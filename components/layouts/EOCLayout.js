@@ -8,9 +8,9 @@ export default function EOCLayout({ children }) {
         <div className="flex flex-col min-h-screen">
             <Header />
             <Navbar />
-            <div className="flex flex-1">
+            <div className="flex flex-1 relative">
                 <Sidebar />
-                <main className="flex-1 p-6 bg-gray-50 overflow-auto">
+                <main className="flex-1 p-4 sm:p-6 bg-gray-50 overflow-auto w-full lg:w-auto">
                     {children}
                 </main>
             </div>

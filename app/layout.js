@@ -1,5 +1,6 @@
 import { Kanit } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 const kanit = Kanit({
   variable: "--font-kanit",
@@ -8,7 +9,7 @@ const kanit = Kanit({
 });
 
 export const metadata = {
-  title: "ระบบ EOC - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน",
+  title: "EOC จังหวัดสตูล - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล",
   description: "Emergency Operations Center - ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน",
 };
 
@@ -18,7 +19,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${kanit.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

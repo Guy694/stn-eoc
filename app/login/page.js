@@ -53,7 +53,7 @@ export default function LoginPage() {
                         <span className="text-white font-bold text-4xl">E</span>
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ EOC</h1>
-                    <p className="text-gray-600">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน</p>
+                    <p className="text-gray-600">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
                 </div>
 
                 {/* Login Form */}
@@ -159,7 +159,7 @@ export default function LoginPage() {
 
                 {/* Footer */}
                 <div className="text-center mt-8 text-sm text-gray-500">
-                    <p>© 2025 ระบบ EOC - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน</p>
+                    <p>© 2025 EOC จังหวัดสตูล - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
                 </div>
             </div>
         </div>
