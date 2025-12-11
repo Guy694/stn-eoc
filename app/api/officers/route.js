@@ -1,0 +1,125 @@
+import { NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+
+// GET - ดึงรายการเจ้าหน้าที่ทั้งหมด
+export async function GET(request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const role = searchParams.get('role');
+        const search = searchParams.get('search');
+
+        let sql = `
+            SELECT 
+                id, 
+                username, 
+                full_name, 
+                email, 
+                phone, 
+                role,
+                created_at,
+                updated_at
+            FROM officer
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (role) {
+            sql += ' AND role = ?';
+            params.push(role);
+        }
+
+        if (search) {
+            sql += ' AND (full_name LIKE ? OR username LIKE ? OR email LIKE ?)';
+            const searchTerm = `%${search}%`;
+            params.push(searchTerm, searchTerm, searchTerm);
+        }
+
+        sql += ' ORDER BY created_at DESC';
+
+        const officers = await query(sql, params);
+
+        // นับจำนวนตาม role
+        const roleCounts = await query(`
+            SELECT role, COUNT(*) as count 
+            FROM officer 
+            GROUP BY role
+        `);
+
+        const stats = roleCounts.reduce((acc, item) => {
+            acc[item.role] = item.count;
+            return acc;
+        }, {});
+
+        return NextResponse.json({
+            success: true,
+            data: officers,
+            stats: stats,
+            total: officers.length
+        });
+
+    } catch (error) {
+        console.error('Error fetching officers:', error);
+        return NextResponse.json(
+            { success: false, error: 'Failed to fetch officers', details: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+// POST - เพิ่มเจ้าหน้าที่ใหม่
+export async function POST(request) {
+    try {
+        const body = await request.json();
+        const { username, password, full_name, email, phone, role } = body;
+
+        // Validate required fields
+        if (!username || !password || !full_name || !role) {
+            return NextResponse.json(
+                { success: false, error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
+        // ตรวจสอบว่า username ซ้ำหรือไม่
+        const existing = await query(
+            'SELECT id FROM officer WHERE username = ?',
+            [username]
+        );
+
+        if (existing.length > 0) {
+            return NextResponse.json(
+                { success: false, error: 'Username already exists' },
+                { status: 409 }
+            );
+        }
+
+        // Hash password
+        const password_hash = await bcrypt.hash(password, 10);
+
+        // Insert new officer
+        const result = await query(`
+            INSERT INTO officer (username, password_hash, full_name, email, phone, role)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [username, password_hash, full_name, email, phone, role]);
+
+        // ดึงข้อมูลที่เพิ่งสร้าง
+        const newOfficer = await query(
+            'SELECT id, username, full_name, email, phone, role, created_at FROM officer WHERE id = ?',
+            [result.insertId]
+        );
+
+        return NextResponse.json({
+            success: true,
+            message: 'Officer created successfully',
+            data: newOfficer[0]
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error('Error creating officer:', error);
+        return NextResponse.json(
+            { success: false, error: 'Failed to create officer', details: error.message },
+            { status: 500 }
+        );
+    }
+}

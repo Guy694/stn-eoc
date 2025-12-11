@@ -39,9 +39,13 @@ export default function HybridDisasterMap({
     polygons = [],
     events = [],
     colorMode = 'risk', // 'risk', 'district', 'population'
+    showColors = true, // แสดงสีหรือเฉพาะขอบเขต
     disasterType = 'flood', // 'flood' or 'drought'
     onPolygonClick,
-    onEventClick
+    onEventClick,
+    gistdaData = null,
+    startDate = '',
+    endDate = ''
 }) {
     const [selectedPolygon, setSelectedPolygon] = useState(null);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -122,6 +126,17 @@ export default function HybridDisasterMap({
     // Style สำหรับ polygon
     const getPolygonStyle = (polygon) => {
         const isSelected = selectedPolygon?.id === polygon.id;
+
+        if (!showColors) {
+            // แสดงเฉพาะขอบเขต
+            return {
+                fillColor: 'transparent',
+                fillOpacity: 0,
+                color: isSelected ? '#000000' : '#2563EB',
+                weight: isSelected ? 3 : 2,
+            };
+        }
+
         return {
             fillColor: getPolygonColor(polygon),
             fillOpacity: isSelected ? 0.7 : 0.5,
@@ -140,11 +155,19 @@ export default function HybridDisasterMap({
 
     const handlePolygonMouseOver = (e) => {
         const layer = e.target;
-        layer.setStyle({
-            fillOpacity: 0.7,
-            weight: 3,
-            color: '#000000'
-        });
+        if (!showColors) {
+            layer.setStyle({
+                fillOpacity: 0,
+                weight: 3,
+                color: '#000000'
+            });
+        } else {
+            layer.setStyle({
+                fillOpacity: 0.7,
+                weight: 3,
+                color: '#000000'
+            });
+        }
     };
 
     const handlePolygonMouseOut = (e, polygon) => {
@@ -206,7 +229,7 @@ export default function HybridDisasterMap({
                                     <p><span className="font-semibold">ตำบล:</span> {polygon.subdistnam}</p>
                                     <p><span className="font-semibold">อำเภอ:</span> {polygon.distname}</p>
                                     <hr className="my-2" />
-                                    <p><span className="font-semibold">จำนวนครัวเรือน:</span> {polygon.num_hh.toLocaleString()} ครัวเรือน</p>
+                                    <p><span className="font-semibold">จำนวนครัวเรือน:</span> {(polygon.num_hh || 0).toLocaleString()} ครัวเรือน</p>
                                     {colorMode === 'risk' && (
                                         <p className="font-semibold text-red-600">
                                             ระดับความเสี่ยง: {polygon.riskLevel || calculateRiskLevel(polygon)}
@@ -242,8 +265,8 @@ export default function HybridDisasterMap({
                                 <div className="space-y-1 text-sm">
                                     <p><span className="font-semibold">ความรุนแรง:</span>
                                         <span className={`ml-1 px-2 py-0.5 rounded text-white ${event.severity === 'สูงมาก' ? 'bg-red-800' :
-                                                event.severity === 'สูง' ? 'bg-red-600' :
-                                                    event.severity === 'ปานกลาง' ? 'bg-orange-500' : 'bg-green-500'
+                                            event.severity === 'สูง' ? 'bg-red-600' :
+                                                event.severity === 'ปานกลาง' ? 'bg-orange-500' : 'bg-green-500'
                                             }`}>
                                             {event.severity}
                                         </span>
@@ -258,6 +281,86 @@ export default function HybridDisasterMap({
                         </Popup>
                     </CircleMarker>
                 ))}
+
+                {/* GISTDA Flood Data Layer */}
+                {gistdaData?.features?.map((feature, idx) => {
+                    const geom = feature.geometry;
+                    const props = feature.properties;
+                    const geometryType = geom?.type;
+
+                    // กรองตามช่วงวันที่ถ้ามีการตั้งค่า
+                    if (startDate && props.date && new Date(props.date) < new Date(startDate)) {
+                        return null;
+                    }
+                    if (endDate && props.date && new Date(props.date) > new Date(endDate)) {
+                        return null;
+                    }
+
+                    // แปลง coordinates
+                    let coordinates = [];
+
+                    if (geometryType === 'Polygon') {
+                        coordinates = geom.coordinates[0].map(([lng, lat]) => [lat, lng]);
+                    } else if (geometryType === 'MultiPolygon') {
+                        coordinates = geom.coordinates[0][0].map(([lng, lat]) => [lat, lng]);
+                    }
+
+                    if (coordinates.length === 0) return null;
+
+                    const floodColor = getFloodRiskColor(props.flood_level || 'ปานกลาง');
+
+                    return (
+                        <Polygon
+                            key={`gistda-${idx}`}
+                            positions={coordinates}
+                            pathOptions={{
+                                color: floodColor,
+                                fillColor: floodColor,
+                                fillOpacity: 0.4,
+                                weight: 2,
+                                dashArray: '5, 5'
+                            }}
+                        >
+                            <Popup>
+                                <div className="min-w-[250px]">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-lg">🌊</span>
+                                        <h3 className="font-bold text-lg text-gray-800">
+                                            {props.tambon || props.name || 'พื้นที่น้ำท่วม GISTDA'}
+                                        </h3>
+                                    </div>
+                                    <div className="space-y-1 text-sm">
+                                        {props.province && <p><strong>จังหวัด:</strong> {props.province}</p>}
+                                        {props.district && <p><strong>อำเภอ:</strong> {props.district}</p>}
+                                        <p>
+                                            <strong>ระดับน้ำท่วม:</strong>{' '}
+                                            <span
+                                                className="px-2 py-1 rounded text-white text-xs"
+                                                style={{ backgroundColor: floodColor }}
+                                            >
+                                                {props.flood_level || 'ปานกลาง'}
+                                            </span>
+                                        </p>
+                                        {props.water_depth && (
+                                            <p><strong>ความลึก:</strong> {props.water_depth} ซม.</p>
+                                        )}
+                                        {props.affected_area && (
+                                            <p><strong>พื้นที่:</strong> {props.affected_area.toLocaleString()} ตร.ม.</p>
+                                        )}
+                                        {props.description && (
+                                            <p className="text-gray-600 mt-2">{props.description}</p>
+                                        )}
+                                        {props.date && (
+                                            <p className="text-xs text-gray-500 mt-2 border-t pt-1">
+                                                แหล่งข้อมูล: GISTDA | {new Date(props.date).toLocaleDateString('th-TH')}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </Popup>
+                        </Polygon>
+                    );
+                })}
 
                 <MapBounds polygons={polygons} />
             </MapContainer>
@@ -274,40 +377,51 @@ export default function HybridDisasterMap({
                     {colorMode === 'risk' ? (
                         disasterType === 'flood' ? (
                             <>
-                                <LegendItem color="#DC2626" label="สูงมาก" />
-                                <LegendItem color="#F59E0B" label="สูง" />
-                                <LegendItem color="#FCD34D" label="ปานกลาง" />
-                                <LegendItem color="#10B981" label="ต่ำ" />
-                                <LegendItem color="#6EE7B7" label="ปลอดภัย" />
+                                <LegendItem key="flood-severe" color="#DC2626" label="สูงมาก" />
+                                <LegendItem key="flood-high" color="#F59E0B" label="สูง" />
+                                <LegendItem key="flood-medium" color="#FCD34D" label="ปานกลาง" />
+                                <LegendItem key="flood-low" color="#10B981" label="ต่ำ" />
+                                <LegendItem key="flood-safe" color="#6EE7B7" label="ปลอดภัย" />
                             </>
                         ) : (
                             <>
-                                <LegendItem color="#7C2D12" label="สูงมาก" />
-                                <LegendItem color="#EA580C" label="สูง" />
-                                <LegendItem color="#FB923C" label="ปานกลาง" />
-                                <LegendItem color="#FDE047" label="ต่ำ" />
-                                <LegendItem color="#86EFAC" label="ปลอดภัย" />
+                                <LegendItem key="drought-severe" color="#7C2D12" label="สูงมาก" />
+                                <LegendItem key="drought-high" color="#EA580C" label="สูง" />
+                                <LegendItem key="drought-medium" color="#FB923C" label="ปานกลาง" />
+                                <LegendItem key="drought-low" color="#FDE047" label="ต่ำ" />
+                                <LegendItem key="drought-safe" color="#86EFAC" label="ปลอดภัย" />
                             </>
                         )
                     ) : colorMode === 'district' ? (
                         <>
-                            <LegendItem color="#3B82F6" label="เมืองสตูล" />
-                            <LegendItem color="#10B981" label="ควนโดน" />
-                            <LegendItem color="#F59E0B" label="ควนกาหลง" />
-                            <LegendItem color="#8B5CF6" label="ท่าแพ" />
-                            <LegendItem color="#EC4899" label="ละงู" />
-                            <LegendItem color="#14B8A6" label="ทุ่งหว้า" />
-                            <LegendItem color="#F97316" label="มะนัง" />
+                            <LegendItem key="district-mueang" color="#3B82F6" label="เมืองสตูล" />
+                            <LegendItem key="district-khuan" color="#10B981" label="ควนโดน" />
+                            <LegendItem key="district-kalong" color="#F59E0B" label="ควนกาหลง" />
+                            <LegendItem key="district-thaphae" color="#8B5CF6" label="ท่าแพ" />
+                            <LegendItem key="district-langu" color="#EC4899" label="ละงู" />
+                            <LegendItem key="district-thungwa" color="#14B8A6" label="ทุ่งหว้า" />
+                            <LegendItem key="district-manang" color="#F97316" label="มะนัง" />
                         </>
                     ) : (
                         <>
-                            <LegendItem color="#FEF3C7" label="0-50 ครัวเรือน" />
-                            <LegendItem color="#FCD34D" label="51-100 ครัวเรือน" />
-                            <LegendItem color="#F59E0B" label="101-150 ครัวเรือน" />
-                            <LegendItem color="#DC2626" label="151+ ครัวเรือน" />
+                            <LegendItem key="pop-0-50" color="#FEF3C7" label="0-50 ครัวเรือน" />
+                            <LegendItem key="pop-51-100" color="#FCD34D" label="51-100 ครัวเรือน" />
+                            <LegendItem key="pop-101-150" color="#F59E0B" label="101-150 ครัวเรือน" />
+                            <LegendItem key="pop-151plus" color="#DC2626" label="151+ ครัวเรือน" />
                         </>
                     )}
                 </div>
+                {gistdaData && (
+                    <div className="mt-3 pt-3 border-t">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-semibold text-gray-700">ข้อมูล GISTDA:</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-3 border-2 border-blue-600" style={{ borderStyle: 'dashed' }}></div>
+                            <span className="text-xs text-gray-600">พื้นที่น้ำท่วม</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Selected Info */}
@@ -339,7 +453,7 @@ export default function HybridDisasterMap({
                             <>
                                 <p>{selectedPolygon?.subdistnam}, {selectedPolygon?.distname}</p>
                                 <p className="font-semibold text-blue-600">
-                                    {selectedPolygon?.num_hh.toLocaleString()} ครัวเรือน
+                                    {(selectedPolygon?.num_hh || 0).toLocaleString()} ครัวเรือน
                                 </p>
                                 {colorMode === 'risk' && (
                                     <p className="font-semibold text-red-600">

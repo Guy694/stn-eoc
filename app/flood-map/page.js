@@ -22,6 +22,11 @@ export default function FloodMapPage() {
     const [polygons, setPolygons] = useState([]);
     const [loading, setLoading] = useState(true);
     const [colorMode, setColorMode] = useState('risk');
+    const [showColors, setShowColors] = useState(true);
+    const [gistdaData, setGistdaData] = useState(null);
+    const [showGistdaLayer, setShowGistdaLayer] = useState(true);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     const [filters, setFilters] = useState({
         severity: "all",
@@ -50,6 +55,23 @@ export default function FloodMapPage() {
                 setLoading(false);
             });
     }, []);
+
+    // โหลดข้อมูล GISTDA
+    useEffect(() => {
+        fetchGistdaData();
+    }, []);
+
+    const fetchGistdaData = async (days = '30') => {
+        try {
+            const response = await fetch(`/api/gistda/flood?days=${days}&limit=100`);
+            const data = await response.json();
+            if (data.success || data.useMockData) {
+                setGistdaData(data.useMockData ? data.data : data);
+            }
+        } catch (err) {
+            console.error('Error loading GISTDA data:', err);
+        }
+    };
 
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
@@ -189,16 +211,60 @@ export default function FloodMapPage() {
                 {/* Filter Panel */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-lg font-semibold text-gray-800 mb-4">🔍 ฟิลเตอร์ข้อมูล</h2>
+
+                    {/* ช่วงวันที่ */}
+                    <div className="mb-4 pb-4 border-b">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    วันที่เริ่มต้น
+                                </label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    วันที่สิ้นสุด
+                                </label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <button
+                                    onClick={() => {
+                                        setStartDate('');
+                                        setEndDate('');
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                >
+                                    ล้างวันที่
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                         {/* ช่วงเวลา */}
                         <FilterSelect
-
                             label="ช่วงเวลา"
                             value={filters.dateRange}
-                            onChange={(e) => handleFilterChange("dateRange", e.target.value)}
+                            onChange={(e) => {
+                                handleFilterChange("dateRange", e.target.value);
+                                if (e.target.value !== "all") {
+                                    fetchGistdaData(e.target.value);
+                                }
+                            }}
                             options={[
                                 { value: "all", label: "ทั้งหมด" },
-                                { value: "1", label: "วันนี้" },
+                                { value: "1", label: "1 วัน" },
                                 { value: "7", label: "7 วัน" },
                                 { value: "30", label: "30 วัน" },
                             ]}
@@ -225,7 +291,7 @@ export default function FloodMapPage() {
                             onChange={(e) => handleFilterChange("district", e.target.value)}
                             options={[
                                 { value: "all", label: "ทั้งหมด" },
-                                ...satunDistricts.map(d => ({ value: d.name, label: d.name }))
+                                ...satunDistricts.map((d, idx) => ({ value: d.name, label: d.name, key: `district-${idx}` }))
                             ]}
                         />
 
@@ -236,7 +302,7 @@ export default function FloodMapPage() {
                             onChange={(e) => handleFilterChange("tambon", e.target.value)}
                             options={[
                                 { value: "all", label: "ทั้งหมด" },
-                                ...tambonOptions.map(t => ({ value: t.name, label: t.name }))
+                                ...tambonOptions.map((t, idx) => ({ value: t.name, label: t.name, key: `tambon-${idx}` }))
                             ]}
                             disabled={filters.district === "all"}
                         />
@@ -248,7 +314,7 @@ export default function FloodMapPage() {
                             onChange={(e) => handleFilterChange("village", e.target.value)}
                             options={[
                                 { value: "all", label: "ทั้งหมด" },
-                                ...villageOptions.map(v => ({ value: v, label: v }))
+                                ...villageOptions.map((v, idx) => ({ value: v, label: v, key: `village-${idx}` }))
                             ]}
                             disabled={filters.tambon === "all"}
                         />
@@ -269,29 +335,55 @@ export default function FloodMapPage() {
 
                 {/* Color Mode Controls */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-4">
-                            <label className="font-semibold text-gray-700">แสดงสีตาม:</label>
+                            <div className="flex items-center gap-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={showColors}
+                                        onChange={(e) => setShowColors(e.target.checked)}
+                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <span className="font-semibold text-gray-700">แสดงสีตาม:</span>
+                                </label>
+                            </div>
                             <div className="flex gap-2">
                                 <ColorModeButton
                                     active={colorMode === 'risk'}
                                     onClick={() => setColorMode('risk')}
                                     label="ความเสี่ยง"
+                                    disabled={!showColors}
                                 />
                                 <ColorModeButton
                                     active={colorMode === 'district'}
                                     onClick={() => setColorMode('district')}
                                     label="อำเภอ"
+                                    disabled={!showColors}
                                 />
                                 <ColorModeButton
                                     active={colorMode === 'population'}
                                     onClick={() => setColorMode('population')}
                                     label="ประชากร"
+                                    disabled={!showColors}
                                 />
                             </div>
                         </div>
-                        <div className="text-sm text-gray-600">
-                            พบ {floodEvents.length} เหตุการณ์
+                        <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={showGistdaLayer}
+                                    onChange={(e) => setShowGistdaLayer(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700">
+                                    แสดงข้อมูล GISTDA
+                                </span>
+                            </label>
+                            <div className="text-sm text-gray-600">
+                                พบ {floodEvents.length} เหตุการณ์
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -302,9 +394,13 @@ export default function FloodMapPage() {
                         polygons={filteredPolygons}
                         events={floodEvents}
                         colorMode={colorMode}
+                        showColors={showColors}
                         disasterType="flood"
                         onPolygonClick={setSelectedPolygon}
                         onEventClick={setSelectedEvent}
+                        gistdaData={showGistdaLayer ? gistdaData : null}
+                        startDate={startDate}
+                        endDate={endDate}
                     />
                 </div>
 
@@ -355,8 +451,8 @@ function FilterSelect({ label, value, onChange, options, disabled = false }) {
                 disabled={disabled}
                 className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
-                {options.map(opt => (
-                    <option key={opt.value} value={opt.value}>
+                {options.map((opt, idx) => (
+                    <option key={opt.key || opt.value || idx} value={opt.value}>
                         {opt.label}
                     </option>
                 ))}
@@ -366,13 +462,16 @@ function FilterSelect({ label, value, onChange, options, disabled = false }) {
 }
 
 // Component สำหรับปุ่ม Color Mode
-function ColorModeButton({ active, onClick, label }) {
+function ColorModeButton({ active, onClick, label, disabled = false }) {
     return (
         <button
             onClick={onClick}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${active
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            disabled={disabled}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${disabled
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : active
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
         >
             {label}

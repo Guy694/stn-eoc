@@ -20,11 +20,23 @@ const Popup = dynamic(
     () => import('react-leaflet').then((mod) => mod.Popup),
     { ssr: false }
 );
+const Marker = dynamic(
+    () => import('react-leaflet').then((mod) => mod.Marker),
+    { ssr: false }
+);
+const LayerGroup = dynamic(
+    () => import('react-leaflet').then((mod) => mod.LayerGroup),
+    { ssr: false }
+);
 
 export default function DailyVillageFloodTimeline({ startDate, polygons }) {
     const [selectedDate, setSelectedDate] = useState(null);
     const [dates, setDates] = useState([]);
     const [floodData, setFloodData] = useState(null);
+    const [healthFacilities, setHealthFacilities] = useState([]);
+    const [tambonBoundaries, setTambonBoundaries] = useState([]);
+    const [showFacilities, setShowFacilities] = useState(true);
+    const [showTambonBoundaries, setShowTambonBoundaries] = useState(false);
     const [loading, setLoading] = useState(false);
     const mapRef = useRef(null);
 
@@ -61,6 +73,40 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
         fetchFloodData();
     }, [selectedDate]);
 
+    // ดึงข้อมูลสถานพยาบาล
+    useEffect(() => {
+        const fetchHealthFacilities = async () => {
+            try {
+                const response = await fetch('/api/health-facilities');
+                const result = await response.json();
+                if (result.success) {
+                    setHealthFacilities(result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching health facilities:', error);
+            }
+        };
+
+        fetchHealthFacilities();
+    }, []);
+
+    // ดึงข้อมูลเขตตำบล
+    useEffect(() => {
+        const fetchTambonBoundaries = async () => {
+            try {
+                const response = await fetch('/api/tambon-boundaries');
+                const result = await response.json();
+                if (result.success) {
+                    setTambonBoundaries(result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching tambon boundaries:', error);
+            }
+        };
+
+        fetchTambonBoundaries();
+    }, []);
+
     const getFloodColor = (level) => {
         const colors = {
             'severe': '#DC2626',
@@ -81,6 +127,46 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
             'nodata': 'ไม่มีข้อมูล',
         };
         return labels[level] || labels.nodata;
+    };
+
+    // สร้างไอคอนสำหรับสถานพยาบาล
+    const createFacilityIcon = (typecode) => {
+        if (typeof window === 'undefined') return null;
+
+        const L = require('leaflet');
+        const colors = {
+            'รพ.ทั่วไป': '#DC2626',
+            'รพ.ชุมชน': '#F59E0B',
+            'รพ.สต.': '#10B981',
+            'ศสช.': '#3B82F6',
+            'สสจ': '#8B5CF6',
+            'สสอ.': '#EC4899',
+            'สอน.': '#06B6D4',
+        };
+
+        const color = colors[typecode] || '#6B7280';
+
+        return L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="
+                background-color: ${color};
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="white">
+                    <path d="M5 0h2v5h5v2H7v5H5V7H0V5h5V0z"/>
+                </svg>
+            </div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+            popupAnchor: [0, -12]
+        });
     };
 
     const downloadMap = async () => {
@@ -182,7 +268,25 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <label className="font-semibold text-gray-700">เลือกวันที่:</label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
+                        <label className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={showTambonBoundaries}
+                                onChange={(e) => setShowTambonBoundaries(e.target.checked)}
+                                className="w-4 h-4 text-purple-600 rounded"
+                            />
+                            แสดงเขตตำบล
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={showFacilities}
+                                onChange={(e) => setShowFacilities(e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded"
+                            />
+                            แสดงสถานพยาบาล
+                        </label>
                         <button
                             onClick={saveMapToServer}
                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
@@ -213,8 +317,8 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     key={index}
                                     onClick={() => setSelectedDate(date)}
                                     className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium transition-all ${isSelected
-                                            ? 'bg-blue-600 text-white shadow-lg'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-blue-600 text-white shadow-lg'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
                                     <div className="text-sm">วันที่ {index + 1}</div>
@@ -272,7 +376,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                 {/* วาด polygon ตามระดับความรุนแรง (วาดจากเบาไปหนัก) */}
                                 {polygonGroups.safe.map((poly, idx) => (
                                     <Polygon
-                                        key={`safe-${idx}`}
+                                        key={`safe-${poly.villcode}-${idx}`}
                                         positions={poly.coordinates}
                                         pathOptions={{
                                             fillColor: getFloodColor('safe'),
@@ -295,7 +399,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
 
                                 {polygonGroups.mild.map((poly, idx) => (
                                     <Polygon
-                                        key={`mild-${idx}`}
+                                        key={`mild-${poly.villcode}-${idx}`}
                                         positions={poly.coordinates}
                                         pathOptions={{
                                             fillColor: getFloodColor('mild'),
@@ -318,7 +422,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
 
                                 {polygonGroups.moderate.map((poly, idx) => (
                                     <Polygon
-                                        key={`moderate-${idx}`}
+                                        key={`moderate-${poly.villcode}-${idx}`}
                                         positions={poly.coordinates}
                                         pathOptions={{
                                             fillColor: getFloodColor('moderate'),
@@ -341,7 +445,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
 
                                 {polygonGroups.severe.map((poly, idx) => (
                                     <Polygon
-                                        key={`severe-${idx}`}
+                                        key={`severe-${poly.villcode}-${idx}`}
                                         positions={poly.coordinates}
                                         pathOptions={{
                                             fillColor: getFloodColor('severe'),
@@ -361,17 +465,102 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                         </Popup>
                                     </Polygon>
                                 ))}
+
+                                {/* เลเยอร์เขตตำบล */}
+                                {showTambonBoundaries && (
+                                    <LayerGroup>
+                                        {tambonBoundaries.map((tambon) => (
+                                            <Polygon
+                                                key={`tambon-${tambon.id}`}
+                                                positions={tambon.coordinates}
+                                                pathOptions={{
+                                                    fillColor: 'transparent',
+                                                    fillOpacity: 0,
+                                                    color: '#8B5CF6',
+                                                    weight: 3,
+                                                    dashArray: '10, 10'
+                                                }}
+                                            >
+                                                <Popup>
+                                                    <div className="text-sm">
+                                                        <strong className="text-purple-700">ตำบล{tambon.tambname}</strong><br />
+                                                        อำเภอ: {tambon.distname}<br />
+                                                        จำนวนหมู่บ้าน: {tambon.villages} หมู่บ้าน
+                                                    </div>
+                                                </Popup>
+                                            </Polygon>
+                                        ))}
+                                    </LayerGroup>
+                                )}
+
+                                {/* เลเยอร์สถานพยาบาล */}
+                                {showFacilities && (
+                                    <LayerGroup>
+                                        {healthFacilities.map((facility) => (
+                                            <Marker
+                                                key={facility.id}
+                                                position={[facility.lat, facility.lon]}
+                                                icon={createFacilityIcon(facility.typecode)}
+                                            >
+                                                <Popup>
+                                                    <div className="text-sm">
+                                                        <strong className="text-blue-700">{facility.name}</strong><br />
+                                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                                            {facility.typecode}
+                                                        </span><br />
+                                                        อำเภอ: {facility.district}<br />
+                                                        <span className={`text-xs px-2 py-0.5 rounded inline-block mt-1 ${facility.risk_level === 'ความเสี่ยงสูงมาก' ? 'bg-red-100 text-red-800' :
+                                                            facility.risk_level === 'ความเสี่ยงสูง' ? 'bg-orange-100 text-orange-800' :
+                                                                facility.risk_level === 'ความเสี่ยงปานกลาง' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-green-100 text-green-800'
+                                                            }`}>
+                                                            {facility.risk_level}
+                                                        </span>
+                                                    </div>
+                                                </Popup>
+                                            </Marker>
+                                        ))}
+                                    </LayerGroup>
+                                )}
                             </MapContainer>
                         </div>
 
                         {/* Legend */}
-                        <div className="flex justify-center gap-4 flex-wrap mb-6">
-                            <LegendItem color="#DC2626" label="น้ำท่วมหนัก" />
-                            <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
-                            <LegendItem color="#34D399" label="น้ำท่วมเล็กน้อย" />
-                            <LegendItem color="#10B981" label="ปลอดภัย" />
-                            <LegendItem color="#E5E7EB" label="ไม่มีข้อมูล" />
+                        <div className="mb-4">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่น้ำท่วม:</h3>
+                            <div className="flex justify-start gap-4 flex-wrap">
+                                <LegendItem color="#DC2626" label="น้ำท่วมหนัก" />
+                                <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
+                                <LegendItem color="#34D399" label="น้ำท่วมเล็กน้อย" />
+                                <LegendItem color="#10B981" label="ปลอดภัย" />
+                                <LegendItem color="#E5E7EB" label="ไม่มีข้อมูล" />
+                            </div>
                         </div>
+
+                        {showTambonBoundaries && (
+                            <div className="mb-4">
+                                <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-12 h-1 border-2 border-purple-500" style={{ borderStyle: 'dashed' }}></div>
+                                    <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {showFacilities && (
+                            <div className="mb-6">
+                                <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์สถานพยาบาล:</h3>
+                                <div className="flex justify-start gap-4 flex-wrap">
+                                    <FacilityLegendItem color="#DC2626" label="รพ.ทั่วไป" />
+                                    <FacilityLegendItem color="#F59E0B" label="รพ.ชุมชน" />
+                                    <FacilityLegendItem color="#10B981" label="รพ.สต." />
+                                    <FacilityLegendItem color="#3B82F6" label="ศสช." />
+                                    <FacilityLegendItem color="#8B5CF6" label="สสจ" />
+                                    <FacilityLegendItem color="#EC4899" label="สสอ." />
+                                    <FacilityLegendItem color="#06B6D4" label="สอน." />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Statistics */}
                         {floodData && floodData.summary && (
@@ -396,7 +585,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                 />
                                 <StatBox
                                     label="ผู้ได้รับผลกระทบ"
-                                    value={floodData.summary.totalPopulation.toLocaleString()}
+                                    value={(floodData.summary?.totalPopulation || 0).toLocaleString()}
                                     color="bg-blue-100 text-blue-700"
                                     unit="คน"
                                 />
@@ -428,12 +617,12 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     <div className="text-sm text-gray-600">อ.{village.district}</div>
                                     <div className="text-xs text-gray-500 flex items-center gap-2">
                                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${village.level === 'severe' ? 'bg-red-200 text-red-800' :
-                                                village.level === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
-                                                    'bg-green-200 text-green-800'
+                                            village.level === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
+                                                'bg-green-200 text-green-800'
                                             }`}>
                                             {getFloodLabel(village.level)}
                                         </span>
-                                        <span>👥 {village.population.toLocaleString()} คน</span>
+                                        <span>👥 {village.population?.toLocaleString() || '0'} คน</span>
                                     </div>
                                 </div>
                             </div>
@@ -452,6 +641,22 @@ function LegendItem({ color, label }) {
                 className="w-6 h-6 rounded border-2 border-gray-300"
                 style={{ backgroundColor: color }}
             />
+            <span className="text-sm font-medium text-gray-700">{label}</span>
+        </div>
+    );
+}
+
+function FacilityLegendItem({ color, label }) {
+    return (
+        <div className="flex items-center gap-2">
+            <div
+                className="w-6 h-6 rounded-full border-2 border-white shadow-md flex items-center justify-center"
+                style={{ backgroundColor: color }}
+            >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="white">
+                    <path d="M5 0h2v5h5v2H7v5H5V7H0V5h5V0z" />
+                </svg>
+            </div>
             <span className="text-sm font-medium text-gray-700">{label}</span>
         </div>
     );
