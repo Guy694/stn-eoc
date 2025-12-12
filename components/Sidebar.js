@@ -36,8 +36,8 @@ export default function Sidebar() {
         {
             title: "แดชบอร์ด",
             items: [
-                { name: "ภาพรวม", path: "/dashboard", icon: "📊" },
-                { name: "สถิติ", path: "/dashboard/statistics", icon: "📈" },
+                { name: "ภาพรวม", path: "/admin/dashboard", icon: "📊" },
+                { name: "สถิติ", path: "/admin/dashboard/statistics", icon: "📈" },
             ],
         },
         {

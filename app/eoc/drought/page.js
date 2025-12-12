@@ -39,7 +39,7 @@ export default function DroughtMapPage() {
 
     // โหลดข้อมูล polygon
     useEffect(() => {
-        fetch('/api/village-polygons')
+        fetch('/api/common/village-polygons')
             .then(res => res.json())
             .then(data => {
                 setPolygons(data);

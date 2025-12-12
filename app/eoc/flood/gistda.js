@@ -35,7 +35,7 @@ export default function GistdaFloodMapPage() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`/api/gistda/flood?days=${selectedDays}&limit=100&pv_idn=91`);
+            const response = await fetch(`/api/eoc/gistda/flood?days=${selectedDays}&limit=100&pv_idn=91`);
             const data = await response.json();
 
             if (data.success || data.useMockData) {

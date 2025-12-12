@@ -28,7 +28,7 @@ export default function VillageMapPage() {
 
     useEffect(() => {
         // โหลดข้อมูล polygon
-        fetch('/api/village-polygons')
+        fetch('/api/common/village-polygons')
             .then(res => res.json())
             .then(data => {
                 setPolygons(data);
@@ -127,8 +127,8 @@ export default function VillageMapPage() {
                                 <button
                                     onClick={() => setColorMode('district')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${colorMode === 'district'
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                         }`}
                                 >
                                     อำเภอ
@@ -136,8 +136,8 @@ export default function VillageMapPage() {
                                 <button
                                     onClick={() => setColorMode('population')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${colorMode === 'population'
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                         }`}
                                 >
                                     จำนวนครัวเรือน

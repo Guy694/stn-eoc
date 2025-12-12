@@ -10,14 +10,17 @@ export default function Navbar() {
     const { canAccessResources, canAccessReports } = useAuth();
 
     const allNavItems = [
-        { name: "หน้าหลัก", path: "/dashboard" },
-        { name: "แผนที่ภัยพิบัติ", path: "/public/disaster-map" },
-        { name: "แผนที่น้ำท่วม", path: "/flood-map" },
-        { name: "แผนที่ภัยแล้ง", path: "/drought-map" },
-        { name: "แผนที่หมู่บ้าน", path: "/village-map" },
+        { name: "หน้าหลัก", path: "/admin/dashboard" },
+        // { name: "แผนที่ภัยพิบัติ", path: "/public/disaster-map" },
+        { name: "แผนที่น้ำท่วม", path: "/eoc/flood" },
+        { name: "แผนที่ภัยแล้ง", path: "/eoc/drought" },
+        // { name: "แผนที่หมู่บ้าน", path: "/eoc/village-map" },
+        { name: "สึนามิ", path: "/eoc/tsunami" },
+        { name: "แผ่นดินไหว", path: "/eoc/earthquake" },
+        { name: "โรคระบาด", path: "/eoc/disease" },
         { name: "รายงานเหตุการณ์", path: "/reports", requiresAdmin: true },
-        { name: "ทรัพยากร", path: "/resources", requiresAdmin: true },
-        { name: "การแจ้งเตือน", path: "/alerts" },
+        // { name: "ทรัพยากร", path: "/resources", requiresAdmin: true },
+        // { name: "การแจ้งเตือน", path: "/alerts" },
     ];
 
     // กรองเมนูตาม role

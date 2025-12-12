@@ -63,7 +63,7 @@ export default function FloodRecordsPage() {
             if (filters.flood_level !== 'all') params.append('flood_level', filters.flood_level);
             if (filters.status !== 'all') params.append('status', filters.status);
 
-            const res = await fetch(`/api/flood-records?${params}`);
+            const res = await fetch(`/api/admin/flood-records?${params}`);
             const data = await res.json();
             if (data.success) {
                 setRecords(data.data);
@@ -78,7 +78,7 @@ export default function FloodRecordsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const url = '/api/flood-records';
+            const url = '/api/admin/flood-records';
             const method = editingRecord ? 'PUT' : 'POST';
             const body = editingRecord
                 ? { ...formData, id: editingRecord.id }
@@ -132,7 +132,7 @@ export default function FloodRecordsPage() {
         if (!confirm('ต้องการลบข้อมูลนี้หรือไม่?')) return;
 
         try {
-            const res = await fetch(`/api/flood-records?id=${id}`, {
+            const res = await fetch(`/api/admin/flood-records?id=${id}`, {
                 method: 'DELETE'
             });
             const data = await res.json();

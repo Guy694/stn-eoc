@@ -44,6 +44,7 @@ export default function HybridDisasterMap({
     onPolygonClick,
     onEventClick,
     gistdaData = null,
+    floodFreqData = null, // ข้อมูลน้ำท่วมซ้ำซาก
     startDate = '',
     endDate = ''
 }) {
@@ -195,6 +196,15 @@ export default function HybridDisasterMap({
         return colors[severity] || '#6B7280';
     };
 
+    // สีสำหรับความถี่ของน้ำท่วมซ้ำซาก
+    const getFloodFreqColor = (frequency) => {
+        if (frequency >= 7) return '#7C2D12'; // สูงมาก (น้ำตาลเข้ม)
+        if (frequency >= 5) return '#DC2626'; // สูง (แดงเข้ม)
+        if (frequency >= 3) return '#F59E0B'; // ปานกลาง (ส้ม)
+        if (frequency >= 1) return '#FCD34D'; // ต่ำ (เหลือง)
+        return '#10B981'; // ไม่มี (เขียว)
+    };
+
     return (
         <div className="relative w-full h-full">
             <MapContainer
@@ -283,84 +293,178 @@ export default function HybridDisasterMap({
                 ))}
 
                 {/* GISTDA Flood Data Layer */}
-                {gistdaData?.features?.map((feature, idx) => {
-                    const geom = feature.geometry;
-                    const props = feature.properties;
-                    const geometryType = geom?.type;
+                {gistdaData?.features
+                    ?.filter((feature) => {
+                        const props = feature.properties;
+                        const geom = feature.geometry;
+                        const geometryType = geom?.type;
 
-                    // กรองตามช่วงวันที่ถ้ามีการตั้งค่า
-                    if (startDate && props.date && new Date(props.date) < new Date(startDate)) {
-                        return null;
-                    }
-                    if (endDate && props.date && new Date(props.date) > new Date(endDate)) {
-                        return null;
-                    }
+                        // กรองตามช่วงวันที่
+                        if (startDate && props.date && new Date(props.date) < new Date(startDate)) {
+                            return false;
+                        }
+                        if (endDate && props.date && new Date(props.date) > new Date(endDate)) {
+                            return false;
+                        }
 
-                    // แปลง coordinates
-                    let coordinates = [];
+                        // ตรวจสอบว่ามี coordinates ที่ถูกต้อง
+                        if (!geom || !geom.coordinates || geom.coordinates.length === 0) {
+                            return false;
+                        }
 
-                    if (geometryType === 'Polygon') {
-                        coordinates = geom.coordinates[0].map(([lng, lat]) => [lat, lng]);
-                    } else if (geometryType === 'MultiPolygon') {
-                        coordinates = geom.coordinates[0][0].map(([lng, lat]) => [lat, lng]);
-                    }
+                        return true;
+                    })
+                    .map((feature, idx) => {
+                        const geom = feature.geometry;
+                        const props = feature.properties;
+                        const geometryType = geom?.type;
 
-                    if (coordinates.length === 0) return null;
+                        // สร้าง unique key จากหลายค่า
+                        const uniqueKey = `gistda-${props.district || ''}-${props.tambon || ''}-${props.date || ''}-${idx}`;
 
-                    const floodColor = getFloodRiskColor(props.flood_level || 'ปานกลาง');
+                        // แปลง coordinates
+                        let coordinates = [];
 
-                    return (
-                        <Polygon
-                            key={`gistda-${idx}`}
-                            positions={coordinates}
-                            pathOptions={{
-                                color: floodColor,
-                                fillColor: floodColor,
-                                fillOpacity: 0.4,
-                                weight: 2,
-                                dashArray: '5, 5'
-                            }}
-                        >
-                            <Popup>
-                                <div className="min-w-[250px]">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-lg">🌊</span>
-                                        <h3 className="font-bold text-lg text-gray-800">
-                                            {props.tambon || props.name || 'พื้นที่น้ำท่วม GISTDA'}
-                                        </h3>
-                                    </div>
-                                    <div className="space-y-1 text-sm">
-                                        {props.province && <p><strong>จังหวัด:</strong> {props.province}</p>}
-                                        {props.district && <p><strong>อำเภอ:</strong> {props.district}</p>}
-                                        <p>
-                                            <strong>ระดับน้ำท่วม:</strong>{' '}
-                                            <span
-                                                className="px-2 py-1 rounded text-white text-xs"
-                                                style={{ backgroundColor: floodColor }}
-                                            >
-                                                {props.flood_level || 'ปานกลาง'}
-                                            </span>
-                                        </p>
-                                        {props.water_depth && (
-                                            <p><strong>ความลึก:</strong> {props.water_depth} ซม.</p>
-                                        )}
-                                        {props.affected_area && (
-                                            <p><strong>พื้นที่:</strong> {props.affected_area.toLocaleString()} ตร.ม.</p>
-                                        )}
-                                        {props.description && (
-                                            <p className="text-gray-600 mt-2">{props.description}</p>
-                                        )}
-                                        {props.date && (
-                                            <p className="text-xs text-gray-500 mt-2 border-t pt-1">
-                                                แหล่งข้อมูล: GISTDA | {new Date(props.date).toLocaleDateString('th-TH')}
+                        if (geometryType === 'Polygon') {
+                            coordinates = geom.coordinates[0].map(([lng, lat]) => [lat, lng]);
+                        } else if (geometryType === 'MultiPolygon') {
+                            coordinates = geom.coordinates[0][0].map(([lng, lat]) => [lat, lng]);
+                        }
+
+                        const floodColor = getFloodRiskColor(props.flood_level || 'ปานกลาง');
+
+                        return (
+                            <Polygon
+                                key={uniqueKey}
+                                positions={coordinates}
+                                pathOptions={{
+                                    color: floodColor,
+                                    fillColor: floodColor,
+                                    fillOpacity: 0.4,
+                                    weight: 2,
+                                    dashArray: '5, 5'
+                                }}
+                            >
+                                <Popup>
+                                    <div className="min-w-[250px]">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-lg">🌊</span>
+                                            <h3 className="font-bold text-lg text-gray-800">
+                                                {props.tambon || props.name || 'พื้นที่น้ำท่วม GISTDA'}
+                                            </h3>
+                                        </div>
+                                        <div className="space-y-1 text-sm">
+                                            {props.province && <p><strong>จังหวัด:</strong> {props.province}</p>}
+                                            {props.district && <p><strong>อำเภอ:</strong> {props.district}</p>}
+                                            <p>
+                                                <strong>ระดับน้ำท่วม:</strong>{' '}
+                                                <span
+                                                    className="px-2 py-1 rounded text-white text-xs"
+                                                    style={{ backgroundColor: floodColor }}
+                                                >
+                                                    {props.flood_level || 'ปานกลาง'}
+                                                </span>
                                             </p>
-                                        )}
+                                            {props.water_depth && (
+                                                <p><strong>ความลึก:</strong> {props.water_depth} ซม.</p>
+                                            )}
+                                            {props.affected_area && (
+                                                <p><strong>พื้นที่:</strong> {props.affected_area.toLocaleString()} ตร.ม.</p>
+                                            )}
+                                            {props.description && (
+                                                <p className="text-gray-600 mt-2">{props.description}</p>
+                                            )}
+                                            {props.date && (
+                                                <p className="text-xs text-gray-500 mt-2 border-t pt-1">
+                                                    แหล่งข้อมูล: GISTDA | {new Date(props.date).toLocaleDateString('th-TH')}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </Popup>
-                        </Polygon>
-                    );
-                })}
+                                </Popup>
+                            </Polygon>
+                        );
+                    })}
+
+                {/* Flood Frequency Layer */}
+                {floodFreqData?.features
+                    ?.filter((feature) => {
+                        const geom = feature.geometry;
+                        // ตรวจสอบว่ามี geometry และ coordinates ที่ถูกต้อง
+                        if (!geom || !geom.coordinates || geom.coordinates.length === 0) {
+                            return false;
+                        }
+                        return true;
+                    })
+                    .map((feature, idx) => {
+                        const geom = feature.geometry;
+                        const props = feature.properties;
+                        const geometryType = geom?.type;
+
+                        // สร้าง unique key
+                        const uniqueKey = `freq-${props.district || ''}-${props.tambon || ''}-${idx}`;
+
+                        // แปลง coordinates
+                        let coordinates = [];
+
+                        if (geometryType === 'Polygon') {
+                            coordinates = geom.coordinates[0].map(([lng, lat]) => [lat, lng]);
+                        } else if (geometryType === 'MultiPolygon') {
+                            coordinates = geom.coordinates[0][0].map(([lng, lat]) => [lat, lng]);
+                        }
+
+                        const freqColor = getFloodFreqColor(props.frequency || 0);
+
+                        return (
+                            <Polygon
+                                key={uniqueKey}
+                                positions={coordinates}
+                                pathOptions={{
+                                    color: freqColor,
+                                    fillColor: freqColor,
+                                    fillOpacity: 0.5,
+                                    weight: 2,
+                                }}
+                            >
+                                <Popup>
+                                    <div className="min-w-[250px]">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-lg">🔄</span>
+                                            <h3 className="font-bold text-lg text-gray-800">
+                                                พื้นที่น้ำท่วมซ้ำซาก
+                                            </h3>
+                                        </div>
+                                        <div className="space-y-1 text-sm">
+                                            {props.province && <p><strong>จังหวัด:</strong> {props.province}</p>}
+                                            {props.district && <p><strong>อำเภอ:</strong> {props.district}</p>}
+                                            {props.tambon && <p><strong>ตำบล:</strong> {props.tambon}</p>}
+                                            <p>
+                                                <strong>ความถี่:</strong>{' '}
+                                                <span
+                                                    className="px-2 py-1 rounded text-white text-xs font-semibold"
+                                                    style={{ backgroundColor: freqColor }}
+                                                >
+                                                    {props.frequency || 0} ครั้ง/10 ปี
+                                                </span>
+                                            </p>
+                                            {props.frequency_level && (
+                                                <p><strong>ระดับ:</strong> {props.frequency_level}</p>
+                                            )}
+                                            {props.last_flood_year && (
+                                                <p><strong>น้ำท่วมครั้งล่าสุด:</strong> {parseInt(props.last_flood_year) + 543}</p>
+                                            )}
+                                            {props.description && (
+                                                <p className="text-gray-600 mt-2">{props.description}</p>
+                                            )}
+                                            <p className="text-xs text-gray-500 mt-2 border-t pt-1">
+                                                แหล่งข้อมูล: GISTDA Flood Frequency
+                                            </p>
+                                        </div>
+                                    </div>
+                                </Popup>
+                            </Polygon>
+                        );
+                    })}
 
                 <MapBounds polygons={polygons} />
             </MapContainer>
@@ -368,13 +472,22 @@ export default function HybridDisasterMap({
             {/* Legend */}
             <div className="absolute bottom-6 right-6 bg-white p-4 rounded-lg shadow-lg z-[1000] max-w-xs">
                 <h4 className="font-bold mb-3 text-gray-800">
-                    {colorMode === 'risk'
-                        ? (disasterType === 'flood' ? 'ระดับความเสี่ยงน้ำท่วม' : 'ระดับความเสี่ยงภัยแล้ง')
-                        : colorMode === 'district' ? 'อำเภอ' : 'จำนวนครัวเรือน'
+                    {floodFreqData ? 'ความถี่น้ำท่วมซ้ำซาก' :
+                        colorMode === 'risk'
+                            ? (disasterType === 'flood' ? 'ระดับความเสี่ยงน้ำท่วม' : 'ระดับความเสี่ยงภัยแล้ง')
+                            : colorMode === 'district' ? 'อำเภอ' : 'จำนวนครัวเรือน'
                     }
                 </h4>
                 <div className="space-y-2">
-                    {colorMode === 'risk' ? (
+                    {floodFreqData ? (
+                        <>
+                            <LegendItem key="freq-very-high" color="#7C2D12" label="สูงมาก (7+ ครั้ง/10 ปี)" />
+                            <LegendItem key="freq-high" color="#DC2626" label="สูง (5-6 ครั้ง/10 ปี)" />
+                            <LegendItem key="freq-medium" color="#F59E0B" label="ปานกลาง (3-4 ครั้ง/10 ปี)" />
+                            <LegendItem key="freq-low" color="#FCD34D" label="ต่ำ (1-2 ครั้ง/10 ปี)" />
+                            <LegendItem key="freq-none" color="#10B981" label="ไม่มี" />
+                        </>
+                    ) : colorMode === 'risk' ? (
                         disasterType === 'flood' ? (
                             <>
                                 <LegendItem key="flood-severe" color="#DC2626" label="สูงมาก" />

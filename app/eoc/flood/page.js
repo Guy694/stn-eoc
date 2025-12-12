@@ -24,7 +24,10 @@ export default function FloodMapPage() {
     const [colorMode, setColorMode] = useState('risk');
     const [showColors, setShowColors] = useState(true);
     const [gistdaData, setGistdaData] = useState(null);
+    const [floodFreqData, setFloodFreqData] = useState(null);
     const [showGistdaLayer, setShowGistdaLayer] = useState(true);
+    const [showFloodFreqLayer, setShowFloodFreqLayer] = useState(true);
+    const [activeMapTab, setActiveMapTab] = useState('current'); // 'current' or 'frequency'
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
@@ -44,7 +47,7 @@ export default function FloodMapPage() {
 
     // โหลดข้อมูล polygon
     useEffect(() => {
-        fetch('/api/village-polygons')
+        fetch('/api/common/village-polygons')
             .then(res => res.json())
             .then(data => {
                 setPolygons(data);
@@ -59,17 +62,30 @@ export default function FloodMapPage() {
     // โหลดข้อมูล GISTDA
     useEffect(() => {
         fetchGistdaData();
+        fetchFloodFreqData();
     }, []);
 
     const fetchGistdaData = async (days = '30') => {
         try {
-            const response = await fetch(`/api/gistda/flood?days=${days}&limit=100`);
+            const response = await fetch(`/api/eoc/gistda/flood?days=${days}&limit=100`);
             const data = await response.json();
             if (data.success || data.useMockData) {
                 setGistdaData(data.useMockData ? data.data : data);
             }
         } catch (err) {
             console.error('Error loading GISTDA data:', err);
+        }
+    };
+
+    const fetchFloodFreqData = async () => {
+        try {
+            const response = await fetch('/api/eoc/gistda/flood-freq?limit=100');
+            const data = await response.json();
+            if (data.success || data.useMockData) {
+                setFloodFreqData(data.data);
+            }
+        } catch (err) {
+            console.error('Error loading flood frequency data:', err);
         }
     };
 
@@ -166,14 +182,42 @@ export default function FloodMapPage() {
     return (
         <PublicLayout>
             <div className="container mx-auto p-6">
-                {/* Page Header */}
+                {/* Page Header with Tabs */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                         <span className="text-4xl">💧</span>
                         แผนที่พื้นที่เสี่ยงน้ำท่วม
                     </h1>
+
+                    {/* Tabs */}
+                    <div className="flex gap-2 mb-4">
+                        <button
+                            onClick={() => setActiveMapTab('current')}
+                            className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeMapTab === 'current'
+                                ? 'bg-blue-500 text-white shadow-md'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                }`}
+                        >
+                            <span className="mr-2">🌊</span>
+                            สถานการณ์ปัจจุบัน
+                        </button>
+                        <button
+                            onClick={() => setActiveMapTab('frequency')}
+                            className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeMapTab === 'frequency'
+                                ? 'bg-purple-500 text-white shadow-md'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                }`}
+                        >
+                            <span className="mr-2">🔄</span>
+                            พื้นที่น้ำท่วมซ้ำซาก
+                        </button>
+                    </div>
+
                     <p className="text-gray-600">
-                        ติดตามสถานการณ์น้ำท่วมและพื้นที่เสี่ยงในจังหวัดสตูล
+                        {activeMapTab === 'current'
+                            ? 'ติดตามสถานการณ์น้ำท่วมปัจจุบันและพื้นที่เสี่ยงในจังหวัดสตูล'
+                            : 'พื้นที่ที่มีประวัติน้ำท่วมซ้ำซากตามข้อมูล GISTDA'
+                        }
                     </p>
                 </div>
 
@@ -370,38 +414,71 @@ export default function FloodMapPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={showGistdaLayer}
-                                    onChange={(e) => setShowGistdaLayer(e.target.checked)}
-                                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                                />
-                                <span className="text-sm font-medium text-gray-700">
-                                    แสดงข้อมูล GISTDA
-                                </span>
-                            </label>
-                            <div className="text-sm text-gray-600">
-                                พบ {floodEvents.length} เหตุการณ์
-                            </div>
+                            {activeMapTab === 'current' ? (
+                                <>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={showGistdaLayer}
+                                            onChange={(e) => setShowGistdaLayer(e.target.checked)}
+                                            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            แสดงข้อมูล GISTDA
+                                        </span>
+                                    </label>
+                                    <div className="text-sm text-gray-600">
+                                        พบ {floodEvents.length} เหตุการณ์
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={showFloodFreqLayer}
+                                            onChange={(e) => setShowFloodFreqLayer(e.target.checked)}
+                                            className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            แสดงพื้นที่น้ำท่วมซ้ำซาก
+                                        </span>
+                                    </label>
+                                    <div className="text-sm text-gray-600">
+                                        พบ {floodFreqData?.features?.length || 0} พื้นที่
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* Map Container */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden" style={{ height: '600px' }}>
-                    <HybridDisasterMap
-                        polygons={filteredPolygons}
-                        events={floodEvents}
-                        colorMode={colorMode}
-                        showColors={showColors}
-                        disasterType="flood"
-                        onPolygonClick={setSelectedPolygon}
-                        onEventClick={setSelectedEvent}
-                        gistdaData={showGistdaLayer ? gistdaData : null}
-                        startDate={startDate}
-                        endDate={endDate}
-                    />
+                    {activeMapTab === 'current' ? (
+                        <HybridDisasterMap
+                            polygons={filteredPolygons}
+                            events={floodEvents}
+                            colorMode={colorMode}
+                            showColors={showColors}
+                            disasterType="flood"
+                            onPolygonClick={setSelectedPolygon}
+                            onEventClick={setSelectedEvent}
+                            gistdaData={showGistdaLayer ? gistdaData : null}
+                            startDate={startDate}
+                            endDate={endDate}
+                        />
+                    ) : (
+                        <HybridDisasterMap
+                            polygons={filteredPolygons}
+                            events={[]}
+                            colorMode="district"
+                            showColors={false}
+                            disasterType="flood"
+                            onPolygonClick={setSelectedPolygon}
+                            floodFreqData={showFloodFreqLayer ? floodFreqData : null}
+                        />
+                    )}
                 </div>
 
                 {/* Daily Village Flood Timeline - เพิ่มด้านล่างแผนที่ */}
@@ -468,10 +545,10 @@ function ColorModeButton({ active, onClick, label, disabled = false }) {
             onClick={onClick}
             disabled={disabled}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${disabled
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : active
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : active
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
         >
             {label}
