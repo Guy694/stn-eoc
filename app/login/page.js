@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({
         username: "",
         password: "",
@@ -25,23 +27,19 @@ export default function LoginPage() {
         setIsLoading(true);
         setError("");
 
-        // จำลองการ login (ในการใช้งานจริงจะเชื่อมต่อกับ API)
-        setTimeout(() => {
-            if (formData.username && formData.password) {
-                // ตัวอย่างการตรวจสอบ username/password
-                if (formData.username === "admin" && formData.password === "admin123") {
-                    // บันทึก session (ในการใช้งานจริงใช้ JWT หรือ session storage)
-                    localStorage.setItem("user", JSON.stringify({ username: formData.username, role: "admin" }));
-                    router.push("/dashboard");
-                } else {
-                    setError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
-                    setIsLoading(false);
-                }
+        try {
+            const result = await login(formData.username, formData.password);
+
+            if (result.success) {
+                router.push("/dashboard");
             } else {
-                setError("กรุณากรอกข้อมูลให้ครบถ้วน");
-                setIsLoading(false);
+                setError(result.message || "เข้าสู่ระบบไม่สำเร็จ");
             }
-        }, 1000);
+        } catch (err) {
+            setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -137,11 +135,17 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-xs text-green-800 font-semibold mb-2">🔑 ข้อมูลทดสอบ:</p>
-                        <p className="text-xs text-green-700">Username: <code className="bg-white px-2 py-1 rounded">admin</code></p>
-                        <p className="text-xs text-green-700">Password: <code className="bg-white px-2 py-1 rounded">admin123</code></p>
+                    {/* Demo Credentials - Updated for Officer Table */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+                        <p className="text-xs text-green-800 font-semibold mb-2">🔑 บัญชีทดสอบ:</p>
+                        <div className="space-y-1 text-xs text-green-700">
+                            <p><strong>Admin:</strong> admin / password123</p>
+                            <p><strong>MCATT:</strong> mcatt01 / password123</p>
+                            <p><strong>SAT:</strong> sat01 / password123</p>
+                            <p><strong>SeRHT:</strong> serht01 / password123</p>
+                            <p><strong>Staff:</strong> staff01 / password123</p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 italic">* รหัสผ่านเริ่มต้นสำหรับทุกบัญชี: password123</p>
                     </div>
                 </div>
 

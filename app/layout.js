@@ -1,6 +1,7 @@
 import { Kanit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { EOCProvider } from "@/context/EOCContext";
 
 const kanit = Kanit({
   variable: "--font-kanit",
@@ -20,7 +21,9 @@ export default function RootLayout({ children }) {
         className={`${kanit.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
+          <EOCProvider>
+            {children}
+          </EOCProvider>
         </AuthProvider>
       </body>
     </html>

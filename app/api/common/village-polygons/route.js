@@ -8,9 +8,9 @@ export async function GET() {
             SELECT 
                 villcode,
                 villname,
-                subdistnam as tambname,
+                subdistnam,
                 distname,
-                num_hh as population,
+                num_hh,
                 ST_AsGeoJSON(geom) as geojson
             FROM satun_village_polygon
             ORDER BY distname, subdistnam, villname
@@ -19,7 +19,7 @@ export async function GET() {
         const results = await query(sql);
 
         // แปลง GeoJSON string เป็น object และดึง coordinates
-        const polygons = results.map(row => {
+        const polygons = results.map((row, index) => {
             const geoJson = JSON.parse(row.geojson);
 
             // แปลง coordinates จาก GeoJSON format
@@ -32,12 +32,16 @@ export async function GET() {
                 coordinates = geoJson.coordinates[0][0].map(coord => [coord[1], coord[0]]);
             }
 
+            // สร้าง unique id จาก villcode และ index เพื่อป้องกัน duplicate
+            const uniqueId = `${row.villcode || 'unknown'}-${index}`;
+
             return {
+                id: uniqueId,
                 villcode: row.villcode,
                 villname: row.villname,
-                tambname: row.tambname,
+                subdistnam: row.subdistnam,
                 distname: row.distname,
-                population: row.population || 0,
+                num_hh: row.num_hh || 0,
                 coordinates: coordinates
             };
         });

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import EOCLayout from "@/components/layouts/EOCLayout";
 
 // Import PolygonMap แบบ dynamic เพื่อหลีกเลี่ยง SSR
 const PolygonMap = dynamic(() => import("@/components/PolygonMap"), {
@@ -70,10 +71,10 @@ export default function VillageMapPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <EOCLayout>
             {/* Header */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="bg-white shadow-sm border-b -mx-6 -mt-6 mb-4">
+                <div className="px-4 sm:px-6 lg:px-8 py-6">
                     <h1 className="text-3xl font-bold text-gray-900">
                         แผนที่หมู่บ้านจังหวัดสตูล
                     </h1>
@@ -84,8 +85,8 @@ export default function VillageMapPage() {
             </div>
 
             {/* Stats Bar */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-white shadow-sm border-b -mx-6 mb-4">
+                <div className="px-4 sm:px-6 lg:px-8 py-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <StatCard
                             label="จำนวนหมู่บ้าน"
@@ -116,8 +117,8 @@ export default function VillageMapPage() {
             </div>
 
             {/* Controls */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-white shadow-sm border-b -mx-6 mb-4">
+                <div className="px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <label className="font-semibold text-gray-700">
@@ -159,7 +160,7 @@ export default function VillageMapPage() {
                     onPolygonClick={handlePolygonClick}
                 />
             </div>
-        </div>
+        </EOCLayout>
     );
 }
 

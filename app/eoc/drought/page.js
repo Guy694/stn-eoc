@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import PublicLayout from "@/components/layouts/PublicLayout";
+import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
 import { disasterEvents, satunDistricts, filterEventsByDays } from "@/data/satunData";
 
@@ -188,7 +188,7 @@ export default function DroughtMapPage() {
     }
 
     return (
-        <PublicLayout>
+        <EOCLayout>
             <div className="container mx-auto p-6">
                 {/* Page Header */}
                 <div className="mb-6">
@@ -361,7 +361,7 @@ export default function DroughtMapPage() {
                     />
                 </div>
             </div>
-        </PublicLayout>
+        </EOCLayout>
     );
 }
 

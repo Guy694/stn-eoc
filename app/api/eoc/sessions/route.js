@@ -1,0 +1,231 @@
+import { NextResponse } from "next/server";
+import mysql from "mysql2/promise";
+
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'stneoc',
+    charset: 'utf8mb4',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+// GET - ดึงประวัติ EOC sessions
+export async function GET(request) {
+    const connection = await pool.getConnection();
+
+    try {
+        const { searchParams } = new URL(request.url);
+        const eocType = searchParams.get('type'); // flood, drought, tsunami, earthquake, disease
+        const status = searchParams.get('status'); // active, closed
+        const limit = parseInt(searchParams.get('limit')) || 50;
+        const offset = parseInt(searchParams.get('offset')) || 0;
+
+        let query = `
+            SELECT 
+                s.id,
+                s.eoc_type,
+                s.session_number,
+                s.opened_at,
+                s.closed_at,
+                s.open_reason,
+                s.close_reason,
+                s.duration_hours,
+                s.status,
+                s.total_activities,
+                s.total_data_entries,
+                s.affected_areas,
+                s.summary,
+                s.created_at,
+                oo.id as opened_by_id,
+                oo.username as opened_by_username,
+                oo.full_name as opened_by_name,
+                oo.role as opened_by_role,
+                co.id as closed_by_id,
+                co.username as closed_by_username,
+                co.full_name as closed_by_name,
+                co.role as closed_by_role
+            FROM eoc_sessions s
+            LEFT JOIN officer oo ON s.opened_by = oo.id
+            LEFT JOIN officer co ON s.closed_by = co.id
+        `;
+
+        let conditions = [];
+        let params = [];
+
+        if (eocType) {
+            conditions.push('s.eoc_type = ?');
+            params.push(eocType);
+        }
+
+        if (status) {
+            conditions.push('s.status = ?');
+            params.push(status);
+        }
+
+        if (conditions.length > 0) {
+            query += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        query += ' ORDER BY s.opened_at DESC LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
+        const [rows] = await connection.execute(query, params);
+
+        // ดึงจำนวนทั้งหมด
+        let countQuery = 'SELECT COUNT(*) as total FROM eoc_sessions s';
+        let countConditions = [];
+        let countParams = [];
+
+        if (eocType) {
+            countConditions.push('s.eoc_type = ?');
+            countParams.push(eocType);
+        }
+
+        if (status) {
+            countConditions.push('s.status = ?');
+            countParams.push(status);
+        }
+
+        if (countConditions.length > 0) {
+            countQuery += ' WHERE ' + countConditions.join(' AND ');
+        }
+
+        const [countResult] = await connection.execute(countQuery, countParams);
+
+        return NextResponse.json({
+            success: true,
+            data: rows,
+            pagination: {
+                total: countResult[0].total,
+                limit: limit,
+                offset: offset,
+                hasMore: offset + rows.length < countResult[0].total
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching EOC sessions:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประวัติ EOC',
+                error: error.message
+            },
+            { status: 500 }
+        );
+    } finally {
+        connection.release();
+    }
+}
+
+// GET session detail with activities
+export async function POST(request) {
+    const connection = await pool.getConnection();
+
+    try {
+        const body = await request.json();
+        const { sessionId } = body;
+
+        if (!sessionId) {
+            return NextResponse.json(
+                { success: false, message: 'กรุณาระบุ session ID' },
+                { status: 400 }
+            );
+        }
+
+        // ดึงข้อมูล session
+        const [sessions] = await connection.execute(
+            `SELECT 
+                s.*,
+                oo.username as opened_by_username,
+                oo.full_name as opened_by_name,
+                oo.role as opened_by_role,
+                co.username as closed_by_username,
+                co.full_name as closed_by_name,
+                co.role as closed_by_role
+            FROM eoc_sessions s
+            LEFT JOIN officer oo ON s.opened_by = oo.id
+            LEFT JOIN officer co ON s.closed_by = co.id
+            WHERE s.id = ?`,
+            [sessionId]
+        );
+
+        if (sessions.length === 0) {
+            return NextResponse.json(
+                { success: false, message: 'ไม่พบ session นี้' },
+                { status: 404 }
+            );
+        }
+
+        const session = sessions[0];
+
+        // ดึง activities ในช่วง session นี้
+        const [activities] = await connection.execute(
+            `SELECT 
+                a.*,
+                o.username,
+                o.full_name,
+                o.role
+            FROM activity_logs a
+            LEFT JOIN officer o ON a.user_id = o.id
+            WHERE a.eoc_session_id = ?
+            ORDER BY a.created_at DESC`,
+            [sessionId]
+        );
+
+        // สรุปข้อมูลตามประเภท action
+        const [actionSummary] = await connection.execute(
+            `SELECT 
+                action_type,
+                COUNT(*) as count
+            FROM activity_logs
+            WHERE eoc_session_id = ?
+            GROUP BY action_type
+            ORDER BY count DESC`,
+            [sessionId]
+        );
+
+        // สรุปผู้ใช้ที่มีกิจกรรมมากที่สุด
+        const [userSummary] = await connection.execute(
+            `SELECT 
+                o.full_name,
+                o.username,
+                COUNT(*) as activity_count
+            FROM activity_logs a
+            LEFT JOIN officer o ON a.user_id = o.id
+            WHERE a.eoc_session_id = ?
+            GROUP BY a.user_id, o.full_name, o.username
+            ORDER BY activity_count DESC
+            LIMIT 10`,
+            [sessionId]
+        );
+
+        return NextResponse.json({
+            success: true,
+            data: {
+                session: session,
+                activities: activities,
+                summary: {
+                    actionTypes: actionSummary,
+                    topUsers: userSummary
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching session detail:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'เกิดข้อผิดพลาดในการดึงรายละเอียด session',
+                error: error.message
+            },
+            { status: 500 }
+        );
+    } finally {
+        connection.release();
+    }
+}

@@ -10,7 +10,7 @@ export default function Navbar() {
     const { canAccessResources, canAccessReports } = useAuth();
 
     const allNavItems = [
-        { name: "หน้าหลัก", path: "/admin/dashboard" },
+        { name: "หน้าหลัก", path: "/dashboard" },
         // { name: "แผนที่ภัยพิบัติ", path: "/public/disaster-map" },
         { name: "แผนที่น้ำท่วม", path: "/eoc/flood" },
         { name: "แผนที่ภัยแล้ง", path: "/eoc/drought" },

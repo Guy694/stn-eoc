@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import PublicLayout from "@/components/layouts/PublicLayout";
+import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
 import { disasterEvents, satunDistricts, filterEventsByDays } from "@/data/satunData";
 
@@ -21,7 +21,7 @@ const HybridDisasterMap = dynamic(() => import("@/components/HybridDisasterMap")
 export default function FloodMapPage() {
     const [polygons, setPolygons] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [colorMode, setColorMode] = useState('risk');
+    const [colorMode, setColorMode] = useState('tambon');
     const [showColors, setShowColors] = useState(true);
     const [gistdaData, setGistdaData] = useState(null);
     const [floodFreqData, setFloodFreqData] = useState(null);
@@ -37,7 +37,6 @@ export default function FloodMapPage() {
         district: "all",
         tambon: "all",
         village: "all",
-        status: "all",
     });
 
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -48,13 +47,28 @@ export default function FloodMapPage() {
     // โหลดข้อมูล polygon
     useEffect(() => {
         fetch('/api/common/village-polygons')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Response is not JSON');
+                }
+                return res.json();
+            })
             .then(data => {
+                console.log('Loaded polygons:', data?.length, 'items');
+                if (data?.length > 0) {
+                    console.log('Sample polygon fields:', Object.keys(data[0]));
+                    console.log('Sample polygon:', data[0]);
+                }
                 setPolygons(data);
                 setLoading(false);
             })
             .catch(err => {
                 console.error('Error loading polygons:', err);
+                setPolygons([]);
                 setLoading(false);
             });
     }, []);
@@ -68,24 +82,44 @@ export default function FloodMapPage() {
     const fetchGistdaData = async (days = '30') => {
         try {
             const response = await fetch(`/api/eoc/gistda/flood?days=${days}&limit=100`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('GISTDA API returned non-JSON response');
+                setGistdaData(null);
+                return;
+            }
             const data = await response.json();
             if (data.success || data.useMockData) {
                 setGistdaData(data.useMockData ? data.data : data);
             }
         } catch (err) {
             console.error('Error loading GISTDA data:', err);
+            setGistdaData(null);
         }
     };
 
     const fetchFloodFreqData = async () => {
         try {
             const response = await fetch('/api/eoc/gistda/flood-freq?limit=100');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('Flood frequency API returned non-JSON response');
+                setFloodFreqData(null);
+                return;
+            }
             const data = await response.json();
             if (data.success || data.useMockData) {
                 setFloodFreqData(data.data);
             }
         } catch (err) {
             console.error('Error loading flood frequency data:', err);
+            setFloodFreqData(null);
         }
     };
 
@@ -141,18 +175,23 @@ export default function FloodMapPage() {
             events = events.filter((e) => e.village === filters.village);
         }
 
-        if (filters.status !== "all") {
-            events = events.filter((e) => e.status === filters.status);
-        }
-
         return events;
     }, [filters]);
 
     // กรอง polygon ตาม filter
     const filteredPolygons = useMemo(() => {
-        if (filters.district === "all") return polygons;
-        return polygons.filter(p => p.distname === filters.district);
-    }, [polygons, filters.district]);
+        let filtered = polygons;
+
+        if (filters.district !== "all") {
+            filtered = filtered.filter(p => p.distname === filters.district);
+        }
+
+        if (filters.tambon !== "all") {
+            filtered = filtered.filter(p => p.subdistnam === filters.tambon);
+        }
+
+        return filtered;
+    }, [polygons, filters.district, filters.tambon]);
 
     // สถิติ
     const stats = useMemo(() => {
@@ -180,7 +219,7 @@ export default function FloodMapPage() {
     }
 
     return (
-        <PublicLayout>
+        <EOCLayout>
             <div className="container mx-auto p-6">
                 {/* Page Header with Tabs */}
                 <div className="mb-6">
@@ -295,7 +334,7 @@ export default function FloodMapPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         {/* ช่วงเวลา */}
                         <FilterSelect
                             label="ช่วงเวลา"
@@ -362,18 +401,6 @@ export default function FloodMapPage() {
                             ]}
                             disabled={filters.tambon === "all"}
                         />
-
-                        {/* สถานะ */}
-                        <FilterSelect
-                            label="สถานะ"
-                            value={filters.status}
-                            onChange={(e) => handleFilterChange("status", e.target.value)}
-                            options={[
-                                { value: "all", label: "ทั้งหมด" },
-                                { value: "กำลังดำเนินการ", label: "กำลังดำเนินการ" },
-                                { value: "เสร็จสิ้น", label: "เสร็จสิ้น" },
-                            ]}
-                        />
                     </div>
                 </div>
 
@@ -394,15 +421,21 @@ export default function FloodMapPage() {
                             </div>
                             <div className="flex gap-2">
                                 <ColorModeButton
-                                    active={colorMode === 'risk'}
-                                    onClick={() => setColorMode('risk')}
-                                    label="ความเสี่ยง"
+                                    active={colorMode === 'tambon'}
+                                    onClick={() => setColorMode('tambon')}
+                                    label="ตำบล"
                                     disabled={!showColors}
                                 />
                                 <ColorModeButton
                                     active={colorMode === 'district'}
                                     onClick={() => setColorMode('district')}
                                     label="อำเภอ"
+                                    disabled={!showColors}
+                                />
+                                <ColorModeButton
+                                    active={colorMode === 'risk'}
+                                    onClick={() => setColorMode('risk')}
+                                    label="ความเสี่ยง"
                                     disabled={!showColors}
                                 />
                                 <ColorModeButton
@@ -489,7 +522,7 @@ export default function FloodMapPage() {
                     />
                 </div>
             </div>
-        </PublicLayout>
+        </EOCLayout>
     );
 }
 

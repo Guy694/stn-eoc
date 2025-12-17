@@ -2,7 +2,7 @@
 import { MapContainer, TileLayer, Polygon, Popup, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 
 // แก้ไข icon default ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -92,6 +92,27 @@ export default function HybridDisasterMap({
         return colors[distname] || '#6B7280';
     };
 
+    // ฟังก์ชันเลือกสีตามตำบล (แบบ hash-based color)
+    const getColorByTambon = (tambonName) => {
+        // ตรวจสอบว่ามีชื่อตำบลหรือไม่
+        if (!tambonName || typeof tambonName !== 'string') {
+            return '#6B7280'; // สีเทาเป็นค่า default
+        }
+
+        // สร้างสีจาก hash ของชื่อตำบล
+        let hash = 0;
+        for (let i = 0; i < tambonName.length; i++) {
+            hash = tambonName.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        // แปลง hash เป็นสี HSL เพื่อให้สีสดใสและแตกต่างกัน
+        const hue = Math.abs(hash % 360);
+        const saturation = 65 + (Math.abs(hash) % 20); // 65-85%
+        const lightness = 50 + (Math.abs(hash >> 8) % 15); // 50-65%
+
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    };
+
     // ฟังก์ชันเลือกสีตามจำนวนครัวเรือน
     const getColorByPopulation = (numHH) => {
         if (numHH <= 50) return '#FEF3C7';
@@ -102,6 +123,8 @@ export default function HybridDisasterMap({
 
     // เลือกสีตาม mode และประเภทภัย
     const getPolygonColor = (polygon) => {
+        if (!polygon) return '#6B7280'; // สีเทาเป็นค่า default
+
         if (colorMode === 'risk') {
             // ใช้ข้อมูลความเสี่ยงจาก polygon หรือคำนวณจากข้อมูลอื่น
             const riskLevel = polygon.riskLevel || calculateRiskLevel(polygon);
@@ -110,10 +133,12 @@ export default function HybridDisasterMap({
             } else {
                 return getDroughtRiskColor(riskLevel);
             }
+        } else if (colorMode === 'tambon') {
+            return getColorByTambon(polygon.subdistnam || polygon.tambon);
         } else if (colorMode === 'population') {
-            return getColorByPopulation(polygon.num_hh);
+            return getColorByPopulation(polygon.num_hh || 0);
         }
-        return getColorByDistrict(polygon.distname);
+        return getColorByDistrict(polygon.distname || polygon.district);
     };
 
     // คำนวณระดับความเสี่ยง (ตัวอย่าง - ควรใช้ข้อมูลจริงจากฐานข้อมูล)
@@ -475,38 +500,45 @@ export default function HybridDisasterMap({
                     {floodFreqData ? 'ความถี่น้ำท่วมซ้ำซาก' :
                         colorMode === 'risk'
                             ? (disasterType === 'flood' ? 'ระดับความเสี่ยงน้ำท่วม' : 'ระดับความเสี่ยงภัยแล้ง')
-                            : colorMode === 'district' ? 'อำเภอ' : 'จำนวนครัวเรือน'
+                            : colorMode === 'tambon' ? 'ตำบล'
+                                : colorMode === 'district' ? 'อำเภอ'
+                                    : 'จำนวนครัวเรือน'
                     }
                 </h4>
                 <div className="space-y-2">
                     {floodFreqData ? (
-                        <>
+                        <Fragment key="freq-legend">
                             <LegendItem key="freq-very-high" color="#7C2D12" label="สูงมาก (7+ ครั้ง/10 ปี)" />
                             <LegendItem key="freq-high" color="#DC2626" label="สูง (5-6 ครั้ง/10 ปี)" />
                             <LegendItem key="freq-medium" color="#F59E0B" label="ปานกลาง (3-4 ครั้ง/10 ปี)" />
                             <LegendItem key="freq-low" color="#FCD34D" label="ต่ำ (1-2 ครั้ง/10 ปี)" />
                             <LegendItem key="freq-none" color="#10B981" label="ไม่มี" />
-                        </>
+                        </Fragment>
                     ) : colorMode === 'risk' ? (
                         disasterType === 'flood' ? (
-                            <>
+                            <Fragment key="flood-risk-legend">
                                 <LegendItem key="flood-severe" color="#DC2626" label="สูงมาก" />
                                 <LegendItem key="flood-high" color="#F59E0B" label="สูง" />
                                 <LegendItem key="flood-medium" color="#FCD34D" label="ปานกลาง" />
                                 <LegendItem key="flood-low" color="#10B981" label="ต่ำ" />
                                 <LegendItem key="flood-safe" color="#6EE7B7" label="ปลอดภัย" />
-                            </>
+                            </Fragment>
                         ) : (
-                            <>
+                            <Fragment key="drought-risk-legend">
                                 <LegendItem key="drought-severe" color="#7C2D12" label="สูงมาก" />
                                 <LegendItem key="drought-high" color="#EA580C" label="สูง" />
                                 <LegendItem key="drought-medium" color="#FB923C" label="ปานกลาง" />
                                 <LegendItem key="drought-low" color="#FDE047" label="ต่ำ" />
                                 <LegendItem key="drought-safe" color="#86EFAC" label="ปลอดภัย" />
-                            </>
+                            </Fragment>
                         )
+                    ) : colorMode === 'tambon' ? (
+                        <div key="tambon-legend" className="text-sm text-gray-600">
+                            <p>แต่ละสีแทนตำบลต่างกัน</p>
+                            <p className="text-xs mt-1">(สีจัดแบบอัตโนมัติ)</p>
+                        </div>
                     ) : colorMode === 'district' ? (
-                        <>
+                        <Fragment key="district-legend">
                             <LegendItem key="district-mueang" color="#3B82F6" label="เมืองสตูล" />
                             <LegendItem key="district-khuan" color="#10B981" label="ควนโดน" />
                             <LegendItem key="district-kalong" color="#F59E0B" label="ควนกาหลง" />
@@ -514,14 +546,14 @@ export default function HybridDisasterMap({
                             <LegendItem key="district-langu" color="#EC4899" label="ละงู" />
                             <LegendItem key="district-thungwa" color="#14B8A6" label="ทุ่งหว้า" />
                             <LegendItem key="district-manang" color="#F97316" label="มะนัง" />
-                        </>
+                        </Fragment>
                     ) : (
-                        <>
+                        <Fragment key="population-legend">
                             <LegendItem key="pop-0-50" color="#FEF3C7" label="0-50 ครัวเรือน" />
                             <LegendItem key="pop-51-100" color="#FCD34D" label="51-100 ครัวเรือน" />
                             <LegendItem key="pop-101-150" color="#F59E0B" label="101-150 ครัวเรือน" />
                             <LegendItem key="pop-151plus" color="#DC2626" label="151+ ครัวเรือน" />
-                        </>
+                        </Fragment>
                     )}
                 </div>
                 {gistdaData && (

@@ -103,7 +103,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                 formData.append('date', selectedDate.toISOString().split('T')[0]);
                 formData.append('officer_id', '1'); // ใช้ officer_id จริงจาก session
 
-                const response = await fetch('/api/daily-flood/upload', {
+                const response = await fetch('/api/eoc/flood/daily-flood/upload', {
                     method: 'POST',
                     body: formData
                 });

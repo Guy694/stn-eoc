@@ -3,12 +3,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useEOC } from "@/context/EOCContext";
 
 export default function Sidebar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const { canAccessResources, canAccessReports } = useAuth();
+    const { user, canAccessResources, canAccessReports } = useAuth();
+    const { eocStatus, getEOCDisplayName } = useEOC();
+
+    // ถ้าไม่มีการ login ไม่แสดง sidebar
+    if (!user) {
+        return null;
+    }
 
     useEffect(() => {
         const checkMobile = () => {
@@ -36,8 +43,31 @@ export default function Sidebar() {
         {
             title: "แดชบอร์ด",
             items: [
-                { name: "ภาพรวม", path: "/admin/dashboard", icon: "📊" },
-                { name: "สถิติ", path: "/admin/dashboard/statistics", icon: "📈" },
+                { name: "ภาพรวม", path: "/dashboard", icon: "📊" },
+            ],
+        },
+        {
+            title: "ศูนย์ EOC",
+            items: [
+                { name: "แผนที่น้ำท่วม", path: "/eoc/flood", icon: "💧", eocType: "flood" },
+                { name: "แผนที่ภัยแล้ง", path: "/eoc/drought", icon: "🌵", eocType: "drought" },
+                { name: "แผนที่สึนามิ", path: "/eoc/tsunami", icon: "🌊", eocType: "tsunami" },
+                { name: "แผนที่แผ่นดินไหว", path: "/eoc/earthquake", icon: "🏚️", eocType: "earthquake" },
+                { name: "แผนที่โรคระบาด", path: "/eoc/disease", icon: "🦠", eocType: "disease" },
+            ],
+        },
+        {
+            title: "ข้อมูลอำเภอ",
+            items: [
+                { name: "บันทึกข้อมูลน้ำท่วม", path: "/admin/flood-records", icon: "💧" },
+            ],
+        },
+        {
+            title: "ผู้ดูแลระบบ",
+            requiresAdmin: true,
+            items: [
+                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮" },
+                { name: "จัดการ EOC", path: "/admin/eoc-management", icon: "⚙️" },
             ],
         },
         {
@@ -123,7 +153,7 @@ export default function Sidebar() {
                 className={`
                     fixed lg:static
                     top-0 left-0
-                    h-full
+                    
                     w-64
                     bg-gray-50 border-r border-gray-200
                     overflow-y-auto
@@ -174,7 +204,15 @@ export default function Sidebar() {
                                                 }`}
                                         >
                                             <span className="text-lg">{item.icon}</span>
-                                            {item.name}
+                                            <span className="flex-1">{item.name}</span>
+                                            {item.eocType && eocStatus[item.eocType] && (
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${eocStatus[item.eocType].is_active
+                                                    ? "bg-green-500 text-white"
+                                                    : "bg-gray-300 text-gray-700"
+                                                    }`}>
+                                                    {eocStatus[item.eocType].is_active ? "เปิด" : "ปิด"}
+                                                </span>
+                                            )}
                                         </Link>
                                     </li>
                                 ))}

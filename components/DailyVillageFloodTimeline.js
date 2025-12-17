@@ -60,7 +60,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
             setLoading(true);
             try {
                 const dateStr = selectedDate.toISOString().split('T')[0];
-                const response = await fetch(`/api/daily-flood-village?date=${dateStr}`);
+                const response = await fetch(`/api/eoc/flood/daily-flood-village?date=${dateStr}`);
                 const data = await response.json();
                 setFloodData(data);
             } catch (error) {
@@ -77,7 +77,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
     useEffect(() => {
         const fetchHealthFacilities = async () => {
             try {
-                const response = await fetch('/api/health-facilities');
+                const response = await fetch('/api/common/health-facilities');
                 const result = await response.json();
                 if (result.success) {
                     setHealthFacilities(result.data);
@@ -94,7 +94,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
     useEffect(() => {
         const fetchTambonBoundaries = async () => {
             try {
-                const response = await fetch('/api/tambon-boundaries');
+                const response = await fetch('/api/common/tambon-boundaries');
                 const result = await response.json();
                 if (result.success) {
                     setTambonBoundaries(result.data);
@@ -204,7 +204,7 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                 formData.append('date', selectedDate.toISOString().split('T')[0]);
                 formData.append('officer_id', '1');
 
-                const response = await fetch('/api/daily-flood/upload', {
+                const response = await fetch('/api/eoc/flood/daily-flood/upload', {
                     method: 'POST',
                     body: formData
                 });
