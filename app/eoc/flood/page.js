@@ -3,6 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
+import FloodSessionSelector from "@/components/FloodSessionSelector";
+import SessionStats from "@/components/SessionStats";
 import { disasterEvents, satunDistricts, filterEventsByDays } from "@/data/satunData";
 
 // Import HybridDisasterMap แบบ dynamic
@@ -30,6 +32,11 @@ export default function FloodMapPage() {
     const [activeMapTab, setActiveMapTab] = useState('current'); // 'current' or 'frequency'
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+
+    // เพิ่ม state สำหรับโหมดดูข้อมูล
+    const [viewMode, setViewMode] = useState('realtime'); // 'realtime' หรือ 'historical'
+    const [selectedSession, setSelectedSession] = useState(null);
+    const [selectedYear, setSelectedYear] = useState(null);
 
     const [filters, setFilters] = useState({
         severity: "all",
@@ -207,6 +214,26 @@ export default function FloodMapPage() {
         };
     }, [floodEvents]);
 
+    // Handle session change
+    const handleSessionChange = (session, year) => {
+        setSelectedSession(session);
+        setSelectedYear(year);
+
+        // ปรับ date range ตาม session
+        if (session) {
+            const openDate = new Date(session.opened_at);
+            setStartDate(openDate.toISOString().split('T')[0]);
+
+            if (session.closed_at) {
+                const closeDate = new Date(session.closed_at);
+                setEndDate(closeDate.toISOString().split('T')[0]);
+            } else {
+                // ถ้ายังไม่ปิด ให้ใช้วันปัจจุบัน
+                setEndDate(new Date().toISOString().split('T')[0]);
+            }
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -221,15 +248,54 @@ export default function FloodMapPage() {
     return (
         <EOCLayout>
             <div className="container mx-auto p-6">
-                {/* Page Header with Tabs */}
+                {/* Page Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                         <span className="text-4xl">💧</span>
                         แผนที่พื้นที่เสี่ยงน้ำท่วม
                     </h1>
 
-                    {/* Tabs */}
+                    {/* View Mode Switcher */}
                     <div className="flex gap-2 mb-4">
+                        <button
+                            onClick={() => setViewMode('realtime')}
+                            className={`px-6 py-3 rounded-lg font-medium transition-all ${viewMode === 'realtime'
+                                ? 'bg-blue-500 text-white shadow-lg transform scale-105'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                }`}
+                        >
+                            <span className="mr-2">🔴</span>
+                            โหมดเรียลไทม์
+                        </button>
+                        <button
+                            onClick={() => setViewMode('historical')}
+                            className={`px-6 py-3 rounded-lg font-medium transition-all ${viewMode === 'historical'
+                                ? 'bg-purple-500 text-white shadow-lg transform scale-105'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                }`}
+                        >
+                            <span className="mr-2">📊</span>
+                            โหมดข้อมูลย้อนหลัง
+                        </button>
+                    </div>
+
+                    <p className="text-gray-600">
+                        {viewMode === 'realtime'
+                            ? 'ติดตามสถานการณ์น้ำท่วมแบบเรียลไทม์ตั้งแต่เปิด EOC'
+                            : 'ดูข้อมูลสรุปและประวัติการเกิดน้ำท่วมย้อนหลัง'
+                        }
+                    </p>
+                </div>
+
+                {/* Session Selector */}
+                <FloodSessionSelector
+                    currentMode={viewMode}
+                    onSessionChange={handleSessionChange}
+                />
+
+                {/* Map Type Tabs */}
+                <div className="mb-6">
+                    <div className="flex gap-2">
                         <button
                             onClick={() => setActiveMapTab('current')}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeMapTab === 'current'
@@ -251,45 +317,48 @@ export default function FloodMapPage() {
                             พื้นที่น้ำท่วมซ้ำซาก
                         </button>
                     </div>
-
-                    <p className="text-gray-600">
-                        {activeMapTab === 'current'
-                            ? 'ติดตามสถานการณ์น้ำท่วมปัจจุบันและพื้นที่เสี่ยงในจังหวัดสตูล'
-                            : 'พื้นที่ที่มีประวัติน้ำท่วมซ้ำซากตามข้อมูล GISTDA'
-                        }
-                    </p>
                 </div>
 
-                {/* Stats Bar */}
-                <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <StatCard
-                            label="เหตุการณ์ทั้งหมด"
-                            value={stats.total}
-                            icon="📊"
-                            color="blue"
-                        />
-                        <StatCard
-                            label="ความรุนแรงสูง"
-                            value={stats.severe}
-                            icon="⚠️"
-                            color="red"
-                        />
-                        <StatCard
-                            label="ผู้ได้รับผลกระทบ"
-                            value={stats.affected.toLocaleString()}
-                            icon="👥"
-                            color="orange"
-                            unit="คน"
-                        />
-                        <StatCard
-                            label="กำลังดำเนินการ"
-                            value={stats.active}
-                            icon="🔄"
-                            color="green"
-                        />
+                {/* Stats Bar - แสดงเฉพาะในโหมดเรียลไทม์ */}
+                {viewMode === 'realtime' && (
+                    <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <StatCard
+                                label="เหตุการณ์ทั้งหมด"
+                                value={stats.total}
+                                icon="📊"
+                                color="blue"
+                            />
+                            <StatCard
+                                label="ความรุนแรงสูง"
+                                value={stats.severe}
+                                icon="⚠️"
+                                color="red"
+                            />
+                            <StatCard
+                                label="ผู้ได้รับผลกระทบ"
+                                value={stats.affected.toLocaleString()}
+                                icon="👥"
+                                color="orange"
+                                unit="คน"
+                            />
+                            <StatCard
+                                label="กำลังดำเนินการ"
+                                value={stats.active}
+                                icon="🔄"
+                                color="green"
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {/* Session Stats - แสดงเฉพาะในโหมดข้อมูลย้อนหลัง */}
+                {viewMode === 'historical' && selectedSession && (
+                    <SessionStats
+                        session={selectedSession}
+                        year={selectedYear}
+                    />
+                )}
 
                 {/* Filter Panel */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">

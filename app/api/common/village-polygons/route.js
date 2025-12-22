@@ -10,7 +10,10 @@ export async function GET() {
                 villname,
                 subdistnam,
                 distname,
+                provname,
                 num_hh,
+                num_build,
+                mun_tao_na,
                 ST_AsGeoJSON(geom) as geojson
             FROM satun_village_polygon
             ORDER BY distname, subdistnam, villname
@@ -41,7 +44,10 @@ export async function GET() {
                 villname: row.villname,
                 subdistnam: row.subdistnam,
                 distname: row.distname,
+                provname: row.provname || 'สตูล',
                 num_hh: row.num_hh || 0,
+                num_build: row.num_build || 0,
+                mun_tao_na: row.mun_tao_na || '',
                 coordinates: coordinates
             };
         });

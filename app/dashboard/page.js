@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import DisasterDashboard from "@/components/DisasterDashboard";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -83,22 +84,16 @@ export default function DashboardPage() {
 
                 {/* Quick Access based on Role */}
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">🔗 เข้าถึงด่วน</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">� ระบบจัดการภัยพิบัติ (Disaster Management Modules)</h2>
+                    <DisasterDashboard />
+                </div>
+
+                {/* Legacy Quick Access */}
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">🔗 เมนูเพิ่มเติม</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {/* สำหรับทุก role */}
-                        <QuickAccessCard
-                            icon="🗺️"
-                            title="แผนที่น้ำท่วม"
-                            description="ดูข้อมูลสถานการณ์น้ำท่วม"
-                            link="/eoc/flood"
-                            color="bg-blue-50 hover:bg-blue-100 border-blue-200"
-                        />
-                        <QuickAccessCard
-                            icon="☀️"
-                            title="แผนที่ภัยแล้ง"
-                            description="ดูข้อมูลสถานการณ์ภัยแล้ง"
-                            link="/eoc/drought"
-                            color="bg-orange-50 hover:bg-orange-100 border-orange-200"
+                        link="/eoc/drought"
+                        color="bg-orange-50 hover:bg-orange-100 border-orange-200"
                         />
                         <QuickAccessCard
                             icon="🏘️"
