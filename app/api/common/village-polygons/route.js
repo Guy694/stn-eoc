@@ -6,6 +6,7 @@ export async function GET() {
         // ดึงข้อมูล polygon จาก database
         const sql = `
             SELECT 
+                id,
                 villcode,
                 villname,
                 subdistnam,
@@ -22,7 +23,7 @@ export async function GET() {
         const results = await query(sql);
 
         // แปลง GeoJSON string เป็น object และดึง coordinates
-        const polygons = results.map((row, index) => {
+        const polygons = results.map((row) => {
             const geoJson = JSON.parse(row.geojson);
 
             // แปลง coordinates จาก GeoJSON format
@@ -35,11 +36,8 @@ export async function GET() {
                 coordinates = geoJson.coordinates[0][0].map(coord => [coord[1], coord[0]]);
             }
 
-            // สร้าง unique id จาก villcode และ index เพื่อป้องกัน duplicate
-            const uniqueId = `${row.villcode || 'unknown'}-${index}`;
-
             return {
-                id: uniqueId,
+                id: row.id, // ใช้ id จริงจาก database
                 villcode: row.villcode,
                 villname: row.villname,
                 subdistnam: row.subdistnam,
@@ -48,7 +46,8 @@ export async function GET() {
                 num_hh: row.num_hh || 0,
                 num_build: row.num_build || 0,
                 mun_tao_na: row.mun_tao_na || '',
-                coordinates: coordinates
+                coordinates: coordinates,
+                geom: row.geojson // เก็บ GeoJSON ไว้สำหรับใช้งานอื่น
             };
         });
 

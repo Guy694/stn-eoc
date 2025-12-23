@@ -71,14 +71,16 @@ export async function GET(request) {
                     AND YEAR(opened_at) = ?
             `, [year]);
 
-            // ดึงข้อมูลพื้นที่ที่ได้รับผลกระทบจาก daily_village_flood
+            // ดึงข้อมูลพื้นที่ที่ได้รับผลกระทบจาก flood_area_status JOIN satun_village_polygon
             const [affectedAreas] = await connection.execute(`
                 SELECT 
-                    COUNT(DISTINCT CONCAT(district, '-', tambon, '-', village)) as total_villages,
-                    COUNT(DISTINCT CONCAT(district, '-', tambon)) as total_tambons,
-                    COUNT(DISTINCT district) as total_districts
-                FROM daily_village_flood
-                WHERE YEAR(record_date) = ?
+                    COUNT(DISTINCT v.id) as total_villages,
+                    COUNT(DISTINCT v.subdistnam) as total_tambons,
+                    COUNT(DISTINCT v.distname) as total_districts
+                FROM flood_area_status f
+                INNER JOIN satun_village_polygon v ON f.vid = v.id
+                INNER JOIN eoc_sessions s ON f.session_id = s.id
+                WHERE s.eoc_type = 'flood' AND YEAR(s.opened_at) = ?
             `, [year]);
 
             return NextResponse.json({

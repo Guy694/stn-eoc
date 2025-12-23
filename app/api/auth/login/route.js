@@ -103,26 +103,17 @@ export async function POST(request) {
             const crypto = require('crypto');
             const sessionToken = crypto.randomBytes(32).toString('hex');
 
-            // Get client info
-            const ip = request.headers.get('x-forwarded-for') ||
-                request.headers.get('x-real-ip') ||
-                'unknown';
-            const userAgent = request.headers.get('user-agent') || 'unknown';
-
-            // บันทึก session ลง user_sessions table
-            const expiresAt = new Date();
-            expiresAt.setHours(expiresAt.getHours() + 24);
-
+            // บันทึก activity log
             await connection.execute(
-                'INSERT INTO user_sessions (user_id, session_token, ip_address, user_agent, expires_at) VALUES (?, ?, ?, ?, ?)',
-                [officer.id, sessionToken, ip, userAgent, expiresAt]
+                'INSERT INTO activity_logs (user_id, username, action_type, description) VALUES (?, ?, ?, ?)',
+                [officer.id, officer.username, 'login', `เข้าสู่ระบบ: ${officer.username}`]
             );
 
             // ดึง permissions ตาม role
             const permissions = rolePermissions[officer.role] || rolePermissions.staff;
 
             // ส่งข้อมูลกลับ
-            const response = {
+            const response = NextResponse.json({
                 success: true,
                 message: 'เข้าสู่ระบบสำเร็จ',
                 user: {
@@ -136,9 +127,17 @@ export async function POST(request) {
                     permissions: permissions
                 },
                 sessionToken: sessionToken
-            };
+            });
 
-            return NextResponse.json(response);
+            // ตั้งค่า cookie สำหรับ session
+            response.cookies.set('session_token', sessionToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 24 // 24 ชั่วโมง
+            });
+
+            return response;
 
         } finally {
             connection.release();

@@ -29,7 +29,7 @@ const LayerGroup = dynamic(
     { ssr: false }
 );
 
-export default function DailyVillageFloodTimeline({ startDate, polygons }) {
+export default function DailyVillageFloodTimeline({ session, polygons }) {
     const [selectedDate, setSelectedDate] = useState(null);
     const [dates, setDates] = useState([]);
     const [floodData, setFloodData] = useState(null);
@@ -40,38 +40,75 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
     const [loading, setLoading] = useState(false);
     const mapRef = useRef(null);
 
+    // สร้างรายการวันที่จาก session
     useEffect(() => {
-        const start = new Date(startDate);
-        const today = new Date();
+        if (!session) {
+            setDates([]);
+            setSelectedDate(null);
+            return;
+        }
+
+        const start = new Date(session.opened_at);
+        const end = session.closed_at ? new Date(session.closed_at) : new Date();
         const dateList = [];
 
-        for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
             dateList.push(new Date(d));
         }
 
         setDates(dateList);
-        setSelectedDate(dateList[dateList.length - 1]);
-    }, [startDate]);
+        setSelectedDate(dateList[dateList.length - 1]); // เลือกวันล่าสุด
+    }, [session]);
 
     useEffect(() => {
-        if (!selectedDate) return;
+        if (!selectedDate || !session) return;
 
         const fetchFloodData = async () => {
             setLoading(true);
             try {
                 const dateStr = selectedDate.toISOString().split('T')[0];
-                const response = await fetch(`/api/eoc/flood/daily-flood-village?date=${dateStr}`);
-                const data = await response.json();
-                setFloodData(data);
+                const response = await fetch(`/api/eoc/flood/area-status?session_id=${session.id}&date=${dateStr}`);
+                const result = await response.json();
+
+                if (result.success && result.hasActiveSession) {
+                    // แปลงข้อมูลจาก API ให้ตรงกับ component
+                    const transformedData = {
+                        summary: {
+                            severeCount: result.stats?.severe_count || 0,
+                            moderateCount: result.stats?.moderate_count || 0,
+                            mildCount: result.stats?.mild_count || 0,
+                            safeCount: result.stats?.safe_count || 0,
+                            totalPopulation: result.stats?.total_population || 0,
+                            affectedDistricts: result.stats?.affected_districts || 0,
+                            affectedTambons: result.stats?.affected_tambons || 0,
+                            affectedVillages: result.stats?.affected_villages || 0
+                        },
+                        villages: result.data?.map(item => ({
+                            villcode: item.villcode,
+                            name: item.villname,
+                            district: item.district,
+                            tambon: item.tambon,
+                            level: item.flood_level,
+                            population: item.affected_population || 0,
+                            water_level: item.water_level,
+                            notes: item.notes
+                        })) || [],
+                        data: result.data || []
+                    };
+                    setFloodData(transformedData);
+                } else {
+                    setFloodData(null);
+                }
             } catch (error) {
                 console.error('Error fetching flood data:', error);
+                setFloodData(null);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchFloodData();
-    }, [selectedDate]);
+    }, [selectedDate, session]);
 
     // ดึงข้อมูลสถานพยาบาล
     useEffect(() => {
@@ -224,13 +261,36 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
         }
     };
 
-    // สร้าง map ระหว่าง villcode กับ flood level
+    // สร้าง map ระหว่าง village id กับ flood level จาก flood_records
     const villageFloodLevels = {};
-    if (floodData && floodData.villages) {
-        floodData.villages.forEach(v => {
-            villageFloodLevels[v.villcode] = v.level;
+    if (floodData && floodData.data) {
+        floodData.data.forEach(item => {
+            // ใช้ vid (polygon_id) เป็น key หลัก
+            if (item.vid) {
+                villageFloodLevels[item.vid] = {
+                    level: item.flood_level,
+                    status: item.status,
+                    water_level: item.water_level,
+                    affected_population: item.affected_population,
+                    notes: item.notes
+                };
+            }
+            // เพิ่ม villcode เป็น key สำรอง
+            if (item.villcode) {
+                villageFloodLevels[item.villcode] = {
+                    level: item.flood_level,
+                    status: item.status,
+                    water_level: item.water_level,
+                    affected_population: item.affected_population,
+                    notes: item.notes
+                };
+            }
         });
     }
+
+    console.log('Flood Data Sample:', floodData?.data?.slice(0, 3));
+    console.log('Village Flood Levels (first 10 keys):', Object.keys(villageFloodLevels).slice(0, 10));
+    console.log('Polygon Sample (first 3):', polygons?.slice(0, 3).map(p => ({ id: p.id, villcode: p.villcode, villname: p.villname })));
 
     // จัดกลุ่ม polygon ตามระดับน้ำท่วม
     const getPolygonsByLevel = () => {
@@ -238,20 +298,47 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
             severe: [],
             moderate: [],
             mild: [],
-            safe: []
+            safe: [],
+            nodata: [] // เพิ่มกลุ่มสำหรับหมู่บ้านที่ไม่มีข้อมูล
         };
 
         polygons.forEach(poly => {
-            const level = villageFloodLevels[poly.villcode] || 'safe';
+            // ลอง match ทั้ง id และ villcode
+            const floodInfo = villageFloodLevels[poly.id] || villageFloodLevels[poly.villcode];
+            const level = floodInfo?.level || 'nodata'; // เปลี่ยนจาก 'safe' เป็น 'nodata'
             if (grouped[level]) {
-                grouped[level].push(poly);
+                grouped[level].push({
+                    ...poly,
+                    floodInfo: floodInfo
+                });
             }
+        });
+
+        console.log('Polygon Groups:', {
+            severe: grouped.severe.length,
+            moderate: grouped.moderate.length,
+            mild: grouped.mild.length,
+            safe: grouped.safe.length,
+            nodata: grouped.nodata.length
         });
 
         return grouped;
     };
 
     const polygonGroups = getPolygonsByLevel();
+
+    // ตรวจสอบว่ามี session หรือไม่
+    if (!session) {
+        return (
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+                <div className="text-6xl mb-4">⚠️</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session</h3>
+                <p className="text-gray-600">
+                    กรุณาเลือก EOC Session เพื่อดูแผนที่สถานการณ์น้ำท่วมรายวัน
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-lg shadow-lg p-6">
@@ -260,7 +347,9 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                     📅 แผนที่สถานการณ์น้ำท่วมรายวัน (ระดับหมู่บ้าน)
                 </h2>
                 <p className="text-gray-600">
-                    ติดตามสถานการณ์น้ำท่วมแบบเรียลไทม์ตั้งแต่เปิด EOC - {dates.length} วัน
+                    Session #{session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
+                    {session.closed_at && ` ถึง ${new Date(session.closed_at).toLocaleDateString('th-TH')}`}
+                    {' '}({dates.length} วัน)
                 </p>
             </div>
 
@@ -373,6 +462,29 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                                 />
 
+                                {/* วาด polygon ที่ไม่มีข้อมูลก่อน (สีใส ขอบสีดำ) */}
+                                {polygonGroups.nodata?.map((poly, idx) => (
+                                    <Polygon
+                                        key={`nodata-${poly.villcode}-${idx}`}
+                                        positions={poly.coordinates}
+                                        pathOptions={{
+                                            fillColor: 'transparent',
+                                            fillOpacity: 0,
+                                            color: '#000000',
+                                            weight: 1,
+                                        }}
+                                    >
+                                        <Popup>
+                                            <div className="text-sm">
+                                                <strong>{poly.villname || poly.villcode}</strong><br />
+                                                อำเภอ: {poly.distname}<br />
+                                                ตำบล: {poly.subdistnam}<br />
+                                                สถานะ: {getFloodLabel('nodata')}<br />
+                                            </div>
+                                        </Popup>
+                                    </Polygon>
+                                ))}
+
                                 {/* วาด polygon ตามระดับความรุนแรง (วาดจากเบาไปหนัก) */}
                                 {polygonGroups.safe.map((poly, idx) => (
                                     <Polygon
@@ -387,11 +499,13 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     >
                                         <Popup>
                                             <div className="text-sm">
-                                                <strong>{poly.villname}</strong><br />
+                                                <strong>{poly.villname || poly.villcode}</strong><br />
                                                 อำเภอ: {poly.distname}<br />
-                                                ตำบล: {poly.tambname}<br />
+                                                ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('safe')}<br />
-                                                ประชากร: {poly.population?.toLocaleString() || 'N/A'}
+                                                {poly.floodInfo?.notes && (
+                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                )}
                                             </div>
                                         </Popup>
                                     </Polygon>
@@ -410,11 +524,19 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     >
                                         <Popup>
                                             <div className="text-sm">
-                                                <strong>{poly.villname}</strong><br />
+                                                <strong>{poly.villname || poly.villcode}</strong><br />
                                                 อำเภอ: {poly.distname}<br />
-                                                ตำบล: {poly.tambname}<br />
+                                                ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('mild')}<br />
-                                                ประชากร: {poly.population?.toLocaleString() || 'N/A'}
+                                                {poly.floodInfo?.water_level > 0 && (
+                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
+                                                )}
+                                                {poly.floodInfo?.affected_population > 0 && (
+                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
+                                                )}
+                                                {poly.floodInfo?.notes && (
+                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                )}
                                             </div>
                                         </Popup>
                                     </Polygon>
@@ -433,11 +555,50 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     >
                                         <Popup>
                                             <div className="text-sm">
-                                                <strong>{poly.villname}</strong><br />
+                                                <strong>{poly.villname || poly.villcode}</strong><br />
                                                 อำเภอ: {poly.distname}<br />
-                                                ตำบล: {poly.tambname}<br />
+                                                ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('moderate')}<br />
-                                                ประชากร: {poly.population?.toLocaleString() || 'N/A'}
+                                                {poly.floodInfo?.water_level > 0 && (
+                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
+                                                )}
+                                                {poly.floodInfo?.affected_population > 0 && (
+                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
+                                                )}
+                                                {poly.floodInfo?.notes && (
+                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                )}
+                                            </div>
+                                        </Popup>
+                                    </Polygon>
+                                ))}
+
+                                {polygonGroups.moderate.map((poly, idx) => (
+                                    <Polygon
+                                        key={`moderate-${poly.villcode}-${idx}`}
+                                        positions={poly.coordinates}
+                                        pathOptions={{
+                                            fillColor: getFloodColor('moderate'),
+                                            fillOpacity: 0.75,
+                                            color: '#333',
+                                            weight: 2,
+                                        }}
+                                    >
+                                        <Popup>
+                                            <div className="text-sm">
+                                                <strong>{poly.villname || poly.villcode}</strong><br />
+                                                อำเภอ: {poly.distname}<br />
+                                                ตำบล: {poly.subdistnam}<br />
+                                                สถานะ: {getFloodLabel('moderate')}<br />
+                                                {poly.floodInfo?.water_level > 0 && (
+                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
+                                                )}
+                                                {poly.floodInfo?.affected_population > 0 && (
+                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
+                                                )}
+                                                {poly.floodInfo?.notes && (
+                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                )}
                                             </div>
                                         </Popup>
                                     </Polygon>
@@ -456,11 +617,19 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     >
                                         <Popup>
                                             <div className="text-sm">
-                                                <strong>{poly.villname}</strong><br />
+                                                <strong>{poly.villname || poly.villcode}</strong><br />
                                                 อำเภอ: {poly.distname}<br />
-                                                ตำบล: {poly.tambname}<br />
+                                                ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('severe')}<br />
-                                                ประชากร: {poly.population?.toLocaleString() || 'N/A'}
+                                                {poly.floodInfo?.water_level > 0 && (
+                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
+                                                )}
+                                                {poly.floodInfo?.affected_population > 0 && (
+                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
+                                                )}
+                                                {poly.floodInfo?.notes && (
+                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                )}
                                             </div>
                                         </Popup>
                                     </Polygon>
@@ -523,19 +692,22 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     </LayerGroup>
                                 )}
                             </MapContainer>
-                        </div>
+                        </div >
 
                         {/* Legend */}
-                        <div className="mb-4">
+                        < div className="mb-4" >
                             <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่น้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
                                 <LegendItem color="#DC2626" label="น้ำท่วมหนัก" />
                                 <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
                                 <LegendItem color="#34D399" label="น้ำท่วมเล็กน้อย" />
                                 <LegendItem color="#10B981" label="ปลอดภัย" />
-                                <LegendItem color="#E5E7EB" label="ไม่มีข้อมูล" />
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded border-2 border-black" style={{ backgroundColor: 'transparent' }}></div>
+                                    <span className="text-sm text-gray-700">ไม่มีข้อมูล</span>
+                                </div>
                             </div>
-                        </div>
+                        </div >
 
                         {showTambonBoundaries && (
                             <div className="mb-4">
@@ -545,92 +717,99 @@ export default function DailyVillageFloodTimeline({ startDate, polygons }) {
                                     <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
                                 </div>
                             </div>
-                        )}
+                        )
+                        }
 
-                        {showFacilities && (
-                            <div className="mb-6">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์สถานพยาบาล:</h3>
-                                <div className="flex justify-start gap-4 flex-wrap">
-                                    <FacilityLegendItem color="#DC2626" label="รพ.ทั่วไป" />
-                                    <FacilityLegendItem color="#F59E0B" label="รพ.ชุมชน" />
-                                    <FacilityLegendItem color="#10B981" label="รพ.สต." />
-                                    <FacilityLegendItem color="#3B82F6" label="ศสช." />
-                                    <FacilityLegendItem color="#8B5CF6" label="สสจ" />
-                                    <FacilityLegendItem color="#EC4899" label="สสอ." />
-                                    <FacilityLegendItem color="#06B6D4" label="สอน." />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Statistics */}
-                        {floodData && floodData.summary && (
-                            <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <StatBox
-                                    label="น้ำท่วมหนัก"
-                                    value={floodData.summary.severeCount}
-                                    color="bg-red-100 text-red-700"
-                                    unit="หมู่บ้าน"
-                                />
-                                <StatBox
-                                    label="น้ำท่วมปานกลาง"
-                                    value={floodData.summary.moderateCount}
-                                    color="bg-yellow-100 text-yellow-700"
-                                    unit="หมู่บ้าน"
-                                />
-                                <StatBox
-                                    label="น้ำท่วมเล็กน้อย"
-                                    value={floodData.summary.mildCount}
-                                    color="bg-green-100 text-green-700"
-                                    unit="หมู่บ้าน"
-                                />
-                                <StatBox
-                                    label="ผู้ได้รับผลกระทบ"
-                                    value={(floodData.summary?.totalPopulation || 0).toLocaleString()}
-                                    color="bg-blue-100 text-blue-700"
-                                    unit="คน"
-                                />
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-
-            {/* Village Details */}
-            {!loading && floodData && floodData.villages && floodData.villages.length > 0 && (
-                <div className="mt-6">
-                    <h4 className="font-semibold text-gray-800 mb-3">
-                        รายละเอียดหมู่บ้านที่ได้รับผลกระทบ ({floodData.villages.length} หมู่บ้าน):
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {floodData.villages.map((village) => (
-                            <div key={village.villcode} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                                <div
-                                    className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
-                                    style={{ backgroundColor: getFloodColor(village.level) }}
-                                >
-                                    <span className="text-white text-xs font-bold">
-                                        {village.level === 'severe' ? '!!!' : village.level === 'moderate' ? '!!' : '!'}
-                                    </span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-gray-800 truncate">{village.name}</div>
-                                    <div className="text-sm text-gray-600">อ.{village.district}</div>
-                                    <div className="text-xs text-gray-500 flex items-center gap-2">
-                                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${village.level === 'severe' ? 'bg-red-200 text-red-800' :
-                                            village.level === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
-                                                'bg-green-200 text-green-800'
-                                            }`}>
-                                            {getFloodLabel(village.level)}
-                                        </span>
-                                        <span>👥 {village.population?.toLocaleString() || '0'} คน</span>
+                        {
+                            showFacilities && (
+                                <div className="mb-6">
+                                    <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์สถานพยาบาล:</h3>
+                                    <div className="flex justify-start gap-4 flex-wrap">
+                                        <FacilityLegendItem color="#DC2626" label="รพ.ทั่วไป" />
+                                        <FacilityLegendItem color="#F59E0B" label="รพ.ชุมชน" />
+                                        <FacilityLegendItem color="#10B981" label="รพ.สต." />
+                                        <FacilityLegendItem color="#3B82F6" label="ศสช." />
+                                        <FacilityLegendItem color="#8B5CF6" label="สสจ" />
+                                        <FacilityLegendItem color="#EC4899" label="สสอ." />
+                                        <FacilityLegendItem color="#06B6D4" label="สอน." />
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        }
+
+                        {/* Statistics */}
+                        {
+                            floodData && floodData.summary && (
+                                <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <StatBox
+                                        label="น้ำท่วมหนัก"
+                                        value={floodData.summary.severeCount}
+                                        color="bg-red-100 text-red-700"
+                                        unit="หมู่บ้าน"
+                                    />
+                                    <StatBox
+                                        label="น้ำท่วมปานกลาง"
+                                        value={floodData.summary.moderateCount}
+                                        color="bg-yellow-100 text-yellow-700"
+                                        unit="หมู่บ้าน"
+                                    />
+                                    <StatBox
+                                        label="น้ำท่วมเล็กน้อย"
+                                        value={floodData.summary.mildCount}
+                                        color="bg-green-100 text-green-700"
+                                        unit="หมู่บ้าน"
+                                    />
+                                    <StatBox
+                                        label="ผู้ได้รับผลกระทบ"
+                                        value={(floodData.summary?.totalPopulation || 0).toLocaleString()}
+                                        color="bg-blue-100 text-blue-700"
+                                        unit="คน"
+                                    />
+                                </div>
+                            )
+                        }
+                    </>
+                )}
+            </div >
+
+            {/* Village Details */}
+            {
+                !loading && floodData && floodData.villages && floodData.villages.length > 0 && (
+                    <div className="mt-6">
+                        <h4 className="font-semibold text-gray-800 mb-3">
+                            รายละเอียดหมู่บ้านที่ได้รับผลกระทบ ({floodData.villages.length} หมู่บ้าน):
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {floodData.villages.map((village) => (
+                                <div key={village.villcode} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div
+                                        className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
+                                        style={{ backgroundColor: getFloodColor(village.level) }}
+                                    >
+                                        <span className="text-white text-xs font-bold">
+                                            {village.level === 'severe' ? '!!!' : village.level === 'moderate' ? '!!' : '!'}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-gray-800 truncate">{village.name}</div>
+                                        <div className="text-sm text-gray-600">อ.{village.district}</div>
+                                        <div className="text-xs text-gray-500 flex items-center gap-2">
+                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${village.level === 'severe' ? 'bg-red-200 text-red-800' :
+                                                village.level === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
+                                                    'bg-green-200 text-green-800'
+                                                }`}>
+                                                {getFloodLabel(village.level)}
+                                            </span>
+                                            <span>👥 {village.population?.toLocaleString() || '0'} คน</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
 

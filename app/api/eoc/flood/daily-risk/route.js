@@ -22,75 +22,97 @@ export async function GET(request) {
 
         connection = await pool.getConnection();
 
+        // ดึง session ที่ active
+        const [sessionResult] = await connection.execute(`
+            SELECT id FROM eoc_sessions 
+            WHERE eoc_type = 'flood' AND status = 'active' 
+            LIMIT 1
+        `);
+
+        if (!sessionResult.length) {
+            return NextResponse.json({
+                success: false,
+                message: 'ไม่มี EOC Session ที่เปิดอยู่'
+            }, { status: 404 });
+        }
+
+        const sessionId = sessionResult[0].id;
+
         // สรุปตามระดับความเสี่ยง
         const [riskSummary] = await connection.execute(`
             SELECT 
-                flood_level,
+                f.flood_level,
+                f.status,
                 COUNT(*) as village_count,
-                SUM(affected_households) as total_households,
-                SUM(affected_population) as total_population,
-                AVG(water_level_cm) as avg_water_level
-            FROM daily_village_flood
-            WHERE record_date = ?
-            GROUP BY flood_level
-            ORDER BY FIELD(flood_level, 'severe', 'moderate', 'mild', 'safe')
-        `, [date]);
+                SUM(f.affected_households) as total_households,
+                SUM(f.affected_population) as total_population,
+                AVG(f.water_level) as avg_water_level,
+                MAX(f.water_level) as max_water_level
+            FROM flood_area_status f
+            WHERE f.session_id = ? AND f.recorded_day = ?
+            GROUP BY f.flood_level, f.status
+            ORDER BY FIELD(f.flood_level, 'severe', 'moderate', 'mild', 'safe')
+        `, [sessionId, date]);
 
         // สรุปตามอำเภอ
         const [districtSummary] = await connection.execute(`
             SELECT 
-                district,
+                v.distname as district,
+                COUNT(DISTINCT v.subdistnam) as tambon_count,
                 COUNT(*) as village_count,
-                SUM(affected_households) as total_households,
-                SUM(affected_population) as total_population,
-                MAX(CASE WHEN flood_level = 'severe' THEN 1 ELSE 0 END) as has_severe,
-                MAX(CASE WHEN flood_level = 'moderate' THEN 1 ELSE 0 END) as has_moderate
-            FROM daily_village_flood
-            WHERE record_date = ?
-            GROUP BY district
+                SUM(f.affected_households) as total_households,
+                SUM(f.affected_population) as total_population,
+                MAX(CASE WHEN f.flood_level = 'severe' THEN 1 ELSE 0 END) as has_severe,
+                MAX(CASE WHEN f.flood_level = 'moderate' THEN 1 ELSE 0 END) as has_moderate,
+                AVG(f.water_level) as avg_water_level
+            FROM flood_area_status f
+            INNER JOIN satun_village_polygon v ON f.vid = v.id
+            WHERE f.session_id = ? AND f.recorded_day = ?
+            GROUP BY v.distname
             ORDER BY has_severe DESC, has_moderate DESC, total_population DESC
-        `, [date]);
+        `, [sessionId, date]);
 
         // รายละเอียดทั้งหมด
         const [details] = await connection.execute(`
             SELECT 
-                district,
-                tambon,
-                village,
-                village_code,
-                flood_level,
-                water_level_cm,
-                affected_households,
-                affected_population,
-                severity_level,
-                status,
-                notes,
-                lat,
-                lng
-            FROM daily_village_flood
-            WHERE record_date = ?
+                f.id,
+                v.distname as district,
+                v.subdistnam as tambon,
+                v.villname as village,
+                v.villcode as village_code,
+                f.flood_level,
+                f.status,
+                f.water_level,
+                f.affected_households,
+                f.affected_population,
+                f.notes,
+                f.updated_at,
+                ST_X(ST_Centroid(v.geom)) as lng,
+                ST_Y(ST_Centroid(v.geom)) as lat
+            FROM flood_area_status f
+            INNER JOIN satun_village_polygon v ON f.vid = v.id
+            WHERE f.session_id = ? AND f.recorded_day = ?
             ORDER BY 
-                FIELD(flood_level, 'severe', 'moderate', 'mild', 'safe'),
-                district,
-                tambon,
-                village
-        `, [date]);
+                FIELD(f.flood_level, 'severe', 'moderate', 'mild', 'safe'),
+                v.distname, v.subdistnam, v.villname
+        `, [sessionId, date]);
 
         // สถิติรวม
         const [totalStats] = await connection.execute(`
             SELECT 
-                COUNT(DISTINCT district) as affected_districts,
-                COUNT(DISTINCT CONCAT(district, '-', tambon)) as affected_tambons,
+                COUNT(DISTINCT v.distname) as affected_districts,
+                COUNT(DISTINCT CONCAT(v.distname, '-', v.subdistnam)) as affected_tambons,
                 COUNT(*) as affected_villages,
-                SUM(affected_households) as total_households,
-                SUM(affected_population) as total_population,
-                SUM(CASE WHEN flood_level = 'severe' THEN 1 ELSE 0 END) as severe_count,
-                SUM(CASE WHEN flood_level = 'moderate' THEN 1 ELSE 0 END) as moderate_count,
-                SUM(CASE WHEN flood_level = 'mild' THEN 1 ELSE 0 END) as mild_count,
-                SUM(CASE WHEN flood_level = 'safe' THEN 1 ELSE 0 END) as safe_count
-            FROM daily_village_flood
-            WHERE record_date = ?
-        `, [date]);
+                SUM(f.affected_households) as total_households,
+                SUM(f.affected_population) as total_population,
+                SUM(CASE WHEN f.flood_level = 'severe' THEN 1 ELSE 0 END) as severe_count,
+                SUM(CASE WHEN f.flood_level = 'moderate' THEN 1 ELSE 0 END) as moderate_count,
+                SUM(CASE WHEN f.flood_level = 'mild' THEN 1 ELSE 0 END) as mild_count,
+                SUM(CASE WHEN f.flood_level = 'safe' THEN 1 ELSE 0 END) as safe_count
+            FROM flood_area_status f
+            INNER JOIN satun_village_polygon v ON f.vid = v.id
+            WHERE f.session_id = ? AND f.recorded_day = ?
+        `, [sessionId, date]);
 
         // EOC Session ที่เปิดอยู่
         const [activeSession] = await connection.execute(`
@@ -104,13 +126,13 @@ export async function GET(request) {
                 TIMESTAMPDIFF(HOUR, opened_at, NOW()) as hours_open,
                 TIMESTAMPDIFF(DAY, opened_at, NOW()) as days_open
             FROM eoc_sessions
-            WHERE eoc_type = 'flood' AND status = 'active'
-            LIMIT 1
-        `);
+            WHERE id = ?
+        `, [sessionId]);
 
         return NextResponse.json({
             success: true,
             date: date,
+            session_id: sessionId,
             totalStats: totalStats[0] || {},
             riskSummary: riskSummary,
             districtSummary: districtSummary,
