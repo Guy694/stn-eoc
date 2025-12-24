@@ -73,12 +73,19 @@ export async function GET(request) {
                 [minLat, minLon]
             ];
 
+            // คำนวณจุดกึ่งกลางสำหรับแสดง label
+            const centerLat = (minLat + maxLat) / 2;
+            const centerLng = (minLon + maxLon) / 2;
+
             return {
                 id: index + 1,
                 tambname: tambon.tambname,
+                subdistnam: tambon.tambname, // เพิ่มสำหรับ compatibility
                 distname: tambon.distname,
                 villages: tambon.villages,
-                coordinates: coordinates
+                coordinates: coordinates,
+                center_lat: centerLat,
+                center_lng: centerLng
             };
         });
 

@@ -5,6 +5,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
 import FloodSessionSelector from "@/components/FloodSessionSelector";
 import FloodAreaStatus from "@/components/FloodAreaStatus";
+import { useAuth } from "@/context/AuthContext";
 
 export default function FloodMapPage() {
     const [mode, setMode] = useState("historical"); // "realtime" หรือ "historical"
@@ -14,6 +15,7 @@ export default function FloodMapPage() {
     const [selectedYear, setSelectedYear] = useState(null);
     const [hasActiveSession, setHasActiveSession] = useState(false);
     const router = useRouter();
+    const { user } = useAuth();
 
     // โหลดข้อมูล polygon
     useEffect(() => {
@@ -114,12 +116,14 @@ export default function FloodMapPage() {
                         >
                             📅 โหมดข้อมูลย้อนหลัง
                         </button>
-                        <button
-                            onClick={() => router.push('/eoc/flood/records')}
-                            className="px-6 py-3 rounded-lg font-medium transition-all bg-green-600 text-white hover:bg-green-700"
-                        >
-                            💾 บันทึกพื้นที่น้ำท่วม
-                        </button>
+                        {user && (
+                            <button
+                                onClick={() => router.push('/eoc/flood/records')}
+                                className="px-6 py-3 rounded-lg font-medium transition-all bg-green-600 text-white hover:bg-green-700"
+                            >
+                                💾 บันทึกพื้นที่น้ำท่วม
+                            </button>
+                        )}
                     </div>
                 )}
 

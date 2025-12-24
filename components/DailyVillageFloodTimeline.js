@@ -330,11 +330,14 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     // ตรวจสอบว่ามี session หรือไม่
     if (!session) {
         return (
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                <div className="text-6xl mb-4">⚠️</div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session</h3>
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 text-center">
+                <div className="text-6xl mb-4">📊</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือก EOC Session</h3>
                 <p className="text-gray-600">
-                    กรุณาเลือก EOC Session เพื่อดูแผนที่สถานการณ์น้ำท่วมรายวัน
+                    เลือกปีและ EOC Session จากด้านบนเพื่อดูข้อมูลประวัติการเกิดน้ำท่วม
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                    💡 ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
                 </p>
             </div>
         );

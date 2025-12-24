@@ -1,0 +1,121 @@
+import { NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+
+// GET - ดึงข้อมูล polygon หมู่บ้านตาม ID
+export async function GET(request, { params }) {
+    try {
+        const { id } = params;
+
+        const polygons = await query(
+            'SELECT * FROM satun_village_polygon WHERE id = ?',
+            [id]
+        );
+
+        if (polygons.length === 0) {
+            return NextResponse.json(
+                { success: false, error: 'Village polygon not found' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: polygons[0]
+        });
+
+    } catch (error) {
+        console.error('Error fetching village polygon:', error);
+        return NextResponse.json(
+            { success: false, error: 'Failed to fetch village polygon', details: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+// PUT - แก้ไขข้อมูล polygon หมู่บ้าน
+export async function PUT(request, { params }) {
+    try {
+        const { id } = params;
+        const body = await request.json();
+        const { villname, distname, subdistnam, coordinates } = body;
+
+        // Validate required fields
+        if (!villname || !distname || !subdistnam) {
+            return NextResponse.json(
+                { success: false, error: 'Missing required fields (villname, distname, subdistnam)' },
+                { status: 400 }
+            );
+        }
+
+        // Update polygon
+        await query(`
+            UPDATE satun_village_polygon 
+            SET villname = ?, 
+                distname = ?, 
+                subdistnam = ?, 
+                coordinates = ?
+            WHERE id = ?
+        `, [villname, distname, subdistnam, coordinates || null, id]);
+
+        // ดึงข้อมูลที่อัปเดต
+        const updatedPolygon = await query(
+            'SELECT * FROM satun_village_polygon WHERE id = ?',
+            [id]
+        );
+
+        if (updatedPolygon.length === 0) {
+            return NextResponse.json(
+                { success: false, error: 'Village polygon not found after update' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: 'Village polygon updated successfully',
+            data: updatedPolygon[0]
+        });
+
+    } catch (error) {
+        console.error('Error updating village polygon:', error);
+        return NextResponse.json(
+            { success: false, error: 'Failed to update village polygon', details: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+// DELETE - ลบข้อมูล polygon หมู่บ้าน
+export async function DELETE(request, { params }) {
+    try {
+        const { id } = params;
+
+        // ตรวจสอบว่ามีข้อมูลอยู่หรือไม่
+        const existing = await query(
+            'SELECT id FROM satun_village_polygon WHERE id = ?',
+            [id]
+        );
+
+        if (existing.length === 0) {
+            return NextResponse.json(
+                { success: false, error: 'Village polygon not found' },
+                { status: 404 }
+            );
+        }
+
+        // ลบข้อมูล
+        await query('DELETE FROM satun_village_polygon WHERE id = ?', [id]);
+
+        return NextResponse.json({
+            success: true,
+            message: 'Village polygon deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error deleting village polygon:', error);
+        return NextResponse.json(
+            { success: false, error: 'Failed to delete village polygon', details: error.message },
+            { status: 500 }
+        );
+    }
+}

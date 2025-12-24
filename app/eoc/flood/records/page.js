@@ -161,10 +161,12 @@ export default function FloodRecordsPage() {
                     // ตรวจสอบว่าหมู่บ้านนี้บันทึกไปแล้ววันนี้หรือยัง
                     const existingRecord = records.find(record => {
                         const recordDate = record.flood_start_date?.split('T')[0];
+                        const recordVillage = record.village || record.villname;
+                        const checkVillage = village.villname;
                         return recordDate === today &&
                             record.district === formData.district &&
                             record.tambon === formData.tambon &&
-                            (record.villname === village.villname || record.village === village.villname);
+                            recordVillage === checkVillage;
                     });
 
                     if (existingRecord) {
@@ -207,7 +209,8 @@ export default function FloodRecordsPage() {
                 setShowModal(false);
                 setEditingRecord(null);
                 resetForm();
-                fetchRecords();
+                // รีโหลดข้อมูลและ refresh หน้าเว็บ
+                await fetchRecords();
                 return;
             }
 
@@ -216,10 +219,11 @@ export default function FloodRecordsPage() {
                 // ตรวจสอบว่าหมู่บ้านนี้มีข้อมูลวันนี้แล้วหรือยัง
                 const existingRecord = records.find(record => {
                     const recordDate = record.flood_start_date?.split('T')[0];
+                    const recordVillage = record.village || record.villname;
                     return recordDate === today &&
                         record.district === formData.district &&
                         record.tambon === formData.tambon &&
-                        (record.villname === formData.village || record.village === formData.village);
+                        recordVillage === formData.village;
                 });
 
                 if (existingRecord) {
@@ -270,11 +274,12 @@ export default function FloodRecordsPage() {
 
             const data = await res.json();
             if (data.success) {
+                alert(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
                 setShowModal(false);
                 setEditingRecord(null);
                 resetForm();
-                fetchRecords();
-                alert(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
+                // รีโหลดข้อมูลหลังบันทึก
+                await fetchRecords();
             } else {
                 alert('เกิดข้อผิดพลาด: ' + data.error);
             }
@@ -337,10 +342,15 @@ export default function FloodRecordsPage() {
         setIsTambonMode(false);
     };
 
-    // คำนวณตำบลที่ยังไม่ได้บันทึก
-    const getUnrecordedTambons = () => {
-        const today = new Date().toISOString().split('T')[0];
-        const allTambons = [];
+    // คำนวณสถานะของทุกตำบล
+    const getAllTambonsStatus = () => {
+        // ใช้วันที่ท้องถิ่นแทน toISOString() ที่ใช้ UTC
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const allTambonsStatus = [];
+
+        console.log('Today (local):', today);
+        console.log('Records count:', records.length);
 
         satunDistricts.forEach(district => {
             district.tambons.forEach(tambon => {
@@ -352,6 +362,7 @@ export default function FloodRecordsPage() {
                 );
 
                 // นับจำนวน record ที่บันทึกไปแล้ววันนี้สำหรับตำบลนี้
+                // ปรับปรุง: นับ record ที่ unique ต่อหมู่บ้าน (ไม่ซ้ำ)
                 const recordedVillagesToday = records.filter(record => {
                     const recordDate = record.flood_start_date?.split('T')[0];
                     return recordDate === today &&
@@ -359,20 +370,58 @@ export default function FloodRecordsPage() {
                         record.tambon === tambon.name;
                 });
 
-                // ถ้ายังบันทึกไม่ครบทุกหมู่บ้าน หรือ ยังไม่ได้บันทึกเลย ให้แสดงในรายการ
-                if (villagesInTambon.length > 0 && recordedVillagesToday.length < villagesInTambon.length) {
-                    allTambons.push({
+                // นับ unique villages ที่มีการบันทึก (ใช้ทั้ง village และ villname)
+                const uniqueRecordedVillages = new Set(
+                    recordedVillagesToday.map(r => r.village || r.villname).filter(Boolean)
+                );
+                const recordedCount = uniqueRecordedVillages.size;
+
+                if (villagesInTambon.length > 0) {
+                    const status = recordedCount >= villagesInTambon.length
+                        ? 'complete'
+                        : recordedCount > 0
+                            ? 'partial'
+                            : 'empty';
+
+                    allTambonsStatus.push({
                         district: district.name,
                         tambon: tambon.name,
                         key: key,
                         totalVillages: villagesInTambon.length,
-                        recordedVillages: recordedVillagesToday.length
+                        recordedVillages: recordedCount,
+                        status: status
                     });
+
+                    // Debug log สำหรับตำบลที่มีปัญหา
+                    if (tambon.name === 'แป-ระ' || tambon.name === 'ทุ่งหว้า') {
+                        console.log(`${tambon.name} Debug:`, {
+                            district: district.name,
+                            totalVillages: villagesInTambon.length,
+                            recordedCount: recordedCount,
+                            status: status,
+                            uniqueVillages: Array.from(uniqueRecordedVillages),
+                            allRecords: recordedVillagesToday.map(r => ({
+                                village: r.village,
+                                villname: r.villname,
+                                date: r.flood_start_date
+                            }))
+                        });
+                    }
                 }
             });
         });
 
-        return allTambons;
+        return allTambonsStatus;
+    };
+
+    // คำนวณตำบลที่ยังไม่ได้บันทึก (สำหรับ backward compatibility)
+    const getUnrecordedTambons = () => {
+        return getAllTambonsStatus().filter(t => t.status !== 'complete');
+    };
+
+    // คำนวณตำบลที่บันทึกครบแล้ว
+    const getCompletedTambons = () => {
+        return getAllTambonsStatus().filter(t => t.status === 'complete');
     };
 
     const getFloodLevelColor = (level) => {
@@ -429,41 +478,86 @@ export default function FloodRecordsPage() {
                     </button>
                 </div>
 
-                {/* ตำบลที่ยังไม่ได้บันทึก */}
-                {getUnrecordedTambons().length > 0 && (
-                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-6">
-                        <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                            <span>⚠️</span>
-                            ตำบลที่ยังบันทึกไม่ครบ ({getUnrecordedTambons().length} ตำบล)
-                        </h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                            {getUnrecordedTambons().map((item) => (
-                                <button
-                                    key={item.key}
-                                    onClick={() => {
-                                        setEditingRecord(null);
-                                        setFormData({
-                                            ...formData,
-                                            district: item.district,
-                                            tambon: item.tambon,
-                                            village: '',
-                                            flood_start_date: new Date().toISOString().split('T')[0]
-                                        });
-                                        setIsTambonMode(true);
-                                        setShowModal(true);
-                                    }}
-                                    className="text-left px-3 py-2 bg-white border border-yellow-300 rounded-lg hover:bg-yellow-100 transition-colors text-sm"
-                                >
-                                    <div className="font-medium text-gray-800">{item.tambon}</div>
-                                    <div className="text-xs text-gray-500">อ.{item.district}</div>
-                                    <div className="text-xs text-orange-600 font-medium mt-1">
-                                        {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
-                                    </div>
-                                </button>
-                            ))}
+                {/* สถานะการบันทึกตำบลวันนี้ */}
+                <div className="mb-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <h3 className="font-bold text-gray-800">📊 สถานะการบันทึกวันนี้</h3>
+                        <div className="flex gap-2 text-sm">
+                            <span className="flex items-center gap-1">
+                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                บันทึกครบ ({getCompletedTambons().length})
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                                ยังไม่ครบ ({getUnrecordedTambons().length})
+                            </span>
                         </div>
                     </div>
-                )}
+
+                    {/* ตำบลที่บันทึกครบแล้ว (สีเขียว) */}
+                    {getCompletedTambons().length > 0 && (
+                        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
+                            <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
+                                <span>✅</span>
+                                ตำบลที่บันทึกครบแล้ว ({getCompletedTambons().length} ตำบล)
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                {getCompletedTambons().map((item) => (
+                                    <div
+                                        key={item.key}
+                                        className="text-left px-3 py-2 bg-green-100 border border-green-300 rounded-lg text-sm"
+                                    >
+                                        <div className="font-medium text-green-800">{item.tambon}</div>
+                                        <div className="text-xs text-green-600">อ.{item.district}</div>
+                                        <div className="text-xs text-green-700 font-medium mt-1">
+                                            ✓ {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ตำบลที่ยังบันทึกไม่ครบ (สีเหลือง) */}
+                    {getUnrecordedTambons().length > 0 && (
+                        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                            <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                <span>⚠️</span>
+                                ตำบลที่ยังบันทึกไม่ครบ ({getUnrecordedTambons().length} ตำบล) - คลิกเพื่อบันทึก
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                {getUnrecordedTambons().map((item) => (
+                                    <button
+                                        key={item.key}
+                                        onClick={() => {
+                                            setEditingRecord(null);
+                                            setFormData({
+                                                ...formData,
+                                                district: item.district,
+                                                tambon: item.tambon,
+                                                village: '',
+                                                flood_start_date: new Date().toISOString().split('T')[0]
+                                            });
+                                            setIsTambonMode(true);
+                                            setShowModal(true);
+                                        }}
+                                        className={`text-left px-3 py-2 rounded-lg hover:opacity-80 transition-colors text-sm ${item.status === 'partial'
+                                            ? 'bg-orange-100 border border-orange-300'
+                                            : 'bg-white border border-yellow-300 hover:bg-yellow-50'
+                                            }`}
+                                    >
+                                        <div className="font-medium text-gray-800">{item.tambon}</div>
+                                        <div className="text-xs text-gray-500">อ.{item.district}</div>
+                                        <div className={`text-xs font-medium mt-1 ${item.status === 'partial' ? 'text-orange-600' : 'text-red-600'
+                                            }`}>
+                                            {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 {/* Filters */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6">

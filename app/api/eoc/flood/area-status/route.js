@@ -27,16 +27,29 @@ export async function GET(request) {
         const [activeSessions] = await connection.execute(`
             SELECT id, session_number, opened_at, open_reason
             FROM eoc_sessions 
-            WHERE eoc_type = 'flood' AND status = 'active'
+            WHERE LOWER(eoc_type) = 'flood' AND status = 'active'
             ORDER BY opened_at DESC
             LIMIT 1
         `);
 
+        console.log('Active Sessions Found:', activeSessions);
+
         if (activeSessions.length === 0) {
+            // ลองตรวจสอบว่ามี session อะไรบ้างในระบบ (สำหรับ debug)
+            const [allFloodSessions] = await connection.execute(`
+                SELECT id, eoc_type, status, session_number, opened_at 
+                FROM eoc_sessions 
+                WHERE LOWER(eoc_type) LIKE '%flood%'
+                ORDER BY opened_at DESC
+                LIMIT 5
+            `);
+            console.log('All Flood-related Sessions:', allFloodSessions);
+
             return NextResponse.json({
                 success: false,
                 hasActiveSession: false,
-                message: 'ไม่มี EOC Session ที่เปิดอยู่'
+                message: 'ไม่มี EOC Session ที่เปิดอยู่',
+                debug: { allFloodSessions }
             });
         }
 
@@ -47,9 +60,20 @@ export async function GET(request) {
         let whereClause = 'f.year = ?';
         let params = [sessionYear];
 
-        if (date) {
+        // ถ้าไม่ระบุวันที่ ให้หาวันที่ล่าสุดที่มีข้อมูล
+        let targetDate = date;
+        if (!targetDate) {
+            const [latestDate] = await connection.execute(`
+                SELECT MAX(flood_start_date) as latest_date 
+                FROM flood_records 
+                WHERE year = ?
+            `, [sessionYear]);
+            targetDate = latestDate[0]?.latest_date;
+        }
+
+        if (targetDate) {
             whereClause += ' AND f.flood_start_date = ?';
-            params.push(date);
+            params.push(targetDate);
         }
 
         // ดึงข้อมูล flood status จาก flood_records พร้อม village data

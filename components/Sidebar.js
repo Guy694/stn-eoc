@@ -67,6 +67,8 @@ export default function Sidebar() {
             requiresAdmin: true,
             items: [
                 { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮" },
+                { name: "จัดการสถานพยาบาล", path: "/admin/health-facilities", icon: "🏥" },
+                { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️" },
                 { name: "จัดการ EOC", path: "/admin/eoc-management", icon: "⚙️" },
             ],
         },

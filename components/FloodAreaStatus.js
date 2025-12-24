@@ -42,12 +42,19 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     const [levelFilter, setLevelFilter] = useState('all'); // all, severe, moderate, mild, safe
     const [districtFilter, setDistrictFilter] = useState('all');
     const [tambonFilter, setTambonFilter] = useState('all');
+    const [villageFilter, setVillageFilter] = useState('all');
+    const [searchText, setSearchText] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [dates, setDates] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
     const [isMounted, setIsMounted] = useState(false);
     const mapRef = useRef(null);
+
+    // State สำหรับควบคุมการแสดงชื่อบนแผนที่
+    const [showDistrictLabels, setShowDistrictLabels] = useState(false);
+    const [showTambonLabels, setShowTambonLabels] = useState(true);
+    const [showVillageLabels, setShowVillageLabels] = useState(true);
 
     // Wait for component to mount before rendering maps
     useEffect(() => {
@@ -83,7 +90,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             try {
                 const response = await fetch('/api/common/health-facilities');
                 const result = await response.json();
+                console.log('Health Facilities Response:', result);
                 if (result.success) {
+                    console.log('Health Facilities Data:', result.data);
                     setHealthFacilities(result.data);
                 }
             } catch (error) {
@@ -100,6 +109,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 const response = await fetch('/api/common/tambon-boundaries');
                 const result = await response.json();
                 if (result.success) {
+                    console.log('Tambon Boundaries:', result.data);
                     setTambonBoundaries(result.data);
                 }
             } catch (error) {
@@ -131,6 +141,10 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             const response = await fetch(url);
             const result = await response.json();
 
+            console.log('FloodAreaStatus API Response:', result);
+            console.log('hasActiveSession:', result.hasActiveSession);
+            console.log('success:', result.success);
+
             if (result.success && result.hasActiveSession) {
                 setFloodData(result.data || []);
                 setStats(result.stats || {});
@@ -139,6 +153,10 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                     setActiveSession(result.activeSession);
                 }
             } else {
+                // ถ้า API ส่ง debug info กลับมาให้แสดง
+                if (result.debug) {
+                    console.log('Debug info:', result.debug);
+                }
                 setFloodData([]);
                 setStats({});
                 setHasActiveSession(result.hasActiveSession || false);
@@ -184,20 +202,23 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         );
     }
 
-    if (floodData.length === 0) {
-        return (
-            <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 text-center">
-                <div className="text-4xl mb-3">📭</div>
-                <p className="text-gray-600">ไม่มีข้อมูลน้ำท่วมในช่วงเวลาที่เลือก</p>
-            </div>
-        );
-    }
+    // แสดงข้อความเมื่อไม่มีข้อมูล แต่ยังแสดงแผนที่ได้
+    const hasNoFloodData = floodData.length === 0;
 
     // แยกข้อมูลตามระดับ
     const severeAreas = floodData.filter(d => d.flood_level === 'severe');
     const moderateAreas = floodData.filter(d => d.flood_level === 'moderate');
     const mildAreas = floodData.filter(d => d.flood_level === 'mild');
     const safeAreas = floodData.filter(d => d.flood_level === 'safe');
+
+    // สร้างรายการ filter จาก polygons
+    const allDistricts = polygons ? [...new Set(polygons.map(p => p.distname))].filter(Boolean).sort() : [];
+    const allTambons = polygons && districtFilter !== 'all'
+        ? [...new Set(polygons.filter(p => p.distname === districtFilter).map(p => p.subdistnam))].filter(Boolean).sort()
+        : [];
+    const allVillages = polygons && tambonFilter !== 'all'
+        ? polygons.filter(p => p.distname === districtFilter && p.subdistnam === tambonFilter).map(p => ({ id: p.id, name: p.villname })).sort((a, b) => a.name?.localeCompare(b.name))
+        : [];
 
     // ฟิลเตอร์ข้อมูลตามที่เลือก
     let filteredData = floodData;
@@ -212,6 +233,20 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
     if (tambonFilter !== 'all') {
         filteredData = filteredData.filter(d => d.tambon === tambonFilter);
+    }
+
+    if (villageFilter !== 'all') {
+        filteredData = filteredData.filter(d => d.villname === villageFilter || d.vid == villageFilter);
+    }
+
+    // ค้นหาข้อความ
+    if (searchText.trim()) {
+        const search = searchText.toLowerCase();
+        filteredData = filteredData.filter(d =>
+            d.villname?.toLowerCase().includes(search) ||
+            d.tambon?.toLowerCase().includes(search) ||
+            d.district?.toLowerCase().includes(search)
+        );
     }
 
     const getFloodColor = (level) => {
@@ -312,28 +347,86 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             'สอน.': '#06B6D4',
         };
 
-        const color = colors[typecode] || '#6B7280';
+        const color = colors[typecode] || '#EF4444'; // default สีแดง
+
+        console.log('Creating facility icon for:', typecode, 'color:', color);
 
         return L.divIcon({
             className: 'custom-div-icon',
             html: `<div style="
                 background-color: ${color};
-                width: 24px;
-                height: 24px;
+                width: 28px;
+                height: 28px;
                 border-radius: 50%;
                 border: 3px solid white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                box-shadow: 0 2px 6px rgba(0,0,0,0.4);
                 display: flex;
                 align-items: center;
                 justify-content: center;
             ">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="white">
+                <svg width="14" height="14" viewBox="0 0 12 12" fill="white">
                     <path d="M5 0h2v5h5v2H7v5H5V7H0V5h5V0z"/>
                 </svg>
             </div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-            popupAnchor: [0, -12]
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14]
+        });
+    };
+
+    // สร้าง label icon สำหรับชื่อหมู่บ้าน/ตำบล/อำเภอ
+    const createLabelIcon = (text, type = 'village') => {
+        if (typeof window === 'undefined') return null;
+
+        const L = require('leaflet');
+        const styles = {
+            village: {
+                fontSize: '10px',
+                color: '#1E40AF',
+                fontWeight: '600',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                padding: '1px 4px',
+                borderRadius: '3px',
+                border: '1px solid rgba(59, 130, 246, 0.8)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                textShadow: '0 0 2px white'
+            },
+            tambon: {
+                fontSize: '12px',
+                color: '#047857',
+                fontWeight: '700',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1.5px solid rgba(16, 185, 129, 0.8)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+                textShadow: '0 0 2px white'
+            },
+            district: {
+                fontSize: '14px',
+                color: '#B91C1C',
+                fontWeight: '800',
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                padding: '3px 8px',
+                borderRadius: '5px',
+                border: '2px solid rgba(239, 68, 68, 0.8)',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                textShadow: '0 0 3px white, 0 0 5px white'
+            }
+        };
+
+        const style = styles[type];
+        const styleString = Object.entries(style).map(([key, value]) =>
+            `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`
+        ).join('; ');
+
+        console.log(`Creating ${type} label:`, text);
+
+        return L.divIcon({
+            className: 'label-icon',
+            html: `<div style="${styleString}; white-space: nowrap; pointer-events: none;">${text}</div>`,
+            iconSize: null,
+            iconAnchor: [0, 0]
         });
     };
 
@@ -350,9 +443,10 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             mild: 'น้ำท่วมเล็กน้อย',
             safe: 'ปกติ'
         };
+
         return (
-            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${badges[level]}`}>
-                {labels[level]}
+            <span className={`px-2 py-1 rounded text-xs font-medium border ${badges[level] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+                {labels[level] || level}
             </span>
         );
     };
@@ -370,8 +464,8 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         const tambonData = {};
 
         floodData.forEach(item => {
-            // ใช้ชื่อฟิลด์ที่ตรงกับ polygon (distname, subdistnam)
             const key = `${item.district}-${item.tambon}`;
+
             if (!tambonData[key]) {
                 tambonData[key] = {
                     district: item.district,
@@ -427,24 +521,31 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
         if (!polygons) return grouped;
 
-        polygons.forEach(poly => {
-            // ใช้ distname และ subdistnam จาก polygon
-            const key = `${poly.distname}-${poly.subdistnam}`;
-            const tambonInfo = tambonFloodLevels[key];
-            const level = tambonInfo?.level || 'nodata';
+        polygons
+            .filter(poly => {
+                // กรองตาม district และ tambon filter
+                if (districtFilter !== 'all' && poly.distname !== districtFilter) return false;
+                if (tambonFilter !== 'all' && poly.subdistnam !== tambonFilter) return false;
+                return true;
+            })
+            .forEach(poly => {
+                // ใช้ distname และ subdistnam จาก polygon
+                const key = `${poly.distname}-${poly.subdistnam}`;
+                const tambonInfo = tambonFloodLevels[key];
+                const level = tambonInfo?.level || 'nodata';
 
-            if (grouped[level]) {
-                grouped[level].push({
-                    ...poly,
-                    tambonInfo: tambonInfo
-                });
-            } else {
-                grouped.nodata.push({
-                    ...poly,
-                    tambonInfo: null
-                });
-            }
-        });
+                if (grouped[level]) {
+                    grouped[level].push({
+                        ...poly,
+                        tambonInfo: tambonInfo
+                    });
+                } else {
+                    grouped.nodata.push({
+                        ...poly,
+                        tambonInfo: null
+                    });
+                }
+            });
 
         return grouped;
     };
@@ -507,43 +608,48 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 </div>
             )}
 
-            {/* Date Range Filter */}
-            <div className="bg-white rounded-lg shadow p-4">
-                <label className="font-semibold text-gray-700 mb-2 block">ช่วงเวลา:</label>
-                <div className="flex flex-wrap gap-4">
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-1">วันที่เริ่มต้น:</label>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-1">วันที่สิ้นสุด:</label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    <div className="flex items-end">
-                        <button
-                            onClick={() => { setStartDate(''); setEndDate(''); }}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                        >
-                            ล้างวันที่
-                        </button>
-                    </div>
+            {/* แสดงข้อความเมื่อไม่มีข้อมูล flood */}
+            {hasNoFloodData && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-center">
+                    <div className="text-2xl mb-2">📋</div>
+                    <p className="text-blue-700 font-medium">ยังไม่มีข้อมูลน้ำท่วมในช่วงเวลาที่เลือก</p>
+                    <p className="text-blue-600 text-sm mt-1">แผนที่จะแสดงพื้นที่ทั้งหมดของจังหวัดสตูล</p>
                 </div>
-            </div>
+            )}
 
-            {/* District and Tambon Filter */}
-            <div className="bg-white rounded-lg shadow p-4">
-                <label className="font-semibold text-gray-700 mb-2 block">พื้นที่:</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+
+            {/* ฟิลเตอร์ข้อมูล */}
+            <div className="bg-white text-gray-700 rounded-lg shadow p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <label className="font-semibold text-gray-700 flex items-center gap-2">
+                        <span>🔍</span>ฟิลเตอร์ข้อมูล
+                    </label>
+                    <button
+                        onClick={() => {
+                            setDistrictFilter('all');
+                            setTambonFilter('all');
+                            setVillageFilter('all');
+                            setSearchText('');
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                        ล้างตัวกรอง
+                    </button>
+                </div>
+
+                {/* ช่องค้นหา */}
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="ค้นหาชื่อหมู่บ้าน, ตำบล, อำเภอ..."
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className="text-sm text-gray-600 block mb-1">อำเภอ:</label>
                         <select
@@ -551,11 +657,12 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             onChange={(e) => {
                                 setDistrictFilter(e.target.value);
                                 setTambonFilter('all');
+                                setVillageFilter('all');
                             }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                            <option value="all">ทั้งหมด</option>
-                            {uniqueDistricts.map(district => (
+                            <option value="all">ทั้งหมด ({allDistricts.length} อำเภอ)</option>
+                            {allDistricts.map(district => (
                                 <option key={district} value={district}>{district}</option>
                             ))}
                         </select>
@@ -564,70 +671,37 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         <label className="text-sm text-gray-600 block mb-1">ตำบล:</label>
                         <select
                             value={tambonFilter}
-                            onChange={(e) => setTambonFilter(e.target.value)}
+                            onChange={(e) => {
+                                setTambonFilter(e.target.value);
+                                setVillageFilter('all');
+                            }}
                             disabled={districtFilter === 'all'}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >
-                            <option value="all">ทั้งหมด</option>
-                            {uniqueTambons.map(tambon => (
+                            <option value="all">{districtFilter === 'all' ? 'กรุณาเลือกอำเภอก่อน' : `ทั้งหมด (${allTambons.length} ตำบล)`}</option>
+                            {allTambons.map(tambon => (
                                 <option key={tambon} value={tambon}>{tambon}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-600 block mb-1">หมู่บ้าน:</label>
+                        <select
+                            value={villageFilter}
+                            onChange={(e) => setVillageFilter(e.target.value)}
+                            disabled={tambonFilter === 'all'}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        >
+                            <option value="all">{tambonFilter === 'all' ? 'กรุณาเลือกตำบลก่อน' : `ทั้งหมด (${allVillages.length} หมู่บ้าน)`}</option>
+                            {allVillages.map(village => (
+                                <option key={village.id} value={village.id}>{village.name}</option>
                             ))}
                         </select>
                     </div>
                 </div>
             </div>
 
-            {/* ฟิลเตอร์ระดับน้ำท่วม */}
-            <div className="bg-white rounded-lg shadow p-4">
-                <label className="font-semibold text-gray-700 mb-2 block">ระดับความรุนแรง:</label>
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        onClick={() => setLevelFilter('all')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${levelFilter === 'all'
-                            ? 'bg-gray-700 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                    >
-                        ทั้งหมด ({floodData.length})
-                    </button>
-                    <button
-                        onClick={() => setLevelFilter('severe')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${levelFilter === 'severe'
-                            ? 'bg-red-600 text-white shadow-lg'
-                            : 'bg-red-100 text-red-700 hover:bg-red-200'
-                            }`}
-                    >
-                        🔴 น้ำท่วมหนัก ({stats.severe_count || 0})
-                    </button>
-                    <button
-                        onClick={() => setLevelFilter('moderate')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${levelFilter === 'moderate'
-                            ? 'bg-orange-600 text-white shadow-lg'
-                            : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                            }`}
-                    >
-                        🟠 ปานกลาง ({stats.moderate_count || 0})
-                    </button>
-                    <button
-                        onClick={() => setLevelFilter('mild')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${levelFilter === 'mild'
-                            ? 'bg-yellow-600 text-white shadow-lg'
-                            : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                            }`}
-                    >
-                        🟡 เล็กน้อย ({stats.mild_count || 0})
-                    </button>
-                    <button
-                        onClick={() => setLevelFilter('safe')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${levelFilter === 'safe'
-                            ? 'bg-green-600 text-white shadow-lg'
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
-                            }`}
-                    >
-                        🟢 ปกติ ({stats.safe_count || 0})
-                    </button>
-                </div>
-            </div>
+
 
             {/* แผนที่สถานการณ์น้ำท่วมรายวัน (ระดับตำบล) */}
             {
@@ -652,7 +726,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </div>
 
                         {/* Controls */}
-                        <div className="flex justify-end gap-2 mb-4">
+                        <div className="flex flex-wrap justify-end gap-2 mb-4">
                             <label className="flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
@@ -661,6 +735,33 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     className="w-4 h-4 text-purple-600 rounded"
                                 />
                                 แสดงเขตตำบล
+                            </label>
+                            <label className="flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                                <input
+                                    type="checkbox"
+                                    checked={showVillageLabels}
+                                    onChange={(e) => setShowVillageLabels(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 rounded"
+                                />
+                                แสดงชื่อหมู่บ้าน
+                            </label>
+                            <label className="flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                                <input
+                                    type="checkbox"
+                                    checked={showTambonLabels}
+                                    onChange={(e) => setShowTambonLabels(e.target.checked)}
+                                    className="w-4 h-4 text-green-600 rounded"
+                                />
+                                แสดงชื่อตำบล
+                            </label>
+                            <label className="flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                                <input
+                                    type="checkbox"
+                                    checked={showDistrictLabels}
+                                    onChange={(e) => setShowDistrictLabels(e.target.checked)}
+                                    className="w-4 h-4 text-orange-600 rounded"
+                                />
+                                แสดงชื่ออำเภอ
                             </label>
                             <label className="flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <input
@@ -718,33 +819,39 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     })}
 
                                     {/* แสดงเส้นขอบเขตตำบล */}
-                                    {showTambonBoundaries && tambonBoundaries.map((tambon, idx) => {
-                                        if (!tambon.boundary_geom) return null;
-                                        const coords = JSON.parse(tambon.boundary_geom);
-                                        if (coords.type !== 'Polygon') return null;
+                                    {showTambonBoundaries && tambonBoundaries
+                                        .filter(tambon => {
+                                            // กรองตาม district filter
+                                            if (districtFilter !== 'all' && tambon.distname !== districtFilter) return false;
+                                            return true;
+                                        })
+                                        .map((tambon, idx) => {
+                                            if (!tambon.boundary_geom) return null;
+                                            const coords = JSON.parse(tambon.boundary_geom);
+                                            if (coords.type !== 'Polygon') return null;
 
-                                        const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
+                                            const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
 
-                                        return (
-                                            <Polygon
-                                                key={`tambon-${idx}`}
-                                                positions={positions}
-                                                pathOptions={{
-                                                    color: '#9333EA',
-                                                    weight: 3,
-                                                    fillOpacity: 0,
-                                                    dashArray: '10, 5'
-                                                }}
-                                            >
-                                                <Popup>
-                                                    <div className="text-sm">
-                                                        <strong>ตำบล{tambon.subdistnam}</strong>
-                                                        <br />อ.{tambon.distname}
-                                                    </div>
-                                                </Popup>
-                                            </Polygon>
-                                        );
-                                    })}
+                                            return (
+                                                <Polygon
+                                                    key={`tambon-${idx}`}
+                                                    positions={positions}
+                                                    pathOptions={{
+                                                        color: '#9333EA',
+                                                        weight: 3,
+                                                        fillOpacity: 0,
+                                                        dashArray: '10, 5'
+                                                    }}
+                                                >
+                                                    <Popup>
+                                                        <div className="text-sm">
+                                                            <strong>ตำบล{tambon.subdistnam}</strong>
+                                                            <br />อ.{tambon.distname}
+                                                        </div>
+                                                    </Popup>
+                                                </Polygon>
+                                            );
+                                        })}
 
                                     {/* Polygons ระดับตำบล - severe */}
                                     {polygonGroupsByTambon.severe.map((poly, idx) => {
@@ -885,32 +992,124 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     })}
 
                                     {/* สถานพยาบาล */}
-                                    {showFacilities && (
+                                    {showFacilities && healthFacilities && healthFacilities.length > 0 && (
                                         <LayerGroup>
-                                            {healthFacilities.map((facility, idx) => {
-                                                if (!facility.lat || !facility.lng) return null;
+                                            {(() => {
+                                                console.log('Total facilities:', healthFacilities.length);
+                                                const filtered = healthFacilities.filter(facility => {
+                                                    // กรองตาม district และ tambon filter (ถ้ามีข้อมูล)
+                                                    if (districtFilter !== 'all' && facility.district && facility.district !== districtFilter) return false;
+                                                    if (tambonFilter !== 'all' && facility.tambon && facility.tambon !== tambonFilter) return false;
+                                                    return true;
+                                                });
+                                                console.log('Filtered facilities:', filtered.length);
+                                                return filtered.map((facility, idx) => {
+                                                    console.log('Rendering facility:', facility.name, 'lat:', facility.lat, 'lon:', facility.lon, 'district:', facility.district);
+                                                    if (!facility.lat || !facility.lon) {
+                                                        console.log('Skipping facility (no coords):', facility.name);
+                                                        return null;
+                                                    }
 
-                                                return (
+                                                    return (
+                                                        <Marker
+                                                            key={`facility-${idx}`}
+                                                            position={[parseFloat(facility.lat), parseFloat(facility.lon)]}
+                                                            icon={createFacilityIcon(facility.typecode)}
+                                                        >
+                                                            <Popup>
+                                                                <div className="text-sm">
+                                                                    <strong>{facility.name}</strong>
+                                                                    <br />ประเภท: {facility.typecode}
+                                                                    <br />ที่อยู่: {facility.address}
+                                                                    {facility.phone && (
+                                                                        <>
+                                                                            <br />📞 {facility.phone}
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </Popup>
+                                                        </Marker>
+                                                    );
+                                                });
+                                            })()}
+                                        </LayerGroup>
+                                    )}
+
+                                    {/* แสดงชื่อหมู่บ้าน */}
+                                    {showVillageLabels && polygons && polygons.length > 0 && (
+                                        <LayerGroup>
+                                            {(() => {
+                                                const filtered = polygons
+                                                    .filter(p => p.lat && p.lng && p.villname)
+                                                    .filter(p => {
+                                                        // กรองตาม district และ tambon filter
+                                                        if (districtFilter !== 'all' && p.distname !== districtFilter) return false;
+                                                        if (tambonFilter !== 'all' && p.subdistnam !== tambonFilter) return false;
+                                                        return true;
+                                                    });
+                                                console.log('Showing village labels:', filtered.length, 'of', polygons.length);
+                                                return filtered.map((poly, idx) => (
                                                     <Marker
-                                                        key={`facility-${idx}`}
-                                                        position={[parseFloat(facility.lat), parseFloat(facility.lng)]}
-                                                        icon={createFacilityIcon(facility.facility_type)}
-                                                    >
-                                                        <Popup>
-                                                            <div className="text-sm">
-                                                                <strong>{facility.name}</strong>
-                                                                <br />ประเภท: {facility.facility_type}
-                                                                <br />ที่อยู่: {facility.address}
-                                                                {facility.phone && (
-                                                                    <>
-                                                                        <br />📞 {facility.phone}
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </Popup>
-                                                    </Marker>
-                                                );
-                                            })}
+                                                        key={`village-label-${idx}`}
+                                                        position={[parseFloat(poly.lat), parseFloat(poly.lng)]}
+                                                        icon={createLabelIcon(poly.villname, 'village')}
+                                                    />
+                                                ));
+                                            })()}
+                                        </LayerGroup>
+                                    )}
+
+                                    {/* แสดงชื่อตำบล */}
+                                    {showTambonLabels && tambonBoundaries && tambonBoundaries.length > 0 && (
+                                        <LayerGroup>
+                                            {tambonBoundaries
+                                                .filter(tambon => {
+                                                    // กรองตาม district filter
+                                                    if (districtFilter !== 'all' && tambon.distname !== districtFilter) return false;
+                                                    return true;
+                                                })
+                                                .map((tambon, idx) => {
+                                                    if (tambon.center_lat && tambon.center_lng) {
+                                                        const tambonName = tambon.subdistnam || tambon.tambname;
+                                                        return (
+                                                            <Marker
+                                                                key={`tambon-label-${idx}`}
+                                                                position={[parseFloat(tambon.center_lat), parseFloat(tambon.center_lng)]}
+                                                                icon={createLabelIcon(`ต.${tambonName}`, 'tambon')}
+                                                            />
+                                                        );
+                                                    }
+                                                    return null;
+                                                })}
+                                        </LayerGroup>
+                                    )}
+
+                                    {/* แสดงชื่ออำเภอ */}
+                                    {showDistrictLabels && polygons && polygons.length > 0 && (
+                                        <LayerGroup>
+                                            {Array.from(new Set(polygons.map(p => p.distname).filter(Boolean)))
+                                                .filter(distName => {
+                                                    // กรองตาม district filter
+                                                    if (districtFilter !== 'all' && distName !== districtFilter) return false;
+                                                    return true;
+                                                })
+                                                .map((distName, idx) => {
+                                                    // หาตำแหน่งกลางของอำเภอจากหมู่บ้านทั้งหมด
+                                                    const districtPolygons = polygons.filter(p => p.distname === distName && p.lat && p.lng);
+                                                    if (districtPolygons.length > 0) {
+                                                        const avgLat = districtPolygons.reduce((sum, p) => sum + parseFloat(p.lat), 0) / districtPolygons.length;
+                                                        const avgLng = districtPolygons.reduce((sum, p) => sum + parseFloat(p.lng), 0) / districtPolygons.length;
+                                                        console.log(`District ${distName}:`, { avgLat, avgLng, count: districtPolygons.length });
+                                                        return (
+                                                            <Marker
+                                                                key={`district-label-${idx}`}
+                                                                position={[avgLat, avgLng]}
+                                                                icon={createLabelIcon(`อ.${distName}`, 'district')}
+                                                            />
+                                                        );
+                                                    }
+                                                    return null;
+                                                })}
                                         </LayerGroup>
                                     )}
                                 </MapContainer>
@@ -991,291 +1190,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 )
             }
 
-            {/* แผนที่ (ระดับหมู่บ้าน) */}
-            {
-                polygons && polygons.length > 0 && (
-                    <div className="bg-white rounded-lg shadow p-6" ref={mapRef}>
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold">แผนที่สถานการณ์น้ำท่วมปัจจุบัน</h3>
-                            <div className="flex gap-2">
-                                <label className="flex items-center gap-2 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        checked={showTambonBoundaries}
-                                        onChange={(e) => setShowTambonBoundaries(e.target.checked)}
-                                        className="w-4 h-4 text-purple-600 rounded"
-                                    />
-                                    แสดงเขตตำบล
-                                </label>
-                                <label className="flex items-center gap-2 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        checked={showFacilities}
-                                        onChange={(e) => setShowFacilities(e.target.checked)}
-                                        className="w-4 h-4 text-blue-600 rounded"
-                                    />
-                                    แสดงสถานพยาบาล
-                                </label>
-                            </div>
-                        </div>
-
-                        <div style={{ height: '600px', position: 'relative' }}>
-                            {isMounted && !loading && polygons && (
-                                <MapContainer
-                                    key={`village-map-${selectedDate?.getTime() || 'default'}`}
-                                    center={[6.9, 100.05]}
-                                    zoom={10}
-                                    style={{ height: '100%', width: '100%', borderRadius: '8px' }}
-                                >
-                                    <TileLayer
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                                    />
-
-                                    {/* Polygons - nodata (ไม่มีข้อมูล - วาดก่อน) */}
-                                    {polygonGroups.nodata?.map((poly, idx) => {
-                                        if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
-                                        if (coords.type !== 'Polygon') return null;
-
-                                        const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
-
-                                        return (
-                                            <Polygon
-                                                key={`nodata-${idx}`}
-                                                positions={positions}
-                                                pathOptions={{
-                                                    fillColor: 'transparent',
-                                                    fillOpacity: 0,
-                                                    color: '#000000',
-                                                    weight: 1
-                                                }}
-                                            >
-                                                <Popup>
-                                                    <div className="text-sm">
-                                                        <strong>{poly.villname}</strong>
-                                                        <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />สถานะ: ไม่มีข้อมูล
-                                                    </div>
-                                                </Popup>
-                                            </Polygon>
-                                        );
-                                    })}
-
-                                    {/* แสดงเส้นขอบเขตตำบล */}
-                                    {showTambonBoundaries && tambonBoundaries.map((tambon, idx) => {
-                                        if (!tambon.boundary_geom) return null;
-                                        const coords = JSON.parse(tambon.boundary_geom);
-                                        if (coords.type !== 'Polygon') return null;
-
-                                        const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
-
-                                        return (
-                                            <Polygon
-                                                key={`tambon-${idx}`}
-                                                positions={positions}
-                                                pathOptions={{
-                                                    color: '#9333EA',
-                                                    weight: 2,
-                                                    fillOpacity: 0,
-                                                    dashArray: '10, 5'
-                                                }}
-                                            >
-                                                <Popup>
-                                                    <div className="text-sm">
-                                                        <strong>ตำบล{tambon.subdistnam}</strong>
-                                                        <br />อ.{tambon.distname}
-                                                    </div>
-                                                </Popup>
-                                            </Polygon>
-                                        );
-                                    })}
-
-                                    {/* Polygons - severe */}
-                                    {polygonGroups.severe.map((poly, idx) => {
-                                        if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
-                                        if (coords.type !== 'Polygon') return null;
-
-                                        const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
-
-                                        return (
-                                            <Polygon
-                                                key={`severe-${idx}`}
-                                                positions={positions}
-                                                pathOptions={{
-                                                    fillColor: getFloodColor('severe'),
-                                                    fillOpacity: 0.6,
-                                                    color: '#DC2626',
-                                                    weight: 2
-                                                }}
-                                            >
-                                                <Popup>
-                                                    <div className="text-sm">
-                                                        <strong>{poly.villname}</strong>
-                                                        <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🔴 <strong>น้ำท่วมหนัก</strong>
-                                                        {poly.floodInfo?.water_level && (
-                                                            <>
-                                                                <br />💧 ระดับน้ำ: {poly.floodInfo.water_level} ม.
-                                                            </>
-                                                        )}
-                                                        {poly.floodInfo?.affected_population > 0 && (
-                                                            <>
-                                                                <br />👥 {poly.floodInfo.affected_population} คน
-                                                            </>
-                                                        )}
-                                                        {poly.floodInfo?.notes && (
-                                                            <>
-                                                                <br />📝 {poly.floodInfo.notes}
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </Popup>
-                                            </Polygon>
-                                        );
-                                    })}
-
-                                    {/* Polygons - moderate */}
-                                    {polygonGroups.moderate.map((poly, idx) => {
-                                        if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
-                                        if (coords.type !== 'Polygon') return null;
-
-                                        const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
-
-                                        return (
-                                            <Polygon
-                                                key={`moderate-${idx}`}
-                                                positions={positions}
-                                                pathOptions={{
-                                                    fillColor: getFloodColor('moderate'),
-                                                    fillOpacity: 0.6,
-                                                    color: '#FBBF24',
-                                                    weight: 2
-                                                }}
-                                            >
-                                                <Popup>
-                                                    <div className="text-sm">
-                                                        <strong>{poly.villname}</strong>
-                                                        <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🟠 <strong>น้ำท่วมปานกลาง</strong>
-                                                        {poly.floodInfo?.water_level && (
-                                                            <>
-                                                                <br />💧 ระดับน้ำ: {poly.floodInfo.water_level} ม.
-                                                            </>
-                                                        )}
-                                                        {poly.floodInfo?.affected_population > 0 && (
-                                                            <>
-                                                                <br />👥 {poly.floodInfo.affected_population} คน
-                                                            </>
-                                                        )}
-                                                        {poly.floodInfo?.notes && (
-                                                            <>
-                                                                <br />📝 {poly.floodInfo.notes}
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </Popup>
-                                            </Polygon>
-                                        );
-                                    })}
-
-                                    {/* Polygons - mild */}
-                                    {polygonGroups.mild.map((poly, idx) => {
-                                        if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
-                                        if (coords.type !== 'Polygon') return null;
-
-                                        const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
-
-                                        return (
-                                            <Polygon
-                                                key={`mild-${idx}`}
-                                                positions={positions}
-                                                pathOptions={{
-                                                    fillColor: getFloodColor('mild'),
-                                                    fillOpacity: 0.5,
-                                                    color: '#34D399',
-                                                    weight: 1
-                                                }}
-                                            >
-                                                <Popup>
-                                                    <div className="text-sm">
-                                                        <strong>{poly.villname}</strong>
-                                                        <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🟡 <strong>น้ำท่วมเล็กน้อย</strong>
-                                                        {poly.floodInfo?.water_level && (
-                                                            <>
-                                                                <br />💧 ระดับน้ำ: {poly.floodInfo.water_level} ม.
-                                                            </>
-                                                        )}
-                                                        {poly.floodInfo?.affected_population > 0 && (
-                                                            <>
-                                                                <br />👥 {poly.floodInfo.affected_population} คน
-                                                            </>
-                                                        )}
-                                                        {poly.floodInfo?.notes && (
-                                                            <>
-                                                                <br />📝 {poly.floodInfo.notes}
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </Popup>
-                                            </Polygon>
-                                        );
-                                    })}
-
-                                    {/* สถานพยาบาล */}
-                                    {showFacilities && (
-                                        <LayerGroup>
-                                            {healthFacilities.map((facility, idx) => {
-                                                if (!facility.lat || !facility.lng) return null;
-
-                                                return (
-                                                    <Marker
-                                                        key={`facility-${idx}`}
-                                                        position={[parseFloat(facility.lat), parseFloat(facility.lng)]}
-                                                        icon={createFacilityIcon(facility.facility_type)}
-                                                    >
-                                                        <Popup>
-                                                            <div className="text-sm">
-                                                                <strong>{facility.name}</strong>
-                                                                <br />ประเภท: {facility.facility_type}
-                                                                <br />ที่อยู่: {facility.address}
-                                                                {facility.phone && (
-                                                                    <>
-                                                                        <br />📞 {facility.phone}
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </Popup>
-                                                    </Marker>
-                                                );
-                                            })}
-                                        </LayerGroup>
-                                    )}
-                                </MapContainer>
-                            )}
-                        </div>
-
-                        {/* Legend */}
-                        <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
-                            <LegendItem color="#DC2626" label="น้ำท่วมหนัก" />
-                            <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
-                            <LegendItem color="#34D399" label="น้ำท่วมเล็กน้อย" />
-                            <LegendItem color="#10B981" label="ปลอดภัย" />
-                            <div className="flex items-center gap-2">
-                                <div
-                                    className="w-6 h-6 rounded border-2 border-black"
-                                    style={{ backgroundColor: 'transparent' }}
-                                />
-                                <span className="text-sm font-medium text-gray-700">ไม่มีข้อมูล</span>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
 
             {/* สถิติสรุป */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1357,9 +1271,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     {getLevelBadge(area.flood_level)}
                                 </div>
                             </div>
-                            {area.water_level > 0 && (
+                            {area.water_level && Number(area.water_level) > 0 && (
                                 <div className="text-sm text-gray-700 mb-1">
-                                    💧 ระดับน้ำ: <span className="font-medium">{area.water_level.toFixed(2)} เมตร</span>
+                                    💧 ระดับน้ำ: <span className="font-medium">{Number(area.water_level).toFixed(2)} เมตร</span>
                                 </div>
                             )}
                             {area.affected_population > 0 && (

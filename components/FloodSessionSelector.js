@@ -190,10 +190,10 @@ export default function FloodSessionSelector({
                 </div>
 
                 {/* เลือก Session */}
-                {sessions.length > 0 && (
+                {sessions.length > 0 ? (
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            เลือก EOC Session
+                            เลือก EOC Session ({sessions.length} sessions)
                         </label>
                         <select
                             value={selectedSession?.id || ''}
@@ -207,10 +207,17 @@ export default function FloodSessionSelector({
                             {sessions.map(session => (
                                 <option key={session.id} value={session.id}>
                                     Session #{session.session_number} - {formatDate(session.opened_at)}
-                                    {session.status === 'active' ? ' (กำลังดำเนินการ)' : ` - ${formatDate(session.closed_at)}`}
+                                    {session.status === 'active' ? ' ✅ (กำลังดำเนินการ)' : ` ถึง ${formatDate(session.closed_at)} ✓ (ปิดแล้ว)`}
                                 </option>
                             ))}
                         </select>
+                    </div>
+                ) : selectedYear && !loading && (
+                    <div className="md:col-span-2">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                            <p className="text-gray-600">📭 ไม่พบ EOC Session ในปี {selectedYear + 543}</p>
+                            <p className="text-sm text-gray-500 mt-1">ลองเลือกปีอื่น</p>
+                        </div>
                     </div>
                 )}
             </div>
@@ -231,6 +238,7 @@ export default function FloodSessionSelector({
                             label="EOC Sessions"
                             value={yearSummary.total_sessions || 0}
                             icon="🔢"
+                            subtext={`ปิดแล้ว: ${yearSummary.closed_sessions || 0}, ดำเนินการ: ${yearSummary.active_sessions || 0}`}
                         />
                         <SummaryItem
                             label="รวมเวลา"
@@ -267,10 +275,16 @@ export default function FloodSessionSelector({
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                                <span className={selectedSession.status === 'active' ? 'text-green-500' : 'text-gray-500'}>
-                                    {selectedSession.status === 'active' ? '🟢' : '⚫'}
-                                </span>
-                                EOC Session #{selectedSession.session_number}
+                                {selectedSession.status === 'active' ? (
+                                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                                        ✅ กำลังดำเนินการ
+                                    </span>
+                                ) : (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
+                                        ✓ ปิดแล้ว
+                                    </span>
+                                )}
+                                <span className="text-gray-700">EOC Session #{selectedSession.session_number}</span>
                             </h4>
                             <div className="space-y-1 text-sm text-gray-600">
                                 <p><strong>เปิด:</strong> {formatDate(selectedSession.opened_at)} โดย {selectedSession.opened_by_name}</p>
@@ -304,7 +318,7 @@ export default function FloodSessionSelector({
 }
 
 // Helper component
-function SummaryItem({ label, value, icon }) {
+function SummaryItem({ label, value, icon, subtext }) {
     return (
         <div className="bg-white rounded p-3 border border-purple-200">
             <div className="flex items-center gap-2 mb-1">
@@ -312,6 +326,9 @@ function SummaryItem({ label, value, icon }) {
                 <span className="text-xs text-gray-600">{label}</span>
             </div>
             <p className="text-lg font-bold text-purple-700">{value}</p>
+            {subtext && (
+                <p className="text-xs text-gray-500 mt-1">{subtext}</p>
+            )}
         </div>
     );
 }

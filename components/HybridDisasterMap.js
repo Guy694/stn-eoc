@@ -1,5 +1,5 @@
 "use client";
-import { MapContainer, TileLayer, Polygon, Popup, CircleMarker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Polygon, Popup, CircleMarker, Marker, LayerGroup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect, Fragment } from "react";
@@ -50,6 +50,9 @@ export default function HybridDisasterMap({
 }) {
     const [selectedPolygon, setSelectedPolygon] = useState(null);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [showDistrictLabels, setShowDistrictLabels] = useState(false);
+    const [showTambonLabels, setShowTambonLabels] = useState(true);
+    const [showVillageLabels, setShowVillageLabels] = useState(true);
 
     // ศูนย์กลางของจังหวัดสตูล
     const satunCenter = [6.6238, 100.0673];
@@ -200,6 +203,54 @@ export default function HybridDisasterMap({
         const layer = e.target;
         const style = getPolygonStyle(polygon);
         layer.setStyle(style);
+    };
+
+    // สร้าง label icon
+    const createLabelIcon = (text, type = 'village') => {
+        const styles = {
+            village: {
+                fontSize: '11px',
+                color: '#1F2937',
+                fontWeight: '500',
+                backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid rgba(59, 130, 246, 0.5)',
+                textShadow: '1px 1px 2px rgba(255,255,255,0.8)'
+            },
+            tambon: {
+                fontSize: '13px',
+                color: '#065F46',
+                fontWeight: '600',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                padding: '3px 8px',
+                borderRadius: '5px',
+                border: '2px solid rgba(16, 185, 129, 0.6)',
+                textShadow: '1px 1px 2px rgba(255,255,255,0.9)'
+            },
+            district: {
+                fontSize: '15px',
+                color: '#9A3412',
+                fontWeight: '700',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                border: '2px solid rgba(234, 88, 12, 0.7)',
+                textShadow: '1px 1px 3px rgba(255,255,255,1)'
+            }
+        };
+
+        const style = styles[type];
+        const styleString = Object.entries(style).map(([key, value]) =>
+            `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`
+        ).join('; ');
+
+        return L.divIcon({
+            className: 'label-icon',
+            html: `<div style="${styleString}; white-space: nowrap;">${text}</div>`,
+            iconSize: null,
+            iconAnchor: [0, 0]
+        });
     };
 
     // Event marker handlers
@@ -491,8 +542,98 @@ export default function HybridDisasterMap({
                         );
                     })}
 
+                {/* แสดงชื่อหมู่บ้าน */}
+                {showVillageLabels && (
+                    <LayerGroup>
+                        {polygons.map((polygon) => (
+                            polygon.lat && polygon.lng && (
+                                <Marker
+                                    key={`village-label-${polygon.id}`}
+                                    position={[parseFloat(polygon.lat), parseFloat(polygon.lng)]}
+                                    icon={createLabelIcon(polygon.villname, 'village')}
+                                />
+                            )
+                        ))}
+                    </LayerGroup>
+                )}
+
+                {/* แสดงชื่อตำบล */}
+                {showTambonLabels && (
+                    <LayerGroup>
+                        {Array.from(new Set(polygons.map(p => `${p.distname}|${p.subdistnam}`))).map((key) => {
+                            const [distname, subdistnam] = key.split('|');
+                            const tambonPolygons = polygons.filter(p => p.distname === distname && p.subdistnam === subdistnam && p.lat && p.lng);
+                            if (tambonPolygons.length > 0) {
+                                const avgLat = tambonPolygons.reduce((sum, p) => sum + parseFloat(p.lat), 0) / tambonPolygons.length;
+                                const avgLng = tambonPolygons.reduce((sum, p) => sum + parseFloat(p.lng), 0) / tambonPolygons.length;
+                                return (
+                                    <Marker
+                                        key={`tambon-label-${key}`}
+                                        position={[avgLat, avgLng]}
+                                        icon={createLabelIcon(`ต.${subdistnam}`, 'tambon')}
+                                    />
+                                );
+                            }
+                            return null;
+                        })}
+                    </LayerGroup>
+                )}
+
+                {/* แสดงชื่ออำเภอ */}
+                {showDistrictLabels && (
+                    <LayerGroup>
+                        {Array.from(new Set(polygons.map(p => p.distname))).map((distname) => {
+                            const districtPolygons = polygons.filter(p => p.distname === distname && p.lat && p.lng);
+                            if (districtPolygons.length > 0) {
+                                const avgLat = districtPolygons.reduce((sum, p) => sum + parseFloat(p.lat), 0) / districtPolygons.length;
+                                const avgLng = districtPolygons.reduce((sum, p) => sum + parseFloat(p.lng), 0) / districtPolygons.length;
+                                return (
+                                    <Marker
+                                        key={`district-label-${distname}`}
+                                        position={[avgLat, avgLng]}
+                                        icon={createLabelIcon(`อ.${distname}`, 'district')}
+                                    />
+                                );
+                            }
+                            return null;
+                        })}
+                    </LayerGroup>
+                )}
+
                 <MapBounds polygons={polygons} />
             </MapContainer>
+
+            {/* Controls สำหรับแสดง/ซ่อน labels */}
+            <div className="absolute top-6 right-6 bg-white p-3 rounded-lg shadow-lg z-[1000] space-y-2">
+                <h4 className="font-bold text-sm text-gray-800 mb-2">แสดงชื่อ</h4>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={showVillageLabels}
+                        onChange={(e) => setShowVillageLabels(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span>หมู่บ้าน</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={showTambonLabels}
+                        onChange={(e) => setShowTambonLabels(e.target.checked)}
+                        className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span>ตำบล</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={showDistrictLabels}
+                        onChange={(e) => setShowDistrictLabels(e.target.checked)}
+                        className="w-4 h-4 text-orange-600 rounded"
+                    />
+                    <span>อำเภอ</span>
+                </label>
+            </div>
 
             {/* Legend */}
             <div className="absolute bottom-6 right-6 bg-white p-4 rounded-lg shadow-lg z-[1000] max-w-xs">
