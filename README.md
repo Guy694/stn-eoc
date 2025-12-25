@@ -1,36 +1,303 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🚨 EOC (Emergency Operations Center) - ระบบศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล
 
-## Getting Started
+ระบบบริหารจัดการภัยพิบัติและเหตุการณ์ฉุกเฉินสำหรับจังหวัดสตูล รองรับการจัดการหลายประเภทภัย พร้อมระบบยืนยันตัวตนด้วย **ThaiID**
 
-First, run the development server:
+## ✨ คุณสมบัติหลัก
+
+### 🔐 Authentication & Authorization
+- ✅ **Login แบบปกติ** (Username/Password)
+- ✅ **Login ด้วย ThaiID** (OAuth 2.0 - DOPA) 🆕
+- ✅ Role-Based Access Control (RBAC)
+- ✅ Activity Logging
+
+### 🌊 Disaster Management
+- Flood (น้ำท่วม)
+- Drought (ภัยแล้ง)
+- Earthquake (แผ่นดินไหว)
+- Tsunami (คลื่นยักษ์)
+- Disease Outbreak (โรคระบาด)
+
+### 🗺️ Interactive Maps
+- แผนที่แบบ Polygon
+- แผนที่แบบ Hybrid
+- Village-level tracking
+- Real-time updates
+
+### 📊 Dashboard & Reports
+- สถิติภัยพิบัติ
+- รายงานสรุป EOC Sessions
+- Activity Logs
+- Role-based views
+
+---
+
+## 🚀 Quick Start
+
+### 1. Installation
+
+```bash
+# Clone repository
+git clone <repo-url>
+cd stn-eoc
+
+# Install dependencies
+npm install
+
+# Setup database
+mysql -u root -p stneoc < stneoc.sql
+mysql -u root -p stneoc < alter_officer_thaiid.sql
+
+# Configure environment
+cp .env.local.example .env.local
+# แก้ไขค่าใน .env.local
+```
+
+### 2. Environment Variables
+
+สร้างไฟล์ `.env.local`:
+
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=stneoc
+
+# Application
+NEXT_PUBLIC_API_URL=http://localhost:3000
+
+# ThaiID (DOPA) - NEW! 🆕
+CALLBACK=http://localhost:3000/
+APIKEY=your_apikey_here
+CLIENT_ID=your_client_id_here
+CLIENT_SECRET=your_client_secret_here
+
+# GISTDA API
+GISTDA_API_KEY=your_gistda_key_here
+```
+
+### 3. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+เปิดเบราว์เซอร์: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🆕 ThaiID Login - ใหม่!
 
-## Learn More
+ระบบรองรับการยืนยันตัวตนผ่าน **DOPA ThaiID** (กรมการปกครอง)
 
-To learn more about Next.js, take a look at the following resources:
+### 📚 เอกสารเกี่ยวกับ ThaiID:
+- **[Quick Start Guide](./THAIID_QUICKSTART.md)** - เริ่มใช้งานใน 5 นาที
+- **[คู่มือฉบับเต็ม](./THAIID_LOGIN_README.md)** - รายละเอียดครบถ้วน
+- **[สรุปภาพรวม](./THAIID_SUMMARY.md)** - ภาพรวมระบบ
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### การใช้งาน ThaiID:
+1. คลิกปุ่ม "เข้าสู่ระบบด้วย ThaiID" บนหน้า login
+2. ยืนยันตัวตนด้วยเลขบัตรประชาชนและ OTP
+3. เข้าสู่ระบบอัตโนมัติ
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### ข้อกำหนด:
+- มีบัญชี ThaiID (ลงทะเบียนที่ https://imauth.bora.dopa.go.th)
+- เลขบัตรประชาชนต้องลงทะเบียนในระบบ
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📁 โครงสร้างโปรเจค
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+stn-eoc/
+├── app/                          # Next.js App Router
+│   ├── login/                    # หน้า Login (รองรับ ThaiID)
+│   ├── dashboard/                # หน้าหลัก
+│   ├── eoc/                      # หน้าจัดการภัยพิบัติ
+│   ├── admin/                    # Admin pages
+│   ├── auth/                     # Authentication pages
+│   │   └── thaiid/               # ThaiID callback 🆕
+│   └── api/                      # API Routes
+│       ├── auth/                 # Authentication APIs
+│       │   ├── login/            # Login ปกติ
+│       │   ├── thaiid/           # ThaiID OAuth 🆕
+│       │   └── session/          # Session management
+│       └── eoc/                  # EOC APIs
+├── components/                   # React Components
+├── context/                      # React Context (Auth, EOC)
+├── lib/                          # Utilities
+├── public/                       # Static files
+├── data/                         # Data files
+└── *.sql                         # Database scripts
+
+📄 ThaiID Documentation: 🆕
+├── THAIID_QUICKSTART.md         # Quick Start
+├── THAIID_LOGIN_README.md       # Full documentation
+├── THAIID_SUMMARY.md            # Overview
+├── alter_officer_thaiid.sql     # DB migration
+└── insert_test_pid_thaiid.sql   # Test data
+```
+
+---
+
+## 🔑 บัญชีทดสอบ (Development)
+
+### Login แบบปกติ:
+```
+Admin:    admin / password123
+MCATT:    mcatt01 / password123
+SAT:      sat01 / password123
+SeRHT:    serht01 / password123
+Staff:    staff01 / password123
+```
+
+### Login ด้วย ThaiID:
+ต้องอัพเดตเลขบัตรประชาชน (PID) ในฐานข้อมูลก่อนใช้งาน
+```sql
+UPDATE officer SET pid = 'xxxxxxxxxxxxx' WHERE username = 'admin';
+```
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend:
+- **Next.js 14** (App Router)
+- **React 18**
+- **Tailwind CSS**
+- **Leaflet** (Maps)
+
+### Backend:
+- **Next.js API Routes**
+- **MySQL**
+- **bcryptjs** (Password hashing)
+
+### Authentication:
+- **Custom Auth System**
+- **ThaiID OAuth 2.0** 🆕
+- **RBAC** (Role-Based Access Control)
+
+### External APIs:
+- **DOPA ThaiID API** 🆕
+- **GISTDA API**
+
+---
+
+## 📖 Additional Documentation
+
+- [STRUCTURE.md](./STRUCTURE.md) - โครงสร้างโปรเจค
+- [RBAC_README.md](./RBAC_README.md) - ระบบจัดการสิทธิ์
+- [MODULAR_ARCHITECTURE_README.md](./MODULAR_ARCHITECTURE_README.md) - สถาปัตยกรรม
+- [DAILY_FLOOD_MAP_README.md](./DAILY_FLOOD_MAP_README.md) - แผนที่น้ำท่วม
+- [HYBRID_MAP_README.md](./HYBRID_MAP_README.md) - แผนที่แบบ Hybrid
+- [POLYGON_MAP_README.md](./POLYGON_MAP_README.md) - แผนที่แบบ Polygon
+- [FLOOD_HISTORICAL_DATA_README.md](./FLOOD_HISTORICAL_DATA_README.md) - ข้อมูลประวัติ
+
+---
+
+## 🧪 การทดสอบ
+
+```bash
+# ทดสอบ Login ปกติ
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password123"}'
+
+# ทดสอบ ThaiID OAuth
+curl -I http://localhost:3000/api/auth/thaiid/authorize
+# ควรได้ HTTP 307 (Redirect)
+
+# ตรวจสอบ Session
+curl http://localhost:3000/api/auth/session
+```
+
+---
+
+## 🚀 Deployment
+
+### Vercel (แนะนำ)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# Production
+vercel --prod
+```
+
+### Environment Variables (Production)
+อย่าลืมตั้งค่า environment variables ใน Vercel Dashboard:
+- Database credentials
+- ThaiID credentials (CALLBACK, APIKEY, CLIENT_ID, CLIENT_SECRET)
+- GISTDA API key
+
+---
+
+## 🔒 Security
+
+### Best Practices:
+- ✅ HTTPS only ใน production
+- ✅ Environment variables สำหรับ sensitive data
+- ✅ Password hashing ด้วย bcrypt
+- ✅ SQL injection protection
+- ✅ CSRF protection (state parameter)
+- ✅ httpOnly cookies
+- ✅ Activity logging
+- ✅ Role-based access control
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📞 Support
+
+หากพบปัญหาหรือต้องการความช่วยเหลือ:
+
+1. ตรวจสอบเอกสารประกอบ
+2. ดู console logs และ error messages
+3. ตรวจสอบ database schema
+4. อ่าน Troubleshooting section ในเอกสาร
+
+### ThaiID Support:
+- [THAIID_QUICKSTART.md](./THAIID_QUICKSTART.md)
+- [DOPA Documentation](https://docs.bora.dopa.go.th/)
+
+---
+
+## 📄 License
+
+Copyright © 2025 EOC จังหวัดสตูล - All Rights Reserved
+
+---
+
+## 🎉 What's New
+
+### Version 1.1.0 (December 2025) 🆕
+- ✅ เพิ่มระบบ Login ด้วย ThaiID (DOPA OAuth 2.0)
+- ✅ รองรับยืนยันตัวตนด้วยเลขบัตรประชาชน
+- ✅ เพิ่ม Activity Logging สำหรับ ThaiID
+- ✅ อัพเดต Database Schema รองรับ ThaiID
+- ✅ เพิ่มเอกสารครบชุดสำหรับ ThaiID
+- ✅ UI/UX ปรับปรุงหน้า Login
+
+### Version 1.0.0 (2025)
+- ✅ ระบบจัดการภัยพิบัติหลายประเภท
+- ✅ Interactive maps
+- ✅ RBAC system
+- ✅ Dashboard และรายงาน
+
+---
+
+**สร้างด้วย ❤️ สำหรับ EOC จังหวัดสตูล**

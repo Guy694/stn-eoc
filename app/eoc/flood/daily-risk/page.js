@@ -6,10 +6,30 @@ export default function FloodDailyRiskPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [availableDates, setAvailableDates] = useState([]);
+    const [showAllDates, setShowAllDates] = useState(false);
 
     useEffect(() => {
         fetchRiskData();
+        fetchAvailableDates();
     }, [selectedDate]);
+
+    const fetchAvailableDates = async () => {
+        try {
+            // สมมติว่ามี active session เริ่มต้นที่ 2025-12-20
+            const startDate = new Date('2025-12-20');
+            const today = new Date();
+            const dates = [];
+
+            for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
+                dates.push(new Date(d).toISOString().split('T')[0]);
+            }
+
+            setAvailableDates(dates.reverse()); // แสดงวันล่าสุดก่อน
+        } catch (error) {
+            console.error('Error fetching dates:', error);
+        }
+    };
 
     const fetchRiskData = async () => {
         setLoading(true);
@@ -28,30 +48,48 @@ export default function FloodDailyRiskPage() {
 
     const getRiskColor = (level) => {
         const colors = {
-            severe: 'bg-red-100 border-red-400 text-red-800',
-            moderate: 'bg-yellow-100 border-yellow-400 text-yellow-800',
-            mild: 'bg-blue-100 border-blue-400 text-blue-800',
-            safe: 'bg-green-100 border-green-400 text-green-800'
+            'สูงมาก': 'bg-red-100 border-red-400 text-red-800',
+            'สูง': 'bg-red-100 border-red-400 text-red-800',
+            'ปานกลาง': 'bg-yellow-100 border-yellow-400 text-yellow-800',
+            'ต่ำ': 'bg-blue-100 border-blue-400 text-blue-800',
+            'ไม่มี': 'bg-green-100 border-green-400 text-green-800',
+            // รองรับภาษาอังกฤษสำหรับ mock data
+            'severe': 'bg-red-100 border-red-400 text-red-800',
+            'moderate': 'bg-yellow-100 border-yellow-400 text-yellow-800',
+            'mild': 'bg-blue-100 border-blue-400 text-blue-800',
+            'safe': 'bg-green-100 border-green-400 text-green-800'
         };
         return colors[level] || 'bg-gray-100 border-gray-400 text-gray-800';
     };
 
     const getRiskIcon = (level) => {
         const icons = {
-            severe: '🔴',
-            moderate: '🟡',
-            mild: '🔵',
-            safe: '🟢'
+            'สูงมาก': '🔴',
+            'สูง': '🔴',
+            'ปานกลาง': '🟡',
+            'ต่ำ': '🔵',
+            'ไม่มี': '🟢',
+            // รองรับภาษาอังกฤษ
+            'severe': '🔴',
+            'moderate': '🟡',
+            'mild': '🔵',
+            'safe': '🟢'
         };
         return icons[level] || '⚪';
     };
 
     const getRiskLabel = (level) => {
         const labels = {
-            severe: 'รุนแรงมาก',
-            moderate: 'ปานกลาง',
-            mild: 'เล็กน้อย',
-            safe: 'ปลอดภัย'
+            'สูงมาก': 'น้ำท่วมสูงมาก',
+            'สูง': 'น้ำท่วมสูง',
+            'ปานกลาง': 'น้ำท่วมปานกลาง',
+            'ต่ำ': 'น้ำท่วมต่ำ',
+            'ไม่มี': 'ไม่มีน้ำท่วม / ปกติ',
+            // รองรับภาษาอังกฤษ
+            'severe': 'รุนแรงมาก',
+            'moderate': 'ปานกลาง',
+            'mild': 'เล็กน้อย',
+            'safe': 'ปลอดภัย'
         };
         return labels[level] || level;
     };
@@ -83,9 +121,10 @@ export default function FloodDailyRiskPage() {
 
     const stats = data.totalStats || {};
     const formatDate = new Date(selectedDate).toLocaleDateString('th-TH', {
-        year: 'numeric',
+        weekday: 'long',
+        day: 'numeric',
         month: 'long',
-        day: 'numeric'
+        year: 'numeric'
     });
 
     return (
@@ -97,21 +136,64 @@ export default function FloodDailyRiskPage() {
                         <span className="text-4xl">📊</span>
                         สรุปความเสี่ยงน้ำท่วมรายวัน
                     </h1>
-                    <p className="text-gray-600">ข้อมูล ณ วันที่ {formatDate}</p>
+                    <p className="text-gray-600">แสดงข้อมูลวันที่: {formatDate}</p>
                 </div>
 
                 {/* Date Selector */}
                 <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        เลือกวันที่ต้องการดู:
-                    </label>
+                    <div className="flex items-center justify-between mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            เลือกวันที่ต้องการดู:
+                        </label>
+                        <button
+                            onClick={() => setShowAllDates(!showAllDates)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        >
+                            {showAllDates ? '🔼 ซ่อนลิสวันที่' : '📅 แสดงลิสวันที่ทั้งหมด'}
+                        </button>
+                    </div>
                     <input
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         max={new Date().toISOString().split('T')[0]}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-700"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-700 w-full md:w-auto"
                     />
+
+                    {/* Available Dates List */}
+                    {showAllDates && availableDates.length > 0 && (
+                        <div className="mt-4 border-t pt-4">
+                            <h3 className="font-semibold text-gray-700 mb-3">📋 วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 max-h-96 overflow-y-auto">
+                                {availableDates.map((date, index) => {
+                                    const dateObj = new Date(date);
+                                    const isSelected = date === selectedDate;
+                                    const thaiDate = dateObj.toLocaleDateString('th-TH', {
+                                        weekday: 'short',
+                                        day: 'numeric',
+                                        month: 'short'
+                                    });
+
+                                    return (
+                                        <button
+                                            key={date}
+                                            onClick={() => {
+                                                setSelectedDate(date);
+                                                setShowAllDates(false);
+                                            }}
+                                            className={`p-3 rounded-lg text-sm transition-all ${isSelected
+                                                ? 'bg-blue-600 text-white shadow-lg font-bold'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            <div className="font-medium">วันที่ {availableDates.length - index}</div>
+                                            <div className="text-xs mt-1">{thaiDate}</div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Active EOC Session Info */}

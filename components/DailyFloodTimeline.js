@@ -193,6 +193,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                                     <div className="text-sm">วันที่ {index + 1}</div>
                                     <div className="text-xs">
                                         {date.toLocaleDateString('th-TH', {
+                                            weekday: 'short',
                                             day: 'numeric',
                                             month: 'short'
                                         })}
@@ -212,12 +213,12 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                         สถานการณ์น้ำท่วม จังหวัดสตูล
                     </h3>
                     <p className="text-lg text-gray-600">
-                        {selectedDate ? selectedDate.toLocaleDateString('th-TH', {
-                            year: 'numeric',
-                            month: 'long',
+                        {selectedDate ? `ข้อมูลวันที่: ${selectedDate.toLocaleDateString('th-TH', {
+                            weekday: 'long',
                             day: 'numeric',
-                            weekday: 'long'
-                        }) : ''}
+                            month: 'long',
+                            year: 'numeric'
+                        })}` : ''}
                     </p>
                 </div>
 

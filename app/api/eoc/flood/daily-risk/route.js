@@ -45,74 +45,68 @@ export async function GET(request) {
                 f.status,
                 COUNT(*) as village_count,
                 SUM(f.affected_households) as total_households,
-                SUM(f.affected_population) as total_population,
-                AVG(f.water_level) as avg_water_level,
-                MAX(f.water_level) as max_water_level
-            FROM flood_area_status f
-            WHERE f.session_id = ? AND f.recorded_day = ?
+                SUM(f.affected_people) as total_population,
+                AVG(f.water_depth_cm) as avg_water_level,
+                MAX(f.water_depth_cm) as max_water_level
+            FROM flood_records f
+            WHERE f.year = YEAR(?) AND f.updated_at >= DATE(?)
             GROUP BY f.flood_level, f.status
-            ORDER BY FIELD(f.flood_level, 'severe', 'moderate', 'mild', 'safe')
-        `, [sessionId, date]);
+            ORDER BY FIELD(f.flood_level, 'สูงมาก', 'สูง', 'ปานกลาง', 'ต่ำ', 'ไม่มี')
+        `, [date, date]);
 
         // สรุปตามอำเภอ
         const [districtSummary] = await connection.execute(`
             SELECT 
-                v.distname as district,
-                COUNT(DISTINCT v.subdistnam) as tambon_count,
+                f.district,
+                COUNT(DISTINCT f.tambon) as tambon_count,
                 COUNT(*) as village_count,
                 SUM(f.affected_households) as total_households,
-                SUM(f.affected_population) as total_population,
-                MAX(CASE WHEN f.flood_level = 'severe' THEN 1 ELSE 0 END) as has_severe,
-                MAX(CASE WHEN f.flood_level = 'moderate' THEN 1 ELSE 0 END) as has_moderate,
-                AVG(f.water_level) as avg_water_level
-            FROM flood_area_status f
-            INNER JOIN satun_village_polygon v ON f.vid = v.id
-            WHERE f.session_id = ? AND f.recorded_day = ?
-            GROUP BY v.distname
+                SUM(f.affected_people) as total_population,
+                MAX(CASE WHEN f.flood_level IN ('สูงมาก', 'สูง') THEN 1 ELSE 0 END) as has_severe,
+                MAX(CASE WHEN f.flood_level = 'ปานกลาง' THEN 1 ELSE 0 END) as has_moderate,
+                AVG(f.water_depth_cm) as avg_water_level
+            FROM flood_records f
+            WHERE f.year = YEAR(?) AND f.updated_at >= DATE(?)
+            GROUP BY f.district
             ORDER BY has_severe DESC, has_moderate DESC, total_population DESC
-        `, [sessionId, date]);
+        `, [date, date]);
 
         // รายละเอียดทั้งหมด
         const [details] = await connection.execute(`
             SELECT 
                 f.id,
-                v.distname as district,
-                v.subdistnam as tambon,
-                v.villname as village,
-                v.villcode as village_code,
+                f.district,
+                f.tambon,
+                f.village,
                 f.flood_level,
                 f.status,
-                f.water_level,
+                f.water_depth_cm,
                 f.affected_households,
-                f.affected_population,
-                f.notes,
-                f.updated_at,
-                ST_X(ST_Centroid(v.geom)) as lng,
-                ST_Y(ST_Centroid(v.geom)) as lat
-            FROM flood_area_status f
-            INNER JOIN satun_village_polygon v ON f.vid = v.id
-            WHERE f.session_id = ? AND f.recorded_day = ?
+                f.affected_people,
+                f.description as notes,
+                f.updated_at
+            FROM flood_records f
+            WHERE f.year = YEAR(?) AND f.updated_at >= DATE(?)
             ORDER BY 
-                FIELD(f.flood_level, 'severe', 'moderate', 'mild', 'safe'),
-                v.distname, v.subdistnam, v.villname
-        `, [sessionId, date]);
+                FIELD(f.flood_level, 'สูงมาก', 'สูง', 'ปานกลาง', 'ต่ำ', 'ไม่มี'),
+                f.district, f.tambon, f.village
+        `, [date, date]);
 
         // สถิติรวม
         const [totalStats] = await connection.execute(`
             SELECT 
-                COUNT(DISTINCT v.distname) as affected_districts,
-                COUNT(DISTINCT CONCAT(v.distname, '-', v.subdistnam)) as affected_tambons,
+                COUNT(DISTINCT f.district) as affected_districts,
+                COUNT(DISTINCT CONCAT(f.district, '-', f.tambon)) as affected_tambons,
                 COUNT(*) as affected_villages,
                 SUM(f.affected_households) as total_households,
-                SUM(f.affected_population) as total_population,
-                SUM(CASE WHEN f.flood_level = 'severe' THEN 1 ELSE 0 END) as severe_count,
-                SUM(CASE WHEN f.flood_level = 'moderate' THEN 1 ELSE 0 END) as moderate_count,
-                SUM(CASE WHEN f.flood_level = 'mild' THEN 1 ELSE 0 END) as mild_count,
-                SUM(CASE WHEN f.flood_level = 'safe' THEN 1 ELSE 0 END) as safe_count
-            FROM flood_area_status f
-            INNER JOIN satun_village_polygon v ON f.vid = v.id
-            WHERE f.session_id = ? AND f.recorded_day = ?
-        `, [sessionId, date]);
+                SUM(f.affected_people) as total_population,
+                SUM(CASE WHEN f.flood_level IN ('สูงมาก', 'สูง') THEN 1 ELSE 0 END) as severe_count,
+                SUM(CASE WHEN f.flood_level = 'ปานกลาง' THEN 1 ELSE 0 END) as moderate_count,
+                SUM(CASE WHEN f.flood_level = 'ต่ำ' THEN 1 ELSE 0 END) as mild_count,
+                SUM(CASE WHEN f.flood_level = 'ไม่มี' THEN 1 ELSE 0 END) as safe_count
+            FROM flood_records f
+            WHERE f.year = YEAR(?) AND f.updated_at >= DATE(?)
+        `, [date, date]);
 
         // EOC Session ที่เปิดอยู่
         const [activeSession] = await connection.execute(`

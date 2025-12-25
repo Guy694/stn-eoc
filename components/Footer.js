@@ -5,14 +5,14 @@ export default function Footer() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
                         <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</h4>
-                        <p className="text-xs sm:text-sm">Emergency Operations Center (EOC)</p>
-                        <p className="text-xs sm:text-sm mt-2">ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน</p>
+                        <p className="text-xs sm:text-sm">Satun Emergency Operations Center (EOC)</p>
+                        <p className="text-xs sm:text-sm mt-2">ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน จังหวัดสตูล</p>
                     </div>
                     <div>
                         <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ติดต่อเรา</h4>
-                        <p className="text-xs sm:text-sm">โทร: 1669 (ฉุกเฉิน)</p>
-                        <p className="text-xs sm:text-sm">อีเมล: eoc@disaster.go.th</p>
-                        <p className="text-xs sm:text-sm">เวลาทำการ: 24/7</p>
+                        <p className="text-xs sm:text-sm">โทร: ..........</p>
+                        <p className="text-xs sm:text-sm">อีเมล: .............</p>
+
                     </div>
                     <div className="sm:col-span-2 lg:col-span-1">
                         <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ลิงก์ที่เกี่ยวข้อง</h4>

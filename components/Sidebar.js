@@ -56,12 +56,7 @@ export default function Sidebar() {
                 { name: "แผนที่โรคระบาด", path: "/eoc/disease", icon: "🦠", eocType: "disease" },
             ],
         },
-        {
-            title: "ข้อมูลอำเภอ",
-            items: [
-                { name: "บันทึกข้อมูลน้ำท่วม", path: "/admin/flood-records", icon: "💧" },
-            ],
-        },
+
         {
             title: "ผู้ดูแลระบบ",
             requiresAdmin: true,

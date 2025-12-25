@@ -25,7 +25,7 @@ export async function GET(request) {
 
         // ตรวจสอบ active session ก่อน
         const [activeSessions] = await connection.execute(`
-            SELECT id, session_number, opened_at, open_reason
+            SELECT id, session_number, opened_at, closed_at, open_reason
             FROM eoc_sessions 
             WHERE LOWER(eoc_type) = 'flood' AND status = 'active'
             ORDER BY opened_at DESC

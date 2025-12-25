@@ -35,7 +35,7 @@ export default function DashboardPage() {
     if (!user) {
         return null;
     }
-
+    
     return (
         <EOCLayout>
             <div className="p-6">
@@ -45,7 +45,7 @@ export default function DashboardPage() {
                         ยินดีต้อนรับ, {user.fullName || user.username}
                     </h1>
                     <p className="text-gray-600">
-                        บทบาท: <span className="font-semibold text-green-600">{user.roleDisplay}</span>
+                        สิทธิ์การเข้าถึง: <span className="font-semibold text-green-600">{user.roleDisplay}</span>
                         {user.department && ` | ${user.department}`}
                         {user.position && ` | ${user.position}`}
                     </p>
@@ -84,7 +84,7 @@ export default function DashboardPage() {
 
                 {/* Quick Access based on Role */}
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">� ระบบจัดการภัยพิบัติ (Disaster Management Modules)</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">ระบบจัดการภัยพิบัติ (Disaster Management Modules)</h2>
                     <DisasterDashboard />
                 </div>
 

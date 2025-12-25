@@ -12,7 +12,7 @@ export default function EOCLayout({ children }) {
             <div className="flex flex-1 relative">
                 <Sidebar />
                 <main className="flex-1 bg-gray-50 overflow-auto w-full lg:w-auto">
-                    <Breadcrumb />
+                    {/* <Breadcrumb /> */}
                     <div className="p-4 sm:p-6">
                         {children}
                     </div>
