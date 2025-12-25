@@ -1,21 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
-export default function LoginPage() {
-    const router = useRouter();
+// Component แยกสำหรับจัดการ error จาก ThaiID callback
+function ThaiIDErrorHandler({ setError }) {
     const searchParams = useSearchParams();
-    const { login } = useAuth();
-    const [formData, setFormData] = useState({
-        username: "",
-        password: "",
-    });
-    const [error, setError] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
 
-    // ตรวจสอบ error จาก ThaiID callback
     useEffect(() => {
         const errorType = searchParams.get('error');
         const errorMessage = searchParams.get('message');
@@ -42,7 +34,20 @@ export default function LoginPage() {
                     setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบผ่าน ThaiID');
             }
         }
-    }, [searchParams]);
+    }, [searchParams, setError]);
+
+    return null;
+}
+
+function LoginForm() {
+    const router = useRouter();
+    const { login } = useAuth();
+    const [formData, setFormData] = useState({
+        username: "",
+        password: "",
+    });
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -217,7 +222,28 @@ export default function LoginPage() {
                 <div className="text-center mt-8 text-sm text-gray-500">
                     <p>© 2025 EOC จังหวัดสตูล - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
                 </div>
+
+                {/* ThaiID Error Handler with Suspense */}
+                <Suspense fallback={null}>
+                    <ThaiIDErrorHandler setError={setError} />
+                </Suspense>
             </div>
         </div>
+    );
+}
+
+// Main export component
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-green-700 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="mt-4 text-gray-600">กำลังโหลด...</p>
+                </div>
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }
