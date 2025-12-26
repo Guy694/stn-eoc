@@ -14,7 +14,9 @@ export default function OfficersManagementPage() {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
-        full_name: '',
+        title: '',
+        given_name: '',
+        family_name: '',
         email: '',
         phone: '',
         role: 'staff'
@@ -96,7 +98,9 @@ export default function OfficersManagementPage() {
         setFormData({
             username: officer.username,
             password: '',
-            full_name: officer.full_name,
+            title: officer.title || '',
+            given_name: officer.given_name,
+            family_name: officer.family_name,
             email: officer.email || '',
             phone: officer.phone || '',
             role: officer.role
@@ -105,7 +109,8 @@ export default function OfficersManagementPage() {
     };
 
     const handleDelete = async (officer) => {
-        if (!confirm(`คุณต้องการลบ ${officer.full_name} ใช่หรือไม่?`)) {
+        const fullName = `${officer.title || ''} ${officer.given_name} ${officer.family_name}`.trim();
+        if (!confirm(`คุณต้องการลบ ${fullName} ใช่หรือไม่?`)) {
             return;
         }
 
@@ -129,15 +134,17 @@ export default function OfficersManagementPage() {
     };
 
     const resetForm = () => {
+        setEditingOfficer(null);
         setFormData({
             username: '',
             password: '',
-            full_name: '',
+            title: '',
+            given_name: '',
+            family_name: '',
             email: '',
             phone: '',
             role: 'staff'
         });
-        setEditingOfficer(null);
     };
 
     const getRoleColor = (role) => {
@@ -179,12 +186,12 @@ export default function OfficersManagementPage() {
                             placeholder="🔍 ค้นหาชื่อ, username, email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className=" text-gray-700 flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <select
                             value={filterRole}
                             onChange={(e) => setFilterRole(e.target.value)}
-                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className=" text-gray-700 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">ทุกบทบาท</option>
                             {roles.map(role => (
@@ -198,7 +205,7 @@ export default function OfficersManagementPage() {
                                 resetForm();
                                 setShowModal(true);
                             }}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
                             ➕ เพิ่มเจ้าหน้าที่
                         </button>
@@ -237,7 +244,10 @@ export default function OfficersManagementPage() {
                                                 {officer.id}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="font-medium text-gray-900">{officer.full_name}</div>
+                                                <div className="font-medium text-gray-900">
+                                                    {officer.title && `${officer.title} `}
+                                                    {officer.given_name} {officer.family_name}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {officer.username}
@@ -283,7 +293,7 @@ export default function OfficersManagementPage() {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">
+                        <h2 className="text-xl font-bold mb-4 text-gray-800">
                             {editingOfficer ? '✏️ แก้ไขเจ้าหน้าที่' : '➕ เพิ่มเจ้าหน้าที่ใหม่'}
                         </h2>
 
@@ -297,7 +307,7 @@ export default function OfficersManagementPage() {
                                     required
                                     value={formData.username}
                                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
@@ -310,20 +320,55 @@ export default function OfficersManagementPage() {
                                     required={!editingOfficer}
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    ชื่อ-นามสกุล *
+                                    คำนำหน้า
+                                </label>
+                                <select
+                                    value={formData.title}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">ไม่ระบุ</option>
+                                    <option value="นาย">นาย</option>
+                                    <option value="นาง">นาง</option>
+                                    <option value="นางสาว">นางสาว</option>
+                                    <option value="ดร.">ดร.</option>
+                                    <option value="ผศ.ดร.">ผศ.ดร.</option>
+                                    <option value="รศ.ดร.">รศ.ดร.</option>
+                                    <option value="ศ.ดร.">ศ.ดร.</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    ชื่อ *
                                 </label>
                                 <input
                                     type="text"
                                     required
-                                    value={formData.full_name}
-                                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={formData.given_name}
+                                    onChange={(e) => setFormData({ ...formData, given_name: e.target.value })}
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="เช่น สมชาย"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    นามสกุล *
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.family_name}
+                                    onChange={(e) => setFormData({ ...formData, family_name: e.target.value })}
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="เช่น ใจดี"
                                 />
                             </div>
 
@@ -335,7 +380,7 @@ export default function OfficersManagementPage() {
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
@@ -347,19 +392,19 @@ export default function OfficersManagementPage() {
                                     type="tel"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    บทบาท *
+                                    สิทธิ์การเข้าถึง *
                                 </label>
                                 <select
                                     required
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="text-gray-800 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     {roles.map(role => (
                                         <option key={role.value} value={role.value}>
@@ -372,7 +417,7 @@ export default function OfficersManagementPage() {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
-                                    className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
                                 >
                                     💾 บันทึก
                                 </button>
@@ -382,7 +427,7 @@ export default function OfficersManagementPage() {
                                         setShowModal(false);
                                         resetForm();
                                     }}
-                                    className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                                    className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                     ❌ ยกเลิก
                                 </button>

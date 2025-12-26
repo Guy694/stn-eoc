@@ -94,8 +94,19 @@ export default function Sidebar() {
         },
     ];
 
-    // กรองเมนูตาม role
-    const menuItems = allMenuItems.filter(section => {
+    // เมนูสำหรับ pending user (รอการอนุมัติ)
+    const pendingUserMenu = [
+        {
+            title: "เจ้าหน้าที่",
+            items: [
+                { name: "ข้อมูลส่วนตัว", path: "/auth/thaiid/registration", icon: "👤" },
+                { name: "สถานะคำขอ", path: "/auth/thaiid/pending", icon: "⏳" },
+            ],
+        },
+    ];
+
+    // กรองเมนูตาม role และสถานะการอนุมัติ
+    const menuItems = user.isApproved === false ? pendingUserMenu : allMenuItems.filter(section => {
         if (section.title === "ทรัพยากร") {
             return canAccessResources();
         }

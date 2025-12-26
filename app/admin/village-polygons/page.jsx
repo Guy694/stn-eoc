@@ -207,7 +207,7 @@ export default function VillagePolygonsPage() {
                                 resetForm();
                                 setShowModal(true);
                             }}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
                             ➕ เพิ่มหมู่บ้าน
                         </button>
@@ -287,7 +287,7 @@ export default function VillagePolygonsPage() {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4">
+                        <h2 className="text-xl font-bold mb-4 text-gray-700">
                             {editingPolygon ? '✏️ แก้ไขข้อมูลหมู่บ้าน' : '➕ เพิ่มข้อมูลหมู่บ้านใหม่'}
                         </h2>
 
@@ -301,7 +301,7 @@ export default function VillagePolygonsPage() {
                                     required
                                     value={formData.villname}
                                     onChange={(e) => setFormData({ ...formData, villname: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
@@ -315,7 +315,7 @@ export default function VillagePolygonsPage() {
                                         required
                                         value={formData.distname}
                                         onChange={(e) => setFormData({ ...formData, distname: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
@@ -328,7 +328,7 @@ export default function VillagePolygonsPage() {
                                         required
                                         value={formData.subdistnam}
                                         onChange={(e) => setFormData({ ...formData, subdistnam: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                             </div>
@@ -341,7 +341,7 @@ export default function VillagePolygonsPage() {
                                     value={formData.coordinates}
                                     onChange={(e) => setFormData({ ...formData, coordinates: e.target.value })}
                                     rows={6}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                    className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                                     placeholder='[[[100.123, 6.456], [100.124, 6.457], ...]]'
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
@@ -352,7 +352,7 @@ export default function VillagePolygonsPage() {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
-                                    className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
                                 >
                                     💾 บันทึก
                                 </button>
@@ -362,7 +362,7 @@ export default function VillagePolygonsPage() {
                                         setShowModal(false);
                                         resetForm();
                                     }}
-                                    className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                                    className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                     ❌ ยกเลิก
                                 </button>

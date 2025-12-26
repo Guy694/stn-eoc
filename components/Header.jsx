@@ -44,11 +44,13 @@ export default function Header() {
                                 >
                                     <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                                         <span className="text-green-800 font-bold text-sm">
-                                            {user.fullName ? user.fullName.charAt(0) : user.username.charAt(0).toUpperCase()}
+                                            {user.thaiIdData?.given_name ? user.thaiIdData.given_name.charAt(0) : (user.fullName ? user.fullName.charAt(0) : user.username.charAt(0).toUpperCase())}
                                         </span>
                                     </div>
                                     <div className="hidden md:block text-left">
-                                        <div className="text-sm font-semibold">{user.fullName || user.username}</div>
+                                        <div className="text-sm font-semibold">
+                                            {user.thaiIdData?.name || user.fullName || user.username}
+                                        </div>
                                         <div className="text-xs text-green-200">{user.roleDisplay}</div>
                                     </div>
                                     <svg
@@ -74,11 +76,18 @@ export default function Header() {
                                         <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-20 overflow-hidden">
                                             {/* User Info */}
                                             <div className="bg-green-50 px-4 py-3 border-b border-green-100">
-                                                <p className="font-semibold text-gray-800">{user.fullName || user.username}</p>
+                                                <p className="font-semibold text-gray-800">
+                                                    {user.thaiIdData?.name || user.fullName || user.username}
+                                                </p>
                                                 <p className="text-sm text-gray-600">{user.email}</p>
                                                 <p className="text-xs text-green-600 mt-1">{user.roleDisplay}</p>
                                                 {user.department && (
                                                     <p className="text-xs text-gray-500">{user.department}</p>
+                                                )}
+                                                {user.thaiIdData && (
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        เข้าสู่ระบบด้วย ThaiID
+                                                    </p>
                                                 )}
                                             </div>
 

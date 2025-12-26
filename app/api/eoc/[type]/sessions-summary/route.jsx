@@ -56,8 +56,12 @@ export async function GET(request, { params }) {
                     s.total_data_entries,
                     s.affected_areas,
                     s.summary,
-                    oo.full_name as opened_by_name,
-                    co.full_name as closed_by_name
+                    oo.title as opened_by_title,
+                    oo.given_name as opened_by_given_name,
+                    oo.family_name as opened_by_family_name,
+                    co.title as closed_by_title,
+                    co.given_name as closed_by_given_name,
+                    co.family_name as closed_by_family_name
                 FROM eoc_sessions s
                 LEFT JOIN officer oo ON s.opened_by = oo.id
                 LEFT JOIN officer co ON s.closed_by = co.id

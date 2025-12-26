@@ -47,8 +47,12 @@ export async function GET(request) {
                     s.total_data_entries,
                     s.affected_areas,
                     s.summary,
-                    oo.full_name as opened_by_name,
-                    co.full_name as closed_by_name
+                    oo.title as opened_by_title,
+                    oo.given_name as opened_by_given_name,
+                    oo.family_name as opened_by_family_name,
+                    co.title as closed_by_title,
+                    co.given_name as closed_by_given_name,
+                    co.family_name as closed_by_family_name
                 FROM eoc_sessions s
                 LEFT JOIN officer oo ON s.opened_by = oo.id
                 LEFT JOIN officer co ON s.closed_by = co.id
@@ -71,14 +75,14 @@ export async function GET(request) {
                     AND YEAR(opened_at) = ?
             `, [year]);
 
-            // ดึงข้อมูลพื้นที่ที่ได้รับผลกระทบจาก flood_area_status JOIN satun_village_polygon
+            // ดึงข้อมูลพื้นที่ที่ได้รับผลกระทบจาก flood_records JOIN satun_village_polygon
             const [affectedAreas] = await connection.execute(`
                 SELECT 
                     COUNT(DISTINCT v.id) as total_villages,
                     COUNT(DISTINCT v.subdistnam) as total_tambons,
                     COUNT(DISTINCT v.distname) as total_districts
-                FROM flood_area_status f
-                INNER JOIN satun_village_polygon v ON f.vid = v.id
+                FROM flood_records f
+                INNER JOIN satun_village_polygon v ON f.id = v.id
                 INNER JOIN eoc_sessions s ON f.session_id = s.id
                 WHERE s.eoc_type = 'flood' AND YEAR(s.opened_at) = ?
             `, [year]);

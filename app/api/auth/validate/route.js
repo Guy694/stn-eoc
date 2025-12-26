@@ -75,7 +75,7 @@ export async function POST(request) {
         try {
             // ตรวจสอบ session และดึงข้อมูล officer
             const [sessions] = await connection.execute(
-                `SELECT s.user_id, s.expires_at, o.username, o.full_name, o.email, o.phone, o.role
+                `SELECT s.user_id, s.expires_at, o.username, o.title, o.given_name, o.family_name, o.email, o.phone, o.role
                  FROM user_sessions s
                  JOIN officer o ON s.user_id = o.id
                  WHERE s.session_token = ? AND s.expires_at > NOW()`,
@@ -99,7 +99,10 @@ export async function POST(request) {
                 user: {
                     id: sessionData.user_id,
                     username: sessionData.username,
-                    fullName: sessionData.full_name,
+                    title: sessionData.title,
+                    givenName: sessionData.given_name,
+                    familyName: sessionData.family_name,
+                    fullName: `${sessionData.title || ''} ${sessionData.given_name || ''} ${sessionData.family_name || ''}`.trim(),
                     email: sessionData.email,
                     phone: sessionData.phone,
                     role: sessionData.role,

@@ -196,7 +196,7 @@ export default function HealthFacilitiesPage() {
                                 resetForm();
                                 setShowModal(true);
                             }}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
                             ➕ เพิ่มสถานพยาบาล
                         </button>
@@ -284,7 +284,7 @@ export default function HealthFacilitiesPage() {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4">
+                        <h2 className="text-xl font-bold mb-4 text-gray-700">
                             {editingFacility ? '✏️ แก้ไขสถานพยาบาล' : '➕ เพิ่มสถานพยาบาลใหม่'}
                         </h2>
 
@@ -299,7 +299,7 @@ export default function HealthFacilitiesPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
@@ -311,7 +311,7 @@ export default function HealthFacilitiesPage() {
                                         required
                                         value={formData.typecode}
                                         onChange={(e) => setFormData({ ...formData, typecode: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="">เลือกประเภท</option>
                                         {facilityTypes.map(type => (
@@ -332,7 +332,7 @@ export default function HealthFacilitiesPage() {
                                         value={formData.address}
                                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                         rows={2}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
@@ -344,7 +344,7 @@ export default function HealthFacilitiesPage() {
                                         type="text"
                                         value={formData.district}
                                         onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
@@ -356,7 +356,7 @@ export default function HealthFacilitiesPage() {
                                         type="text"
                                         value={formData.tambon}
                                         onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
@@ -369,7 +369,7 @@ export default function HealthFacilitiesPage() {
                                         step="any"
                                         value={formData.lat}
                                         onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="6.xxxxx"
                                     />
                                 </div>
@@ -383,7 +383,7 @@ export default function HealthFacilitiesPage() {
                                         step="any"
                                         value={formData.lon}
                                         onChange={(e) => setFormData({ ...formData, lon: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="100.xxxxx"
                                     />
                                 </div>
@@ -392,7 +392,7 @@ export default function HealthFacilitiesPage() {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
-                                    className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
                                 >
                                     💾 บันทึก
                                 </button>
@@ -402,7 +402,7 @@ export default function HealthFacilitiesPage() {
                                         setShowModal(false);
                                         resetForm();
                                     }}
-                                    className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                                    className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                     ❌ ยกเลิก
                                 </button>

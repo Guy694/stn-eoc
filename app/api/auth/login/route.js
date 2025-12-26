@@ -76,7 +76,7 @@ export async function POST(request) {
         try {
             // ดึงข้อมูลจาก officer table
             const [officers] = await connection.execute(
-                'SELECT id, username, password_hash, full_name, email, phone, role FROM officer WHERE username = ?',
+                'SELECT id, username, password_hash, title, given_name, family_name, email, phone, role FROM officer WHERE username = ?',
                 [username]
             );
 
@@ -120,7 +120,10 @@ export async function POST(request) {
                     id: officer.id,
                     username: officer.username,
                     email: officer.email,
-                    fullName: officer.full_name,
+                    title: officer.title,
+                    givenName: officer.given_name,
+                    familyName: officer.family_name,
+                    fullName: `${officer.title || ''} ${officer.given_name || ''} ${officer.family_name || ''}`.trim(),
                     phone: officer.phone,
                     role: officer.role,
                     roleDisplay: roleDisplayNames[officer.role] || officer.role,

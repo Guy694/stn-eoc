@@ -35,14 +35,14 @@ export default function DashboardPage() {
     if (!user) {
         return null;
     }
-    
+
     return (
         <EOCLayout>
             <div className="p-6">
                 {/* Welcome Section */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        ยินดีต้อนรับ, {user.fullName || user.username}
+                        ยินดีต้อนรับ, {user.thaiIdData?.name || user.fullName || user.username}
                     </h1>
                     <p className="text-gray-600">
                         สิทธิ์การเข้าถึง: <span className="font-semibold text-green-600">{user.roleDisplay}</span>

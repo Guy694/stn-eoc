@@ -41,11 +41,15 @@ export async function GET(request) {
                 s.created_at,
                 oo.id as opened_by_id,
                 oo.username as opened_by_username,
-                oo.full_name as opened_by_name,
+                oo.title as opened_by_title,
+                oo.given_name as opened_by_given_name,
+                oo.family_name as opened_by_family_name,
                 oo.role as opened_by_role,
                 co.id as closed_by_id,
                 co.username as closed_by_username,
-                co.full_name as closed_by_name,
+                co.title as closed_by_title,
+                co.given_name as closed_by_given_name,
+                co.family_name as closed_by_family_name,
                 co.role as closed_by_role
             FROM eoc_sessions s
             LEFT JOIN officer oo ON s.opened_by = oo.id
@@ -141,10 +145,14 @@ export async function POST(request) {
             `SELECT 
                 s.*,
                 oo.username as opened_by_username,
-                oo.full_name as opened_by_name,
+                oo.title as opened_by_title,
+                oo.given_name as opened_by_given_name,
+                oo.family_name as opened_by_family_name,
                 oo.role as opened_by_role,
                 co.username as closed_by_username,
-                co.full_name as closed_by_name,
+                co.title as closed_by_title,
+                co.given_name as closed_by_given_name,
+                co.family_name as closed_by_family_name,
                 co.role as closed_by_role
             FROM eoc_sessions s
             LEFT JOIN officer oo ON s.opened_by = oo.id
@@ -167,7 +175,9 @@ export async function POST(request) {
             `SELECT 
                 a.*,
                 o.username,
-                o.full_name,
+                o.title,
+                o.given_name,
+                o.family_name,
                 o.role
             FROM activity_logs a
             LEFT JOIN officer o ON a.user_id = o.id
@@ -191,13 +201,15 @@ export async function POST(request) {
         // สรุปผู้ใช้ที่มีกิจกรรมมากที่สุด
         const [userSummary] = await connection.execute(
             `SELECT 
-                o.full_name,
+                o.title,
+                o.given_name,
+                o.family_name,
                 o.username,
                 COUNT(*) as activity_count
             FROM activity_logs a
             LEFT JOIN officer o ON a.user_id = o.id
             WHERE a.eoc_session_id = ?
-            GROUP BY a.user_id, o.full_name, o.username
+            GROUP BY a.user_id, o.title, o.given_name, o.family_name, o.username
             ORDER BY activity_count DESC
             LIMIT 10`,
             [sessionId]

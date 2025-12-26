@@ -600,7 +600,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                         key={idx}
                                         onClick={() => setSelectedDate(d)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-all ${isSelected
-                                            ? 'bg-blue-600 text-white shadow-lg transform scale-105'
+                                            ? 'bg-green-600 text-white shadow-lg transform scale-105'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                     >
@@ -777,7 +777,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </div>
 
                         {/* Map */}
-                        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6" style={{ height: '900px' }}>
+                        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6" style={{ height: '1100px' }}>
                             {isMounted && !loading && polygons && (
                                 <MapContainer
                                     key={`tambon-map-${selectedDate?.getTime() || 'default'}`}
@@ -1408,7 +1408,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             </div>
 
             {/* ระดับความรุนแรง */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6 text-gray-700">
                 <h3 className="text-lg font-bold mb-4">สรุปตามระดับความรุนแรง</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <LevelCard

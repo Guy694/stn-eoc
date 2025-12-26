@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 const THAIID_CONFIG = {
     authUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/',
     clientId: process.env.CLIENT_ID,
-    redirectUri: `${process.env.CALLBACK}api/auth/thaiid/callback`,
-    scope: 'pid', // ขอข้อมูลเลขบัตรประชาชน
+    redirectUri: process.env.CALLBACK,
+    scope: 'pid given_name family_name name birthdate address gender', // ขอข้อมูลทั้งหมด
     responseType: 'code',
     state: null // จะสร้างแบบสุ่มเพื่อป้องกัน CSRF
 };

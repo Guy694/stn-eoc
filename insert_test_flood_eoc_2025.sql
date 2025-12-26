@@ -160,11 +160,11 @@ INSERT INTO daily_village_flood (record_date, district, tambon, village, village
 -- ===============================================
 
 -- กิจกรรมการเปิด EOC Session 3
-INSERT INTO activity_logs (user_id, action, target_type, target_id, details, ip_address, eoc_session_id, created_at) VALUES
+INSERT INTO activity_logs (user_id, action_type, target_type, target_id, details, ip_address, eoc_session_id, created_at) VALUES
 (1, 'CREATE', 'eoc_session', 3, 'เปิด EOC น้ำท่วม Session #3/2025', '127.0.0.1', 3, '2025-12-18 09:00:00');
 
 -- กิจกรรมการบันทึกข้อมูลน้ำท่วม
-INSERT INTO activity_logs (user_id, action, target_type, target_id, details, ip_address, eoc_session_id, created_at) VALUES
+INSERT INTO activity_logs (user_id, action_type, target_type, target_id, details, ip_address, eoc_session_id, created_at) VALUES
 (1, 'CREATE', 'flood_record', NULL, 'บันทึกข้อมูลน้ำท่วมวันที่ 18 ธ.ค. 2568', '127.0.0.1', 3, '2025-12-18 10:30:00'),
 (2, 'CREATE', 'flood_record', NULL, 'บันทึกข้อมูลน้ำท่วมวันที่ 18 ธ.ค. 2568', '127.0.0.1', 3, '2025-12-18 11:15:00'),
 (1, 'CREATE', 'flood_record', NULL, 'บันทึกข้อมูลน้ำท่วมวันที่ 19 ธ.ค. 2568', '127.0.0.1', 3, '2025-12-19 09:45:00'),

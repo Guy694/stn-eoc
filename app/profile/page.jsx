@@ -9,7 +9,9 @@ export default function ProfilePage() {
     const { user, loading } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
-        fullName: "",
+        title: "",
+        givenName: "",
+        familyName: "",
         email: "",
         phone: "",
         department: "",
@@ -22,7 +24,9 @@ export default function ProfilePage() {
             router.push("/login");
         } else if (user) {
             setFormData({
-                fullName: user.fullName || "",
+                title: user.title || "",
+                givenName: user.givenName || "",
+                familyName: user.familyName || "",
                 email: user.email || "",
                 phone: user.phone || "",
                 department: user.department || "",
@@ -171,12 +175,36 @@ export default function ProfilePage() {
                             // Edit Mode
                             <form onSubmit={handleSubmit}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <label className="block text-gray-700 font-semibold mb-2">คำนำหน้า</label>
+                                        <select
+                                            name="title"
+                                            value={formData.title}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        >
+                                            <option value="">ไม่ระบุ</option>
+                                            <option value="นาย">นาย</option>
+                                            <option value="นาง">นาง</option>
+                                            <option value="นางสาว">นางสาว</option>
+                                            <option value="ดร.">ดร.</option>
+                                        </select>
+                                    </div>
                                     <FormField
-                                        label="ชื่อ-นามสกุล"
-                                        name="fullName"
-                                        value={formData.fullName}
+                                        label="ชื่อ"
+                                        name="givenName"
+                                        value={formData.givenName}
                                         onChange={handleChange}
                                         required
+                                        placeholder="เช่น สมชาย"
+                                    />
+                                    <FormField
+                                        label="นามสกุล"
+                                        name="familyName"
+                                        value={formData.familyName}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="เช่น ใจดี"
                                     />
                                     <FormField
                                         label="อีเมล"

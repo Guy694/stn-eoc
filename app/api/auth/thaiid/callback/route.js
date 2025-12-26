@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 // Database Pool
 const pool = mysql.createPool({
@@ -13,6 +14,11 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// ฟังก์ชัน Hash PID ด้วย SHA-256 สำหรับความปลอดภัย (PDPA Compliance)
+function hashPID(pid) {
+    return crypto.createHash('sha256').update(pid).digest('hex');
+}
+
 // ThaiID Configuration ตามคู่มือ DOPA
 const THAIID_CONFIG = {
     tokenUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/token/',
@@ -20,7 +26,7 @@ const THAIID_CONFIG = {
     clientId: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
     apiKey: process.env.APIKEY,
-    redirectUri: `${process.env.CALLBACK}api/auth/thaiid/callback`,
+    redirectUri: process.env.CALLBACK,
 };
 
 // กำหนด permissions สำหรับแต่ละ role
@@ -82,6 +88,15 @@ async function exchangeCodeForToken(code) {
         client_secret: THAIID_CONFIG.clientSecret,
     });
 
+    console.log('Token Exchange Request:', {
+        url: THAIID_CONFIG.tokenUrl,
+        redirectUri: THAIID_CONFIG.redirectUri,
+        clientId: THAIID_CONFIG.clientId ? 'Present' : 'Missing',
+        clientSecret: THAIID_CONFIG.clientSecret ? 'Present' : 'Missing',
+        apiKey: THAIID_CONFIG.apiKey ? 'Present' : 'Missing',
+        code: code ? 'Present' : 'Missing'
+    });
+
     const response = await fetch(THAIID_CONFIG.tokenUrl, {
         method: 'POST',
         headers: {
@@ -91,32 +106,54 @@ async function exchangeCodeForToken(code) {
         body: tokenParams.toString(),
     });
 
+    const responseText = await response.text();
+    console.log('Token Exchange Response Status:', response.status);
+    console.log('Token Exchange Response Body:', responseText);
+
     if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
+        throw new Error(`Token exchange failed: ${response.status} - ${responseText}`);
     }
 
-    return await response.json();
+    const tokenData = JSON.parse(responseText);
+    console.log('Token Data Keys:', Object.keys(tokenData));
+    console.log('Access Token Present:', tokenData.access_token ? 'Yes' : 'No');
+
+    return tokenData;
 }
 
 /**
  * ดึงข้อมูลผู้ใช้จาก ThaiID
  */
 async function getUserInfo(accessToken) {
-    const response = await fetch(THAIID_CONFIG.userInfoUrl, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'API_KEY': THAIID_CONFIG.apiKey,
-        },
+    console.log('Requesting userinfo with:', {
+        url: THAIID_CONFIG.userInfoUrl,
+        apiKey: THAIID_CONFIG.apiKey ? 'Present' : 'Missing',
+        accessToken: accessToken ? accessToken.substring(0, 20) + '...' : 'Missing'
     });
 
+    // ส่ง access_token ใน body ตามเอกสาร ThaiID
+    const userInfoParams = new URLSearchParams({
+        access_token: accessToken
+    });
+
+    const response = await fetch(THAIID_CONFIG.userInfoUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'API_KEY': THAIID_CONFIG.apiKey,
+        },
+        body: userInfoParams.toString(),
+    });
+
+    const responseText = await response.text();
+    console.log('UserInfo Response Status:', response.status);
+    console.log('UserInfo Response Body:', responseText);
+
     if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Get user info failed: ${response.status} - ${errorText}`);
+        throw new Error(`Get user info failed: ${response.status} - ${responseText}`);
     }
 
-    return await response.json();
+    return JSON.parse(responseText);
 }
 
 /**
@@ -148,14 +185,20 @@ export async function GET(request) {
         // 1. แลกเปลี่ยน Authorization Code กับ Access Token
         const tokenData = await exchangeCodeForToken(code);
         const accessToken = tokenData.access_token;
+        const pid = tokenData.pid; // ThaiID ส่ง PID มาพร้อมกับ token response แล้ว
 
-        console.log('ThaiID - Access Token received');
-
-        // 2. ดึงข้อมูลผู้ใช้จาก ThaiID
-        const userInfo = await getUserInfo(accessToken);
-        const pid = userInfo.pid; // เลขบัตรประชาชน
-
-        console.log('ThaiID - User PID:', pid);
+        console.log('ThaiID - Access Token received:', accessToken ? 'Yes' : 'No');
+        console.log('ThaiID - Token Data:', JSON.stringify(tokenData));
+        console.log('ThaiID - PID from token:', pid);
+        console.log('ThaiID - Full Data:', {
+            pid: tokenData.pid,
+            name: tokenData.name,
+            given_name: tokenData.given_name,
+            family_name: tokenData.family_name,
+            birthdate: tokenData.birthdate,
+            gender: tokenData.gender,
+            address: tokenData.address
+        });
 
         if (!pid) {
             return NextResponse.redirect(
@@ -163,45 +206,67 @@ export async function GET(request) {
             );
         }
 
-        // 3. ค้นหาผู้ใช้ในฐานข้อมูลด้วย PID
+        // Hash PID เพื่อความปลอดภัย
+        const hashedPID = hashPID(pid);
+        console.log('ThaiID - PID Hashed for security');
+
+        // 2. ค้นหาผู้ใช้ในฐานข้อมูลด้วย Hashed PID
         const connection = await pool.getConnection();
 
         try {
             const [officers] = await connection.execute(
-                'SELECT id, username, full_name, email, phone, role, pid FROM officer WHERE pid = ?',
-                [pid]
+                'SELECT id, username, title, given_name, family_name, email, phone, role, pid_hash, is_approved, position, department FROM officer WHERE pid_hash = ?',
+                [hashedPID]
             );
 
+            let officer;
+            let isNewUser = false;
+
             if (officers.length === 0) {
-                connection.release();
-                return NextResponse.redirect(
-                    `${process.env.CALLBACK}login?error=user_not_found&pid=${pid}`
+                // ไม่พบผู้ใช้ -> สร้าง pending user ใหม่
+                console.log('ThaiID - Creating new pending user');
+
+                const username = `thaiid_${pid.substring(0, 8)}`; // username ชั่วคราวจาก PID
+                const title = tokenData.title || null;
+                const givenName = tokenData.given_name || '';
+                const familyName = tokenData.family_name || '';
+
+                const [result] = await connection.execute(
+                    `INSERT INTO officer 
+                    (username, password_hash, title, given_name, family_name, role, pid_hash, is_approved, request_time, created_at) 
+                    VALUES (?, ?, ?, ?, ?, 'staff', ?, FALSE, NOW(), NOW())`,
+                    [username, await bcrypt.hash(Math.random().toString(36), 10), title, givenName, familyName, hashedPID]
                 );
+
+                // ดึงข้อมูล user ที่สร้างใหม่
+                const [newOfficers] = await connection.execute(
+                    'SELECT id, username, title, given_name, family_name, email, phone, role, pid_hash, is_approved, position, department FROM officer WHERE id = ?',
+                    [result.insertId]
+                );
+
+                officer = newOfficers[0];
+                isNewUser = true;
+
+                console.log('ThaiID - New pending user created:', officer.id);
+            } else {
+                officer = officers[0];
             }
 
-            const officer = officers[0];
-
-            // 4. อัพเดท ThaiID access token ในฐานข้อมูล (ถ้ามีคอลัมน์)
-            try {
-                await connection.execute(
-                    'UPDATE officer SET thaiid_token = ?, last_login = NOW() WHERE id = ?',
-                    [accessToken, officer.id]
-                );
-            } catch (updateError) {
-                console.log('Note: thaiid_token column may not exist yet:', updateError.message);
+            // ตรวจสอบสถานะการอนุมัติ
+            if (!officer.is_approved) {
+                console.log('ThaiID - User pending approval');
             }
 
-            // 5. บันทึก Activity Log
+            // 4. บันทึก Activity Log
             try {
                 await connection.execute(
                     `INSERT INTO activity_logs 
-                    (user_id, user_name, action, details, ip_address, user_agent, timestamp) 
-                    VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+                    (user_id, action_type, details, ip_address, user_agent, timestamp) 
+                    VALUES (?, ?, ?, ?, ?, NOW())`,
                     [
                         officer.id,
-                        officer.username,
                         'LOGIN_THAIID',
-                        `เข้าสู่ระบบด้วย ThaiID สำเร็จ - PID: ${pid}`,
+                        `เข้าสู่ระบบด้วย ThaiID สำเร็จ - User: ${officer.username}`,
                         request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
                         request.headers.get('user-agent') || 'unknown'
                     ]
@@ -216,18 +281,42 @@ export async function GET(request) {
             const userData = {
                 id: officer.id,
                 username: officer.username,
-                fullName: officer.full_name,
+                title: officer.title,
+                givenName: officer.given_name,
+                familyName: officer.family_name,
+                fullName: `${officer.title || ''} ${officer.given_name || ''} ${officer.family_name || ''}`.trim(),
                 email: officer.email,
                 phone: officer.phone,
                 role: officer.role,
                 roleDisplayName: roleDisplayNames[officer.role] || officer.role,
-                permissions: rolePermissions[officer.role] || rolePermissions.staff,
-                pid: officer.pid,
-                loginMethod: 'thaiid'
+                permissions: officer.is_approved ? (rolePermissions[officer.role] || rolePermissions.staff) : {}, // ไม่มี permission ถ้ายังไม่ approved
+                loginMethod: 'thaiid',
+                isApproved: officer.is_approved,
+                isNewUser: isNewUser,
+                position: officer.position,
+                department: officer.department,
+                // ข้อมูลเพิ่มเติมจาก ThaiID
+                thaiIdData: {
+                    title: tokenData.title,
+                    name: tokenData.name,
+                    given_name: tokenData.given_name,
+                    family_name: tokenData.family_name,
+                    birthdate: tokenData.birthdate,
+                    gender: tokenData.gender,
+                    address: tokenData.address
+                }
             };
 
-            // 7. Redirect ไปหน้า callback page พร้อมข้อมูล
-            const response = NextResponse.redirect(`${process.env.CALLBACK}auth/thaiid/callback`);
+            // 7. Redirect ไปหน้าที่เหมาะสม
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+            let redirectPath = '/auth/thaiid/callback';
+
+            // ถ้าเป็น user ใหม่หรือยังไม่ approved -> ไปหน้ากรอกข้อมูล
+            if (!officer.is_approved) {
+                redirectPath = '/auth/thaiid/registration';
+            }
+
+            const response = NextResponse.redirect(`${baseUrl}${redirectPath}`);
 
             // เก็บข้อมูลใน cookie (encrypted ด้วย httpOnly)
             response.cookies.set('user_session', JSON.stringify(userData), {
@@ -246,8 +335,9 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('ThaiID Callback Error:', error);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
         return NextResponse.redirect(
-            `${process.env.CALLBACK}login?error=callback_failed&message=${encodeURIComponent(error.message)}`
+            `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent(error.message)}`
         );
     }
 }

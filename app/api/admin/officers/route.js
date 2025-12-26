@@ -13,7 +13,9 @@ export async function GET(request) {
             SELECT 
                 id, 
                 username, 
-                full_name, 
+                title,
+                given_name, 
+                family_name, 
                 email, 
                 phone, 
                 role,
@@ -30,9 +32,9 @@ export async function GET(request) {
         }
 
         if (search) {
-            sql += ' AND (full_name LIKE ? OR username LIKE ? OR email LIKE ?)';
+            sql += ' AND (given_name LIKE ? OR family_name LIKE ? OR username LIKE ? OR email LIKE ?)';
             const searchTerm = `%${search}%`;
-            params.push(searchTerm, searchTerm, searchTerm);
+            params.push(searchTerm, searchTerm, searchTerm, searchTerm);
         }
 
         sql += ' ORDER BY created_at DESC';
@@ -71,10 +73,10 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { username, password, full_name, email, phone, role } = body;
+        const { username, password, title, given_name, family_name, email, phone, role } = body;
 
         // Validate required fields
-        if (!username || !password || !full_name || !role) {
+        if (!username || !password || !given_name || !family_name || !role) {
             return NextResponse.json(
                 { success: false, error: 'Missing required fields' },
                 { status: 400 }

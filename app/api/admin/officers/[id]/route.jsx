@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
         const { id } = await params;
 
         const officers = await query(
-            `SELECT id, username, full_name, email, phone, role, created_at, updated_at 
+            `SELECT id, username, title, given_name, family_name, email, phone, role, created_at, updated_at 
              FROM officer WHERE id = ?`,
             [id]
         );
@@ -39,7 +39,7 @@ export async function PUT(request, { params }) {
     try {
         const { id } = await params;
         const body = await request.json();
-        const { username, password, full_name, email, phone, role } = body;
+        const { username, password, title, given_name, family_name, email, phone, role } = body;
 
         // ตรวจสอบว่ามีเจ้าหน้าที่นี้อยู่หรือไม่
         const existing = await query('SELECT id FROM officer WHERE id = ?', [id]);
@@ -72,9 +72,17 @@ export async function PUT(request, { params }) {
             updates.push('username = ?');
             values.push(username);
         }
-        if (full_name) {
-            updates.push('full_name = ?');
-            values.push(full_name);
+        if (title !== undefined) {
+            updates.push('title = ?');
+            values.push(title);
+        }
+        if (given_name) {
+            updates.push('given_name = ?');
+            values.push(given_name);
+        }
+        if (family_name) {
+            updates.push('family_name = ?');
+            values.push(family_name);
         }
         if (email !== undefined) {
             updates.push('email = ?');

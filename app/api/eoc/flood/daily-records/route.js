@@ -12,7 +12,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// GET - ดึงข้อมูล flood_area_status ตามวันที่และ session
+// GET - ดึงข้อมูล flood_records ตามวันที่และ session
 export async function GET(request) {
     let connection;
 
@@ -69,7 +69,7 @@ export async function GET(request) {
                 v.villname,
                 v.distname as district,
                 v.subdistnam as tambon
-            FROM flood_area_status f
+            FROM flood_records f
             INNER JOIN satun_village_polygon v ON f.vid = v.id
             WHERE ${whereClause}
             ORDER BY f.recorded_day DESC, f.updated_at DESC
@@ -90,7 +90,7 @@ export async function GET(request) {
     }
 }
 
-// POST - บันทึกข้อมูลลง flood_area_status
+// POST - บันทึกข้อมูลลง flood_records
 export async function POST(request) {
     let connection;
 
@@ -111,14 +111,14 @@ export async function POST(request) {
 
         // ตรวจสอบว่ามีข้อมูลของหมู่บ้านนี้ในวันนี้แล้วหรือยัง
         const [existing] = await connection.execute(`
-            SELECT id FROM flood_area_status 
+            SELECT id FROM flood_records 
             WHERE vid = ? AND session_id = ? AND recorded_day = ?
         `, [data.polygon_id, data.session_id, data.recorded_day]);
 
         if (existing.length > 0) {
             // ถ้ามีแล้ว ให้ UPDATE
             await connection.execute(`
-                UPDATE flood_area_status SET
+                UPDATE flood_records SET
                     flood_level = ?,
                     water_level = ?,
                     affected_households = ?,
@@ -142,7 +142,7 @@ export async function POST(request) {
         } else {
             // ถ้ายังไม่มี ให้ INSERT
             const [result] = await connection.execute(`
-                INSERT INTO flood_area_status 
+                INSERT INTO flood_records
                 (vid, session_id, flood_level, water_level, affected_households, 
                  affected_population, recorded_day, notes, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')
@@ -190,7 +190,7 @@ export async function DELETE(request) {
 
         connection = await pool.getConnection();
         const [result] = await connection.execute(
-            'DELETE FROM flood_area_status WHERE id = ?',
+            'DELETE FROM flood_records WHERE id = ?',
             [id]
         );
 

@@ -101,7 +101,7 @@ export default function FloodMapPage() {
                         <button
                             onClick={() => setMode("realtime")}
                             className={`px-6 py-3 rounded-lg font-medium transition-all ${mode === "realtime"
-                                ? "bg-blue-600 text-white shadow-lg"
+                                ? "bg-green-600 text-white shadow-lg"
                                 : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                                 }`}
                         >
@@ -110,7 +110,7 @@ export default function FloodMapPage() {
                         <button
                             onClick={() => setMode("historical")}
                             className={`px-6 py-3 rounded-lg font-medium transition-all ${mode === "historical"
-                                ? "bg-blue-600 text-white shadow-lg"
+                                ? "bg-green-600 text-white shadow-lg"
                                 : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                                 }`}
                         >

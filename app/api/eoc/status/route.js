@@ -31,9 +31,13 @@ export async function GET(request) {
                 es.created_at,
                 es.updated_at,
                 ao.username as activated_by_username,
-                ao.full_name as activated_by_name,
+                ao.title as activated_by_title,
+                ao.given_name as activated_by_given_name,
+                ao.family_name as activated_by_family_name,
                 do.username as deactivated_by_username,
-                do.full_name as deactivated_by_name
+                do.title as deactivated_by_title,
+                do.given_name as deactivated_by_given_name,
+                do.family_name as deactivated_by_family_name
             FROM eoc_status es
             LEFT JOIN officer ao ON es.activated_by = ao.id
             LEFT JOIN officer do ON es.deactivated_by = do.id
