@@ -86,7 +86,7 @@ export async function GET(request) {
                 INNER JOIN eoc_sessions s ON f.session_id = s.id
                 WHERE s.eoc_type = 'flood' AND YEAR(s.opened_at) = ?
             `, [year]);
-
+d
             return NextResponse.json({
                 success: true,
                 year: parseInt(year),

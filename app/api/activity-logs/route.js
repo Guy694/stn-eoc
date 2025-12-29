@@ -116,7 +116,9 @@ export async function GET(request) {
                 al.user_agent,
                 al.metadata,
                 al.created_at,
-                o.full_name as user_full_name,
+                o.title,
+                o.given_name,
+                o.family_name,
                 o.role as user_role
             FROM activity_logs al
             LEFT JOIN officer o ON al.user_id = o.id

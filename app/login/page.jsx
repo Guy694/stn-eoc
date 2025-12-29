@@ -12,6 +12,13 @@ function ThaiIDErrorHandler({ setError }) {
         const errorType = searchParams.get('error');
         const errorMessage = searchParams.get('message');
         const pid = searchParams.get('pid');
+        const timeout = searchParams.get('timeout');
+
+        // ตรวจสอบ session timeout
+        if (timeout === 'true') {
+            setError('⏱️ Session หมดอายุเนื่องจากไม่มีการใช้งานเกิน 10 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+            return;
+        }
 
         if (errorType) {
             switch (errorType) {
@@ -28,7 +35,14 @@ function ThaiIDErrorHandler({ setError }) {
                     setError(`ไม่พบผู้ใช้งานที่มีเลขบัตรประชาชน: ${pid || 'ไม่ระบุ'}\nกรุณาติดต่อผู้ดูแลระบบเพื่อลงทะเบียน`);
                     break;
                 case 'callback_failed':
-                    setError(`เกิดข้อผิดพลาด: ${errorMessage || 'การเข้าสู่ระบบผ่าน ThaiID ล้มเหลว'}`);
+                    const decodedMessage = errorMessage ? decodeURIComponent(errorMessage) : 'การเข้าสู่ระบบผ่าน ThaiID ล้มเหลว';
+
+                    // ตรวจสอบว่าเป็น timeout error หรือไม่
+                    if (decodedMessage.includes('timeout') || decodedMessage.includes('ETIMEDOUT')) {
+                        setError('⏱️ การเชื่อมต่อ ThaiID หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiID ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiID API\n\nคำแนะนำ:\n✓ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n✓ ลองใหม่อีกครั้งในอีกสักครู่\n✓ หรือใช้ username/password แทน');
+                    } else {
+                        setError(`เกิดข้อผิดพลาด: ${decodedMessage}`);
+                    }
                     break;
                 default:
                     setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบผ่าน ThaiID');
@@ -95,9 +109,9 @@ function LoginForm() {
                         {/* Error Message */}
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                                <div className="flex items-center gap-2">
-                                    <span>⚠️</span>
-                                    <span>{error}</span>
+                                <div className="flex items-start gap-2">
+                                    <span className="text-lg">⚠️</span>
+                                    <div className="flex-1 whitespace-pre-line">{error}</div>
                                 </div>
                             </div>
                         )}

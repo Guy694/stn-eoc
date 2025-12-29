@@ -91,11 +91,11 @@ export default function ProfilePage() {
                         <div className="flex items-center gap-6">
                             <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
                                 <span className="text-green-700 font-bold text-4xl">
-                                    {user.fullName ? user.fullName.charAt(0) : user.username.charAt(0).toUpperCase()}
+                                    {user.givenName ? user.givenName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                                 </span>
                             </div>
                             <div>
-                                <h2 className="text-3xl font-bold mb-1">{user.fullName || user.username}</h2>
+                                <h2 className="text-3xl font-bold mb-1">{`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}</h2>
                                 <p className="text-green-100 text-lg">{user.roleDisplay}</p>
                                 <div className="flex items-center gap-4 mt-2">
                                     <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
@@ -117,7 +117,7 @@ export default function ProfilePage() {
                             // View Mode
                             <div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                    <InfoField label="ชื่อ-นามสกุล" value={user.fullName} icon="👤" />
+                                    <InfoField label="ชื่อ-นามสกุล" value={`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim()} icon="👤" />
                                     <InfoField label="อีเมล" value={user.email} icon="📧" />
                                     <InfoField label="เบอร์โทรศัพท์" value={user.phone} icon="📱" />
                                     <InfoField label="ตำแหน่ง" value={user.position} icon="💼" />

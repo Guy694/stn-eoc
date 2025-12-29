@@ -42,7 +42,7 @@ export default function DashboardPage() {
                 {/* Welcome Section */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        ยินดีต้อนรับ, {user.thaiIdData?.name || user.fullName || user.username}
+                        ยินดีต้อนรับ, {`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
                     </h1>
                     <p className="text-gray-600">
                         สิทธิ์การเข้าถึง: <span className="font-semibold text-green-600">{user.roleDisplay}</span>

@@ -97,28 +97,43 @@ async function exchangeCodeForToken(code) {
         code: code ? 'Present' : 'Missing'
     });
 
-    const response = await fetch(THAIID_CONFIG.tokenUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'API_KEY': THAIID_CONFIG.apiKey,
-        },
-        body: tokenParams.toString(),
-    });
+    // สร้าง AbortController สำหรับ timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30 วินาที
 
-    const responseText = await response.text();
-    console.log('Token Exchange Response Status:', response.status);
-    console.log('Token Exchange Response Body:', responseText);
+    try {
+        const response = await fetch(THAIID_CONFIG.tokenUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'API_KEY': THAIID_CONFIG.apiKey,
+            },
+            body: tokenParams.toString(),
+            signal: controller.signal
+        });
 
-    if (!response.ok) {
-        throw new Error(`Token exchange failed: ${response.status} - ${responseText}`);
+        clearTimeout(timeout);
+
+        const responseText = await response.text();
+        console.log('Token Exchange Response Status:', response.status);
+        console.log('Token Exchange Response Body:', responseText);
+
+        if (!response.ok) {
+            throw new Error(`Token exchange failed: ${response.status} - ${responseText}`);
+        }
+
+        const tokenData = JSON.parse(responseText);
+        console.log('Token Data Keys:', Object.keys(tokenData));
+        console.log('Access Token Present:', tokenData.access_token ? 'Yes' : 'No');
+
+        return tokenData;
+    } catch (error) {
+        clearTimeout(timeout);
+        if (error.name === 'AbortError') {
+            throw new Error('การเชื่อมต่อ ThaiID หมดเวลา (timeout) กรุณาลองใหม่อีกครั้ง');
+        }
+        throw error;
     }
-
-    const tokenData = JSON.parse(responseText);
-    console.log('Token Data Keys:', Object.keys(tokenData));
-    console.log('Access Token Present:', tokenData.access_token ? 'Yes' : 'No');
-
-    return tokenData;
 }
 
 /**
@@ -136,24 +151,39 @@ async function getUserInfo(accessToken) {
         access_token: accessToken
     });
 
-    const response = await fetch(THAIID_CONFIG.userInfoUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'API_KEY': THAIID_CONFIG.apiKey,
-        },
-        body: userInfoParams.toString(),
-    });
+    // สร้าง AbortController สำหรับ timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30 วินาที
 
-    const responseText = await response.text();
-    console.log('UserInfo Response Status:', response.status);
-    console.log('UserInfo Response Body:', responseText);
+    try {
+        const response = await fetch(THAIID_CONFIG.userInfoUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'API_KEY': THAIID_CONFIG.apiKey,
+            },
+            body: userInfoParams.toString(),
+            signal: controller.signal
+        });
 
-    if (!response.ok) {
-        throw new Error(`Get user info failed: ${response.status} - ${responseText}`);
+        clearTimeout(timeout);
+
+        const responseText = await response.text();
+        console.log('UserInfo Response Status:', response.status);
+        console.log('UserInfo Response Body:', responseText);
+
+        if (!response.ok) {
+            throw new Error(`Get user info failed: ${response.status} - ${responseText}`);
+        }
+
+        return JSON.parse(responseText);
+    } catch (error) {
+        clearTimeout(timeout);
+        if (error.name === 'AbortError') {
+            throw new Error('การเชื่อมต่อ ThaiID หมดเวลา (timeout) กรุณาลองใหม่อีกครั้ง');
+        }
+        throw error;
     }
-
-    return JSON.parse(responseText);
 }
 
 /**
@@ -249,7 +279,29 @@ export async function GET(request) {
 
                 console.log('ThaiID - New pending user created:', officer.id);
             } else {
+                // พบผู้ใช้เดิม -> อัพเดทข้อมูลจาก ThaiID
                 officer = officers[0];
+
+                console.log('ThaiID - Updating existing user data from ThaiID');
+
+                const title = tokenData.title || officer.title;
+                const givenName = tokenData.given_name || officer.given_name;
+                const familyName = tokenData.family_name || officer.family_name;
+
+                // อัพเดทข้อมูลจาก ThaiID ลงฐานข้อมูล
+                await connection.execute(
+                    `UPDATE officer 
+                    SET title = ?, given_name = ?, family_name = ?, last_login = NOW() 
+                    WHERE id = ?`,
+                    [title, givenName, familyName, officer.id]
+                );
+
+                // อัพเดทข้อมูลใน officer object
+                officer.title = title;
+                officer.given_name = givenName;
+                officer.family_name = familyName;
+
+                console.log('ThaiID - User data updated from ThaiID');
             }
 
             // ตรวจสอบสถานะการอนุมัติ
@@ -284,7 +336,6 @@ export async function GET(request) {
                 title: officer.title,
                 givenName: officer.given_name,
                 familyName: officer.family_name,
-                fullName: `${officer.title || ''} ${officer.given_name || ''} ${officer.family_name || ''}`.trim(),
                 email: officer.email,
                 phone: officer.phone,
                 role: officer.role,

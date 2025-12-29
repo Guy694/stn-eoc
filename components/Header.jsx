@@ -44,12 +44,12 @@ export default function Header() {
                                 >
                                     <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                                         <span className="text-green-800 font-bold text-sm">
-                                            {user.thaiIdData?.given_name ? user.thaiIdData.given_name.charAt(0) : (user.fullName ? user.fullName.charAt(0) : user.username.charAt(0).toUpperCase())}
+                                            {user.givenName ? user.givenName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
                                     <div className="hidden md:block text-left">
                                         <div className="text-sm font-semibold">
-                                            {user.thaiIdData?.name || user.fullName || user.username}
+                                            {`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
                                         </div>
                                         <div className="text-xs text-green-200">{user.roleDisplay}</div>
                                     </div>
@@ -77,7 +77,7 @@ export default function Header() {
                                             {/* User Info */}
                                             <div className="bg-green-50 px-4 py-3 border-b border-green-100">
                                                 <p className="font-semibold text-gray-800">
-                                                    {user.thaiIdData?.name || user.fullName || user.username}
+                                                    {`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
                                                 </p>
                                                 <p className="text-sm text-gray-600">{user.email}</p>
                                                 <p className="text-xs text-green-600 mt-1">{user.roleDisplay}</p>

@@ -118,7 +118,7 @@ export async function PUT(request, { params }) {
 
         // ดึงข้อมูลที่อัปเดตแล้ว
         const updated = await query(
-            'SELECT id, username, full_name, email, phone, role, created_at, updated_at FROM officer WHERE id = ?',
+            'SELECT id, username, title, given_name, family_name, email, phone, role, created_at, updated_at FROM officer WHERE id = ?',
             [id]
         );
 

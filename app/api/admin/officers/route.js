@@ -101,13 +101,13 @@ export async function POST(request) {
 
         // Insert new officer
         const result = await query(`
-            INSERT INTO officer (username, password_hash, full_name, email, phone, role)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `, [username, password_hash, full_name, email, phone, role]);
+            INSERT INTO officer (username, password_hash, title, given_name, family_name, email, phone, role)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [username, password_hash, title, given_name, family_name, email, phone, role]);
 
         // ดึงข้อมูลที่เพิ่งสร้าง
         const newOfficer = await query(
-            'SELECT id, username, full_name, email, phone, role, created_at FROM officer WHERE id = ?',
+            'SELECT id, username, title, given_name, family_name, email, phone, role, created_at FROM officer WHERE id = ?',
             [result.insertId]
         );
 

@@ -71,16 +71,59 @@ export async function POST(request) {
             );
         }
 
+        // ดึง IP address และ User Agent
+        const ip_address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+            || request.headers.get('x-real-ip')
+            || 'unknown';
+        const user_agent = request.headers.get('user-agent') || 'unknown';
+
         const connection = await pool.getConnection();
 
         try {
+            // ตรวจสอบ brute force attack (มากกว่า 5 ครั้งใน 15 นาที)
+            const [recentAttempts] = await connection.execute(
+                `SELECT COUNT(*) as count FROM login_attempts 
+                WHERE (username = ? OR ip_address = ?) 
+                AND success = 0 
+                AND attempt_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)`,
+                [username, ip_address]
+            );
+
+            if (recentAttempts[0].count >= 5) {
+                // บันทึก security log
+                await connection.execute(
+                    `INSERT INTO security_logs (event_type, username, ip_address, user_agent, details, severity) 
+                    VALUES (?, ?, ?, ?, ?, ?)`,
+                    ['suspicious_activity', username, ip_address, user_agent, 'Too many failed login attempts', 'high']
+                );
+
+                return NextResponse.json(
+                    { success: false, message: 'บัญชีถูกล็อคชั่วคราว กรุณาลองใหม่ในอีก 15 นาที' },
+                    { status: 429 }
+                );
+            }
+
             // ดึงข้อมูลจาก officer table
             const [officers] = await connection.execute(
-                'SELECT id, username, password_hash, title, given_name, family_name, email, phone, role FROM officer WHERE username = ?',
+                `SELECT id, username, password_hash, title, given_name, family_name, email, phone, role, 
+                failed_login_attempts, account_locked_until, must_change_password 
+                FROM officer WHERE username = ?`,
                 [username]
             );
 
             if (officers.length === 0) {
+                // บันทึก login attempt ที่ล้มเหลว
+                await connection.execute(
+                    'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 0)',
+                    [username, ip_address]
+                );
+
+                await connection.execute(
+                    `INSERT INTO security_logs (event_type, username, ip_address, user_agent, details, severity) 
+                    VALUES (?, ?, ?, ?, ?, ?)`,
+                    ['login_failed', username, ip_address, user_agent, 'User not found', 'medium']
+                );
+
                 return NextResponse.json(
                     { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
                     { status: 401 }
@@ -89,19 +132,97 @@ export async function POST(request) {
 
             const officer = officers[0];
 
+            // ตรวจสอบว่าบัญชีถูกล็อคหรือไม่
+            if (officer.account_locked_until && new Date(officer.account_locked_until) > new Date()) {
+                await connection.execute(
+                    `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    ['account_locked', officer.id, username, ip_address, user_agent, 'Attempt to login locked account', 'high']
+                );
+
+                return NextResponse.json(
+                    { success: false, message: `บัญชีถูกล็อค กรุณาติดต่อผู้ดูแลระบบ` },
+                    { status: 403 }
+                );
+            }
+
             // ตรวจสอบรหัสผ่านด้วย bcrypt
             const isPasswordValid = await bcrypt.compare(password, officer.password_hash);
 
             if (!isPasswordValid) {
+                // เพิ่มจำนวนครั้งที่ login ผิด
+                const failedAttempts = (officer.failed_login_attempts || 0) + 1;
+                let lockUntil = null;
+
+                // ล็อคบัญชีถ้าล้มเหลว 5 ครั้ง
+                if (failedAttempts >= 5) {
+                    lockUntil = new Date(Date.now() + 30 * 60 * 1000); // ล็อค 30 นาที
+
+                    await connection.execute(
+                        `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                        ['account_locked', officer.id, username, ip_address, user_agent, `Account locked after ${failedAttempts} failed attempts`, 'critical']
+                    );
+                }
+
+                await connection.execute(
+                    'UPDATE officer SET failed_login_attempts = ?, account_locked_until = ? WHERE id = ?',
+                    [failedAttempts, lockUntil, officer.id]
+                );
+
+                await connection.execute(
+                    'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 0)',
+                    [username, ip_address]
+                );
+
+                await connection.execute(
+                    `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    ['login_failed', officer.id, username, ip_address, user_agent, `Wrong password (attempt ${failedAttempts}/5)`, 'medium']
+                );
+
+                const message = failedAttempts >= 5
+                    ? 'บัญชีถูกล็อคชั่วคราว 30 นาที เนื่องจาก login ผิด 5 ครั้ง'
+                    : `ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (${failedAttempts}/5)`;
+
                 return NextResponse.json(
-                    { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
+                    { success: false, message },
                     { status: 401 }
                 );
             }
 
+            // Login สำเร็จ - รีเซ็ตจำนวนครั้งที่ล้มเหลว
+            await connection.execute(
+                'UPDATE officer SET failed_login_attempts = 0, account_locked_until = NULL, last_login = NOW() WHERE id = ?',
+                [officer.id]
+            );
+
             // สร้าง session token
             const crypto = require('crypto');
             const sessionToken = crypto.randomBytes(32).toString('hex');
+            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 ชั่วโมง
+
+            // บันทึก session ลงฐานข้อมูล
+            await connection.execute(
+                `INSERT INTO user_sessions 
+                (session_token, user_id, username, title, given_name, family_name, email, phone, role, ip_address, user_agent, expires_at, login_method) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'username_password')`,
+                [sessionToken, officer.id, officer.username, officer.title, officer.given_name, officer.family_name,
+                    officer.email, officer.phone, officer.role, ip_address, user_agent, expiresAt]
+            );
+
+            // บันทึก login attempt ที่สำเร็จ
+            await connection.execute(
+                'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 1)',
+                [username, ip_address]
+            );
+
+            // บันทึก security log
+            await connection.execute(
+                `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                ['login_success', officer.id, username, ip_address, user_agent, 'Successful login', 'low']
+            );
 
             // บันทึก activity log
             await connection.execute(
@@ -123,20 +244,20 @@ export async function POST(request) {
                     title: officer.title,
                     givenName: officer.given_name,
                     familyName: officer.family_name,
-                    fullName: `${officer.title || ''} ${officer.given_name || ''} ${officer.family_name || ''}`.trim(),
                     phone: officer.phone,
                     role: officer.role,
                     roleDisplay: roleDisplayNames[officer.role] || officer.role,
-                    permissions: permissions
+                    permissions: permissions,
+                    mustChangePassword: officer.must_change_password
                 },
                 sessionToken: sessionToken
             });
 
-            // ตั้งค่า cookie สำหรับ session
+            // ตั้งค่า cookie สำหรับ session (httpOnly เพื่อความปลอดภัย)
             response.cookies.set('session_token', sessionToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                sameSite: 'strict', // เปลี่ยนเป็น strict สำหรับความปลอดภัย
                 maxAge: 60 * 60 * 24 // 24 ชั่วโมง
             });
 

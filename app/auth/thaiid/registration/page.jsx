@@ -101,7 +101,7 @@ export default function ThaiIDRegistrationPage() {
                         </div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">ยินดีต้อนรับ</h1>
                         <p className="text-xl text-green-700 mb-2">
-                            {user.thaiIdData?.given_name || user.givenName || user.fullName}
+                            {user.givenName || user.thaiIdData?.given_name || user.username}
                         </p>
                         <p className="text-gray-600">กรุณากรอกข้อมูลเพื่อขอสิทธิ์เข้าใช้งานระบบ</p>
                     </div>

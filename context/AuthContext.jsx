@@ -1,50 +1,109 @@
 "use client";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [idleWarning, setIdleWarning] = useState(false);
+    const router = useRouter();
 
+    // ตรวจสอบ session ทุก 1 นาที
     useEffect(() => {
-        // ตรวจสอบ session จาก localStorage
+        // ตรวจสอบ session ทั้งจาก localStorage และ cookie
         validateSession();
+
+        // ตั้ง interval ตรวจสอบทุก 1 นาที
+        const intervalId = setInterval(() => {
+            validateSession();
+        }, 60000); // 60 วินาที
+
+        return () => clearInterval(intervalId);
     }, []);
 
-    const validateSession = async () => {
+    const validateSession = async (skipReload = false) => {
         try {
+            // 1. ลองตรวจสอบจาก localStorage ก่อน (สำหรับ username/password login)
             const sessionToken = localStorage.getItem("sessionToken");
-            if (!sessionToken) {
+            const storedUser = localStorage.getItem("user");
+
+            if (sessionToken && storedUser) {
+                // มี session ใน localStorage
+                const response = await fetch('/api/auth/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionToken })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.user) {
+                    setUser(data.user);
+                    setLoading(false);
+
+                    // แสดง warning ถ้าเหลือเวลาน้อยกว่า 2 นาที
+                    if (data.remainingMinutes !== undefined && data.remainingMinutes <= 2 && data.remainingMinutes > 0) {
+                        setIdleWarning(true);
+                    } else {
+                        setIdleWarning(false);
+                    }
+
+                    return;
+                } else if (data.sessionExpired || data.idleTimeout) {
+                    // Session หมดอายุ - ล้างข้อมูลและ redirect
+                    handleSessionExpired(skipReload);
+                    return;
+                }
+            }
+
+            // 2. ถ้าไม่มีใน localStorage ให้ลองตรวจสอบจาก cookie (สำหรับ ThaiID login)
+            const cookieResponse = await fetch('/api/auth/session');
+            const cookieData = await cookieResponse.json();
+
+            if (cookieData.success && cookieData.user) {
+                // พบ session ใน cookie -> บันทึกลง localStorage เพื่อใช้ต่อ
+                setUser(cookieData.user);
+                localStorage.setItem("user", JSON.stringify(cookieData.user));
+
+                // สร้าง sessionToken สำหรับ ThaiID session
+                const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                localStorage.setItem("sessionToken", thaiIdToken);
+
                 setLoading(false);
                 return;
             }
 
-            const response = await fetch('/api/auth/validate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionToken })
-            });
+            // 3. ไม่พบ session ทั้ง 2 แบบ
+            handleSessionExpired(skipReload);
 
-            const data = await response.json();
-
-            if (data.success && data.user) {
-                setUser(data.user);
-            } else {
-                // Session หมดอายุ
-                localStorage.removeItem("sessionToken");
-                localStorage.removeItem("user");
-                setUser(null);
-            }
         } catch (error) {
             console.error('Error validating session:', error);
-            localStorage.removeItem("sessionToken");
-            localStorage.removeItem("user");
-            setUser(null);
+            handleSessionExpired(skipReload);
         } finally {
             setLoading(false);
         }
     };
+
+    const handleSessionExpired = useCallback((skipReload = false) => {
+        localStorage.removeItem("sessionToken");
+        localStorage.removeItem("user");
+        setUser(null);
+        setIdleWarning(false);
+
+        // หน้าสาธารณะที่ไม่ต้อง redirect
+        const publicPages = ['/', '/login', '/auth/thaiid'];
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isPublicPage = publicPages.some(page => currentPath === page || currentPath.startsWith(page));
+
+        // Redirect ไป login เฉพาะหน้าที่ต้อง authentication
+        if (typeof window !== 'undefined' && !isPublicPage) {
+            if (!skipReload) {
+                router.push('/login?timeout=true');
+            }
+        }
+    }, [router]);
 
     const login = async (username, password) => {
         try {
@@ -80,12 +139,21 @@ export function AuthProvider({ children }) {
                     body: JSON.stringify({ sessionToken })
                 });
             }
+
+            // ลบ cookie ด้วย (สำหรับ ThaiID session)
+            document.cookie = 'user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
             setUser(null);
             localStorage.removeItem("sessionToken");
             localStorage.removeItem("user");
+
+            // Redirect ไปหน้า index
+            if (typeof window !== 'undefined') {
+                router.push('/');
+            }
         }
     };
 
@@ -151,6 +219,7 @@ export function AuthProvider({ children }) {
             login,
             logout,
             loading,
+            idleWarning,
             hasAccess,
             hasPermission,
             canAccessResources,
@@ -161,6 +230,45 @@ export function AuthProvider({ children }) {
             validateSession
         }}>
             {children}
+
+            {/* Idle Warning Modal */}
+            {idleWarning && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <svg className="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800">⚠️ คำเตือน</h3>
+                                <p className="text-sm text-gray-600">Session กำลังจะหมดอายุ</p>
+                            </div>
+                        </div>
+                        <p className="text-gray-700 mb-4">
+                            คุณไม่ได้ใช้งานเกินกว่า 8 นาที ระบบจะออกจากระบบอัตโนมัติในอีก <span className="font-bold text-red-600">2 นาที</span> หากไม่มีการใช้งาน
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setIdleWarning(false);
+                                    validateSession();
+                                }}
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                ใช้งานต่อ
+                            </button>
+                            <button
+                                onClick={logout}
+                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                ออกจากระบบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthContext.Provider>
     );
 }

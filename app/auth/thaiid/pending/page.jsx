@@ -32,7 +32,7 @@ export default function PendingApprovalPage() {
 
                 <div className="text-left bg-gray-50 rounded-lg p-4 mb-6">
                     <p className="text-gray-700 mb-2">
-                        <span className="font-semibold">ชื่อ:</span> {user?.thaiIdData?.name || user?.fullName}
+                        <span className="font-semibold">ชื่อ:</span> {`${user?.title || ''} ${user?.givenName || ''} ${user?.familyName || ''}`.trim() || user?.username}
                     </p>
                     <p className="text-gray-700 mb-2">
                         <span className="font-semibold">ตำแหน่ง:</span> {user?.position || '-'}

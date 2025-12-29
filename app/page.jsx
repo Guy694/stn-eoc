@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   const [activeEOCs, setActiveEOCs] = useState([]);
@@ -17,6 +17,8 @@ export default function Home() {
     hours: 0,
     minutes: 0
   });
+
+  const [infographicsData, setInfographicsData] = useState({});
 
   // ดึงข้อมูล EOC ที่เปิดอยู่
   useEffect(() => {
@@ -54,6 +56,33 @@ export default function Home() {
     // รีเฟรชทุก 30 วินาที
     const interval = setInterval(fetchActiveEOCs, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // ดึงข้อมูล infographics
+  useEffect(() => {
+    const fetchInfographics = async () => {
+      const types = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
+      const data = {};
+
+      for (const type of types) {
+        try {
+          const response = await fetch(`/api/public/infographics?eocType=${type}`);
+          const result = await response.json();
+          if (result.success) {
+            data[type] = result.data;
+          } else {
+            data[type] = [];
+          }
+        } catch (error) {
+          console.error(`Error fetching infographics for ${type}:`, error);
+          data[type] = [];
+        }
+      }
+
+      setInfographicsData(data);
+    };
+
+    fetchInfographics();
   }, []);
 
   // คำนวณเวลาที่ผ่านไป
@@ -127,6 +156,7 @@ export default function Home() {
   const getEOCContent = (eocType) => {
     const content = {
       flood: {
+        infographics: infographicsData[eocType] || [],
         warnings: [
           { icon: "⚠️", text: "หลีกเลี่ยงการเดินทางผ่านพื้นที่น้ำท่วม", level: "danger" },
           { icon: "🏠", text: "ย้ายทรัพย์สินไปที่สูง ตัดไฟฟ้าก่อนน้ำท่วม", level: "warning" },
@@ -159,6 +189,7 @@ export default function Home() {
         }
       },
       drought: {
+        infographics: infographicsData[eocType] || [],
         warnings: [
           { icon: "💧", text: "ใช้น้ำอย่างประหยัด งดล้างรถ รดน้ำต้นไม้", level: "warning" },
           { icon: "🌾", text: "เกษตรกรเก็บน้ำไว้ใช้ในการเพาะปลูก", level: "warning" },
@@ -191,6 +222,7 @@ export default function Home() {
         }
       },
       tsunami: {
+        infographics: infographicsData[eocType] || [],
         warnings: [
           { icon: "🚨", text: "อพยพไปพื้นที่สูงทันทีเมื่อได้รับแจ้งเตือน", level: "danger" },
           { icon: "📻", text: "ติดตามข่าวสารจากวิทยุและหอกระจายข่าว", level: "danger" },
@@ -217,6 +249,7 @@ export default function Home() {
         }
       },
       earthquake: {
+        infographics: infographicsData[eocType] || [],
         warnings: [
           { icon: "🏚️", text: "หลบใต้โต๊ะ ห่างจากหน้าต่างและของตกหล่น", level: "danger" },
           { icon: "🚪", text: "ออกจากอาคารสูง ไปยังพื้นที่โล่งแจ้ง", level: "danger" },
@@ -243,6 +276,7 @@ export default function Home() {
         }
       },
       disease: {
+        infographics: infographicsData[eocType] || [],
         warnings: [
           { icon: "😷", text: "สวมหน้ากากอนามัย ล้างมือบ่อยๆ", level: "warning" },
           { icon: "🏥", text: "พบแพทย์ทันทีหากมีอาการป่วย", level: "danger" },
@@ -282,43 +316,43 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
       {/* Hero Section - Improved */}
-      <header className="bg-gradient-to-r from-green-700 to-green-900 text-white py-16 shadow-lg relative overflow-hidden">
+      <header className="bg-gradient-to-r from-green-700 to-green-900 text-white py-8 md:py-16 shadow-lg relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl ring-4 ring-green-400">
-                <Image src="/img/logo.png" alt="EOC Logo" width={80} height={80} className="w-20 h-20" />
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
+            <div className="flex items-center gap-3 md:gap-6">
+              <div className="w-16 h-16 md:w-24 md:h-24 bg-white rounded-full flex items-center justify-center shadow-2xl ring-2 md:ring-4 ring-green-400">
+                <Image src="/img/logo.png" alt="EOC Logo" width={80} height={80} className="w-14 h-14 md:w-20 md:h-20" />
               </div>
               <div>
-                <h1 className="text-5xl font-bold mb-2 drop-shadow-lg">EOC จังหวัดสตูล</h1>
-                <p className="text-xl text-green-100 mb-1">Emergency Operations Center</p>
-                <p className="text-sm text-green-200">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 drop-shadow-lg">EOC จังหวัดสตูล</h1>
+                <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Emergency Operations Center</p>
+                <p className="text-xs md:text-sm text-green-200">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
               </div>
             </div>
 
             {/* Call-to-Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 md:gap-4 w-full md:w-auto">
               <Link
                 href="/login"
-                className="bg-white hover:bg-gray-100 text-green-700 px-8 py-4 rounded-xl font-bold shadow-xl transition-all hover:shadow-2xl hover:scale-105 text-center"
+                className="bg-white hover:bg-gray-100 text-green-700 px-4 py-3 md:px-8 md:py-4 rounded-lg md:rounded-xl font-bold shadow-xl transition-all hover:shadow-2xl hover:scale-105 text-center text-sm md:text-base"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl">🔐</span>
+                  <span className="text-sm md:text-2xl">🔐</span>
                   <span>เข้าสู่ระบบ</span>
                 </div>
               </Link>
               <Link
                 href="/public/disaster-map"
-                className="bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-xl font-bold shadow-xl transition-all hover:shadow-2xl hover:scale-105 text-center"
+                className="bg-green-600 hover:bg-green-500 text-white px-4 py-3 md:px-8 md:py-4 rounded-lg md:rounded-xl font-bold shadow-xl transition-all hover:shadow-2xl hover:scale-105 text-center text-sm md:text-base"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl">🗺️</span>
+                  <span className="text-sm md:text-2xl">🗺️</span>
                   <span>แผนที่ภัยพิบัติ</span>
                 </div>
               </Link>
@@ -327,7 +361,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-3 md:px-6 py-4 md:py-8">
         {/* EOC Status Section - Enhanced with Active EOCs List */}
         <section className="mb-8">
           {loading ? (
@@ -337,8 +371,8 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <div className={`rounded-2xl shadow-2xl p-8 relative overflow-hidden mb-6 ${eocStatus.isOpen
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+              <div className={`rounded-xl md:rounded-2xl shadow-2xl p-4 md:p-8 relative overflow-hidden mb-4 md:mb-6 ${eocStatus.isOpen
+                ? 'bg-gradient-to-r from-red-700 to-orange-700 text-white'
                 : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
                 }`}>
                 {/* Animated Background */}
@@ -350,38 +384,38 @@ export default function Home() {
                 )}
 
                 <div className="relative z-10">
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${eocStatus.isOpen ? 'bg-white/20 animate-pulse' : 'bg-white/10'
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+                    <div className="flex-1 w-full">
+                      <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                        <div className={`w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center ${eocStatus.isOpen ? 'bg-white/20 animate-pulse' : 'bg-white/10'
                           } shadow-lg`}>
-                          <span className="text-4xl">{eocStatus.isOpen ? '🚨' : '✅'}</span>
+                          <span className="text-3xl md:text-4xl">{eocStatus.isOpen ? '🚨' : '✅'}</span>
                         </div>
                         <div>
-                          <h2 className="text-4xl font-bold mb-1">
+                          <h2 className="text-xl md:text-3xl lg:text-4xl font-bold mb-0.5 md:mb-1">
                             สถานะ EOC: {eocStatus.isOpen ? 'เปิดใช้งาน' : 'ปิด'}
                           </h2>
-                          <p className="text-xl opacity-90">
+                          <p className="text-sm md:text-lg lg:text-xl opacity-90">
                             {eocStatus.isOpen ? eocStatus.reason : 'ไม่มีเหตุฉุกเฉิน'}
                           </p>
                         </div>
                       </div>
 
                       {eocStatus.isOpen && (
-                        <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-                          <p className="text-sm mb-3">เปิด EOC เมื่อ: {formatDate(eocStatus.openedDate)}</p>
-                          <div className="grid grid-cols-3 gap-4">
-                            <div className="text-center bg-white/10 rounded-lg p-3">
-                              <div className="text-4xl font-bold">{timeElapsed.days}</div>
-                              <div className="text-sm opacity-80">วัน</div>
+                        <div className="bg-white/10 rounded-lg md:rounded-xl p-3 md:p-4 backdrop-blur-sm">
+                          <p className="text-xs md:text-sm mb-2 md:mb-3">เปิด EOC เมื่อ: {formatDate(eocStatus.openedDate)}</p>
+                          <div className="grid grid-cols-3 gap-2 md:gap-4">
+                            <div className="text-center bg-white/10 rounded-lg p-2 md:p-3">
+                              <div className="text-2xl md:text-4xl font-bold">{timeElapsed.days}</div>
+                              <div className="text-xs md:text-sm opacity-80">วัน</div>
                             </div>
-                            <div className="text-center bg-white/10 rounded-lg p-3">
-                              <div className="text-4xl font-bold">{timeElapsed.hours}</div>
-                              <div className="text-sm opacity-80">ชั่วโมง</div>
+                            <div className="text-center bg-white/10 rounded-lg p-2 md:p-3">
+                              <div className="text-2xl md:text-4xl font-bold">{timeElapsed.hours}</div>
+                              <div className="text-xs md:text-sm opacity-80">ชั่วโมง</div>
                             </div>
-                            <div className="text-center bg-white/10 rounded-lg p-3">
-                              <div className="text-4xl font-bold">{timeElapsed.minutes}</div>
-                              <div className="text-sm opacity-80">นาที</div>
+                            <div className="text-center bg-white/10 rounded-lg p-2 md:p-3">
+                              <div className="text-2xl md:text-4xl font-bold">{timeElapsed.minutes}</div>
+                              <div className="text-xs md:text-sm opacity-80">นาที</div>
                             </div>
                           </div>
                         </div>
@@ -389,16 +423,16 @@ export default function Home() {
                     </div>
 
                     {eocStatus.isOpen && (
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-row md:flex-col gap-2 md:gap-3 w-full md:w-auto">
                         <Link
-                          href="/dashboard"
-                          className="bg-white text-red-600 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 text-center"
+                          href="/public/report-incident"
+                          className="bg-white text-red-600 px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 text-center text-sm md:text-base flex-1 md:flex-none"
                         >
-                          ⚡ ดูรายละเอียด
+                          ⚡ แบบฟอร์มแจ้งเหตุ
                         </Link>
                         <Link
                           href="/eoc/flood"
-                          className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-semibold transition-all text-center backdrop-blur-sm border border-white/30"
+                          className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all text-center backdrop-blur-sm border border-white/30 text-sm md:text-base flex-1 md:flex-none"
                         >
                           🗺️ แผนที่สถานการณ์
                         </Link>
@@ -410,51 +444,51 @@ export default function Home() {
 
               {/* Active EOCs List */}
               {activeEOCs.length > 0 && (
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">🚨 EOC ที่เปิดใช้งานอยู่ ({activeEOCs.length})</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="mb-4 md:mb-6">
+                  <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚨 EOC ที่เปิดใช้งานอยู่ ({activeEOCs.length})</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     {activeEOCs.map((eoc) => (
                       <div
                         key={eoc.eoc_type}
-                        className={`bg-gradient-to-br ${getEOCTypeColor(eoc.eoc_type)} text-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all hover:scale-105`}
+                        className={`bg-gradient-to-br ${getEOCTypeColor(eoc.eoc_type)} text-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-6 hover:shadow-xl transition-all hover:scale-105`}
                       >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="text-4xl">{getEOCTypeIcon(eoc.eoc_type)}</div>
+                        <div className="flex items-center justify-between mb-3 md:mb-4">
+                          <div className="flex items-center gap-2 md:gap-3">
+                            <div className="text-3xl md:text-4xl">{getEOCTypeIcon(eoc.eoc_type)}</div>
                             <div>
-                              <h3 className="text-xl font-bold">{getEOCTypeName(eoc.eoc_type)}</h3>
+                              <h3 className="text-base md:text-xl font-bold">{getEOCTypeName(eoc.eoc_type)}</h3>
                               <p className="text-xs opacity-80">EOC {eoc.eoc_type.toUpperCase()}</p>
                             </div>
                           </div>
-                          <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-bold backdrop-blur-sm">
+                          <span className="px-2 md:px-3 py-1 bg-white/20 rounded-full text-xs font-bold backdrop-blur-sm">
                             เปิด
                           </span>
                         </div>
 
-                        <div className="space-y-2 text-sm">
-                          <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                        <div className="space-y-2 text-xs md:text-sm">
+                          <div className="bg-white/10 rounded-lg p-2 md:p-3 backdrop-blur-sm">
                             <p className="opacity-80 text-xs mb-1">เปิดเมื่อ</p>
-                            <p className="font-semibold">{formatDate(eoc.activated_at)}</p>
+                            <p className="font-semibold text-xs md:text-sm">{formatDate(eoc.activated_at)}</p>
                           </div>
 
                           {eoc.activated_by_name && (
-                            <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                            <div className="bg-white/10 rounded-lg p-2 md:p-3 backdrop-blur-sm">
                               <p className="opacity-80 text-xs mb-1">เปิดโดย</p>
-                              <p className="font-semibold">{eoc.activated_by_name}</p>
+                              <p className="font-semibold text-xs md:text-sm">{eoc.activated_by_name}</p>
                             </div>
                           )}
 
                           {eoc.description && (
-                            <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                            <div className="bg-white/10 rounded-lg p-2 md:p-3 backdrop-blur-sm">
                               <p className="opacity-80 text-xs mb-1">รายละเอียด</p>
-                              <p className="font-medium text-sm">{eoc.description}</p>
+                              <p className="font-medium text-xs md:text-sm">{eoc.description}</p>
                             </div>
                           )}
                         </div>
 
                         <Link
                           href={`/eoc/${eoc.eoc_type}`}
-                          className="mt-4 block w-full bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-center transition-all backdrop-blur-sm border border-white/30"
+                          className="mt-3 md:mt-4 block w-full bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-center transition-all backdrop-blur-sm border border-white/30 text-xs md:text-sm"
                         >
                           ดูข้อมูล →
                         </Link>
@@ -474,36 +508,24 @@ export default function Home() {
 
           return (
             <div key={eoc.eoc_type} className="mb-8">
-              {/* คำเตือนและคำแนะนำ */}
-              <section className="mb-6">
-                <div className={`bg-gradient-to-r ${getEOCTypeColor(eoc.eoc_type)} rounded-xl p-6 text-white shadow-xl`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-4xl">{getEOCTypeIcon(eoc.eoc_type)}</span>
-                    <h2 className="text-3xl font-bold">คำแนะนำสำหรับประชาชน - {getEOCTypeName(eoc.eoc_type)}</h2>
+              {/* Infographic Carousel - คำแนะนำสำหรับประชาชน */}
+              <section className="mb-4 md:mb-6">
+                <div className={`bg-gradient-to-r ${getEOCTypeColor(eoc.eoc_type)} rounded-lg md:rounded-xl p-4 md:p-6 text-white shadow-xl`}>
+                  <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                    <span className="text-3xl md:text-4xl">{getEOCTypeIcon(eoc.eoc_type)}</span>
+                    <h2 className="text-lg md:text-2xl lg:text-3xl font-bold">คำแนะนำสำหรับประชาชน - {getEOCTypeName(eoc.eoc_type)}</h2>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {content.warnings.map((warning, idx) => (
-                      <div
-                        key={idx}
-                        className={`p-4 rounded-lg ${warning.level === 'danger' ? 'bg-red-600/30 border-2 border-red-300' :
-                          warning.level === 'warning' ? 'bg-yellow-600/20 border-2 border-yellow-300' :
-                            'bg-blue-600/20 border-2 border-blue-300'
-                          }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-3xl flex-shrink-0">{warning.icon}</span>
-                          <p className="font-semibold">{warning.text}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <InfographicCarousel
+                    infographics={content.infographics}
+                    eocType={eoc.eoc_type}
+                  />
                 </div>
               </section>
 
               {/* สถิติเฉพาะ EOC */}
-              <section className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">📊 สถิติ{getEOCTypeName(eoc.eoc_type)}</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <section className="mb-4 md:mb-6">
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">📊 สถิติ{getEOCTypeName(eoc.eoc_type)}</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                   {Object.entries(content.stats).map(([key, value]) => {
                     const labels = {
                       affected: { icon: "👥", title: "ผู้ได้รับผลกระทบ", unit: "คน" },
@@ -523,75 +545,77 @@ export default function Home() {
                     const label = labels[key] || { icon: "📊", title: key, unit: "" };
 
                     return (
-                      <div key={key} className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-3xl mb-2">{label.icon}</div>
-                        <div className="text-2xl font-bold text-gray-800 mb-1">
-                          {value} <span className="text-sm font-normal text-gray-600">{label.unit}</span>
+                      <div key={key} className="bg-white rounded-lg shadow-md p-3 md:p-4 text-center">
+                        <div className="text-2xl md:text-3xl mb-1 md:mb-2">{label.icon}</div>
+                        <div className="text-lg md:text-2xl font-bold text-gray-800 mb-0.5 md:mb-1">
+                          {value} <span className="text-xs md:text-sm font-normal text-gray-600">{label.unit}</span>
                         </div>
                         <div className="text-xs text-gray-600">{label.title}</div>
                       </div>
                     );
                   })}
                 </div>
-              </section>
+              </section >
 
               {/* ข่าวประชาสัมพันธ์เฉพาะ EOC */}
-              <section className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">📢 ข่าวสาร{getEOCTypeName(eoc.eoc_type)}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              < section className="mb-4 md:mb-6" >
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">📢 ข่าวสาร{getEOCTypeName(eoc.eoc_type)}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {content.news.map((news, idx) => (
-                    <div key={idx} className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${news.type === 'warning' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                    <div key={idx} className="bg-white rounded-lg shadow-md p-4 md:p-5 hover:shadow-lg transition-shadow">
+                      <div className="flex items-start gap-2 md:gap-3">
+                        <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${news.type === 'warning' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
                           }`}>
-                          <span className="text-2xl">{news.type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                          <span className="text-xl md:text-2xl">{news.type === 'warning' ? '⚠️' : 'ℹ️'}</span>
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-800 mb-1">{news.title}</h3>
-                          <p className="text-sm text-gray-500 mb-2">{news.date}</p>
-                          <p className="text-gray-600">{news.content}</p>
+                          <h3 className="font-bold text-sm md:text-lg text-gray-800 mb-1">{news.title}</h3>
+                          <p className="text-xs md:text-sm text-gray-500 mb-1 md:mb-2">{news.date}</p>
+                          <p className="text-sm md:text-base text-gray-600">{news.content}</p>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </section>
+              </section >
 
               {/* Quick Access เฉพาะ EOC */}
-              <section className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">🚀 เข้าถึงด่วน - {getEOCTypeName(eoc.eoc_type)}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              < section className="mb-4 md:mb-6" >
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚀 เข้าถึงด่วน - {getEOCTypeName(eoc.eoc_type)}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                   {content.quickActions.map((action, idx) => (
                     <Link
                       key={idx}
                       href={action.link}
-                      className={`bg-gradient-to-br from-${action.color}-50 to-${action.color}-100 border-2 border-${action.color}-200 hover:border-${action.color}-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group`}
+                      className={`bg-gradient-to-br from-${action.color}-50 to-${action.color}-100 border-2 border-${action.color}-200 hover:border-${action.color}-300 rounded-lg md:rounded-xl shadow-md p-4 md:p-6 text-center transition-all hover:shadow-xl hover:scale-105 group`}
                     >
-                      <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">{action.icon}</div>
-                      <h3 className="font-bold text-lg text-gray-800">{action.title}</h3>
+                      <div className="text-4xl md:text-5xl mb-3 md:mb-4 group-hover:scale-110 transition-transform">{action.icon}</div>
+                      <h3 className="font-bold text-base md:text-lg text-gray-800">{action.title}</h3>
                     </Link>
                   ))}
                 </div>
-              </section>
-            </div>
+              </section >
+            </div >
           );
         })}
 
         {/* ถ้าไม่มี EOC เปิด แสดงข้อมูลทั่วไป */}
-        {activeEOCs.length === 0 && !loading && (
-          <>
-            {/* Quick Access ทั่วไป */}
-            <section className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">🚀 เข้าถึงด่วน</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <QuickLinkCard icon="🗺️" title="แผนที่ภัยพิบัติ" description="ดูสถานการณ์ภัยพิบัติทั้งหมด" link="/public/disaster-map" color="blue" />
-                <QuickLinkCard icon="💧" title="สถานการณ์น้ำท่วม" description="ข้อมูลน้ำท่วมรายวัน" link="/eoc/flood" color="cyan" />
-                <QuickLinkCard icon="☀️" title="สถานการณ์ภัยแล้ง" description="พื้นที่ประสบภัยแล้ง" link="/eoc/drought" color="orange" />
-                <QuickLinkCard icon="🏘️" title="ข้อมูลหมู่บ้าน" description="ข้อมูลหมู่บ้านทั้งหมด" link="/eoc/village-map" color="green" />
-              </div>
-            </section>
-          </>
-        )}
+        {
+          activeEOCs.length === 0 && !loading && (
+            <>
+              {/* Quick Access ทั่วไป */}
+              <section className="mb-6 md:mb-8">
+                <h2 className="text-xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6 px-1">🚀 เข้าถึงด่วน</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+                  <QuickLinkCard icon="🗺️" title="แผนที่ภัยพิบัติ" description="ดูสถานการณ์ภัยพิบัติทั้งหมด" link="/public/disaster-map" color="blue" />
+                  <QuickLinkCard icon="💧" title="สถานการณ์น้ำท่วม" description="ข้อมูลน้ำท่วมรายวัน" link="/eoc/flood" color="cyan" />
+                  <QuickLinkCard icon="☀️" title="สถานการณ์ภัยแล้ง" description="พื้นที่ประสบภัยแล้ง" link="/eoc/drought" color="orange" />
+                  <QuickLinkCard icon="🏘️" title="ข้อมูลหมู่บ้าน" description="ข้อมูลหมู่บ้านทั้งหมด" link="/eoc/village-map" color="green" />
+                </div>
+              </section>
+            </>
+          )
+        }
 
         {/* Infographic Stats */}
         <section className="mb-8 hidden">
@@ -601,32 +625,192 @@ export default function Home() {
         </section>
 
         {/* Emergency Contact - แสดงเสมอ */}
-        <section className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl shadow-lg p-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">☎️ หมายเลขฉุกเฉิน</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-8 text-center">
+          <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4">☎️ หมายเลขฉุกเฉิน</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <div>
-              <div className="text-5xl font-bold mb-2">191</div>
-              <div className="text-lg">ตำรวจ</div>
+              <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">191</div>
+              <div className="text-sm md:text-lg">ตำรวจ</div>
             </div>
             <div>
-              <div className="text-5xl font-bold mb-2">1669</div>
-              <div className="text-lg">ฉุกเฉิน EMS</div>
+              <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">1669</div>
+              <div className="text-sm md:text-lg">ฉุกเฉิน EMS</div>
             </div>
             <div>
-              <div className="text-5xl font-bold mb-2">199</div>
-              <div className="text-lg">ดับเพลิง</div>
+              <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">199</div>
+              <div className="text-sm md:text-lg">ดับเพลิง</div>
             </div>
           </div>
         </section>
-      </main>
+      </main >
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-gray-300 py-6 mt-12">
-        <div className="container mx-auto px-6 text-center">
-          <p>&copy; 2025 EOC จังหวัดสตูล - Emergency Operations Center</p>
-          <p className="text-sm mt-2">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
+      < footer className="bg-gray-800 text-gray-300 py-4 md:py-6 mt-8 md:mt-12" >
+        <div className="container mx-auto px-4 md:px-6 text-center">
+          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Emergency Operations Center</p>
+          <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// Infographic Carousel Component
+function InfographicCarousel({ infographics, eocType }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const autoPlayRef = useRef(null);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (isAutoPlaying) {
+      autoPlayRef.current = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % infographics.length);
+      }, 5000); // เปลี่ยนทุก 5 วินาที
+    }
+
+    return () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current);
+      }
+    };
+  }, [isAutoPlaying, infographics.length]);
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+    setIsAutoPlaying(false); // หยุด auto-play เมื่อผู้ใช้คลิก
+  };
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + infographics.length) % infographics.length);
+    setIsAutoPlaying(false);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % infographics.length);
+    setIsAutoPlaying(false);
+  };
+
+  const toggleAutoPlay = () => {
+    setIsAutoPlaying(!isAutoPlaying);
+  };
+
+  // ถ้าไม่มี infographics แสดง placeholder
+  if (!infographics || infographics.length === 0) {
+    return (
+      <div className="relative overflow-hidden rounded-lg bg-white/10 backdrop-blur-sm">
+        <div className="relative w-full aspect-video bg-gradient-to-br from-white/20 to-white/5">
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+            <div className="text-6xl md:text-8xl mb-4 opacity-50">📊</div>
+            <p className="text-white text-lg md:text-2xl font-bold mb-2">ยังไม่มี Infographic</p>
+            <p className="text-white/80 text-sm md:text-base">
+              รอดำเนินการโดยฝ่าย Risk Communication
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      {/* Main Carousel */}
+      <div className="relative overflow-hidden rounded-lg bg-white/10 backdrop-blur-sm">
+        <div
+          className="flex transition-transform duration-500 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {infographics.map((infographic) => (
+            <div key={infographic.id} className="w-full flex-shrink-0">
+              <div className="relative w-full aspect-video bg-gradient-to-br from-white/20 to-white/5">
+                {/* แสดงรูป Infographic */}
+                <img
+                  src={infographic.image}
+                  alt={infographic.alt}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    // Fallback ถ้ารูปโหลดไม่ได้
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = `
+                      <div class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                        <div class="text-6xl md:text-8xl mb-4 opacity-50">📊</div>
+                        <p class="text-white text-lg md:text-2xl font-bold mb-2">${infographic.alt}</p>
+                        <p class="text-white/80 text-sm md:text-base mb-4">ไม่สามารถโหลดรูปภาพได้</p>
+                      </div>
+                    `;
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Navigation Buttons */}
+        <button
+          onClick={goToPrevious}
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-sm text-white rounded-full p-2 md:p-3 transition-all hover:scale-110 z-10"
+          aria-label="Previous slide"
+        >
+          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <button
+          onClick={goToNext}
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-sm text-white rounded-full p-2 md:p-3 transition-all hover:scale-110 z-10"
+          aria-label="Next slide"
+        >
+          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Controls and Indicators */}
+      <div className="flex items-center justify-between mt-3 md:mt-4">
+        {/* Slide Indicators */}
+        <div className="flex gap-2">
+          {infographics.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`h-2 rounded-full transition-all ${index === currentIndex
+                ? 'w-8 bg-white'
+                : 'w-2 bg-white/40 hover:bg-white/60'
+                }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Auto-play Toggle */}
+        <button
+          onClick={toggleAutoPlay}
+          className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all"
+        >
+          {isAutoPlaying ? (
+            <>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+              </svg>
+              <span className="hidden md:inline">หยุดอัตโนมัติ</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <span className="hidden md:inline">เล่นอัตโนมัติ</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Slide Counter */}
+      <div className="text-center mt-2 text-white/80 text-xs md:text-sm">
+        {currentIndex + 1} / {infographics.length}
+      </div>
     </div>
   );
 }
@@ -634,12 +818,12 @@ export default function Home() {
 // Component สำหรับแสดงสถิติ
 function StatCard({ icon, title, value, unit = "", color }) {
   return (
-    <div className={`bg-gradient-to-br ${color} text-white rounded-lg shadow-lg p-6 hover:scale-105 transition-transform`}>
-      <div className="text-4xl mb-2">{icon}</div>
-      <div className="text-3xl font-bold mb-1">
-        {value} {unit && <span className="text-xl">{unit}</span>}
+    <div className={`bg-gradient-to-br ${color} text-white rounded-lg shadow-lg p-4 md:p-6 hover:scale-105 transition-transform`}>
+      <div className="text-3xl md:text-4xl mb-1 md:mb-2">{icon}</div>
+      <div className="text-2xl md:text-3xl font-bold mb-1">
+        {value} {unit && <span className="text-base md:text-xl">{unit}</span>}
       </div>
-      <div className="text-sm opacity-90">{title}</div>
+      <div className="text-xs md:text-sm opacity-90">{title}</div>
     </div>
   );
 }
@@ -657,11 +841,11 @@ function QuickLinkCard({ icon, title, description, link, color = "gray" }) {
   return (
     <Link
       href={link}
-      className={`bg-gradient-to-br ${colorClasses[color]} border-2 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group`}
+      className={`bg-gradient-to-br ${colorClasses[color]} border-2 rounded-lg md:rounded-xl shadow-md p-4 md:p-6 text-center transition-all hover:shadow-xl hover:scale-105 group`}
     >
-      <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">{icon}</div>
-      <h3 className="font-bold text-lg text-gray-800 mb-2">{title}</h3>
-      {description && <p className="text-sm text-gray-600">{description}</p>}
+      <div className="text-4xl md:text-5xl mb-3 md:mb-4 group-hover:scale-110 transition-transform">{icon}</div>
+      <h3 className="font-bold text-base md:text-lg text-gray-800 mb-1 md:mb-2">{title}</h3>
+      {description && <p className="text-xs md:text-sm text-gray-600">{description}</p>}
     </Link>
   );
 }

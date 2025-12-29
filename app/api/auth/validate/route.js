@@ -74,22 +74,54 @@ export async function POST(request) {
 
         try {
             // ตรวจสอบ session และดึงข้อมูล officer
+            // เพิ่มเงื่อนไข: last_activity ต้องไม่เกิน 10 นาที
             const [sessions] = await connection.execute(
-                `SELECT s.user_id, s.expires_at, o.username, o.title, o.given_name, o.family_name, o.email, o.phone, o.role
+                `SELECT s.*, o.username, o.title, o.given_name, o.family_name, o.email, o.phone, o.role,
+                 TIMESTAMPDIFF(MINUTE, s.last_activity, NOW()) as idle_minutes
                  FROM user_sessions s
                  JOIN officer o ON s.user_id = o.id
-                 WHERE s.session_token = ? AND s.expires_at > NOW()`,
+                 WHERE s.session_token = ? 
+                 AND s.expires_at > NOW() 
+                 AND s.is_active = 1`,
                 [sessionToken]
             );
 
             if (sessions.length === 0) {
                 return NextResponse.json(
-                    { success: false, message: 'Session หมดอายุหรือไม่ถูกต้อง' },
+                    { success: false, message: 'Session หมดอายุหรือไม่ถูกต้อง', sessionExpired: true },
                     { status: 401 }
                 );
             }
 
             const sessionData = sessions[0];
+
+            // ตรวจสอบ idle timeout (10 นาที)
+            if (sessionData.idle_minutes >= 10) {
+                // ปิด session
+                await connection.execute(
+                    'UPDATE user_sessions SET is_active = 0 WHERE session_token = ?',
+                    [sessionToken]
+                );
+
+                // บันทึก security log
+                await connection.execute(
+                    `INSERT INTO security_logs (event_type, user_id, username, details, severity) 
+                    VALUES (?, ?, ?, ?, ?)`,
+                    ['session_expired', sessionData.user_id, sessionData.username,
+                        `Session expired due to inactivity (${sessionData.idle_minutes} minutes)`, 'low']
+                );
+
+                return NextResponse.json(
+                    { success: false, message: 'Session หมดอายุเนื่องจากไม่มีการใช้งาน', sessionExpired: true, idleTimeout: true },
+                    { status: 401 }
+                );
+            }
+
+            // อัพเดท last_activity (เพื่อรีเซ็ต idle timer)
+            await connection.execute(
+                'UPDATE user_sessions SET last_activity = NOW() WHERE session_token = ?',
+                [sessionToken]
+            );
 
             // ดึง permissions ตาม role
             const permissions = rolePermissions[sessionData.role] || rolePermissions.staff;
@@ -102,13 +134,14 @@ export async function POST(request) {
                     title: sessionData.title,
                     givenName: sessionData.given_name,
                     familyName: sessionData.family_name,
-                    fullName: `${sessionData.title || ''} ${sessionData.given_name || ''} ${sessionData.family_name || ''}`.trim(),
                     email: sessionData.email,
                     phone: sessionData.phone,
                     role: sessionData.role,
                     roleDisplay: roleDisplayNames[sessionData.role] || sessionData.role,
                     permissions: permissions
-                }
+                },
+                idleMinutes: sessionData.idle_minutes,
+                remainingMinutes: 10 - sessionData.idle_minutes
             });
 
         } finally {

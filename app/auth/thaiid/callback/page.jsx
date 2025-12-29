@@ -16,14 +16,34 @@ export default function ThaiIDCallbackPage() {
                 const data = await response.json();
 
                 if (data.success && data.user) {
+                    // บันทึก user ลง localStorage เพื่อให้ AuthContext ใช้งานได้
+                    localStorage.setItem("user", JSON.stringify(data.user));
+
+                    // สร้าง sessionToken แบบง่ายๆ (ใช้ timestamp + random)
+                    const sessionToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                    localStorage.setItem("sessionToken", sessionToken);
+
                     // เซ็ต user ใน AuthContext
                     setUser(data.user);
                     setStatus('success');
 
-                    // Redirect ไป dashboard หลังจาก 1 วินาที
-                    setTimeout(() => {
-                        router.push('/dashboard');
-                    }, 1000);
+                    // ตรวจสอบสถานะการอนุมัติ
+                    if (data.user.isApproved === false) {
+                        // ถ้ายังไม่ได้รับการอนุมัติ -> ไปหน้า pending
+                        setTimeout(() => {
+                            router.push('/auth/thaiid/pending');
+                        }, 1000);
+                    } else if (data.user.isNewUser) {
+                        // ถ้าเป็น user ใหม่ -> ไปหน้ากรอกข้อมูล
+                        setTimeout(() => {
+                            router.push('/auth/thaiid/registration');
+                        }, 1000);
+                    } else {
+                        // ถ้าปกติ -> ไป dashboard
+                        setTimeout(() => {
+                            router.push('/dashboard');
+                        }, 1000);
+                    }
                 } else {
                     setStatus('error');
                 }

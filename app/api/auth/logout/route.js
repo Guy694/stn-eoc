@@ -14,6 +14,10 @@ const pool = mysql.createPool({
 export async function POST(request) {
     try {
         const { sessionToken } = await request.json();
+        const ip_address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+            || request.headers.get('x-real-ip')
+            || 'unknown';
+        const user_agent = request.headers.get('user-agent') || 'unknown';
 
         if (!sessionToken) {
             return NextResponse.json(
@@ -25,16 +29,48 @@ export async function POST(request) {
         const connection = await pool.getConnection();
 
         try {
+            // ดึงข้อมูล session ก่อนลบ
+            const [sessions] = await connection.execute(
+                'SELECT user_id, username FROM user_sessions WHERE session_token = ?',
+                [sessionToken]
+            );
+
             // ลบ session
             await connection.execute(
                 'DELETE FROM user_sessions WHERE session_token = ?',
                 [sessionToken]
             );
 
-            return NextResponse.json({
+            // บันทึก security log
+            if (sessions.length > 0) {
+                await connection.execute(
+                    `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    ['logout', sessions[0].user_id, sessions[0].username, ip_address, user_agent, 'User logged out', 'low']
+                );
+            }
+
+            const response = NextResponse.json({
                 success: true,
                 message: 'ออกจากระบบสำเร็จ'
             });
+
+            // ลบ cookie สำหรับ ThaiID session และ session_token
+            response.cookies.set('user_session', '', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 0
+            });
+
+            response.cookies.set('session_token', '', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 0
+            });
+
+            return response;
 
         } finally {
             connection.release();
