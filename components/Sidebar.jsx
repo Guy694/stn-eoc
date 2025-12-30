@@ -61,6 +61,7 @@ export default function Sidebar() {
             title: "ผู้ดูแลระบบ",
             requiresAdmin: true,
             items: [
+                { name: "รายงานเหตุการณ์", path: "/admin/incident-reports", icon: "📋" },
                 { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮" },
                 { name: "จัดการสถานพยาบาล", path: "/admin/health-facilities", icon: "🏥" },
                 { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️" },
