@@ -19,6 +19,13 @@ export function EOCProvider({ children }) {
     const fetchEOCStatus = async () => {
         try {
             const response = await fetch('/api/eoc/status');
+
+            // ตรวจสอบว่า response สำเร็จก่อน parse JSON
+            if (!response.ok) {
+                console.error('Failed to fetch EOC status:', response.status);
+                return;
+            }
+
             const data = await response.json();
 
             if (data.success) {
@@ -67,6 +74,11 @@ export function EOCProvider({ children }) {
                     description
                 })
             });
+
+            if (!response.ok) {
+                console.error('Failed to toggle EOC:', response.status);
+                return { success: false, message: 'ไม่สามารถอัพเดทสถานะ EOC ได้' };
+            }
 
             const data = await response.json();
 

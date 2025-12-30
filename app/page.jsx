@@ -25,6 +25,12 @@ export default function Home() {
     const fetchActiveEOCs = async () => {
       try {
         const response = await fetch('/api/eoc/status');
+
+        if (!response.ok) {
+          console.error('Failed to fetch EOC status:', response.status);
+          return;
+        }
+
         const result = await response.json();
 
         if (result.success) {
@@ -67,6 +73,13 @@ export default function Home() {
       for (const type of types) {
         try {
           const response = await fetch(`/api/public/infographics?eocType=${type}`);
+
+          if (!response.ok) {
+            console.error(`Failed to fetch infographics for ${type}:`, response.status);
+            data[type] = [];
+            continue;
+          }
+
           const result = await response.json();
           if (result.success) {
             data[type] = result.data;

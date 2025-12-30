@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { showWarning } from '@/lib/sweetAlert';
 
 // Import Leaflet components with no SSR
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -154,7 +155,7 @@ export default function ReportIncidentPage() {
         if (file) {
             // Check file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                alert('ขนาดไฟล์ใหญ่เกินไป (สูงสุด 5MB)');
+                showWarning('ขนาดไฟล์ใหญ่เกินไป (สูงสุด 5MB)');
                 return;
             }
             setFormData(prev => ({
@@ -169,19 +170,19 @@ export default function ReportIncidentPage() {
 
         // Validation
         if (!formData.firstName || !formData.lastName) {
-            alert('กรุณากรอกชื่อ-นามสกุล');
+            showWarning('กรุณากรอกชื่อ-นามสกุล');
             return;
         }
         if (!formData.phone) {
-            alert('กรุณากรอกเบอร์โทรศัพท์');
+            showWarning('กรุณากรอกเบอร์โทรศัพท์');
             return;
         }
         if (!markerPosition) {
-            alert('กรุณาปักหมุดตำแหน่งที่เกิดเหตุบนแผนที่');
+            showWarning('กรุณาปักหมุดตำแหน่งที่เกิดเหตุบนแผนที่');
             return;
         }
         if (!formData.description) {
-            alert('กรุณาอธิบายเหตุการณ์');
+            showWarning('กรุณาอธิบายเหตุการณ์');
             return;
         }
 

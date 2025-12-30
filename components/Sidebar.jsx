@@ -12,11 +12,6 @@ export default function Sidebar() {
     const { user, canAccessResources, canAccessReports } = useAuth();
     const { eocStatus, getEOCDisplayName } = useEOC();
 
-    // ถ้าไม่มีการ login ไม่แสดง sidebar
-    if (!user) {
-        return null;
-    }
-
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 1024);
@@ -38,6 +33,11 @@ export default function Sidebar() {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isOpen, isMobile]);
+
+    // ถ้าไม่มีการ login ไม่แสดง sidebar
+    if (!user) {
+        return null;
+    }
 
     const allMenuItems = [
         {

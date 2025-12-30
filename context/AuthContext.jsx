@@ -37,6 +37,20 @@ export function AuthProvider({ children }) {
                     body: JSON.stringify({ sessionToken })
                 });
 
+                if (!response.ok) {
+                    // 401 เป็นกรณีปกติเมื่อ session หมดอายุหรือไม่ valid
+                    if (response.status === 401) {
+                        console.log('Session expired or invalid');
+                    } else {
+                        console.error('Failed to validate session:', response.status);
+                    }
+                    localStorage.removeItem('sessionToken');
+                    localStorage.removeItem('user');
+                    setUser(null);
+                    setLoading(false);
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (data.success && data.user) {
@@ -60,19 +74,22 @@ export function AuthProvider({ children }) {
 
             // 2. ถ้าไม่มีใน localStorage ให้ลองตรวจสอบจาก cookie (สำหรับ ThaiID login)
             const cookieResponse = await fetch('/api/auth/session');
-            const cookieData = await cookieResponse.json();
 
-            if (cookieData.success && cookieData.user) {
-                // พบ session ใน cookie -> บันทึกลง localStorage เพื่อใช้ต่อ
-                setUser(cookieData.user);
-                localStorage.setItem("user", JSON.stringify(cookieData.user));
+            if (cookieResponse.ok) {
+                const cookieData = await cookieResponse.json();
 
-                // สร้าง sessionToken สำหรับ ThaiID session
-                const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                localStorage.setItem("sessionToken", thaiIdToken);
+                if (cookieData.success && cookieData.user) {
+                    // พบ session ใน cookie -> บันทึกลง localStorage เพื่อใช้ต่อ
+                    setUser(cookieData.user);
+                    localStorage.setItem("user", JSON.stringify(cookieData.user));
 
-                setLoading(false);
-                return;
+                    // สร้าง sessionToken สำหรับ ThaiID session
+                    const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                    localStorage.setItem("sessionToken", thaiIdToken);
+
+                    setLoading(false);
+                    return;
+                }
             }
 
             // 3. ไม่พบ session ทั้ง 2 แบบ
@@ -112,6 +129,12 @@ export function AuthProvider({ children }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Login failed:', response.status, errorText);
+                return { success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' };
+            }
 
             const data = await response.json();
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
 export default function HealthFacilitiesPage() {
     const [facilities, setFacilities] = useState([]);
@@ -52,7 +53,7 @@ export default function HealthFacilitiesPage() {
             }
         } catch (error) {
             console.error('Error fetching facilities:', error);
-            alert('ไม่สามารถโหลดข้อมูลได้');
+            showError('ไม่สามารถโหลดข้อมูลได้');
         } finally {
             setLoading(false);
         }
@@ -77,16 +78,16 @@ export default function HealthFacilitiesPage() {
             const data = await response.json();
 
             if (data.success) {
-                alert(editingFacility ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มสถานพยาบาลสำเร็จ');
+                showSuccess(editingFacility ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มสถานพยาบาลสำเร็จ');
                 setShowModal(false);
                 resetForm();
                 fetchFacilities();
             } else {
-                alert(data.error || 'เกิดข้อผิดพลาด');
+                showError(data.error || 'เกิดข้อผิดพลาด');
             }
         } catch (error) {
             console.error('Error saving facility:', error);
-            alert('ไม่สามารถบันทึกข้อมูลได้');
+            showError('ไม่สามารถบันทึกข้อมูลได้');
         }
     };
 
@@ -116,14 +117,14 @@ export default function HealthFacilitiesPage() {
             const data = await response.json();
 
             if (data.success) {
-                alert('ลบข้อมูลสำเร็จ');
+                showSuccess('ลบข้อมูลสำเร็จ');
                 fetchFacilities();
             } else {
-                alert(data.error || 'ไม่สามารถลบข้อมูลได้');
+                showError(data.error || 'ไม่สามารถลบข้อมูลได้');
             }
         } catch (error) {
             console.error('Error deleting facility:', error);
-            alert('ไม่สามารถลบข้อมูลได้');
+            showError('ไม่สามารถลบข้อมูลได้');
         }
     };
 

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
 export default function FloodRecordsPage() {
     const [records, setRecords] = useState([]);
@@ -96,13 +97,13 @@ export default function FloodRecordsPage() {
                 setEditingRecord(null);
                 resetForm();
                 fetchRecords();
-                alert(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
+                showSuccess(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
             } else {
-                alert('เกิดข้อผิดพลาด: ' + data.error);
+                showError('เกิดข้อผิดพลาด: ' + data.error);
             }
         } catch (error) {
             console.error('Error saving record:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            showError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         }
     };
 
@@ -129,7 +130,8 @@ export default function FloodRecordsPage() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('ต้องการลบข้อมูลนี้หรือไม่?')) return;
+        const confirmed = await showDeleteConfirm();
+        if (!confirmed) return;
 
         try {
             const res = await fetch(`/api/admin/flood-records?id=${id}`, {
@@ -138,13 +140,13 @@ export default function FloodRecordsPage() {
             const data = await res.json();
             if (data.success) {
                 fetchRecords();
-                alert('ลบข้อมูลสำเร็จ');
+                showSuccess('ลบข้อมูลสำเร็จ');
             } else {
-                alert('เกิดข้อผิดพลาด: ' + data.error);
+                showError('เกิดข้อผิดพลาด: ' + data.error);
             }
         } catch (error) {
             console.error('Error deleting record:', error);
-            alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+            showError('เกิดข้อผิดพลาดในการลบข้อมูล');
         }
     };
 

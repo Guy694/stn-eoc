@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
 export default function OfficersManagementPage() {
     const [officers, setOfficers] = useState([]);
@@ -50,7 +51,7 @@ export default function OfficersManagementPage() {
             }
         } catch (error) {
             console.error('Error fetching officers:', error);
-            alert('ไม่สามารถโหลดข้อมูลได้');
+            showError('ไม่สามารถโหลดข้อมูลได้');
         } finally {
             setLoading(false);
         }
@@ -80,16 +81,16 @@ export default function OfficersManagementPage() {
             const data = await response.json();
 
             if (data.success) {
-                alert(editingOfficer ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มเจ้าหน้าที่สำเร็จ');
+                showSuccess(editingOfficer ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มเจ้าหน้าที่สำเร็จ');
                 setShowModal(false);
                 resetForm();
                 fetchOfficers();
             } else {
-                alert(data.error || 'เกิดข้อผิดพลาด');
+                showError(data.error || 'เกิดข้อผิดพลาด');
             }
         } catch (error) {
             console.error('Error saving officer:', error);
-            alert('ไม่สามารถบันทึกข้อมูลได้');
+            showError('ไม่สามารถบันทึกข้อมูลได้');
         }
     };
 
@@ -122,14 +123,14 @@ export default function OfficersManagementPage() {
             const data = await response.json();
 
             if (data.success) {
-                alert('ลบข้อมูลสำเร็จ');
+                showSuccess('ลบข้อมูลสำเร็จ');
                 fetchOfficers();
             } else {
-                alert(data.error || 'เกิดข้อผิดพลาด');
+                showError(data.error || 'เกิดข้อผิดพลาด');
             }
         } catch (error) {
             console.error('Error deleting officer:', error);
-            alert('ไม่สามารถลบข้อมูลได้');
+            showError('ไม่สามารถลบข้อมูลได้');
         }
     };
 

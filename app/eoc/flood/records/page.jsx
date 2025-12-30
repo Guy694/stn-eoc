@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
 export default function FloodRecordsPage() {
     const [records, setRecords] = useState([]);
@@ -134,7 +135,7 @@ export default function FloodRecordsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!activeSession) {
-            alert('ไม่พบ EOC Session ที่เปิดอยู่');
+            showError('ไม่พบ EOC Session ที่เปิดอยู่');
             return;
         }
 
@@ -150,7 +151,7 @@ export default function FloodRecordsPage() {
                 );
 
                 if (villagesToSave.length === 0) {
-                    alert('ไม่พบหมู่บ้านในตำบลนี้');
+                    showError('ไม่พบหมู่บ้านในตำบลนี้');
                     return;
                 }
 
@@ -205,7 +206,7 @@ export default function FloodRecordsPage() {
                     ? `บันทึกข้อมูลสำเร็จ ${successCount} หมู่บ้าน (ข้าม ${skippedCount} หมู่บ้านที่บันทึกไปแล้ว)`
                     : `บันทึกข้อมูลสำเร็จ ${successCount} จาก ${villagesToSave.length} หมู่บ้าน`;
 
-                alert(message);
+                showSuccess(message);
                 setShowModal(false);
                 setEditingRecord(null);
                 resetForm();
@@ -274,18 +275,18 @@ export default function FloodRecordsPage() {
 
             const data = await res.json();
             if (data.success) {
-                alert(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
+                showSuccess(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
                 setShowModal(false);
                 setEditingRecord(null);
                 resetForm();
                 // รีโหลดข้อมูลหลังบันทึก
                 await fetchRecords();
             } else {
-                alert('เกิดข้อผิดพลาด: ' + data.error);
+                showError('เกิดข้อผิดพลาด: ' + data.error);
             }
         } catch (error) {
             console.error('Error saving record:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            showError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         }
     };
 
@@ -307,7 +308,8 @@ export default function FloodRecordsPage() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('ต้องการลบข้อมูลนี้หรือไม่?')) return;
+        const confirmed = await showDeleteConfirm();
+        if (!confirmed) return;
 
         try {
             const res = await fetch(`/api/admin/flood-records?id=${id}`, {
@@ -316,13 +318,13 @@ export default function FloodRecordsPage() {
             const data = await res.json();
             if (data.success) {
                 fetchRecords();
-                alert('ลบข้อมูลสำเร็จ');
+                showSuccess('ลบข้อมูลสำเร็จ');
             } else {
-                alert('เกิดข้อผิดพลาด: ' + data.error);
+                showError('เกิดข้อผิดพลาด: ' + data.error);
             }
         } catch (error) {
             console.error('Error deleting record:', error);
-            alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+            showError('เกิดข้อผิดพลาดในการลบข้อมูล');
         }
     };
 

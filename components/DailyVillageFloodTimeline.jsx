@@ -222,7 +222,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             link.click();
         } catch (error) {
             console.error('Error downloading map:', error);
-            alert('เกิดข้อผิดพลาดในการดาวน์โหลดภาพ');
+            showError('เกิดข้อผิดพลาดในการดาวน์โหลดภาพ');
         }
     };
 
@@ -249,15 +249,15 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('✅ บันทึกภาพแผนที่สำเร็จ');
+                    showSuccess('✅ บันทึกภาพแผนที่สำเร็จ');
                 } else {
-                    alert('❌ เกิดข้อผิดพลาด: ' + result.error);
+                    showError('❌ เกิดข้อผิดพลาด: ' + result.error);
                 }
             }, 'image/png');
 
         } catch (error) {
             console.error('Error saving map:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึกภาพ');
+            showError('เกิดข้อผิดพลาดในการบันทึกภาพ');
         }
     };
 

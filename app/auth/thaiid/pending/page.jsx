@@ -15,8 +15,11 @@ export default function PendingApprovalPage() {
     }, [user, router]);
 
     const handleLogout = async () => {
-        await logout();
-        router.push('/login');
+        const confirmed = await showLogoutConfirm();
+        if (confirmed) {
+            await logout();
+            router.push('/');
+        }
     };
 
     return (

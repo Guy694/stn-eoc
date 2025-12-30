@@ -2,6 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { showLogoutConfirm } from "@/lib/sweetAlert";
 
 export default function Header() {
     const { user, logout } = useAuth();
@@ -9,8 +10,11 @@ export default function Header() {
     const [showMenu, setShowMenu] = useState(false);
 
     const handleLogout = async () => {
-        await logout();
-        router.push("/");
+        const confirmed = await showLogoutConfirm();
+        if (confirmed) {
+            await logout();
+            router.push("/");
+        }
     };
 
     return (

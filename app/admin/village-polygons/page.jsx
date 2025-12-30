@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
 export default function VillagePolygonsPage() {
     const [polygons, setPolygons] = useState([]);
@@ -40,7 +41,7 @@ export default function VillagePolygonsPage() {
             }
         } catch (error) {
             console.error('Error fetching polygons:', error);
-            alert('ไม่สามารถโหลดข้อมูลได้');
+            showError('ไม่สามารถโหลดข้อมูลได้');
         } finally {
             setLoading(false);
         }
@@ -65,16 +66,16 @@ export default function VillagePolygonsPage() {
             const data = await response.json();
 
             if (data.success) {
-                alert(editingPolygon ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มข้อมูลหมู่บ้านสำเร็จ');
+                showSuccess(editingPolygon ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มข้อมูลหมู่บ้านสำเร็จ');
                 setShowModal(false);
                 resetForm();
                 fetchPolygons();
             } else {
-                alert(data.error || 'เกิดข้อผิดพลาด');
+                showError(data.error || 'เกิดข้อผิดพลาด');
             }
         } catch (error) {
             console.error('Error saving polygon:', error);
-            alert('ไม่สามารถบันทึกข้อมูลได้');
+            showError('ไม่สามารถบันทึกข้อมูลได้');
         }
     };
 
@@ -100,14 +101,14 @@ export default function VillagePolygonsPage() {
             const data = await response.json();
 
             if (data.success) {
-                alert('ลบข้อมูลสำเร็จ');
+                showSuccess('ลบข้อมูลสำเร็จ');
                 fetchPolygons();
             } else {
-                alert(data.error || 'ไม่สามารถลบข้อมูลได้');
+                showError(data.error || 'ไม่สามารถลบข้อมูลได้');
             }
         } catch (error) {
             console.error('Error deleting polygon:', error);
-            alert('ไม่สามารถลบข้อมูลได้');
+            showError('ไม่สามารถลบข้อมูลได้');
         }
     };
 
