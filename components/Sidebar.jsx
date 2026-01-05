@@ -9,6 +9,7 @@ export default function Sidebar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [pendingReportsCount, setPendingReportsCount] = useState(0);
     const { user, canAccessResources, canAccessReports } = useAuth();
     const { eocStatus, getEOCDisplayName } = useEOC();
 
@@ -21,6 +22,30 @@ export default function Sidebar() {
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+    // Fetch pending reports count
+    useEffect(() => {
+        const fetchPendingCount = async () => {
+            try {
+                const response = await fetch('/api/admin/incident-reports?status=pending&limit=1');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.stats) {
+                        setPendingReportsCount(data.stats.pending || 0);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching pending reports count:', error);
+            }
+        };
+
+        if (user) {
+            fetchPendingCount();
+            // Refresh count every 30 seconds
+            const interval = setInterval(fetchPendingCount, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
 
     // Close sidebar when clicking outside on mobile
     useEffect(() => {
@@ -61,9 +86,10 @@ export default function Sidebar() {
             title: "ผู้ดูแลระบบ",
             requiresAdmin: true,
             items: [
-                { name: "รายงานเหตุการณ์", path: "/admin/incident-reports", icon: "📋" },
+                { name: "รายงานเหตุการณ์", path: "/admin/incident-reports", icon: "📋", badge: "pendingReports" },
+                { name: "ประชาสัมพันธ์", path: "/admin/announcements", icon: "📢" },
                 { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮" },
-                { name: "จัดการสถานพยาบาล", path: "/admin/health-facilities", icon: "🏥" },
+                { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: "🏥" },
                 { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️" },
                 { name: "จัดการ EOC", path: "/admin/eoc-management", icon: "⚙️" },
             ],
@@ -98,16 +124,23 @@ export default function Sidebar() {
     // เมนูสำหรับ pending user (รอการอนุมัติ)
     const pendingUserMenu = [
         {
+            title: "แดชบอร์ด",
+            items: [
+                { name: "ภาพรวม", path: "/dashboard", icon: "📊" },
+            ],
+        },
+        {
             title: "เจ้าหน้าที่",
             items: [
-                { name: "ข้อมูลส่วนตัว", path: "/auth/thaiid/registration", icon: "👤" },
+                { name: "สมัครเจ้าหน้าที่", path: "/auth/thaiid/registration", icon: "📝" },
                 { name: "สถานะคำขอ", path: "/auth/thaiid/pending", icon: "⏳" },
             ],
         },
     ];
 
     // กรองเมนูตาม role และสถานะการอนุมัติ
-    const menuItems = user.isApproved === false ? pendingUserMenu : allMenuItems.filter(section => {
+    // role 'user' หรือ isApproved = false จะเห็นเฉพาะเมนูเจ้าหน้าที่
+    const menuItems = (user.role === 'user' || user.isApproved === false) ? pendingUserMenu : allMenuItems.filter(section => {
         if (section.title === "ทรัพยากร") {
             return canAccessResources();
         }
@@ -152,7 +185,7 @@ export default function Sidebar() {
             {/* Overlay for mobile */}
             {isMobile && isOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                    className="fixed inset-0  backdrop-blur-md bg-white/30 bg-opacity-50 z-30 lg:hidden"
                     onClick={() => setIsOpen(false)}
                 />
             )}
@@ -214,6 +247,11 @@ export default function Sidebar() {
                                         >
                                             <span className="text-lg">{item.icon}</span>
                                             <span className="flex-1">{item.name}</span>
+                                            {item.badge === "pendingReports" && pendingReportsCount > 0 && (
+                                                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                                    {pendingReportsCount}
+                                                </span>
+                                            )}
                                             {item.eocType && eocStatus[item.eocType] && (
                                                 <span className={`text-xs px-2 py-0.5 rounded-full ${eocStatus[item.eocType].is_active
                                                     ? "bg-green-500 text-white"

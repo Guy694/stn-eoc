@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
+import AnnouncementPopup from "@/components/AnnouncementPopup";
 
 export default function Home() {
   const [activeEOCs, setActiveEOCs] = useState([]);
@@ -328,6 +329,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+      {/* Announcement Popup */}
+      <AnnouncementPopup />
+
       {/* Hero Section - Improved */}
       <header className="bg-gradient-to-r from-green-700 to-green-900 text-white py-8 md:py-16 shadow-lg relative overflow-hidden">
         {/* Background Pattern */}

@@ -8,6 +8,9 @@ export async function GET(request) {
         const district = searchParams.get('district');
         const tambon = searchParams.get('tambon');
         const search = searchParams.get('search');
+        const page = parseInt(searchParams.get('page')) || 1;
+        const limit = parseInt(searchParams.get('limit')) || 20;
+        const offset = (page - 1) * limit;
 
         let sql = `
             SELECT 
@@ -36,7 +39,31 @@ export async function GET(request) {
             params.push(`%${search}%`);
         }
 
-        sql += ' ORDER BY distname, subdistnam, villname';
+        // นับจำนวนทั้งหมดตามเงื่อนไข
+        let countSql = 'SELECT COUNT(*) as total FROM satun_village_polygon WHERE 1=1';
+        const countParams = [];
+
+        if (district) {
+            countSql += ' AND distname = ?';
+            countParams.push(district);
+        }
+
+        if (tambon) {
+            countSql += ' AND subdistnam = ?';
+            countParams.push(tambon);
+        }
+
+        if (search) {
+            countSql += ' AND villname LIKE ?';
+            countParams.push(`%${search}%`);
+        }
+
+        const [countResult] = await query(countSql, countParams);
+        const totalRecords = countResult.total;
+        const totalPages = Math.ceil(totalRecords / limit);
+
+        sql += ' ORDER BY distname, subdistnam, villname LIMIT ? OFFSET ?';
+        params.push(limit, offset);
 
         const polygons = await query(sql, params);
 
@@ -52,7 +79,12 @@ export async function GET(request) {
             success: true,
             data: polygons,
             stats: stats,
-            total: polygons.length
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalRecords: totalRecords,
+                limit: limit
+            }
         });
 
     } catch (error) {

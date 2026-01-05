@@ -88,7 +88,7 @@ export async function GET(request) {
                     ELSE 'safe'
                 END as flood_level,
                 f.status,
-                ROUND(f.water_depth_cm / 100, 2) as water_level,
+                COALESCE(ROUND(f.water_depth_cm / 100, 2), 0) as water_level,
                 f.affected_households,
                 f.affected_people as affected_population,
                 f.flood_start_date as recorded_day,
@@ -109,9 +109,10 @@ export async function GET(request) {
             ORDER BY f.flood_start_date DESC, f.updated_at DESC
         `, params);
 
-        // แปลง GeoJSON geometry
+        // แปลง GeoJSON geometry และแปลง water_level เป็น number
         const processedData = floodData.map(item => ({
             ...item,
+            water_level: parseFloat(item.water_level) || 0,
             geometry: item.geometry ? JSON.parse(item.geometry) : null
         }));
 
@@ -151,3 +152,4 @@ export async function GET(request) {
         if (connection) connection.release();
     }
 }
+

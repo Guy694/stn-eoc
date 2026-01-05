@@ -5,6 +5,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
 import FloodSessionSelector from "@/components/FloodSessionSelector";
 import FloodAreaStatus from "@/components/FloodAreaStatus";
+import PublicIncidentMap from "@/components/PublicIncidentMap";
 import { useAuth } from "@/context/AuthContext";
 
 export default function FloodMapPage() {
@@ -147,6 +148,20 @@ export default function FloodMapPage() {
                                 session={selectedSession}
                                 polygons={polygons}
                             />
+                        </div>
+
+                        {/* Public Incident Reports Map */}
+                        <div className="mt-6">
+                            <div className="bg-white rounded-lg shadow-md p-6">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <span className="text-3xl">📍</span>
+                                    รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
+                                </h2>
+                                <p className="text-gray-600 mb-4">
+                                    แสดงจุดที่มีการรายงานเหตุการณ์น้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
+                                </p>
+                                <PublicIncidentMap />
+                            </div>
                         </div>
                     </>
                 )}

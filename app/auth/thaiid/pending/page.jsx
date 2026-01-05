@@ -15,7 +15,7 @@ export default function PendingApprovalPage() {
     }, [user, router]);
 
     const handleLogout = async () => {
-        const confirmed = await showLogoutConfirm();
+        const confirmed = confirm('คุณต้องการออกจากระบบหรือไม่?');
         if (confirmed) {
             await logout();
             router.push('/');

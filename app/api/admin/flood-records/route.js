@@ -12,6 +12,7 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const year = searchParams.get('year');
+        const sessionId = searchParams.get('session_id');
         const district = searchParams.get('district');
         const tambon = searchParams.get('tambon');
         const floodLevel = searchParams.get('flood_level');
@@ -19,31 +20,45 @@ export async function GET(request) {
 
         const connection = await mysql.createConnection(dbConfig);
 
-        let query = 'SELECT * FROM flood_records WHERE 1=1';
+        let query = `
+            SELECT 
+                f.*,
+                v.villname,
+                v.villcode,
+                v.distname,
+                v.subdistnam
+            FROM flood_records f
+            LEFT JOIN satun_village_polygon v ON f.polygon_id = v.id
+            WHERE 1=1
+        `;
         const params = [];
 
-        if (year) {
-            query += ' AND year = ?';
+        if (sessionId) {
+            query += ' AND f.session_id = ?';
+            params.push(sessionId);
+        } else if (year) {
+            query += ' AND f.year = ?';
             params.push(year);
         }
+
         if (district && district !== 'all') {
-            query += ' AND district = ?';
+            query += ' AND f.district = ?';
             params.push(district);
         }
         if (tambon && tambon !== 'all') {
-            query += ' AND tambon = ?';
+            query += ' AND f.tambon = ?';
             params.push(tambon);
         }
         if (floodLevel && floodLevel !== 'all') {
-            query += ' AND flood_level = ?';
+            query += ' AND f.flood_level = ?';
             params.push(floodLevel);
         }
         if (status && status !== 'all') {
-            query += ' AND status = ?';
+            query += ' AND f.status = ?';
             params.push(status);
         }
 
-        query += ' ORDER BY year DESC, created_at DESC';
+        query += ' ORDER BY f.created_at DESC';
 
         const [rows] = await connection.execute(query, params);
         await connection.end();

@@ -86,7 +86,7 @@ export async function GET(request) {
                 INNER JOIN eoc_sessions s ON f.session_id = s.id
                 WHERE s.eoc_type = 'flood' AND YEAR(s.opened_at) = ?
             `, [year]);
-            d
+
             return NextResponse.json({
                 success: true,
                 year: parseInt(year),
@@ -97,6 +97,12 @@ export async function GET(request) {
                 },
                 sessions: sessions.map(s => ({
                     ...s,
+                    opened_by_name: s.opened_by_title && s.opened_by_given_name && s.opened_by_family_name
+                        ? `${s.opened_by_title}${s.opened_by_given_name} ${s.opened_by_family_name}`
+                        : `User ID: ${s.opened_by}`,
+                    closed_by_name: s.closed_by_title && s.closed_by_given_name && s.closed_by_family_name
+                        ? `${s.closed_by_title}${s.closed_by_given_name} ${s.closed_by_family_name}`
+                        : s.closed_by ? `User ID: ${s.closed_by}` : null,
                     affected_areas: s.affected_areas ? JSON.parse(s.affected_areas) : null,
                     duration_hours: parseFloat(s.duration_hours || 0)
                 }))

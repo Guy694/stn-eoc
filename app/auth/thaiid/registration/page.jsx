@@ -119,7 +119,7 @@ export default function ThaiIDRegistrationPage() {
                                 คำนำหน้า
                             </label>
                             <select
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             >
@@ -142,7 +142,7 @@ export default function ThaiIDRegistrationPage() {
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 placeholder="เช่น สมชาย"
                                 value={formData.given_name}
                                 onChange={(e) => setFormData({ ...formData, given_name: e.target.value })}
@@ -157,7 +157,7 @@ export default function ThaiIDRegistrationPage() {
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 placeholder="เช่น ใจดี"
                                 value={formData.family_name}
                                 onChange={(e) => setFormData({ ...formData, family_name: e.target.value })}
@@ -172,7 +172,7 @@ export default function ThaiIDRegistrationPage() {
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 placeholder="เช่น นักวิชาการสาธารณสุข"
                                 value={formData.position}
                                 onChange={(e) => setFormData({ ...formData, position: e.target.value })}
@@ -187,7 +187,7 @@ export default function ThaiIDRegistrationPage() {
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 placeholder="เช่น สำนักงานสาธารณสุขจังหวัดสตูล"
                                 value={formData.department}
                                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
@@ -201,7 +201,7 @@ export default function ThaiIDRegistrationPage() {
                             </label>
                             <select
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 value={formData.requested_role}
                                 onChange={(e) => setFormData({ ...formData, requested_role: e.target.value })}
                             >
@@ -223,7 +223,7 @@ export default function ThaiIDRegistrationPage() {
                             <input
                                 type="tel"
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 placeholder="เช่น 074-123456"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -238,7 +238,7 @@ export default function ThaiIDRegistrationPage() {
                             <input
                                 type="email"
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 placeholder="เช่น example@satun.go.th"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}

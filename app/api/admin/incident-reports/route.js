@@ -120,7 +120,7 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { reportId, status, reviewNotes, reviewedBy } = body;
+        const { reportId, status, adminNotes, reviewedBy } = body;
 
         // Validate input
         if (!reportId || !status || !reviewedBy) {
@@ -131,7 +131,7 @@ export async function PUT(request) {
         }
 
         // Validate status
-        const validStatuses = ['pending', 'approved', 'rejected'];
+        const validStatuses = ['pending', 'reviewing', 'verified', 'resolved', 'rejected'];
         if (!validStatuses.includes(status)) {
             return NextResponse.json(
                 { success: false, message: 'สถานะไม่ถูกต้อง' },
@@ -147,7 +147,7 @@ export async function PUT(request) {
                 reviewed_at = NOW(), 
                 admin_notes = ?
             WHERE id = ?`,
-            [status, reviewedBy, admin_notes || null, reportId]
+            [status, reviewedBy, adminNotes || null, reportId]
         );
 
         // ดึงข้อมูลที่อัปเดตแล้ว

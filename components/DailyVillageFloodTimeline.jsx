@@ -361,7 +361,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <label className="font-semibold text-gray-700">เลือกวันที่:</label>
                     <div className="flex gap-2 items-center">
-                        <label className="flex items-center gap-2 text-sm">
+                        <label className="text-gray-700 flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
                                 checked={showTambonBoundaries}
@@ -370,7 +370,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                             />
                             แสดงเขตตำบล
                         </label>
-                        <label className="flex items-center gap-2 text-sm">
+                        <label className="text-gray-700 flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
                                 checked={showFacilities}

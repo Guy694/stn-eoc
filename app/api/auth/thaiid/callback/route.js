@@ -65,6 +65,13 @@ const rolePermissions = {
         admin: { view: false, create: false, edit: false, delete: false },
         reports: { view: true, create: false, export: false },
         users: { view: false, create: false, edit: false, delete: false }
+    },
+    user: {
+        dashboard: true,
+        eoc: { view: false, create: false, edit: false, delete: false },
+        admin: { view: false, create: false, edit: false, delete: false },
+        reports: { view: false, create: false, export: false },
+        users: { view: false, create: false, edit: false, delete: false }
     }
 };
 
@@ -73,7 +80,8 @@ const roleDisplayNames = {
     MCATT: 'ทีม MCATT',
     SAT: 'ทีม SAT',
     SeRHT: 'ทีม SeRHT',
-    staff: 'เจ้าหน้าที่'
+    staff: 'เจ้าหน้าที่',
+    user: 'ผู้ใช้งานทั่วไป'
 };
 
 /**
@@ -264,7 +272,7 @@ export async function GET(request) {
                 const [result] = await connection.execute(
                     `INSERT INTO officer 
                     (username, password_hash, title, given_name, family_name, role, pid_hash, is_approved, request_time, created_at) 
-                    VALUES (?, ?, ?, ?, ?, 'staff', ?, FALSE, NOW(), NOW())`,
+                    VALUES (?, ?, ?, ?, ?, 'user', ?, FALSE, NOW(), NOW())`,
                     [username, await bcrypt.hash(Math.random().toString(36), 10), title, givenName, familyName, hashedPID]
                 );
 
@@ -359,24 +367,27 @@ export async function GET(request) {
             };
 
             // 7. Redirect ไปหน้าที่เหมาะสม
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-            let redirectPath = '/auth/thaiid/callback';
+            const baseUrl = 'https://tartily-unrecluse-emily.ngrok-free.dev';
+            let redirectPath = '/dashboard';
 
-            // ถ้าเป็น user ใหม่หรือยังไม่ approved -> ไปหน้ากรอกข้อมูล
-            if (!officer.is_approved) {
-                redirectPath = '/auth/thaiid/registration';
-            }
+            // ทุกคนไปหน้า dashboard (ระบบจะจัดการเมนูตาม approval status)
+            // ถ้ายังไม่ approved จะเห็นเฉพาะเมนูสมัครเจ้าหน้าที่
 
+            console.log('Redirecting to:', `${baseUrl}${redirectPath}`);
+            console.log('Setting user session cookie for user:', userData.username);
             const response = NextResponse.redirect(`${baseUrl}${redirectPath}`);
 
             // เก็บข้อมูลใน cookie (encrypted ด้วย httpOnly)
+            // ใช้ secure: true เพราะ ngrok เป็น https
             response.cookies.set('user_session', JSON.stringify(userData), {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: true, // ใช้ true เพราะ ngrok เป็น https
                 sameSite: 'lax',
-                maxAge: 60 * 60 * 24 // 24 hours
+                maxAge: 60 * 60 * 24, // 24 hours
+                path: '/' // ระบุ path ให้ชัดเจน
             });
 
+            console.log('Cookie set successfully');
             return response;
 
         } catch (dbError) {
@@ -386,7 +397,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('ThaiID Callback Error:', error);
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseUrl = 'https://tartily-unrecluse-emily.ngrok-free.dev';
         return NextResponse.redirect(
             `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent(error.message)}`
         );

@@ -115,7 +115,7 @@ export default function FloodRecordsPage() {
         try {
             setLoading(true);
             const params = new URLSearchParams();
-            params.append('year', new Date(activeSession.opened_at).getFullYear());
+            params.append('session_id', activeSession.id);
             if (filters.district !== 'all') params.append('district', filters.district);
             if (filters.tambon !== 'all') params.append('tambon', filters.tambon);
             if (filters.flood_level !== 'all') params.append('flood_level', filters.flood_level);
@@ -179,6 +179,7 @@ export default function FloodRecordsPage() {
                         ...formData,
                         village: village.villname,
                         polygon_id: village.id,
+                        session_id: activeSession.id,
                         year: new Date(activeSession.opened_at).getFullYear(),
                         status: 'กำลังดำเนินการ',
                         flood_end_date: null,
@@ -256,6 +257,7 @@ export default function FloodRecordsPage() {
             const body = {
                 ...formData,
                 polygon_id: selectedVillage?.id || null,
+                session_id: activeSession.id,
                 year: new Date(activeSession.opened_at).getFullYear(),
                 status: 'กำลังดำเนินการ',
                 flood_end_date: null,
@@ -485,12 +487,12 @@ export default function FloodRecordsPage() {
                     <div className="flex items-center gap-4 mb-4">
                         <h3 className="font-bold text-gray-800">📊 สถานะการบันทึกวันนี้</h3>
                         <div className="flex gap-2 text-sm">
-                            <span className="flex items-center gap-1">
-                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                            <span className="text-gray-600 flex items-center gap-1">
+                                <span className="text-gray-600 w-3 h-3 bg-green-500 rounded-full"></span>
                                 บันทึกครบ ({getCompletedTambons().length})
                             </span>
-                            <span className="flex items-center gap-1">
-                                <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                            <span className="text-gray-600 flex items-center gap-1">
+                                <span className="text-gray-600 w-3 h-3 bg-yellow-500 rounded-full"></span>
                                 ยังไม่ครบ ({getUnrecordedTambons().length})
                             </span>
                         </div>
@@ -569,7 +571,7 @@ export default function FloodRecordsPage() {
                             <select
                                 value={filters.district}
                                 onChange={(e) => setFilters({ ...filters, district: e.target.value, tambon: 'all' })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                             >
                                 <option value="all">ทั้งหมด</option>
                                 {satunDistricts.map(d => (
@@ -583,7 +585,7 @@ export default function FloodRecordsPage() {
                                 value={filters.tambon}
                                 onChange={(e) => setFilters({ ...filters, tambon: e.target.value })}
                                 disabled={filters.district === 'all'}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                             >
                                 <option value="all">ทั้งหมด</option>
                                 {filters.district !== 'all' && satunDistricts.find(d => d.name === filters.district)?.tambons.map(t => (
@@ -596,7 +598,7 @@ export default function FloodRecordsPage() {
                             <select
                                 value={filters.flood_level}
                                 onChange={(e) => setFilters({ ...filters, flood_level: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                             >
                                 <option value="all">ทั้งหมด</option>
                                 <option value="ไม่มี">ไม่มี</option>
@@ -672,10 +674,10 @@ export default function FloodRecordsPage() {
 
                 {/* Modal */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="fixed inset-0  backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-2xl font-bold mb-4">
+                                <h2 className="text-gray-700 text-2xl font-bold mb-4">
                                     {editingRecord ? 'แก้ไขข้อมูล' : isTambonMode ? 'บันทึกข้อมูลทั้งตำบล' : 'เพิ่มข้อมูลใหม่'}
                                 </h2>
 
@@ -704,7 +706,7 @@ export default function FloodRecordsPage() {
                                                 value={formData.district}
                                                 onChange={(e) => setFormData({ ...formData, district: e.target.value, tambon: '' })}
                                                 required
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             >
                                                 <option value="">เลือกอำเภอ</option>
                                                 {satunDistricts.map(d => (
@@ -721,7 +723,7 @@ export default function FloodRecordsPage() {
                                                 onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
                                                 required
                                                 disabled={!formData.district}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                                             >
                                                 <option value="">เลือกตำบล</option>
                                                 {tambonOptions.map(t => (
@@ -734,7 +736,7 @@ export default function FloodRecordsPage() {
                                                 หมู่บ้าน {!isTambonMode && <span className="text-red-500">*</span>}
                                             </label>
                                             {isTambonMode ? (
-                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+                                                <div className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
                                                     บันทึกทุกหมู่บ้านในตำบล
                                                 </div>
                                             ) : (
@@ -743,7 +745,7 @@ export default function FloodRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, village: e.target.value })}
                                                     required={!isTambonMode}
                                                     disabled={!formData.tambon || villageOptions.length === 0}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                                                    className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                                                 >
                                                     <option value="">เลือกหมู่บ้าน</option>
                                                     {villageOptions.map(v => (
@@ -763,7 +765,7 @@ export default function FloodRecordsPage() {
                                                 value={formData.flood_level}
                                                 onChange={(e) => setFormData({ ...formData, flood_level: e.target.value })}
                                                 required
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             >
                                                 <option value="ไม่มี">ไม่มี</option>
                                                 <option value="ต่ำ">ต่ำ</option>
@@ -781,7 +783,7 @@ export default function FloodRecordsPage() {
                                                 value={formData.flood_start_date}
                                                 onChange={(e) => setFormData({ ...formData, flood_start_date: e.target.value })}
                                                 required
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             />
                                         </div>
                                         <div>
@@ -790,7 +792,7 @@ export default function FloodRecordsPage() {
                                                 type="number"
                                                 value={formData.water_depth_cm}
                                                 onChange={(e) => setFormData({ ...formData, water_depth_cm: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             />
                                         </div>
                                         <div>
@@ -799,7 +801,7 @@ export default function FloodRecordsPage() {
                                                 type="number"
                                                 value={formData.affected_area_sqm}
                                                 onChange={(e) => setFormData({ ...formData, affected_area_sqm: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             />
                                         </div>
                                         <div>
@@ -808,7 +810,7 @@ export default function FloodRecordsPage() {
                                                 type="number"
                                                 value={formData.affected_households}
                                                 onChange={(e) => setFormData({ ...formData, affected_households: parseInt(e.target.value) || 0 })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             />
                                         </div>
                                         <div>
@@ -817,7 +819,7 @@ export default function FloodRecordsPage() {
                                                 type="number"
                                                 value={formData.affected_people}
                                                 onChange={(e) => setFormData({ ...formData, affected_people: parseInt(e.target.value) || 0 })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             />
                                         </div>
                                     </div>
@@ -827,7 +829,7 @@ export default function FloodRecordsPage() {
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             rows="3"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                            className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                         />
                                     </div>
                                     <div className="flex gap-2 justify-end pt-4">
@@ -838,13 +840,13 @@ export default function FloodRecordsPage() {
                                                 setEditingRecord(null);
                                                 resetForm();
                                             }}
-                                            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                                            className="px-6 py-2 bg-red-500 rounded-lg hover:bg-red-600"
                                         >
                                             ยกเลิก
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                                         >
                                             {editingRecord ? 'บันทึกการแก้ไข' : 'บันทึก'}
                                         </button>

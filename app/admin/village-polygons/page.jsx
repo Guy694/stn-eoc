@@ -12,6 +12,8 @@ export default function VillagePolygonsPage() {
     const [filterDistrict, setFilterDistrict] = useState('');
     const [filterTambon, setFilterTambon] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({});
     const [editingPolygon, setEditingPolygon] = useState(null);
     const [formData, setFormData] = useState({
         villname: '',
@@ -22,7 +24,7 @@ export default function VillagePolygonsPage() {
 
     useEffect(() => {
         fetchPolygons();
-    }, [filterDistrict, filterTambon, searchTerm]);
+    }, [filterDistrict, filterTambon, searchTerm, currentPage]);
 
     const fetchPolygons = async () => {
         try {
@@ -31,6 +33,8 @@ export default function VillagePolygonsPage() {
             if (filterDistrict) params.append('district', filterDistrict);
             if (filterTambon) params.append('tambon', filterTambon);
             if (searchTerm) params.append('search', searchTerm);
+            params.append('page', currentPage);
+            params.append('limit', 20);
 
             const response = await fetch(`/api/admin/village-polygons?${params}`);
             const data = await response.json();
@@ -38,6 +42,7 @@ export default function VillagePolygonsPage() {
             if (data.success) {
                 setPolygons(data.data);
                 setStats(data.stats);
+                setPagination(data.pagination || {});
             }
         } catch (error) {
             console.error('Error fetching polygons:', error);
@@ -143,21 +148,22 @@ export default function VillagePolygonsPage() {
                     <p className="text-gray-600">ระบบจัดการข้อมูล Polygon และพิกัดหมู่บ้าน</p>
                 </div>
 
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
                         <div className="text-sm text-gray-600 mb-1">จำนวนหมู่บ้านทั้งหมด</div>
                         <div className="text-3xl font-bold text-gray-800">
                             {stats.total || 0}
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
                         <div className="text-sm text-gray-600 mb-1">จำนวนอำเภอ</div>
                         <div className="text-3xl font-bold text-gray-800">
                             {stats.districts || 0}
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
                         <div className="text-sm text-gray-600 mb-1">จำนวนตำบล</div>
                         <div className="text-3xl font-bold text-gray-800">
                             {stats.tambons || 0}
@@ -172,7 +178,10 @@ export default function VillagePolygonsPage() {
                             type="text"
                             placeholder="🔍 ค้นหาชื่อหมู่บ้าน..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1); // รีเซ็ตหน้า
+                            }}
                             className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <select
@@ -180,6 +189,7 @@ export default function VillagePolygonsPage() {
                             onChange={(e) => {
                                 setFilterDistrict(e.target.value);
                                 setFilterTambon(''); // รีเซ็ตตำบลเมื่อเปลี่ยนอำเภอ
+                                setCurrentPage(1); // รีเซ็ตหน้า
                             }}
                             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
@@ -192,7 +202,10 @@ export default function VillagePolygonsPage() {
                         </select>
                         <select
                             value={filterTambon}
-                            onChange={(e) => setFilterTambon(e.target.value)}
+                            onChange={(e) => {
+                                setFilterTambon(e.target.value);
+                                setCurrentPage(1); // รีเซ็ตหน้า
+                            }}
                             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={!filterDistrict}
                         >
@@ -281,12 +294,55 @@ export default function VillagePolygonsPage() {
                             </table>
                         </div>
                     )}
+
+                    {/* Pagination */}
+                    {pagination.totalPages > 1 && (
+                        <div className="bg-gray-50 px-6 py-4 border-t flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                                แสดง {polygons.length} จาก {pagination.totalRecords} รายการ
+                                (หน้า {pagination.currentPage} / {pagination.totalPages})
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                >
+                                    ««
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                >
+                                    « ก่อนหน้า
+                                </button>
+                                <span className="px-4 py-1 text-gray-700">
+                                    {currentPage} / {pagination.totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    disabled={currentPage === pagination.totalPages}
+                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                >
+                                    ถัดไป »
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage(pagination.totalPages)}
+                                    disabled={currentPage === pagination.totalPages}
+                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                >
+                                    »»
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4 shadow-lg">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-700">
                             {editingPolygon ? '✏️ แก้ไขข้อมูลหมู่บ้าน' : '➕ เพิ่มข้อมูลหมู่บ้านใหม่'}

@@ -1,9 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showConfirm, showDeleteConfirm } from '@/lib/sweetAlert';
-import Image from 'next/image';
+import 'leaflet/dist/leaflet.css';
+
+// Import Leaflet dynamically (client-side only)
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 const DISASTER_TYPES = {
     flood: 'น้ำท่วม',
@@ -17,13 +24,17 @@ const DISASTER_TYPES = {
 
 const STATUS_COLORS = {
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    approved: 'bg-green-100 text-green-800 border-green-300',
+    reviewing: 'bg-blue-100 text-blue-800 border-blue-300',
+    verified: 'bg-green-100 text-green-800 border-green-300',
+    resolved: 'bg-gray-100 text-gray-800 border-gray-300',
     rejected: 'bg-red-100 text-red-800 border-red-300'
 };
 
 const STATUS_LABELS = {
     pending: 'รอตรวจสอบ',
-    approved: 'อนุมัติ',
+    reviewing: 'กำลังตรวจสอบ',
+    verified: 'ยืนยันแล้ว',
+
     rejected: 'ปฏิเสธ'
 };
 
@@ -47,10 +58,27 @@ export default function IncidentReportsPage() {
         total: 0,
         totalPages: 0
     });
+    const [mapMounted, setMapMounted] = useState(false);
 
     useEffect(() => {
         fetchReports();
     }, [filters, pagination.page]);
+
+    useEffect(() => {
+        setMapMounted(true);
+
+        // Fix Leaflet marker icon issue in Next.js
+        if (typeof window !== 'undefined') {
+            import('leaflet').then((L) => {
+                delete L.Icon.Default.prototype._getIconUrl;
+                L.Icon.Default.mergeOptions({
+                    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+                    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                });
+            });
+        }
+    }, []);
 
     const fetchReports = async () => {
         setLoading(true);
@@ -160,7 +188,46 @@ export default function IncidentReportsPage() {
 
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
-        return imagePath.startsWith('http') ? imagePath : `/uploads/incidents/${imagePath}`;
+
+        // If it's already a full URL
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+        }
+
+        // If it already starts with /uploads
+        if (imagePath.startsWith('/uploads/')) {
+            return imagePath;
+        }
+
+        // Otherwise, prepend /uploads/incidents/
+        return `/uploads/incidents/${imagePath}`;
+    };
+
+    const getPhotoArray = (photoPath) => {
+        if (!photoPath) return [];
+
+        try {
+            // If it's already an array, return it
+            if (Array.isArray(photoPath)) {
+                return photoPath;
+            }
+
+            // If it's a string, try to parse it as JSON
+            if (typeof photoPath === 'string') {
+                // Check if it looks like JSON array
+                if (photoPath.trim().startsWith('[')) {
+                    return JSON.parse(photoPath);
+                }
+                // Otherwise, treat it as a single image path
+                return [photoPath];
+            }
+
+            return [];
+        } catch (error) {
+            console.error('Error parsing photo path:', error);
+            // If JSON parse fails, treat it as a single image path
+            return typeof photoPath === 'string' ? [photoPath] : [];
+        }
     };
 
     return (
@@ -170,7 +237,7 @@ export default function IncidentReportsPage() {
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                         <span className="text-4xl">📋</span>
-                        รายงานเหตุการณ์จากประชาชน
+
                     </h1>
                     <p className="text-gray-600">จัดการและตรวจสอบรายงานเหตุการณ์ที่ส่งมาจากประชาชน</p>
                 </div>
@@ -207,11 +274,13 @@ export default function IncidentReportsPage() {
                             <select
                                 value={filters.status}
                                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">ทั้งหมด</option>
                                 <option value="pending">รอตรวจสอบ</option>
-                                <option value="approved">อนุมัติแล้ว</option>
+                                <option value="reviewing">กำลังตรวจสอบ</option>
+                                <option value="verified">ยืนยันแล้ว</option>
+
                                 <option value="rejected">ปฏิเสธ</option>
                             </select>
                         </div>
@@ -222,7 +291,7 @@ export default function IncidentReportsPage() {
                             <select
                                 value={filters.disaster_type}
                                 onChange={(e) => setFilters({ ...filters, disaster_type: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">ทั้งหมด</option>
                                 {Object.entries(DISASTER_TYPES).map(([key, label]) => (
@@ -381,8 +450,8 @@ export default function IncidentReportsPage() {
 
                 {/* Detail Modal */}
                 {showModal && selectedReport && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-4">
                                     <h2 className="text-2xl font-bold text-gray-800">รายละเอียดรายงาน</h2>
@@ -403,11 +472,11 @@ export default function IncidentReportsPage() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <span className="text-sm text-gray-600">ชื่อ:</span>
-                                                <p className="font-medium">{selectedReport.first_name} {selectedReport.last_name}</p>
+                                                <p className="font-medium text-gray-600">{selectedReport.first_name} {selectedReport.last_name}</p>
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">เบอร์โทร:</span>
-                                                <p className="font-medium">{selectedReport.reporter_phone}</p>
+                                                <p className="font-medium text-gray-600">{selectedReport.reporter_phone}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -418,43 +487,83 @@ export default function IncidentReportsPage() {
                                         <div className="space-y-2">
                                             <div>
                                                 <span className="text-sm text-gray-600">ประเภทภัย:</span>
-                                                <p className="font-medium">{DISASTER_TYPES[selectedReport.disaster_type] || selectedReport.disaster_type}</p>
+                                                <p className="font-medium text-gray-600">{DISASTER_TYPES[selectedReport.disaster_type] || selectedReport.disaster_type}</p>
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">รายละเอียด:</span>
-                                                <p className="font-medium">{selectedReport.description}</p>
+                                                <p className="font-medium text-gray-600">{selectedReport.description}</p>
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">สถานที่:</span>
-                                                <p className="font-medium">{selectedReport.location_description || 'ไม่ระบุ'}</p>
+                                                <p className="font-medium text-gray-600">{selectedReport.location_description || 'ไม่ระบุ'}</p>
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">พิกัด:</span>
-                                                <p className="font-medium">
+                                                <p className="font-medium text-gray-600">
                                                     {selectedReport.latitude}, {selectedReport.longitude}
                                                 </p>
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">วันที่รายงาน:</span>
-                                                <p className="font-medium">{new Date(selectedReport.created_at).toLocaleString('th-TH')}</p>
+                                                <p className="font-medium text-gray-600">{new Date(selectedReport.created_at).toLocaleString('th-TH')}</p>
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Map */}
+                                    {selectedReport.latitude && selectedReport.longitude && mapMounted && (
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <h3 className="font-semibold text-gray-700 mb-2">ตำแหน่งบนแผนที่</h3>
+                                            <div className="w-full h-64 rounded-lg border border-gray-300 overflow-hidden">
+                                                <MapContainer
+                                                    center={[parseFloat(selectedReport.latitude), parseFloat(selectedReport.longitude)]}
+                                                    zoom={15}
+                                                    style={{ height: '100%', width: '100%' }}
+                                                    scrollWheelZoom={false}
+                                                >
+                                                    <TileLayer
+                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                    />
+                                                    <Marker position={[parseFloat(selectedReport.latitude), parseFloat(selectedReport.longitude)]}>
+                                                        <Popup>
+                                                            <div className="text-sm">
+                                                                <strong>{DISASTER_TYPES[selectedReport.disaster_type] || selectedReport.disaster_type}</strong>
+                                                                <br />
+                                                                {selectedReport.description}
+                                                            </div>
+                                                        </Popup>
+                                                    </Marker>
+                                                </MapContainer>
+                                            </div>
+                                            <p className="text-sm text-gray-600 mt-2">
+                                                📍 พิกัด: {selectedReport.latitude}, {selectedReport.longitude}
+                                            </p>
+                                        </div>
+                                    )}
 
                                     {/* Images */}
                                     {selectedReport.photo_path && (
                                         <div className="bg-gray-50 rounded-lg p-4">
                                             <h3 className="font-semibold text-gray-700 mb-2">รูปภาพ</h3>
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                {JSON.parse(selectedReport.photo_path).map((img, idx) => (
-                                                    <div key={idx} className="relative h-48">
-                                                        <img
-                                                            src={getImageUrl(img)}
-                                                            alt={`รูปภาพ ${idx + 1}`}
-                                                            className="w-full h-full object-cover rounded-lg"
-                                                        />
-                                                    </div>
-                                                ))}
+                                                {getPhotoArray(selectedReport.photo_path).map((img, idx) => {
+                                                    const imageUrl = getImageUrl(img);
+                                                    return (
+                                                        <div key={idx} className="relative h-48 bg-gray-200 rounded-lg overflow-hidden">
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={`รูปภาพ ${idx + 1}`}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.onerror = null;
+                                                                    e.target.src = '/img/no-image.png';
+                                                                    e.target.alt = 'ไม่สามารถโหลดรูปภาพได้';
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     )}
@@ -470,11 +579,12 @@ export default function IncidentReportsPage() {
                                                 <select
                                                     value={reviewData.status}
                                                     onChange={(e) => setReviewData({ ...reviewData, status: e.target.value })}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="">เลือกสถานะ</option>
                                                     <option value="pending">รอตรวจสอบ</option>
-                                                    <option value="approved">อนุมัติ</option>
+                                                    <option value="reviewing">กำลังตรวจสอบ</option>
+                                                    <option value="verified">ยืนยันแล้ว</option>
                                                     <option value="rejected">ปฏิเสธ</option>
                                                 </select>
                                             </div>
@@ -486,7 +596,8 @@ export default function IncidentReportsPage() {
                                                     value={reviewData.admin_notes}
                                                     onChange={(e) => setReviewData({ ...reviewData, admin_notes: e.target.value })}
                                                     rows={3}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    className="text-gray-600 
+                                                    w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
                                                 />
                                             </div>
@@ -502,13 +613,13 @@ export default function IncidentReportsPage() {
                                     <div className="flex justify-end gap-3 pt-4 border-t">
                                         <button
                                             onClick={() => setShowModal(false)}
-                                            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                            className="px-4 py-2 bg-red-600 rounded-lg text-white hover:bg-red-700"
                                         >
                                             ยกเลิก
                                         </button>
                                         <button
                                             onClick={handleUpdateStatus}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                                         >
                                             บันทึก
                                         </button>

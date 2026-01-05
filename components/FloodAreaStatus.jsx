@@ -765,7 +765,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 />
                                 แสดงชื่ออำเภอ
                             </label>
-                            <label className="flex items-center gap-2 text-sm text-gray-700 bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
                                     checked={showFacilities}

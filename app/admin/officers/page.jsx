@@ -170,9 +170,9 @@ export default function OfficersManagementPage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                     {roles.map(role => (
-                        <div key={role.value} className="bg-white p-4 rounded-lg shadow">
+                        <div key={role.value} className={`bg-white rounded-lg shadow p-4 border-l-4 ${getRoleColor(role.value)}`}>
                             <div className="text-sm text-gray-600 mb-1">{role.label}</div>
-                            <div className="text-2xl font-bold text-gray-800">
+                            <div className="text-2xl font-bold">
                                 {stats[role.value] || 0}
                             </div>
                         </div>
@@ -292,7 +292,7 @@ export default function OfficersManagementPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4 shadow-lg">
                     <div className="bg-white rounded-lg max-w-md w-full p-6">
                         <h2 className="text-xl font-bold mb-4 text-gray-800">
                             {editingOfficer ? '✏️ แก้ไขเจ้าหน้าที่' : '➕ เพิ่มเจ้าหน้าที่ใหม่'}

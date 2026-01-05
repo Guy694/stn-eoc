@@ -83,9 +83,11 @@ export function AuthProvider({ children }) {
                     setUser(cookieData.user);
                     localStorage.setItem("user", JSON.stringify(cookieData.user));
 
-                    // สร้าง sessionToken สำหรับ ThaiID session
-                    const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                    localStorage.setItem("sessionToken", thaiIdToken);
+                    // สร้าง sessionToken เฉพาะครั้งแรก (ถ้ายังไม่มี)
+                    if (!sessionToken) {
+                        const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                        localStorage.setItem("sessionToken", thaiIdToken);
+                    }
 
                     setLoading(false);
                     return;
@@ -256,7 +258,7 @@ export function AuthProvider({ children }) {
 
             {/* Idle Warning Modal */}
             {idleWarning && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0  backdrop-blur-md bg-white/30 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">

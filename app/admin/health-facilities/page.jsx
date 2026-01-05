@@ -153,7 +153,7 @@ export default function HealthFacilitiesPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        🏥 จัดการสถานพยาบาล
+                        🏥 จัดการหน่วยบริการ
                     </h1>
                     <p className="text-gray-600">ระบบจัดการข้อมูลสถานพยาบาลและสถานีอนามัย</p>
                 </div>
@@ -161,14 +161,16 @@ export default function HealthFacilitiesPage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
                     {facilityTypes.map(type => (
-                        <div key={type.value} className="bg-white p-4 rounded-lg shadow">
-                            <div className="text-xs text-gray-600 mb-1">{type.label}</div>
-                            <div className="text-2xl font-bold text-gray-800">
+                        <div key={type.value} className={`bg-white rounded-lg shadow p-4 border-l-4 ${getTypeColor(type.value)}`}>
+                            <div className="text-sm text-gray-600 mb-1">{type.label}</div>
+                            <div className="text-2xl font-bold">
                                 {stats[type.value] || 0}
                             </div>
                         </div>
                     ))}
                 </div>
+
+
 
                 {/* Search and Filter */}
                 <div className="bg-white p-4 rounded-lg shadow mb-6 text-gray-800">
