@@ -1,17 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showDeleteConfirm } from '@/lib/sweetAlert';
 import Image from 'next/image';
 
 export default function AnnouncementsPage() {
+    const searchParams = useSearchParams();
+    const eocParam = searchParams.get('eoc');
+
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
     const [filters, setFilters] = useState({
+        eoc_type: eocParam || '',
         is_active: '',
         show_popup: ''
     });
@@ -21,14 +26,25 @@ export default function AnnouncementsPage() {
         inactive: 0,
         popup: 0
     });
+    const [eocStats, setEocStats] = useState({});
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 20,
         total: 0,
         totalPages: 0
     });
+
+    const eocTypes = [
+        { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
+        { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow' },
+        { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan' },
+        { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange' },
+        { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
+    ];
+
     const [formData, setFormData] = useState({
         title: '',
+        eoc_type: eocParam || 'flood',
         description: '',
         show_popup: false,
         priority: 0,
@@ -43,12 +59,20 @@ export default function AnnouncementsPage() {
         fetchAnnouncements();
     }, [filters, pagination.page]);
 
+    // Update filter when URL parameter changes
+    useEffect(() => {
+        if (eocParam) {
+            setFilters(prev => ({ ...prev, eoc_type: eocParam }));
+        }
+    }, [eocParam]);
+
     const fetchAnnouncements = async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
             params.append('page', pagination.page);
             params.append('limit', pagination.limit);
+            if (filters.eoc_type !== '') params.append('eoc_type', filters.eoc_type);
             if (filters.is_active !== '') params.append('is_active', filters.is_active);
             if (filters.show_popup !== '') params.append('show_popup', filters.show_popup);
 
@@ -61,6 +85,9 @@ export default function AnnouncementsPage() {
                 setAnnouncements(data.data);
                 if (data.stats) {
                     setStats(data.stats);
+                }
+                if (data.eocStats) {
+                    setEocStats(data.eocStats);
                 }
                 if (data.pagination) {
                     setPagination(prev => ({
@@ -124,6 +151,7 @@ export default function AnnouncementsPage() {
                 // Create
                 const formDataToSend = new FormData();
                 formDataToSend.append('title', formData.title);
+                formDataToSend.append('eoc_type', formData.eoc_type);
                 formDataToSend.append('description', formData.description);
                 formDataToSend.append('show_popup', formData.show_popup);
                 formDataToSend.append('priority', formData.priority);
@@ -157,6 +185,7 @@ export default function AnnouncementsPage() {
         setSelectedAnnouncement(announcement);
         setFormData({
             title: announcement.title,
+            eoc_type: announcement.eoc_type || 'flood',
             description: announcement.description || '',
             show_popup: announcement.show_popup === 1,
             priority: announcement.priority,
@@ -191,6 +220,7 @@ export default function AnnouncementsPage() {
     const resetForm = () => {
         setFormData({
             title: '',
+            eoc_type: filters.eoc_type || 'flood',
             description: '',
             show_popup: false,
             priority: 0,
@@ -218,6 +248,11 @@ export default function AnnouncementsPage() {
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                             <span className="text-4xl">📢</span>
                             จัดการประชาสัมพันธ์/แบนเนอร์
+                            {filters.eoc_type && (
+                                <span className="text-xl text-gray-600">
+                                    ({eocTypes.find(t => t.value === filters.eoc_type)?.label})
+                                </span>
+                            )}
                         </h1>
                         <p className="text-gray-600">จัดการแบนเนอร์และประกาศข่าวสารต่างๆ</p>
                     </div>
@@ -250,9 +285,41 @@ export default function AnnouncementsPage() {
                     </div>
                 </div>
 
+                {/* EOC Stats */}
+                {Object.keys(eocStats).length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                        {eocTypes.map(type => (
+                            <div key={type.value} className="bg-white rounded-lg shadow p-4 border-l-4 border-gray-300">
+                                <div className="text-sm text-gray-600 mb-1">{type.label}</div>
+                                <div className="text-xl font-bold text-gray-800">
+                                    {eocStats[type.value]?.count || 0}
+                                    <span className="text-sm text-gray-500 ml-1">
+                                        ({eocStats[type.value]?.active || 0} เปิด)
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* Filters */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                ประเภท EOC
+                            </label>
+                            <select
+                                value={filters.eoc_type}
+                                onChange={(e) => setFilters({ ...filters, eoc_type: e.target.value })}
+                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                                <option value="">ทั้งหมด</option>
+                                {eocTypes.map(type => (
+                                    <option key={type.value} value={type.value}>{type.label}</option>
+                                ))}
+                            </select>
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 สถานะการใช้งาน
@@ -283,7 +350,7 @@ export default function AnnouncementsPage() {
                         </div>
                         <div className="flex items-end">
                             <button
-                                onClick={() => setFilters({ is_active: '', show_popup: '' })}
+                                onClick={() => setFilters({ eoc_type: '', is_active: '', show_popup: '' })}
                                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                             >
                                 ล้างตัวกรอง
@@ -312,6 +379,9 @@ export default function AnnouncementsPage() {
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             หัวข้อ
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ประเภท EOC
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             สถานะ
@@ -354,6 +424,11 @@ export default function AnnouncementsPage() {
                                                         {announcement.description}
                                                     </div>
                                                 )}
+                                            </td>
+                                            <td className="text-gray-600 px-6 py-4 whitespace-nowrap">
+                                                <span className="text-sm">
+                                                    {eocTypes.find(t => t.value === announcement.eoc_type)?.label || announcement.eoc_type}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${announcement.is_active
@@ -491,6 +566,23 @@ export default function AnnouncementsPage() {
                                             className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             required
                                         />
+                                    </div>
+
+                                    {/* EOC Type */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            ประเภท EOC *
+                                        </label>
+                                        <select
+                                            value={formData.eoc_type}
+                                            onChange={(e) => setFormData({ ...formData, eoc_type: e.target.value })}
+                                            className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            required
+                                        >
+                                            {eocTypes.map(type => (
+                                                <option key={type.value} value={type.value}>{type.label}</option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     {/* Description */}

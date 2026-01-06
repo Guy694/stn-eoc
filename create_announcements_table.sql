@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS announcements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL COMMENT 'หัวข้อประกาศ',
+    eoc_type ENUM('flood', 'drought', 'tsunami', 'earthquake', 'disease') NOT NULL COMMENT 'ประเภท EOC ที่ใช้กับประกาศนี้',
     description TEXT COMMENT 'รายละเอียดประกาศ',
     image_path VARCHAR(255) NOT NULL COMMENT 'path รูปภาพแบนเนอร์',
     show_popup BOOLEAN DEFAULT FALSE COMMENT 'แสดงเป็น popup หน้าแรกหรือไม่',
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS announcements (
     created_by INT COMMENT 'ผู้สร้าง (officer_id)',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_eoc_type (eoc_type, is_active, show_popup),
     INDEX idx_show_popup (show_popup, is_active),
     INDEX idx_dates (start_date, end_date),
     INDEX idx_priority (priority)

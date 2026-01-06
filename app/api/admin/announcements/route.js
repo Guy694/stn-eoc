@@ -22,12 +22,18 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const isActive = searchParams.get('is_active');
         const showPopup = searchParams.get('show_popup');
+        const eocType = searchParams.get('eoc_type');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const offset = (page - 1) * limit;
 
         let whereConditions = [];
         let params = [];
+
+        if (eocType) {
+            whereConditions.push('eoc_type = ?');
+            params.push(eocType);
+        }
 
         if (isActive !== null && isActive !== undefined && isActive !== '') {
             whereConditions.push('is_active = ?');
@@ -43,11 +49,19 @@ export async function GET(request) {
             ? 'WHERE ' + whereConditions.join(' AND ')
             : '';
 
+        // ตรวจสอบว่ามีคอลัมน์ eoc_type หรือไม่
+        const [columns] = await connection.execute(
+            `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
+        );
+        const hasEocType = columns.length > 0;
+
         // Query รายการแบนเนอร์
+        const selectFields = hasEocType
+            ? 'a.*, CONCAT(o.given_name, \' \', o.family_name) as created_by_name'
+            : 'a.id, a.title, a.description, a.image_path, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, \' \', o.family_name) as created_by_name, \'flood\' as eoc_type';
+
         const [announcements] = await connection.execute(
-            `SELECT 
-                a.*,
-                CONCAT(o.given_name, ' ', o.family_name) as created_by_name
+            `SELECT ${selectFields}
             FROM announcements a
             LEFT JOIN officer o ON a.created_by = o.id
             ${whereClause}
@@ -74,6 +88,26 @@ export async function GET(request) {
             FROM announcements`
         );
 
+        // สถิติแยกตาม EOC type (ถ้ามีคอลัมน์)
+        let eocStats = {};
+        if (hasEocType) {
+            const [eocStatsResult] = await connection.execute(
+                `SELECT 
+                    eoc_type,
+                    COUNT(*) as count,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_count
+                FROM announcements
+                GROUP BY eoc_type`
+            );
+
+            eocStatsResult.forEach(row => {
+                eocStats[row.eoc_type] = {
+                    count: row.count,
+                    active: row.active_count
+                };
+            });
+        }
+
         return NextResponse.json({
             success: true,
             data: announcements,
@@ -83,7 +117,8 @@ export async function GET(request) {
                 total,
                 totalPages: Math.ceil(total / limit)
             },
-            stats: statsResult[0]
+            stats: statsResult[0],
+            eocStats: eocStats
         });
 
     } catch (error) {
@@ -108,6 +143,7 @@ export async function POST(request) {
     try {
         const formData = await request.formData();
         const title = formData.get('title');
+        const eocType = formData.get('eoc_type');
         const description = formData.get('description');
         const showPopup = formData.get('show_popup') === 'true';
         const priority = parseInt(formData.get('priority') || '0');
@@ -123,6 +159,17 @@ export async function POST(request) {
                 { success: false, message: 'กรุณากรอกข้อมูลให้ครบถ้วน' },
                 { status: 400 }
             );
+        }
+
+        // Validate EOC type (ถ้ามี)
+        if (eocType) {
+            const validEocTypes = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
+            if (!validEocTypes.includes(eocType)) {
+                return NextResponse.json(
+                    { success: false, message: 'ประเภท EOC ไม่ถูกต้อง' },
+                    { status: 400 }
+                );
+            }
         }
 
         // สร้างโฟลเดอร์สำหรับเก็บรูป
@@ -143,13 +190,29 @@ export async function POST(request) {
 
         const imagePath = `/uploads/announcements/${fileName}`;
 
-        // บันทึกลงฐานข้อมูล
-        const [result] = await connection.execute(
-            `INSERT INTO announcements 
-            (title, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [title, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy]
+        // ตรวจสอบว่ามีคอลัมน์ eoc_type หรือไม่
+        const [columns] = await connection.execute(
+            `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
         );
+        const hasEocType = columns.length > 0;
+
+        // บันทึกลงฐานข้อมูล
+        let result;
+        if (hasEocType) {
+            [result] = await connection.execute(
+                `INSERT INTO announcements 
+                (title, eoc_type, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [title, eocType, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy]
+            );
+        } else {
+            [result] = await connection.execute(
+                `INSERT INTO announcements 
+                (title, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [title, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy]
+            );
+        }
 
         return NextResponse.json({
             success: true,
@@ -178,7 +241,7 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, title, description, show_popup, priority, is_active, start_date, end_date } = body;
+        const { id, title, eoc_type, description, show_popup, priority, is_active, start_date, end_date } = body;
 
         if (!id) {
             return NextResponse.json(
@@ -187,18 +250,51 @@ export async function PUT(request) {
             );
         }
 
-        await connection.execute(
-            `UPDATE announcements 
-            SET title = ?, 
-                description = ?, 
-                show_popup = ?, 
-                priority = ?, 
-                is_active = ?, 
-                start_date = ?, 
-                end_date = ?
-            WHERE id = ?`,
-            [title, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+        // Validate EOC type (ถ้ามี)
+        if (eoc_type) {
+            const validEocTypes = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
+            if (!validEocTypes.includes(eoc_type)) {
+                return NextResponse.json(
+                    { success: false, message: 'ประเภท EOC ไม่ถูกต้อง' },
+                    { status: 400 }
+                );
+            }
+        }
+
+        // ตรวจสอบว่ามีคอลัมน์ eoc_type หรือไม่
+        const [columns] = await connection.execute(
+            `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
         );
+        const hasEocType = columns.length > 0;
+
+        if (hasEocType && eoc_type) {
+            await connection.execute(
+                `UPDATE announcements 
+                SET title = ?, 
+                    eoc_type = ?,
+                    description = ?, 
+                    show_popup = ?, 
+                    priority = ?, 
+                    is_active = ?, 
+                    start_date = ?, 
+                    end_date = ?
+                WHERE id = ?`,
+                [title, eoc_type, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+            );
+        } else {
+            await connection.execute(
+                `UPDATE announcements 
+                SET title = ?, 
+                    description = ?, 
+                    show_popup = ?, 
+                    priority = ?, 
+                    is_active = ?, 
+                    start_date = ?, 
+                    end_date = ?
+                WHERE id = ?`,
+                [title, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+            );
+        }
 
         return NextResponse.json({
             success: true,

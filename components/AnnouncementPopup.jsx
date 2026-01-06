@@ -46,7 +46,7 @@ export default function AnnouncementPopup() {
 
     return (
         <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-[9999] p-4 animate-fadeIn">
-            <div className=" bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-scaleIn">
+            <div className=" bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-scaleIn">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 flex justify-between items-center">
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
