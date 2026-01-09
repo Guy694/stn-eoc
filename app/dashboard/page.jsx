@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import DisasterDashboard from "@/components/DisasterDashboard";
+import EOCTypeChart from "@/components/EOCTypeChart";
+import UserEOCDashboard from "@/components/UserEOCDashboard";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -57,28 +59,28 @@ export default function DashboardPage() {
                         icon="🚨"
                         title="เหตุการณ์ที่กำลังดำเนินการ"
                         value={stats.activeEvents}
-                        color="from-red-500 to-orange-500"
+                        color="from-gray-400 to-gray-200"
                     />
                     <StatCard
                         icon="👥"
                         title="ผู้ได้รับผลกระทบ"
                         value={stats.totalAffected}
                         unit="คน"
-                        color="from-blue-500 to-cyan-500"
+                        color="from-gray-400 to-gray-200"
                     />
                     <StatCard
                         icon="⚡"
                         title="ทีมปฏิบัติการ"
                         value={stats.teamsDeployed}
                         unit="ทีม"
-                        color="from-green-500 to-emerald-500"
+                        color="from-gray-400 to-gray-200"
                     />
                     <StatCard
                         icon="📊"
                         title="รายงานวันนี้"
                         value={5}
                         unit="รายการ"
-                        color="from-purple-500 to-pink-500"
+                        color="from-gray-400 to-gray-200"
                     />
                 </div>
 
@@ -86,6 +88,18 @@ export default function DashboardPage() {
                 <div className="mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">ระบบจัดการภัยพิบัติ (Disaster Management Modules)</h2>
                     <DisasterDashboard />
+                </div>
+
+                {/* User EOC Assignments - แสดงทีมที่รับผิดชอบ */}
+                {user.role !== 'admin' && (
+                    <div className="mb-8">
+                        <UserEOCDashboard />
+                    </div>
+                )}
+
+                {/* EOC Statistics Chart */}
+                <div className="mb-8">
+                    <EOCTypeChart />
                 </div>
 
                 {/* Legacy Quick Access */}

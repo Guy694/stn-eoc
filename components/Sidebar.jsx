@@ -90,6 +90,7 @@ export default function Sidebar() {
                 { name: "ประชาสัมพันธ์", path: "/admin/announcements?eoc=flood", icon: "📢" },
                 { name: "ศูนย์พักพิงชั่วคราว", path: "/admin/shelter-center?eoc=flood", icon: "🏕️" },
                 { name: "สถานการณ์โรค", path: "/admin/disease-reports", icon: "🦠" },
+                { name: "เจ้าหน้าที่ EOC", path: "/admin/eoc-officer?eoc=flood", icon: "👮" },
             ],
         },
         {

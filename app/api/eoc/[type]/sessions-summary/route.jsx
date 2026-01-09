@@ -18,7 +18,8 @@ export async function GET(request, { params }) {
     let connection;
 
     try {
-        const disasterType = params.type; // flood, drought, disease, etc.
+        // Next.js 15+ params เป็น Promise ต้อง await
+        const { type: disasterType } = await params;
         const { searchParams } = new URL(request.url);
         const year = searchParams.get('year');
 

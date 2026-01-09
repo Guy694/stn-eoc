@@ -1,4 +1,7 @@
 // ข้อมูล configuration สำหรับแต่ละ disaster module
+// ระบบจะโหลดข้อมูลจาก database ก่อน ถ้าไม่มีหรือ error จะใช้ค่า default นี้
+
+let dynamicDisasterTypes = null; // cache สำหรับข้อมูลจาก database
 
 export const DISASTER_TYPES = {
     FLOOD: 'flood',
@@ -6,6 +9,23 @@ export const DISASTER_TYPES = {
     DISEASE: 'disease',
     TSUNAMI: 'tsunami',
     EARTHQUAKE: 'earthquake'
+};
+
+// ดึงข้อมูล EOC Types จาก database (eoc_status table)
+export const fetchEOCTypesFromDB = async () => {
+    try {
+        const response = await fetch('/api/admin/eoc-types?active=true');
+        const result = await response.json();
+
+        if (result.success && Array.isArray(result.data)) {
+            dynamicDisasterTypes = result.data.map(item => item.id);
+            return result.data;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching EOC types from DB:", error);
+        return null;
+    }
 };
 
 export const DISASTER_CONFIG = {
@@ -226,8 +246,26 @@ export const getDisasterConfig = (disasterType) => {
     return DISASTER_CONFIG[disasterType] || null;
 };
 
-export const getAllDisasterTypes = () => {
+export const getAllDisasterTypes = async () => {
+    // พยายามโหลดจาก database ก่อน
+    if (typeof window !== 'undefined') { // ตรวจสอบว่าอยู่ใน client-side
+        try {
+            const dbTypes = await fetchEOCTypesFromDB();
+            if (dbTypes && dbTypes.length > 0) {
+                return dbTypes.map(item => item.id);
+            }
+        } catch (error) {
+            console.error("Error loading dynamic types:", error);
+        }
+    }
+
+    // fallback ไปใช้ค่า default
     return Object.values(DISASTER_TYPES);
+};
+
+// สำหรับใช้แบบ sync (ไม่รอ database)
+export const getAllDisasterTypesSync = () => {
+    return dynamicDisasterTypes || Object.values(DISASTER_TYPES);
 };
 
 export const getDisasterName = (disasterType, lang = 'th') => {

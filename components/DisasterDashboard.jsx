@@ -1,23 +1,48 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getDisasterConfig, getAllDisasterTypes } from '@/lib/disasterConfig';
+import { getDisasterConfig, getAllDisasterTypesSync } from '@/lib/disasterConfig';
 
 export default function DisasterDashboard() {
     const [activeSessions, setActiveSessions] = useState({});
     const [loading, setLoading] = useState(true);
-    const disasterTypes = getAllDisasterTypes();
+    const [disasterTypes, setDisasterTypes] = useState([]);
 
     useEffect(() => {
-        fetchAllActiveSessions();
+        loadDisasterTypes();
     }, []);
 
-    const fetchAllActiveSessions = async () => {
+    const loadDisasterTypes = async () => {
+        try {
+            // ดึงข้อมูล EOC Types จาก API
+            const response = await fetch('/api/admin/eoc-types?active=true');
+            const result = await response.json();
+
+            if (result.success && Array.isArray(result.data)) {
+                const types = result.data.map(item => item.id);
+                setDisasterTypes(types);
+                // โหลด sessions หลังจากได้ types แล้ว
+                await fetchAllActiveSessions(types);
+            } else {
+                // fallback ถ้าไม่มีข้อมูล
+                const defaultTypes = getAllDisasterTypesSync();
+                setDisasterTypes(defaultTypes);
+                await fetchAllActiveSessions(defaultTypes);
+            }
+        } catch (error) {
+            console.error('Error loading disaster types:', error);
+            const defaultTypes = getAllDisasterTypesSync();
+            setDisasterTypes(defaultTypes);
+            await fetchAllActiveSessions(defaultTypes);
+        }
+    };
+
+    const fetchAllActiveSessions = async (types) => {
         setLoading(true);
         const sessionsData = {};
 
         await Promise.all(
-            disasterTypes.map(async (type) => {
+            types.map(async (type) => {
                 try {
                     const response = await fetch(`/api/eoc/${type}/sessions-summary`);
                     const data = await response.json();
@@ -49,72 +74,89 @@ export default function DisasterDashboard() {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {disasterTypes.map((type) => {
-                const config = getDisasterConfig(type);
-                const sessionData = activeSessions[type] || { active: 0, total: 0, activities: 0 };
-                const isActive = sessionData.active > 0;
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
+            {disasterTypes
+                .filter((type) => {
+                    const sessionData = activeSessions[type] || { active: 0, total: 0, activities: 0 };
+                    return sessionData.active > 0; // แสดงเฉพาะ EOC ที่เปิดอยู่
+                })
+                .map((type) => {
+                    const config = getDisasterConfig(type);
+                    const sessionData = activeSessions[type] || { active: 0, total: 0, activities: 0 };
+                    const isActive = sessionData.active > 0;
 
-                return (
-                    <Link key={type} href={config.routes.main}>
-                        <div className={`relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer ${isActive ? 'ring-4 ring-red-500' : ''
-                            }`}>
-                            <div className={`bg-linear-to-br ${config.color.gradient} p-6 text-white`}>
-                                <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-4xl">{config.icon}</span>
-                                            {isActive && (
-                                                <span className="animate-pulse">
-                                                    <span className="flex h-3 w-3 relative">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    return (
+                        <Link key={type} href={config.routes.main}>
+                            <div className={`relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer ${isActive ? 'ring-4 ring-red-500' : ''
+                                }`}>
+                                <div className={`bg-linear-to-br ${config.color.gradient} p-6 text-white`}>
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-4xl">{config.icon}</span>
+                                                {isActive && (
+                                                    <span className="animate-pulse">
+                                                        <span className="flex h-3 w-3 relative">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                                        </span>
                                                     </span>
-                                                </span>
-                                            )}
+                                                )}
+                                            </div>
+                                            <h3 className="text-2xl font-bold mb-1">{config.name}</h3>
+                                            <p className="text-sm opacity-90">{config.nameEn}</p>
                                         </div>
-                                        <h3 className="text-2xl font-bold mb-1">{config.name}</h3>
-                                        <p className="text-sm opacity-90">{config.nameEn}</p>
+                                        {isActive && (
+                                            <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
+                                                ACTIVE
+                                            </div>
+                                        )}
                                     </div>
-                                    {isActive && (
-                                        <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
-                                            ACTIVE
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">
+                                            <span className="text-sm">EOC เปิดอยู่</span>
+                                            <span className="font-bold text-lg">{sessionData.active}</span>
                                         </div>
-                                    )}
+                                        <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">
+                                            <span className="text-sm">Sessions ปีนี้</span>
+                                            <span className="font-bold">{sessionData.total}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">
+                                            <span className="text-sm">กิจกรรมทั้งหมด</span>
+                                            <span className="font-bold">{sessionData.activities}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 pt-4 border-t border-white/20">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span>ดูรายละเอียด</span>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">
-                                        <span className="text-sm">EOC เปิดอยู่</span>
-                                        <span className="font-bold text-lg">{sessionData.active}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">
-                                        <span className="text-sm">Sessions ปีนี้</span>
-                                        <span className="font-bold">{sessionData.total}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">
-                                        <span className="text-sm">กิจกรรมทั้งหมด</span>
-                                        <span className="font-bold">{sessionData.activities}</span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 pt-4 border-t border-white/20">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span>ดูรายละเอียด</span>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </div>
-                                </div>
+                                {isActive && (
+                                    <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 bg-red-500 rounded-full opacity-20 animate-ping"></div>
+                                )}
                             </div>
+                        </Link>
+                    );
+                })}
 
-                            {isActive && (
-                                <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 bg-red-500 rounded-full opacity-20 animate-ping"></div>
-                            )}
-                        </div>
-                    </Link>
-                );
-            })}
+            {/* แสดงข้อความถ้าไม่มี EOC ที่เปิดอยู่ */}
+            {disasterTypes.filter((type) => {
+                const sessionData = activeSessions[type] || { active: 0 };
+                return sessionData.active > 0;
+            }).length === 0 && (
+                    <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
+                        <div className="text-6xl mb-4">✅</div>
+                        <h3 className="text-xl font-bold text-gray-700 mb-2">ไม่มี EOC ที่เปิดอยู่ในขณะนี้</h3>
+                        <p className="text-gray-600">ขณะนี้ไม่มีสถานการณ์ภัยพิบัติที่ต้องเปิด EOC</p>
+                    </div>
+                )}
         </div>
     );
 }
