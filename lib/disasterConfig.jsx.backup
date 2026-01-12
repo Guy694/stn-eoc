@@ -68,6 +68,48 @@ export const DISASTER_CONFIG = {
         ]
     },
 
+    drought: {
+        id: 'drought',
+        name: 'ภัยแล้ง',
+        nameEn: 'Drought',
+        icon: '🌵',
+        color: {
+            primary: 'orange',
+            gradient: 'from-orange-500 to-red-500',
+            light: 'bg-orange-50',
+            border: 'border-orange-200',
+            text: 'text-orange-700'
+        },
+        routes: {
+            main: '/eoc/drought',
+            map: '/eoc/drought',
+            dailyRisk: '/eoc/drought/daily-risk',
+            reports: '/eoc/drought/reports',
+            history: '/eoc/drought/history'
+        },
+        api: {
+            sessions: '/api/eoc/drought/sessions-summary',
+            dailyRisk: '/api/eoc/drought/daily-risk',
+            dailyData: '/api/eoc/drought/daily-data'
+        },
+        fields: {
+            riskLevel: 'drought_level',
+            waterSource: 'water_source_status',
+            soilMoisture: 'soil_moisture_percent'
+        },
+        riskLevels: [
+            { value: 'critical', label: 'วิกฤต', icon: '🔴', color: 'red' },
+            { value: 'severe', label: 'รุนแรง', icon: '🟠', color: 'orange' },
+            { value: 'moderate', label: 'ปานกลาง', icon: '🟡', color: 'yellow' },
+            { value: 'normal', label: 'ปกติ', icon: '🟢', color: 'green' }
+        ],
+        metrics: [
+            { key: 'water_reserve_percent', label: 'ปริมาณน้ำคงเหลือ', unit: '%', icon: '💧' },
+            { key: 'soil_moisture', label: 'ความชื้นในดิน', unit: '%', icon: '🌱' },
+            { key: 'affected_farmland', label: 'พื้นที่การเกษตร', unit: 'ไร่', icon: '🌾' }
+        ]
+    },
+
     disease: {
         id: 'disease',
         name: 'โรคระบาด',
@@ -108,6 +150,92 @@ export const DISASTER_CONFIG = {
             { key: 'deaths', label: 'เสียชีวิต', unit: 'ราย', icon: '💀' },
             { key: 'recovered', label: 'หายแล้ว', unit: 'ราย', icon: '😊' },
             { key: 'infection_rate', label: 'อัตราการติดเชื้อ', unit: '%', icon: '📈' }
+        ]
+    }
+};
+
+// Helper functions
+export const getDisasterConfig = (disasterType) => {
+    id: 'tsunami',
+        name: 'คลื่นสึนามิ',
+            nameEn: 'Tsunami',
+                icon: '🌊',
+                    color: {
+        primary: 'cyan',
+            gradient: 'from-cyan-500 to-blue-700',
+                light: 'bg-cyan-50',
+                    border: 'border-cyan-200',
+                        text: 'text-cyan-700'
+    },
+    routes: {
+        main: '/eoc/tsunami',
+            map: '/eoc/tsunami',
+                dailyRisk: '/eoc/tsunami/daily-risk',
+                    reports: '/eoc/tsunami/reports',
+                        history: '/eoc/tsunami/history'
+    },
+    api: {
+        sessions: '/api/eoc/tsunami/sessions-summary',
+            dailyRisk: '/api/eoc/tsunami/daily-risk',
+                dailyData: '/api/eoc/tsunami/daily-data'
+    },
+    fields: {
+        riskLevel: 'tsunami_risk',
+            waveHeight: 'wave_height_m',
+                evacuationStatus: 'evacuation_status'
+    },
+    riskLevels: [
+        { value: 'extreme', label: 'อันตรายสูงสุด', icon: '🔴', color: 'red' },
+        { value: 'high', label: 'อันตรายสูง', icon: '🟠', color: 'orange' },
+        { value: 'watch', label: 'เฝ้าระวัง', icon: '🟡', color: 'yellow' },
+        { value: 'safe', label: 'ปลอดภัย', icon: '🟢', color: 'green' }
+    ],
+        metrics: [
+            { key: 'wave_height', label: 'ความสูงคลื่น', unit: 'เมตร', icon: '📊' },
+            { key: 'evacuated', label: 'อพยพแล้ว', unit: 'คน', icon: '🏃' },
+            { key: 'coastal_distance', label: 'ระยะจากชายฝั่ง', unit: 'ก.ม.', icon: '📏' }
+        ]
+},
+
+    earthquake: {
+        id: 'earthquake',
+        name: 'แผ่นดินไหว',
+        nameEn: 'Earthquake',
+        icon: '🏚️',
+        color: {
+            primary: 'brown',
+            gradient: 'from-yellow-700 to-red-700',
+            light: 'bg-yellow-50',
+            border: 'border-yellow-300',
+            text: 'text-yellow-800'
+        },
+        routes: {
+            main: '/eoc/earthquake',
+            map: '/eoc/earthquake',
+            dailyRisk: '/eoc/earthquake/daily-risk',
+            reports: '/eoc/earthquake/reports',
+            history: '/eoc/earthquake/history'
+        },
+        api: {
+            sessions: '/api/eoc/earthquake/sessions-summary',
+            dailyRisk: '/api/eoc/earthquake/daily-risk',
+            dailyData: '/api/eoc/earthquake/daily-data'
+        },
+        fields: {
+            riskLevel: 'earthquake_magnitude',
+            magnitude: 'richter_scale',
+            epicenter: 'epicenter_location'
+        },
+        riskLevels: [
+            { value: 'major', label: 'รุนแรงมาก (≥7.0)', icon: '🔴', color: 'red' },
+            { value: 'strong', label: 'รุนแรง (6.0-6.9)', icon: '🟠', color: 'orange' },
+            { value: 'moderate', label: 'ปานกลาง (5.0-5.9)', icon: '🟡', color: 'yellow' },
+            { value: 'minor', label: 'เล็กน้อย (<5.0)', icon: '🟢', color: 'green' }
+        ],
+        metrics: [
+            { key: 'magnitude', label: 'ขนาด', unit: 'ริกเตอร์', icon: '📊' },
+            { key: 'depth', label: 'ความลึก', unit: 'ก.ม.', icon: '📏' },
+            { key: 'buildings_damaged', label: 'อาคารเสียหาย', unit: 'หลัง', icon: '🏚️' }
         ]
     }
 };

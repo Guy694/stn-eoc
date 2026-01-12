@@ -73,130 +73,234 @@ export default function Sidebar() {
         return null;
     }
 
+    // ============================================
+    // MENU CONFIGURATION
+    // ============================================
+    // โครงสร้างเมนูทั้งหมด แบ่งตามหมวดหมู่และสิทธิ์การเข้าถึง
+    // 
+    // สิทธิ์การเข้าถึง:
+    // - Public: ทุกคนที่ login แล้วเห็นได้
+    // - requiresAdmin: เฉพาะ admin เท่านั้น (user.role === 'admin')
+    // - requiresEOCManager: เฉพาะ admin และ eoc_manager
+    // - requiresStaff: เฉพาะ admin, eoc_manager, eoc_staff
+    // - eocType: เมนูที่เกี่ยวข้องกับ EOC ประเภทต่างๆ
+    // - collapsible: เมนูที่สามารถขยาย/ย่อได้
+    //
+    // ============================================
+
     const allMenuItems = [
+        // ============================================
+        // 1. DASHBOARD - ทุกคนเห็นได้
+        // ============================================
         {
-            title: "แดชบอร์ด",
+            title: "แดshบอร์ด",
+            section: "dashboard",
+            requiresPermission: null, // ทุกคนเห็นได้
             items: [
-                { name: "ภาพรวม", path: "/dashboard", icon: "📊" },
+                { name: "ภาพรวมระบบ", path: "/dashboard", icon: "📊", description: "ภาพรวมข้อมูลทั้งหมด" },
             ],
         },
+
+        // ============================================
+        // 2. EOC MODULES - แยกตามประเภทภัยพิบัติ
+        // ============================================
+        // เมนูเหล่านี้จะแสดงตามสถานะการเปิด/ปิด EOC
         {
-            title: "💧 น้ำท่วม",
+            title: "🌊 EOC น้ำท่วม",
+            section: "eoc-flood",
             key: "flood",
             eocType: "flood",
             collapsible: true,
+            requiresPermission: null, // ทุกคนเห็นได้
             items: [
-                { name: "แผนที่น้ำท่วม", path: "/eoc/flood", icon: "🗺️" },
-                { name: "ประชาสัมพันธ์", path: "/admin/announcements?eoc=flood", icon: "📢" },
-                { name: "ศูนย์พักพิงชั่วคราว", path: "/admin/shelter-center?eoc=flood", icon: "🏕️" },
-                { name: "สถานการณ์โรค", path: "/admin/disease-reports", icon: "🦠" },
-                { name: "เจ้าหน้าที่ EOC", path: "/admin/eoc-officer?eoc=flood", icon: "👮" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: "📊", description: "ภาพรวมสถานการณ์น้ำท่วม" },
+                { name: "รายชื่อผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", icon: "👥", description: "ข้อมูลผู้ประสบภัย" },
+                { name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", icon: "🧑‍🦽", description: "ผู้สูงอายุ เด็ก คนพิการ" },
+                { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: "📢", description: "ข่าวประชาสัมพันธ์" },
+                { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: "📋", description: "ติดตามโรคระบาด" },
             ],
         },
+
         {
-            title: "🌵 ภัยแล้ง",
+            title: "🌵 EOC ภัยแล้ง",
+            section: "eoc-drought",
             key: "drought",
             eocType: "drought",
             collapsible: true,
+            requiresPermission: null,
             items: [
-                { name: "แผนที่ภัยแล้ง", path: "/eoc/drought", icon: "🗺️" },
-                { name: "ประชาสัมพันธ์", path: "/admin/announcements?eoc=drought", icon: "📢" },
-                { name: "ศูนย์พักพิงชั่วคราว", path: "/admin/shelter-center?eoc=drought", icon: "🏕️" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/drought", icon: "📊", description: "ภาพรวมสถานการณ์ภัยแล้ง" },
+                { name: "ข้อมูลแหล่งน้ำ", path: "/eoc/drought/water-sources", icon: "💧", description: "สถานะแหล่งน้ำ" },
             ],
         },
+
         {
-            title: "🌊 สึนามิ",
+            title: "🌊 EOC สึนามิ",
+            section: "eoc-tsunami",
             key: "tsunami",
             eocType: "tsunami",
             collapsible: true,
+            requiresPermission: null,
             items: [
-                { name: "แผนที่สึนามิ", path: "/eoc/tsunami", icon: "🗺️" },
-                { name: "ประชาสัมพันธ์", path: "/admin/announcements?eoc=tsunami", icon: "📢" },
-                { name: "ศูนย์พักพิงชั่วคราว", path: "/admin/shelter-center?eoc=tsunami", icon: "🏕️" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/tsunami", icon: "📊", description: "ภาพรวมสถานการณ์สึนามิ" },
+                { name: "จุดอพยพ", path: "/eoc/tsunami/evacuation", icon: "🏃", description: "จุดอพยพและเส้นทาง" },
             ],
         },
+
         {
-            title: "🏚️ แผ่นดินไหว",
+            title: "🏚️ EOC แผ่นดินไหว",
+            section: "eoc-earthquake",
             key: "earthquake",
             eocType: "earthquake",
             collapsible: true,
+            requiresPermission: null,
             items: [
-                { name: "แผนที่แผ่นดินไหว", path: "/eoc/earthquake", icon: "🗺️" },
-                { name: "ประชาสัมพันธ์", path: "/admin/announcements?eoc=earthquake", icon: "📢" },
-                { name: "ศูนย์พักพิงชั่วคราว", path: "/admin/shelter-center?eoc=earthquake", icon: "🏕️" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/earthquake", icon: "📊", description: "ภาพรวมสถานการณ์แผ่นดินไหว" },
+                { name: "อาคารเสียหาย", path: "/eoc/earthquake/damages", icon: "🏚️", description: "รายงานความเสียหาย" },
             ],
         },
+
         {
-            title: "🦠 โรคระบาด",
+            title: "🦠 EOC โรคระบาด",
+            section: "eoc-disease",
             key: "disease",
             eocType: "disease",
             collapsible: true,
+            requiresPermission: null,
             items: [
-                { name: "แผนที่โรคระบาด", path: "/eoc/disease", icon: "🗺️" },
-                { name: "ประชาสัมพันธ์", path: "/admin/announcements?eoc=disease", icon: "📢" },
-                { name: "ศูนย์พักพิงชั่วคราว", path: "/admin/shelter-center?eoc=disease", icon: "🏕️" },
-                { name: "สถานการณ์โรค", path: "/admin/disease-reports", icon: "🦠" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/disease", icon: "📊", description: "ภาพรวมการระบาด" },
+                { name: "รายงานผู้ป่วย", path: "/eoc/disease/reports", icon: "📋", description: "สถิติผู้ป่วยรายวัน" },
             ],
         },
 
+        // ============================================
+        // 3. ADMIN MANAGEMENT - เฉพาะ Admin
+        // ============================================
         {
-            title: "ผู้ดูแลระบบ",
-            requiresAdmin: true,
+            title: "🔧 จัดการระบบ",
+            section: "admin",
+            requiresPermission: "admin", // เฉพาะ admin
+            collapsible: true,
             items: [
-                { name: "รายงานเหตุการณ์", path: "/admin/incident-reports", icon: "📋", badge: "pendingReports" },
-                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮" },
-                { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: "🏥" },
-                { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️" },
-                { name: "จัดการ EOC", path: "/admin/eoc-management", icon: "⚙️" },
+                {
+                    name: "รายงานเหตุการณ์",
+                    path: "/admin/incident-reports",
+                    icon: "📋",
+                    badge: "pendingReports",
+                    description: "รายงานจากประชาชน"
+                },
+                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮", description: "ข้อมูลบุคลากร" },
+                { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: "🏥", description: "โรงพยาบาล/สถานีอนามัย" },
+                { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️", description: "พื้นที่หมู่บ้าน" },
+                { name: "จัดการ EOC", path: "/admin/eoc-management", icon: "⚙️", description: "เปิด/ปิด EOC" },
+                { name: "ประวัติ EOC Sessions", path: "/admin/eoc-sessions", icon: "📜", description: "ประวัติการเปิด-ปิด EOC" },
             ],
         },
+
+        // ============================================
+        // 4. RESOURCES - ต้องมีสิทธิ์เฉพาะ
+        // ============================================
         {
-            title: "ทรัพยากร",
-            requiresAdmin: true,
+            title: "📦 ทรัพยากร",
+            section: "resources",
+            requiresPermission: "resources", // ใช้ canAccessResources()
+            collapsible: true,
             items: [
-                { name: "บุคลากร", path: "/resources/personnel", icon: "👥" },
-                { name: "ยานพาหนะ", path: "/resources/vehicles", icon: "🚑" },
-                { name: "อุปกรณ์", path: "/resources/equipment", icon: "🛠️" },
+                { name: "บุคลากร", path: "/resources/personnel", icon: "👥", description: "ทีมงานและอาสาสมัคร" },
+                { name: "ยานพาหนะ", path: "/resources/vehicles", icon: "🚑", description: "รถพยาบาล/รถบรรทุก" },
+                { name: "อุปกรณ์", path: "/resources/equipment", icon: "🛠️", description: "เครื่องมือและอุปกรณ์" },
+                { name: "ศูนย์พักพิง", path: "/admin/shelter-center", icon: "🏠", description: "ศูนย์พักพิงชั่วคราว" },
             ],
         },
+
+        // ============================================
+        // 5. REPORTS - ต้องมีสิทธิ์เฉพาะ
+        // ============================================
         {
-            title: "รายงาน",
-            requiresAdmin: true,
+            title: "📄 รายงาน",
+            section: "reports",
+            requiresPermission: "reports", // ใช้ canAccessReports()
+            collapsible: true,
             items: [
-                { name: "สร้างรายงาน", path: "/reports/create", icon: "📝" },
-                { name: "รายงานทั้งหมด", path: "/reports", icon: "📄" },
+                { name: "สร้างรายงาน", path: "/reports/create", icon: "📝", description: "สร้างรายงานใหม่" },
+                { name: "รายงานทั้งหมด", path: "/reports", icon: "📄", description: "ดูรายงานที่ผ่านมา" },
+                { name: "สถิติและกราฟ", path: "/reports/statistics", icon: "📊", description: "วิเคราะห์ข้อมูล" },
+            ],
+        },
+
+        // ============================================
+        // 6. SETTINGS - สำหรับการตั้งค่าส่วนตัว
+        // ============================================
+        {
+            title: "⚙️ ตั้งค่า",
+            section: "settings",
+            requiresPermission: null, // ทุกคนเห็นได้
+            items: [
+                { name: "โปรไฟล์ของฉัน", path: "/profile", icon: "👤", description: "ข้อมูลส่วนตัว" },
+                { name: "ตั้งค่าระบบ", path: "/settings", icon: "🔧", description: "กำหนดค่าต่างๆ" },
             ],
         },
     ];
 
-    // เมนูสำหรับ pending user (รอการอนุมัติ)
+    // ============================================
+    // PENDING USER MENU
+    // ============================================
+    // เมนูสำหรับผู้ใช้ที่รอการอนุมัติ (isApproved = false)
+    // จะเห็นเฉพาะเมนูพื้นฐานและหน้าสมัครเจ้าหน้าที่
+    // ============================================
     const pendingUserMenu = [
         {
             title: "แดชบอร์ด",
+            section: "dashboard",
             items: [
-                { name: "ภาพรวม", path: "/dashboard", icon: "📊" },
+                { name: "ภาพรวมระบบ", path: "/dashboard", icon: "📊", description: "ข้อมูลเบื้องต้น" },
             ],
         },
         {
-            title: "เจ้าหน้าที่",
+            title: "👤 บัญชีผู้ใช้",
+            section: "account",
             items: [
-                { name: "สมัครเจ้าหน้าที่", path: "/auth/thaiid/registration", icon: "📝" },
-                { name: "สถานะคำขอ", path: "/auth/thaiid/pending", icon: "⏳" },
+                { name: "สมัครเจ้าหน้าที่", path: "/auth/thaiid/registration", icon: "📝", description: "ลงทะเบียนเป็นเจ้าหน้าที่" },
+                { name: "สถานะคำขอ", path: "/auth/thaiid/pending", icon: "⏳", description: "ตรวจสอบสถานะ" },
             ],
         },
     ];
 
-    // กรองเมนูตาม role และสถานะการอนุมัติ
-    // role 'user' หรือ isApproved = false จะเห็นเฉพาะเมนูเจ้าหน้าที่
-    const menuItems = (user.role === 'user' || user.isApproved === false) ? pendingUserMenu : allMenuItems.filter(section => {
-        if (section.title === "ทรัพยากร") {
-            return canAccessResources();
-        }
-        if (section.title === "รายงาน") {
-            return canAccessReports();
-        }
-        return true;
-    });
+    // ============================================
+    // MENU FILTERING LOGIC
+    // ============================================
+    // กรองเมนูตามสิทธิ์และสถานะของผู้ใช้
+    // 
+    // Logic การกรอง:
+    // 1. ถ้า user.role === 'user' หรือ isApproved === false 
+    //    → ใช้ pendingUserMenu (เมนูจำกัด)
+    // 2. ถ้าเป็นเจ้าหน้าที่ที่อนุมัติแล้ว → กรองตาม requiresPermission
+    //    - requiresPermission === "admin" → เฉพาะ admin
+    //    - requiresPermission === "resources" → ใช้ canAccessResources()
+    //    - requiresPermission === "reports" → ใช้ canAccessReports()
+    //    - requiresPermission === null → ทุกคนเห็นได้
+    // ============================================
+    const menuItems = (user.role === 'user' || user.isApproved === false)
+        ? pendingUserMenu
+        : allMenuItems.filter(section => {
+            // Admin-only sections
+            if (section.requiresPermission === "admin") {
+                return user.role === 'admin';
+            }
+
+            // Resources section
+            if (section.requiresPermission === "resources") {
+                return canAccessResources();
+            }
+
+            // Reports section
+            if (section.requiresPermission === "reports") {
+                return canAccessReports();
+            }
+
+            // Public sections (requiresPermission === null)
+            return true;
+        });
 
     return (
         <>
@@ -278,8 +382,11 @@ export default function Sidebar() {
 
                     {/* Menu Items */}
                     {menuItems.map((section, idx) => (
-                        <div key={idx} className="mb-4">
+                        <div key={section.section || idx} className="mb-4">
                             {section.collapsible ? (
+                                // ============================================
+                                // COLLAPSIBLE SECTION (EOC Modules)
+                                // ============================================
                                 <>
                                     {/* Collapsible Section Header */}
                                     <button
@@ -288,9 +395,11 @@ export default function Sidebar() {
                                             ? "bg-green-50 text-green-800"
                                             : "text-gray-700 hover:bg-gray-100"
                                             }`}
+                                        title={section.description || section.title}
                                     >
                                         <span className="font-semibold flex items-center gap-2">
                                             {section.title}
+                                            {/* แสดงสถานะ EOC (เปิด/ปิด) */}
                                             {section.eocType && eocStatus[section.eocType] && (
                                                 <span className={`text-xs px-2 py-0.5 rounded-full ${eocStatus[section.eocType].is_active
                                                     ? "bg-green-500 text-white"
@@ -328,6 +437,7 @@ export default function Sidebar() {
                                                             ? "bg-green-100 text-green-800 font-medium"
                                                             : "text-gray-600 hover:bg-gray-100"
                                                             }`}
+                                                        title={item.description || item.name}
                                                     >
                                                         <span className="text-base">{item.icon}</span>
                                                         <span className="flex-1">{item.name}</span>
@@ -338,8 +448,11 @@ export default function Sidebar() {
                                     )}
                                 </>
                             ) : (
+                                // ============================================
+                                // REGULAR SECTION (Non-collapsible)
+                                // ============================================
                                 <>
-                                    {/* Regular Section */}
+                                    {/* Regular Section Header */}
                                     <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
                                         {section.title}
                                     </h3>
@@ -353,14 +466,19 @@ export default function Sidebar() {
                                                         ? "bg-green-100 text-green-800 font-medium"
                                                         : "text-gray-700 hover:bg-gray-100"
                                                         }`}
+                                                    title={item.description || item.name}
                                                 >
                                                     <span className="text-lg">{item.icon}</span>
                                                     <span className="flex-1">{item.name}</span>
+
+                                                    {/* Badge สำหรับแจ้งเตือน (เช่น รายงานค้าง) */}
                                                     {item.badge === "pendingReports" && pendingReportsCount > 0 && (
                                                         <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
                                                             {pendingReportsCount}
                                                         </span>
                                                     )}
+
+                                                    {/* สถานะ EOC (ถ้ามี) */}
                                                     {item.eocType && eocStatus[item.eocType] && (
                                                         <span className={`text-xs px-2 py-0.5 rounded-full ${eocStatus[item.eocType].is_active
                                                             ? "bg-green-500 text-white"

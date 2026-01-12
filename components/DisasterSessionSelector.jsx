@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { getDisasterConfig, getDisasterIcon, getRiskLevelIcon } from '@/lib/disasterConfig';
+import SessionTeamsList from './SessionTeamsList';
 
 export default function DisasterSessionSelector({
     disasterType = 'flood',
     onSessionChange,
-    currentMode = 'realtime' // 'realtime' หรือ 'historical'
+    currentMode = 'realtime', // 'realtime' หรือ 'historical'
+    showTeams = false // แสดงข้อมูลทีมหรือไม่
 }) {
     const [years, setYears] = useState([]);
     const [selectedYear, setSelectedYear] = useState(null);
@@ -280,6 +282,13 @@ export default function DisasterSessionSelector({
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* แสดงข้อมูลทีมและสมาชิก (ถ้าเปิดใช้งาน) */}
+            {showTeams && selectedSession && (
+                <div className="mt-4">
+                    <SessionTeamsList sessionId={selectedSession.id} showTitle={true} />
                 </div>
             )}
         </div>

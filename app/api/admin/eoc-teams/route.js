@@ -18,7 +18,7 @@ export async function GET(request) {
         }
         query += ' ORDER BY sort_order';
 
-        const [teams] = await pool.query(query);
+        const teams = await pool.query(query);
 
         return NextResponse.json({
             success: true,

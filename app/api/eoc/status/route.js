@@ -24,12 +24,20 @@ export async function GET(request) {
             SELECT 
                 es.id,
                 es.eoc_type,
+                es.name_th,
+                es.name_en,
+                es.icon,
+                es.color_primary,
+                es.color_gradient,
                 es.is_active,
                 es.activated_at,
                 es.deactivated_at,
                 es.description,
                 es.created_at,
                 es.updated_at,
+                sess.id as session_id,
+                sess.session_number,
+                sess.status as session_status,
                 ao.username as activated_by_username,
                 ao.title as activated_by_title,
                 ao.given_name as activated_by_given_name,
@@ -41,6 +49,7 @@ export async function GET(request) {
             FROM eoc_status es
             LEFT JOIN officer ao ON es.activated_by = ao.id
             LEFT JOIN officer do ON es.deactivated_by = do.id
+            LEFT JOIN eoc_sessions sess ON es.eoc_type = sess.eoc_type AND sess.status = 'active'
         `;
 
         let params = [];
@@ -54,9 +63,20 @@ export async function GET(request) {
 
         const [rows] = await connection.execute(query, params);
 
+        // เพิ่มฟิลด์ activated_by_name และ deactivated_by_name
+        const formattedRows = rows.map(row => ({
+            ...row,
+            activated_by_name: row.activated_by_title && row.activated_by_given_name && row.activated_by_family_name
+                ? `${row.activated_by_title}${row.activated_by_given_name} ${row.activated_by_family_name}`
+                : null,
+            deactivated_by_name: row.deactivated_by_title && row.deactivated_by_given_name && row.deactivated_by_family_name
+                ? `${row.deactivated_by_title}${row.deactivated_by_given_name} ${row.deactivated_by_family_name}`
+                : null
+        }));
+
         return NextResponse.json({
             success: true,
-            data: rows
+            data: formattedRows
         });
 
     } catch (error) {
@@ -90,11 +110,15 @@ export async function POST(request) {
             );
         }
 
-        // Validate eocType
-        const validTypes = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
-        if (!validTypes.includes(eocType)) {
+        // ตรวจสอบว่า eocType มีอยู่ใน eoc_status หรือไม่
+        const [existingType] = await connection.execute(
+            'SELECT eoc_type FROM eoc_status WHERE eoc_type = ?',
+            [eocType]
+        );
+
+        if (existingType.length === 0) {
             return NextResponse.json(
-                { success: false, message: 'ประเภท EOC ไม่ถูกต้อง' },
+                { success: false, message: 'ประเภท EOC ไม่ถูกต้องหรือไม่มีในระบบ' },
                 { status: 400 }
             );
         }

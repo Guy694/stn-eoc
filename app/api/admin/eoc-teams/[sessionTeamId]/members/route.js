@@ -4,19 +4,22 @@
 // ========================================
 
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { query } from '@/lib/db';
 
 // GET: ดึงรายชื่อสมาชิกในทีม
 export async function GET(request, { params }) {
     try {
-        const { sessionTeamId } = params;
+        const { sessionTeamId } = await params;
 
-        const [members] = await pool.query(`
+        const members = await query(`
             SELECT 
                 tm.id,
                 tm.officer_id,
                 o.username,
-                o.full_name,
+                CONCAT(COALESCE(o.title, ''), o.given_name, ' ', o.family_name) as full_name,
+                o.given_name,
+                o.family_name,
+                o.title,
                 o.role as officer_role,
                 tm.role_in_team,
                 tm.assigned_at,
@@ -46,12 +49,22 @@ export async function GET(request, { params }) {
 // POST: เพิ่มสมาชิกเข้าทีม
 export async function POST(request, { params }) {
     try {
-        const { sessionTeamId } = params;
+        const { sessionTeamId } = await params;
         const body = await request.json();
         const { officerId, roleInTeam, assignedBy, notes } = body;
 
+        console.log('POST /members - Received:', { sessionTeamId, officerId, roleInTeam, assignedBy, notes });
+
+        // Validate required fields
+        if (!sessionTeamId || !officerId || !roleInTeam || !assignedBy) {
+            return NextResponse.json({
+                success: false,
+                message: 'ข้อมูลไม่ครบถ้วน'
+            }, { status: 400 });
+        }
+
         // ตรวจสอบว่าเจ้าหน้าที่อยู่ในทีมนี้แล้วหรือยัง
-        const [existing] = await pool.query(`
+        const existing = await query(`
             SELECT id FROM eoc_team_members 
             WHERE session_team_id = ? AND officer_id = ? AND is_active = TRUE
         `, [sessionTeamId, officerId]);
@@ -63,17 +76,16 @@ export async function POST(request, { params }) {
             }, { status: 400 });
         }
 
-        // เพิ่มสมาชิก
-        const [result] = await pool.query(`
+        // เพิ่มสมาชิก - แปลง undefined เป็น null
+        await query(`
             INSERT INTO eoc_team_members 
             (session_team_id, officer_id, role_in_team, assigned_by, notes)
             VALUES (?, ?, ?, ?, ?)
-        `, [sessionTeamId, officerId, roleInTeam || 'สมาชิก', assignedBy, notes]);
+        `, [sessionTeamId, officerId, roleInTeam || 'เจ้าหน้าที่', assignedBy, notes || null]);
 
         return NextResponse.json({
             success: true,
-            message: 'เพิ่มสมาชิกสำเร็จ',
-            memberId: result.insertId
+            message: 'เพิ่มสมาชิกสำเร็จ'
         });
 
     } catch (error) {
@@ -89,11 +101,11 @@ export async function POST(request, { params }) {
 // PATCH: อัพเดทบทบาทของสมาชิก
 export async function PATCH(request, { params }) {
     try {
-        const { sessionTeamId } = params;
+        const { sessionTeamId } = await params;
         const body = await request.json();
         const { memberId, roleInTeam } = body;
 
-        await pool.query(`
+        await query(`
             UPDATE eoc_team_members 
             SET role_in_team = ?
             WHERE id = ? AND session_team_id = ?
@@ -117,7 +129,7 @@ export async function PATCH(request, { params }) {
 // DELETE: ถอดสมาชิกออกจากทีม
 export async function DELETE(request, { params }) {
     try {
-        const { sessionTeamId } = params;
+        const { sessionTeamId } = await params;
         const { searchParams } = new URL(request.url);
         const memberId = searchParams.get('memberId');
 
@@ -128,7 +140,7 @@ export async function DELETE(request, { params }) {
             }, { status: 400 });
         }
 
-        await pool.query(`
+        await query(`
             UPDATE eoc_team_members 
             SET is_active = FALSE,
                 removed_at = NOW()

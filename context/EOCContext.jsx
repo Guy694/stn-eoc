@@ -6,13 +6,8 @@ const EOCContext = createContext();
 
 export function EOCProvider({ children }) {
     const { user } = useAuth();
-    const [eocStatus, setEocStatus] = useState({
-        flood: { is_active: false, description: '', activated_at: null },
-        drought: { is_active: false, description: '', activated_at: null },
-        tsunami: { is_active: false, description: '', activated_at: null },
-        earthquake: { is_active: false, description: '', activated_at: null },
-        disease: { is_active: false, description: '', activated_at: null }
-    });
+    const [eocStatus, setEocStatus] = useState({});
+    const [eocTypes, setEocTypes] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // ดึงสถานะ EOC
@@ -30,6 +25,7 @@ export function EOCProvider({ children }) {
 
             if (data.success) {
                 const statusMap = {};
+                const typesList = [];
                 data.data.forEach(item => {
                     statusMap[item.eoc_type] = {
                         is_active: Boolean(item.is_active),
@@ -37,10 +33,20 @@ export function EOCProvider({ children }) {
                         activated_at: item.activated_at,
                         deactivated_at: item.deactivated_at,
                         activated_by_name: item.activated_by_name,
-                        deactivated_by_name: item.deactivated_by_name
+                        deactivated_by_name: item.deactivated_by_name,
+                        name_th: item.name_th,
+                        name_en: item.name_en,
+                        icon: item.icon,
+                        color_primary: item.color_primary,
+                        color_gradient: item.color_gradient,
+                        session_id: item.session_id,
+                        session_number: item.session_number,
+                        session_status: item.session_status
                     };
+                    typesList.push(item.eoc_type);
                 });
                 setEocStatus(statusMap);
+                setEocTypes(typesList);
             }
         } catch (error) {
             console.error('Error fetching EOC status:', error);
@@ -119,18 +125,24 @@ export function EOCProvider({ children }) {
 
     // แปลงชื่อ EOC เป็นภาษาไทย
     const getEOCDisplayName = (eocType) => {
-        const names = {
+        // ดึงชื่อจาก eocStatus ที่โหลดจาก database
+        if (eocStatus[eocType]?.name_th) {
+            return eocStatus[eocType].name_th;
+        }
+        // Fallback สำหรับ EOC เดิม
+        const fallbackNames = {
             flood: 'น้ำท่วม',
             drought: 'ภัยแล้ง',
             tsunami: 'สึนามิ',
             earthquake: 'แผ่นดินไหว',
             disease: 'โรคระบาด'
         };
-        return names[eocType] || eocType;
+        return fallbackNames[eocType] || eocType;
     };
 
     const value = {
         eocStatus,
+        eocTypes,
         loading,
         toggleEOC,
         isEOCActive,

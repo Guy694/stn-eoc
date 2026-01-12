@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from 'react';
+import SessionTeamsList from './SessionTeamsList';
 
 export default function FloodSessionSelector({
     onSessionChange,
-    currentMode = 'realtime' // 'realtime' หรือ 'historical'
+    currentMode = 'realtime', // 'realtime' หรือ 'historical'
+    showTeams = true // แสดงข้อมูลทีมหรือไม่
 }) {
     const [years, setYears] = useState([]);
     const [selectedYear, setSelectedYear] = useState(null);
@@ -311,6 +313,13 @@ export default function FloodSessionSelector({
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* แสดงข้อมูลทีมและสมาชิก (ถ้าเปิดใช้งาน) */}
+            {showTeams && selectedSession && (
+                <div className="mt-4">
+                    <SessionTeamsList sessionId={selectedSession.id} showTitle={true} />
                 </div>
             )}
         </div>

@@ -4,15 +4,16 @@
 // ========================================
 
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { query, getConnection } from '@/lib/db';
+import mysql from 'mysql2/promise';
 
 // GET: ดึงข้อมูลทีมงานทั้งหมดของ Session
 export async function GET(request, { params }) {
     try {
-        const { sessionId } = params;
+        const { sessionId } = await params;
 
         // ดึงข้อมูล Session พร้อมทีมงาน
-        const [session] = await pool.query(`
+        const session = await query(`
             SELECT 
                 s.id,
                 s.eoc_type,
@@ -32,8 +33,8 @@ export async function GET(request, { params }) {
             }, { status: 404 });
         }
 
-        // ดึงข้อมูลทีมงานของ Session นี้
-        const [teams] = await pool.query(`
+        // ดึงข้อมูลทีมงานของ Session นี้ (เฉพาะทีมที่เปิดใช้งาน)
+        const teams = await query(`
             SELECT 
                 st.id as session_team_id,
                 st.team_id,
@@ -43,29 +44,35 @@ export async function GET(request, { params }) {
                 t.icon,
                 t.color,
                 st.team_lead_officer_id,
-                o.full_name as team_lead_name,
+                CONCAT(COALESCE(o.title, ''), o.given_name, ' ', o.family_name) as team_lead_name,
                 o.username as team_lead_username,
                 st.assigned_at,
                 st.notes,
                 COUNT(tm.id) as member_count,
-                st.is_active
+                st.is_active,
+                t.is_active as team_is_active
             FROM eoc_session_teams st
             JOIN eoc_teams t ON st.team_id = t.id
             LEFT JOIN officer o ON st.team_lead_officer_id = o.id
             LEFT JOIN eoc_team_members tm ON st.id = tm.session_team_id AND tm.is_active = TRUE
-            WHERE st.eoc_session_id = ?
+            WHERE st.eoc_session_id = ? 
+            AND st.is_active = TRUE 
+            AND t.is_active = TRUE
             GROUP BY st.id
             ORDER BY t.sort_order
         `, [sessionId]);
 
         // ดึงรายละเอียดสมาชิกแต่ละทีม
         for (let team of teams) {
-            const [members] = await pool.query(`
+            const members = await query(`
                 SELECT 
                     tm.id,
                     tm.officer_id,
                     o.username,
-                    o.full_name,
+                    CONCAT(COALESCE(o.title, ''), o.given_name, ' ', o.family_name) as full_name,
+                    o.given_name,
+                    o.family_name,
+                    o.title,
                     o.role as officer_role,
                     tm.role_in_team,
                     tm.assigned_at,
@@ -79,7 +86,7 @@ export async function GET(request, { params }) {
                         WHEN 'รองหัวหน้าทีม' THEN 2
                         ELSE 3
                     END,
-                    o.full_name
+                    o.given_name, o.family_name
             `, [team.session_team_id]);
 
             team.members = members;
@@ -103,10 +110,11 @@ export async function GET(request, { params }) {
 
 // POST: มอบหมายทีมใหม่เข้า Session
 export async function POST(request, { params }) {
+    const pool = await getConnection();
     const conn = await pool.getConnection();
 
     try {
-        const { sessionId } = params;
+        const { sessionId } = await params;
         const body = await request.json();
         const { teamId, teamLeadOfficerId, assignedBy, notes } = body;
 
@@ -187,10 +195,11 @@ export async function POST(request, { params }) {
 
 // DELETE: ถอดทีมออกจาก Session
 export async function DELETE(request, { params }) {
+    const pool = await getConnection();
     const conn = await pool.getConnection();
 
     try {
-        const { sessionId } = params;
+        const { sessionId } = await params;
         const { searchParams } = new URL(request.url);
         const teamId = searchParams.get('teamId');
 

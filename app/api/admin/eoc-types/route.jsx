@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import { query } from "@/lib/db";
 
 // GET - ดึงข้อมูล EOC Types ทั้งหมด
 export async function GET(req) {
@@ -7,7 +7,7 @@ export async function GET(req) {
         const { searchParams } = new URL(req.url);
         const activeOnly = searchParams.get('active') === 'true';
 
-        let query = `
+        let queryStr = `
             SELECT 
                 id,
                 eoc_type,
@@ -25,12 +25,12 @@ export async function GET(req) {
         `;
 
         if (activeOnly) {
-            query += ` WHERE is_active = 1`;
+            queryStr += ` WHERE is_active = 1`;
         }
 
-        query += ` ORDER BY sort_order ASC, eoc_type ASC`;
+        queryStr += ` ORDER BY sort_order ASC, eoc_type ASC`;
 
-        const [rows] = await pool.query(query);
+        const rows = await query(queryStr);
 
         if (!Array.isArray(rows)) {
             console.error("EOC Types query error - rows is not array:", rows);

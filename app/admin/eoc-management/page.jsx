@@ -300,6 +300,15 @@ export default function EOCManagementPage() {
                                         {getStatusBadge(isActive)}
                                         <div className="flex gap-1">
                                             <button
+                                                onClick={() => router.push(`/admin/eoc-modules?eoc_type=${eocType}`)}
+                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded transition"
+                                                title="จัดการเมนู Sidebar"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                                </svg>
+                                            </button>
+                                            <button
                                                 onClick={() => openEditModal(eocType)}
                                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
                                                 title="แก้ไข"

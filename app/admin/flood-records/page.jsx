@@ -24,7 +24,7 @@ export default function FloodRecordsPage() {
         village: '',
         flood_level: 'ไม่มี',
         flood_start_date: '',
-        flood_end_date: '',
+      
         water_depth_cm: '',
         affected_area_sqm: '',
         affected_households: 0,
@@ -116,7 +116,7 @@ export default function FloodRecordsPage() {
             village: record.village || '',
             flood_level: record.flood_level,
             flood_start_date: record.flood_start_date?.split('T')[0] || '',
-            flood_end_date: record.flood_end_date?.split('T')[0] || '',
+          
             water_depth_cm: record.water_depth_cm || '',
             affected_area_sqm: record.affected_area_sqm || '',
             affected_households: record.affected_households || 0,
@@ -158,7 +158,7 @@ export default function FloodRecordsPage() {
             village: '',
             flood_level: 'ไม่มี',
             flood_start_date: '',
-            flood_end_date: '',
+     
             water_depth_cm: '',
             affected_area_sqm: '',
             affected_households: 0,
@@ -366,7 +366,7 @@ export default function FloodRecordsPage() {
                                                 {record.flood_start_date && (
                                                     <div>
                                                         {new Date(record.flood_start_date).toLocaleDateString('th-TH')}
-                                                        {record.flood_end_date && ` - ${new Date(record.flood_end_date).toLocaleDateString('th-TH')}`}
+                                                       
                                                     </div>
                                                 )}
                                             </td>
@@ -535,17 +535,7 @@ export default function FloodRecordsPage() {
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                วันที่น้ำลด
-                                            </label>
-                                            <input
-                                                type="date"
-                                                value={formData.flood_end_date}
-                                                onChange={(e) => setFormData({ ...formData, flood_end_date: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        </div>
+                                        
                                     </div>
                                 </div>
 

@@ -117,6 +117,8 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
 
     const handleAddMember = async (sessionTeamId, officerId, roleInTeam) => {
         try {
+            console.log('Adding member:', { sessionTeamId, officerId, roleInTeam, assignedBy: user.id });
+
             const response = await fetch(
                 `/api/admin/eoc-teams/${sessionTeamId}/members`,
                 {
@@ -131,16 +133,19 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             );
 
             const data = await response.json();
+            console.log('Add member response:', data);
+
             if (data.success) {
+                alert('เพิ่มสมาชิกสำเร็จ');
                 await loadSessionTeams();
                 setShowAddMemberModal(false);
                 setSelectedSessionTeam(null);
             } else {
-                alert(data.message);
+                alert(data.message || 'เกิดข้อผิดพลาด');
             }
         } catch (error) {
             console.error('Error adding member:', error);
-            alert('เกิดข้อผิดพลาด');
+            alert('เกิดข้อผิดพลาด: ' + error.message);
         }
     };
 
@@ -304,7 +309,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
             {expanded && (
                 <div className="p-4">
                     {team.members && team.members.length > 0 ? (
-                        <table className="w-full">
+                        <table className="text-gray-600 w-full">
                             <thead>
                                 <tr className="border-b">
                                     <th className="text-left py-2">ชื่อ-สกุล</th>
@@ -322,8 +327,8 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                                         <td className="py-2">{member.username}</td>
                                         <td className="py-2">
                                             <span className={`px-2 py-1 rounded text-sm ${member.role_in_team === 'หัวหน้าทีม'
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-gray-100 text-gray-800'
+                                                ? 'bg-yellow-100 text-yellow-800'
+                                                : 'bg-gray-100 text-gray-800'
                                                 }`}>
                                                 {member.role_in_team}
                                             </span>
@@ -384,7 +389,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-                <h3 className="text-xl font-bold mb-4">เพิ่มทีมเข้า Session</h3>
+                <h3 className="text-gray-600 text-xl font-bold mb-4">เพิ่มทีมเข้า Session</h3>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
@@ -394,7 +399,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                             <select
                                 value={selectedTeam}
                                 onChange={(e) => setSelectedTeam(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                                 required
                             >
                                 <option value="">-- เลือกทีม --</option>
@@ -413,10 +418,10 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                             <select
                                 value={selectedLead}
                                 onChange={(e) => setSelectedLead(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">-- ไม่ระบุ --</option>
-                                {availableOfficers.map((officer) => (
+                                {Array.isArray(availableOfficers) && availableOfficers.map((officer) => (
                                     <option key={officer.id} value={officer.id}>
                                         {officer.full_name} ({officer.username})
                                     </option>
@@ -429,7 +434,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+                            className="px-4 py-2 bg-red-500 rounded-lg hover:bg-gray-100"
                         >
                             ยกเลิก
                         </button>
@@ -453,8 +458,8 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
     const [selectedOfficer, setSelectedOfficer] = useState('');
     const [roleInTeam, setRoleInTeam] = useState('สมาชิก');
 
-    const currentMemberIds = currentMembers.filter(m => m.is_active).map(m => m.officer_id);
-    const availableForAdd = availableOfficers.filter(o => !currentMemberIds.includes(o.id));
+    const currentMemberIds = Array.isArray(currentMembers) ? currentMembers.filter(m => m.is_active).map(m => m.officer_id) : [];
+    const availableForAdd = Array.isArray(availableOfficers) ? availableOfficers.filter(o => !currentMemberIds.includes(o.id)) : [];
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -468,7 +473,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-                <h3 className="text-xl font-bold mb-4">
+                <h3 className="text-xl text-gray-600 font-bold mb-4">
                     เพิ่มสมาชิกเข้าทีม {team.team_name_th}
                 </h3>
                 <form onSubmit={handleSubmit}>
@@ -480,7 +485,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                             <select
                                 value={selectedOfficer}
                                 onChange={(e) => setSelectedOfficer(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600  w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                                 required
                             >
                                 <option value="">-- เลือกเจ้าหน้าที่ --</option>
@@ -499,11 +504,11 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                             <select
                                 value={roleInTeam}
                                 onChange={(e) => setRoleInTeam(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             >
-                                <option value="สมาชิก">สมาชิก</option>
-                                <option value="รองหัวหน้าทีม">รองหัวหน้าทีม</option>
-                                <option value="ผู้ประสานงาน">ผู้ประสานงาน</option>
+                                <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                                {/* <option value="รองหัวหน้าทีม">รองหัวหน้าทีม</option>
+                                <option value="หัวหน้าทีม">หัวหน้าทีม</option> */}
                             </select>
                         </div>
                     </div>
@@ -512,7 +517,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                         >
                             ยกเลิก
                         </button>

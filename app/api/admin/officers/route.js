@@ -15,7 +15,8 @@ export async function GET(request) {
                 username, 
                 title,
                 given_name, 
-                family_name, 
+                family_name,
+                CONCAT(COALESCE(title, ''), given_name, ' ', family_name) as full_name,
                 email, 
                 phone, 
                 role,
@@ -56,6 +57,7 @@ export async function GET(request) {
         return NextResponse.json({
             success: true,
             data: officers,
+            officers: officers,
             stats: stats,
             total: officers.length
         });

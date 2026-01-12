@@ -7,6 +7,7 @@ export async function GET(request) {
         const pool = await getConnection();
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
+        const sessionId = searchParams.get('session_id');
         const facilityId = searchParams.get('facility_id');
         const disease = searchParams.get('disease');
         const startDate = searchParams.get('start_date');
@@ -25,6 +26,11 @@ export async function GET(request) {
             WHERE 1=1
         `;
         const params = [];
+
+        if (sessionId) {
+            query += ` AND dr.session_id = ?`;
+            params.push(sessionId);
+        }
 
         if (date) {
             query += ` AND dr.report_date = ?`;
@@ -50,9 +56,9 @@ export async function GET(request) {
 
         const [reports] = await pool.query(query, params);
 
-        // สรุปข้อมูลตามอำเภอ (วันนี้)
+        // สรุปข้อมูลตามอำเภอ (วันนี้) - กรอง session_id ถ้ามี
         const today = new Date().toISOString().split('T')[0];
-        const [todaySummary] = await pool.query(`
+        let todaySummaryQuery = `
             SELECT 
                 hf.district_name,
                 dr.disease_name,
@@ -61,12 +67,23 @@ export async function GET(request) {
             FROM disease_reports dr
             JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE dr.report_date = ?
+        `;
+        const todayParams = [today];
+
+        if (sessionId) {
+            todaySummaryQuery += ` AND dr.session_id = ?`;
+            todayParams.push(sessionId);
+        }
+
+        todaySummaryQuery += `
             GROUP BY hf.district_name, dr.disease_name
             ORDER BY hf.district_name, today_patients DESC
-        `, [today]);
+        `;
 
-        // สรุปข้อมูลสะสม
-        const [cumulativeSummary] = await pool.query(`
+        const [todaySummary] = await pool.query(todaySummaryQuery, todayParams);
+
+        // สรุปข้อมูลสะสม - กรอง session_id ถ้ามี
+        let cumulativeQuery = `
             SELECT 
                 hf.district_name,
                 dr.disease_name,
@@ -75,28 +92,62 @@ export async function GET(request) {
                 MAX(dr.report_date) as last_report_date
             FROM disease_reports dr
             JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            WHERE 1=1
+        `;
+        const cumulativeParams = [];
+
+        if (sessionId) {
+            cumulativeQuery += ` AND dr.session_id = ?`;
+            cumulativeParams.push(sessionId);
+        }
+
+        cumulativeQuery += `
             GROUP BY hf.district_name, dr.disease_name
             ORDER BY hf.district_name, cumulative_patients DESC
-        `);
+        `;
 
-        // สรุปรายโรค
-        const [diseaseSummary] = await pool.query(`
+        const [cumulativeSummary] = await pool.query(cumulativeQuery, cumulativeParams);
+
+        // สรุปรายโรค - กรอง session_id ถ้ามี
+        let diseaseSummaryQuery = `
             SELECT 
                 dr.disease_name,
                 SUM(CASE WHEN dr.report_date = ? THEN dr.patient_count ELSE 0 END) as today_total,
                 SUM(dr.patient_count) as cumulative_total,
                 COUNT(DISTINCT dr.health_facility_id) as facilities_count
             FROM disease_reports dr
+            WHERE 1=1
+        `;
+        const diseaseParams = [today];
+
+        if (sessionId) {
+            diseaseSummaryQuery += ` AND dr.session_id = ?`;
+            diseaseParams.push(sessionId);
+        }
+
+        diseaseSummaryQuery += `
             GROUP BY dr.disease_name
             ORDER BY cumulative_total DESC
-        `, [today]);
+        `;
 
-        // ดึงรายการโรคทั้งหมดที่เคยบันทึก (สำหรับ dropdown)
-        const [diseaseList] = await pool.query(`
+        const [diseaseSummary] = await pool.query(diseaseSummaryQuery, diseaseParams);
+
+        // ดึงรายการโรคทั้งหมดที่เคยบันทึก (สำหรับ dropdown) - กรอง session_id ถ้ามี
+        let diseaseListQuery = `
             SELECT DISTINCT disease_name 
-            FROM disease_reports 
-            ORDER BY disease_name
-        `);
+            FROM disease_reports
+            WHERE 1=1
+        `;
+        const diseaseListParams = [];
+
+        if (sessionId) {
+            diseaseListQuery += ` AND session_id = ?`;
+            diseaseListParams.push(sessionId);
+        }
+
+        diseaseListQuery += ` ORDER BY disease_name`;
+
+        const [diseaseList] = await pool.query(diseaseListQuery, diseaseListParams);
 
         return NextResponse.json({
             success: true,
@@ -128,6 +179,7 @@ export async function POST(request) {
         const pool = await getConnection();
         const body = await request.json();
         const {
+            session_id,
             report_date,
             health_facility_id,
             disease_name,
@@ -139,10 +191,10 @@ export async function POST(request) {
         console.log('Received data:', body);
 
         // Validation
-        if (!report_date || !health_facility_id || !disease_name || patient_count === undefined || patient_count === null) {
-            console.error('Validation failed:', { report_date, health_facility_id, disease_name, patient_count });
+        if (!session_id || !report_date || !health_facility_id || !disease_name || patient_count === undefined || patient_count === null) {
+            console.error('Validation failed:', { session_id, report_date, health_facility_id, disease_name, patient_count });
             return NextResponse.json(
-                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน' },
+                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง session_id)' },
                 { status: 400 }
             );
         }
@@ -154,18 +206,18 @@ export async function POST(request) {
             );
         }
 
-        console.log('Executing INSERT query with:', [report_date, health_facility_id, disease_name, patient_count, notes || null, reported_by || 1]);
+        console.log('Executing INSERT query with:', [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, reported_by || 1]);
 
         const [result] = await pool.query(
             `INSERT INTO disease_reports 
-            (report_date, health_facility_id, disease_name, patient_count, notes, reported_by) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            (session_id, report_date, health_facility_id, disease_name, patient_count, notes, reported_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 patient_count = VALUES(patient_count),
                 notes = VALUES(notes),
                 reported_by = VALUES(reported_by),
                 updated_at = CURRENT_TIMESTAMP`,
-            [report_date, health_facility_id, disease_name, patient_count, notes || null, reported_by || 1]
+            [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, reported_by || 1]
         );
 
         return NextResponse.json({
@@ -226,6 +278,7 @@ export async function PUT(request) {
 
         const body = await request.json();
         const {
+            session_id,
             report_date,
             health_facility_id,
             disease_name,
@@ -233,19 +286,19 @@ export async function PUT(request) {
             notes
         } = body;
 
-        if (!report_date || !health_facility_id || !disease_name || patient_count === undefined) {
+        if (!session_id || !report_date || !health_facility_id || !disease_name || patient_count === undefined) {
             return NextResponse.json(
-                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน' },
+                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง session_id)' },
                 { status: 400 }
             );
         }
 
         await pool.query(
             `UPDATE disease_reports 
-            SET report_date = ?, health_facility_id = ?, disease_name = ?, 
+            SET session_id = ?, report_date = ?, health_facility_id = ?, disease_name = ?, 
                 patient_count = ?, notes = ?
             WHERE id = ?`,
-            [report_date, health_facility_id, disease_name, patient_count, notes || null, id]
+            [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, id]
         );
 
         return NextResponse.json({

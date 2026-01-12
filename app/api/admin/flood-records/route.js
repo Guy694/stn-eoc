@@ -83,14 +83,15 @@ export async function POST(request) {
 
         const query = `
             INSERT INTO flood_records 
-            (year, polygon_id, province, district, tambon, village, flood_level, 
-             flood_start_date, flood_end_date, water_depth_cm, affected_area_sqm,
+            (session_id, year, polygon_id, province, district, tambon, village, flood_level, 
+             flood_start_date, water_depth_cm, affected_area_sqm,
              affected_households, affected_people, description, damage_amount, 
              relief_amount, status, created_by)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const params = [
+            data.session_id || null,
             data.year,
             data.polygon_id || null,
             data.province || 'สตูล',
@@ -99,7 +100,6 @@ export async function POST(request) {
             data.village || null,
             data.flood_level || 'ไม่มี',
             data.flood_start_date || null,
-            data.flood_end_date || null,
             data.water_depth_cm || null,
             data.affected_area_sqm || null,
             data.affected_households || 0,
@@ -134,8 +134,8 @@ export async function PUT(request) {
 
         const query = `
             UPDATE flood_records SET
-                year = ?, polygon_id = ?, province = ?, district = ?, tambon = ?, 
-                village = ?, flood_level = ?, flood_start_date = ?, flood_end_date = ?,
+                session_id = ?, year = ?, polygon_id = ?, province = ?, district = ?, tambon = ?, 
+                village = ?, flood_level = ?, flood_start_date = ?, 
                 water_depth_cm = ?, affected_area_sqm = ?, affected_households = ?,
                 affected_people = ?, description = ?, damage_amount = ?, 
                 relief_amount = ?, status = ?
@@ -143,6 +143,7 @@ export async function PUT(request) {
         `;
 
         const params = [
+            data.session_id || null,
             data.year,
             data.polygon_id || null,
             data.province || 'สตูล',
@@ -151,7 +152,6 @@ export async function PUT(request) {
             data.village || null,
             data.flood_level,
             data.flood_start_date || null,
-            data.flood_end_date || null,
             data.water_depth_cm || null,
             data.affected_area_sqm || null,
             data.affected_households || 0,

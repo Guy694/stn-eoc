@@ -55,8 +55,13 @@ export default function FloodRecordsPage() {
             try {
                 const response = await fetch('/api/eoc/flood/area-status');
                 const result = await response.json();
+                console.log('Active session result:', result);
                 if (result.hasActiveSession && result.activeSession) {
+                    console.log('Active session data:', result.activeSession);
+                    console.log('Session ID to use:', result.activeSession.id);
                     setActiveSession(result.activeSession);
+                } else {
+                    console.error('No active session found!', result);
                 }
             } catch (error) {
                 console.error('Error fetching active session:', error);
@@ -120,10 +125,35 @@ export default function FloodRecordsPage() {
             if (filters.tambon !== 'all') params.append('tambon', filters.tambon);
             if (filters.flood_level !== 'all') params.append('flood_level', filters.flood_level);
 
+            console.log('Fetching with filters:', filters);
+            console.log('Active session ID for fetch:', activeSession.id);
             const res = await fetch(`/api/admin/flood-records?${params}`);
             const data = await res.json();
+            console.log('Fetched data:', data);
+
             if (data.success) {
+                console.log('Fetched records from DB:', data.data.length, 'records');
                 setRecords(data.data);
+
+                // อัพเดทตำบลที่บันทึกแล้ววันนี้ทันที (ใช้วันที่ท้องถิ่น)
+                const now = new Date();
+                const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                console.log('Today local:', today);
+                console.log('Sample record dates:', data.data.slice(0, 3).map(r => ({
+                    village: r.village || r.villname,
+                    date: r.flood_start_date?.split('T')[0]
+                })));
+
+                const recorded = new Set();
+                data.data.forEach(record => {
+                    const recordDate = record.flood_start_date?.split('T')[0];
+                    console.log('Record date:', recordDate, 'equals today?', recordDate === today);
+                    if (recordDate === today) {
+                        recorded.add(`${record.district}-${record.tambon}`);
+                    }
+                });
+                console.log('Recorded tambons:', Array.from(recorded));
+                setRecordedTambons(recorded);
             }
         } catch (error) {
             console.error('Error fetching records:', error);
@@ -142,7 +172,9 @@ export default function FloodRecordsPage() {
         try {
             const url = '/api/admin/flood-records';
             const method = editingRecord ? 'PUT' : 'POST';
-            const today = new Date().toISOString().split('T')[0];
+            // ใช้ local date แทน UTC
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
             // ถ้าเป็นโหมดตำบล ให้บันทึกทุกหมู่บ้านในตำบล
             if (isTambonMode && !editingRecord) {
@@ -177,6 +209,7 @@ export default function FloodRecordsPage() {
 
                     const body = {
                         ...formData,
+                        flood_start_date: today, // บังคับใช้วันที่วันนี้ (local date)
                         village: village.villname,
                         polygon_id: village.id,
                         session_id: activeSession.id,
@@ -186,6 +219,8 @@ export default function FloodRecordsPage() {
                         damage_amount: 0,
                         relief_amount: 0
                     };
+
+                    console.log('Saving village:', village.villname, 'date:', today, 'body:', body);
 
                     try {
                         const res = await fetch(url, {
@@ -207,12 +242,18 @@ export default function FloodRecordsPage() {
                     ? `บันทึกข้อมูลสำเร็จ ${successCount} หมู่บ้าน (ข้าม ${skippedCount} หมู่บ้านที่บันทึกไปแล้ว)`
                     : `บันทึกข้อมูลสำเร็จ ${successCount} จาก ${villagesToSave.length} หมู่บ้าน`;
 
+                // Reset filters ก่อน fetch เพื่อแสดงข้อมูลทั้งหมด
+                setFilters({ district: 'all', tambon: 'all', flood_level: 'all' });
+
+                // รอให้ข้อมูลบันทึกลงฐานข้อมูลเสร็จแล้ว fetch ข้อมูลใหม่
+                await new Promise(resolve => setTimeout(resolve, 800));
+                console.log('Fetching updated records after save...');
+                await fetchRecords();
+
                 showSuccess(message);
                 setShowModal(false);
                 setEditingRecord(null);
                 resetForm();
-                // รีโหลดข้อมูลและ refresh หน้าเว็บ
-                await fetchRecords();
                 return;
             }
 
@@ -265,29 +306,39 @@ export default function FloodRecordsPage() {
                 relief_amount: 0
             };
 
-            if (editingRecord) {
-                body.id = editingRecord.id;
-            }
+            console.log('Saving single village with session_id:', activeSession.id, 'full body:', body);
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
 
-            const data = await res.json();
-            if (data.success) {
-                showSuccess(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
-                setShowModal(false);
-                setEditingRecord(null);
-                resetForm();
-                // รีโหลดข้อมูลหลังบันทึก
-                await fetchRecords();
-            } else {
-                showError('เกิดข้อผิดพลาด: ' + data.error);
+                const data = await res.json();
+                if (data.success) {
+                    // Reset filters ก่อน fetch เพื่อแสดงข้อมูลทั้งหมด
+                    if (!editingRecord) {
+                        setFilters({ district: 'all', tambon: 'all', flood_level: 'all' });
+                    }
+
+                    // รอสักครู่แล้ว fetch ข้อมูลใหม่
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    await fetchRecords();
+
+                    showSuccess(editingRecord ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
+                    setShowModal(false);
+                    setEditingRecord(null);
+                    resetForm();
+                } else {
+                    showError('เกิดข้อผิดพลาด: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error saving record:', error);
+                showError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             }
         } catch (error) {
-            console.error('Error saving record:', error);
+            console.error('Error in handleSubmit:', error);
             showError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         }
     };
@@ -360,9 +411,12 @@ export default function FloodRecordsPage() {
             district.tambons.forEach(tambon => {
                 const key = `${district.name}-${tambon.name}`;
 
-                // นับจำนวนหมู่บ้านในตำบลนี้จาก polygon data
+                // นับจำนวนหมู่บ้านในตำบลนี้จาก polygon data (กรองเฉพาะที่มีชื่อหมู่บ้าน)
                 const villagesInTambon = polygons.filter(
-                    p => p.distname === district.name && p.subdistnam === tambon.name
+                    p => p.distname === district.name &&
+                        p.subdistnam === tambon.name &&
+                        p.villname &&
+                        p.villname.trim() !== ''
                 );
 
                 // นับจำนวน record ที่บันทึกไปแล้ววันนี้สำหรับตำบลนี้
@@ -374,11 +428,32 @@ export default function FloodRecordsPage() {
                         record.tambon === tambon.name;
                 });
 
-                // นับ unique villages ที่มีการบันทึก (ใช้ทั้ง village และ villname)
+                // นับ unique villages ที่มีการบันทึก (ใช้ทั้ง village และ villname, กรองค่าว่าง)
                 const uniqueRecordedVillages = new Set(
-                    recordedVillagesToday.map(r => r.village || r.villname).filter(Boolean)
+                    recordedVillagesToday
+                        .map(r => {
+                            const name = r.village || r.villname;
+                            return name && name.trim() !== '' ? name : null;
+                        })
+                        .filter(Boolean)
                 );
                 const recordedCount = uniqueRecordedVillages.size;
+
+                // Debug log สำหรับทุกตำบลที่มีการบันทึก
+                if (recordedCount > 0 || villagesInTambon.length > 0) {
+                    const expectedVillages = villagesInTambon.map(v => v.villname);
+                    const recordedVillages = Array.from(uniqueRecordedVillages);
+                    const matched = recordedVillages.filter(r => expectedVillages.includes(r));
+                    const unmatched = recordedVillages.filter(r => !expectedVillages.includes(r));
+
+                    console.log(`${tambon.name} (${district.name}): ${recordedCount}/${villagesInTambon.length} villages`, {
+                        recorded: recordedVillages,
+                        expected: expectedVillages,
+                        matched: matched,
+                        unmatched: unmatched,
+                        status: recordedCount >= villagesInTambon.length ? 'COMPLETE ✅' : 'INCOMPLETE ⚠️'
+                    });
+                }
 
                 if (villagesInTambon.length > 0) {
                     const status = recordedCount >= villagesInTambon.length
@@ -488,13 +563,26 @@ export default function FloodRecordsPage() {
                         <h3 className="font-bold text-gray-800">📊 สถานะการบันทึกวันนี้</h3>
                         <div className="flex gap-2 text-sm">
                             <span className="text-gray-600 flex items-center gap-1">
-                                <span className="text-gray-600 w-3 h-3 bg-green-500 rounded-full"></span>
+                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
                                 บันทึกครบ ({getCompletedTambons().length})
                             </span>
                             <span className="text-gray-600 flex items-center gap-1">
-                                <span className="text-gray-600 w-3 h-3 bg-yellow-500 rounded-full"></span>
-                                ยังไม่ครบ ({getUnrecordedTambons().length})
+                                <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                                บันทึกบางส่วน ({getAllTambonsStatus().filter(t => t.status === 'partial').length})
                             </span>
+                            <span className="text-gray-600 flex items-center gap-1">
+                                <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
+                                ยังไม่ได้บันทึก ({getAllTambonsStatus().filter(t => t.status === 'empty').length})
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Debug Info */}
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-4 text-xs">
+                        <div className="font-mono">
+                            Debug: Records={records.length}, Polygons={polygons.length},
+                            Complete={getCompletedTambons().length},
+                            Incomplete={getUnrecordedTambons().length}
                         </div>
                     </div>
 
@@ -535,12 +623,14 @@ export default function FloodRecordsPage() {
                                         key={item.key}
                                         onClick={() => {
                                             setEditingRecord(null);
+                                            const now = new Date();
+                                            const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                                             setFormData({
                                                 ...formData,
                                                 district: item.district,
                                                 tambon: item.tambon,
                                                 village: '',
-                                                flood_start_date: new Date().toISOString().split('T')[0]
+                                                flood_start_date: localDate
                                             });
                                             setIsTambonMode(true);
                                             setShowModal(true);
@@ -613,62 +703,94 @@ export default function FloodRecordsPage() {
 
                 {/* Table */}
                 <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <div className="p-4 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-bold text-gray-800">📋 ตารางข้อมูลที่บันทึกแล้ว</h3>
+                        <p className="text-sm text-gray-600 mt-1">แสดงข้อมูลทั้งหมด {records.length} รายการ</p>
+                    </div>
+
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <p className="text-gray-600 text-sm">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : records.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            ไม่พบข้อมูล
+                        <div className="text-center py-12">
+                            <div className="text-6xl mb-4">📭</div>
+                            <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
+                            <p className="text-gray-500 text-sm">คลิกปุ่ม "เพิ่มข้อมูลใหม่" เพื่อเริ่มบันทึกข้อมูล</p>
                         </div>
                     ) : (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พื้นที่</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ระดับน้ำท่วม</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">วันที่เริ่ม</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ผู้ได้รับผลกระทบ</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {records.map((record) => (
-                                    <tr key={record.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm font-medium text-gray-900">{record.village || '-'}</div>
-                                            <div className="text-sm text-gray-500">{record.tambon}, {record.district}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFloodLevelColor(record.flood_level)}`}>
-                                                {record.flood_level}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {record.flood_start_date ? new Date(record.flood_start_date).toLocaleDateString('th-TH') : '-'}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {record.affected_households} ครัวเรือน<br />
-                                            {record.affected_people} คน
-                                        </td>
-                                        <td className="px-6 py-4 text-sm">
-                                            <button
-                                                onClick={() => handleEdit(record)}
-                                                className="text-blue-600 hover:text-blue-800 mr-3"
-                                            >
-                                                แก้ไข
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(record.id)}
-                                                className="text-red-600 hover:text-red-800"
-                                            >
-                                                ลบ
-                                            </button>
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            #
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            พื้นที่
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ระดับน้ำท่วม
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            วันที่เริ่ม
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ผู้ได้รับผลกระทบ
+                                        </th>
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            จัดการ
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {records.map((record, index) => (
+                                        <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {index + 1}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-gray-900">{record.village || record.villname || '-'}</div>
+                                                <div className="text-sm text-gray-500">ต.{record.tambon} อ.{record.district}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-3 py-1 text-xs font-medium rounded-full ${getFloodLevelColor(record.flood_level)}`}>
+                                                    {record.flood_level}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {record.flood_start_date ? new Date(record.flood_start_date).toLocaleDateString('th-TH', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                }) : '-'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">{record.affected_households || 0} ครัวเรือน</div>
+                                                <div className="text-sm text-gray-500">{record.affected_people || 0} คน</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                <button
+                                                    onClick={() => handleEdit(record)}
+                                                    className="text-blue-600 hover:text-blue-800 mr-3 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
+                                                    title="แก้ไขข้อมูล"
+                                                >
+                                                    ✏️ แก้ไข
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(record.id)}
+                                                    className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
+                                                    title="ลบข้อมูล"
+                                                >
+                                                    🗑️ ลบ
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
 
@@ -736,7 +858,7 @@ export default function FloodRecordsPage() {
                                                 หมู่บ้าน {!isTambonMode && <span className="text-red-500">*</span>}
                                             </label>
                                             {isTambonMode ? (
-                                                <div className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
                                                     บันทึกทุกหมู่บ้านในตำบล
                                                 </div>
                                             ) : (
