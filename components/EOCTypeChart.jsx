@@ -33,6 +33,7 @@ const EOC_TYPE_LABELS = {
 // สี Chart สำหรับแต่ละประเภท
 const EOC_TYPE_COLORS = {
     flood: { bg: "rgba(59, 130, 246, 0.6)", border: "rgb(59, 130, 246)" },
+    accident: { bg: "rgba(249, 115, 22, 0.6)", border: "rgb(249, 115, 22)" },
     drought: { bg: "rgba(234, 179, 8, 0.6)", border: "rgb(234, 179, 8)" },
     tsunami: { bg: "rgba(14, 165, 233, 0.6)", border: "rgb(14, 165, 233)" },
     earthquake: { bg: "rgba(239, 68, 68, 0.6)", border: "rgb(239, 68, 68)" },
