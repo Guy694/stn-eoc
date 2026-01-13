@@ -122,15 +122,16 @@ export default function Sidebar() {
         },
 
         {
-            title: "🌵 EOC อุบัติเหตุช่วงเทศกาล",
-            section: "eoc-festival-accidents",
-            key: "festival-accidents",
-            eocType: "festival-accidents",
+            title: "🚗 EOC อุบัติเหตุ/ความปลอดภัย",
+            section: "eoc-accident",
+            key: "accident",
+            eocType: "accident",
             collapsible: true,
             requiresPermission: null,
             items: [
-                { name: "แผนที่และสถานการณ์", path: "/eoc/festival-accidents", icon: "📊", description: "ภาพรวมสถานการณ์อุบัติเหตุช่วงเทศกาล" },
-
+                { name: "แผนที่และสถานการณ์", path: "/eoc/accident", icon: "📊", description: "ภาพรวมสถานการณ์อุบัติเหตุ 7 วันอันตราย" },
+                { name: "บันทึกอุบัติเหตุ", path: "/eoc/accident/records", icon: "🚗", description: "บันทึกข้อมูลอุบัติเหตุ" },
+                { name: "จุดบริการชั่วคราว", path: "/eoc/accident/service-points", icon: "🚧", description: "จัดการจุดตรวจ/จุดบริการ" },
             ],
         },
 

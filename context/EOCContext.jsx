@@ -132,10 +132,8 @@ export function EOCProvider({ children }) {
         // Fallback สำหรับ EOC เดิม
         const fallbackNames = {
             flood: 'น้ำท่วม',
-            drought: 'ภัยแล้ง',
-            tsunami: 'สึนามิ',
-            earthquake: 'แผ่นดินไหว',
-            disease: 'โรคระบาด'
+            disease: 'โรคระบาด',
+            accident: 'อุบัติเหตุ/ความปลอดภัย'
         };
         return fallbackNames[eocType] || eocType;
     };

@@ -14,14 +14,51 @@ export default function DashboardPage() {
         activeEvents: 0,
         totalAffected: 0,
         teamsDeployed: 0,
-        recentActivities: []
+        todayReports: 0,
+        recentActivities: [],
+        announcements: []
     });
+    const [statsLoading, setStatsLoading] = useState(true);
 
+    // Redirect if not logged in
     useEffect(() => {
         if (!loading && !user) {
             router.push("/login");
         }
     }, [user, loading, router]);
+
+    // Fetch dashboard data
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setStatsLoading(true);
+                const response = await fetch('/api/dashboard/summary');
+                const result = await response.json();
+
+                if (result.success) {
+                    setStats({
+                        activeEvents: result.data.activeEOCs || 0,
+                        totalAffected: result.data.totalAffected || 0,
+                        teamsDeployed: result.data.activeTeams || 0,
+                        todayReports: result.data.todayReports || 0,
+                        recentActivities: result.data.recentActivities || [],
+                        announcements: result.data.announcements || []
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        if (user) {
+            fetchDashboardData();
+            // Refresh data every 30 seconds
+            const interval = setInterval(fetchDashboardData, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
 
     if (loading) {
         return (
@@ -59,30 +96,57 @@ export default function DashboardPage() {
                         icon="🚨"
                         title="เหตุการณ์ที่กำลังดำเนินการ"
                         value={stats.activeEvents}
-                        color="from-gray-400 to-gray-200"
+                        color={stats.activeEvents > 0 ? "from-red-500 to-orange-500" : "from-green-500 to-emerald-500"}
+                        loading={statsLoading}
                     />
                     <StatCard
                         icon="👥"
                         title="ผู้ได้รับผลกระทบ"
                         value={stats.totalAffected}
                         unit="คน"
-                        color="from-gray-400 to-gray-200"
+                        color={stats.totalAffected > 0 ? "from-blue-500 to-cyan-500" : "from-gray-400 to-gray-300"}
+                        loading={statsLoading}
                     />
                     <StatCard
                         icon="⚡"
                         title="ทีมปฏิบัติการ"
                         value={stats.teamsDeployed}
                         unit="ทีม"
-                        color="from-gray-400 to-gray-200"
+                        color={stats.teamsDeployed > 0 ? "from-purple-500 to-pink-500" : "from-gray-400 to-gray-300"}
+                        loading={statsLoading}
                     />
                     <StatCard
                         icon="📊"
                         title="รายงานวันนี้"
-                        value={5}
+                        value={stats.todayReports}
                         unit="รายการ"
-                        color="from-gray-400 to-gray-200"
+                        color={stats.todayReports > 0 ? "from-amber-500 to-yellow-500" : "from-gray-400 to-gray-300"}
+                        loading={statsLoading}
                     />
                 </div>
+
+                {/* Announcements Section */}
+                {stats.announcements.length > 0 && (
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">📢 ประกาศล่าสุด</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {stats.announcements.map((announcement) => (
+                                <div
+                                    key={announcement.id}
+                                    className={`bg-white rounded-lg shadow-md p-5 border-l-4 ${announcement.priority === 'high' ? 'border-red-500' :
+                                            announcement.priority === 'medium' ? 'border-yellow-500' : 'border-blue-500'
+                                        }`}
+                                >
+                                    <h3 className="font-bold text-lg text-gray-800 mb-2">{announcement.title}</h3>
+                                    <p className="text-sm text-gray-600 line-clamp-2">{announcement.content}</p>
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        {new Date(announcement.created_at).toLocaleDateString('th-TH')}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Quick Access based on Role */}
                 <div className="mb-8">
@@ -106,9 +170,6 @@ export default function DashboardPage() {
                 <div className="mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">🔗 เมนูเพิ่มเติม</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-
-
                         <QuickAccessCard
                             icon="🏘️"
                             title="แผนที่หมู่บ้าน"
@@ -153,13 +214,21 @@ export default function DashboardPage() {
                 {/* Recent Activities */}
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">📋 กิจกรรมล่าสุด</h2>
-                    {stats.recentActivities.length > 0 ? (
+                    {statsLoading ? (
+                        <div className="text-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                            <p className="text-gray-500">กำลังโหลด...</p>
+                        </div>
+                    ) : stats.recentActivities.length > 0 ? (
                         <div className="space-y-3">
                             {stats.recentActivities.map((activity, index) => (
-                                <div key={index} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div key={activity.id || index} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-100 last:border-0">
                                     <span className="text-2xl">{activity.icon}</span>
                                     <div className="flex-1">
-                                        <p className="font-medium text-gray-800">{activity.title}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-medium text-gray-800">{activity.title}</p>
+                                            <span className="text-xs text-gray-400">โดย {activity.user}</span>
+                                        </div>
                                         <p className="text-sm text-gray-600">{activity.description}</p>
                                         <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                                     </div>
@@ -178,14 +247,20 @@ export default function DashboardPage() {
     );
 }
 
-// Stat Card Component
-function StatCard({ icon, title, value, unit = "", color }) {
+// Stat Card Component with dynamic colors and loading state
+function StatCard({ icon, title, value, unit = "", color, loading = false }) {
     return (
-        <div className={`bg-linear-to-br ${color} text-white rounded-lg shadow-lg p-6 hover:scale-105 transition-transform`}>
+        <div className={`bg-gradient-to-br ${color} text-white rounded-lg shadow-lg p-6 hover:scale-105 transition-transform`}>
             <div className="text-4xl mb-2">{icon}</div>
-            <div className="text-3xl font-bold mb-1">
-                {value} {unit && <span className="text-xl">{unit}</span>}
-            </div>
+            {loading ? (
+                <div className="h-10 flex items-center">
+                    <div className="animate-pulse bg-white/30 rounded h-8 w-20"></div>
+                </div>
+            ) : (
+                <div className="text-3xl font-bold mb-1">
+                    {value.toLocaleString()} {unit && <span className="text-xl">{unit}</span>}
+                </div>
+            )}
             <div className="text-sm opacity-90">{title}</div>
         </div>
     );
