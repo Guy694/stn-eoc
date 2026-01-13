@@ -68,7 +68,7 @@ export default function Home() {
   // ดึงข้อมูล infographics
   useEffect(() => {
     const fetchInfographics = async () => {
-      const types = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
+      const types = ['flood', 'disease', 'accident'];
       const data = {};
 
       for (const type of types) {
@@ -125,10 +125,8 @@ export default function Home() {
   const getEOCTypeName = (type) => {
     const names = {
       flood: 'น้ำท่วม',
-      drought: 'ภัยแล้ง',
-      tsunami: 'คลื่นสึนามิ',
-      earthquake: 'แผ่นดินไหว',
-      disease: 'โรคระบาด'
+      disease: 'โรคระบาด',
+      accident: 'อุบัติเหตุ/ความปลอดภัย'
     };
     return names[type] || type;
   };
@@ -136,10 +134,8 @@ export default function Home() {
   const getEOCTypeIcon = (type) => {
     const icons = {
       flood: '💧',
-      drought: '☀️',
-      tsunami: '🌊',
-      earthquake: '🌍',
-      disease: '🦠'
+      disease: '🦠',
+      accident: '🚗'
     };
     return icons[type] || '⚠️';
   };
@@ -147,12 +143,19 @@ export default function Home() {
   const getEOCTypeColor = (type) => {
     const colors = {
       flood: 'from-blue-500 to-cyan-500',
-      drought: 'from-orange-500 to-yellow-500',
-      tsunami: 'from-teal-500 to-blue-600',
-      earthquake: 'from-red-500 to-orange-600',
-      disease: 'from-purple-500 to-pink-500'
+      disease: 'from-purple-500 to-pink-500',
+      accident: 'from-orange-500 to-red-600'
     };
     return colors[type] || 'from-gray-500 to-gray-600';
+  };
+
+  const getEOCTypeBaseColor = (type) => {
+    const colors = {
+      flood: 'blue',
+      disease: 'purple',
+      accident: 'orange'
+    };
+    return colors[type] || 'gray';
   };
 
   const formatDate = (dateString) => {
@@ -202,91 +205,37 @@ export default function Home() {
           supplies: 45
         }
       },
-      drought: {
+      accident: {
         infographics: infographicsData[eocType] || [],
         warnings: [
-          { icon: "💧", text: "ใช้น้ำอย่างประหยัด งดล้างรถ รดน้ำต้นไม้", level: "warning" },
-          { icon: "🌾", text: "เกษตรกรเก็บน้ำไว้ใช้ในการเพาะปลูก", level: "warning" },
-          { icon: "🚰", text: "ตรวจสอบแหล่งน้ำสำรองในชุมชน", level: "info" }
+          { icon: "🍺", text: "เมาไม่ขับ ปฏิบัติตามกฎจราจร", level: "danger" },
+          { icon: "⛑️", text: "สวมหมวกกันน็อคและคาดเข็มขัดนิรภัย", level: "warning" },
+          { icon: "😴", text: "ง่วงไม่ขับ พักผ่อนให้เพียงพอ", level: "info" }
         ],
         news: [
           {
-            title: "สถานการณ์ภัยแล้งในพื้นที่",
-            content: "ปริมาณน้ำในอ่างเก็บน้ำลดลง 45% จากปกติ",
+            title: "มาตรการป้องกันและลดอุบัติเหตุ",
+            content: "จังหวัดสตูลตั้งจุดตรวจหลักและด่านชุมชนเพื่ออำนวยความสะดวกและกวดขันวินัยจราจร",
             type: "warning",
-            date: "2025-12-17"
+            date: "2026-01-01"
           },
           {
-            title: "มาตรการช่วยเหลือเกษตรกร",
-            content: "จัดส่งน้ำสะอาดให้หมู่บ้านในพื้นที่ขาดแคลนน้ำ",
+            title: "แจ้งจุดเสี่ยงอุบัติเหตุ",
+            content: "ประชาสัมพันธ์จุดเสี่ยงและเส้นทางที่ต้องใช้ความระมัดระวังเป็นพิเศษ",
             type: "info",
-            date: "2025-12-15"
+            date: "2026-01-02"
           }
         ],
         quickActions: [
-          { icon: "☀️", title: "แผนที่ภัยแล้ง", link: "/eoc/drought", color: "orange" },
-          { icon: "💧", title: "จุดแจกน้ำ", link: "/eoc/village-map", color: "blue" },
-          { icon: "🌾", title: "ช่วยเหลือเกษตรกร", link: "/public/disaster-map", color: "green" }
+          { icon: "🗺️", title: "แผนที่อุบัติเหตุ", link: "/eoc/accident", color: "orange" },
+          { icon: "📝", title: "บันทึกข้อมูล", link: "/eoc/accident/records", color: "red" },
+          { icon: "🏥", title: "จุดบริการ", link: "/eoc/accident/service-points", color: "blue" }
         ],
         stats: {
-          affected: 89,
-          waterPoints: 15,
-          teams: 6,
-          waterTanks: 23
-        }
-      },
-      tsunami: {
-        infographics: infographicsData[eocType] || [],
-        warnings: [
-          { icon: "🚨", text: "อพยพไปพื้นที่สูงทันทีเมื่อได้รับแจ้งเตือน", level: "danger" },
-          { icon: "📻", text: "ติดตามข่าวสารจากวิทยุและหอกระจายข่าว", level: "danger" },
-          { icon: "🏃", text: "จำเส้นทางอพยพไปยังจุดปลอดภัย", level: "warning" }
-        ],
-        news: [
-          {
-            title: "ซ้อมแผนอพยพหนีคลื่นสึนามิ",
-            content: "กำหนดซ้อมแผนอพยพประจำเดือน วันที่ 20 ธันวาคม",
-            type: "info",
-            date: "2025-12-17"
-          }
-        ],
-        quickActions: [
-          { icon: "🌊", title: "แผนที่สึนามิ", link: "/eoc/tsunami", color: "cyan" },
-          { icon: "🏃", title: "เส้นทางอพยพ", link: "/eoc/village-map", color: "red" },
-          { icon: "📡", title: "ระบบเตือนภัย", link: "/public/disaster-map", color: "orange" }
-        ],
-        stats: {
-          evacuationPoints: 12,
-          safeZones: 8,
-          teams: 15,
-          alerts: 24
-        }
-      },
-      earthquake: {
-        infographics: infographicsData[eocType] || [],
-        warnings: [
-          { icon: "🏚️", text: "หลบใต้โต๊ะ ห่างจากหน้าต่างและของตกหล่น", level: "danger" },
-          { icon: "🚪", text: "ออกจากอาคารสูง ไปยังพื้นที่โล่งแจ้ง", level: "danger" },
-          { icon: "⚡", text: "ปิดแก๊ส ไฟฟ้า และน้ำประปาหลังแผ่นดินไหว", level: "warning" }
-        ],
-        news: [
-          {
-            title: "เตรียมความพร้อมรับมือแผ่นดินไหว",
-            content: "ตรวจสอบโครงสร้างอาคาร เตรียมอุปกรณ์ฉุกเฉิน",
-            type: "info",
-            date: "2025-12-17"
-          }
-        ],
-        quickActions: [
-          { icon: "🌍", title: "แผนที่แผ่นดินไหว", link: "/eoc/earthquake", color: "red" },
-          { icon: "🏗️", title: "อาคารปลอดภัย", link: "/eoc/village-map", color: "green" },
-          { icon: "🆘", title: "ช่วยเหลือฉุกเฉิน", link: "/public/disaster-map", color: "orange" }
-        ],
-        stats: {
-          shelters: 10,
-          safeBuildings: 45,
-          teams: 18,
-          supplies: 67
+          accidents: 12,
+          injuries: 15,
+          deaths: 0,
+          checkpoints: 8
         }
       },
       disease: {
@@ -464,53 +413,57 @@ export default function Home() {
                 <div className="mb-4 md:mb-6">
                   <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚨 EOC ที่เปิดใช้งานอยู่ ({activeEOCs.length})</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                    {activeEOCs.map((eoc) => (
-                      <div
-                        key={eoc.eoc_type}
-                        className={`bg-gradient-to-br ${getEOCTypeColor(eoc.eoc_type)} text-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-6 hover:shadow-xl transition-all hover:scale-105`}
-                      >
-                        <div className="flex items-center justify-between mb-3 md:mb-4">
-                          <div className="flex items-center gap-2 md:gap-3">
-                            <div className="text-3xl md:text-4xl">{getEOCTypeIcon(eoc.eoc_type)}</div>
-                            <div>
-                              <h3 className="text-base md:text-xl font-bold">{getEOCTypeName(eoc.eoc_type)}</h3>
-                              <p className="text-xs opacity-80">EOC {eoc.eoc_type.toUpperCase()}</p>
-                            </div>
-                          </div>
-                          <span className="px-2 md:px-3 py-1 bg-white/20 rounded-full text-xs font-bold backdrop-blur-sm">
-                            เปิด
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 text-xs md:text-sm">
-                          <div className="bg-white/10 rounded-lg p-2 md:p-3 backdrop-blur-sm">
-                            <p className="opacity-80 text-xs mb-1">เปิดเมื่อ</p>
-                            <p className="font-semibold text-xs md:text-sm">{formatDate(eoc.activated_at)}</p>
-                          </div>
-
-                          {eoc.activated_by_name && (
-                            <div className="bg-white/10 rounded-lg p-2 md:p-3 backdrop-blur-sm">
-                              <p className="opacity-80 text-xs mb-1">เปิดโดย</p>
-                              <p className="font-semibold text-xs md:text-sm">{eoc.activated_by_name}</p>
-                            </div>
-                          )}
-
-                          {eoc.description && (
-                            <div className="bg-white/10 rounded-lg p-2 md:p-3 backdrop-blur-sm">
-                              <p className="opacity-80 text-xs mb-1">รายละเอียด</p>
-                              <p className="font-medium text-xs md:text-sm">{eoc.description}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        <Link
-                          href={`/eoc/${eoc.eoc_type}`}
-                          className="mt-3 md:mt-4 block w-full bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-center transition-all backdrop-blur-sm border border-white/30 text-xs md:text-sm"
+                    {activeEOCs.map((eoc) => {
+                      const baseColor = getEOCTypeBaseColor(eoc.eoc_type);
+                      return (
+                        <div
+                          key={eoc.eoc_type}
+                          className={`bg-white rounded-lg md:rounded-xl shadow-md p-4 md:p-6 hover:shadow-lg transition-all border-l-4 border-${baseColor}-500`}
                         >
-                          ดูข้อมูล →
-                        </Link>
-                      </div>
-                    ))}
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-12 h-12 rounded-full bg-${baseColor}-50 flex items-center justify-center text-3xl shadow-sm`}>
+                                {getEOCTypeIcon(eoc.eoc_type)}
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-gray-800 leading-tight">
+                                  {getEOCTypeName(eoc.eoc_type)}
+                                </h3>
+                                <p className={`text-xs font-semibold text-${baseColor}-600 tracking-wide`}>
+                                  EOC {eoc.eoc_type.toUpperCase()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <span className={`px-2 py-0.5 bg-${baseColor}-100 text-${baseColor}-700 rounded-full text-xs font-bold mb-1`}>
+                                • เปิดใช้งาน
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Info */}
+                          <div className="space-y-3 mb-4">
+                            <div className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                              <span className="flex-shrink-0 mt-0.5">ℹ️</span>
+                              <span className="line-clamp-2">{eoc.description || 'ไม่มีรายละเอียดเพิ่มเติม'}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs text-gray-500 px-1">
+                              <span>เปิดเมื่อ:</span>
+                              <span className="font-medium text-gray-700">{formatDate(eoc.activated_at)}</span>
+                            </div>
+                          </div>
+
+                          {/* Button */}
+                          <Link
+                            href={`/eoc/${eoc.eoc_type}`}
+                            className={`block w-full py-2.5 rounded-lg font-semibold text-center transition-all bg-${baseColor}-600 hover:bg-${baseColor}-700 text-white shadow-sm hover:shadow-md text-sm`}
+                          >
+                            เข้าสู่หน้าศูนย์ปฏิบัติการ →
+                          </Link>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -522,19 +475,23 @@ export default function Home() {
         {activeEOCs.length > 0 && activeEOCs.map((eoc) => {
           const content = getEOCContent(eoc.eoc_type);
           if (!content) return null;
+          const baseColor = getEOCTypeBaseColor(eoc.eoc_type);
 
           return (
             <div key={eoc.eoc_type} className="mb-8">
               {/* Infographic Carousel - คำแนะนำสำหรับประชาชน */}
               <section className="mb-4 md:mb-6">
-                <div className={`bg-gradient-to-r ${getEOCTypeColor(eoc.eoc_type)} rounded-lg md:rounded-xl p-4 md:p-6 text-white shadow-xl`}>
-                  <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                    <span className="text-3xl md:text-4xl">{getEOCTypeIcon(eoc.eoc_type)}</span>
-                    <h2 className="text-lg md:text-2xl lg:text-3xl font-bold">คำแนะนำสำหรับประชาชน - {getEOCTypeName(eoc.eoc_type)}</h2>
+                <div className={`bg-white rounded-lg md:rounded-xl p-4 md:p-6 shadow-md border-t-4 border-${baseColor}-500`}>
+                  <div className="flex items-center gap-2 md:gap-3 mb-4 pb-3 border-b border-gray-100">
+                    <span className="text-3xl md:text-3xl">{getEOCTypeIcon(eoc.eoc_type)}</span>
+                    <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-800">
+                      คำแนะนำสำหรับประชาชน - <span className={`text-${baseColor}-600`}>{getEOCTypeName(eoc.eoc_type)}</span>
+                    </h2>
                   </div>
                   <InfographicCarousel
                     infographics={content.infographics}
                     eocType={eoc.eoc_type}
+                    lightMode={true}
                   />
                 </div>
               </section>
@@ -557,7 +514,11 @@ export default function Home() {
                       safeBuildings: { icon: "🏗️", title: "อาคารปลอดภัย", unit: "แห่ง" },
                       patients: { icon: "😷", title: "ผู้ป่วย", unit: "คน" },
                       vaccinated: { icon: "💉", title: "ฉีดวัคซีน", unit: "คน" },
-                      hospitals: { icon: "🏥", title: "โรงพยาบาล", unit: "แห่ง" }
+                      hospitals: { icon: "🏥", title: "โรงพยาบาล", unit: "แห่ง" },
+                      accidents: { icon: "💥", title: "อุบัติเหตุสะสม", unit: "ครั้ง" },
+                      injuries: { icon: "🤕", title: "ผู้บาดเจ็บ", unit: "ราย" },
+                      deaths: { icon: "💀", title: "ผู้เสียชีวิต", unit: "ราย" },
+                      checkpoints: { icon: "🚧", title: "จุดตรวจ", unit: "จุด" }
                     };
                     const label = labels[key] || { icon: "📊", title: key, unit: "" };
 
@@ -626,8 +587,8 @@ export default function Home() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                   <QuickLinkCard icon="🗺️" title="แผนที่ภัยพิบัติ" description="ดูสถานการณ์ภัยพิบัติทั้งหมด" link="/public/disaster-map" color="blue" />
                   <QuickLinkCard icon="💧" title="สถานการณ์น้ำท่วม" description="ข้อมูลน้ำท่วมรายวัน" link="/eoc/flood" color="cyan" />
-                  <QuickLinkCard icon="☀️" title="สถานการณ์ภัยแล้ง" description="พื้นที่ประสบภัยแล้ง" link="/eoc/drought" color="orange" />
-                  <QuickLinkCard icon="🏘️" title="ข้อมูลหมู่บ้าน" description="ข้อมูลหมู่บ้านทั้งหมด" link="/eoc/village-map" color="green" />
+                  <QuickLinkCard icon="🚗" title="อุบัติเหตุ" description="7 วันอันตราย" link="/eoc/accident" color="orange" />
+                  <QuickLinkCard icon="🦠" title="โรคระบาด" description="สถานการณ์โรคระบาด" link="/eoc/disease" color="purple" />
                 </div>
               </section>
             </>
@@ -673,7 +634,8 @@ export default function Home() {
 }
 
 // Infographic Carousel Component
-function InfographicCarousel({ infographics, eocType }) {
+// Infographic Carousel Component
+function InfographicCarousel({ infographics, eocType, lightMode = false }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const autoPlayRef = useRef(null);
@@ -715,12 +677,12 @@ function InfographicCarousel({ infographics, eocType }) {
   // ถ้าไม่มี infographics แสดง placeholder
   if (!infographics || infographics.length === 0) {
     return (
-      <div className="relative overflow-hidden rounded-lg bg-white/10 backdrop-blur-sm">
-        <div className="relative w-full aspect-video bg-gradient-to-br from-white/20 to-white/5">
+      <div className={`relative overflow-hidden rounded-lg ${lightMode ? 'bg-gray-100 border border-gray-200' : 'bg-white/10'} backdrop-blur-sm`}>
+        <div className={`relative w-full aspect-video bg-gradient-to-br ${lightMode ? 'from-gray-50 to-gray-100' : 'from-white/20 to-white/5'}`}>
           <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
             <div className="text-6xl md:text-8xl mb-4 opacity-50">📊</div>
-            <p className="text-white text-lg md:text-2xl font-bold mb-2">ยังไม่มี Infographic</p>
-            <p className="text-white/80 text-sm md:text-base">
+            <p className={`${lightMode ? 'text-gray-600' : 'text-white'} text-lg md:text-2xl font-bold mb-2`}>ยังไม่มี Infographic</p>
+            <p className={`${lightMode ? 'text-gray-500' : 'text-white/80'} text-sm md:text-base`}>
               รอดำเนินการโดยฝ่าย Risk Communication
             </p>
           </div>
@@ -732,14 +694,14 @@ function InfographicCarousel({ infographics, eocType }) {
   return (
     <div className="relative">
       {/* Main Carousel */}
-      <div className="relative overflow-hidden rounded-lg bg-white/10 backdrop-blur-sm">
+      <div className={`relative overflow-hidden rounded-lg ${lightMode ? 'bg-gray-100 border border-gray-200' : 'bg-white/10'} backdrop-blur-sm`}>
         <div
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {infographics.map((infographic) => (
             <div key={infographic.id} className="w-full flex-shrink-0">
-              <div className="relative w-full aspect-video bg-gradient-to-br from-white/20 to-white/5">
+              <div className={`relative w-full aspect-video bg-gradient-to-br ${lightMode ? 'from-gray-50 to-gray-100' : 'from-white/20 to-white/5'}`}>
                 {/* แสดงรูป Infographic */}
                 <img
                   src={infographic.image}
@@ -751,8 +713,8 @@ function InfographicCarousel({ infographics, eocType }) {
                     e.target.parentElement.innerHTML = `
                       <div class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
                         <div class="text-6xl md:text-8xl mb-4 opacity-50">📊</div>
-                        <p class="text-white text-lg md:text-2xl font-bold mb-2">${infographic.alt}</p>
-                        <p class="text-white/80 text-sm md:text-base mb-4">ไม่สามารถโหลดรูปภาพได้</p>
+                        <p class="${lightMode ? 'text-gray-600' : 'text-white'} text-lg md:text-2xl font-bold mb-2">${infographic.alt}</p>
+                        <p class="${lightMode ? 'text-gray-500' : 'text-white/80'} text-sm md:text-base mb-4">ไม่สามารถโหลดรูปภาพได้</p>
                       </div>
                     `;
                   }}
@@ -765,7 +727,7 @@ function InfographicCarousel({ infographics, eocType }) {
         {/* Navigation Buttons */}
         <button
           onClick={goToPrevious}
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-sm text-white rounded-full p-2 md:p-3 transition-all hover:scale-110 z-10"
+          className={`absolute left-2 md:left-4 top-1/2 -translate-y-1/2 ${lightMode ? 'bg-white/80 hover:bg-white text-gray-800 shadow-sm border border-gray-200' : 'bg-white/30 hover:bg-white/50 text-white'} backdrop-blur-sm rounded-full p-2 md:p-3 transition-all hover:scale-110 z-10`}
           aria-label="Previous slide"
         >
           <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -775,7 +737,7 @@ function InfographicCarousel({ infographics, eocType }) {
 
         <button
           onClick={goToNext}
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-sm text-white rounded-full p-2 md:p-3 transition-all hover:scale-110 z-10"
+          className={`absolute right-2 md:right-4 top-1/2 -translate-y-1/2 ${lightMode ? 'bg-white/80 hover:bg-white text-gray-800 shadow-sm border border-gray-200' : 'bg-white/30 hover:bg-white/50 text-white'} backdrop-blur-sm rounded-full p-2 md:p-3 transition-all hover:scale-110 z-10`}
           aria-label="Next slide"
         >
           <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -793,8 +755,8 @@ function InfographicCarousel({ infographics, eocType }) {
               key={index}
               onClick={() => goToSlide(index)}
               className={`h-2 rounded-full transition-all ${index === currentIndex
-                ? 'w-8 bg-white'
-                : 'w-2 bg-white/40 hover:bg-white/60'
+                ? (lightMode ? 'w-8 bg-gray-600' : 'w-8 bg-white')
+                : (lightMode ? 'w-2 bg-gray-300 hover:bg-gray-400' : 'w-2 bg-white/40 hover:bg-white/60')
                 }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -804,7 +766,7 @@ function InfographicCarousel({ infographics, eocType }) {
         {/* Auto-play Toggle */}
         <button
           onClick={toggleAutoPlay}
-          className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all"
+          className={`flex items-center gap-2 ${lightMode ? 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50' : 'bg-white/20 hover:bg-white/30 text-white'} backdrop-blur-sm px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all`}
         >
           {isAutoPlaying ? (
             <>
@@ -825,7 +787,7 @@ function InfographicCarousel({ infographics, eocType }) {
       </div>
 
       {/* Slide Counter */}
-      <div className="text-center mt-2 text-white/80 text-xs md:text-sm">
+      <div className={`text-center mt-2 ${lightMode ? 'text-gray-500' : 'text-white/80'} text-xs md:text-sm`}>
         {currentIndex + 1} / {infographics.length}
       </div>
     </div>
