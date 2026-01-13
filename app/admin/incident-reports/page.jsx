@@ -476,7 +476,7 @@ export default function IncidentReportsPage() {
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">เบอร์โทร:</span>
-                                                <p className="font-medium text-gray-600">{selectedReport.reporter_phone}</p>
+                                                <p className="font-medium text-gray-600">{selectedReport.phone}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -495,7 +495,7 @@ export default function IncidentReportsPage() {
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">สถานที่:</span>
-                                                <p className="font-medium text-gray-600">{selectedReport.location_description || 'ไม่ระบุ'}</p>
+                                                <p className="font-medium text-gray-600">หมู่บ้าน {selectedReport.village || '-'} ตำบล {selectedReport.sub_district || '-'} อำเภอ {selectedReport.district || '-'}</p>
                                             </div>
                                             <div>
                                                 <span className="text-sm text-gray-600">พิกัด:</span>

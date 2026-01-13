@@ -166,7 +166,7 @@ export default function UploadInfographics() {
                 {/* Message */}
                 {message.text && (
                     <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-700 border border-green-300' :
-                            'bg-red-100 text-red-700 border border-red-300'
+                        'bg-red-100 text-red-700 border border-red-300'
                         }`}>
                         {message.text}
                     </div>
@@ -189,8 +189,8 @@ export default function UploadInfographics() {
                                         type="button"
                                         onClick={() => setFormData({ ...formData, eocType: type.value })}
                                         className={`p-4 rounded-lg border-2 transition-all ${formData.eocType === type.value
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <div className="text-3xl mb-2">{type.icon}</div>

@@ -17,7 +17,7 @@ export default function Footer() {
                     <div className="sm:col-span-2 lg:col-span-1">
                         <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ลิงก์ที่เกี่ยวข้อง</h4>
                         <ul className="text-xs sm:text-sm space-y-1">
-                            <li>
+                            <li> 
                                 <a href="#" className="hover:text-white transition-colors">
                                     กรมป้องกันและบรรเทาสาธารณภัย
                                 </a>
@@ -36,7 +36,7 @@ export default function Footer() {
                     </div>
                 </div>
                 <div className="border-t border-gray-700 mt-6 pt-4 text-center text-xs sm:text-sm">
-                    <p>&copy; 2025 EOC จังหวัดสตูล - All Rights Reserved</p>
+                    <p>&copy; 2025 สำนักงานสาธารณสุขจังหวัดสตูล - All Rights Reserved</p>
                 </div>
             </div>
         </footer>

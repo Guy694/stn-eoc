@@ -24,9 +24,9 @@ ChartJS.register(
 // ชื่อ EOC Type แบบภาษาไทย
 const EOC_TYPE_LABELS = {
     flood: "น้ำท่วม",
-    drought: "ภัยแล้ง",
-    tsunami: "คลื่นสึนามิ",
-    earthquake: "แผ่นดินไหว",
+    accident: "อุบัติเหตุ",
+    // tsunami: "คลื่นสึนามิ",
+    // earthquake: "แผ่นดินไหว",
     disease: "โรคระบาด"
 };
 
@@ -202,9 +202,7 @@ export default function EOCTypeChart() {
                         <div key={type} className="text-center p-4 bg-gray-50 rounded-lg border">
                             <div className="text-3xl mb-2">
                                 {type === 'flood' && '🌊'}
-                                {type === 'drought' && '☀️'}
-                                {type === 'tsunami' && '🌊'}
-                                {type === 'earthquake' && '🏚️'}
+                                {type === 'festival-accidents' && '🏚️'}
                                 {type === 'disease' && '🦠'}
                             </div>
                             <div className="text-2xl font-bold text-gray-800">{count}</div>

@@ -74,11 +74,11 @@ export default function FloodMapPage() {
     // ดึงข้อมูลทีมงาน EOC เมื่อมี Active Session
     useEffect(() => {
         const fetchSessionTeams = async () => {
-            if (!activeSessionData?.session_id) return;
+            if (!activeSessionData?.id) return;
 
             setLoadingTeams(true);
             try {
-                const response = await fetch(`/api/eoc/sessions/${activeSessionData.session_id}/teams`);
+                const response = await fetch(`/api/eoc/sessions/${activeSessionData.id}/teams`);
                 const result = await response.json();
 
                 if (result.success && Array.isArray(result.teams)) {
@@ -103,14 +103,14 @@ export default function FloodMapPage() {
         setSelectedYear(year);
 
         // ดึงข้อมูลทีมสำหรับ session ที่เลือก
-        if (session?.session_id) {
+        if (session?.id) {
             setLoadingTeams(true);
             try {
-                const response = await fetch(`/api/admin/eoc-sessions/${session.session_id}/teams`);
+                const response = await fetch(`/api/eoc/sessions/${session.id}/teams`);
                 const data = await response.json();
 
-                if (Array.isArray(data)) {
-                    setSessionTeams(data);
+                if (data.success && Array.isArray(data.teams)) {
+                    setSessionTeams(data.teams);
                 } else {
                     setSessionTeams([]);
                 }
@@ -171,8 +171,8 @@ export default function FloodMapPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {sessionTeams.map((team) => (
-                                    <div key={team.session_team_id} className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow">
+                                {sessionTeams.map((team, index) => (
+                                    <div key={`realtime-${team.session_team_id}-${team.team_id}-${index}`} className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow">
                                         <div className="mb-2">
                                             <h3 className="font-bold text-gray-900 text-lg">
                                                 {team.team_name_th || team.team_name_en}
@@ -239,11 +239,33 @@ export default function FloodMapPage() {
 
                 {/* Realtime Mode - แสดงเฉพาะเมื่อมี Active Session */}
                 {hasActiveSession && mode === "realtime" && (
-                    <FloodAreaStatus polygons={polygons} />
-                    
-                    
+                    <>
+                        <FloodAreaStatus polygons={polygons} />
 
-                    
+                        {/* แผนที่สถานการณ์น้ำท่วมรายวัน (Realtime) */}
+                        {/* {activeSessionData && (
+                            <div className="mt-6">
+                                <DailyVillageFloodTimeline
+                                    session={activeSessionData}
+                                    polygons={polygons}
+                                />
+                            </div>
+                        )} */}
+
+                        {/* Public Incident Reports Map */}
+                        <div className="mt-6">
+                            <div className="bg-white rounded-lg shadow-md p-6">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <span className="text-3xl">📍</span>
+                                    รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
+                                </h2>
+                                <p className="text-gray-600 mb-4">
+                                    แสดงจุดที่มีการรายงานเหตุการณ์น้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
+                                </p>
+                                <PublicIncidentMap />
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 {/* Historical Mode */}
@@ -273,8 +295,8 @@ export default function FloodMapPage() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        {sessionTeams.map((team) => (
-                                            <div key={team.session_team_id} className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow">
+                                        {sessionTeams.map((team, index) => (
+                                            <div key={`historical-${team.session_team_id}-${team.team_id}-${index}`} className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow">
                                                 <div className="mb-2">
                                                     <h3 className="font-bold text-gray-900 text-lg">
                                                         {team.team_name_th || team.team_name_en}

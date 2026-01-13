@@ -122,43 +122,43 @@ export default function Sidebar() {
         },
 
         {
-            title: "🌵 EOC ภัยแล้ง",
-            section: "eoc-drought",
-            key: "drought",
-            eocType: "drought",
+            title: "🌵 EOC อุบัติเหตุช่วงเทศกาล",
+            section: "eoc-festival-accidents",
+            key: "festival-accidents",
+            eocType: "festival-accidents",
             collapsible: true,
             requiresPermission: null,
             items: [
-                { name: "แผนที่และสถานการณ์", path: "/eoc/drought", icon: "📊", description: "ภาพรวมสถานการณ์ภัยแล้ง" },
-                { name: "ข้อมูลแหล่งน้ำ", path: "/eoc/drought/water-sources", icon: "💧", description: "สถานะแหล่งน้ำ" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/festival-accidents", icon: "📊", description: "ภาพรวมสถานการณ์อุบัติเหตุช่วงเทศกาล" },
+
             ],
         },
 
-        {
-            title: "🌊 EOC สึนามิ",
-            section: "eoc-tsunami",
-            key: "tsunami",
-            eocType: "tsunami",
-            collapsible: true,
-            requiresPermission: null,
-            items: [
-                { name: "แผนที่และสถานการณ์", path: "/eoc/tsunami", icon: "📊", description: "ภาพรวมสถานการณ์สึนามิ" },
-                { name: "จุดอพยพ", path: "/eoc/tsunami/evacuation", icon: "🏃", description: "จุดอพยพและเส้นทาง" },
-            ],
-        },
+        // {
+        //     title: "🌊 EOC สึนามิ",
+        //     section: "eoc-tsunami",
+        //     key: "tsunami",
+        //     eocType: "tsunami",
+        //     collapsible: true,
+        //     requiresPermission: null,
+        //     items: [
+        //         { name: "แผนที่และสถานการณ์", path: "/eoc/tsunami", icon: "📊", description: "ภาพรวมสถานการณ์สึนามิ" },
+        //         { name: "จุดอพยพ", path: "/eoc/tsunami/evacuation", icon: "🏃", description: "จุดอพยพและเส้นทาง" },
+        //     ],
+        // },
 
-        {
-            title: "🏚️ EOC แผ่นดินไหว",
-            section: "eoc-earthquake",
-            key: "earthquake",
-            eocType: "earthquake",
-            collapsible: true,
-            requiresPermission: null,
-            items: [
-                { name: "แผนที่และสถานการณ์", path: "/eoc/earthquake", icon: "📊", description: "ภาพรวมสถานการณ์แผ่นดินไหว" },
-                { name: "อาคารเสียหาย", path: "/eoc/earthquake/damages", icon: "🏚️", description: "รายงานความเสียหาย" },
-            ],
-        },
+        // {
+        //     title: "🏚️ EOC แผ่นดินไหว",
+        //     section: "eoc-earthquake",
+        //     key: "earthquake",
+        //     eocType: "earthquake",
+        //     collapsible: true,
+        //     requiresPermission: null,
+        //     items: [
+        //         { name: "แผนที่และสถานการณ์", path: "/eoc/earthquake", icon: "📊", description: "ภาพรวมสถานการณ์แผ่นดินไหว" },
+        //         { name: "อาคารเสียหาย", path: "/eoc/earthquake/damages", icon: "🏚️", description: "รายงานความเสียหาย" },
+        //     ],
+        // },
 
         {
             title: "🦠 EOC โรคระบาด",

@@ -56,9 +56,14 @@ export async function GET(request) {
         const activeSession = activeSessions[0];
         const sessionYear = new Date(activeSession.opened_at).getFullYear();
 
-        // สร้าง WHERE clause - ใช้ year แทน session_id
-        let whereClause = 'f.year = ?';
-        let params = [sessionYear];
+        // ใช้ session_id ที่ส่งมา หรือ active session id
+        const targetSessionId = sessionId || activeSession.id;
+
+        console.log('Using session_id:', targetSessionId, 'for date:', date);
+
+        // สร้าง WHERE clause - ใช้ session_id เป็นหลัก
+        let whereClause = 'f.session_id = ?';
+        let params = [targetSessionId];
 
         // ถ้าไม่ระบุวันที่ ให้หาวันที่ล่าสุดที่มีข้อมูล
         let targetDate = date;
@@ -66,13 +71,14 @@ export async function GET(request) {
             const [latestDate] = await connection.execute(`
                 SELECT MAX(flood_start_date) as latest_date 
                 FROM flood_records 
-                WHERE year = ?
-            `, [sessionYear]);
+                WHERE session_id = ?
+            `, [targetSessionId]);
             targetDate = latestDate[0]?.latest_date;
+            console.log('No date provided, using latest:', targetDate);
         }
 
         if (targetDate) {
-            whereClause += ' AND f.flood_start_date = ?';
+            whereClause += ' AND DATE(f.flood_start_date) = ?';
             params.push(targetDate);
         }
 

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import DailyDiseaseChart from '@/components/DailyDiseaseChart';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -492,6 +493,11 @@ export default function DiseaseReportsPage() {
                                 <div className="text-sm text-gray-600 mb-1">หน่วยบริการ</div>
                                 <div className="text-2xl font-bold text-purple-600">{facilities.length} แห่ง</div>
                             </div>
+                        </div>
+
+                        {/* Daily Trend Chart */}
+                        <div className="mb-6">
+                            <DailyDiseaseChart sessionId={selectedSession?.id} />
                         </div>
 
                         {/* Charts */}

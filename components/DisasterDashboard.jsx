@@ -74,7 +74,7 @@ export default function DisasterDashboard() {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {disasterTypes
                 .filter((type) => {
                     const sessionData = activeSessions[type] || { active: 0, total: 0, activities: 0 };

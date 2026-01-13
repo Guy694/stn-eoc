@@ -412,17 +412,24 @@ export default function FloodRecordsPage() {
                 const key = `${district.name}-${tambon.name}`;
 
                 // นับจำนวนหมู่บ้านในตำบลนี้จาก polygon data (กรองเฉพาะที่มีชื่อหมู่บ้าน)
-                const villagesInTambon = polygons.filter(
+                // ใช้ Set เพื่อนับเฉพาะชื่อหมู่บ้านที่ไม่ซ้ำกัน เพราะ polygon อาจมีหลาย record ต่อหมู่บ้าน
+                const allVillagesInPolygons = polygons.filter(
                     p => p.distname === district.name &&
                         p.subdistnam === tambon.name &&
                         p.villname &&
                         p.villname.trim() !== ''
                 );
 
+                const uniqueVillageNames = new Set(allVillagesInPolygons.map(p => p.villname));
+                const totalVillages = uniqueVillageNames.size;
+
                 // นับจำนวน record ที่บันทึกไปแล้ววันนี้สำหรับตำบลนี้
                 // ปรับปรุง: นับ record ที่ unique ต่อหมู่บ้าน (ไม่ซ้ำ)
                 const recordedVillagesToday = records.filter(record => {
-                    const recordDate = record.flood_start_date?.split('T')[0];
+                    // แปลง flood_start_date จาก UTC เป็น local date เพื่อเปรียบเทียบ
+                    const recordDateObj = new Date(record.flood_start_date);
+                    const recordDate = `${recordDateObj.getFullYear()}-${String(recordDateObj.getMonth() + 1).padStart(2, '0')}-${String(recordDateObj.getDate()).padStart(2, '0')}`;
+
                     return recordDate === today &&
                         record.district === district.name &&
                         record.tambon === tambon.name;
@@ -440,23 +447,23 @@ export default function FloodRecordsPage() {
                 const recordedCount = uniqueRecordedVillages.size;
 
                 // Debug log สำหรับทุกตำบลที่มีการบันทึก
-                if (recordedCount > 0 || villagesInTambon.length > 0) {
-                    const expectedVillages = villagesInTambon.map(v => v.villname);
+                if (recordedCount > 0 || totalVillages > 0) {
+                    const expectedVillages = Array.from(uniqueVillageNames);
                     const recordedVillages = Array.from(uniqueRecordedVillages);
                     const matched = recordedVillages.filter(r => expectedVillages.includes(r));
                     const unmatched = recordedVillages.filter(r => !expectedVillages.includes(r));
 
-                    console.log(`${tambon.name} (${district.name}): ${recordedCount}/${villagesInTambon.length} villages`, {
+                    console.log(`${tambon.name} (${district.name}): ${recordedCount}/${totalVillages} villages`, {
                         recorded: recordedVillages,
                         expected: expectedVillages,
                         matched: matched,
                         unmatched: unmatched,
-                        status: recordedCount >= villagesInTambon.length ? 'COMPLETE ✅' : 'INCOMPLETE ⚠️'
+                        status: recordedCount >= totalVillages ? 'COMPLETE ✅' : 'INCOMPLETE ⚠️'
                     });
                 }
 
-                if (villagesInTambon.length > 0) {
-                    const status = recordedCount >= villagesInTambon.length
+                if (totalVillages > 0) {
+                    const status = recordedCount >= totalVillages
                         ? 'complete'
                         : recordedCount > 0
                             ? 'partial'
@@ -466,7 +473,7 @@ export default function FloodRecordsPage() {
                         district: district.name,
                         tambon: tambon.name,
                         key: key,
-                        totalVillages: villagesInTambon.length,
+                        totalVillages: totalVillages,
                         recordedVillages: recordedCount,
                         status: status
                     });
@@ -475,7 +482,7 @@ export default function FloodRecordsPage() {
                     if (tambon.name === 'แป-ระ' || tambon.name === 'ทุ่งหว้า') {
                         console.log(`${tambon.name} Debug:`, {
                             district: district.name,
-                            totalVillages: villagesInTambon.length,
+                            totalVillages: totalVillages,
                             recordedCount: recordedCount,
                             status: status,
                             uniqueVillages: Array.from(uniqueRecordedVillages),

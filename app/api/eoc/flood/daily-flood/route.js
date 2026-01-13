@@ -188,23 +188,40 @@ export async function GET(request) {
 
 // สำหรับการเพิ่มข้อมูลใหม่ (ถ้าต้องการ)
 export async function POST(request) {
-    try {
-        const data = await request.json();
+        };
 
-        // ในการใช้งานจริง ควรบันทึกลง database
-        console.log('Received flood data:', data);
+        // รายชื่ออำเภอทั้งหมดในสตูล
+        const allDistricts = [
+            'เมืองสตูล',
+            'ควนโดน',
+            'ควนกาหลง',
+            'ท่าแพ',
+            'ละงู',
+            'ทุ่งหว้า',
+            'มะนัง',
+        ];
 
-        return NextResponse.json({
-            success: true,
-            message: 'Data received successfully',
-            data: data
-        });
+        if (!date || !dailyFloodData[date]) {
+            // คืนค่า nodata สำหรับทุกอำเภอ ถ้าไม่มีข้อมูลวันนั้น
+            return NextResponse.json({
+                date: date,
+                districts: allDistricts.map(name => ({
+                    name,
+                    level: 'nodata',
+                    affectedArea: 0,
+                    population: 0
+                })),
+                summary: {
+                    totalAffected: 0,
+                    severeCount: 0,
+                    moderateCount: 0,
+                    mildCount: 0,
+                    totalPopulation: 0,
+                }
+            });
+        }
 
-    } catch (error) {
-        console.error('Error saving flood data:', error);
-        return NextResponse.json(
-            { error: 'Failed to save flood data' },
-            { status: 500 }
+        return NextResponse.json(dailyFloodData[date]);
         );
     }
 }

@@ -48,13 +48,27 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             return;
         }
 
+        // ใช้ local date และรีเซ็ตเวลาเป็น 00:00:00
         const start = new Date(session.opened_at);
-        const end = session.closed_at ? new Date(session.closed_at) : new Date();
-        const dateList = [];
+        start.setHours(0, 0, 0, 0);
 
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            dateList.push(new Date(d));
+        const end = session.closed_at ? new Date(session.closed_at) : new Date();
+        end.setHours(0, 0, 0, 0);
+
+        const dateList = [];
+        const current = new Date(start);
+
+        while (current <= end) {
+            dateList.push(new Date(current));
+            current.setDate(current.getDate() + 1);
         }
+
+        console.log('DailyVillageFloodTimeline - Date range:', {
+            start: start.toISOString().split('T')[0],
+            end: end.toISOString().split('T')[0],
+            totalDays: dateList.length,
+            dates: dateList.map(d => d.toISOString().split('T')[0])
+        });
 
         setDates(dateList);
         setSelectedDate(dateList[dateList.length - 1]); // เลือกวันล่าสุด
@@ -66,9 +80,22 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         const fetchFloodData = async () => {
             setLoading(true);
             try {
-                const dateStr = selectedDate.toISOString().split('T')[0];
+                // ใช้ local date format แทน toISOString() เพื่อหลีกเลี่ยงปัญหา timezone
+                const year = selectedDate.getFullYear();
+                const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(selectedDate.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+
+                console.log('Fetching flood data for date:', dateStr, 'session:', session.id);
+
                 const response = await fetch(`/api/eoc/flood/area-status?session_id=${session.id}&date=${dateStr}`);
                 const result = await response.json();
+
+                console.log('Flood data result:', {
+                    success: result.success,
+                    dataCount: result.data?.length || 0,
+                    stats: result.stats
+                });
 
                 if (result.success && result.hasActiveSession) {
                     // แปลงข้อมูลจาก API ให้ตรงกับ component
