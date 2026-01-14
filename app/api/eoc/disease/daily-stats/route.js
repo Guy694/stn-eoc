@@ -45,9 +45,16 @@ export async function GET(request) {
             ? new Date(session.closed_at)
             : new Date(); // ถ้ายังไม่ปิด ใช้วันปัจจุบัน
 
-        // Format วันที่สำหรับ SQL
-        const startDateStr = startDate.toISOString().split('T')[0];
-        const endDateStr = endDate.toISOString().split('T')[0];
+        // Format วันที่สำหรับ SQL (ใช้ local date เพื่อรองรับ timezone ไทย)
+        const formatLocalDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const startDateStr = formatLocalDate(startDate);
+        const endDateStr = formatLocalDate(endDate);
 
         // ดึงข้อมูลรายงานโรครายวัน
         const dailyData = await query(`
@@ -68,7 +75,8 @@ export async function GET(request) {
         const diseaseSet = new Set();
 
         dailyData.forEach(row => {
-            const dateStr = new Date(row.date).toISOString().split('T')[0];
+            // ใช้ formatLocalDate เพื่อให้วันที่ตรงกับ allDates
+            const dateStr = formatLocalDate(new Date(row.date));
 
             if (!groupedByDate[dateStr]) {
                 groupedByDate[dateStr] = {
@@ -91,8 +99,12 @@ export async function GET(request) {
         // สร้าง array ของวันที่ทั้งหมดในช่วง (รวมวันที่ไม่มีข้อมูล)
         const allDates = [];
         const currentDate = new Date(startDate);
-        while (currentDate <= endDate) {
-            const dateStr = currentDate.toISOString().split('T')[0];
+        currentDate.setHours(0, 0, 0, 0); // Reset เวลาเป็น 00:00:00
+        const endDateCompare = new Date(endDate);
+        endDateCompare.setHours(23, 59, 59, 999); // Set เป็นสิ้นสุดวัน
+
+        while (currentDate <= endDateCompare) {
+            const dateStr = formatLocalDate(currentDate);
             allDates.push(dateStr);
             currentDate.setDate(currentDate.getDate() + 1);
         }

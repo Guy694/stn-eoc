@@ -66,9 +66,19 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     // สร้างรายการวันที่จาก active session
     useEffect(() => {
         if (activeSession) {
+            // ใช้ Thailand timezone (UTC+7)
+            const now = new Date();
+            const thailandOffset = 7 * 60; // UTC+7 in minutes
+            const localOffset = now.getTimezoneOffset();
+            const thailandNow = new Date(now.getTime() + (thailandOffset + localOffset) * 60 * 1000);
+
             const start = new Date(activeSession.opened_at);
-            const end = activeSession.closed_at ? new Date(activeSession.closed_at) : new Date();
+            // ถ้า session ยังเปิดอยู่ ใช้วันนี้ (Thailand time)
+            const end = activeSession.closed_at ? new Date(activeSession.closed_at) : thailandNow;
             const dateList = [];
+
+            // Reset start time to beginning of day
+            start.setHours(0, 0, 0, 0);
 
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 dateList.push(new Date(d));
@@ -147,7 +157,11 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
             if (sessionId) params.append('session_id', sessionId);
             if (selectedDate) {
-                params.append('date', selectedDate.toISOString().split('T')[0]);
+                // ใช้ local date format เพื่อหลีกเลี่ยงปัญหา timezone
+                const year = selectedDate.getFullYear();
+                const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(selectedDate.getDate()).padStart(2, '0');
+                params.append('date', `${year}-${month}-${day}`);
             } else if (date) {
                 params.append('date', date);
             }
@@ -1407,36 +1421,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 />
             </div>
 
-            {/* ระดับความรุนแรง */}
-            <div className="bg-white rounded-lg shadow p-6 text-gray-700">
-                <h3 className="text-lg font-bold mb-4">สรุปตามระดับความรุนแรง</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <LevelCard
-                        label="น้ำท่วมหนัก"
-                        count={stats.severe_count || 0}
-                        color="red"
-                        icon="🔴"
-                    />
-                    <LevelCard
-                        label="ปานกลาง"
-                        count={stats.moderate_count || 0}
-                        color="orange"
-                        icon="🟠"
-                    />
-                    <LevelCard
-                        label="เล็กน้อย"
-                        count={stats.mild_count || 0}
-                        color="yellow"
-                        icon="🟡"
-                    />
-                    <LevelCard
-                        label="ปกติ"
-                        count={stats.safe_count || 0}
-                        color="green"
-                        icon="🟢"
-                    />
-                </div>
-            </div>
+
 
             {/* รายการพื้นที่ */}
             <div className="bg-white rounded-lg shadow">

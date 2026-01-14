@@ -169,10 +169,6 @@ export default function DiseaseReportsPage() {
             return;
         }
 
-        if (submitData.patient_count < 0) {
-            showWarning('จำนวนผู้ป่วยต้องเป็นจำนวนบวก');
-            return;
-        }
 
         if (!submitData.session_id) {
             showError('ไม่พบ Session ID กรุณาเลือก EOC Session ใหม่');
@@ -514,11 +510,59 @@ export default function DiseaseReportsPage() {
                                                 legend: { position: 'top' },
                                                 title: {
                                                     display: true,
+                                                    font: {
+                                                        size: 18,
+                                                        weight: 'bold',
+                                                        family: 'Kanit'
+                                                    },
                                                     text: `ข้อมูล ณ วันที่ ${new Date(filterDate).toLocaleDateString('th-TH')}`
+
                                                 }
+
                                             },
                                             scales: {
-                                                y: { beginAtZero: true }
+                                                x: {
+                                                    grid: {
+                                                        display: false
+                                                    },
+                                                    ticks: {
+                                                        font: {
+                                                            family: 'Kanit'
+                                                        }
+                                                    }
+                                                },
+                                                y: {
+                                                    beginAtZero: true,
+                                                    ticks: {
+                                                        font: {
+                                                            family: 'Kanit'
+                                                        },
+                                                        callback: function (value) {
+                                                            return value + ' คน';
+                                                        }
+                                                    },
+                                                    grid: {
+                                                        color: 'rgba(0, 0, 0, 0.05)'
+                                                    }
+                                                }
+                                            },
+                                            plugins: {
+                                                tooltip: {
+                                                    callbacks: {
+                                                        title: function (tooltipItem) {
+                                                            const date = tooltipItem[0].label;
+                                                            return `ข้อมูล ณ`;
+                                                        }
+                                                    }
+                                                },
+                                                titleFont: {
+                                                    size: 14,
+                                                    family: 'Kanit'
+                                                },
+                                                bodyFont: {
+                                                    size: 13,
+                                                    family: 'Kanit'
+                                                },
                                             }
                                         }}
                                     />
@@ -536,7 +580,13 @@ export default function DiseaseReportsPage() {
                                         options={{
                                             responsive: true,
                                             plugins: {
-                                                legend: { position: 'right' }
+                                                legend: {
+                                                    position: 'right', font: {
+                                                        size: 18,
+                                                        weight: 'bold',
+                                                        family: 'Kanit'
+                                                    }
+                                                },
                                             }
                                         }}
                                     />
@@ -587,18 +637,29 @@ export default function DiseaseReportsPage() {
                                                             <td className=" border border-gray-300 px-3 py-2 font-medium text-gray-800">
                                                                 {disease}
                                                             </td>
-                                                            {mainDistricts.map(district => (
-                                                                <React.Fragment key={`${disease}-${district}`}>
-                                                                    <td className="text-gray-600 border border-gray-300 px-2 py-1 text-center">
-                                                                        {data.today[district] || 0}
-                                                                    </td>
-                                                                    <td className="text-gray-600 border border-gray-300 px-2 py-1 text-center">
-                                                                        {data.cumulative[district] || 0}
-                                                                    </td>
-                                                                </React.Fragment>
-                                                            ))}
-                                                            <td className="text-gray-800 border border-gray-300 px-3 py-2 text-center font-bold bg-yellow-100">
-                                                                {rowTodayTotal}
+                                                            {mainDistricts.map(district => {
+                                                                const todayValue = data.today[district] || 0;
+                                                                const isPositive = todayValue > 0;
+                                                                const isNegative = todayValue < 0;
+                                                                return (
+                                                                    <React.Fragment key={`${disease}-${district}`}>
+                                                                        <td className={`border border-gray-300 px-2 py-1 text-center font-semibold ${isPositive ? 'text-red-600 bg-red-50' :
+                                                                            isNegative ? 'text-green-600 bg-green-50' :
+                                                                                'text-gray-600'
+                                                                            }`}>
+                                                                            {todayValue !== 0 ? (isPositive ? `+${todayValue}` : todayValue) : 0}
+                                                                        </td>
+                                                                        <td className="text-gray-600 border border-gray-300 px-2 py-1 text-center">
+                                                                            {data.cumulative[district] || 0}
+                                                                        </td>
+                                                                    </React.Fragment>
+                                                                );
+                                                            })}
+                                                            <td className={`border border-gray-300 px-3 py-2 text-center font-bold ${rowTodayTotal > 0 ? 'text-red-600 bg-red-100' :
+                                                                rowTodayTotal < 0 ? 'text-green-600 bg-green-100' :
+                                                                    'text-gray-800 bg-yellow-100'
+                                                                }`}>
+                                                                {rowTodayTotal !== 0 ? (rowTodayTotal > 0 ? `+${rowTodayTotal}` : rowTodayTotal) : 0}
                                                             </td>
                                                             <td className="text-gray-800 border border-gray-300 px-3 py-2 text-center font-bold bg-green-100">
                                                                 {rowCumulativeTotal}
@@ -844,15 +905,15 @@ export default function DiseaseReportsPage() {
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    จำนวนผู้ป่วย (คน) *
+                                                    จำนวนผู้ป่วย (คน) * <span className="text-gray-400 text-xs">(ใส่ค่าลบเพื่อลดจำนวน)</span>
                                                 </label>
                                                 <input
                                                     type="number"
-                                                    min="0"
                                                     value={formData.patient_count}
                                                     onChange={(e) => setFormData({ ...formData, patient_count: parseInt(e.target.value) || 0 })}
                                                     className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
                                                     required
+                                                    placeholder="เช่น 10 หรือ -5"
                                                 />
                                             </div>
 

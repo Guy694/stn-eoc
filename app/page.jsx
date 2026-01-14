@@ -126,7 +126,7 @@ export default function Home() {
     const names = {
       flood: 'น้ำท่วม',
       disease: 'โรคระบาด',
-      accident: 'อุบัติเหตุ/ความปลอดภัย'
+      accident: 'เทศกาล'
     };
     return names[type] || type;
   };

@@ -15,7 +15,7 @@ export default function Navbar() {
         { name: "แผนที่น้ำท่วม", path: "/eoc/flood" },
         // { name: "แผนที่หมู่บ้าน", path: "/eoc/village-map" },
         { name: "โรคระบาด", path: "/eoc/disease" },
-        { name: "รายงานเหตุการณ์", path: "/reports", requiresAdmin: true },
+        { name: "อุบัติเหตุช่วงเทศกาล", path: "/eoc/festival-accidents" },
         // { name: "ทรัพยากร", path: "/resources", requiresAdmin: true },
         // { name: "การแจ้งเตือน", path: "/alerts" },
     ];

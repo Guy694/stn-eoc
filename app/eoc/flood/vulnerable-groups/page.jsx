@@ -258,7 +258,7 @@ export default function VulnerableGroupsPage() {
                 {stats && (
                     <>
                         {/* สถิติจังหวัด */}
-                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+                        <div className="bg-gradient-to-r from-green-700 to-green-600 rounded-lg shadow-lg p-6 mb-6 text-white">
                             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                                 <span>🏛️</span>
                                 สถิติรวมจังหวัด{stats.province.province}

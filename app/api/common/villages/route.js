@@ -1,0 +1,43 @@
+import { NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+
+export async function GET() {
+    try {
+        // Query to get distinct village information
+        // We use DISTINCT to avoid duplicates if any, though distinct id usually implies unique rows
+        // But for the purpose of the dropdown hierarchy, we need list of villages with their district and tambon
+        const sql = `
+            SELECT 
+                id,
+                villcode,
+                villname as name,
+                subdistnam as subDistrict,
+                distname as district
+            FROM satun_village_polygon
+            ORDER BY distname, subdistnam, villname
+        `;
+
+        const results = await query(sql);
+
+        // Map data to match frontend expectations
+        const data = results.map(row => ({
+            id: row.id,
+            code: row.villcode,
+            name: row.name,
+            subDistrict: row.subDistrict, // Tambon
+            district: row.district      // District (Amphoe)
+        }));
+
+        return NextResponse.json({
+            success: true,
+            data: data
+        });
+
+    } catch (error) {
+        console.error('Error fetching villages:', error);
+        return NextResponse.json(
+            { success: false, message: 'Failed to fetch villages', error: error.message },
+            { status: 500 }
+        );
+    }
+}

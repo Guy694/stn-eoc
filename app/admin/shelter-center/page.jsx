@@ -33,6 +33,11 @@ export default function ShelterCenterPage() {
         by_type: {}
     });
 
+    // Dropdown data
+    const [districts, setDistricts] = useState([]);
+    const [tambons, setTambons] = useState([]);
+    const [villages, setVillages] = useState([]);
+
     const eocTypes = [
         { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
         { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow' },
@@ -50,6 +55,7 @@ export default function ShelterCenterPage() {
         address: '',
         tambon: '',
         district_name: '',
+        village: '',
         is_active: 1,
         shelter_capacity: ''
     });
@@ -57,6 +63,7 @@ export default function ShelterCenterPage() {
     useEffect(() => {
         setMounted(true);
         fetchShelterCenters();
+        fetchDistricts();
     }, []);
 
     // Update filter when URL parameter changes
@@ -128,11 +135,82 @@ export default function ShelterCenterPage() {
             address: '',
             tambon: '',
             district_name: '',
+            village: '',
             is_active: 1,
             shelter_capacity: ''
         });
         setMarkerPosition(null);
         setEditingCenter(null);
+        setTambons([]);
+        setVillages([]);
+    };
+
+    // Fetch districts
+    const fetchDistricts = async () => {
+        try {
+            const response = await fetch('/api/common/villages');
+            const result = await response.json();
+            if (result.success && Array.isArray(result.data)) {
+                const uniqueDistricts = [...new Set(result.data.map(v => v.district))];
+                setDistricts(uniqueDistricts.sort());
+            }
+        } catch (error) {
+            console.error('Fetch districts error:', error);
+        }
+    };
+
+    // Fetch tambons based on selected district
+    const fetchTambons = async (district) => {
+        try {
+            const response = await fetch('/api/common/villages');
+            const result = await response.json();
+            if (result.success && Array.isArray(result.data)) {
+                const filteredTambons = result.data
+                    .filter(v => v.district === district)
+                    .map(v => v.subDistrict);
+                const uniqueTambons = [...new Set(filteredTambons)];
+                setTambons(uniqueTambons.sort());
+            }
+        } catch (error) {
+            console.error('Fetch tambons error:', error);
+        }
+    };
+
+    // Fetch villages based on selected district and tambon
+    const fetchVillages = async (district, tambon) => {
+        try {
+            const response = await fetch('/api/common/villages');
+            const result = await response.json();
+            if (result.success && Array.isArray(result.data)) {
+                const filteredVillages = result.data
+                    .filter(v => v.district === district && v.subDistrict === tambon)
+                    .map(v => v.name);
+                setVillages(filteredVillages.sort());
+            }
+        } catch (error) {
+            console.error('Fetch villages error:', error);
+        }
+    };
+
+    // Handle district change
+    const handleDistrictChange = (e) => {
+        const district = e.target.value;
+        setFormData({ ...formData, district_name: district, tambon: '', village: '' });
+        setTambons([]);
+        setVillages([]);
+        if (district) {
+            fetchTambons(district);
+        }
+    };
+
+    // Handle tambon change
+    const handleTambonChange = (e) => {
+        const tambon = e.target.value;
+        setFormData({ ...formData, tambon: tambon, village: '' });
+        setVillages([]);
+        if (tambon && formData.district_name) {
+            fetchVillages(formData.district_name, tambon);
+        }
     };
 
     const handleEdit = (center) => {
@@ -145,6 +223,7 @@ export default function ShelterCenterPage() {
             address: center.address || '',
             tambon: center.tambon || '',
             district_name: center.district_name || '',
+            village: center.village || '',
             is_active: center.is_active || 1,
             shelter_capacity: center.shelter_capacity || ''
         });
@@ -153,6 +232,13 @@ export default function ShelterCenterPage() {
                 lat: parseFloat(center.lat),
                 lng: parseFloat(center.lon)
             });
+        }
+        // Load tambons and villages for editing
+        if (center.district_name) {
+            fetchTambons(center.district_name);
+            if (center.tambon) {
+                fetchVillages(center.district_name, center.tambon);
+            }
         }
         setShowModal(true);
     };
@@ -498,27 +584,64 @@ export default function ShelterCenterPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             เขต/อำเภอ *
                                         </label>
-                                        <input
-                                            type="text"
+                                        <select
                                             required
                                             value={formData.district_name}
-                                            onChange={(e) => setFormData({ ...formData, district_name: e.target.value })}
+                                            onChange={handleDistrictChange}
                                             className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="เช่น เมืองสตูล"
-                                        />
+                                        >
+                                            <option value="">-- เลือกอำเภอ --</option>
+                                            {districts.map(district => (
+                                                <option key={district} value={district}>{district}</option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             ตำบล *
                                         </label>
-                                        <input
-                                            type="text"
+                                        <select
                                             required
                                             value={formData.tambon}
-                                            onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
+                                            onChange={handleTambonChange}
+                                            disabled={!formData.district_name}
+                                            className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                                        >
+                                            <option value="">-- เลือกตำบล --</option>
+                                            {tambons.map(tambon => (
+                                                <option key={tambon} value={tambon}>{tambon}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            หมู่บ้าน/ชุมชน
+                                        </label>
+                                        <select
+                                            value={formData.village || ''}
+                                            onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                                            disabled={!formData.tambon}
+                                            className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                                        >
+                                            <option value="">-- เลือกหมู่บ้าน --</option>
+                                            {villages.map(village => (
+                                                <option key={village} value={village}>{village}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            ที่อยู่
+                                        </label>
+                                        <textarea
+                                            value={formData.address}
+                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                            rows={2}
                                             className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="เช่น ควนกาหลง"
+                                            placeholder="เช่น 123 หมู่ 1 ถนนสตูล"
                                         />
                                     </div>
 
@@ -583,7 +706,7 @@ export default function ShelterCenterPage() {
                                             resetForm();
                                         }}
                                         disabled={isSubmitting}
-                                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:bg-gray-400"
+                                        className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors disabled:bg-gray-400"
                                     >
                                         ❌ ยกเลิก
                                     </button>

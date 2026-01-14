@@ -11,8 +11,14 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
 
     useEffect(() => {
         // สร้างรายการวันที่ตั้งแต่เปิด EOC จนถึงปัจจุบัน
-        const start = new Date(startDate);
-        const today = new Date();
+        // แปลง startDate เป็น local date components
+        const startDateObj = new Date(startDate);
+        const start = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), startDateObj.getDate());
+
+        // ใช้วันที่ปัจจุบัน (local timezone)
+        const todayObj = new Date();
+        const today = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+
         const dateList = [];
 
         for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {

@@ -122,7 +122,7 @@ export default function Sidebar() {
         },
 
         {
-            title: "🚗 EOC อุบัติเหตุ/ความปลอดภัย",
+            title: "🚗 EOC อุบัติเหตุช่วงเทศกาล",
             section: "eoc-accident",
             key: "accident",
             eocType: "accident",

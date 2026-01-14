@@ -38,7 +38,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     const [showFacilities, setShowFacilities] = useState(true);
     const [showTambonBoundaries, setShowTambonBoundaries] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 12;
     const mapRef = useRef(null);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [floodData]);
 
     // สร้างรายการวันที่จาก session
     useEffect(() => {
@@ -48,12 +54,19 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             return;
         }
 
-        // ใช้ local date และรีเซ็ตเวลาเป็น 00:00:00
-        const start = new Date(session.opened_at);
-        start.setHours(0, 0, 0, 0);
+        // แปลง opened_at เป็น local date components เพื่อหลีกเลี่ยงปัญหา timezone
+        const openedDate = new Date(session.opened_at);
+        const start = new Date(openedDate.getFullYear(), openedDate.getMonth(), openedDate.getDate());
 
-        const end = session.closed_at ? new Date(session.closed_at) : new Date();
-        end.setHours(0, 0, 0, 0);
+        // สร้าง end date - ถ้า session ยังเปิดอยู่ใช้วันที่ปัจจุบัน (local)
+        let end;
+        if (session.closed_at) {
+            const closedDate = new Date(session.closed_at);
+            end = new Date(closedDate.getFullYear(), closedDate.getMonth(), closedDate.getDate());
+        } else {
+            const today = new Date();
+            end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        }
 
         const dateList = [];
         const current = new Date(start);
@@ -62,6 +75,25 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             dateList.push(new Date(current));
             current.setDate(current.getDate() + 1);
         }
+
+
+        console.log('DailyVillageFloodTimeline - Debug Info:', {
+            session_opened_at: session.opened_at,
+            openedDate_full: openedDate.toString(),
+            openedDate_components: {
+                year: openedDate.getFullYear(),
+                month: openedDate.getMonth(),
+                date: openedDate.getDate()
+            },
+            start_full: start.toString(),
+            today_full: new Date().toString(),
+            today_components: {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth(),
+                date: new Date().getDate()
+            },
+            end_full: end.toString()
+        });
 
         console.log('DailyVillageFloodTimeline - Date range:', {
             start: start.toISOString().split('T')[0],
@@ -388,15 +420,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <label className="font-semibold text-gray-700">เลือกวันที่:</label>
                     <div className="flex gap-2 items-center">
-                        <label className="text-gray-700 flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={showTambonBoundaries}
-                                onChange={(e) => setShowTambonBoundaries(e.target.checked)}
-                                className="w-4 h-4 text-purple-600 rounded"
-                            />
-                            แสดงเขตตำบล
-                        </label>
+
                         <label className="text-gray-700 flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
@@ -604,36 +628,6 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                     </Polygon>
                                 ))}
 
-                                {polygonGroups.moderate.map((poly, idx) => (
-                                    <Polygon
-                                        key={`moderate-${poly.villcode}-${idx}`}
-                                        positions={poly.coordinates}
-                                        pathOptions={{
-                                            fillColor: getFloodColor('moderate'),
-                                            fillOpacity: 0.75,
-                                            color: '#333',
-                                            weight: 2,
-                                        }}
-                                    >
-                                        <Popup>
-                                            <div className="text-sm">
-                                                <strong>{poly.villname || poly.villcode}</strong><br />
-                                                อำเภอ: {poly.distname}<br />
-                                                ตำบล: {poly.subdistnam}<br />
-                                                สถานะ: {getFloodLabel('moderate')}<br />
-                                                {poly.floodInfo?.water_level > 0 && (
-                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
-                                                )}
-                                                {poly.floodInfo?.affected_population > 0 && (
-                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
-                                                )}
-                                                {poly.floodInfo?.notes && (
-                                                    <>📝 {poly.floodInfo.notes}<br /></>
-                                                )}
-                                            </div>
-                                        </Popup>
-                                    </Polygon>
-                                ))}
 
                                 {polygonGroups.severe.map((poly, idx) => (
                                     <Polygon
@@ -810,32 +804,59 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                         <h4 className="font-semibold text-gray-800 mb-3">
                             รายละเอียดหมู่บ้านที่ได้รับผลกระทบ ({floodData.villages.length} หมู่บ้าน):
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {floodData.villages.map((village) => (
-                                <div key={village.villcode} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <div
-                                        className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
-                                        style={{ backgroundColor: getFloodColor(village.level) }}
-                                    >
-                                        <span className="text-white text-xs font-bold">
-                                            {village.level === 'severe' ? '!!!' : village.level === 'moderate' ? '!!' : '!'}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-medium text-gray-800 truncate">{village.name}</div>
-                                        <div className="text-sm text-gray-600">อ.{village.district}</div>
-                                        <div className="text-xs text-gray-500 flex items-center gap-2">
-                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${village.level === 'severe' ? 'bg-red-200 text-red-800' :
-                                                village.level === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
-                                                    'bg-green-200 text-green-800'
-                                                }`}>
-                                                {getFloodLabel(village.level)}
-                                            </span>
-                                            <span>👥 {village.population?.toLocaleString() || '0'} คน</span>
+                        <div className="flex flex-col gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {floodData.villages
+                                    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                                    .map((village) => (
+                                        <div key={village.villcode} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                                            <div
+                                                className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
+                                                style={{ backgroundColor: getFloodColor(village.level) }}
+                                            >
+                                                <span className="text-white text-xs font-bold">
+                                                    {village.level === 'severe' ? '!!!' : village.level === 'moderate' ? '!!' : '!'}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium text-gray-800 truncate">{village.name}</div>
+                                                <div className="text-sm text-gray-600">อ.{village.district}</div>
+                                                <div className="text-xs text-gray-500 flex items-center gap-2">
+                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${village.level === 'severe' ? 'bg-red-200 text-red-800' :
+                                                        village.level === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
+                                                            'bg-green-200 text-green-800'
+                                                        }`}>
+                                                        {getFloodLabel(village.level)}
+                                                    </span>
+                                                    <span>👥 {village.population?.toLocaleString() || '0'} คน</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
+                            </div>
+
+                            {/* Pagination Controls */}
+                            {floodData.villages.length > ITEMS_PER_PAGE && (
+                                <div className="flex justify-center items-center gap-4 mt-2">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                                    >
+                                        &lt; ก่อนหน้า
+                                    </button>
+                                    <span className="text-gray-700 font-medium">
+                                        หน้า {currentPage} / {Math.ceil(floodData.villages.length / ITEMS_PER_PAGE)}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(floodData.villages.length / ITEMS_PER_PAGE), p + 1))}
+                                        disabled={currentPage === Math.ceil(floodData.villages.length / ITEMS_PER_PAGE)}
+                                        className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                                    >
+                                        ถัดไป &gt;
+                                    </button>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
                 )

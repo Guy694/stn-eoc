@@ -199,12 +199,7 @@ export async function POST(request) {
             );
         }
 
-        if (patient_count < 0) {
-            return NextResponse.json(
-                { success: false, message: 'จำนวนผู้ป่วยต้องเป็นจำนวนบวก' },
-                { status: 400 }
-            );
-        }
+        // อนุญาตให้กรอกค่าลบได้สำหรับกรณีลดจำนวนผู้ป่วย
 
         console.log('Executing INSERT query with:', [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, reported_by || 1]);
 

@@ -6,6 +6,7 @@ import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
 import FloodSessionSelector from "@/components/FloodSessionSelector";
 import FloodAreaStatus from "@/components/FloodAreaStatus";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
+import ShelterCenterMap from "@/components/ShelterCenterMap";
 import { useAuth } from "@/context/AuthContext";
 
 export default function FloodMapPage() {
@@ -18,8 +19,17 @@ export default function FloodMapPage() {
     const [activeSessionData, setActiveSessionData] = useState(null);
     const [sessionTeams, setSessionTeams] = useState([]);
     const [loadingTeams, setLoadingTeams] = useState(false);
+    const [expandedTeams, setExpandedTeams] = useState({}); // เก็บสถานะ expand ของแต่ละทีม
     const router = useRouter();
     const { user } = useAuth();
+
+    // Toggle expand/collapse ของทีม
+    const toggleTeamExpand = (teamId) => {
+        setExpandedTeams(prev => ({
+            ...prev,
+            [teamId]: !prev[teamId]
+        }));
+    };
 
     // โหลดข้อมูล polygon
     useEffect(() => {
@@ -171,31 +181,83 @@ export default function FloodMapPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {sessionTeams.map((team, index) => (
-                                    <div key={`realtime-${team.session_team_id}-${team.team_id}-${index}`} className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow">
-                                        <div className="mb-2">
-                                            <h3 className="font-bold text-gray-900 text-lg">
-                                                {team.team_name_th || team.team_name_en}
-                                            </h3>
+                                {sessionTeams.map((team, index) => {
+                                    const teamKey = `realtime-${team.session_team_id}-${team.team_id}-${index}`;
+                                    const isExpanded = expandedTeams[teamKey];
+
+                                    return (
+                                        <div key={teamKey} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden">
+                                            <div className="p-4">
+                                                <div className="mb-2">
+                                                    <h3 className="font-bold text-gray-900 text-lg">
+                                                        {team.team_name_th || team.team_name_en}
+                                                    </h3>
+                                                </div>
+
+                                                {team.team_lead_name && (
+                                                    <p className="text-sm text-gray-700 mb-1">
+                                                        <span className="font-medium">หัวหน้าทีม:</span> {team.team_lead_name}
+                                                    </p>
+                                                )}
+
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <p className="text-sm text-blue-600 font-medium">
+                                                        สมาชิก: {team.member_count || 0} คน
+                                                    </p>
+
+                                                    {team.members && team.members.length > 0 && (
+                                                        <button
+                                                            onClick={() => toggleTeamExpand(teamKey)}
+                                                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                                                        >
+                                                            {isExpanded ? (
+                                                                <>
+                                                                    <span>ซ่อน</span>
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                                    </svg>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <span>ดูสมาชิก</span>
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                                    </svg>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {team.description && (
+                                                    <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                                                        {team.description}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* แสดงรายชื่อสมาชิกเมื่อ expand */}
+                                            {isExpanded && team.members && team.members.length > 0 && (
+                                                <div className="border-t border-gray-100 bg-gray-50 p-3">
+                                                    <p className="text-xs font-medium text-gray-600 mb-2">รายชื่อสมาชิก:</p>
+                                                    <ul className="space-y-1">
+                                                        {team.members.map((member, mIdx) => (
+                                                            <li key={mIdx} className="text-sm text-gray-700 flex items-center gap-2">
+                                                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                                                {member.given_name && member.family_name
+                                                                    ? `${member.given_name} ${member.family_name}`
+                                                                    : member.full_name || member.name || `สมาชิก ${mIdx + 1}`}
+                                                                {member.role_in_team && (
+                                                                    <span className="text-xs text-gray-500">({member.role_in_team})</span>
+                                                                )}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
                                         </div>
-
-                                        {team.team_lead_name && (
-                                            <p className="text-sm text-gray-700 mb-1">
-                                                <span className="font-medium">หัวหน้าทีม:</span> {team.team_lead_name}
-                                            </p>
-                                        )}
-
-                                        <p className="text-sm text-blue-600 font-medium">
-                                            สมาชิก: {team.member_count || 0} คน
-                                        </p>
-
-                                        {team.description && (
-                                            <p className="text-xs text-gray-500 mt-2 line-clamp-2">
-                                                {team.description}
-                                            </p>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
 
@@ -243,7 +305,8 @@ export default function FloodMapPage() {
                         <FloodAreaStatus polygons={polygons} />
 
                         {/* แผนที่สถานการณ์น้ำท่วมรายวัน (Realtime) */}
-                        {/* {activeSessionData && (
+                        {/* DailyVillageFloodTimeline ใช้ในโหมดข้อมูลย้อนหลังเท่านั้น 
+                        {activeSessionData && (
                             <div className="mt-6">
                                 <DailyVillageFloodTimeline
                                     session={activeSessionData}
@@ -251,6 +314,11 @@ export default function FloodMapPage() {
                                 />
                             </div>
                         )} */}
+
+                        {/* Shelter Centers Map */}
+                        {/* <div className="mt-6">
+                            <ShelterCenterMap eocType="flood" sessionId={activeSessionData?.id} />
+                        </div> */}
 
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
@@ -295,31 +363,83 @@ export default function FloodMapPage() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        {sessionTeams.map((team, index) => (
-                                            <div key={`historical-${team.session_team_id}-${team.team_id}-${index}`} className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow">
-                                                <div className="mb-2">
-                                                    <h3 className="font-bold text-gray-900 text-lg">
-                                                        {team.team_name_th || team.team_name_en}
-                                                    </h3>
+                                        {sessionTeams.map((team, index) => {
+                                            const teamKey = `historical-${team.session_team_id}-${team.team_id}-${index}`;
+                                            const isExpanded = expandedTeams[teamKey];
+
+                                            return (
+                                                <div key={teamKey} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden">
+                                                    <div className="p-4">
+                                                        <div className="mb-2">
+                                                            <h3 className="font-bold text-gray-900 text-lg">
+                                                                {team.team_name_th || team.team_name_en}
+                                                            </h3>
+                                                        </div>
+
+                                                        {team.team_lead_name && (
+                                                            <p className="text-sm text-gray-700 mb-1">
+                                                                <span className="font-medium">หัวหน้าทีม:</span> {team.team_lead_name}
+                                                            </p>
+                                                        )}
+
+                                                        <div className="flex items-center justify-between mt-2">
+                                                            <p className="text-sm text-amber-600 font-medium">
+                                                                สมาชิก: {team.member_count || 0} คน
+                                                            </p>
+
+                                                            {team.members && team.members.length > 0 && (
+                                                                <button
+                                                                    onClick={() => toggleTeamExpand(teamKey)}
+                                                                    className="text-xs text-amber-600 hover:text-amber-800 flex items-center gap-1 transition-colors"
+                                                                >
+                                                                    {isExpanded ? (
+                                                                        <>
+                                                                            <span>ซ่อน</span>
+                                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                                            </svg>
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <span>ดูสมาชิก</span>
+                                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                                            </svg>
+                                                                        </>
+                                                                    )}
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {team.description && (
+                                                            <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                                                                {team.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* แสดงรายชื่อสมาชิกเมื่อ expand */}
+                                                    {isExpanded && team.members && team.members.length > 0 && (
+                                                        <div className="border-t border-gray-100 bg-gray-50 p-3">
+                                                            <p className="text-xs font-medium text-gray-600 mb-2">รายชื่อสมาชิก:</p>
+                                                            <ul className="space-y-1">
+                                                                {team.members.map((member, mIdx) => (
+                                                                    <li key={mIdx} className="text-sm text-gray-700 flex items-center gap-2">
+                                                                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                                                                        {member.given_name && member.family_name
+                                                                            ? `${member.given_name} ${member.family_name}`
+                                                                            : member.full_name || member.name || `สมาชิก ${mIdx + 1}`}
+                                                                        {member.role_in_team && (
+                                                                            <span className="text-xs text-gray-500">({member.role_in_team})</span>
+                                                                        )}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                                 </div>
-
-                                                {team.team_lead_name && (
-                                                    <p className="text-sm text-gray-700 mb-1">
-                                                        <span className="font-medium">หัวหน้าทีม:</span> {team.team_lead_name}
-                                                    </p>
-                                                )}
-
-                                                <p className="text-sm text-amber-600 font-medium">
-                                                    สมาชิก: {team.member_count || 0} คน
-                                                </p>
-
-                                                {team.description && (
-                                                    <p className="text-xs text-gray-500 mt-2 line-clamp-2">
-                                                        {team.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -333,6 +453,11 @@ export default function FloodMapPage() {
                                 polygons={polygons}
                             />
                         </div>
+
+                        {/* Shelter Centers Map */}
+                        {/* <div className="mt-6">
+                            <ShelterCenterMap eocType="flood" sessionId={selectedSession?.id} />
+                        </div> */}
 
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { getConnection } from '@/lib/db';
 
 // GET - Fetch all shelter centers
 export async function GET(request) {
@@ -17,6 +17,7 @@ export async function GET(request) {
 
         query += ` ORDER BY eoc_type, id DESC`;
 
+        const pool = await getConnection();
         const [rows] = await pool.query(query, params);
 
         return NextResponse.json({
@@ -50,6 +51,7 @@ export async function POST(request) {
             address,
             tambon,
             district_name,
+            village,
             is_active,
             shelter_capacity
         } = body;
@@ -73,10 +75,11 @@ export async function POST(request) {
 
         console.log('Inserting shelter center:', { sheltername, eoc_type, lat, lon, tambon, shelter_capacity });
 
+        const pool = await getConnection();
         const [result] = await pool.query(
             `INSERT INTO shelter_centers 
-            (sheltername, eoc_type, lat, lon, address, tambon, district_name, is_active, shelter_capacity) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (sheltername, eoc_type, lat, lon, address, tambon, district_name, village, is_active, shelter_capacity) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 sheltername,
                 eoc_type,
@@ -85,6 +88,7 @@ export async function POST(request) {
                 address || null,
                 tambon,
                 district_name || null,
+                village || null,
                 is_active !== undefined ? is_active : 1,
                 shelter_capacity
             ]
@@ -136,6 +140,7 @@ export async function PUT(request) {
             address,
             tambon,
             district_name,
+            village,
             is_active,
             shelter_capacity
         } = body;
@@ -159,10 +164,11 @@ export async function PUT(request) {
 
         console.log('Updating shelter center:', id, { sheltername, eoc_type, lat, lon, tambon, shelter_capacity });
 
+        const pool = await getConnection();
         await pool.query(
             `UPDATE shelter_centers 
             SET sheltername = ?, eoc_type = ?, lat = ?, lon = ?, address = ?, 
-                tambon = ?, district_name = ?, is_active = ?, shelter_capacity = ?
+                tambon = ?, district_name = ?, village = ?, is_active = ?, shelter_capacity = ?
             WHERE id = ?`,
             [
                 sheltername,
@@ -172,6 +178,7 @@ export async function PUT(request) {
                 address || null,
                 tambon,
                 district_name || null,
+                village || null,
                 is_active !== undefined ? is_active : 1,
                 shelter_capacity,
                 id
@@ -212,6 +219,7 @@ export async function DELETE(request) {
             );
         }
 
+        const pool = await getConnection();
         await pool.query('DELETE FROM shelter_centers WHERE id = ?', [id]);
 
         return NextResponse.json({

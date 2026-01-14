@@ -75,7 +75,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
 
     return (
         <div className="space-y-4">
-            {showTitle && (
+            {/* {showTitle && (
                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg shadow-md p-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                         <span className="text-2xl">👥</span>
@@ -96,7 +96,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
                 {teams.map((team) => (
                     <TeamCard key={team.session_team_id} team={team} />
                 ))}
-            </div>
+            </div> */}
         </div>
     );
 }

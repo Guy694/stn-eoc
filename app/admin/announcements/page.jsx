@@ -36,9 +36,7 @@ export default function AnnouncementsPage() {
 
     const eocTypes = [
         { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
-        { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow' },
-        { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan' },
-        { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange' },
+        { value: 'festival-accidents', label: '🎉 อุบัติเหตุช่วงเทศกาล', color: 'yellow' },
         { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
     ];
 

@@ -83,7 +83,7 @@ export default function AccidentEOCPage() {
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                         <span className="text-4xl">🚗</span>
-                        {hasActiveSession ? "ศูนย์ปฏิบัติการช่วง 7 วันอันตราย" : "EOC อุบัติเหตุ/ความปลอดภัย"}
+                        {hasActiveSession ? "ศูนย์ปฏิบัติการช่วง 7 วันอันตราย" : "EOC อุบัติเหตุช่วงเทศกาล"}
                     </h1>
                     {activeSession && (
                         <p className="text-gray-600">

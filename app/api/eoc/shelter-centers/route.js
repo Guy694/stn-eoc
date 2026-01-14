@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { getConnection } from '@/lib/db';
 
 // GET - Fetch shelter centers for a specific EOC session
 export async function GET(request) {
@@ -59,6 +59,7 @@ export async function GET(request) {
             query += ` ORDER BY sc.eoc_type, sc.id DESC`;
         }
 
+        const pool = await getConnection();
         const [rows] = await pool.query(query, params);
 
         return NextResponse.json({
@@ -88,6 +89,7 @@ export async function POST(request) {
         }
 
         // Check if record exists
+        const pool = await getConnection();
         const [existing] = await pool.query(
             'SELECT * FROM shelter_occupancy WHERE shelter_id = ? AND eoc_session_id = ?',
             [shelter_id, eoc_session_id]
