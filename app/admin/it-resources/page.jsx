@@ -1,7 +1,28 @@
 "use client";
 import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/layouts/AdminLayout';
+import EOCLayout from '@/components/layouts/EOCLayout';
 import Swal from 'sweetalert2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement
+} from 'chart.js';
+import { Bar, Pie } from 'react-chartjs-2';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement
+);
 
 export default function ITResourcesPage() {
     const [resources, setResources] = useState([]);
@@ -10,7 +31,8 @@ export default function ITResourcesPage() {
     const [editingResource, setEditingResource] = useState(null);
     const [filterType, setFilterType] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
-    const [stats, setStats] = useState({ total: 0, online: 0, offline: 0, maintenance: 0, unknown: 0 });
+    const [stats, setStats] = useState({ total: 0, online: 0, offline: 0, maintenance: 0, unknown: 0, byType: [], byIsp: [] });
+    const [healthFacilities, setHealthFacilities] = useState([]);
 
     const resourceTypes = [
         { value: 'server', label: '🖥️ Server', color: 'bg-blue-100 text-blue-800' },
@@ -30,25 +52,31 @@ export default function ITResourcesPage() {
     const connectionTypes = ['Fiber', '4G', '5G', 'ADSL', 'VDSL', 'Leased Line', 'Satellite'];
 
     const [formData, setFormData] = useState({
-        resource_type: 'server',
+        resource_type: 'internet',
         unit_name: '',
-        unit_code: '',
-        location: '',
-        server_name: '',
-        server_ip: '',
-        server_os: '',
         isp_provider: '',
         connection_type: '',
         bandwidth: '',
         status: 'unknown',
-        notes: '',
-        contact_person: '',
-        contact_phone: ''
+        notes: ''
     });
 
     useEffect(() => {
         fetchResources();
+        fetchHealthFacilities();
     }, [filterType, filterStatus]);
+
+    const fetchHealthFacilities = async () => {
+        try {
+            const response = await fetch('/api/common/health-facilities');
+            const data = await response.json();
+            if (data.success) {
+                setHealthFacilities(data.data || []);
+            }
+        } catch (error) {
+            console.error('Fetch health facilities error:', error);
+        }
+    };
 
     const fetchResources = async () => {
         try {
@@ -73,20 +101,13 @@ export default function ITResourcesPage() {
 
     const resetForm = () => {
         setFormData({
-            resource_type: 'server',
+            resource_type: 'internet',
             unit_name: '',
-            unit_code: '',
-            location: '',
-            server_name: '',
-            server_ip: '',
-            server_os: '',
             isp_provider: '',
             connection_type: '',
             bandwidth: '',
             status: 'unknown',
-            notes: '',
-            contact_person: '',
-            contact_phone: ''
+            notes: ''
         });
         setEditingResource(null);
     };
@@ -94,20 +115,13 @@ export default function ITResourcesPage() {
     const handleEdit = (resource) => {
         setEditingResource(resource);
         setFormData({
-            resource_type: resource.resource_type || 'server',
+            resource_type: resource.resource_type || 'internet',
             unit_name: resource.unit_name || '',
-            unit_code: resource.unit_code || '',
-            location: resource.location || '',
-            server_name: resource.server_name || '',
-            server_ip: resource.server_ip || '',
-            server_os: resource.server_os || '',
             isp_provider: resource.isp_provider || '',
             connection_type: resource.connection_type || '',
             bandwidth: resource.bandwidth || '',
             status: resource.status || 'unknown',
-            notes: resource.notes || '',
-            contact_person: resource.contact_person || '',
-            contact_phone: resource.contact_phone || ''
+            notes: resource.notes || ''
         });
         setShowModal(true);
     };
@@ -189,7 +203,7 @@ export default function ITResourcesPage() {
     };
 
     return (
-        <AdminLayout>
+        <EOCLayout>
             <div className="p-6">
                 {/* Header */}
                 <div className="mb-6">
@@ -220,6 +234,146 @@ export default function ITResourcesPage() {
                     <div className="bg-gray-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-gray-600">{stats.unknown}</div>
                         <div className="text-sm text-gray-700">⚪ Unknown</div>
+                    </div>
+                </div>
+
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {/* Status Pie Chart */}
+                    <div className="bg-white rounded-lg shadow p-4">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">📊 สถานะทั้งหมด</h3>
+                        <div className="h-64">
+                            <Pie
+                                data={{
+                                    labels: ['🟢 Online', '🔴 Offline', '🟡 Maintenance', '⚪ Unknown'],
+                                    datasets: [{
+                                        data: [
+                                            stats.online || 0,
+                                            stats.offline || 0,
+                                            stats.maintenance || 0,
+                                            stats.unknown || 0
+                                        ],
+                                        backgroundColor: [
+                                            'rgba(34, 197, 94, 0.8)',
+                                            'rgba(239, 68, 68, 0.8)',
+                                            'rgba(234, 179, 8, 0.8)',
+                                            'rgba(156, 163, 175, 0.8)'
+                                        ],
+                                        borderColor: [
+                                            'rgb(34, 197, 94)',
+                                            'rgb(239, 68, 68)',
+                                            'rgb(234, 179, 8)',
+                                            'rgb(156, 163, 175)'
+                                        ],
+                                        borderWidth: 2
+                                    }]
+                                }}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { position: 'bottom' }
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* ISP Providers Bar Chart */}
+                    <div className="bg-white rounded-lg shadow p-4">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">🌐 ผู้ให้บริการ Internet (ISP)</h3>
+                        <div className="h-64">
+                            {stats.byIsp && stats.byIsp.length > 0 ? (
+                                <Bar
+                                    data={{
+                                        labels: stats.byIsp.map(item => item.isp_provider),
+                                        datasets: [
+                                            {
+                                                label: 'Online',
+                                                data: stats.byIsp.map(item => item.online || 0),
+                                                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                                                borderColor: 'rgb(34, 197, 94)',
+                                                borderWidth: 1
+                                            },
+                                            {
+                                                label: 'Offline',
+                                                data: stats.byIsp.map(item => item.offline || 0),
+                                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                                borderColor: 'rgb(239, 68, 68)',
+                                                borderWidth: 1
+                                            }
+                                        ]
+                                    }}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { position: 'top' }
+                                        },
+                                        scales: {
+                                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <div className="h-full flex items-center justify-center text-gray-500">
+                                    ยังไม่มีข้อมูล ISP
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Resource Types Bar Chart */}
+                    <div className="bg-white rounded-lg shadow p-4">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">📦 แยกตามประเภททรัพยากร</h3>
+                        <div className="h-64">
+                            {stats.byType && stats.byType.length > 0 ? (
+                                <Bar
+                                    data={{
+                                        labels: stats.byType.map(item => {
+                                            const typeLabels = {
+                                                server: '🖥️ Server',
+                                                internet: '🌐 Internet',
+                                                network: '🔌 Network',
+                                                hardware: '💻 Hardware'
+                                            };
+                                            return typeLabels[item.resource_type] || item.resource_type;
+                                        }),
+                                        datasets: [{
+                                            label: 'จำนวน',
+                                            data: stats.byType.map(item => item.count || 0),
+                                            backgroundColor: [
+                                                'rgba(59, 130, 246, 0.8)',
+                                                'rgba(34, 197, 94, 0.8)',
+                                                'rgba(168, 85, 247, 0.8)',
+                                                'rgba(249, 115, 22, 0.8)'
+                                            ],
+                                            borderColor: [
+                                                'rgb(59, 130, 246)',
+                                                'rgb(34, 197, 94)',
+                                                'rgb(168, 85, 247)',
+                                                'rgb(249, 115, 22)'
+                                            ],
+                                            borderWidth: 2
+                                        }]
+                                    }}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false }
+                                        },
+                                        scales: {
+                                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <div className="h-full flex items-center justify-center text-gray-500">
+                                    ยังไม่มีข้อมูล
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -393,79 +547,22 @@ export default function ITResourcesPage() {
                                     </div>
 
                                     {/* Unit Info */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อหน่วยบริการ *</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={formData.unit_name}
-                                                onChange={(e) => setFormData({ ...formData, unit_name: e.target.value })}
-                                                className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                                placeholder="เช่น รพ.สต.ควนกาหลง"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">รหัสหน่วยบริการ</label>
-                                            <input
-                                                type="text"
-                                                value={formData.unit_code}
-                                                onChange={(e) => setFormData({ ...formData, unit_code: e.target.value })}
-                                                className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                                placeholder="เช่น PCU-KKL"
-                                            />
-                                        </div>
-                                    </div>
-
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">ที่ตั้ง</label>
-                                        <input
-                                            type="text"
-                                            value={formData.location}
-                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">หน่วยบริการ *</label>
+                                        <select
+                                            required
+                                            value={formData.unit_name}
+                                            onChange={(e) => setFormData({ ...formData, unit_name: e.target.value })}
                                             className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                            placeholder="เช่น อ.ควนกาหลง"
-                                        />
+                                        >
+                                            <option value="">-- เลือกหน่วยบริการ --</option>
+                                            {healthFacilities.map(facility => (
+                                                <option key={facility.id} value={facility.name}>{facility.name}</option>
+                                            ))}
+                                        </select>
                                     </div>
 
-                                    {/* Server Fields */}
-                                    {formData.resource_type === 'server' && (
-                                        <div className="bg-blue-50 p-4 rounded-lg space-y-4">
-                                            <h3 className="font-medium text-blue-800">🖥️ ข้อมูล Server</h3>
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อ Server</label>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.server_name}
-                                                        onChange={(e) => setFormData({ ...formData, server_name: e.target.value })}
-                                                        className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                                        placeholder="Main Server"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">IP Address</label>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.server_ip}
-                                                        onChange={(e) => setFormData({ ...formData, server_ip: e.target.value })}
-                                                        className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                                        placeholder="192.168.1.1"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">OS</label>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.server_os}
-                                                        onChange={(e) => setFormData({ ...formData, server_os: e.target.value })}
-                                                        className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                                        placeholder="Windows Server 2019"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+
 
                                     {/* Internet Fields */}
                                     {formData.resource_type === 'internet' && (
@@ -512,27 +609,7 @@ export default function ITResourcesPage() {
                                         </div>
                                     )}
 
-                                    {/* Contact Info */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ผู้รับผิดชอบ</label>
-                                            <input
-                                                type="text"
-                                                value={formData.contact_person}
-                                                onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
-                                                className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">เบอร์ติดต่อ</label>
-                                            <input
-                                                type="text"
-                                                value={formData.contact_phone}
-                                                onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
-                                                className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                            />
-                                        </div>
-                                    </div>
+
 
                                     {/* Notes */}
                                     <div>
@@ -567,6 +644,6 @@ export default function ITResourcesPage() {
                     </div>
                 )}
             </div>
-        </AdminLayout>
+        </EOCLayout>
     );
 }

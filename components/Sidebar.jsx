@@ -211,6 +211,7 @@ export default function Sidebar() {
                 { name: "ยานพาหนะ", path: "/resources/vehicles", icon: "🚑", description: "รถพยาบาล/รถบรรทุก" },
                 { name: "อุปกรณ์", path: "/resources/equipment", icon: "🛠️", description: "เครื่องมือและอุปกรณ์" },
                 { name: "ศูนย์พักพิง", path: "/admin/shelter-center", icon: "🏠", description: "ศูนย์พักพิงชั่วคราว" },
+                { name: "ทรัพยากร IT", path: "/admin/it-resources", icon: "🖥️", description: "Server/Internet/Network" },
             ],
         },
 

@@ -35,7 +35,7 @@ export async function GET(request) {
         }
 
         if (date) {
-            whereClause += ' AND f.recorded_day = ?';
+            whereClause += ' AND DATE(f.flood_start_date) = ?';
             params.push(date);
         }
 
@@ -70,9 +70,9 @@ export async function GET(request) {
                 v.distname as district,
                 v.subdistnam as tambon
             FROM flood_records f
-            INNER JOIN satun_village_polygon v ON f.vid = v.id
+            INNER JOIN satun_village_polygon v ON f.polygon_id = v.id
             WHERE ${whereClause}
-            ORDER BY f.recorded_day DESC, f.updated_at DESC
+            ORDER BY f.flood_start_date DESC, f.updated_at DESC
         `, params);
 
         return NextResponse.json({

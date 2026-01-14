@@ -14,6 +14,14 @@ export default function FloodRecordsPage() {
     const [villageOptions, setVillageOptions] = useState([]);
     const [recordedTambons, setRecordedTambons] = useState(new Set());
     const [isTambonMode, setIsTambonMode] = useState(false);
+
+    // วันที่ที่เลือกดู/บันทึก (default วันนี้)
+    const getTodayDate = () => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    };
+    const [selectedDate, setSelectedDate] = useState(''); // Initialize empty to avoid hydration mismatch
+
     const [filters, setFilters] = useState({
         district: 'all',
         tambon: 'all',
@@ -35,6 +43,7 @@ export default function FloodRecordsPage() {
 
     const [tambonOptions, setTambonOptions] = useState([]);
 
+
     // ดึงข้อมูล polygon หมู่บ้าน
     useEffect(() => {
         const fetchPolygons = async () => {
@@ -47,6 +56,11 @@ export default function FloodRecordsPage() {
             }
         };
         fetchPolygons();
+
+        // Set initial date on client-side to avoid hydration mismatch
+        if (!selectedDate) {
+            setSelectedDate(getTodayDate());
+        }
     }, []);
 
     // ดึงข้อมูล Active EOC Session
@@ -75,7 +89,7 @@ export default function FloodRecordsPage() {
         if (activeSession) {
             fetchRecords();
         }
-    }, [filters, activeSession]);
+    }, [filters, activeSession, selectedDate]);
 
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
@@ -399,12 +413,11 @@ export default function FloodRecordsPage() {
 
     // คำนวณสถานะของทุกตำบล
     const getAllTambonsStatus = () => {
-        // ใช้วันที่ท้องถิ่นแทน toISOString() ที่ใช้ UTC
-        const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        // ใช้วันที่ที่เลือก (selectedDate) แทนวันนี้
+        const targetDate = selectedDate;
         const allTambonsStatus = [];
 
-        console.log('Today (local):', today);
+        console.log('Selected date:', targetDate);
         console.log('Records count:', records.length);
 
         satunDistricts.forEach(district => {
@@ -423,21 +436,21 @@ export default function FloodRecordsPage() {
                 const uniqueVillageNames = new Set(allVillagesInPolygons.map(p => p.villname));
                 const totalVillages = uniqueVillageNames.size;
 
-                // นับจำนวน record ที่บันทึกไปแล้ววันนี้สำหรับตำบลนี้
+                // นับจำนวน record ที่บันทึกไปแล้วสำหรับวันที่เลือก
                 // ปรับปรุง: นับ record ที่ unique ต่อหมู่บ้าน (ไม่ซ้ำ)
-                const recordedVillagesToday = records.filter(record => {
+                const recordedVillagesForDate = records.filter(record => {
                     // แปลง flood_start_date จาก UTC เป็น local date เพื่อเปรียบเทียบ
                     const recordDateObj = new Date(record.flood_start_date);
                     const recordDate = `${recordDateObj.getFullYear()}-${String(recordDateObj.getMonth() + 1).padStart(2, '0')}-${String(recordDateObj.getDate()).padStart(2, '0')}`;
 
-                    return recordDate === today &&
+                    return recordDate === targetDate &&
                         record.district === district.name &&
                         record.tambon === tambon.name;
                 });
 
                 // นับ unique villages ที่มีการบันทึก (ใช้ทั้ง village และ villname, กรองค่าว่าง)
                 const uniqueRecordedVillages = new Set(
-                    recordedVillagesToday
+                    recordedVillagesForDate
                         .map(r => {
                             const name = r.village || r.villname;
                             return name && name.trim() !== '' ? name : null;
@@ -486,7 +499,7 @@ export default function FloodRecordsPage() {
                             recordedCount: recordedCount,
                             status: status,
                             uniqueVillages: Array.from(uniqueRecordedVillages),
-                            allRecords: recordedVillagesToday.map(r => ({
+                            allRecords: recordedVillagesForDate.map(r => ({
                                 village: r.village,
                                 villname: r.villname,
                                 date: r.flood_start_date
@@ -564,10 +577,101 @@ export default function FloodRecordsPage() {
                     </button>
                 </div>
 
-                {/* สถานะการบันทึกตำบลวันนี้ */}
+                {/* Date Picker for Backdating */}
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg p-4 mb-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">📅</span>
+                            <div>
+                                <h3 className="font-bold text-gray-800">เลือกวันที่บันทึก</h3>
+                                <p className="text-sm text-gray-600">
+                                    บันทึกข้อมูลย้อนหลังตั้งแต่ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {/* Previous Day */}
+                            <button
+                                onClick={() => {
+                                    const current = new Date(selectedDate);
+                                    current.setDate(current.getDate() - 1);
+                                    const minDate = new Date(activeSession.opened_at);
+                                    if (current >= minDate) {
+                                        setSelectedDate(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`);
+                                    }
+                                }}
+                                disabled={selectedDate <= activeSession.opened_at?.split('T')[0]}
+                                className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="วันก่อนหน้า"
+                            >
+                                ◀️
+                            </button>
+
+                            {/* Date Input */}
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                min={activeSession.opened_at?.split('T')[0]}
+                                max={getTodayDate()}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="px-4 py-2 border-2 border-purple-300 rounded-lg text-gray-700 font-medium bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            />
+
+                            {/* Next Day */}
+                            <button
+                                onClick={() => {
+                                    const current = new Date(selectedDate);
+                                    current.setDate(current.getDate() + 1);
+                                    const today = getTodayDate();
+                                    const nextDateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+                                    if (nextDateStr <= today) {
+                                        setSelectedDate(nextDateStr);
+                                    }
+                                }}
+                                disabled={selectedDate >= getTodayDate()}
+                                className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="วันถัดไป"
+                            >
+                                ▶️
+                            </button>
+
+                            {/* Today Button */}
+                            <button
+                                onClick={() => setSelectedDate(getTodayDate())}
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedDate === getTodayDate()
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-white border border-purple-300 text-purple-700 hover:bg-purple-50'
+                                    }`}
+                            >
+                                📆 วันนี้
+                            </button>
+                        </div>
+
+                        {/* Selected Date Display */}
+                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-purple-200">
+                            <span className={`font-bold text-lg ${selectedDate === getTodayDate() ? 'text-green-600' : 'text-purple-600'}`}>
+                                {new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </span>
+                            {selectedDate !== getTodayDate() && (
+                                <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+                                    ย้อนหลัง
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* สถานะการบันทึกของวันที่เลือก */}
                 <div className="mb-6">
                     <div className="flex items-center gap-4 mb-4">
-                        <h3 className="font-bold text-gray-800">📊 สถานะการบันทึกวันนี้</h3>
+                        <h3 className="font-bold text-gray-800">
+                            📊 สถานะการบันทึก{selectedDate === getTodayDate() ? 'วันนี้' : ` (${new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH')})`}
+                        </h3>
                         <div className="flex gap-2 text-sm">
                             <span className="text-gray-600 flex items-center gap-1">
                                 <span className="w-3 h-3 bg-green-500 rounded-full"></span>
@@ -630,14 +734,12 @@ export default function FloodRecordsPage() {
                                         key={item.key}
                                         onClick={() => {
                                             setEditingRecord(null);
-                                            const now = new Date();
-                                            const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                                             setFormData({
                                                 ...formData,
                                                 district: item.district,
                                                 tambon: item.tambon,
                                                 village: '',
-                                                flood_start_date: localDate
+                                                flood_start_date: selectedDate
                                             });
                                             setIsTambonMode(true);
                                             setShowModal(true);

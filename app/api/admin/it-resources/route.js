@@ -37,10 +37,33 @@ export async function GET(request) {
             FROM it_resources
         `);
 
+        // Stats by resource type
+        const [byTypeResult] = await pool.query(`
+            SELECT resource_type, COUNT(*) as count
+            FROM it_resources
+            GROUP BY resource_type
+            ORDER BY count DESC
+        `);
+
+        // Stats by ISP provider (for internet type)
+        const [byIspResult] = await pool.query(`
+            SELECT isp_provider, COUNT(*) as count, 
+                   SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online,
+                   SUM(CASE WHEN status = 'offline' THEN 1 ELSE 0 END) as offline
+            FROM it_resources
+            WHERE resource_type = 'internet' AND isp_provider IS NOT NULL AND isp_provider != ''
+            GROUP BY isp_provider
+            ORDER BY count DESC
+        `);
+
         return NextResponse.json({
             success: true,
             data: Array.isArray(rows) ? rows : [],
-            stats: statsResult[0] || { total: 0, online: 0, offline: 0, maintenance: 0, unknown: 0 }
+            stats: {
+                ...(statsResult[0] || { total: 0, online: 0, offline: 0, maintenance: 0, unknown: 0 }),
+                byType: byTypeResult || [],
+                byIsp: byIspResult || []
+            }
         });
     } catch (error) {
         console.error('Get IT resources error:', error);
