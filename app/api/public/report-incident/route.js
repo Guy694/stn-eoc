@@ -18,6 +18,7 @@ export async function POST(request) {
         const waterLevel = formData.get('waterLevel');
         const affectedPeople = formData.get('affectedPeople') || null;
         const urgency = formData.get('urgency') || 'medium';
+        const travelStatus = formData.get('travelStatus') || null; // สถานะการสัญจร
         const occurredAt = formData.get('occurredAt') || new Date().toISOString();
         const latitude = formData.get('latitude');
         const longitude = formData.get('longitude');
@@ -67,9 +68,9 @@ export async function POST(request) {
         const [result] = await pool.execute(
             `INSERT INTO public_incident_reports 
             (first_name, last_name, phone, village, sub_district, district, 
-             description, water_level, affected_people, urgency, occurred_at, 
+             description, water_level, affected_people, urgency, travel_status, occurred_at, 
              latitude, longitude, photo_path, status, reported_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
             [
                 firstName,
                 lastName,
@@ -81,6 +82,7 @@ export async function POST(request) {
                 waterLevel,
                 affectedPeople,
                 urgency,
+                travelStatus,
                 occurredAt,
                 latitude,
                 longitude,

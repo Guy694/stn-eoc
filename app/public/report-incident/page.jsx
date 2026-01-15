@@ -56,6 +56,7 @@ export default function ReportIncidentPage() {
         waterLevel: '',
         affectedPeople: '',
         urgency: 'medium',
+        travelStatus: '', // สถานะการสัญจร
         occurredAt: '',
         photo: null
     });
@@ -231,6 +232,7 @@ export default function ReportIncidentPage() {
                     waterLevel: '',
                     affectedPeople: '',
                     urgency: 'medium',
+                    travelStatus: '',
                     occurredAt: new Date().toISOString().slice(0, 16),
                     photo: null
                 });
@@ -534,6 +536,24 @@ export default function ReportIncidentPage() {
                                     <option value="medium">ปานกลาง (ต้องเฝ้าระวัง)</option>
                                     <option value="high">สูง (ต้องการความช่วยเหลือ)</option>
                                     <option value="critical">วิกฤติ (ต้องช่วยเหลือทันที)</option>
+                                </select>
+                            </div>
+
+                            {/* Travel Status */}
+                            <div>
+                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
+                                    🚧 สถานะการสัญจร
+                                </label>
+                                <select
+                                    name="travelStatus"
+                                    value={formData.travelStatus}
+                                    onChange={handleInputChange}
+                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
+                                >
+                                    <option value="">-- เลือกสถานะ --</option>
+                                    <option value="passable">✅ สัญจรได้ปกติ</option>
+                                    <option value="difficult">⚠️ สัญจรได้ยากลำบาก</option>
+                                    <option value="impassable">🚫 ไม่สามารถสัญจรได้</option>
                                 </select>
                             </div>
                         </div>

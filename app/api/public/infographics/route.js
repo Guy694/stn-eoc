@@ -19,7 +19,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const eocType = searchParams.get('eocType');
 
-        if (!eocType || !['flood', 'drought', 'tsunami', 'earthquake', 'disease'].includes(eocType)) {
+        if (!eocType || !['flood', 'disease', 'accident'].includes(eocType)) {
             return NextResponse.json({
                 success: false,
                 message: 'ประเภท EOC ไม่ถูกต้อง'

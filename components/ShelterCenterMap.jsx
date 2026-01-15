@@ -47,11 +47,40 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
         if (typeof window !== 'undefined') {
             const L = require('leaflet');
             const icons = {};
+
+            // สร้าง icon สำหรับแต่ละประเภท EOC โดยใช้รูปบ้าน/ศูนย์พักพิง
+            const shelterIconColors = {
+                'flood': { bg: '#3B82F6', border: '#1D4ED8', emoji: '🏠' },      // น้ำเงิน
+                'drought': { bg: '#EAB308', border: '#CA8A04', emoji: '🏠' },    // เหลือง
+                'tsunami': { bg: '#8B5CF6', border: '#7C3AED', emoji: '🏠' },    // ม่วง
+                'earthquake': { bg: '#F97316', border: '#EA580C', emoji: '🏠' }, // ส้ม
+                'disease': { bg: '#EF4444', border: '#DC2626', emoji: '🏠' }     // แดง
+            };
+
             eocTypes.forEach(type => {
-                icons[type.value] = L.icon({
-                    iconUrl: type.markerUrl,
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                const colors = shelterIconColors[type.value] || { bg: '#6B7280', border: '#4B5563', emoji: '🏠' };
+                icons[type.value] = L.divIcon({
+                    className: 'shelter-custom-icon',
+                    html: `
+                        <div style="
+                            background-color: ${colors.bg};
+                            border: 3px solid ${colors.border};
+                            border-radius: 50%;
+                            width: 40px;
+                            height: 40px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 20px;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                            cursor: pointer;
+                        ">
+                            ${colors.emoji}
+                        </div>
+                    `,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20],
+                    popupAnchor: [0, -20]
                 });
             });
             setCustomIcons(icons);

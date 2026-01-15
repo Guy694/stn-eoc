@@ -4,20 +4,6 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
-// รายชื่อโรคที่พบบ่อย
-const commonDiseases = [
-    'ไข้เลือดออก',
-    'ไข้หวัดใหญ่',
-    'อุจจาระร่วง',
-    'มือ เท้า ปาก',
-    'ไข้ฉี่หนู',
-    'โรคตาแดง',
-    'อาหารเป็นพิษ',
-    'ปอดอักเสบ',
-    'วัณโรค',
-    'โรคพิษสุนัขบ้า'
-];
-
 export default function DiseaseRecordsPage() {
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,6 +15,9 @@ export default function DiseaseRecordsPage() {
     const [villageOptions, setVillageOptions] = useState([]);
     const [recordedTambons, setRecordedTambons] = useState(new Set());
     const [isTambonMode, setIsTambonMode] = useState(false);
+    const [commonDiseases, setCommonDiseases] = useState([]); // รายการโรคจาก database
+    const [showOtherInput, setShowOtherInput] = useState(false); // แสดง input โรคอื่นๆ
+    const [customDisease, setCustomDisease] = useState(''); // ชื่อโรคที่กรอกเอง
     const [filters, setFilters] = useState({
         district: 'all',
         tambon: 'all',
@@ -59,6 +48,27 @@ export default function DiseaseRecordsPage() {
             }
         };
         fetchPolygons();
+    }, []);
+
+    // ดึงรายการโรคจาก database
+    useEffect(() => {
+        const fetchDiseases = async () => {
+            try {
+                const response = await fetch('/api/common/diseases');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    // เพิ่ม "อื่นๆ" ไว้ท้ายสุด
+                    const diseases = result.data.map(d => d.name).filter(d => d !== 'อื่นๆ');
+                    diseases.push('อื่นๆ');
+                    setCommonDiseases(diseases);
+                }
+            } catch (error) {
+                console.error('Error fetching diseases:', error);
+                // ใช้รายการ default
+                setCommonDiseases(['ไข้เลือดออก', 'โควิด-19', 'มือเท้าปาก', 'ไข้หวัดใหญ่', 'อุจจาระร่วง', 'โรคผิวหนัง', 'อื่นๆ']);
+            }
+        };
+        fetchDiseases();
     }, []);
 
     // ดึงข้อมูล health facilities
@@ -171,6 +181,35 @@ export default function DiseaseRecordsPage() {
             const now = new Date();
             const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
+            // ถ้าเลือก "อื่นๆ" ให้ใช้ชื่อโรคที่กรอกเอง และเพิ่มเข้า database
+            let diseaseName = formData.disease_name;
+            if (showOtherInput && customDisease.trim()) {
+                diseaseName = customDisease.trim();
+                // เพิ่มโรคใหม่เข้า database
+                try {
+                    const addRes = await fetch('/api/common/diseases', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: diseaseName })
+                    });
+                    const addResult = await addRes.json();
+                    if (addResult.success) {
+                        // รีเฟรช dropdown
+                        const dRes = await fetch('/api/common/diseases');
+                        const dResult = await dRes.json();
+                        if (dResult.success) {
+                            const diseases = dResult.data.map(d => d.name).filter(d => d !== 'อื่นๆ');
+                            diseases.push('อื่นๆ');
+                            setCommonDiseases(diseases);
+                        }
+                    } else if (addResult.existing_name) {
+                        diseaseName = addResult.existing_name;
+                    }
+                } catch (err) {
+                    console.log('Could not add disease to database:', err);
+                }
+            }
+
             // ถ้าเป็นโหมดตำบล ให้บันทึกทุกหน่วยบริการในตำบล
             if (isTambonMode && !editingRecord) {
                 const facilitiesToSave = healthFacilities.filter(
@@ -188,7 +227,7 @@ export default function DiseaseRecordsPage() {
                     const body = {
                         report_date: formData.report_date || today,
                         health_facility_id: facility.id,
-                        disease_name: formData.disease_name,
+                        disease_name: diseaseName,
                         patient_count: parseInt(formData.patient_count) || 0,
                         notes: formData.notes,
                         session_id: activeSession.id
@@ -238,7 +277,7 @@ export default function DiseaseRecordsPage() {
             const body = {
                 report_date: formData.report_date || today,
                 health_facility_id: editingRecord?.health_facility_id || selectedFacility?.id,
-                disease_name: formData.disease_name,
+                disease_name: diseaseName,
                 patient_count: parseInt(formData.patient_count) || 0,
                 notes: formData.notes,
                 session_id: activeSession.id
@@ -725,15 +764,34 @@ export default function DiseaseRecordsPage() {
                                             </label>
                                             <select
                                                 value={formData.disease_name}
-                                                onChange={(e) => setFormData({ ...formData, disease_name: e.target.value })}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    setFormData({ ...formData, disease_name: value });
+                                                    if (value === 'อื่นๆ') {
+                                                        setShowOtherInput(true);
+                                                    } else {
+                                                        setShowOtherInput(false);
+                                                        setCustomDisease('');
+                                                    }
+                                                }}
                                                 required
                                                 className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             >
+                                                <option value="">เลือกโรค</option>
                                                 {commonDiseases.map(disease => (
                                                     <option key={disease} value={disease}>{disease}</option>
                                                 ))}
-                                                <option value="อื่นๆ">อื่นๆ</option>
                                             </select>
+                                            {showOtherInput && (
+                                                <input
+                                                    type="text"
+                                                    value={customDisease}
+                                                    onChange={(e) => setCustomDisease(e.target.value)}
+                                                    placeholder="กรอกชื่อโรค..."
+                                                    className="mt-2 text-gray-600 w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                                    required
+                                                />
+                                            )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">

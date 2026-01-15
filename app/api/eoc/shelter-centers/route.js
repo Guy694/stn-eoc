@@ -7,25 +7,28 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const eocType = searchParams.get('eoc_type');
+        const includeAll = searchParams.get('include_all'); // ถ้า true แสดงทั้งหมด
 
         let query;
         let params = [];
 
-        if (sessionId) {
-            // Get shelter centers with occupancy data for a specific session
+        if (sessionId && !includeAll) {
+            // ดึงเฉพาะ shelter ที่ activate สำหรับ session นี้
             query = `
                 SELECT 
                     sc.*,
-                    COALESCE(so.current_occupancy, 0) as current_occupancy,
-                    COALESCE(so.max_occupancy_reached, 0) as max_occupancy_reached,
-                    COALESCE(so.last_updated, sc.created_at) as last_updated,
+                    COALESCE(ssa.current_occupancy, 0) as current_occupancy,
+                    ssa.activated_at,
                     CASE 
-                        WHEN COALESCE(so.current_occupancy, 0) >= sc.shelter_capacity THEN 'full'
-                        WHEN COALESCE(so.current_occupancy, 0) >= sc.shelter_capacity * 0.8 THEN 'near_full'
+                        WHEN COALESCE(ssa.current_occupancy, 0) >= sc.shelter_capacity THEN 'full'
+                        WHEN COALESCE(ssa.current_occupancy, 0) >= sc.shelter_capacity * 0.8 THEN 'near_full'
                         ELSE 'available'
                     END as occupancy_status
                 FROM shelter_centers sc
-                LEFT JOIN shelter_occupancy so ON sc.id = so.shelter_id AND so.eoc_session_id = ?
+                INNER JOIN shelter_session_activations ssa 
+                    ON sc.id = ssa.shelter_id 
+                    AND ssa.session_id = ? 
+                    AND ssa.is_active = 1
                 WHERE sc.is_active = 1
             `;
             params = [sessionId];
@@ -36,14 +39,13 @@ export async function GET(request) {
                 params.push(eocType);
             }
 
-            query += ` ORDER BY sc.eoc_type, sc.id DESC`;
+            query += ` ORDER BY sc.eoc_type, sc.sheltername ASC`;
         } else {
-            // Get all active shelter centers
+            // ดึง all active shelter centers (สำหรับ admin หรือไม่ระบุ session)
             query = `
                 SELECT 
                     sc.*,
                     0 as current_occupancy,
-                    0 as max_occupancy_reached,
                     sc.created_at as last_updated,
                     'available' as occupancy_status
                 FROM shelter_centers sc
@@ -56,7 +58,7 @@ export async function GET(request) {
                 params.push(eocType);
             }
 
-            query += ` ORDER BY sc.eoc_type, sc.id DESC`;
+            query += ` ORDER BY sc.eoc_type, sc.sheltername ASC`;
         }
 
         const pool = await getConnection();
@@ -68,6 +70,34 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('Get EOC shelter centers error:', error);
+
+        // ถ้าตาราง activation ยังไม่มี fallback ไป query เดิม
+        if (error.message.includes("shelter_session_activations")) {
+            try {
+                const { searchParams } = new URL(request.url);
+                const eocType = searchParams.get('eoc_type');
+
+                let fallbackQuery = `SELECT sc.*, 0 as current_occupancy FROM shelter_centers sc WHERE sc.is_active = 1`;
+                let fallbackParams = [];
+
+                if (eocType) {
+                    fallbackQuery += ` AND sc.eoc_type = ?`;
+                    fallbackParams.push(eocType);
+                }
+
+                const pool = await getConnection();
+                const [rows] = await pool.query(fallbackQuery, fallbackParams);
+
+                return NextResponse.json({
+                    success: true,
+                    data: rows,
+                    message: 'ใช้ข้อมูลแบบเดิม (ยังไม่ได้สร้างตาราง shelter_session_activations)'
+                });
+            } catch (fallbackError) {
+                console.error('Fallback query error:', fallbackError);
+            }
+        }
+
         return NextResponse.json(
             { success: false, message: 'เกิดข้อผิดพลาดในการดึงข้อมูล', error: error.message },
             { status: 500 }

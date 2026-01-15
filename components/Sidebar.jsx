@@ -114,10 +114,13 @@ export default function Sidebar() {
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
                 { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: "📊", description: "ภาพรวมสถานการณ์น้ำท่วม" },
+                { name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", icon: "💧", description: "บันทึกข้อมูลพื้นที่น้ำท่วม" },
+                { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: "🏠", description: "แผนที่ศูนย์พักพิง" },
+                { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: "🦠", description: "บันทึกโรคในศูนย์พักพิง" },
                 { name: "รายชื่อผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", icon: "👥", description: "ข้อมูลผู้ประสบภัย" },
                 { name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", icon: "🧑‍🦽", description: "ผู้สูงอายุ เด็ก คนพิการ" },
                 { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: "📢", description: "ข่าวประชาสัมพันธ์" },
-                { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: "📋", description: "ติดตามโรคระบาด" },
+                { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: "📋", description: "ติดตามโรคระบาดจากหน่วยบริการ" },
             ],
         },
 

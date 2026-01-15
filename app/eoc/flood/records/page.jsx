@@ -205,12 +205,12 @@ export default function FloodRecordsPage() {
                 let skippedCount = 0;
 
                 for (const village of villagesToSave) {
-                    // ตรวจสอบว่าหมู่บ้านนี้บันทึกไปแล้ววันนี้หรือยัง
+                    // ตรวจสอบว่าหมู่บ้านนี้บันทึกไปแล้วในวันที่เลือกหรือยัง
                     const existingRecord = records.find(record => {
                         const recordDate = record.flood_start_date?.split('T')[0];
                         const recordVillage = record.village || record.villname;
                         const checkVillage = village.villname;
-                        return recordDate === today &&
+                        return recordDate === selectedDate &&
                             record.district === formData.district &&
                             record.tambon === formData.tambon &&
                             recordVillage === checkVillage;
@@ -223,7 +223,7 @@ export default function FloodRecordsPage() {
 
                     const body = {
                         ...formData,
-                        flood_start_date: today, // บังคับใช้วันที่วันนี้ (local date)
+                        flood_start_date: selectedDate, // ใช้วันที่ที่เลือก (รองรับการบันทึกย้อนหลัง)
                         village: village.villname,
                         polygon_id: village.id,
                         session_id: activeSession.id,
@@ -234,7 +234,7 @@ export default function FloodRecordsPage() {
                         relief_amount: 0
                     };
 
-                    console.log('Saving village:', village.villname, 'date:', today, 'body:', body);
+                    console.log('Saving village:', village.villname, 'date:', selectedDate, 'body:', body);
 
                     try {
                         const res = await fetch(url, {
@@ -273,11 +273,11 @@ export default function FloodRecordsPage() {
 
             // โหมดปกติ - บันทึกหมู่บ้านเดียว
             if (!editingRecord) {
-                // ตรวจสอบว่าหมู่บ้านนี้มีข้อมูลวันนี้แล้วหรือยัง
+                // ตรวจสอบว่าหมู่บ้านนี้มีข้อมูลในวันที่เลือกแล้วหรือยัง
                 const existingRecord = records.find(record => {
                     const recordDate = record.flood_start_date?.split('T')[0];
                     const recordVillage = record.village || record.villname;
-                    return recordDate === today &&
+                    return recordDate === selectedDate &&
                         record.district === formData.district &&
                         record.tambon === formData.tambon &&
                         recordVillage === formData.village;

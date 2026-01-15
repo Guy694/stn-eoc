@@ -3,8 +3,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
+import SplashScreen from "@/components/SplashScreen";
 
 export default function Home() {
+  const [showSplash, setShowSplash] = useState(true);
   const [activeEOCs, setActiveEOCs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [eocStatus, setEocStatus] = useState({
@@ -20,6 +22,7 @@ export default function Home() {
   });
 
   const [infographicsData, setInfographicsData] = useState({});
+  const [floodStats, setFloodStats] = useState(null); // สถิติน้ำท่วมจาก database
 
   // ดึงข้อมูล EOC ที่เปิดอยู่
   useEffect(() => {
@@ -98,6 +101,31 @@ export default function Home() {
 
     fetchInfographics();
   }, []);
+
+  // ดึงข้อมูลสถิติน้ำท่วมจาก database
+  useEffect(() => {
+    const fetchFloodStats = async () => {
+      // หา session_id ของ flood EOC ที่ active
+      const floodEOC = activeEOCs.find(eoc => eoc.eoc_type === 'flood');
+      if (!floodEOC) return;
+
+      try {
+        const response = await fetch(`/api/public/flood-stats?session_id=${floodEOC.id}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setFloodStats(result.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching flood stats:', error);
+      }
+    };
+
+    if (activeEOCs.length > 0) {
+      fetchFloodStats();
+    }
+  }, [activeEOCs]);
 
   // คำนวณเวลาที่ผ่านไป
   useEffect(() => {
@@ -198,11 +226,16 @@ export default function Home() {
           { icon: "🚨", title: "แจ้งเหตุน้ำท่วม", link: "/public/disaster-map", color: "red" },
           { icon: "🏘️", title: "จุดพักพิงฉุกเฉิน", link: "/eoc/village-map", color: "green" }
         ],
-        stats: {
-          affected: 156,
-          shelters: 8,
-          teams: 12,
-          supplies: 45
+        stats: floodStats ? {
+          affected: floodStats.affected || 0,
+          affectedHouseholds: floodStats.affectedHouseholds || 0,
+          floodedVillages: floodStats.floodedVillages || 0,
+          affectedAreas: floodStats.affectedAreas || 0
+        } : {
+          affected: 0,
+          affectedHouseholds: 0,
+          floodedVillages: 0,
+          affectedAreas: 0
         }
       },
       accident: {
@@ -278,6 +311,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+      {/* Splash Screen */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+
       {/* Announcement Popup */}
       <AnnouncementPopup />
 
@@ -503,6 +539,9 @@ export default function Home() {
                   {Object.entries(content.stats).map(([key, value]) => {
                     const labels = {
                       affected: { icon: "👥", title: "ผู้ได้รับผลกระทบ", unit: "คน" },
+                      affectedHouseholds: { icon: "🏠", title: "ครัวเรือน", unit: "หลัง" },
+                      floodedVillages: { icon: "🏘️", title: "หมู่บ้านน้ำท่วม", unit: "แห่ง" },
+                      affectedAreas: { icon: "📍", title: "ตำบลประสบภัย", unit: "ตำบล" },
                       shelters: { icon: "🏘️", title: "จุดพักพิง", unit: "แห่ง" },
                       teams: { icon: "⚡", title: "ทีมปฏิบัติการ", unit: "ทีม" },
                       supplies: { icon: "📦", title: "เสบียงและอุปกรณ์", unit: "หน่วย" },

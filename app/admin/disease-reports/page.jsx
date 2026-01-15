@@ -53,27 +53,40 @@ export default function DiseaseReportsPage() {
         notes: ''
     });
 
-    // รายการโรคพื้นฐาน
-    const commonDiseases = [
-        'ไข้เลือดออก',
-        'โควิด-19',
-        'มือเท้าปาก',
-        'ไข้หวัดใหญ่',
-        'อุจจาระร่วง',
-        'โรคผิวหนัง',
-        'อื่นๆ'
-    ];
+    // รวมรายการโรคจาก database + อื่นๆ
+    const allDiseases = (() => {
+        const diseases = diseaseList.map(d => d.name || d);
+        // ลบ "อื่นๆ" ออกก่อน แล้วเพิ่มไว้ท้ายสุด
+        const filtered = diseases.filter(d => d !== 'อื่นๆ');
+        console.log('allDiseases computed:', [...filtered, 'อื่นๆ']);
+        return [...filtered, 'อื่นๆ'];
+    })();
 
-    // รวมรายการโรคพื้นฐานกับโรคที่เคยบันทึก
-    const allDiseases = useMemo(() => {
-        const combined = [...commonDiseases];
-        diseaseList.forEach(disease => {
-            if (!combined.includes(disease) && disease !== 'อื่นๆ') {
-                combined.splice(combined.length - 1, 0, disease); // เพิ่มก่อน "อื่นๆ"
+    // ดึงรายการโรคจาก database
+    useEffect(() => {
+        const fetchDiseases = async () => {
+            try {
+                const response = await fetch('/api/common/diseases');
+                const result = await response.json();
+                console.log('Diseases API result:', result);
+                if (result.success) {
+                    setDiseaseList(result.data || []);
+                }
+            } catch (error) {
+                console.error('Fetch diseases error:', error);
+                // ใช้รายการ default ถ้าดึงไม่ได้
+                setDiseaseList([
+                    { name: 'ไข้เลือดออก' },
+                    { name: 'โควิด-19' },
+                    { name: 'มือเท้าปาก' },
+                    { name: 'ไข้หวัดใหญ่' },
+                    { name: 'อุจจาระร่วง' },
+                    { name: 'โรคผิวหนัง' }
+                ]);
             }
-        });
-        return combined;
-    }, [diseaseList]);
+        };
+        fetchDiseases();
+    }, []);
 
     useEffect(() => {
         fetchSessions();
@@ -131,7 +144,7 @@ export default function DiseaseReportsPage() {
             if (result.success) {
                 setReports(Array.isArray(result.data) ? result.data : []);
                 setSummary(result.summary || { today: [], cumulative: [], byDisease: [] });
-                setDiseaseList(Array.isArray(result.diseaseList) ? result.diseaseList : []); // อัพเดทรายการโรค
+                // หมายเหตุ: ไม่ต้อง setDiseaseList ที่นี่ เพราะดึงจาก /api/common/diseases แล้ว
             } else {
                 showError(result.message);
             }
@@ -154,11 +167,34 @@ export default function DiseaseReportsPage() {
         console.log('Selected session:', selectedSession);
         console.log('Session ID:', selectedSession.id);
 
-        // ถ้าเลือก "อื่นๆ" ให้ใช้ชื่อโรคที่กรอกเอง
+        // ถ้าเลือก "อื่นๆ" ให้ใช้ชื่อโรคที่กรอกเอง และเพิ่มเข้า database
+        let diseaseName = formData.disease_name;
+        if (showOtherInput && customDisease.trim()) {
+            diseaseName = customDisease.trim();
+            // เพิ่มโรคใหม่เข้า database (ถ้ายังไม่มี)
+            try {
+                const addDiseaseRes = await fetch('/api/common/diseases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: diseaseName })
+                });
+                const addResult = await addDiseaseRes.json();
+                if (addResult.success) {
+                    console.log('Added new disease:', diseaseName);
+                    fetchDiseases(); // รีเฟรชรายการโรค
+                } else if (addResult.existing_name) {
+                    console.log('Disease already exists:', addResult.existing_name);
+                    diseaseName = addResult.existing_name; // ใช้ชื่อที่มีอยู่แล้ว
+                }
+            } catch (err) {
+                console.log('Could not add disease to database:', err);
+            }
+        }
+
         const submitData = {
             ...formData,
             session_id: selectedSession.id,
-            disease_name: showOtherInput ? customDisease.trim() : formData.disease_name,
+            disease_name: diseaseName,
             patient_count: parseInt(formData.patient_count) || 0
         };
 
@@ -359,7 +395,7 @@ export default function DiseaseReportsPage() {
 
     // สร้างตารางสรุปรายโรคแบบ 7 อำเภอ
     const getDistrictSummaryTable = () => {
-        const mainDistricts = ['สตูล', 'ควนโดน', 'ควนกาหลง', 'ท่าแพ', 'ละงู', 'มะนัง', 'ทุ่งหว้า'];
+        const mainDistricts = ['เมืองสตูล', 'ควนโดน', 'ควนกาหลง', 'ท่าแพ', 'ละงู', 'มะนัง', 'ทุ่งหว้า'];
 
         // สร้าง object สำหรับเก็บข้อมูลแต่ละโรค แต่ละอำเภอ
         const diseaseData = {};
