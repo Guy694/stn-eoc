@@ -57,6 +57,8 @@ export default function ReportIncidentPage() {
         affectedPeople: '',
         urgency: 'medium',
         travelStatus: '', // สถานะการสัญจร
+        reportType: 'help_request', // ประเภทรายงาน
+        disasterType: 'flood', // ประเภทภัย
         occurredAt: '',
         photo: null
     });
@@ -233,6 +235,8 @@ export default function ReportIncidentPage() {
                     affectedPeople: '',
                     urgency: 'medium',
                     travelStatus: '',
+                    reportType: 'help_request',
+                    disasterType: 'flood',
                     occurredAt: new Date().toISOString().slice(0, 16),
                     photo: null
                 });
@@ -316,6 +320,65 @@ export default function ReportIncidentPage() {
                                 <li>• ระบุระดับน้ำและจำนวนผู้ประสบภัย (ถ้าทราบ)</li>
                             </ul>
                         </div>
+                    </div>
+                </div>
+
+                {/* Report Type Selection */}
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 md:p-6 mb-4 md:mb-6 shadow-md">
+                    <h3 className="font-bold text-lg md:text-xl text-blue-900 mb-3 md:mb-4 flex items-center gap-2">
+                        <span className="text-2xl">📋</span>
+                        เลือกประเภทการแจ้ง
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        {/* Help Request */}
+                        <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, reportType: 'help_request' }))}
+                            className={`p-4 md:p-6 rounded-xl border-2 transition-all text-left ${formData.reportType === 'help_request'
+                                ? 'border-red-500 bg-red-50 shadow-lg scale-105'
+                                : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50'
+                                }`}
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className="text-4xl md:text-5xl">🆘</div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-base md:text-lg text-red-700 mb-1">แจ้งความช่วยเหลือ</h4>
+                                    <p className="text-xs md:text-sm text-gray-600">
+                                        สำหรับผู้ประสบภัยที่ต้องการความช่วยเหลือ เช่น ขอเสบียง อาหาร น้ำดื่ม หรือขอการอพยพ
+                                    </p>
+                                    {formData.reportType === 'help_request' && (
+                                        <div className="mt-2 text-xs md:text-sm text-red-600 font-semibold flex items-center gap-1">
+                                            <span>✓</span> เลือกแล้ว
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </button>
+
+                        {/* Traffic Report */}
+                        <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, reportType: 'traffic_report' }))}
+                            className={`p-4 md:p-6 rounded-xl border-2 transition-all text-left ${formData.reportType === 'traffic_report'
+                                ? 'border-orange-500 bg-orange-50 shadow-lg scale-105'
+                                : 'border-gray-300 bg-white hover:border-orange-300 hover:bg-orange-50'
+                                }`}
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className="text-4xl md:text-5xl">🚧</div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-base md:text-lg text-orange-700 mb-1">แจ้งเส้นทางการจราจร</h4>
+                                    <p className="text-xs md:text-sm text-gray-600">
+                                        สำหรับรายงานสภาพถนน เส้นทางปิด หรือสถานการณ์การจราจรที่ได้รับผลกระทบ
+                                    </p>
+                                    {formData.reportType === 'traffic_report' && (
+                                        <div className="mt-2 text-xs md:text-sm text-orange-600 font-semibold flex items-center gap-1">
+                                            <span>✓</span> เลือกแล้ว
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </button>
                     </div>
                 </div>
 

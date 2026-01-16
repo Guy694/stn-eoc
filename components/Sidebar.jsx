@@ -124,19 +124,19 @@ export default function Sidebar() {
             ],
         },
 
-        {
-            title: "🚗 EOC อุบัติเหตุช่วงเทศกาล",
-            section: "eoc-accident",
-            key: "accident",
-            eocType: "accident",
-            collapsible: true,
-            requiresPermission: null,
-            items: [
-                { name: "แผนที่และสถานการณ์", path: "/eoc/accident", icon: "📊", description: "ภาพรวมสถานการณ์อุบัติเหตุ 7 วันอันตราย" },
-                { name: "บันทึกอุบัติเหตุ", path: "/eoc/accident/records", icon: "🚗", description: "บันทึกข้อมูลอุบัติเหตุ" },
-                { name: "จุดบริการชั่วคราว", path: "/eoc/accident/service-points", icon: "🚧", description: "จัดการจุดตรวจ/จุดบริการ" },
-            ],
-        },
+        // {
+        //     title: "🚗 EOC อุบัติเหตุช่วงเทศกาล",
+        //     section: "eoc-accident",
+        //     key: "accident",
+        //     eocType: "accident",
+        //     collapsible: true,
+        //     requiresPermission: null,
+        //     items: [
+        //         { name: "แผนที่และสถานการณ์", path: "/eoc/accident", icon: "📊", description: "ภาพรวมสถานการณ์อุบัติเหตุ 7 วันอันตราย" },
+        //         { name: "บันทึกอุบัติเหตุ", path: "/eoc/accident/records", icon: "🚗", description: "บันทึกข้อมูลอุบัติเหตุ" },
+        //         { name: "จุดบริการชั่วคราว", path: "/eoc/accident/service-points", icon: "🚧", description: "จัดการจุดตรวจ/จุดบริการ" },
+        //     ],
+        // },
 
         // {
         //     title: "🌊 EOC สึนามิ",
@@ -164,18 +164,18 @@ export default function Sidebar() {
         //     ],
         // },
 
-        {
-            title: "🦠 EOC โรคระบาด",
-            section: "eoc-disease",
-            key: "disease",
-            eocType: "disease",
-            collapsible: true,
-            requiresPermission: null,
-            items: [
-                { name: "แผนที่และสถานการณ์", path: "/eoc/disease", icon: "📊", description: "ภาพรวมการระบาด" },
-                { name: "รายงานผู้ป่วย", path: "/eoc/disease/reports", icon: "📋", description: "สถิติผู้ป่วยรายวัน" },
-            ],
-        },
+        // {
+        //     title: "🦠 EOC โรคระบาด",
+        //     section: "eoc-disease",
+        //     key: "disease",
+        //     eocType: "disease",
+        //     collapsible: true,
+        //     requiresPermission: null,
+        //     items: [
+        //         { name: "แผนที่และสถานการณ์", path: "/eoc/disease", icon: "📊", description: "ภาพรวมการระบาด" },
+        //         { name: "รายงานผู้ป่วย", path: "/eoc/disease/reports", icon: "📋", description: "สถิติผู้ป่วยรายวัน" },
+        //     ],
+        // },
 
         // ============================================
         // 3. ADMIN MANAGEMENT - เฉพาะ Admin

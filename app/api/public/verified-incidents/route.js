@@ -52,6 +52,8 @@ export async function GET(request) {
                 water_level,
                 affected_people,
                 urgency,
+                travel_status,
+                report_type,
                 occurred_at,
                 disaster_type,
                 photo_path,

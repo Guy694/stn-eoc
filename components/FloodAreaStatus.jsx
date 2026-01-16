@@ -791,7 +791,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </div>
 
                         {/* Map */}
-                        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6" style={{ height: '1100px' }}>
+                        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6" style={{ height: '600px' }}>
                             {isMounted && !loading && polygons && (
                                 <MapContainer
                                     key={`tambon-map-${selectedDate?.getTime() || 'default'}`}

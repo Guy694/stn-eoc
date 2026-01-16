@@ -489,10 +489,55 @@ export default function IncidentReportsPage() {
                                                 <span className="text-sm text-gray-600">ประเภทภัย:</span>
                                                 <p className="font-medium text-gray-600">{DISASTER_TYPES[selectedReport.disaster_type] || selectedReport.disaster_type}</p>
                                             </div>
+                                            {selectedReport.report_type && (
+                                                <div>
+                                                    <span className="text-sm text-gray-600">ประเภทรายงาน:</span>
+                                                    <p className="font-medium text-gray-600">
+                                                        {selectedReport.report_type === 'help_request' ? '🆘 แจ้งความช่วยเหลือ' : '🚧 แจ้งเส้นทางการจราจร'}
+                                                    </p>
+                                                </div>
+                                            )}
                                             <div>
                                                 <span className="text-sm text-gray-600">รายละเอียด:</span>
                                                 <p className="font-medium text-gray-600">{selectedReport.description}</p>
                                             </div>
+                                            {selectedReport.water_level && (
+                                                <div>
+                                                    <span className="text-sm text-gray-600">ระดับน้ำ:</span>
+                                                    <p className="font-medium text-gray-600">{selectedReport.water_level} ซม.</p>
+                                                </div>
+                                            )}
+                                            {selectedReport.affected_people && (
+                                                <div>
+                                                    <span className="text-sm text-gray-600">ผู้ได้รับผลกระทบ:</span>
+                                                    <p className="font-medium text-gray-600">{selectedReport.affected_people} คน</p>
+                                                </div>
+                                            )}
+                                            {selectedReport.urgency && (
+                                                <div>
+                                                    <span className="text-sm text-gray-600">ความเร่งด่วน:</span>
+                                                    <p className={`font-medium ${selectedReport.urgency === 'critical' ? 'text-red-600' :
+                                                        selectedReport.urgency === 'high' ? 'text-orange-600' :
+                                                            selectedReport.urgency === 'medium' ? 'text-yellow-600' :
+                                                                'text-blue-600'
+                                                        }`}>
+                                                        {selectedReport.urgency === 'critical' ? 'เร่งด่วนมาก' :
+                                                            selectedReport.urgency === 'high' ? 'เร่งด่วน' :
+                                                                selectedReport.urgency === 'medium' ? 'ปานกลาง' :
+                                                                    'ไม่เร่งด่วน'}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {selectedReport.travel_status && (
+                                                <div>
+                                                    <span className="text-sm text-gray-600">สถานะการสัญจร:</span>
+                                                    <p className="font-medium text-gray-600">
+                                                        {selectedReport.travel_status === 'passable' ? '✅ สัญจรได้ปกติ' :
+                                                            selectedReport.travel_status === 'difficult' ? '⚠️ สัญจรได้ยากลำบาก' :
+                                                                '🚫 ไม่สามารถสัญจรได้'}
+                                                    </p>
+                                                </div>
+                                            )}
                                             <div>
                                                 <span className="text-sm text-gray-600">สถานที่:</span>
                                                 <p className="font-medium text-gray-600">หมู่บ้าน {selectedReport.village || '-'} ตำบล {selectedReport.sub_district || '-'} อำเภอ {selectedReport.district || '-'}</p>
@@ -503,6 +548,12 @@ export default function IncidentReportsPage() {
                                                     {selectedReport.latitude}, {selectedReport.longitude}
                                                 </p>
                                             </div>
+                                            {selectedReport.occurred_at && (
+                                                <div>
+                                                    <span className="text-sm text-gray-600">วันเวลาที่เกิดเหตุ:</span>
+                                                    <p className="font-medium text-gray-600">{new Date(selectedReport.occurred_at).toLocaleString('th-TH')}</p>
+                                                </div>
+                                            )}
                                             <div>
                                                 <span className="text-sm text-gray-600">วันที่รายงาน:</span>
                                                 <p className="font-medium text-gray-600">{new Date(selectedReport.created_at).toLocaleString('th-TH')}</p>

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
 import SplashScreen from "@/components/SplashScreen";
+import AIChatbot from "@/components/AIChatbot";
+import PDPAConsent from "@/components/PDPAConsent";
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
@@ -668,11 +670,13 @@ export default function Home() {
           <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
         </div>
       </footer>
+
+      {/* AI Chatbot */}
+      <AIChatbot />
     </div>
   );
 }
 
-// Infographic Carousel Component
 // Infographic Carousel Component
 function InfographicCarousel({ infographics, eocType, lightMode = false }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -867,4 +871,7 @@ function QuickLinkCard({ icon, title, description, link, color = "gray" }) {
     </Link>
   );
 }
+
+{/* PDPA Consent */ }
+<PDPAConsent />
 

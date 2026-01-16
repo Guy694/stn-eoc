@@ -35,35 +35,93 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         'มะนัง': '#06B6D4'
     };
 
-    // สร้าง custom icon สำหรับแต่ละระดับความเร่งด่วน
+    // สร้าง custom icon สำหรับแต่ละระดับความเร่งด่วน และประเภทรายงาน
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const L = require('leaflet');
             const icons = {
-                low: L.icon({
+                // Help Request Icons (สีแดง)
+                help_request_low: L.icon({
                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                 }),
-                medium: L.icon({
+                help_request_medium: L.icon({
                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                 }),
-                high: L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                }),
-                critical: L.icon({
+                help_request_high: L.icon({
                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                }),
+                help_request_critical: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                    iconSize: [30, 49], iconAnchor: [15, 49], popupAnchor: [1, -42], shadowSize: [50, 50]
                 })
             };
             setCustomIcon(icons);
         }
     }, []);
+
+    // สร้าง custom divIcon สำหรับ traffic report ตามสถานะการสัญจร
+    const createTrafficIcon = (travelStatus) => {
+        if (typeof window === 'undefined') return null;
+        const L = require('leaflet');
+
+        let bgColor, icon, borderColor;
+
+        if (travelStatus === 'passable') {
+            bgColor = '#10B981'; // green
+            icon = '✅';
+            borderColor = '#059669';
+        } else if (travelStatus === 'difficult') {
+            bgColor = '#F59E0B'; // orange
+            icon = '⚠️';
+            borderColor = '#D97706';
+        } else {
+            bgColor = '#EF4444'; // red
+            icon = '🚫';
+            borderColor = '#DC2626';
+        }
+
+        return L.divIcon({
+            className: 'custom-traffic-icon',
+            html: `
+                <div style="
+                    background-color: ${bgColor};
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    border: 3px solid ${borderColor};
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 20px;
+                    position: relative;
+                ">
+                    ${icon}
+                    <div style="
+                        position: absolute;
+                        bottom: -8px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        width: 0;
+                        height: 0;
+                        border-left: 8px solid transparent;
+                        border-right: 8px solid transparent;
+                        border-top: 8px solid ${borderColor};
+                    "></div>
+                </div>
+            `,
+            iconSize: [40, 48],
+            iconAnchor: [20, 48],
+            popupAnchor: [0, -48]
+        });
+    };
 
     useEffect(() => { fetchIncidents(); }, [disasterType, startDate, endDate]);
 
@@ -121,6 +179,23 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
 
     const getUrgencyLabel = (urgency) => ({ low: 'ไม่เร่งด่วน', medium: 'ปานกลาง', high: 'เร่งด่วน', critical: 'เร่งด่วนมาก' }[urgency] || urgency);
     const getUrgencyColor = (urgency) => ({ low: 'text-blue-600', medium: 'text-yellow-600', high: 'text-orange-600', critical: 'text-red-600' }[urgency] || 'text-gray-600');
+    const getReportTypeLabel = (reportType) => ({ help_request: 'แจ้งความช่วยเหลือ', traffic_report: 'แจ้งเส้นทางการจราจร' }[reportType] || reportType);
+    const getReportTypeIcon = (reportType) => ({ help_request: '🆘', traffic_report: '🚧' }[reportType] || '📍');
+
+    // สร้าง icon key จาก report_type และ urgency
+    const getMarkerIcon = (incident) => {
+        const reportType = incident.report_type || 'help_request';
+
+        // ถ้าเป็น traffic report ให้ใช้ icon ตามสถานะการสัญจร
+        if (reportType === 'traffic_report') {
+            return createTrafficIcon(incident.travel_status);
+        }
+
+        // ถ้าเป็น help request ให้ใช้ icon ตามความเร่งด่วน
+        const urgency = incident.urgency || 'medium';
+        const iconKey = `${reportType}_${urgency}`;
+        return customIcon?.[iconKey] || undefined;
+    };
 
     // Create label icon
     const createLabelIcon = (text, type = 'district') => {
@@ -213,6 +288,36 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                     </div>
                 )}
 
+                {/* Report Type Legend */}
+                <div className="mb-4 bg-white p-3 rounded-lg shadow">
+                    <label className="text-sm font-medium block mb-2">📋 ประเภทรายงาน:</label>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                            <span className="text-sm">🆘 แจ้งความช่วยเหลือ (สีตามความเร่งด่วน)</span>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-semibold">🚧 แจ้งเส้นทางการจราจร (สัญลักษณ์ตามสถานะ):</span>
+                            </div>
+                            <div className="ml-4 space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg">✅</span>
+                                    <span className="text-xs">สัญจรได้ปกติ</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg">⚠️</span>
+                                    <span className="text-xs">สัญจรได้ยากลำบาก</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg">🚫</span>
+                                    <span className="text-xs">ไม่สามารถสัญจรได้</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Urgency Legend */}
                 <div className="mb-4 flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2"><div className="w-4 h-4 bg-blue-500 rounded-full"></div><span>ไม่เร่งด่วน</span></div>
@@ -235,7 +340,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                 <div key={`district-${idx}`}>
                                     <GeoJSON
                                         data={item.geojson}
-                                        style={{ color: color, weight: 3, fillColor: color, fillOpacity: 0.2 }}
+                                        style={{ color: color, weight: 1, fillColor: color, fillOpacity: 0.1 }}
                                         onEachFeature={(feature, layer) => {
                                             layer.bindPopup(`<div class="text-center"><strong class="text-lg">อ.${item.name}</strong></div>`);
                                         }}
@@ -287,17 +392,22 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                             <Marker
                                 key={incident.id}
                                 position={[parseFloat(incident.latitude), parseFloat(incident.longitude)]}
-                                icon={customIcon?.[incident.urgency] || undefined}
+                                icon={getMarkerIcon(incident)}
                             >
                                 <Popup maxWidth={300}>
                                     <div className="p-2">
-                                        <h4 className="font-bold text-gray-800 mb-2">รายงานจาก: {incident.first_name} {incident.last_name}</h4>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-2xl">{getReportTypeIcon(incident.report_type)}</span>
+                                            <h4 className="font-bold text-gray-800">{getReportTypeLabel(incident.report_type)}</h4>
+                                        </div>
+                                        <h5 className="font-semibold text-gray-700 mb-2">รายงานจาก: {incident.first_name} {incident.last_name}</h5>
                                         <div className="space-y-1 text-sm">
                                             <p><strong>สถานที่:</strong> {incident.village || '-'}, ต.{incident.sub_district || '-'}, อ.{incident.district || '-'}</p>
                                             <p><strong>โทร:</strong> {incident.phone}</p>
                                             <p className={getUrgencyColor(incident.urgency)}><strong>ความเร่งด่วน:</strong> {getUrgencyLabel(incident.urgency)}</p>
                                             <p><strong>ระดับน้ำ:</strong> {incident.water_level}</p>
                                             {incident.affected_people > 0 && <p><strong>ผู้ได้รับผลกระทบ:</strong> {incident.affected_people} คน</p>}
+                                            {incident.travel_status && <p><strong>สถานะการสัญจร:</strong> {incident.travel_status === 'passable' ? '✅ สัญจรได้ปกติ' : incident.travel_status === 'difficult' ? '⚠️ สัญจรได้ยากลำบาก' : '🚫 ไม่สามารถสัญจรได้'}</p>}
                                             <p><strong>เวลาเกิดเหตุ:</strong> {formatDate(incident.occurred_at)}</p>
                                             <p className="pt-2 border-t"><strong>รายละเอียด:</strong><br />{incident.description}</p>
                                             {incident.photo_path && (

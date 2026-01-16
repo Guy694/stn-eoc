@@ -19,6 +19,8 @@ export async function POST(request) {
         const affectedPeople = formData.get('affectedPeople') || null;
         const urgency = formData.get('urgency') || 'medium';
         const travelStatus = formData.get('travelStatus') || null; // สถานะการสัญจร
+        const reportType = formData.get('reportType') || 'help_request'; // ประเภทรายงาน
+        const disasterType = formData.get('disasterType') || 'flood'; // ประเภทภัย
         const occurredAt = formData.get('occurredAt') || new Date().toISOString();
         const latitude = formData.get('latitude');
         const longitude = formData.get('longitude');
@@ -29,6 +31,14 @@ export async function POST(request) {
             return NextResponse.json({
                 success: false,
                 message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน'
+            }, { status: 400 });
+        }
+
+        // Validate report_type
+        if (reportType !== 'help_request' && reportType !== 'traffic_report') {
+            return NextResponse.json({
+                success: false,
+                message: 'ประเภทรายงานไม่ถูกต้อง'
             }, { status: 400 });
         }
 
@@ -68,9 +78,9 @@ export async function POST(request) {
         const [result] = await pool.execute(
             `INSERT INTO public_incident_reports 
             (first_name, last_name, phone, village, sub_district, district, 
-             description, water_level, affected_people, urgency, travel_status, occurred_at, 
+             description, water_level, affected_people, urgency, travel_status, report_type, disaster_type, occurred_at, 
              latitude, longitude, photo_path, status, reported_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
             [
                 firstName,
                 lastName,
@@ -83,6 +93,8 @@ export async function POST(request) {
                 affectedPeople,
                 urgency,
                 travelStatus,
+                reportType,
+                disasterType,
                 occurredAt,
                 latitude,
                 longitude,

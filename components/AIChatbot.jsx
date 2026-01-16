@@ -1,0 +1,247 @@
+"use client";
+import { useState, useRef, useEffect } from 'react';
+
+export default function AIChatbot() {
+    const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [inputMessage, setInputMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const messagesEndRef = useRef(null);
+
+    // Sample questions
+    const sampleQuestions = [
+        "มี EOC กี่ประเภท?",
+        "มีผู้ป่วยกี่คนในระบบ?",
+        "แสดงข้อมูลน้ำท่วมล่าสุด",
+        "มีกี่ตำบลในจังหวัดสตูล?"
+    ];
+
+    // Scroll to bottom when new messages arrive
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    // Load conversation history from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('chatbot_history');
+        if (saved) {
+            try {
+                setMessages(JSON.parse(saved));
+            } catch (e) {
+                console.error('Failed to load chat history:', e);
+            }
+        }
+    }, []);
+
+    // Save conversation history to localStorage
+    useEffect(() => {
+        if (messages.length > 0) {
+            localStorage.setItem('chatbot_history', JSON.stringify(messages));
+        }
+    }, [messages]);
+
+    const sendMessage = async (text = inputMessage) => {
+        if (!text.trim() || isLoading) return;
+
+        const userMessage = {
+            role: 'user',
+            content: text,
+            timestamp: new Date().toISOString()
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setInputMessage('');
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/chatbot/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: text,
+                    conversationHistory: messages.slice(-5) // Send last 5 messages for context
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const aiMessage = {
+                    role: 'assistant',
+                    content: data.data.answer,
+                    sql: data.data.sql,
+                    resultCount: data.data.resultCount,
+                    timestamp: new Date().toISOString()
+                };
+                setMessages(prev => [...prev, aiMessage]);
+            } else {
+                const errorMessage = {
+                    role: 'assistant',
+                    content: `❌ เกิดข้อผิดพลาด: ${data.message || data.error}`,
+                    timestamp: new Date().toISOString(),
+                    isError: true
+                };
+                setMessages(prev => [...prev, errorMessage]);
+            }
+        } catch (error) {
+            console.error('Chatbot error:', error);
+            const errorMessage = {
+                role: 'assistant',
+                content: '❌ ไม่สามารถเชื่อมต่อกับ AI ได้ กรุณาลองใหม่อีกครั้ง',
+                timestamp: new Date().toISOString(),
+                isError: true
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    };
+
+    const clearHistory = () => {
+        setMessages([]);
+        localStorage.removeItem('chatbot_history');
+    };
+
+    return (
+        <>
+            {/* Floating Bubble Button */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 z-50 ${isOpen
+                    ? 'bg-red-600 hover:bg-red-700 rotate-90'
+                    : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 animate-pulse'
+                    }`}
+                aria-label={isOpen ? 'ปิด chatbot' : 'เปิด chatbot'}
+            >
+                {isOpen ? (
+                    <span className="text-3xl text-white">✕</span>
+                ) : (
+                    <span className="text-3xl">🤖</span>
+                )}
+            </button>
+
+            {/* Chat Interface */}
+            {isOpen && (
+                <div className="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                <span className="text-2xl">🤖</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg">EOC AI Assistant</h3>
+                                <p className="text-xs text-green-100">ผู้ช่วยตอบคำถามข้อมูล EOC</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={clearHistory}
+                            className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10 transition-colors"
+                            title="ล้างประวัติการสนทนา"
+                        >
+                            🗑️
+                        </button>
+                    </div>
+
+                    {/* Messages Area */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                        {messages.length === 0 && (
+                            <div className="text-center py-8">
+                                <div className="text-6xl mb-4">👋</div>
+                                <p className="text-gray-600 mb-4">สวัสดีครับ! ผมสามารถช่วยตอบคำถามเกี่ยวกับข้อมูลในระบบ EOC ได้</p>
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-500 font-semibold">ตัวอย่างคำถาม:</p>
+                                    {sampleQuestions.map((q, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => sendMessage(q)}
+                                            className="block w-full text-left text-sm bg-white hover:bg-green-50 text-gray-700 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-300 transition-colors"
+                                        >
+                                            💬 {q}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {messages.map((msg, idx) => (
+                            <div
+                                key={idx}
+                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
+                                        ? 'bg-green-600 text-white rounded-br-none'
+                                        : msg.isError
+                                            ? 'bg-red-50 text-red-800 border border-red-200 rounded-bl-none'
+                                            : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
+                                        }`}
+                                >
+                                    <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                                    <div className="text-xs opacity-60 mt-1">
+                                        {new Date(msg.timestamp).toLocaleTimeString('th-TH', {
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+
+                        {isLoading && (
+                            <div className="flex justify-start">
+                                <div className="bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex gap-1">
+                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                        </div>
+                                        <span className="text-sm text-gray-600">กำลังคิด...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Input Area */}
+                    <div className="p-4 bg-white border-t border-gray-200 rounded-b-2xl">
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={inputMessage}
+                                onChange={(e) => setInputMessage(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                placeholder="พิมพ์คำถามของคุณ..."
+                                disabled={isLoading}
+                                className="text-gray-600 flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            />
+                            <button
+                                onClick={() => sendMessage()}
+                                disabled={!inputMessage.trim() || isLoading}
+                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                <span>ส่ง</span>
+                                <span>📤</span>
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                            💡 ลองถามเกี่ยวกับข้อมูล EOC, ผู้ป่วย, น้ำท่วม, หรืออุบัติเหตุ
+                        </p>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}

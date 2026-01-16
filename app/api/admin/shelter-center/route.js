@@ -211,6 +211,7 @@ export async function DELETE(request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
+        const force = searchParams.get('force') === 'true'; // ลบแบบบังคับพร้อมข้อมูลที่เกี่ยวข้อง
 
         if (!id) {
             return NextResponse.json(
@@ -220,16 +221,113 @@ export async function DELETE(request) {
         }
 
         const pool = await getConnection();
-        await pool.query('DELETE FROM shelter_centers WHERE id = ?', [id]);
+
+        let activationsCount = 0;
+        let diseaseReportsCount = 0;
+
+        // ตรวจสอบว่ามีการใช้งานศูนย์พักพิงนี้อยู่หรือไม่ (ถ้าตารางมีอยู่)
+        try {
+            const [activations] = await pool.query(
+                'SELECT COUNT(*) as count FROM shelter_activations WHERE shelter_id = ?',
+                [id]
+            );
+            activationsCount = activations[0].count;
+        } catch (error) {
+            // ถ้าตารางไม่มี ให้ข้ามไป
+            if (!error.message.includes("doesn't exist")) {
+                throw error; // ถ้าเป็น error อื่นให้ throw ต่อ
+            }
+        }
+
+        // ตรวจสอบว่ามีข้อมูลโรคระบาดที่เกี่ยวข้องหรือไม่ (ถ้าตารางมีอยู่)
+        try {
+            const [diseaseReports] = await pool.query(
+                'SELECT COUNT(*) as count FROM shelter_disease_reports WHERE shelter_id = ?',
+                [id]
+            );
+            diseaseReportsCount = diseaseReports[0].count;
+        } catch (error) {
+            // ถ้าตารางไม่มี ให้ข้ามไป
+            if (!error.message.includes("doesn't exist")) {
+                throw error; // ถ้าเป็น error อื่นให้ throw ต่อ
+            }
+        }
+
+        const hasRelatedData = activationsCount > 0 || diseaseReportsCount > 0;
+
+        // ถ้ามีข้อมูลที่เกี่ยวข้องและไม่ได้เลือก force delete
+        if (hasRelatedData && !force) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    needsConfirmation: true,
+                    message: `ศูนย์พักพิงนี้มีข้อมูลที่เกี่ยวข้อง:\n- การใช้งาน: ${activationsCount} ครั้ง\n- รายงานโรค: ${diseaseReportsCount} รายการ\n\nต้องการลบพร้อมข้อมูลที่เกี่ยวข้องทั้งหมดหรือไม่?`,
+                    relatedData: {
+                        activations: activationsCount,
+                        diseaseReports: diseaseReportsCount
+                    }
+                },
+                { status: 400 }
+            );
+        }
+
+        // ถ้าเลือก force delete ให้ลบข้อมูลที่เกี่ยวข้องก่อน
+        if (force && hasRelatedData) {
+            // ลบรายงานโรคก่อน (ถ้าตารางมีอยู่)
+            if (diseaseReportsCount > 0) {
+                try {
+                    await pool.query('DELETE FROM shelter_disease_reports WHERE shelter_id = ?', [id]);
+                } catch (error) {
+                    if (!error.message.includes("doesn't exist")) {
+                        throw error;
+                    }
+                }
+            }
+
+            // ลบการใช้งาน (ถ้าตารางมีอยู่)
+            if (activationsCount > 0) {
+                try {
+                    await pool.query('DELETE FROM shelter_activations WHERE shelter_id = ?', [id]);
+                } catch (error) {
+                    if (!error.message.includes("doesn't exist")) {
+                        throw error;
+                    }
+                }
+            }
+        }
+
+        // ลบศูนย์พักพิง
+        const [result] = await pool.query('DELETE FROM shelter_centers WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return NextResponse.json(
+                { success: false, message: 'ไม่พบข้อมูลที่ต้องการลบ' },
+                { status: 404 }
+            );
+        }
 
         return NextResponse.json({
             success: true,
-            message: 'ลบข้อมูลสำเร็จ'
+            message: force
+                ? 'ลบศูนย์พักพิงและข้อมูลที่เกี่ยวข้องทั้งหมดสำเร็จ'
+                : 'ลบข้อมูลสำเร็จ'
         });
     } catch (error) {
         console.error('Delete shelter center error:', error);
+
+        // จัดการ error จาก foreign key constraint
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'ไม่สามารถลบได้ เนื่องจากศูนย์พักพิงนี้ถูกใช้งานอยู่ในระบบ กรุณาลบข้อมูลที่เกี่ยวข้องก่อน'
+                },
+                { status: 400 }
+            );
+        }
+
         return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการลบข้อมูล', error: error.message },
+            { success: false, message: 'เกิดข้อผิดพลาดในการลบข้อมูล: ' + error.message, error: error.message },
             { status: 500 }
         );
     }

@@ -243,31 +243,50 @@ export default function ShelterCenterPage() {
         setShowModal(true);
     };
 
-    const handleDelete = async (center) => {
-        const result = await showConfirm(
-            'ยืนยันการลบ',
-            `คุณต้องการลบศูนย์พักพิง "${center.sheltername}" ใช่หรือไม่?`,
-            'warning'
-        );
+    const handleDelete = async (center, forceDelete = false) => {
+        // ถ้ายังไม่ได้ force delete ให้แสดง confirm ปกติก่อน
+        if (!forceDelete) {
+            const result = await showConfirm(
+                'warning',
+                `คุณต้องการลบศูนย์พักพิง "${center.sheltername}" ใช่หรือไม่?`,
+                'ยืนยันการลบ'
+            );
 
-        if (result.isConfirmed) {
-            try {
-                const response = await fetch(`/api/admin/shelter-center?id=${center.id}`, {
-                    method: 'DELETE'
-                });
+            if (!result.isConfirmed) return;
+        }
 
-                const result = await response.json();
+        try {
+            const url = forceDelete
+                ? `/api/admin/shelter-center?id=${center.id}&force=true`
+                : `/api/admin/shelter-center?id=${center.id}`;
 
-                if (result.success) {
-                    showSuccess('ลบข้อมูลสำเร็จ');
-                    fetchShelterCenters();
-                } else {
-                    showError(result.message || 'ไม่สามารถลบข้อมูลได้');
+            const response = await fetch(url, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showSuccess(result.message || 'ลบข้อมูลสำเร็จ');
+                fetchShelterCenters();
+            } else if (result.needsConfirmation) {
+                // ถ้ามีข้อมูลที่เกี่ยวข้อง ให้ถามว่าต้องการลบพร้อมข้อมูลที่เกี่ยวข้องหรือไม่
+                const confirmResult = await showConfirm(
+                    '⚠️ พบข้อมูลที่เกี่ยวข้อง',
+                    result.message,
+                    'warning'
+                );
+
+                if (confirmResult.isConfirmed) {
+                    // เรียกอีกครั้งด้วย force=true
+                    handleDelete(center, true);
                 }
-            } catch (error) {
-                console.error('Delete error:', error);
-                showError('เกิดข้อผิดพลาดในการลบข้อมูล');
+            } else {
+                showError(result.message || 'ไม่สามารถลบข้อมูลได้');
             }
+        } catch (error) {
+            console.error('Delete error:', error);
+            showError('เกิดข้อผิดพลาดในการลบข้อมูล');
         }
     };
 

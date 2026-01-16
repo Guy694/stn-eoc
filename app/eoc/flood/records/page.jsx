@@ -689,13 +689,13 @@ export default function FloodRecordsPage() {
                     </div>
 
                     {/* Debug Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-4 text-xs">
+                    {/* <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-4 text-xs">
                         <div className="font-mono">
                             Debug: Records={records.length}, Polygons={polygons.length},
                             Complete={getCompletedTambons().length},
                             Incomplete={getUnrecordedTambons().length}
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* ตำบลที่บันทึกครบแล้ว (สีเขียว) */}
                     {getCompletedTambons().length > 0 && (

@@ -9,26 +9,26 @@ export default function Footer() {
                         <p className="text-xs sm:text-sm mt-2">ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน จังหวัดสตูล</p>
                     </div>
                     <div>
-                        <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ติดต่อเรา</h4>
+                        {/* <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ติดต่อเรา</h4>
                         <p className="text-xs sm:text-sm">โทร: ..........</p>
-                        <p className="text-xs sm:text-sm">อีเมล: .............</p>
+                        <p className="text-xs sm:text-sm">อีเมล: .............</p> */}
 
                     </div>
                     <div className="sm:col-span-2 lg:col-span-1">
                         <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ลิงก์ที่เกี่ยวข้อง</h4>
                         <ul className="text-xs sm:text-sm space-y-1">
-                            <li> 
-                                <a href="#" className="hover:text-white transition-colors">
-                                    กรมป้องกันและบรรเทาสาธารณภัย
+                            <li>
+                                <a href="https://satun.moph.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                                    สำนักงานสาธารณสุขจังหวัดสตูล
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-white transition-colors">
-                                    กระทรวงมหาดไทย
+                                <a href="https://www.moph.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                                    กระทรวงสาธารณสุข
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-white transition-colors">
+                                <a href="https://www.tmd.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                                     กรมอุตุนิยมวิทยา
                                 </a>
                             </li>
