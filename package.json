@@ -20,7 +20,8 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.0",
     "react-leaflet": "^5.0.0",
-    "sweetalert2": "^11.26.17"
+    "sweetalert2": "^11.26.17",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,0 +1,462 @@
+{
+  "total_tables": 26,
+  "tables": {
+    "active_sessions": {
+      "column_count": 15,
+      "foreign_keys": [
+        {
+          "column": "user_id",
+          "references_table": "officer",
+          "references_column": "id"
+        },
+        {
+          "column": "eoc_session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        },
+        {
+          "column": "eoc_session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        },
+        {
+          "column": "user_id",
+          "references_table": "officer",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "affected_persons": {
+      "column_count": 13,
+      "foreign_keys": [
+        {
+          "column": "reported_by",
+          "references_table": "officer",
+          "references_column": "id"
+        },
+        {
+          "column": "session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "affected_persons_cumulative_summary": {
+      "column_count": 16,
+      "foreign_keys": [
+        {
+          "column": "session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "disease_cumulative_summary": {
+      "column_count": 11,
+      "foreign_keys": [
+        {
+          "column": "health_facility_id",
+          "references_table": "health_facilities",
+          "references_column": "id"
+        },
+        {
+          "column": "reported_by",
+          "references_table": "officer",
+          "references_column": "id"
+        },
+        {
+          "column": "session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "disease_summary_by_district": {
+      "column_count": 9,
+      "foreign_keys": [],
+      "referenced_by": []
+    },
+    "eoc_sessions": {
+      "column_count": 18,
+      "foreign_keys": [
+        {
+          "column": "opened_by",
+          "references_table": "officer",
+          "references_column": "id"
+        },
+        {
+          "column": "closed_by",
+          "references_table": "officer",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": [
+        {
+          "table": "active_sessions",
+          "column": "eoc_session_id"
+        },
+        {
+          "table": "eoc_session_teams",
+          "column": "eoc_session_id"
+        },
+        {
+          "table": "shelter_occupancy",
+          "column": "eoc_session_id"
+        },
+        {
+          "table": "active_sessions",
+          "column": "eoc_session_id"
+        },
+        {
+          "table": "eoc_session_teams",
+          "column": "eoc_session_id"
+        },
+        {
+          "table": "shelter_occupancy",
+          "column": "eoc_session_id"
+        },
+        {
+          "table": "affected_persons",
+          "column": "session_id"
+        },
+        {
+          "table": "affected_persons_cumulative_summary",
+          "column": "session_id"
+        },
+        {
+          "table": "disease_cumulative_summary",
+          "column": "session_id"
+        },
+        {
+          "table": "flood_records",
+          "column": "session_id"
+        },
+        {
+          "table": "vulnerable_groups",
+          "column": "session_id"
+        }
+      ]
+    },
+    "eoc_session_teams": {
+      "column_count": 10,
+      "foreign_keys": [
+        {
+          "column": "eoc_session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        },
+        {
+          "column": "eoc_session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        },
+        {
+          "column": "team_id",
+          "references_table": "eoc_teams",
+          "references_column": "id"
+        },
+        {
+          "column": "team_id",
+          "references_table": "eoc_teams",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": [
+        {
+          "table": "eoc_team_members",
+          "column": "session_team_id"
+        }
+      ]
+    },
+    "eoc_status": {
+      "column_count": 17,
+      "foreign_keys": [
+        {
+          "column": "activated_by",
+          "references_table": "officer",
+          "references_column": "id"
+        },
+        {
+          "column": "deactivated_by",
+          "references_table": "officer",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "eoc_teams": {
+      "column_count": 11,
+      "foreign_keys": [],
+      "referenced_by": [
+        {
+          "table": "eoc_session_teams",
+          "column": "team_id"
+        },
+        {
+          "table": "module_permissions",
+          "column": "team_id"
+        },
+        {
+          "table": "eoc_session_teams",
+          "column": "team_id"
+        },
+        {
+          "table": "module_permissions",
+          "column": "team_id"
+        }
+      ]
+    },
+    "eoc_team_members": {
+      "column_count": 12,
+      "foreign_keys": [
+        {
+          "column": "session_team_id",
+          "references_table": "eoc_session_teams",
+          "references_column": "id"
+        },
+        {
+          "column": "officer_id",
+          "references_table": "officer",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "eoc_type_modules": {
+      "column_count": 16,
+      "foreign_keys": [],
+      "referenced_by": [
+        {
+          "table": "module_permissions",
+          "column": "module_id"
+        }
+      ]
+    },
+    "facility_types": {
+      "column_count": 7,
+      "foreign_keys": [],
+      "referenced_by": []
+    },
+    "flood_records": {
+      "column_count": 21,
+      "foreign_keys": [
+        {
+          "column": "polygon_id",
+          "references_table": "satun_village_polygon",
+          "references_column": "id"
+        },
+        {
+          "column": "session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "health_facilities": {
+      "column_count": 13,
+      "foreign_keys": [],
+      "referenced_by": [
+        {
+          "table": "disease_cumulative_summary",
+          "column": "health_facility_id"
+        }
+      ]
+    },
+    "it_resources": {
+      "column_count": 18,
+      "foreign_keys": [],
+      "referenced_by": []
+    },
+    "login_attempts": {
+      "column_count": 5,
+      "foreign_keys": [],
+      "referenced_by": []
+    },
+    "module_permissions": {
+      "column_count": 10,
+      "foreign_keys": [
+        {
+          "column": "team_id",
+          "references_table": "eoc_teams",
+          "references_column": "id"
+        },
+        {
+          "column": "module_id",
+          "references_table": "eoc_type_modules",
+          "references_column": "id"
+        },
+        {
+          "column": "team_id",
+          "references_table": "eoc_teams",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "officer": {
+      "column_count": 26,
+      "foreign_keys": [],
+      "referenced_by": [
+        {
+          "table": "active_sessions",
+          "column": "user_id"
+        },
+        {
+          "table": "security_logs",
+          "column": "user_id"
+        },
+        {
+          "table": "user_sessions",
+          "column": "user_id"
+        },
+        {
+          "table": "affected_persons",
+          "column": "reported_by"
+        },
+        {
+          "table": "disease_cumulative_summary",
+          "column": "reported_by"
+        },
+        {
+          "table": "eoc_sessions",
+          "column": "opened_by"
+        },
+        {
+          "table": "eoc_sessions",
+          "column": "closed_by"
+        },
+        {
+          "table": "eoc_status",
+          "column": "activated_by"
+        },
+        {
+          "table": "eoc_status",
+          "column": "deactivated_by"
+        },
+        {
+          "table": "eoc_team_members",
+          "column": "officer_id"
+        },
+        {
+          "table": "active_sessions",
+          "column": "user_id"
+        },
+        {
+          "table": "security_logs",
+          "column": "user_id"
+        },
+        {
+          "table": "user_sessions",
+          "column": "user_id"
+        }
+      ]
+    },
+    "public_incident_reports": {
+      "column_count": 23,
+      "foreign_keys": [],
+      "referenced_by": []
+    },
+    "satun_village_polygon": {
+      "column_count": 22,
+      "foreign_keys": [],
+      "referenced_by": [
+        {
+          "table": "flood_records",
+          "column": "polygon_id"
+        }
+      ]
+    },
+    "security_logs": {
+      "column_count": 9,
+      "foreign_keys": [
+        {
+          "column": "user_id",
+          "references_table": "officer",
+          "references_column": "id"
+        },
+        {
+          "column": "user_id",
+          "references_table": "officer",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "shelter_centers": {
+      "column_count": 13,
+      "foreign_keys": [],
+      "referenced_by": [
+        {
+          "table": "shelter_occupancy",
+          "column": "shelter_id"
+        }
+      ]
+    },
+    "shelter_occupancy": {
+      "column_count": 7,
+      "foreign_keys": [
+        {
+          "column": "eoc_session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        },
+        {
+          "column": "eoc_session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        },
+        {
+          "column": "shelter_id",
+          "references_table": "shelter_centers",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "suspicious_activities": {
+      "column_count": 11,
+      "foreign_keys": [],
+      "referenced_by": []
+    },
+    "user_sessions": {
+      "column_count": 17,
+      "foreign_keys": [
+        {
+          "column": "user_id",
+          "references_table": "officer",
+          "references_column": "id"
+        },
+        {
+          "column": "user_id",
+          "references_table": "officer",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    },
+    "vulnerable_groups": {
+      "column_count": 17,
+      "foreign_keys": [
+        {
+          "column": "session_id",
+          "references_table": "eoc_sessions",
+          "references_column": "id"
+        }
+      ],
+      "referenced_by": []
+    }
+  },
+  "orphan_tables": [
+    "disease_summary_by_district",
+    "facility_types",
+    "it_resources",
+    "login_attempts",
+    "public_incident_reports",
+    "suspicious_activities"
+  ]
+}

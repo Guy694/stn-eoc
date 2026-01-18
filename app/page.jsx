@@ -224,8 +224,8 @@ export default function Home() {
           }
         ],
         quickActions: [
-          { icon: "🗺️", title: "แผนที่น้ำท่วม", link: "/eoc/flood", color: "blue" },
-          { icon: "🚨", title: "แจ้งเหตุน้ำท่วม", link: "/public/disaster-map", color: "red" },
+          { icon: "🗺️", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/disaster-map", color: "blue" },
+          { icon: "🚨", title: "แจ้งเหตุน้ำท่วม", link: "/public/report-incident", color: "red" },
           { icon: "🏘️", title: "จุดพักพิงฉุกเฉิน", link: "/eoc/village-map", color: "green" }
         ],
         stats: floodStats ? {
@@ -312,7 +312,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen bg-pattern">
       {/* Splash Screen */}
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
@@ -576,28 +576,6 @@ export default function Home() {
                 </div>
               </section >
 
-              {/* ข่าวประชาสัมพันธ์เฉพาะ EOC */}
-              < section className="mb-4 md:mb-6" >
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">📢 ข่าวสาร{getEOCTypeName(eoc.eoc_type)}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  {content.news.map((news, idx) => (
-                    <div key={idx} className="bg-white rounded-lg shadow-md p-4 md:p-5 hover:shadow-lg transition-shadow">
-                      <div className="flex items-start gap-2 md:gap-3">
-                        <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${news.type === 'warning' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
-                          }`}>
-                          <span className="text-xl md:text-2xl">{news.type === 'warning' ? '⚠️' : 'ℹ️'}</span>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-sm md:text-lg text-gray-800 mb-1">{news.title}</h3>
-                          <p className="text-xs md:text-sm text-gray-500 mb-1 md:mb-2">{news.date}</p>
-                          <p className="text-sm md:text-base text-gray-600">{news.content}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section >
-
               {/* Quick Access เฉพาะ EOC */}
               < section className="mb-4 md:mb-6" >
                 <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚀 เข้าถึงด่วน - {getEOCTypeName(eoc.eoc_type)}</h2>
@@ -618,23 +596,23 @@ export default function Home() {
           );
         })}
 
+
         {/* ถ้าไม่มี EOC เปิด แสดงข้อมูลทั่วไป */}
         {
           activeEOCs.length === 0 && !loading && (
             <>
-              {/* Quick Access ทั่วไป */}
+              {/* Quick Access ทั่วไป - แสดงเฉพาะแผนที่ภัยพิบัติ */}
               <section className="mb-6 md:mb-8">
                 <h2 className="text-xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6 px-1">🚀 เข้าถึงด่วน</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                   <QuickLinkCard icon="🗺️" title="แผนที่ภัยพิบัติ" description="ดูสถานการณ์ภัยพิบัติทั้งหมด" link="/public/disaster-map" color="blue" />
-                  <QuickLinkCard icon="💧" title="สถานการณ์น้ำท่วม" description="ข้อมูลน้ำท่วมรายวัน" link="/eoc/flood" color="cyan" />
-                  <QuickLinkCard icon="🚗" title="อุบัติเหตุ" description="7 วันอันตราย" link="/eoc/accident" color="orange" />
-                  <QuickLinkCard icon="🦠" title="โรคระบาด" description="สถานการณ์โรคระบาด" link="/eoc/disease" color="purple" />
+                  {/* EOC-specific items are hidden when no EOC is active */}
                 </div>
               </section>
             </>
           )
         }
+
 
         {/* Infographic Stats */}
         <section className="mb-8 hidden">

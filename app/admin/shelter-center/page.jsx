@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import ExportExcelButton from '@/components/ExportExcelButton';
 
 // Dynamic import for Map component
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
@@ -452,6 +453,23 @@ export default function ShelterCenterPage() {
                                 </option>
                             ))}
                         </select>
+                        <ExportExcelButton
+                            data={filteredCenters.map(center => ({
+                                'ID': center.id,
+                                'ประเภท EOC': getEocTypeLabel(center.eoc_type),
+                                'ชื่อศูนย์': center.sheltername,
+                                'ที่อยู่': center.address || '-',
+                                'อำเภอ': center.district_name || '-',
+                                'ตำบล': center.tambon || '-',
+                                'หมู่บ้าน': center.village || '-',
+                                'ละติจูด': center.lat || '-',
+                                'ลองจิจูด': center.lon || '-',
+                                'ความจุ (คน)': center.shelter_capacity || '-',
+                                'สถานะ': center.is_active === 1 ? 'เปิดใช้งาน' : 'ปิดใช้งาน'
+                            }))}
+                            filename="shelter_centers"
+                            sheetName="ศูนย์พักพิง"
+                        />
                         <button
                             onClick={() => {
                                 resetForm();

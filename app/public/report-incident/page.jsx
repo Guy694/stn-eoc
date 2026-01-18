@@ -44,10 +44,15 @@ export default function ReportIncidentPage() {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState('');
 
+    // ThaiID session
+    const [citizenSession, setCitizenSession] = useState(null);
+    const [checkingSession, setCheckingSession] = useState(true);
+
     // Form data
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        nationalId: '', // เลขบัตรประชาชน
         phone: '',
         village: '',
         subDistrict: '',
@@ -59,9 +64,12 @@ export default function ReportIncidentPage() {
         travelStatus: '', // สถานะการสัญจร
         reportType: 'help_request', // ประเภทรายงาน
         disasterType: 'flood', // ประเภทภัย
-        occurredAt: '',
-        photo: null
+        occurredAt: ''
     });
+
+    // Photos state (multiple photos)
+    const [photos, setPhotos] = useState([]);
+    const MAX_PHOTOS = 5;
 
     // Village autocomplete
     const [villages, setVillages] = useState([]);
@@ -91,7 +99,37 @@ export default function ReportIncidentPage() {
                 });
             });
         }
+
+        // Check for ThaiID session
+        async function checkSession() {
+            try {
+                const res = await fetch('/api/auth/citizen-thaiid/session');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.authenticated) {
+                        setCitizenSession(data.user);
+                    }
+                }
+            } catch (error) {
+                console.error('Session check failed:', error);
+            } finally {
+                setCheckingSession(false);
+            }
+        }
+        checkSession();
     }, []);
+
+    // Auto-fill form when ThaiID session exists
+    useEffect(() => {
+        if (citizenSession) {
+            setFormData(prev => ({
+                ...prev,
+                firstName: citizenSession.firstName,
+                lastName: citizenSession.lastName,
+                nationalId: citizenSession.pid
+            }));
+        }
+    }, [citizenSession]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -382,6 +420,66 @@ export default function ReportIncidentPage() {
                     </div>
                 </div>
 
+                {/* ThaiID Login Section */}
+                {!checkingSession && !citizenSession && (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+                        <div className="flex items-start gap-4">
+                            <span className="text-4xl">🔐</span>
+                            <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                                    เข้าสู่ระบบด้วย ThaiID
+                                </h3>
+                                <p className="text-gray-600 mb-4">
+                                    กรอกข้อมูลอัตโนมัติจากบัตรประชาชน (ชื่อ, นามสกุล, เลขบัตร)
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => window.location.href = '/api/auth/citizen-thaiid/authorize'}
+                                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2"
+                                >
+                                    <span className="text-xl">🇹🇭</span>
+                                    <span>เข้าสู่ระบบด้วย ThaiID</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Logged In Status */}
+                {citizenSession && (
+                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-2xl">✅</span>
+                                <div>
+                                    <p className="font-semibold text-gray-800">
+                                        ยืนยันตัวตนด้วย ThaiID
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        {citizenSession.firstName} {citizenSession.lastName}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    await fetch('/api/auth/citizen-thaiid/session', { method: 'DELETE' });
+                                    setCitizenSession(null);
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        firstName: '',
+                                        lastName: '',
+                                        nationalId: ''
+                                    }));
+                                }}
+                                className="text-sm text-red-600 hover:text-red-800 font-medium"
+                            >
+                                ออกจากระบบ
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-xl p-4 md:p-8">
                     {/* Personal Information Section */}
@@ -439,6 +537,31 @@ export default function ReportIncidentPage() {
                                     pattern="[0-9]{10}"
                                     required
                                 />
+                            </div>
+
+                            {/* National ID */}
+                            <div>
+                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
+                                    เลขบัตรประชาชน {citizenSession && <span className="text-green-600 text-sm">(ยืนยันจาก ThaiID ✓)</span>}
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nationalId"
+                                    value={formData.nationalId}
+                                    onChange={handleInputChange}
+                                    disabled={!!citizenSession}
+                                    maxLength="13"
+                                    className={`text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 rounded-lg focus:outline-none text-sm md:text-base ${citizenSession
+                                        ? 'bg-green-50 border-green-300 cursor-not-allowed'
+                                        : 'border-gray-300 focus:border-blue-500'
+                                        }`}
+                                    placeholder="เลขบัตรประชาชน 13 หลัก (ไม่บังคับ)"
+                                />
+                                {citizenSession && (
+                                    <p className="text-xs text-green-600 mt-1">
+                                        ข้อมูลนี้ได้รับการยืนยันจากระบบ ThaiID
+                                    </p>
+                                )}
                             </div>
 
                             {/* Village */}

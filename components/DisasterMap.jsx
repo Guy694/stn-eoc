@@ -21,7 +21,20 @@ export default function DisasterMap({ events, onEventClick }) {
 
     // สร้าง custom icon ตามประเภทภัย
     const createCustomIcon = (event) => {
-        const color = severityColors[event.severity] || "#6B7280";
+        let color = severityColors[event.severity] || "#6B7280";
+
+        // For traffic reports, use color based on travelStatus
+        if (event.reportType === 'traffic_report') {
+            if (event.travelStatus === 'passable') {
+                color = "#10B981"; // Green - ผ่านได้
+            } else if (event.travelStatus === 'impassable') {
+                color = "#EF4444"; // Red - ผ่านไม่ได้
+            } else if (event.travelStatus === 'difficult') {
+                color = "#F59E0B"; // Orange - ผ่านได้ยากลำบาก
+            } else {
+                color = "#6B7280"; // Gray - ไม่ระบุ
+            }
+        }
 
         return L.divIcon({
             className: "custom-div-icon",
@@ -38,7 +51,7 @@ export default function DisasterMap({ events, onEventClick }) {
           justify-content: center;
           font-size: 16px;
         ">
-          ${getDisasterIcon(event.type)}
+          ${getDisasterIcon(event)}
         </div>
       `,
             iconSize: [30, 30],
@@ -46,7 +59,16 @@ export default function DisasterMap({ events, onEventClick }) {
         });
     };
 
-    const getDisasterIcon = (type) => {
+    const getDisasterIcon = (event) => {
+        // Check reportType first for citizen reports
+        if (event.reportType === 'traffic_report') {
+            return "🚦"; // Traffic light for traffic reports
+        }
+        if (event.reportType === 'help_request') {
+            return "💧"; // Water drop for flood/help requests
+        }
+
+        // Fallback to disaster type
         const icons = {
             "น้ำท่วม": "💧",
             "ดินถ่ม": "⛰️",
@@ -54,7 +76,7 @@ export default function DisasterMap({ events, onEventClick }) {
             "ไฟป่า": "🔥",
             "แผ่นดินไหว": "📍",
         };
-        return icons[type] || "⚠️";
+        return icons[event.type] || "⚠️";
     };
 
     // สร้าง label icon

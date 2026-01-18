@@ -70,45 +70,6 @@ export default function SplashScreen({ onComplete }) {
                     <div className="w-2 h-2 bg-white rounded-full animate-pulse-dot-3"></div>
                 </div>
             </div>
-
-            {/* CSS Animations */}
-            <style jsx>{`
-                @keyframes bounce-slow {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                }
-                @keyframes fade-in {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes pulse-dot {
-                    0%, 100% { opacity: 0.3; transform: scale(0.8); }
-                    50% { opacity: 1; transform: scale(1.2); }
-                }
-                .animate-bounce-slow {
-                    animation: bounce-slow 2s ease-in-out infinite;
-                }
-                .animate-fade-in {
-                    animation: fade-in 0.8s ease-out forwards;
-                }
-                .animate-fade-in-delay {
-                    animation: fade-in 0.8s ease-out 0.2s forwards;
-                    opacity: 0;
-                }
-                .animate-fade-in-delay-2 {
-                    animation: fade-in 0.8s ease-out 0.4s forwards;
-                    opacity: 0;
-                }
-                .animate-pulse-dot-1 {
-                    animation: pulse-dot 1.4s ease-in-out infinite;
-                }
-                .animate-pulse-dot-2 {
-                    animation: pulse-dot 1.4s ease-in-out 0.2s infinite;
-                }
-                .animate-pulse-dot-3 {
-                    animation: pulse-dot 1.4s ease-in-out 0.4s infinite;
-                }
-            `}</style>
         </div>
     );
 }

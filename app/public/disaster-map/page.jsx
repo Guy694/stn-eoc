@@ -1,8 +1,12 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import PublicLayout from "@/components/layouts/PublicLayout";
-import { disasterEvents, satunDistricts, filterEventsByDays } from "@/data/satunData";
+import { satunDistricts } from "@/data/satunData";
+import SkeletonLoader, { StatsSkeleton } from "@/components/SkeletonLoader";
+import { NoReportsEmptyState } from "@/components/EmptyState";
+import ErrorMessage, { getFriendlyErrorMessage } from "@/components/ErrorMessage";
 
 // Import DisasterMap แบบ dynamic เพื่อหลีกเลี่ยง SSR error
 const DisasterMap = dynamic(() => import("@/components/DisasterMap"), {
@@ -19,7 +23,7 @@ const DisasterMap = dynamic(() => import("@/components/DisasterMap"), {
 
 export default function DisasterMapPage() {
     const [filters, setFilters] = useState({
-        disasterType: "all",
+        reportType: "all",
         severity: "all",
         dateRange: "all",
         district: "all",
@@ -31,6 +35,11 @@ export default function DisasterMapPage() {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [tambonOptions, setTambonOptions] = useState([]);
     const [villageOptions, setVillageOptions] = useState([]);
+
+    // Real incident data from API
+    const [incidents, setIncidents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
@@ -56,22 +65,109 @@ export default function DisasterMapPage() {
         }
     }, [filters.tambon, tambonOptions]);
 
+    // Fetch real incident data from API
+    useEffect(() => {
+        const fetchIncidents = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/public/verified-incidents');
+                const result = await response.json();
+
+                if (result.success) {
+                    // Map API data to expected format
+                    const mappedData = result.data
+                        .filter(incident => {
+                            // Only include incidents with valid coordinates
+                            return incident.latitude && incident.longitude &&
+                                !isNaN(incident.latitude) && !isNaN(incident.longitude);
+                        })
+                        .map(incident => {
+                            // Map urgency to severity
+                            let severity = "ต่ำ";
+                            if (incident.urgency === 'critical' || incident.urgency === 'high') {
+                                severity = "สูง";
+                            } else if (incident.urgency === 'medium') {
+                                severity = "ปานกลาง";
+                            }
+
+                            // Format date
+                            let formattedDate = 'ไม่ระบุวันที่';
+                            const dateValue = incident.occurredAt || incident.createdAt;
+                            if (dateValue) {
+                                const date = new Date(dateValue);
+                                if (!isNaN(date.getTime())) {
+                                    formattedDate = date.toLocaleDateString('th-TH', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    });
+                                }
+                            }
+
+                            return {
+                                id: incident.id,
+                                type: incident.disasterType || 'น้ำท่วม',
+                                reportType: incident.reportType, // 'help_request' or 'traffic_report'
+                                severity: severity,
+                                district: incident.district || 'ไม่ระบุ',
+                                tambon: incident.subDistrict || 'ไม่ระบุ',
+                                village: incident.village || 'ไม่ระบุ',
+                                date: formattedDate,
+                                description: incident.description || 'ไม่มีรายละเอียด',
+                                affected: incident.affectedPeople || 0,
+                                status: incident.status || 'รอตรวจสอบ',
+                                // For map display
+                                lat: parseFloat(incident.latitude),
+                                lng: parseFloat(incident.longitude),
+                                position: [parseFloat(incident.latitude), parseFloat(incident.longitude)],
+                                // Additional info
+                                reporter: `${incident.firstName} ${incident.lastName}`,
+                                phone: incident.phone,
+                                waterLevel: incident.waterLevel,
+                                travelStatus: incident.travelStatus,
+                                photoPath: incident.photoPath
+                            };
+                        });
+                    setIncidents(mappedData);
+                } else {
+                    setError(result.message || 'ไม่สามารถโหลดข้อมูลได้');
+                }
+            } catch (err) {
+                console.error('Error fetching incidents:', err);
+                setError('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchIncidents();
+    }, []);
+
     const handleFilterChange = (filterName, value) => {
         setFilters((prev) => ({ ...prev, [filterName]: value }));
     };
 
     // กรองข้อมูลตามฟิลเตอร์
     const filteredEvents = useMemo(() => {
-        let events = [...disasterEvents];
+        let events = [...incidents];
 
         // กรองตามวันที่
         if (filters.dateRange !== "all") {
-            events = filterEventsByDays(events, parseInt(filters.dateRange));
+            const days = parseInt(filters.dateRange);
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+
+            events = events.filter(e => {
+                const eventDate = new Date(e.date);
+                return eventDate >= cutoffDate;
+            });
         }
 
-        // กรองตามประเภทภัย
-        if (filters.disasterType !== "all") {
-            events = events.filter((e) => e.type === filters.disasterType);
+        // กรองตามประเภทการรายงาน
+        if (filters.reportType !== "all") {
+            events = events.filter((e) => e.reportType === filters.reportType);
         }
 
         // กรองตามความรุนแรง
@@ -100,177 +196,50 @@ export default function DisasterMapPage() {
         }
 
         return events;
-    }, [filters]);
+    }, [filters, incidents]);
 
     return (
         <PublicLayout>
             <div className="container mx-auto p-6">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">แผนที่ภัยพิบัติ</h1>
-                    <p className="text-gray-600">ติดตามสถานการณ์ภัยพิบัติและเหตุการณ์ฉุกเฉินแบบเรียลไทม์</p>
+                <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2">รายงานจากประชาชน (ยืนยันแล้ว)</h1>
+                        <p className="text-gray-600">แผนที่แสดงรายงานเหตุการณ์จากประชาชนที่ผ่านการยืนยันจากเจ้าหน้าที่</p>
+                    </div>
+                    <Link
+                        href="/public/report-incident"
+                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 md:px-6 py-3 md:py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2 justify-center md:justify-start min-h-[48px] touch-manipulation"
+                    >
+                        <span className="text-2xl">🚨</span>
+                        <span>แจ้งเหตุภัยพิบัติ</span>
+                    </Link>
                 </div>
 
-                {/* Filter Panel */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">🔍 ฟิลเตอร์ข้อมูล - จังหวัดสตูล</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* ช่วงเวลา */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                ช่วงเวลา
-                            </label>
-                            <select
-                                value={filters.dateRange}
-                                onChange={(e) => handleFilterChange("dateRange", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                <option value="1">วันนี้</option>
-                                <option value="7">7 วันย้อนหลัง</option>
-                                <option value="30">30 วันย้อนหลัง</option>
-                                <option value="90">90 วันย้อนหลัง</option>
-                            </select>
+                {/* Loading State */}
+                {loading && (
+                    <>
+                        <StatsSkeleton count={4} />
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-2">
+                                <SkeletonLoader type="map" />
+                            </div>
+                            <div>
+                                <SkeletonLoader type="list" count={3} />
+                            </div>
                         </div>
+                    </>
+                )}
 
-                        {/* ประเภทภัย */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                ประเภทภัยพิบัติ
-                            </label>
-                            <select
-                                value={filters.disasterType}
-                                onChange={(e) => handleFilterChange("disasterType", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                <option value="น้ำท่วม">น้ำท่วม</option>
-                                <option value="แผ่นดินไหว">แผ่นดินไหว</option>
-                                <option value="ไฟป่า">ไฟป่า</option>
-                                <option value="พายุ">พายุ</option>
-                                <option value="ดินถ่ม">ดินถ่ม</option>
-                            </select>
-                        </div>
+                {/* Error State */}
+                {error && (
+                    <ErrorMessage
+                        {...getFriendlyErrorMessage(error)}
+                        technicalDetails={error}
+                        onRetry={() => window.location.reload()}
+                        onClose={() => setError(null)}
+                    />
+                )}
 
-                        {/* ระดับความรุนแรง */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                ระดับความรุนแรง
-                            </label>
-                            <select
-                                value={filters.severity}
-                                onChange={(e) => handleFilterChange("severity", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                <option value="สูง">สูง</option>
-                                <option value="ปานกลาง">ปานกลาง</option>
-                                <option value="ต่ำ">ต่ำ</option>
-                            </select>
-                        </div>
-
-                        {/* สถานะ */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                สถานะ
-                            </label>
-                            <select
-                                value={filters.status}
-                                onChange={(e) => handleFilterChange("status", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                <option value="ฉุกเฉิน">ฉุกเฉิน</option>
-                                <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-                                <option value="ติดตาม">ติดตาม</option>
-                                <option value="แก้ไขแล้ว">แก้ไขแล้ว</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* ฟิลเตอร์พื้นที่ - แถวที่ 2 */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                        {/* อำเภอ */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                📍 อำเภอ
-                            </label>
-                            <select
-                                value={filters.district}
-                                onChange={(e) => handleFilterChange("district", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                {satunDistricts.map((district) => (
-                                    <option key={district.id} value={district.name}>
-                                        {district.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* ตำบล */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                📍 ตำบล
-                            </label>
-                            <select
-                                value={filters.tambon}
-                                onChange={(e) => handleFilterChange("tambon", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                disabled={filters.district === "all"}
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                {tambonOptions.map((tambon) => (
-                                    <option key={tambon.id} value={tambon.name}>
-                                        {tambon.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* หมู่บ้าน */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                📍 หมู่บ้าน
-                            </label>
-                            <select
-                                value={filters.village}
-                                onChange={(e) => handleFilterChange("village", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                disabled={filters.tambon === "all"}
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                {villageOptions.map((village, index) => (
-                                    <option key={index} value={village}>
-                                        {village}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between">
-                        <p className="text-sm text-gray-600">
-                            พบ <span className="font-semibold text-green-700">{filteredEvents.length}</span> เหตุการณ์
-                        </p>
-                        <button
-                            onClick={() =>
-                                setFilters({
-                                    disasterType: "all",
-                                    severity: "all",
-                                    dateRange: "all",
-                                    district: "all",
-                                    tambon: "all",
-                                    village: "all",
-                                    status: "all",
-                                })
-                            }
-                            className="text-sm text-green-700 hover:text-green-800 font-medium"
-                        >
-                            ล้างฟิลเตอร์ทั้งหมด
-                        </button>
-                    </div>
-                </div>
 
                 {/* Map Container */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -278,7 +247,7 @@ export default function DisasterMapPage() {
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-lg shadow-md overflow-hidden">
                             <div className="bg-linear-to-r from-green-600 to-green-700 text-white px-6 py-4">
-                                <h3 className="text-lg font-semibold">🗺️ แผนที่แสดงตำแหน่งเหตุการณ์ - จังหวัดสตูล</h3>
+                                <h3 className="text-lg font-semibold">🗺️ แผนที่รายงานจากประชาชน - จังหวัดสตูล</h3>
                             </div>
                             <div className="h-[600px]">
                                 <DisasterMap events={filteredEvents} onEventClick={setSelectedEvent} />
@@ -294,12 +263,14 @@ export default function DisasterMapPage() {
                             </div>
                             <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
                                 {filteredEvents.length === 0 ? (
-                                    <p className="text-center text-gray-500 py-8">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</p>
+                                    <NoReportsEmptyState
+                                        onReport={() => window.location.href = '/public/report-incident'}
+                                    />
                                 ) : (
                                     filteredEvents.map((event) => (
                                         <div
                                             key={event.id}
-                                            className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${selectedEvent?.id === event.id
+                                            className={`border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer min-h-[80px] touch-manipulation ${selectedEvent?.id === event.id
                                                 ? "border-green-500 bg-green-50"
                                                 : "border-gray-200"
                                                 }`}
@@ -355,7 +326,7 @@ export default function DisasterMapPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-600">เหตุการณ์ทั้งหมด</p>
-                                <p className="text-3xl font-bold text-gray-800">{disasterEvents.length}</p>
+                                <p className="text-3xl font-bold text-gray-800">{incidents.length}</p>
                             </div>
                             <div className="text-4xl">📊</div>
                         </div>
@@ -365,7 +336,7 @@ export default function DisasterMapPage() {
                             <div>
                                 <p className="text-sm text-gray-600">ระดับสูง</p>
                                 <p className="text-3xl font-bold text-red-600">
-                                    {disasterEvents.filter((d) => d.severity === "สูง").length}
+                                    {incidents.filter((d) => d.severity === "สูง").length}
                                 </p>
                             </div>
                             <div className="text-4xl">🚨</div>
@@ -376,7 +347,7 @@ export default function DisasterMapPage() {
                             <div>
                                 <p className="text-sm text-gray-600">ระดับปานกลาง</p>
                                 <p className="text-3xl font-bold text-yellow-600">
-                                    {disasterEvents.filter((d) => d.severity === "ปานกลาง").length}
+                                    {incidents.filter((d) => d.severity === "ปานกลาง").length}
                                 </p>
                             </div>
                             <div className="text-4xl">⚠️</div>
@@ -387,7 +358,7 @@ export default function DisasterMapPage() {
                             <div>
                                 <p className="text-sm text-gray-600">ระดับต่ำ</p>
                                 <p className="text-3xl font-bold text-green-600">
-                                    {disasterEvents.filter((d) => d.severity === "ต่ำ").length}
+                                    {incidents.filter((d) => d.severity === "ต่ำ").length}
                                 </p>
                             </div>
                             <div className="text-4xl">✅</div>
