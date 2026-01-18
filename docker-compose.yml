@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # ส่วนของ Database
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456 # เปลี่ยนรหัสผ่านตรงนี้
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # ส่วนของ phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=db  # ชื่อ Service ของตัว database ด้านบน
+      - PMA_PORT=3306
+    depends_on:
+      - db
+
+volumes:
+  db_data:
