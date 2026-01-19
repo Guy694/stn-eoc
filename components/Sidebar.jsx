@@ -193,6 +193,7 @@ export default function Sidebar() {
                     badge: "pendingReports",
                     description: "รายงานจากประชาชน"
                 },
+                { name: "กิจกรรมล่าสุด", path: "/admin/recent-activities", icon: "📋", description: "ติดตามกิจกรรมในระบบ" },
                 { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮", description: "ข้อมูลบุคลากร" },
                 { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: "🏥", description: "โรงพยาบาล/สถานีอนามัย" },
                 { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️", description: "พื้นที่หมู่บ้าน" },

@@ -6,7 +6,7 @@ export default function Footer() {
                     <div>
                         <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</h4>
                         <p className="text-xs sm:text-sm">Satun Emergency Operations Center (EOC)</p>
-                        <p className="text-xs sm:text-sm mt-2">ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน จังหวัดสตูล</p>
+                        {/* <p className="text-xs sm:text-sm mt-2">ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน จังหวัดสตูล</p> */}
                     </div>
                     <div>
                         {/* <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ติดต่อเรา</h4>

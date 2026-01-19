@@ -134,7 +134,7 @@ export default function DashboardPage() {
                                 <div
                                     key={announcement.id}
                                     className={`bg-white rounded-lg shadow-md p-5 border-l-4 ${announcement.priority === 'high' ? 'border-red-500' :
-                                            announcement.priority === 'medium' ? 'border-yellow-500' : 'border-blue-500'
+                                        announcement.priority === 'medium' ? 'border-yellow-500' : 'border-blue-500'
                                         }`}
                                 >
                                     <h3 className="font-bold text-lg text-gray-800 mb-2">{announcement.title}</h3>
@@ -209,38 +209,6 @@ export default function DashboardPage() {
                             />
                         )}
                     </div>
-                </div>
-
-                {/* Recent Activities */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">📋 กิจกรรมล่าสุด</h2>
-                    {statsLoading ? (
-                        <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-                            <p className="text-gray-500">กำลังโหลด...</p>
-                        </div>
-                    ) : stats.recentActivities.length > 0 ? (
-                        <div className="space-y-3">
-                            {stats.recentActivities.map((activity, index) => (
-                                <div key={activity.id || index} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-100 last:border-0">
-                                    <span className="text-2xl">{activity.icon}</span>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-medium text-gray-800">{activity.title}</p>
-                                            <span className="text-xs text-gray-400">โดย {activity.user}</span>
-                                        </div>
-                                        <p className="text-sm text-gray-600">{activity.description}</p>
-                                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            <p className="text-4xl mb-2">📭</p>
-                            <p>ยังไม่มีกิจกรรม</p>
-                        </div>
-                    )}
                 </div>
             </div>
         </EOCLayout>
