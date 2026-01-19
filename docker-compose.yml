@@ -6,7 +6,10 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 123456 # เปลี่ยนรหัสผ่านตรงนี้
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # เปลี่ยนรหัสผ่านตรงนี้
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
 
@@ -17,8 +20,9 @@ services:
     ports:
       - 8080:80
     environment:
-      - PMA_HOST=db  # ชื่อ Service ของตัว database ด้านบน
-      - PMA_PORT=3306
+      - PMA_HOST=${PMA_HOST}  # ชื่อ Service ของตัว database ด้านบน
+      - UPLOAD_LIMIT=${UPLOAD_LIMIT}
+      - PMA_PORT=${PMA_PORT}
     depends_on:
       - db
 
