@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showDeleteConfirm } from '@/lib/sweetAlert';
 import Image from 'next/image';
 
-export default function AnnouncementsPage() {
+function AnnouncementsContent() {
     const searchParams = useSearchParams();
     const eocParam = searchParams.get('eoc');
 
@@ -705,5 +705,19 @@ export default function AnnouncementsPage() {
                 )}
             </div>
         </EOCLayout>
+    );
+}
+
+export default function AnnouncementsPage() {
+    return (
+        <Suspense fallback={
+            <EOCLayout>
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                </div>
+            </EOCLayout>
+        }>
+            <AnnouncementsContent />
+        </Suspense>
     );
 }

@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import Swal from "sweetalert2";
 
-export default function EOCModulesManagement() {
+function EOCModulesContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const eocType = searchParams.get('eoc_type');
@@ -484,5 +484,19 @@ export default function EOCModulesManagement() {
                 )}
             </div>
         </EOCLayout>
+    );
+}
+
+export default function EOCModulesManagement() {
+    return (
+        <Suspense fallback={
+            <EOCLayout>
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                </div>
+            </EOCLayout>
+        }>
+            <EOCModulesContent />
+        </Suspense>
     );
 }

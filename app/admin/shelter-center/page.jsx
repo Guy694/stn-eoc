@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
@@ -13,7 +13,7 @@ const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     loading: () => <div className="h-96 bg-gray-100 flex items-center justify-center">กำลังโหลดแผนที่...</div>
 });
 
-export default function ShelterCenterPage() {
+function ShelterCenterContent() {
     const searchParams = useSearchParams();
     const eocParam = searchParams.get('eoc'); // Get EOC type from URL
 
@@ -754,5 +754,19 @@ export default function ShelterCenterPage() {
                 )
             }
         </EOCLayout >
+    );
+}
+
+export default function ShelterCenterPage() {
+    return (
+        <Suspense fallback={
+            <EOCLayout>
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                </div>
+            </EOCLayout>
+        }>
+            <ShelterCenterContent />
+        </Suspense>
     );
 }
