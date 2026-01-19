@@ -11,7 +11,7 @@ const kanit = Kanit({
 
 export const metadata = {
   title: "EOC จังหวัดสตูล - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล",
-  description: "Emergency Operations Center - ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน",
+  description: "Satun Geo-EOC Intelligence Platform - ระบบศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล",
   icons: {
     icon: '/img/eoc-icon.png',
     shortcut: '/img/eoc-icon.png',

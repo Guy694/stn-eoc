@@ -342,7 +342,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                         data={item.geojson}
                                         style={{ color: color, weight: 1, fillColor: color, fillOpacity: 0.1 }}
                                         onEachFeature={(feature, layer) => {
-                                            layer.bindPopup(`<div class="text-center"><strong class="text-lg">อ.${item.name}</strong></div>`);
+                                            layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong class="text-lg">อ.${item.name}</strong></div>`);
                                         }}
                                     />
                                     {showLabels && center && (
@@ -362,7 +362,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                         data={item.geojson}
                                         style={{ color: '#059669', weight: 2, fillColor: '#10B981', fillOpacity: 0.1, dashArray: '5, 5' }}
                                         onEachFeature={(feature, layer) => {
-                                            layer.bindPopup(`<div class="text-center"><strong>ต.${item.name}</strong><p class="text-sm">อ.${item.district_name}</p></div>`);
+                                            layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>ต.${item.name}</strong><p class="text-sm">อ.${item.district_name}</p></div>`);
                                         }}
                                     />
                                     {showLabels && center && (
@@ -381,7 +381,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                     data={item.geojson}
                                     style={{ color: '#9CA3AF', weight: 1, fillColor: '#D1D5DB', fillOpacity: 0.1 }}
                                     onEachFeature={(feature, layer) => {
-                                        layer.bindPopup(`<div class="text-center"><strong>${item.name}</strong><p class="text-xs">ต.${item.tambon_name} อ.${item.district_name}</p></div>`);
+                                        layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>${item.name}</strong><p class="text-xs">ต.${item.tambon_name} อ.${item.district_name}</p></div>`);
                                     }}
                                 />
                             );
@@ -395,7 +395,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                 icon={getMarkerIcon(incident)}
                             >
                                 <Popup maxWidth={300}>
-                                    <div className="p-2">
+                                    <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-2xl">{getReportTypeIcon(incident.report_type)}</span>
                                             <h4 className="font-bold text-gray-800">{getReportTypeLabel(incident.report_type)}</h4>

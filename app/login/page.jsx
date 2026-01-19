@@ -209,12 +209,13 @@ function LoginForm() {
                         <p className="text-xs text-green-800 font-semibold mb-2">🔑 บัญชีทดสอบ:</p>
                         <div className="space-y-1 text-xs text-green-700">
                             <p><strong>Admin:</strong> admin / password123</p>
+                            <p><strong>Commander:</strong> commander01 / commander123</p>
                             <p><strong>MCATT:</strong> mcatt01 / password123</p>
                             <p><strong>SAT:</strong> sat01 / password123</p>
                             <p><strong>SeRHT:</strong> serht01 / password123</p>
                             <p><strong>Staff:</strong> staff01 / password123</p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2 italic">* รหัสผ่านเริ่มต้นสำหรับทุกบัญชี: password123</p>
+                        <p className="text-xs text-gray-500 mt-2 italic">* สำหรับทดสอบระบบเท่านั้น</p>
                     </div>
                 </div>
 

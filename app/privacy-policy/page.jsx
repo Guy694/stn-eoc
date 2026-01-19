@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
                             <span>📌</span> บทนำ
                         </h2>
                         <p className="text-gray-700 leading-relaxed">
-                            ศูนย์ปฏิบัติการฉุกเฉิน (Emergency Operations Center - EOC) จังหวัดสตูล
+                            ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล (Satun Geo-EOC Intelligence Platform)
                             ให้ความสำคัญกับการคุ้มครองข้อมูลส่วนบุคคลของท่านตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562
                             นโยบายนี้อธิบายวิธีการที่เราเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลของท่าน
                         </p>

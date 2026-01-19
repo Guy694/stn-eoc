@@ -28,7 +28,7 @@ export default function Header() {
                         </div>
                         <div>
                             <h1 className="text-lg sm:text-xl font-bold">EOC จังหวัดสตูล</h1>
-                            <p className="text-xs text-green-100 hidden sm:block">Emergency Operations Center</p>
+                            <p className="text-xs text-green-100 hidden sm:block">Satun Geo-EOC Intelligence Platform</p>
                         </div>
                     </div>
 

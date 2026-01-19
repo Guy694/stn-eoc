@@ -860,7 +860,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                     }}
                                                 >
                                                     <Popup>
-                                                        <div className="text-sm">
+                                                        <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                             <strong>ตำบล{tambon.subdistnam}</strong>
                                                             <br />อ.{tambon.distname}
                                                         </div>
@@ -889,7 +889,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 }}
                                             >
                                                 <Popup>
-                                                    <div className="text-sm">
+                                                    <div className="text-sm " style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                         <br />🔴 <strong>ตำบลมีน้ำท่วมหนัก</strong>
@@ -925,7 +925,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 }}
                                             >
                                                 <Popup>
-                                                    <div className="text-sm">
+                                                    <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                         <br />🟠 <strong>ตำบลมีน้ำท่วมปานกลาง</strong>
@@ -961,7 +961,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 }}
                                             >
                                                 <Popup>
-                                                    <div className="text-sm">
+                                                    <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                         <br />🟡 <strong>ตำบลมีน้ำท่วมเล็กน้อย</strong>
@@ -997,7 +997,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 }}
                                             >
                                                 <Popup>
-                                                    <div className="text-sm">
+                                                    <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                         <br />🟢 <strong>ตำบลปกติ</strong>
@@ -1033,7 +1033,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                             icon={createFacilityIcon(facility.typecode)}
                                                         >
                                                             <Popup>
-                                                                <div className="text-sm">
+                                                                <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                     <strong>{facility.name}</strong>
                                                                     <br />ประเภท: {facility.typecode}
                                                                     <br />ที่อยู่: {facility.address}
@@ -1152,7 +1152,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         }}
                                                     >
                                                         <Popup>
-                                                            <div className="text-sm">
+                                                            <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                                 <br />🔴 <strong>อำเภอมีน้ำท่วมหนัก</strong>
@@ -1190,7 +1190,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         }}
                                                     >
                                                         <Popup>
-                                                            <div className="text-sm">
+                                                            <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                                 <br />🟠 <strong>อำเภอมีน้ำท่วมปานกลาง</strong>
@@ -1228,7 +1228,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         }}
                                                     >
                                                         <Popup>
-                                                            <div className="text-sm">
+                                                            <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                                 <br />🟡 <strong>อำเภอมีน้ำท่วมเล็กน้อย</strong>
@@ -1266,7 +1266,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         }}
                                                     >
                                                         <Popup>
-                                                            <div className="text-sm">
+                                                            <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                                 <br />🟢 <strong>อำเภอปกติ</strong>
@@ -1303,7 +1303,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         }}
                                                     >
                                                         <Popup>
-                                                            <div className="text-sm">
+                                                            <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
                                                                 <br />⚪ <strong>ไม่มีข้อมูล</strong>

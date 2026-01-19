@@ -299,13 +299,31 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                                 icon={customIcons?.[shelter.eoc_type] || undefined}
                             >
                                 <Popup maxWidth={300}>
-                                    <div className="p-2">
+                                    <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <h4 className="font-bold text-gray-800 mb-2">{shelter.sheltername}</h4>
                                         <div className="space-y-1 text-sm">
                                             <p><strong>ประเภท:</strong> {getEocTypeLabel(shelter.eoc_type)}</p>
                                             <p><strong>ที่อยู่:</strong> {shelter.address || '-'}</p>
                                             <p><strong>พื้นที่:</strong> ต.{shelter.tambon}, อ.{shelter.district_name || '-'}</p>
                                             <p><strong>ความจุ:</strong> {shelter.shelter_capacity} คน</p>
+                                            {shelter.contact_phone && (
+                                                <p className="flex items-center gap-1">
+                                                    <strong>โทรศัพท์:</strong>
+                                                    <a href={`tel:${shelter.contact_phone}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                                                        {shelter.contact_phone}
+                                                    </a>
+                                                </p>
+                                            )}
+                                            <div className="mt-2 pt-2  border-t border-gray-100">
+                                                <a
+                                                    href={`https://www.google.com/maps/dir/?api=1&destination=${shelter.lat},${shelter.lon}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="w-full bg-green-600 text-white text-center py-2 rounded-lg text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <span style={{ color: 'white' }} className='p-1'>นำทางไปยังศูนย์พักพิง</span>
+                                                </a>
+                                            </div>
                                             {getOccupancyBadge(shelter)}
                                         </div>
                                     </div>

@@ -10,8 +10,8 @@ export default function AIChatbot() {
 
     // Sample questions
     const sampleQuestions = [
-        "มี EOC กี่ประเภท?",
-        "มีผู้ป่วยกี่คนในระบบ?",
+        "สตูลน้ำท่วมหรือไม่?",
+        "สตูลประกาศเป็นพื้นที่ภัยพิบัติหรือยัง?",
         "แสดงข้อมูลน้ำท่วมล่าสุด",
         "มีกี่ตำบลในจังหวัดสตูล?"
     ];
@@ -217,7 +217,7 @@ export default function AIChatbot() {
                                 </svg>
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg">EOC AI Assistant</h3>
+                                <h3 className="font-bold text-lg">EOC Assistant</h3>
                                 <p className="text-xs text-green-100">ผู้ช่วยตอบคำถามข้อมูล EOC</p>
                             </div>
                         </div>

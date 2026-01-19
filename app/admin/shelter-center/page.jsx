@@ -58,7 +58,8 @@ function ShelterCenterContent() {
         district_name: '',
         village: '',
         is_active: 1,
-        shelter_capacity: ''
+        shelter_capacity: '',
+        contact_phone: ''
     });
 
     useEffect(() => {
@@ -138,7 +139,8 @@ function ShelterCenterContent() {
             district_name: '',
             village: '',
             is_active: 1,
-            shelter_capacity: ''
+            shelter_capacity: '',
+            contact_phone: ''
         });
         setMarkerPosition(null);
         setEditingCenter(null);
@@ -226,7 +228,8 @@ function ShelterCenterContent() {
             district_name: center.district_name || '',
             village: center.village || '',
             is_active: center.is_active || 1,
-            shelter_capacity: center.shelter_capacity || ''
+            shelter_capacity: center.shelter_capacity || '',
+            contact_phone: center.contact_phone || ''
         });
         if (center.lat && center.lon) {
             setMarkerPosition({
@@ -465,6 +468,7 @@ function ShelterCenterContent() {
                                 'ละติจูด': center.lat || '-',
                                 'ลองจิจูด': center.lon || '-',
                                 'ความจุ (คน)': center.shelter_capacity || '-',
+                                'เบอร์โทรติดต่อ': center.contact_phone || '-',
                                 'สถานะ': center.is_active === 1 ? 'เปิดใช้งาน' : 'ปิดใช้งาน'
                             }))}
                             filename="shelter_centers"
@@ -503,6 +507,7 @@ function ShelterCenterContent() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ที่อยู่</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ/ตำบล</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พิกัด</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">เบอร์โทร</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ความจุ (คน)</th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">สถานะ</th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
@@ -534,6 +539,9 @@ function ShelterCenterContent() {
                                                     ? `${parseFloat(center.lat).toFixed(4)}, ${parseFloat(center.lon).toFixed(4)}`
                                                     : '-'
                                                 }
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {center.contact_phone || '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
                                                 {center.shelter_capacity || '-'}
@@ -679,6 +687,19 @@ function ShelterCenterContent() {
                                             rows={2}
                                             className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             placeholder="เช่น 123 หมู่ 1 ถนนสตูล"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            เบอร์โทรติดต่อ
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            value={formData.contact_phone}
+                                            onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                                            className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="เช่น 074-123456"
                                         />
                                     </div>
 

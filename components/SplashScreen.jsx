@@ -57,7 +57,7 @@ export default function SplashScreen({ onComplete }) {
                     EOC จังหวัดสตูล
                 </h1>
                 <p className="text-lg md:text-xl text-green-100 mb-2 animate-fade-in-delay">
-                    Emergency Operations Center
+                    Satun Geo-EOC Intelligence Platform
                 </p>
                 <p className="text-sm md:text-base text-green-200 animate-fade-in-delay-2">
                     ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน

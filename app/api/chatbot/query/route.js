@@ -112,7 +112,7 @@ export async function POST(request) {
             }
         });
 
-        const sqlPrompt = `คุณเป็น SQL Expert สำหรับระบบ EOC (Emergency Operations Center) จังหวัดสตูล
+        const sqlPrompt = `คุณเป็น SQL Expert สำหรับระบบ EOC (Satun Geo-EOC Intelligence Platform) จังหวัดสตูล
 
 DATABASE SCHEMA:
 ${JSON.stringify(schema, null, 2)}
@@ -192,7 +192,7 @@ RULES:
         }
 
         // Step 4: Generate natural language response using Gemini
-        const answerPrompt = `คุณเป็นผู้ช่วย AI สำหรับระบบ EOC (Emergency Operations Center) จังหวัดสตูล
+        const answerPrompt = `คุณเป็นผู้ช่วย AI สำหรับระบบ EOC (Satun Geo-EOC Intelligence Platform) จังหวัดสตูล
 
 USER QUESTION: ${message}
 

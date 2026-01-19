@@ -226,7 +226,7 @@ export default function Home() {
         quickActions: [
           { icon: "🗺️", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/disaster-map", color: "blue" },
           { icon: "🚨", title: "แจ้งเหตุน้ำท่วม", link: "/public/report-incident", color: "red" },
-          { icon: "🏘️", title: "จุดพักพิงฉุกเฉิน", link: "/eoc/village-map", color: "green" }
+          { icon: "🏘️", title: "ศูนย์พักพิงชั่วคราว", link: "/eoc/flood/shelters", color: "green" }
         ],
         stats: floodStats ? {
           affected: floodStats.affected || 0,
@@ -335,7 +335,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 drop-shadow-lg">EOC จังหวัดสตูล</h1>
-                <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Emergency Operations Center</p>
+                <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Satun Geo-EOC Intelligence Platform</p>
                 <p className="text-xs md:text-sm text-green-200">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
               </div>
             </div>
@@ -644,7 +644,7 @@ export default function Home() {
       {/* Footer */}
       < footer className="bg-gray-800 text-gray-300 py-4 md:py-6 mt-8 md:mt-12" >
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Emergency Operations Center</p>
+          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Satun Geo-EOC Intelligence Platform</p>
           <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
         </div>
       </footer>

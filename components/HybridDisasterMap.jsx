@@ -307,7 +307,7 @@ export default function HybridDisasterMap({
                         }}
                     >
                         <Popup>
-                            <div className="min-w-[200px]">
+                            <div className="min-w-[200px]" style={{ fontFamily: 'var(--font-kanit)' }}>
                                 <h3 className="font-bold text-lg mb-2 text-gray-800">
                                     {polygon.villname}
                                 </h3>
@@ -344,7 +344,7 @@ export default function HybridDisasterMap({
                         }}
                     >
                         <Popup>
-                            <div className="min-w-[200px]">
+                            <div className="min-w-[200px]" style={{ fontFamily: 'var(--font-kanit)' }}>
                                 <h3 className="font-bold text-lg mb-2 text-gray-800">
                                     {event.type}
                                 </h3>
@@ -422,7 +422,7 @@ export default function HybridDisasterMap({
                                 }}
                             >
                                 <Popup>
-                                    <div className="min-w-[250px]">
+                                    <div className="min-w-[250px]" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-lg">🌊</span>
                                             <h3 className="font-bold text-lg text-gray-800">
@@ -503,7 +503,7 @@ export default function HybridDisasterMap({
                                 }}
                             >
                                 <Popup>
-                                    <div className="min-w-[250px]">
+                                    <div className="min-w-[250px]" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-lg">🔄</span>
                                             <h3 className="font-bold text-lg text-gray-800">

@@ -5,8 +5,11 @@ import { useEOC } from "@/context/EOCContext";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function FloodSheltersPage() {
     const { eocStatus } = useEOC();
+    const { user } = useAuth();
     const [sessionId, setSessionId] = useState(null);
 
     // ดึง session ID จาก EOC ที่เปิดอยู่
@@ -27,6 +30,7 @@ export default function FloodSheltersPage() {
 
     const floodEOC = eocStatus?.flood;
     const isActive = floodEOC?.is_active;
+    const isAdmin = user?.role === 'admin';
 
     return (
         <EOCLayout>
@@ -44,7 +48,7 @@ export default function FloodSheltersPage() {
                             </div>
                         </div>
                         <div className="flex gap-3">
-                            {isActive && (
+                            {isActive && isAdmin && (
                                 <Link
                                     href="/eoc/flood/shelters/manage"
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
@@ -53,13 +57,15 @@ export default function FloodSheltersPage() {
                                     <span>เลือกศูนย์สำหรับ Session นี้</span>
                                 </Link>
                             )}
-                            <Link
-                                href="/admin/shelter-center"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                            >
-                                <span>⚙️</span>
-                                <span>จัดการข้อมูลหลัก</span>
-                            </Link>
+                            {isAdmin && (
+                                <Link
+                                    href="/admin/shelter-center"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                >
+                                    <span>⚙️</span>
+                                    <span>จัดการข้อมูลหลัก</span>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

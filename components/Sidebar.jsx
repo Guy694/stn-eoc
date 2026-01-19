@@ -113,7 +113,8 @@ export default function Sidebar() {
             collapsible: true,
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
-                { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: "📊", description: "ภาพรวมสถานการณ์น้ำท่วม" },
+                { name: "ภาพรวม EOC", path: "/eoc/flood/overview", icon: "📊", description: "Dashboard ภาพรวมสถานการณ์ทั้งหมด" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: "🗺️", description: "ภาพรวมสถานการณ์น้ำท่วม" },
                 { name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", icon: "💧", description: "บันทึกข้อมูลพื้นที่น้ำท่วม" },
                 { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: "🏠", description: "แผนที่ศูนย์พักพิง" },
                 { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: "🦠", description: "บันทึกโรคในศูนย์พักพิง" },
@@ -178,7 +179,12 @@ export default function Sidebar() {
         // },
 
         // ============================================
-        // 3. ADMIN MANAGEMENT - เฉพาะ Admin
+        // 3. COMMANDER SECTION - REMOVED
+        // Dashboard moved to /eoc/flood/overview (accessible to all)
+        // ============================================
+
+        // ============================================
+        // 4. ADMIN MANAGEMENT - เฉพาะ Admin
         // ============================================
         {
             title: "🔧 จัดการระบบ",
