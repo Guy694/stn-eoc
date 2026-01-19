@@ -158,37 +158,6 @@ export async function GET(request) {
             },
         };
 
-        if (date) {
-            // ส่งข้อมูลของวันที่ที่ระบุ
-            const data = dailyFloodData[date] || {
-                date: date,
-                districts: [],
-                summary: {
-                    totalAffected: 0,
-                    severeCount: 0,
-                    moderateCount: 0,
-                    mildCount: 0,
-                    totalPopulation: 0,
-                }
-            };
-            return NextResponse.json(data);
-        } else {
-            // ส่งข้อมูลทั้งหมด
-            return NextResponse.json(dailyFloodData);
-        }
-
-    } catch (error) {
-        console.error('Error fetching daily flood data:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch daily flood data' },
-            { status: 500 }
-        );
-    }
-}
-
-// สำหรับการเพิ่มข้อมูลใหม่ (ถ้าต้องการ)
-export async function POST(request) {
-        };
 
         // รายชื่ออำเภอทั้งหมดในสตูล
         const allDistricts = [
@@ -201,27 +170,38 @@ export async function POST(request) {
             'มะนัง',
         ];
 
-        if (!date || !dailyFloodData[date]) {
-            // คืนค่า nodata สำหรับทุกอำเภอ ถ้าไม่มีข้อมูลวันนั้น
-            return NextResponse.json({
-                date: date,
-                districts: allDistricts.map(name => ({
-                    name,
-                    level: 'nodata',
-                    affectedArea: 0,
-                    population: 0
-                })),
-                summary: {
-                    totalAffected: 0,
-                    severeCount: 0,
-                    moderateCount: 0,
-                    mildCount: 0,
-                    totalPopulation: 0,
-                }
-            });
+        if (date) {
+            if (dailyFloodData[date]) {
+                return NextResponse.json(dailyFloodData[date]);
+            } else {
+                // คืนค่า nodata สำหรับทุกอำเภอ ถ้าไม่มีข้อมูลวันนั้น
+                return NextResponse.json({
+                    date: date,
+                    districts: allDistricts.map(name => ({
+                        name,
+                        level: 'nodata',
+                        affectedArea: 0,
+                        population: 0
+                    })),
+                    summary: {
+                        totalAffected: 0,
+                        severeCount: 0,
+                        moderateCount: 0,
+                        mildCount: 0,
+                        totalPopulation: 0,
+                    }
+                });
+            }
+        } else {
+            // ส่งข้อมูลทั้งหมด
+            return NextResponse.json(dailyFloodData);
         }
 
-        return NextResponse.json(dailyFloodData[date]);
+    } catch (error) {
+        console.error('Error fetching daily flood data:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch daily flood data' },
+            { status: 500 }
         );
     }
 }
