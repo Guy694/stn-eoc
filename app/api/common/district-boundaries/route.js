@@ -32,7 +32,9 @@ export async function GET(request) {
             districtMap[distName].villages++;
 
             // แปลง GeoJSON และเก็บ coordinates
-            const geoJson = JSON.parse(row.geojson);
+            const geoJson = typeof row.geojson === 'string'
+                ? JSON.parse(row.geojson)
+                : row.geojson;
             if (geoJson.type === 'Polygon') {
                 districtMap[distName].allCoords.push(...geoJson.coordinates[0]);
             }

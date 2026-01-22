@@ -106,8 +106,8 @@ export async function GET(request) {
                 v.distname as district,
                 v.num_hh as total_households,
                 v.provname as province,
-                ST_X(ST_Centroid(v.geom)) as lng,
-                ST_Y(ST_Centroid(v.geom)) as lat,
+                ST_X(ST_Centroid(ST_SRID(v.geom, 0))) as lng,
+ST_Y(ST_Centroid(ST_SRID(v.geom, 0))) as lat,
                 ST_AsGeoJSON(v.geom) as geometry
             FROM flood_records f
             INNER JOIN satun_village_polygon v ON f.polygon_id = v.id
@@ -115,11 +115,10 @@ export async function GET(request) {
             ORDER BY f.flood_start_date DESC, f.updated_at DESC
         `, params);
 
-        // แปลง GeoJSON geometry และแปลง water_level เป็น number
         const processedData = floodData.map(item => ({
             ...item,
             water_level: parseFloat(item.water_level) || 0,
-            geometry: item.geometry ? JSON.parse(item.geometry) : null
+            geometry: item.geometry ? (typeof item.geometry === 'string' ? JSON.parse(item.geometry) : item.geometry) : null
         }));
 
         // สถิติสรุป

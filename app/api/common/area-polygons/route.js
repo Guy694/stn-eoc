@@ -40,7 +40,8 @@ export async function GET(request) {
                 }
                 if (row.geojson) {
                     try {
-                        districtMap.get(distName).polygons.push(JSON.parse(row.geojson));
+                        const geojson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
+                        districtMap.get(distName).polygons.push(geojson);
                     } catch (e) {
                         console.error('Error parsing district geojson:', e);
                     }
@@ -98,7 +99,8 @@ export async function GET(request) {
                 }
                 if (row.geojson) {
                     try {
-                        tambonMap.get(key).polygons.push(JSON.parse(row.geojson));
+                        const geojson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
+                        tambonMap.get(key).polygons.push(geojson);
                     } catch (e) {
                         console.error('Error parsing tambon geojson:', e);
                     }
@@ -136,8 +138,8 @@ export async function GET(request) {
                     distname as district_name,
                     villcode as code,
                     ST_AsGeoJSON(geom) as geojson,
-                    ST_Y(ST_Centroid(geom)) as center_lat,
-                    ST_X(ST_Centroid(geom)) as center_lng
+                    ST_Y(ST_Centroid(ST_SRID(geom, 0))) as center_lat,
+                    ST_X(ST_Centroid(ST_SRID(geom, 0))) as center_lng
                 FROM satun_village_polygon
                 ORDER BY distname, subdistnam, villname
             `;
@@ -146,7 +148,7 @@ export async function GET(request) {
                 let geojson = null;
                 if (row.geojson) {
                     try {
-                        geojson = JSON.parse(row.geojson);
+                        geojson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
                     } catch (e) {
                         console.error('Error parsing village geojson:', e);
                     }

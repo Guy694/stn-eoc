@@ -463,9 +463,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             safe: 'bg-green-100 text-green-800 border-green-300'
         };
         const labels = {
-            severe: 'น้ำท่วมหนัก',
+            severe: 'น้ำท่วมสูง',
             moderate: 'น้ำท่วมปานกลาง',
-            mild: 'น้ำท่วมเล็กน้อย',
+            mild: 'น้ำท่วมต่ำ',
             safe: 'ปกติ'
         };
 
@@ -807,7 +807,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     {/* Polygons ระดับตำบล - nodata (ไม่มีข้อมูล - วาดก่อน) */}
                                     {polygonGroupsByTambon.nodata?.map((poly, idx) => {
                                         if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
+                                        const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                         if (coords.type !== 'Polygon') return null;
 
                                         const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -843,7 +843,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                         })
                                         .map((tambon, idx) => {
                                             if (!tambon.boundary_geom) return null;
-                                            const coords = JSON.parse(tambon.boundary_geom);
+                                            const coords = typeof tambon.boundary_geom === "string" ? JSON.parse(tambon.boundary_geom) : tambon.boundary_geom;
                                             if (coords.type !== 'Polygon') return null;
 
                                             const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -872,7 +872,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     {/* Polygons ระดับตำบล - severe */}
                                     {polygonGroupsByTambon.severe.map((poly, idx) => {
                                         if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
+                                        const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                         if (coords.type !== 'Polygon') return null;
 
                                         const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -892,10 +892,10 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                     <div className="text-sm " style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🔴 <strong>ตำบลมีน้ำท่วมหนัก</strong>
+                                                        <br />🔴 <strong>ตำบลมีน้ำท่วมสูง</strong>
                                                         {poly.tambonInfo && (
                                                             <>
-                                                                <br />หมู่บ้านน้ำท่วมหนัก: {poly.tambonInfo.severeCount}
+                                                                <br />หมู่บ้านน้ำท่วมสูง: {poly.tambonInfo.severeCount}
                                                                 <br />ประชากร: {poly.tambonInfo.totalPopulation.toLocaleString()} คน
                                                             </>
                                                         )}
@@ -908,7 +908,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     {/* Polygons ระดับตำบล - moderate */}
                                     {polygonGroupsByTambon.moderate.map((poly, idx) => {
                                         if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
+                                        const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                         if (coords.type !== 'Polygon') return null;
 
                                         const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -944,7 +944,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     {/* Polygons ระดับตำบล - mild */}
                                     {polygonGroupsByTambon.mild.map((poly, idx) => {
                                         if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
+                                        const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                         if (coords.type !== 'Polygon') return null;
 
                                         const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -980,7 +980,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     {/* Polygons ระดับตำบล - safe */}
                                     {polygonGroupsByTambon.safe.map((poly, idx) => {
                                         if (!poly.geom) return null;
-                                        const coords = JSON.parse(poly.geom);
+                                        const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                         if (coords.type !== 'Polygon') return null;
 
                                         const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -1135,7 +1135,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                             {/* Polygons ระดับอำเภอ - severe */}
                                             {polygonGroupsByDistrict.severe.map((poly, idx) => {
                                                 if (!poly.geom) return null;
-                                                const coords = JSON.parse(poly.geom);
+                                                const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                                 if (coords.type !== 'Polygon') return null;
 
                                                 const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -1155,12 +1155,12 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                             <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                                <br />🔴 <strong>อำเภอมีน้ำท่วมหนัก</strong>
+                                                                <br />🔴 <strong>อำเภอมีน้ำท่วมสูง</strong>
                                                                 {poly.districtInfo && (
                                                                     <>
-                                                                        <br />หมู่บ้านน้ำท่วมหนัก: {poly.districtInfo.severeCount}
+                                                                        <br />หมู่บ้านน้ำท่วมสูง: {poly.districtInfo.severeCount}
                                                                         <br />หมู่บ้านน้ำท่วมปานกลาง: {poly.districtInfo.moderateCount}
-                                                                        <br />หมู่บ้านน้ำท่วมเล็กน้อย: {poly.districtInfo.mildCount}
+                                                                        <br />หมู่บ้านน้ำท่วมต่ำ: {poly.districtInfo.mildCount}
                                                                         <br />ประชากร: {poly.districtInfo.totalPopulation.toLocaleString()} คน
                                                                     </>
                                                                 )}
@@ -1173,7 +1173,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                             {/* Polygons ระดับอำเภอ - moderate */}
                                             {polygonGroupsByDistrict.moderate.map((poly, idx) => {
                                                 if (!poly.geom) return null;
-                                                const coords = JSON.parse(poly.geom);
+                                                const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                                 if (coords.type !== 'Polygon') return null;
 
                                                 const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -1196,9 +1196,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                                 <br />🟠 <strong>อำเภอมีน้ำท่วมปานกลาง</strong>
                                                                 {poly.districtInfo && (
                                                                     <>
-                                                                        <br />หมู่บ้านน้ำท่วมหนัก: {poly.districtInfo.severeCount}
+                                                                        <br />หมู่บ้านน้ำท่วมสูง: {poly.districtInfo.severeCount}
                                                                         <br />หมู่บ้านน้ำท่วมปานกลาง: {poly.districtInfo.moderateCount}
-                                                                        <br />หมู่บ้านน้ำท่วมเล็กน้อย: {poly.districtInfo.mildCount}
+                                                                        <br />หมู่บ้านน้ำท่วมต่ำ: {poly.districtInfo.mildCount}
                                                                         <br />ประชากร: {poly.districtInfo.totalPopulation.toLocaleString()} คน
                                                                     </>
                                                                 )}
@@ -1211,7 +1211,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                             {/* Polygons ระดับอำเภอ - mild */}
                                             {polygonGroupsByDistrict.mild.map((poly, idx) => {
                                                 if (!poly.geom) return null;
-                                                const coords = JSON.parse(poly.geom);
+                                                const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                                 if (coords.type !== 'Polygon') return null;
 
                                                 const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -1234,9 +1234,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                                 <br />🟡 <strong>อำเภอมีน้ำท่วมเล็กน้อย</strong>
                                                                 {poly.districtInfo && (
                                                                     <>
-                                                                        <br />หมู่บ้านน้ำท่วมหนัก: {poly.districtInfo.severeCount}
+                                                                        <br />หมู่บ้านน้ำท่วมสูง: {poly.districtInfo.severeCount}
                                                                         <br />หมู่บ้านน้ำท่วมปานกลาง: {poly.districtInfo.moderateCount}
-                                                                        <br />หมู่บ้านน้ำท่วมเล็กน้อย: {poly.districtInfo.mildCount}
+                                                                        <br />หมู่บ้านน้ำท่วมต่ำ: {poly.districtInfo.mildCount}
                                                                         <br />ประชากร: {poly.districtInfo.totalPopulation.toLocaleString()} คน
                                                                     </>
                                                                 )}
@@ -1249,7 +1249,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                             {/* Polygons ระดับอำเภอ - safe */}
                                             {polygonGroupsByDistrict.safe.map((poly, idx) => {
                                                 if (!poly.geom) return null;
-                                                const coords = JSON.parse(poly.geom);
+                                                const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                                 if (coords.type !== 'Polygon') return null;
 
                                                 const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -1285,7 +1285,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                             {/* Polygons อำเภอที่ไม่มีข้อมูล */}
                                             {polygonGroupsByDistrict.nodata.map((poly, idx) => {
                                                 if (!poly.geom) return null;
-                                                const coords = JSON.parse(poly.geom);
+                                                const coords = typeof poly.geom === "string" ? JSON.parse(poly.geom) : poly.geom;
                                                 if (coords.type !== 'Polygon') return null;
 
                                                 const positions = coords.coordinates[0].map(coord => [coord[1], coord[0]]);
@@ -1322,9 +1322,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         <div className="mb-4 mt-4">
                             <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่น้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
-                                <LegendItem color="#DC2626" label="ตำบลมีน้ำท่วมหนัก" />
-                                <LegendItem color="#FBBF24" label="ตำบลมีน้ำท่วมปานกลาง" />
-                                <LegendItem color="#34D399" label="ตำบลมีน้ำท่วมเล็กน้อย" />
+                                <LegendItem color="#DC2626" label="ตำบลมีน้ำท่วมสูง (50+ ซม.)" />
+                                <LegendItem color="#FBBF24" label="ตำบลมีน้ำท่วมปานกลาง (20-50 ซม.)" />
+                                <LegendItem color="#34D399" label="ตำบลมีน้ำท่วมต่ำ (0-20 ซม.)" />
                                 <LegendItem color="#10B981" label="ตำบลปกติ" />
                                 <div className="flex items-center gap-2">
                                     <div
@@ -1364,7 +1364,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         {/* สถิติระดับตำบล */}
                         <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                             <StatBox
-                                label="ตำบลน้ำท่วมหนัก"
+                                label="ตำบลน้ำท่วมสูง"
                                 value={Object.values(tambonFloodLevels).filter(t => t.level === 'severe').length}
                                 color="bg-red-100 text-red-700"
                                 unit="ตำบล"
@@ -1376,7 +1376,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 unit="ตำบล"
                             />
                             <StatBox
-                                label="ตำบลน้ำท่วมเล็กน้อย"
+                                label="ตำบลน้ำท่วมต่ำ"
                                 value={Object.values(tambonFloodLevels).filter(t => t.level === 'mild').length}
                                 color="bg-green-100 text-green-700"
                                 unit="ตำบล"

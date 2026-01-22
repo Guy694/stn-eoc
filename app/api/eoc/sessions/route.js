@@ -73,8 +73,7 @@ export async function GET(request) {
             query += ' WHERE ' + conditions.join(' AND ');
         }
 
-        query += ' ORDER BY s.opened_at DESC LIMIT ? OFFSET ?';
-        params.push(limit, offset);
+        query += ` ORDER BY s.opened_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
         const [rows] = await connection.execute(query, params);
 

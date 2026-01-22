@@ -201,6 +201,7 @@ export default function Sidebar() {
                 },
                 { name: "กิจกรรมล่าสุด", path: "/admin/recent-activities", icon: "📋", description: "ติดตามกิจกรรมในระบบ" },
                 { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮", description: "ข้อมูลบุคลากร" },
+                { name: "จัดการผู้ใช้ประชาชน", path: "/admin/citizens", icon: "👥", description: "ประชาชนที่ลงทะเบียน ThaiID" },
                 { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: "🏥", description: "โรงพยาบาล/สถานีอนามัย" },
                 { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️", description: "พื้นที่หมู่บ้าน" },
                 { name: "จัดการ EOC", path: "/admin/eoc-management", icon: "⚙️", description: "เปิด/ปิด EOC" },

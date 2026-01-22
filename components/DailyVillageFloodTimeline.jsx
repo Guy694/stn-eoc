@@ -216,9 +216,9 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
 
     const getFloodLabel = (level) => {
         const labels = {
-            'severe': 'น้ำท่วมหนัก',
+            'severe': 'น้ำท่วมสูง',
             'moderate': 'น้ำท่วมปานกลาง',
-            'mild': 'น้ำท่วมเล็กน้อย',
+            'mild': 'น้ำท่วมต่ำ',
             'safe': 'ปลอดภัย',
             'nodata': 'ไม่มีข้อมูล',
         };
@@ -723,9 +723,9 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                         < div className="mb-4" >
                             <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่น้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
-                                <LegendItem color="#DC2626" label="น้ำท่วมหนัก" />
+                                <LegendItem color="#DC2626" label="น้ำท่วมสูง" />
                                 <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
-                                <LegendItem color="#34D399" label="น้ำท่วมเล็กน้อย" />
+                                <LegendItem color="#34D399" label="น้ำท่วมต่ำ" />
                                 <LegendItem color="#10B981" label="ปลอดภัย" />
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded border-2 border-black" style={{ backgroundColor: 'transparent' }}></div>
@@ -767,7 +767,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                             floodData && floodData.summary && (
                                 <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <StatBox
-                                        label="น้ำท่วมหนัก"
+                                        label="น้ำท่วมสูง"
                                         value={floodData.summary.severeCount}
                                         color="bg-red-100 text-red-700"
                                         unit="หมู่บ้าน"
@@ -779,7 +779,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                         unit="หมู่บ้าน"
                                     />
                                     <StatBox
-                                        label="น้ำท่วมเล็กน้อย"
+                                        label="น้ำท่วมต่ำ"
                                         value={floodData.summary.mildCount}
                                         color="bg-green-100 text-green-700"
                                         unit="หมู่บ้าน"

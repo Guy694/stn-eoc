@@ -24,7 +24,7 @@ export async function GET() {
 
         // แปลง GeoJSON string เป็น object และดึง coordinates
         const polygons = results.map((row) => {
-            const geoJson = JSON.parse(row.geojson);
+            const geoJson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
 
             // แปลง coordinates จาก GeoJSON format
             let coordinates = [];

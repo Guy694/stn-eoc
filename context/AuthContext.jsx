@@ -25,7 +25,30 @@ export function AuthProvider({ children }) {
 
     const validateSession = async (skipReload = false) => {
         try {
-            // 1. ลองตรวจสอบจาก localStorage ก่อน (สำหรับ username/password login)
+            // 1. ตรวจสอบจาก cookie ก่อน (สำหรับ ThaiID login)
+            const cookieResponse = await fetch('/api/auth/session');
+
+            if (cookieResponse.ok) {
+                const cookieData = await cookieResponse.json();
+
+                if (cookieData.success && cookieData.user) {
+                    // พบ session ใน cookie -> บันทึกลง localStorage เพื่อใช้ต่อ
+                    setUser(cookieData.user);
+                    localStorage.setItem("user", JSON.stringify(cookieData.user));
+
+                    // สร้าง sessionToken เฉพาะครั้งแรก (ถ้ายังไม่มี)
+                    const sessionToken = localStorage.getItem("sessionToken");
+                    if (!sessionToken) {
+                        const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                        localStorage.setItem("sessionToken", thaiIdToken);
+                    }
+
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // 2. ถ้าไม่มีใน cookie ให้ลองตรวจสอบจาก localStorage (สำหรับ username/password login)
             const sessionToken = localStorage.getItem("sessionToken");
             const storedUser = localStorage.getItem("user");
 
@@ -68,28 +91,6 @@ export function AuthProvider({ children }) {
                 } else if (data.sessionExpired || data.idleTimeout) {
                     // Session หมดอายุ - ล้างข้อมูลและ redirect
                     handleSessionExpired(skipReload);
-                    return;
-                }
-            }
-
-            // 2. ถ้าไม่มีใน localStorage ให้ลองตรวจสอบจาก cookie (สำหรับ ThaiID login)
-            const cookieResponse = await fetch('/api/auth/session');
-
-            if (cookieResponse.ok) {
-                const cookieData = await cookieResponse.json();
-
-                if (cookieData.success && cookieData.user) {
-                    // พบ session ใน cookie -> บันทึกลง localStorage เพื่อใช้ต่อ
-                    setUser(cookieData.user);
-                    localStorage.setItem("user", JSON.stringify(cookieData.user));
-
-                    // สร้าง sessionToken เฉพาะครั้งแรก (ถ้ายังไม่มี)
-                    if (!sessionToken) {
-                        const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                        localStorage.setItem("sessionToken", thaiIdToken);
-                    }
-
-                    setLoading(false);
                     return;
                 }
             }

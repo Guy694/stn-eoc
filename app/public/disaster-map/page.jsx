@@ -1,25 +1,12 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicLayout from "@/components/layouts/PublicLayout";
+import PublicIncidentMap from "@/components/PublicIncidentMap";
 import { satunDistricts } from "@/data/satunData";
 import SkeletonLoader, { StatsSkeleton } from "@/components/SkeletonLoader";
 import { NoReportsEmptyState } from "@/components/EmptyState";
 import ErrorMessage, { getFriendlyErrorMessage } from "@/components/ErrorMessage";
-
-// Import DisasterMap แบบ dynamic เพื่อหลีกเลี่ยง SSR error
-const DisasterMap = dynamic(() => import("@/components/DisasterMap"), {
-    ssr: false,
-    loading: () => (
-        <div className="h-full w-full flex items-center justify-center bg-gray-100 rounded-lg">
-            <div className="text-center">
-                <div className="text-4xl mb-2">🗺️</div>
-                <p className="text-gray-600">กำลังโหลดแผนที่...</p>
-            </div>
-        </div>
-    ),
-});
 
 export default function DisasterMapPage() {
     const [filters, setFilters] = useState({
@@ -92,7 +79,7 @@ export default function DisasterMapPage() {
 
                             // Format date
                             let formattedDate = 'ไม่ระบุวันที่';
-                            const dateValue = incident.occurredAt || incident.createdAt;
+                            const dateValue = incident.occurred_at || incident.created_at;
                             if (dateValue) {
                                 const date = new Date(dateValue);
                                 if (!isNaN(date.getTime())) {
@@ -108,26 +95,26 @@ export default function DisasterMapPage() {
 
                             return {
                                 id: incident.id,
-                                type: incident.disasterType || 'น้ำท่วม',
-                                reportType: incident.reportType, // 'help_request' or 'traffic_report'
+                                type: incident.disaster_type || 'น้ำท่วม',
+                                reportType: incident.report_type, // 'help_request' or 'traffic_report'
                                 severity: severity,
                                 district: incident.district || 'ไม่ระบุ',
-                                tambon: incident.subDistrict || 'ไม่ระบุ',
+                                tambon: incident.sub_district || 'ไม่ระบุ',
                                 village: incident.village || 'ไม่ระบุ',
                                 date: formattedDate,
                                 description: incident.description || 'ไม่มีรายละเอียด',
-                                affected: incident.affectedPeople || 0,
+                                affected: incident.affected_people || 0,
                                 status: incident.status || 'รอตรวจสอบ',
                                 // For map display
                                 lat: parseFloat(incident.latitude),
                                 lng: parseFloat(incident.longitude),
                                 position: [parseFloat(incident.latitude), parseFloat(incident.longitude)],
                                 // Additional info
-                                reporter: `${incident.firstName} ${incident.lastName}`,
+                                reporter: `${incident.first_name} ${incident.last_name}`,
                                 phone: incident.phone,
-                                waterLevel: incident.waterLevel,
-                                travelStatus: incident.travelStatus,
-                                photoPath: incident.photoPath
+                                waterLevel: incident.water_level,
+                                travelStatus: incident.travel_status,
+                                photoPath: incident.photo_path
                             };
                         });
                     setIncidents(mappedData);
@@ -245,14 +232,7 @@ export default function DisasterMapPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* แผนที่ */}
                     <div className="lg:col-span-2">
-                        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                            <div className="bg-linear-to-r from-green-600 to-green-700 text-white px-6 py-4">
-                                <h3 className="text-lg font-semibold">🗺️ แผนที่รายงานจากประชาชน - จังหวัดสตูล</h3>
-                            </div>
-                            <div className="h-[600px]">
-                                <DisasterMap events={filteredEvents} onEventClick={setSelectedEvent} />
-                            </div>
-                        </div>
+                        <PublicIncidentMap />
                     </div>
 
                     {/* รายการเหตุการณ์ */}

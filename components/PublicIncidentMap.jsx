@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -12,6 +12,8 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
     const [incidents, setIncidents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [customIcon, setCustomIcon] = useState(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const mapContainerRef = useRef(null);
 
     // Layer states
     const [showDistrictLayer, setShowDistrictLayer] = useState(true);
@@ -138,6 +140,16 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         if (showVillageLayer && villagePolygons.length === 0) fetchPolygons('village');
     }, [showVillageLayer]);
 
+    // Listen for fullscreen changes
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
     const fetchPolygons = async (level) => {
         try {
             const response = await fetch(`/api/common/area-polygons?level=${level}`);
@@ -242,11 +254,45 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         );
     }
 
+    // Toggle fullscreen
+    const toggleFullscreen = () => {
+        if (!mapContainerRef.current) return;
+
+        if (!document.fullscreenElement) {
+            mapContainerRef.current.requestFullscreen().then(() => {
+                setIsFullscreen(true);
+            }).catch(err => {
+                console.error('Error attempting to enable fullscreen:', err);
+            });
+        } else {
+            document.exitFullscreen().then(() => {
+                setIsFullscreen(false);
+            });
+        }
+    };
+
     return (
-        <div className="text-gray-800 bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-green-50">
+        <div ref={mapContainerRef} className="text-gray-800 bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-green-50 relative">
                 <h3 className="text-2xl font-bold text-gray-800">📍 รายงานจากประชาชน (ยืนยันแล้ว)</h3>
                 <p className="text-lg mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงาน ({incidents.length} จุด)</p>
+
+                {/* Fullscreen Button */}
+                <button
+                    onClick={toggleFullscreen}
+                    className="absolute top-4 right-4 bg-white hover:bg-gray-100 text-gray-800 p-2 rounded-lg shadow-md transition-all hover:shadow-lg"
+                    title={isFullscreen ? "ออกจากโหมดเต็มจอ" : "เปิดแบบเต็มจอ"}
+                >
+                    {isFullscreen ? (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    ) : (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                    )}
+                </button>
             </div>
 
             <div className="p-4 bg-gradient-to-br from-blue-50 to-green-50">
@@ -318,16 +364,11 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                     </div>
                 </div>
 
-                {/* Urgency Legend */}
-                <div className="mb-4 flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-blue-500 rounded-full"></div><span>ไม่เร่งด่วน</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-500 rounded-full"></div><span>ปานกลาง</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-orange-500 rounded-full"></div><span>เร่งด่วน</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-red-500 rounded-full"></div><span>เร่งด่วนมาก</span></div>
-                </div>
+
+
 
                 {/* Map */}
-                <div className="h-[600px] rounded-lg overflow-hidden border border-gray-200">
+                <div className={`${isFullscreen ? 'h-screen' : 'h-[600px]'} rounded-lg overflow-hidden border border-gray-200`}>
                     <MapContainer center={[6.6238, 100.0673]} zoom={10} style={{ height: '100%', width: '100%' }}>
                         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -405,7 +446,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                             <p><strong>สถานที่:</strong> {incident.village || '-'}, ต.{incident.sub_district || '-'}, อ.{incident.district || '-'}</p>
                                             <p><strong>โทร:</strong> {incident.phone}</p>
                                             <p className={getUrgencyColor(incident.urgency)}><strong>ความเร่งด่วน:</strong> {getUrgencyLabel(incident.urgency)}</p>
-                                            <p><strong>ระดับน้ำ:</strong> {incident.water_level}</p>
+                                            <p><strong>ระดับน้ำ:</strong> {incident.water_level} ซม.</p>
                                             {incident.affected_people > 0 && <p><strong>ผู้ได้รับผลกระทบ:</strong> {incident.affected_people} คน</p>}
                                             {incident.travel_status && <p><strong>สถานะการสัญจร:</strong> {incident.travel_status === 'passable' ? '✅ สัญจรได้ปกติ' : incident.travel_status === 'difficult' ? '⚠️ สัญจรได้ยากลำบาก' : '🚫 ไม่สามารถสัญจรได้'}</p>}
                                             <p><strong>เวลาเกิดเหตุ:</strong> {formatDate(incident.occurred_at)}</p>

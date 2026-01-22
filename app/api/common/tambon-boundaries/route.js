@@ -45,7 +45,9 @@ export async function GET(request) {
             tambonMap[key].villages++;
 
             // แปลง GeoJSON และเก็บ coordinates
-            const geoJson = JSON.parse(row.geojson);
+            const geoJson = typeof row.geojson === 'string'
+                ? JSON.parse(row.geojson)
+                : row.geojson;
             if (geoJson.type === 'Polygon') {
                 tambonMap[key].allCoords.push(...geoJson.coordinates[0]);
             } else if (geoJson.type === 'MultiPolygon') {

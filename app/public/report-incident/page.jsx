@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { showWarning } from '@/lib/sweetAlert';
+import { useAuth } from '@/context/AuthContext';
 
 // Import Leaflet components with no SSR
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -44,9 +45,7 @@ export default function ReportIncidentPage() {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState('');
 
-    // ThaiID session
-    const [citizenSession, setCitizenSession] = useState(null);
-    const [checkingSession, setCheckingSession] = useState(true);
+    const { user } = useAuth(); // Get logged-in user (citizen or officer)
 
     // Form data
     const [formData, setFormData] = useState({
@@ -99,37 +98,22 @@ export default function ReportIncidentPage() {
                 });
             });
         }
-
-        // Check for ThaiID session
-        async function checkSession() {
-            try {
-                const res = await fetch('/api/auth/citizen-thaiid/session');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated) {
-                        setCitizenSession(data.user);
-                    }
-                }
-            } catch (error) {
-                console.error('Session check failed:', error);
-            } finally {
-                setCheckingSession(false);
-            }
-        }
-        checkSession();
     }, []);
 
-    // Auto-fill form when ThaiID session exists
+    // Auto-fill form when user is logged in (citizen)
     useEffect(() => {
-        if (citizenSession) {
+        if (user && user.role === 'citizen') {
+            // Pre-fill data from ThaiID
+            const givenName = user.thaiIdData?.given_name || user.givenName || '';
+            const familyName = user.thaiIdData?.family_name || user.familyName || '';
+
             setFormData(prev => ({
                 ...prev,
-                firstName: citizenSession.firstName,
-                lastName: citizenSession.lastName,
-                nationalId: citizenSession.pid
+                firstName: givenName,
+                lastName: familyName
             }));
         }
-    }, [citizenSession]);
+    }, [user]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -420,8 +404,8 @@ export default function ReportIncidentPage() {
                     </div>
                 </div>
 
-                {/* ThaiID Login Section */}
-                {!checkingSession && !citizenSession && (
+                {/* ThaiID Login Section - Show only if not logged in */}
+                {!user && (
                     <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
                         <div className="flex items-start gap-4">
                             <span className="text-4xl">🔐</span>
@@ -446,7 +430,8 @@ export default function ReportIncidentPage() {
                 )}
 
                 {/* Logged In Status */}
-                {citizenSession && (
+                {/* Logged in as Citizen */}
+                {user && user.role === 'citizen' && (
                     <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -456,7 +441,7 @@ export default function ReportIncidentPage() {
                                         ยืนยันตัวตนด้วย ThaiID
                                     </p>
                                     <p className="text-sm text-gray-600">
-                                        {citizenSession.firstName} {citizenSession.lastName}
+                                        {user.givenName} {user.familyName}
                                     </p>
                                 </div>
                             </div>
@@ -542,22 +527,22 @@ export default function ReportIncidentPage() {
                             {/* National ID */}
                             <div>
                                 <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    เลขบัตรประชาชน {citizenSession && <span className="text-green-600 text-sm">(ยืนยันจาก ThaiID ✓)</span>}
+                                    เลขบัตรประชาชน {user && user.role === 'citizen' && <span className="text-green-600 text-sm">(ยืนยันจาก ThaiID ✓)</span>}
                                 </label>
                                 <input
                                     type="text"
                                     name="nationalId"
-                                    value={formData.nationalId}
+                                    value={formData.nationalId || ''}
                                     onChange={handleInputChange}
-                                    disabled={!!citizenSession}
+                                    disabled={user && user.role === 'citizen'}
                                     maxLength="13"
-                                    className={`text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 rounded-lg focus:outline-none text-sm md:text-base ${citizenSession
+                                    className={`text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 rounded-lg focus:outline-none text-sm md:text-base ${user && user.role === 'citizen'
                                         ? 'bg-green-50 border-green-300 cursor-not-allowed'
                                         : 'border-gray-300 focus:border-blue-500'
                                         }`}
                                     placeholder="เลขบัตรประชาชน 13 หลัก (ไม่บังคับ)"
                                 />
-                                {citizenSession && (
+                                {user && user.role === 'citizen' && (
                                     <p className="text-xs text-green-600 mt-1">
                                         ข้อมูลนี้ได้รับการยืนยันจากระบบ ThaiID
                                     </p>
@@ -670,10 +655,10 @@ export default function ReportIncidentPage() {
                                     required
                                 >
                                     <option value="">-- เลือกระดับน้ำ --</option>
-                                    <option value="0-20">น้อย (0-20 ซม. / ใต้เข่า)</option>
+                                    <option value="0-20">ต่ำ (0-20 ซม. / ใต้เข่า)</option>
                                     <option value="20-50">ปานกลาง (20-50 ซม. / เหนือเข่า)</option>
-                                    <option value="50-100">มาก (50-100 ซม. / เอว)</option>
-                                    <option value="100+">รุนแรง (100+ ซม. / เหนืออก)</option>
+                                    <option value="50-100">สูง (50-100 ซม. / เอว)</option>
+                                    <option value="100+">สูงมาก (100+ ซม. / เหนืออก)</option>
                                 </select>
                             </div>
 

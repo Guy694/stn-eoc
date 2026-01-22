@@ -5,7 +5,8 @@ import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
 export default function FloodRecordsPage() {
-    const [records, setRecords] = useState([]);
+    const [records, setRecords] = useState([]); // ข้อมูลที่แสดงในตาราง (กรองตามวันที่)
+    const [allRecords, setAllRecords] = useState([]); // ข้อมูลทั้งหมด (สำหรับคำนวณสถานะ)
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
@@ -21,6 +22,11 @@ export default function FloodRecordsPage() {
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     };
     const [selectedDate, setSelectedDate] = useState(''); // Initialize empty to avoid hydration mismatch
+    const [showCopyModal, setShowCopyModal] = useState(false);
+    const [copyConfig, setCopyConfig] = useState({
+        sourceDate: '',
+        overwrite: false
+    });
 
     const [filters, setFilters] = useState({
         district: 'all',
@@ -147,7 +153,18 @@ export default function FloodRecordsPage() {
 
             if (data.success) {
                 console.log('Fetched records from DB:', data.data.length, 'records');
-                setRecords(data.data);
+
+                // เก็บข้อมูลทั้งหมดสำหรับคำนวณสถานะ
+                setAllRecords(data.data);
+
+                // กรองข้อมูลให้แสดงเฉพาะวันที่เลือก
+                const filteredRecords = data.data.filter(record => {
+                    const recordDate = record.flood_start_date?.split('T')[0];
+                    return recordDate === selectedDate;
+                });
+
+                console.log(`Filtered to ${filteredRecords.length} records for ${selectedDate}`);
+                setRecords(filteredRecords);
 
                 // อัพเดทตำบลที่บันทึกแล้ววันนี้ทันที (ใช้วันที่ท้องถิ่น)
                 const now = new Date();
@@ -411,6 +428,44 @@ export default function FloodRecordsPage() {
         setIsTambonMode(false);
     };
 
+    const handleCopyData = async () => {
+        if (!activeSession) {
+            showError('ไม่พบ EOC Session ที่เปิดอยู่');
+            return;
+        }
+
+        if (!copyConfig.sourceDate) {
+            showError('กรุณาเลือกวันที่ต้องการคัดลอก');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/flood-records/copy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: activeSession.id,
+                    source_date: copyConfig.sourceDate,
+                    target_date: selectedDate,
+                    overwrite: copyConfig.overwrite
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showSuccess(result.message);
+                await fetchRecords();
+                setShowCopyModal(false);
+                setCopyConfig({ sourceDate: '', overwrite: false });
+            } else {
+                showError('เกิดข้อผิดพลาด: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error copying data:', error);
+            showError('เกิดข้อผิดพลาดในการคัดลอกข้อมูล');
+        }
+    };
+
     // คำนวณสถานะของทุกตำบล
     const getAllTambonsStatus = () => {
         // ใช้วันที่ที่เลือก (selectedDate) แทนวันนี้
@@ -438,7 +493,7 @@ export default function FloodRecordsPage() {
 
                 // นับจำนวน record ที่บันทึกไปแล้วสำหรับวันที่เลือก
                 // ปรับปรุง: นับ record ที่ unique ต่อหมู่บ้าน (ไม่ซ้ำ)
-                const recordedVillagesForDate = records.filter(record => {
+                const recordedVillagesForDate = allRecords.filter(record => {
                     // แปลง flood_start_date จาก UTC เป็น local date เพื่อเปรียบเทียบ
                     const recordDateObj = new Date(record.flood_start_date);
                     const recordDate = `${recordDateObj.getFullYear()}-${String(recordDateObj.getMonth() + 1).padStart(2, '0')}-${String(recordDateObj.getDate()).padStart(2, '0')}`;
@@ -644,6 +699,18 @@ export default function FloodRecordsPage() {
                                     }`}
                             >
                                 📆 วันนี้
+                            </button>
+
+                            {/* Copy Data Button */}
+                            <button
+                                onClick={() => {
+                                    setCopyConfig({ sourceDate: '', overwrite: false });
+                                    setShowCopyModal(true);
+                                }}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                                title="คัดลอกข้อมูลจากวันอื่น"
+                            >
+                                📋 คัดลอกข้อมูล
                             </button>
                         </div>
 
@@ -1083,6 +1150,85 @@ export default function FloodRecordsPage() {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Copy Data Modal */}
+                {showCopyModal && (
+                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-indigo-200">
+                            <div className="p-6">
+                                <h2 className="text-gray-700 text-2xl font-bold mb-4 flex items-center gap-2">
+                                    📋 คัดลอกข้อมูลน้ำท่วม
+                                </h2>
+
+                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-4">
+                                    <p className="text-sm text-indigo-800 mb-2">
+                                        <span className="font-bold">วันที่ปลายทาง:</span> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                    <p className="text-xs text-indigo-600">
+                                        ระบบจะคัดลอกข้อมูลจากวันที่ต้นทางไปยังวันที่ปลายทาง
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            วันที่ต้นทาง (คัดลอกจาก) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={copyConfig.sourceDate}
+                                            min={activeSession?.opened_at?.split('T')[0]}
+                                            max={getTodayDate()}
+                                            onChange={(e) => setCopyConfig({ ...copyConfig, sourceDate: e.target.value })}
+                                            className="text-gray-600 w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-start gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="overwrite"
+                                            checked={copyConfig.overwrite}
+                                            onChange={(e) => setCopyConfig({ ...copyConfig, overwrite: e.target.checked })}
+                                            className="mt-1"
+                                        />
+                                        <label htmlFor="overwrite" className="text-sm text-gray-700">
+                                            <span className="font-medium">ทับข้อมูลเดิม</span>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                หากไม่เลือก ระบบจะข้ามหมู่บ้านที่มีข้อมูลในวันที่ปลายทางแล้ว
+                                            </p>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 justify-end pt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowCopyModal(false);
+                                            setCopyConfig({ sourceDate: '', overwrite: false });
+                                        }}
+                                        className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyData}
+                                        disabled={!copyConfig.sourceDate}
+                                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        คัดลอกข้อมูล
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

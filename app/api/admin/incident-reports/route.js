@@ -72,7 +72,7 @@ export async function GET(request) {
             ${whereClause}
             ORDER BY created_at DESC
             LIMIT ? OFFSET ?`,
-            [...params, limit, offset]
+            [...params, String(limit), String(offset)]
         );
 
         // นับจำนวนทั้งหมด

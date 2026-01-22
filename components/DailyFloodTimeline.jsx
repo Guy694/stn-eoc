@@ -62,9 +62,9 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
 
     const getFloodLabel = (level) => {
         const labels = {
-            'severe': 'น้ำท่วมหนัก',
+            'severe': 'น้ำท่วมสูง',
             'moderate': 'น้ำท่วมปานกลาง',
-            'mild': 'น้ำท่วมเล็กน้อย',
+            'mild': 'น้ำท่วมต่ำ',
             'safe': 'ปลอดภัย',
             'nodata': 'ไม่มีข้อมูล',
         };
@@ -306,9 +306,9 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
 
                 {/* Legend */}
                 <div className="flex justify-center gap-4 flex-wrap">
-                    <LegendItem color="#DC2626" label="น้ำท่วมหนัก" />
+                    <LegendItem color="#DC2626" label="น้ำท่วมสูง" />
                     <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
-                    <LegendItem color="#34D399" label="น้ำท่วมเล็กน้อย" />
+                    <LegendItem color="#34D399" label="น้ำท่วมต่ำ" />
                     <LegendItem color="#10B981" label="ปลอดภัย" />
                     <LegendItem color="#E5E7EB" label="ไม่มีข้อมูล" />
                 </div>
@@ -317,7 +317,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                 {floodData && floodData.summary && (
                     <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                         <StatBox
-                            label="น้ำท่วมหนัก"
+                            label="น้ำท่วมสูง"
                             value={floodData.summary.severeCount}
                             color="bg-red-100 text-red-700"
                         />
@@ -327,7 +327,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                             color="bg-yellow-100 text-yellow-700"
                         />
                         <StatBox
-                            label="น้ำท่วมเล็กน้อย"
+                            label="น้ำท่วมต่ำ"
                             value={floodData.summary.mildCount}
                             color="bg-green-100 text-green-700"
                         />
