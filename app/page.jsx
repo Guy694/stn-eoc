@@ -407,7 +407,7 @@ export default function Home() {
 
                       {eocStatus.isOpen && (
                         <div className="bg-white/10 rounded-lg md:rounded-xl p-3 md:p-4 backdrop-blur-sm">
-                          <p className="text-xs md:text-sm mb-2 md:mb-3">เปิด EOC เมื่อ: {formatDate(eocStatus.openedDate)}</p>
+                          <p className="text-xs md:text-sm mb-2 md:mb-3">เปิด EOC เมื่อ: {formatDate(eocStatus.openedDate)} น.</p>
                           <div className="grid grid-cols-3 gap-2 md:gap-4">
                             <div className="text-center bg-white/10 rounded-lg p-2 md:p-3">
                               <div className="text-2xl md:text-4xl font-bold">{timeElapsed.days}</div>
@@ -488,7 +488,7 @@ export default function Home() {
                             </div>
                             <div className="flex justify-between items-center text-xs text-gray-500 px-1">
                               <span>เปิดเมื่อ:</span>
-                              <span className="font-medium text-gray-700">{formatDate(eoc.activated_at)}</span>
+                              <span className="font-medium text-gray-700">{formatDate(eoc.activated_at)} น.</span>
                             </div>
                           </div>
 

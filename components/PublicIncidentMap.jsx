@@ -274,8 +274,8 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
     return (
         <div ref={mapContainerRef} className="text-gray-800 bg-white rounded-lg shadow-md overflow-hidden">
             <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-green-50 relative">
-                <h3 className="text-2xl font-bold text-gray-800">📍 รายงานจากประชาชน (ยืนยันแล้ว)</h3>
-                <p className="text-lg mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงาน ({incidents.length} จุด)</p>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-800">📍 รายงานจากประชาชน (ยืนยันแล้ว)</h3>
+                <p className="text-sm mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงาน <p>({incidents.length} จุด)</p> </p>
 
                 {/* Fullscreen Button */}
                 <button

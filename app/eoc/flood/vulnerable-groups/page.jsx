@@ -233,7 +233,7 @@ export default function VulnerableGroupsPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <h1 className="text-xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                             <span className="text-4xl">👥</span>
                             บันทึกข้อมูลกลุ่มเปราะบาง
                         </h1>
@@ -247,9 +247,9 @@ export default function VulnerableGroupsPage() {
                             resetForm();
                             setShowModal(true);
                         }}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                        className="bg-blue-600 text-white px-1 md:px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
-                        <span>➕</span>
+                        <span >➕</span>
                         เพิ่มข้อมูลใหม่
                     </button>
                 </div>

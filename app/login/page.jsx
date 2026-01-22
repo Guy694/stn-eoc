@@ -101,6 +101,7 @@ function LoginForm() {
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ EOC</h1>
                     <p className="text-gray-600">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
+                    <p className="text-gray-600">(Satun Geo-EOC Inteligent platform) </p>
                 </div>
 
                 {/* Login Form */}

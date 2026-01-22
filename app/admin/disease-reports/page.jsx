@@ -440,7 +440,7 @@ export default function DiseaseReportsPage() {
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <h1 className="text-xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                             <span className="text-4xl">🦠</span>
                             สถานการณ์โรครายวัน
                         </h1>
@@ -451,7 +451,7 @@ export default function DiseaseReportsPage() {
                             resetForm();
                             setShowModal(true);
                         }}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        className="px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
                         <span className="text-xl">➕</span>
                         เพิ่มรายงานโรค

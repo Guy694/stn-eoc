@@ -45,6 +45,11 @@ export default function ReportIncidentPage() {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState('');
 
+    // GPS Location states
+    const [gpsStatus, setGpsStatus] = useState('idle'); // idle, requesting, success, error, denied
+    const [gpsError, setGpsError] = useState('');
+    const [isGpsLocation, setIsGpsLocation] = useState(false); // ตำแหน่งมาจาก GPS หรือไม่
+
     const { user } = useAuth(); // Get logged-in user (citizen or officer)
 
     // Form data
@@ -80,6 +85,52 @@ export default function ReportIncidentPage() {
     const [markerPosition, setMarkerPosition] = useState(null);
     const defaultCenter = [6.6238, 100.0750]; // Satun coordinates
 
+    // ฟังก์ชันขอตำแหน่ง GPS
+    const requestGpsLocation = () => {
+        if (!navigator.geolocation) {
+            setGpsStatus('error');
+            setGpsError('เบราว์เซอร์ไม่รองรับ GPS');
+            return;
+        }
+
+        setGpsStatus('requesting');
+        setGpsError('');
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setMarkerPosition({ lat: latitude, lng: longitude });
+                setIsGpsLocation(true);
+                setGpsStatus('success');
+            },
+            (error) => {
+                setIsGpsLocation(false);
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        setGpsStatus('denied');
+                        setGpsError('ผู้ใช้ไม่อนุญาตให้เข้าถึงตำแหน่ง กรุณาปักหมุดบนแผนที่');
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        setGpsStatus('error');
+                        setGpsError('ไม่สามารถระบุตำแหน่งได้ กรุณาปักหมุดบนแผนที่');
+                        break;
+                    case error.TIMEOUT:
+                        setGpsStatus('error');
+                        setGpsError('หมดเวลาในการขอตำแหน่ง กรุณาปักหมุดบนแผนที่');
+                        break;
+                    default:
+                        setGpsStatus('error');
+                        setGpsError('เกิดข้อผิดพลาด กรุณาปักหมุดบนแผนที่');
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    };
+
     useEffect(() => {
         setMounted(true);
         // Set default occurrence time to now
@@ -97,6 +148,9 @@ export default function ReportIncidentPage() {
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
                 });
             });
+
+            // ขอตำแหน่ง GPS อัตโนมัติเมื่อโหลดหน้า
+            requestGpsLocation();
         }
     }, []);
 
@@ -759,15 +813,80 @@ export default function ReportIncidentPage() {
                             <span className="text-2xl md:text-3xl">📍</span>
                             ตำแหน่งที่เกิดเหตุ <span className="text-red-500">*</span>
                         </h2>
-                        <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4">
-                            คลิกบนแผนที่เพื่อปักหมุดตำแหน่งที่เกิดเหตุ
-                        </p>
+
+                        {/* GPS Status Section */}
+                        <div className="mb-4">
+                            {/* GPS Status Indicator */}
+                            {gpsStatus === 'requesting' && (
+                                <div className="flex items-center gap-3 bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-3">
+                                    <span className="animate-spin text-2xl">📡</span>
+                                    <div>
+                                        <p className="font-semibold text-blue-800">กำลังค้นหาตำแหน่งของคุณ...</p>
+                                        <p className="text-sm text-blue-600">กรุณารอสักครู่</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {gpsStatus === 'success' && isGpsLocation && (
+                                <div className="flex items-center gap-3 bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-3">
+                                    <span className="text-2xl">✅</span>
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-green-800">ปักหมุดจาก GPS สำเร็จ</p>
+                                        <p className="text-sm text-green-600">หากตำแหน่งไม่ตรง สามารถคลิกแผนที่เพื่อแก้ไขได้</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setMarkerPosition(null);
+                                            setIsGpsLocation(false);
+                                        }}
+                                        className="text-gray-500 hover:text-gray-700 text-sm"
+                                    >
+                                        ล้าง
+                                    </button>
+                                </div>
+                            )}
+
+                            {(gpsStatus === 'error' || gpsStatus === 'denied') && (
+                                <div className="flex items-center gap-3 bg-amber-50 border-2 border-amber-200 rounded-lg p-4 mb-3">
+                                    <span className="text-2xl">⚠️</span>
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-amber-800">{gpsError}</p>
+                                        <p className="text-sm text-amber-600">คลิกบนแผนที่เพื่อปักหมุดตำแหน่งที่เกิดเหตุ</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={requestGpsLocation}
+                                        className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        ลองใหม่
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Manual Location Button */}
+                            {gpsStatus !== 'requesting' && (
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    <button
+                                        type="button"
+                                        onClick={requestGpsLocation}
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
+                                    >
+                                        <span>📍</span>
+                                        <span>ใช้ตำแหน่งปัจจุบัน (GPS)</span>
+                                    </button>
+                                    <span className="flex items-center text-gray-500 text-sm">
+                                        หรือ คลิกบนแผนที่เพื่อปักหมุดเอง
+                                    </span>
+                                </div>
+                            )}
+                        </div>
 
                         {mounted && (
                             <div className="border-4 border-blue-200 rounded-xl overflow-hidden shadow-lg">
                                 <MapContainer
-                                    center={defaultCenter}
-                                    zoom={11}
+                                    center={markerPosition ? [markerPosition.lat, markerPosition.lng] : defaultCenter}
+                                    zoom={markerPosition ? 15 : 11}
                                     style={{ height: '400px', width: '100%' }}
                                     className="z-0"
                                     scrollWheelZoom={true}
@@ -776,16 +895,35 @@ export default function ReportIncidentPage() {
                                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                     />
-                                    <LocationMarker position={markerPosition} setPosition={setMarkerPosition} />
+                                    <LocationMarker position={markerPosition} setPosition={(pos) => {
+                                        setMarkerPosition(pos);
+                                        setIsGpsLocation(false); // ถ้าผู้ใช้คลิกแก้ไข ถือว่าไม่ใช่จาก GPS แล้ว
+                                    }} />
                                 </MapContainer>
                             </div>
                         )}
 
                         {markerPosition && (
-                            <div className="mt-3 md:mt-4 bg-blue-50 rounded-lg p-3 md:p-4">
-                                <p className="text-sm md:text-base text-blue-800">
-                                    <strong>ตำแหน่งที่เลือก:</strong> {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
-                                </p>
+                            <div className={`mt-3 md:mt-4 rounded-lg p-3 md:p-4 ${isGpsLocation ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'}`}>
+                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                    <p className={`text-sm md:text-base ${isGpsLocation ? 'text-green-800' : 'text-blue-800'}`}>
+                                        <strong>ตำแหน่งที่เลือก:</strong> {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
+                                        {isGpsLocation && <span className="ml-2 text-green-600 text-sm">(จาก GPS)</span>}
+                                        {!isGpsLocation && markerPosition && <span className="ml-2 text-blue-600 text-sm">(ปักหมุดเอง)</span>}
+                                    </p>
+                                    {markerPosition && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setMarkerPosition(null);
+                                                setIsGpsLocation(false);
+                                            }}
+                                            className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1"
+                                        >
+                                            <span>🗑️</span> ล้างตำแหน่ง
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>

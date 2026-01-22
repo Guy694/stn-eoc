@@ -190,7 +190,7 @@ export default function DisasterMapPage() {
             <div className="container mx-auto p-6">
                 <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">รายงานจากประชาชน (ยืนยันแล้ว)</h1>
+                        <h1 className="flex text-xl justify-center items-center  md: text-2xl font-bold text-gray-800 mb-2">รายงานจากประชาชน (ยืนยันแล้ว)</h1>
                         <p className="text-gray-600">แผนที่แสดงรายงานเหตุการณ์จากประชาชนที่ผ่านการยืนยันจากเจ้าหน้าที่</p>
                     </div>
                     <Link
