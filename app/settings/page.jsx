@@ -39,7 +39,6 @@ export default function SettingsPage() {
         setIsSubmitting(true);
 
         try {
-            // TODO: เชื่อมต่อ API เปลี่ยนรหัสผ่าน
             const response = await fetch('/api/auth/change-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

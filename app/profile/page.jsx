@@ -47,10 +47,40 @@ export default function ProfilePage() {
         setMessage({ type: "", text: "" });
 
         try {
-            // TODO: เชื่อมต่อ API อัพเดทข้อมูล
-            setMessage({ type: "success", text: "บันทึกข้อมูลสำเร็จ" });
-            setIsEditing(false);
+            const response = await fetch('/api/officer/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    ...formData
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMessage({ type: "success", text: "บันทึกข้อมูลสำเร็จ" });
+                setIsEditing(false);
+
+                // อัพเดท user context ด้วยข้อมูลใหม่
+                if (data.data) {
+                    const updatedUser = {
+                        ...user,
+                        title: data.data.title,
+                        givenName: data.data.given_name,
+                        familyName: data.data.family_name,
+                        email: data.data.email,
+                        phone: data.data.phone,
+                        department: data.data.department,
+                        position: data.data.position
+                    };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                }
+            } else {
+                setMessage({ type: "error", text: data.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+            }
         } catch (error) {
+            console.error('Error updating profile:', error);
             setMessage({ type: "error", text: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
         }
     };

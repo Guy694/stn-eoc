@@ -323,7 +323,7 @@ export default function FloodMapPage() {
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
                             <div className="bg-white rounded-lg shadow-md p-6">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <h2 className=" text-center text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <span className="text-3xl">📍</span>
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>

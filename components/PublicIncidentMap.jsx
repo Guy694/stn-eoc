@@ -275,7 +275,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         <div ref={mapContainerRef} className="text-gray-800 bg-white rounded-lg shadow-md overflow-hidden">
             <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-green-50 relative">
                 <h3 className="text-xl md:text-2xl font-bold text-gray-800">📍 รายงานจากประชาชน (ยืนยันแล้ว)</h3>
-                <p className="text-sm mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงาน <p>({incidents.length} จุด)</p> </p>
+                <p className="text-sm mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงาน <span>({incidents.length} จุด)</span></p>
 
                 {/* Fullscreen Button */}
                 <button
@@ -368,7 +368,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
 
 
                 {/* Map */}
-                <div className={`${isFullscreen ? 'h-screen' : 'h-[600px]'} rounded-lg overflow-hidden border border-gray-200`}>
+                <div className={`${isFullscreen ? 'h-screen' : 'h-[400px]'} rounded-lg overflow-hidden border border-gray-200`}>
                     <MapContainer center={[6.6238, 100.0673]} zoom={10} style={{ height: '100%', width: '100%' }}>
                         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -435,14 +435,14 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                 position={[parseFloat(incident.latitude), parseFloat(incident.longitude)]}
                                 icon={getMarkerIcon(incident)}
                             >
-                                <Popup maxWidth={300}>
+                                <Popup maxWidth={200} maxHeight={200}>
                                     <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-2xl">{getReportTypeIcon(incident.report_type)}</span>
                                             <h4 className="font-bold text-gray-800">{getReportTypeLabel(incident.report_type)}</h4>
                                         </div>
                                         <h5 className="font-semibold text-gray-700 mb-2">รายงานจาก: {incident.first_name} {incident.last_name}</h5>
-                                        <div className="space-y-1 text-sm">
+                                        <div className="text-sm">
                                             <p><strong>สถานที่:</strong> {incident.village || '-'}, ต.{incident.sub_district || '-'}, อ.{incident.district || '-'}</p>
                                             <p><strong>โทร:</strong> {incident.phone}</p>
                                             <p className={getUrgencyColor(incident.urgency)}><strong>ความเร่งด่วน:</strong> {getUrgencyLabel(incident.urgency)}</p>

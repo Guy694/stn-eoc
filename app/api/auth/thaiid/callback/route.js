@@ -14,9 +14,67 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// ฟังก์ชัน Hash PID ด้วย SHA-256 สำหรับความปลอดภัย (PDPA Compliance)
-function hashPID(pid) {
-    return crypto.createHash('sha256').update(pid).digest('hex');
+// ฟังก์ชันเข้ารหัส PID ด้วย AES-256-GCM สำหรับความปลอดภัย (PDPA Compliance)
+function encryptPID(pid) {
+    const secretKey = process.env.SECRET_KEY;
+    if (!secretKey) {
+        throw new Error('SECRET_KEY is not defined in environment variables');
+    }
+
+    // สร้าง key ขนาด 32 bytes จาก SECRET_KEY
+    const key = crypto.createHash('sha256').update(secretKey).digest();
+
+    // สร้าง initialization vector (IV) แบบสุ่ม
+    const iv = crypto.randomBytes(16);
+
+    // สร้าง cipher ด้วย AES-256-GCM
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+
+    // เข้ารหัสข้อมูล
+    let encrypted = cipher.update(pid, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    // ดึง auth tag
+    const authTag = cipher.getAuthTag();
+
+    // รวม IV + encrypted data + auth tag เข้าด้วยกัน (คั่นด้วย :)
+    return iv.toString('hex') + ':' + encrypted + ':' + authTag.toString('hex');
+}
+
+// ฟังก์ชันถอดรหัส PID
+function decryptPID(encryptedPID) {
+    try {
+        const secretKey = process.env.SECRET_KEY;
+        if (!secretKey) {
+            throw new Error('SECRET_KEY is not defined in environment variables');
+        }
+
+        // แยก IV, encrypted data, และ auth tag
+        const parts = encryptedPID.split(':');
+        if (parts.length !== 3) {
+            throw new Error('Invalid encrypted PID format');
+        }
+
+        const iv = Buffer.from(parts[0], 'hex');
+        const encrypted = parts[1];
+        const authTag = Buffer.from(parts[2], 'hex');
+
+        // สร้าง key ขนาด 32 bytes จาก SECRET_KEY
+        const key = crypto.createHash('sha256').update(secretKey).digest();
+
+        // สร้าง decipher
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(authTag);
+
+        // ถอดรหัส
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+
+        return decrypted;
+    } catch (error) {
+        console.error('Error decrypting PID:', error);
+        throw new Error('Failed to decrypt PID');
+    }
 }
 
 // ThaiID Configuration ตามคู่มือ DOPA
@@ -202,18 +260,18 @@ export async function GET(request) {
             );
         }
 
-        // Hash PID เพื่อความปลอดภัย
-        const hashedPID = hashPID(pid);
-        console.log('ThaiID - PID Hashed for security');
+        // เข้ารหัส PID เพื่อความปลอดภัย
+        const encryptedPID = encryptPID(pid);
+        console.log('ThaiID - PID Encrypted for security');
 
-        // 2. ค้นหาผู้ใช้ในฐานข้อมูลด้วย Hashed PID
+        // 2. ค้นหาผู้ใช้ในฐานข้อมูลด้วย Encrypted PID
         const connection = await pool.getConnection();
 
         try {
             // STEP 2.1: Check Officer Table First
             const [officers] = await connection.execute(
                 'SELECT id, username, title, given_name, family_name, email, phone, role, pid_hash, is_approved, position, department FROM officer WHERE pid_hash = ?',
-                [hashedPID]
+                [encryptedPID]
             );
 
             let userRecord;
@@ -249,7 +307,7 @@ export async function GET(request) {
 
                 const [citizens] = await connection.execute(
                     'SELECT id, pid_hash, title, given_name, family_name, birthdate, gender, address, phone FROM citizens WHERE pid_hash = ?',
-                    [hashedPID]
+                    [encryptedPID]
                 );
 
                 if (citizens.length > 0) {
@@ -295,12 +353,12 @@ export async function GET(request) {
                         `INSERT INTO citizens 
                         (pid_hash, title, given_name, family_name, birthdate, gender, address, created_at) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-                        [hashedPID, title, givenName, familyName, birthdate, gender, address]
+                        [encryptedPID, title, givenName, familyName, birthdate, gender, address]
                     );
 
                     userRecord = {
                         id: result.insertId,
-                        pid_hash: hashedPID,
+                        pid_hash: encryptedPID,
                         title,
                         given_name: givenName,
                         family_name: familyName,

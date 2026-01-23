@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showConfirm, showDeleteConfirm } from '@/lib/sweetAlert';
 import 'leaflet/dist/leaflet.css';
@@ -39,6 +40,7 @@ const STATUS_LABELS = {
 };
 
 export default function IncidentReportsPage() {
+    const { user } = useAuth();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({});
@@ -138,7 +140,7 @@ export default function IncidentReportsPage() {
                     reportId: selectedReport.id,
                     status: reviewData.status,
                     adminNotes: reviewData.admin_notes,
-                    reviewedBy: 1 // TODO: ใช้ user ID จริงจาก context
+                    reviewedBy: user?.id || 1
                 })
             });
 

@@ -2,11 +2,13 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showDeleteConfirm } from '@/lib/sweetAlert';
 import Image from 'next/image';
 
 function AnnouncementsContent() {
+    const { user } = useAuth();
     const searchParams = useSearchParams();
     const eocParam = searchParams.get('eoc');
 
@@ -156,7 +158,7 @@ function AnnouncementsContent() {
                 formDataToSend.append('is_active', formData.is_active);
                 formDataToSend.append('start_date', formData.start_date);
                 formDataToSend.append('end_date', formData.end_date);
-                formDataToSend.append('created_by', 1); // TODO: ใช้ user ID จริง
+                formDataToSend.append('created_by', user?.id || 1);
                 formDataToSend.append('image', imageFile);
 
                 const response = await fetch('/api/admin/announcements', {
