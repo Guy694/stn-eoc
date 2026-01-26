@@ -265,7 +265,7 @@ export default function ShelterDiseaseReportsPage() {
                                     <select
                                         value={formData.shelter_id}
                                         onChange={(e) => setFormData({ ...formData, shelter_id: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                         required
                                     >
                                         <option value="">-- เลือกศูนย์พักพิง --</option>
@@ -279,7 +279,7 @@ export default function ShelterDiseaseReportsPage() {
                                     <select
                                         value={formData.disease_type}
                                         onChange={(e) => setFormData({ ...formData, disease_type: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                         required
                                     >
                                         <option value="">-- เลือกประเภทโรค --</option>
@@ -298,7 +298,7 @@ export default function ShelterDiseaseReportsPage() {
                                         min="0"
                                         value={formData.new_cases}
                                         onChange={(e) => setFormData({ ...formData, new_cases: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                                 <div>
@@ -308,7 +308,7 @@ export default function ShelterDiseaseReportsPage() {
                                         min="0"
                                         value={formData.recovered}
                                         onChange={(e) => setFormData({ ...formData, recovered: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                                 <div>
@@ -318,7 +318,7 @@ export default function ShelterDiseaseReportsPage() {
                                         min="0"
                                         value={formData.hospitalized}
                                         onChange={(e) => setFormData({ ...formData, hospitalized: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                                 <div>
@@ -326,7 +326,7 @@ export default function ShelterDiseaseReportsPage() {
                                     <select
                                         value={formData.severity}
                                         onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="low">ต่ำ</option>
                                         <option value="medium">ปานกลาง</option>
@@ -341,7 +341,7 @@ export default function ShelterDiseaseReportsPage() {
                                 <textarea
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     rows="2"
                                 />
                             </div>
@@ -357,7 +357,7 @@ export default function ShelterDiseaseReportsPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowForm(false)}
-                                    className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                    className="px-6 py-2 bg-gray-100 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                     ยกเลิก
                                 </button>

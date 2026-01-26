@@ -206,7 +206,7 @@ function LoginForm() {
                     </button>
 
                     {/* Demo Credentials - Updated for Officer Table */}
-                    {/* <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
                         <p className="text-xs text-green-800 font-semibold mb-2">🔑 บัญชีทดสอบ:</p>
                         <div className="space-y-1 text-xs text-green-700">
                             <p><strong>Admin:</strong> admin / password123</p>
@@ -217,7 +217,7 @@ function LoginForm() {
                             <p><strong>Staff:</strong> staff01 / password123</p>
                         </div>
                         <p className="text-xs text-gray-500 mt-2 italic">* สำหรับทดสอบระบบเท่านั้น</p>
-                    </div> */}
+                    </div>
                 </div>
 
                 {/* Public Access Link */}
