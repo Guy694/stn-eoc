@@ -34,7 +34,7 @@ export default function FloodDailyRiskPage() {
     const fetchRiskData = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/eoc/flood/daily-risk?date=${selectedDate}`);
+            const response = await fetch(`/stn-eoc/api/eoc/flood/daily-risk?date=${selectedDate}`);
             const result = await response.json();
             if (result.success) {
                 setData(result);

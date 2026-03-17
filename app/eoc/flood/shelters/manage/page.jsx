@@ -28,7 +28,7 @@ export default function ManageSheltersPage() {
     useEffect(() => {
         const fetchActiveSession = async () => {
             try {
-                const response = await fetch('/api/eoc/flood/area-status');
+                const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
                 const result = await response.json();
                 if (result.hasActiveSession && result.activeSession) {
                     setSessionId(result.activeSession.id);
@@ -46,7 +46,7 @@ export default function ManageSheltersPage() {
 
         try {
             setLoading(true);
-            const response = await fetch(`/api/eoc/shelter-activations?session_id=${sessionId}&eoc_type=flood`);
+            const response = await fetch(`/stn-eoc/api/eoc/shelter-activations?session_id=${sessionId}&eoc_type=flood`);
             const result = await response.json();
 
             if (result.success) {
@@ -72,7 +72,7 @@ export default function ManageSheltersPage() {
 
         setUpdating(shelterId);
         try {
-            const response = await fetch('/api/eoc/shelter-activations', {
+            const response = await fetch('/stn-eoc/api/eoc/shelter-activations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -104,7 +104,7 @@ export default function ManageSheltersPage() {
         setLoading(true);
         try {
             for (const shelter of shelters.filter(s => !s.is_activated_for_session)) {
-                await fetch('/api/eoc/shelter-activations', {
+                await fetch('/stn-eoc/api/eoc/shelter-activations', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -147,7 +147,7 @@ export default function ManageSheltersPage() {
 
         setUpdating(editingShelter.id);
         try {
-            const response = await fetch('/api/eoc/shelter-activations', {
+            const response = await fetch('/stn-eoc/api/eoc/shelter-activations', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

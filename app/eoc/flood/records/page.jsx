@@ -54,7 +54,7 @@ export default function FloodRecordsPage() {
     useEffect(() => {
         const fetchPolygons = async () => {
             try {
-                const response = await fetch('/api/common/village-polygons');
+                const response = await fetch('/stn-eoc/api/common/village-polygons');
                 const data = await response.json();
                 setPolygons(data);
             } catch (error) {
@@ -73,7 +73,7 @@ export default function FloodRecordsPage() {
     useEffect(() => {
         const fetchActiveSession = async () => {
             try {
-                const response = await fetch('/api/eoc/flood/area-status');
+                const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
                 const result = await response.json();
                 console.log('Active session result:', result);
                 if (result.hasActiveSession && result.activeSession) {
@@ -147,7 +147,7 @@ export default function FloodRecordsPage() {
 
             console.log('Fetching with filters:', filters);
             console.log('Active session ID for fetch:', activeSession.id);
-            const res = await fetch(`/api/admin/flood-records?${params}`);
+            const res = await fetch(`/stn-eoc/api/admin/flood-records?${params}`);
             const data = await res.json();
             console.log('Fetched data:', data);
 
@@ -201,7 +201,7 @@ export default function FloodRecordsPage() {
         }
 
         try {
-            const url = '/api/admin/flood-records';
+            const url = '/stn-eoc/api/admin/flood-records';
             const method = editingRecord ? 'PUT' : 'POST';
             // ใช้ local date แทน UTC
             const now = new Date();
@@ -311,7 +311,7 @@ export default function FloodRecordsPage() {
 
                     // ถ้ายืนยันให้บันทึกทับ ให้ลบข้อมูลเดิมก่อน
                     try {
-                        await fetch(`/api/admin/flood-records?id=${existingRecord.id}`, {
+                        await fetch(`/stn-eoc/api/admin/flood-records?id=${existingRecord.id}`, {
                             method: 'DELETE'
                         });
                     } catch (error) {
@@ -396,7 +396,7 @@ export default function FloodRecordsPage() {
         if (!confirmed) return;
 
         try {
-            const res = await fetch(`/api/admin/flood-records?id=${id}`, {
+            const res = await fetch(`/stn-eoc/api/admin/flood-records?id=${id}`, {
                 method: 'DELETE'
             });
             const data = await res.json();
@@ -440,7 +440,7 @@ export default function FloodRecordsPage() {
         }
 
         try {
-            const response = await fetch('/api/admin/flood-records/copy', {
+            const response = await fetch('/stn-eoc/api/admin/flood-records/copy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

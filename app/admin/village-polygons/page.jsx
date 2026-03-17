@@ -36,7 +36,7 @@ export default function VillagePolygonsPage() {
             params.append('page', currentPage);
             params.append('limit', 20);
 
-            const response = await fetch(`/api/admin/village-polygons?${params}`);
+            const response = await fetch(`/stn-eoc/api/admin/village-polygons?${params}`);
             const data = await response.json();
 
             if (data.success) {
@@ -57,8 +57,8 @@ export default function VillagePolygonsPage() {
 
         try {
             const url = editingPolygon
-                ? `/api/admin/village-polygons/${editingPolygon.id}`
-                : '/api/admin/village-polygons';
+                ? `/stn-eoc/api/admin/village-polygons/${editingPolygon.id}`
+                : '/stn-eoc/api/admin/village-polygons';
 
             const method = editingPolygon ? 'PUT' : 'POST';
 
@@ -99,7 +99,7 @@ export default function VillagePolygonsPage() {
         if (!confirm(`ต้องการลบ ${polygon.villname} ใช่หรือไม่?`)) return;
 
         try {
-            const response = await fetch(`/api/admin/village-polygons/${polygon.id}`, {
+            const response = await fetch(`/stn-eoc/api/admin/village-polygons/${polygon.id}`, {
                 method: 'DELETE'
             });
 

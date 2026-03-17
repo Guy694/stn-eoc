@@ -44,7 +44,7 @@ export default function EOCSessionsPage() {
         setError('');
 
         try {
-            let url = `/api/eoc/sessions?limit=${pagination.limit}&offset=${pagination.offset}`;
+            let url = `/stn-eoc/api/eoc/sessions?limit=${pagination.limit}&offset=${pagination.offset}`;
             if (filters.type) url += `&type=${filters.type}`;
             if (filters.status) url += `&status=${filters.status}`;
 
@@ -71,7 +71,7 @@ export default function EOCSessionsPage() {
     const fetchSessionDetail = async (sessionId) => {
         setDetailLoading(true);
         try {
-            const response = await fetch('/api/eoc/sessions', {
+            const response = await fetch('/stn-eoc/api/eoc/sessions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sessionId })

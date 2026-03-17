@@ -44,7 +44,7 @@ export default function HealthFacilitiesPage() {
             if (filterType) params.append('type', filterType);
             if (searchTerm) params.append('search', searchTerm);
 
-            const response = await fetch(`/api/admin/health-facilities?${params}`);
+            const response = await fetch(`/stn-eoc/api/admin/health-facilities?${params}`);
             const data = await response.json();
 
             if (data.success) {
@@ -64,8 +64,8 @@ export default function HealthFacilitiesPage() {
 
         try {
             const url = editingFacility
-                ? `/api/admin/health-facilities/${editingFacility.id}`
-                : '/api/admin/health-facilities';
+                ? `/stn-eoc/api/admin/health-facilities/${editingFacility.id}`
+                : '/stn-eoc/api/admin/health-facilities';
 
             const method = editingFacility ? 'PUT' : 'POST';
 
@@ -110,7 +110,7 @@ export default function HealthFacilitiesPage() {
         if (!confirm(`ต้องการลบ ${facility.name} ใช่หรือไม่?`)) return;
 
         try {
-            const response = await fetch(`/api/admin/health-facilities/${facility.id}`, {
+            const response = await fetch(`/stn-eoc/api/admin/health-facilities/${facility.id}`, {
                 method: 'DELETE'
             });
 

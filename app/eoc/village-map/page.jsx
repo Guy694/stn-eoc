@@ -29,7 +29,7 @@ export default function VillageMapPage() {
 
     useEffect(() => {
         // โหลดข้อมูล polygon
-        fetch('/api/common/village-polygons')
+        fetch('/stn-eoc/api/common/village-polygons')
             .then(res => res.json())
             .then(data => {
                 setPolygons(data);

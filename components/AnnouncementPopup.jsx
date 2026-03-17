@@ -12,7 +12,7 @@ export default function AnnouncementPopup() {
 
     const fetchPopupAnnouncement = async () => {
         try {
-            const response = await fetch('/api/public/announcements/popup');
+            const response = await fetch('/stn-eoc/api/public/announcements/popup');
             const data = await response.json();
 
             if (data.success && data.data) {

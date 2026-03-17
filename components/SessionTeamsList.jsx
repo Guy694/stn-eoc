@@ -24,7 +24,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
         try {
             setLoading(true);
             setError('');
-            const response = await fetch(`/api/eoc/sessions/${sessionId}/teams`);
+            const response = await fetch(`/stn-eoc/api/eoc/sessions/${sessionId}/teams`);
             const data = await response.json();
 
             if (data.success) {

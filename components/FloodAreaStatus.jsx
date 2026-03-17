@@ -99,7 +99,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     useEffect(() => {
         const fetchHealthFacilities = async () => {
             try {
-                const response = await fetch('/api/common/health-facilities');
+                const response = await fetch('/stn-eoc/api/common/health-facilities');
                 const result = await response.json();
                 console.log('Health Facilities Response:', result);
                 if (result.success) {
@@ -117,7 +117,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     useEffect(() => {
         const fetchTambonBoundaries = async () => {
             try {
-                const response = await fetch('/api/common/tambon-boundaries');
+                const response = await fetch('/stn-eoc/api/common/tambon-boundaries');
                 const result = await response.json();
                 if (result.success) {
                     console.log('Tambon Boundaries:', result.data);
@@ -134,7 +134,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     useEffect(() => {
         const fetchDistrictBoundaries = async () => {
             try {
-                const response = await fetch('/api/common/district-boundaries');
+                const response = await fetch('/stn-eoc/api/common/district-boundaries');
                 const result = await response.json();
                 if (result.success) {
                     console.log('District Boundaries:', result.data);
@@ -152,7 +152,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         setError(null);
 
         try {
-            let url = '/api/eoc/flood/area-status';
+            let url = '/stn-eoc/api/eoc/flood/area-status';
             const params = new URLSearchParams();
 
             if (sessionId) params.append('session_id', sessionId);

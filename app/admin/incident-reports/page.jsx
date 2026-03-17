@@ -91,7 +91,7 @@ export default function IncidentReportsPage() {
                 ...filters
             });
 
-            const response = await fetch(`/api/admin/incident-reports?${params}`);
+            const response = await fetch(`/stn-eoc/api/admin/incident-reports?${params}`);
 
             if (!response.ok) {
                 showError('ไม่สามารถโหลดข้อมูลได้');
@@ -133,7 +133,7 @@ export default function IncidentReportsPage() {
         }
 
         try {
-            const response = await fetch('/api/admin/incident-reports', {
+            const response = await fetch('/stn-eoc/api/admin/incident-reports', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -167,7 +167,7 @@ export default function IncidentReportsPage() {
         if (!confirmed) return;
 
         try {
-            const response = await fetch(`/api/admin/incident-reports?id=${reportId}`, {
+            const response = await fetch(`/stn-eoc/api/admin/incident-reports?id=${reportId}`, {
                 method: 'DELETE'
             });
 

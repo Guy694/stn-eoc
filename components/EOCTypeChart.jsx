@@ -51,7 +51,7 @@ export default function EOCTypeChart() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`/api/stats/eoc-types?year=${selectedYear}`);
+            const response = await fetch(`/stn-eoc/api/stats/eoc-types?year=${selectedYear}`);
             const result = await response.json();
 
             console.log("EOC Stats API Result:", result); // Debug log

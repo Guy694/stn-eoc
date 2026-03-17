@@ -37,7 +37,7 @@ export default function AccidentRecordsPage() {
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const res = await fetch('/api/eoc/accident/area-status');
+                const res = await fetch('/stn-eoc/api/eoc/accident/area-status');
                 const result = await res.json();
                 if (result.hasActiveSession) {
                     setActiveSession(result.activeSession);
@@ -74,7 +74,7 @@ export default function AccidentRecordsPage() {
             if (filters.district !== 'all') params.append('district', filters.district);
             if (filters.date) params.append('date', filters.date);
 
-            const res = await fetch(`/api/admin/accident-reports?${params}`);
+            const res = await fetch(`/stn-eoc/api/admin/accident-reports?${params}`);
             const data = await res.json();
             if (data.success) {
                 setRecords(data.data || []);
@@ -95,8 +95,8 @@ export default function AccidentRecordsPage() {
 
         try {
             const url = editingRecord
-                ? `/api/admin/accident-reports?id=${editingRecord.id}`
-                : '/api/admin/accident-reports';
+                ? `/stn-eoc/api/admin/accident-reports?id=${editingRecord.id}`
+                : '/stn-eoc/api/admin/accident-reports';
             const method = editingRecord ? 'PUT' : 'POST';
 
             const res = await fetch(url, {
@@ -147,7 +147,7 @@ export default function AccidentRecordsPage() {
         if (!confirmed) return;
 
         try {
-            const res = await fetch(`/api/admin/accident-reports?id=${id}`, { method: 'DELETE' });
+            const res = await fetch(`/stn-eoc/api/admin/accident-reports?id=${id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
                 showSuccess('ลบข้อมูลสำเร็จ');

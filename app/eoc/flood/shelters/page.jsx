@@ -16,7 +16,7 @@ export default function FloodSheltersPage() {
     useEffect(() => {
         const fetchActiveSession = async () => {
             try {
-                const response = await fetch('/api/eoc/flood/area-status');
+                const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
                 const result = await response.json();
                 if (result.hasActiveSession && result.activeSession) {
                     setSessionId(result.activeSession.id);

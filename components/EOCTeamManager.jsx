@@ -32,7 +32,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     const loadSessionTeams = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/admin/eoc-sessions/${sessionId}/teams`);
+            const response = await fetch(`/stn-eoc/api/admin/eoc-sessions/${sessionId}/teams`);
             const data = await response.json();
 
             if (data.success) {
@@ -48,7 +48,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
 
     const loadAvailableTeams = async () => {
         try {
-            const response = await fetch('/api/admin/eoc-teams?active=true');
+            const response = await fetch('/stn-eoc/api/admin/eoc-teams?active=true');
             const data = await response.json();
             if (data.success) {
                 setAvailableTeams(data.teams);
@@ -60,7 +60,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
 
     const loadAvailableOfficers = async () => {
         try {
-            const response = await fetch('/api/admin/officers?active=true');
+            const response = await fetch('/stn-eoc/api/admin/officers?active=true');
             const data = await response.json();
             if (data.success) {
                 setAvailableOfficers(data.officers);
@@ -72,7 +72,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
 
     const handleAddTeam = async (teamId, teamLeadId) => {
         try {
-            const response = await fetch(`/api/admin/eoc-sessions/${sessionId}/teams`, {
+            const response = await fetch(`/stn-eoc/api/admin/eoc-sessions/${sessionId}/teams`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

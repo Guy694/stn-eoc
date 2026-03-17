@@ -68,7 +68,7 @@ export default function ITResourcesPage() {
 
     const fetchHealthFacilities = async () => {
         try {
-            const response = await fetch('/api/common/health-facilities');
+            const response = await fetch('/stn-eoc/api/common/health-facilities');
             const data = await response.json();
             if (data.success) {
                 setHealthFacilities(data.data || []);
@@ -85,7 +85,7 @@ export default function ITResourcesPage() {
             if (filterType) params.append('resource_type', filterType);
             if (filterStatus) params.append('status', filterStatus);
 
-            const response = await fetch(`/api/admin/it-resources?${params}`);
+            const response = await fetch(`/stn-eoc/api/admin/it-resources?${params}`);
             const data = await response.json();
 
             if (data.success) {
@@ -131,8 +131,8 @@ export default function ITResourcesPage() {
 
         try {
             const url = editingResource
-                ? `/api/admin/it-resources?id=${editingResource.id}`
-                : '/api/admin/it-resources';
+                ? `/stn-eoc/api/admin/it-resources?id=${editingResource.id}`
+                : '/stn-eoc/api/admin/it-resources';
             const method = editingResource ? 'PUT' : 'POST';
 
             const response = await fetch(url, {
@@ -176,7 +176,7 @@ export default function ITResourcesPage() {
 
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`/api/admin/it-resources?id=${id}`, { method: 'DELETE' });
+                const response = await fetch(`/stn-eoc/api/admin/it-resources?id=${id}`, { method: 'DELETE' });
                 const data = await response.json();
 
                 if (data.success) {

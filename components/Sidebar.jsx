@@ -36,7 +36,7 @@ export default function Sidebar() {
     useEffect(() => {
         const fetchPendingCount = async () => {
             try {
-                const response = await fetch('/api/admin/incident-reports?status=pending&limit=1');
+                const response = await fetch('/stn-eoc/api/admin/incident-reports?status=pending&limit=1');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.stats) {

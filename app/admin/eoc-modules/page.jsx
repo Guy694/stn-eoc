@@ -52,7 +52,7 @@ function EOCModulesContent() {
 
     const loadEOCInfo = async () => {
         try {
-            const response = await fetch(`/api/admin/eoc-types`);
+            const response = await fetch(`/stn-eoc/api/admin/eoc-types`);
             const result = await response.json();
             if (result.success) {
                 const info = result.data.find(e => e.id === eocType);
@@ -66,7 +66,7 @@ function EOCModulesContent() {
     const loadModules = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/admin/eoc-modules?eoc_type=${eocType}`);
+            const response = await fetch(`/stn-eoc/api/admin/eoc-modules?eoc_type=${eocType}`);
             const result = await response.json();
 
             if (result.success && Array.isArray(result.data)) {
@@ -123,8 +123,8 @@ function EOCModulesContent() {
             }
 
             const url = editingModule
-                ? '/api/admin/eoc-modules'
-                : '/api/admin/eoc-modules';
+                ? '/stn-eoc/api/admin/eoc-modules'
+                : '/stn-eoc/api/admin/eoc-modules';
 
             const method = editingModule ? 'PUT' : 'POST';
 
@@ -168,7 +168,7 @@ function EOCModulesContent() {
 
             if (!confirm.isConfirmed) return;
 
-            const response = await fetch(`/api/admin/eoc-modules?id=${moduleId}`, {
+            const response = await fetch(`/stn-eoc/api/admin/eoc-modules?id=${moduleId}`, {
                 method: 'DELETE'
             });
 

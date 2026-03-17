@@ -76,7 +76,7 @@ function AnnouncementsContent() {
             if (filters.is_active !== '') params.append('is_active', filters.is_active);
             if (filters.show_popup !== '') params.append('show_popup', filters.show_popup);
 
-            const response = await fetch(`/api/admin/announcements?${params}`);
+            const response = await fetch(`/stn-eoc/api/admin/announcements?${params}`);
             const data = await response.json();
 
             console.log('Announcements API Response:', data);
@@ -131,7 +131,7 @@ function AnnouncementsContent() {
         try {
             if (editMode) {
                 // Update
-                const response = await fetch('/api/admin/announcements', {
+                const response = await fetch('/stn-eoc/api/admin/announcements', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -161,7 +161,7 @@ function AnnouncementsContent() {
                 formDataToSend.append('created_by', user?.id || 1);
                 formDataToSend.append('image', imageFile);
 
-                const response = await fetch('/api/admin/announcements', {
+                const response = await fetch('/stn-eoc/api/admin/announcements', {
                     method: 'POST',
                     body: formDataToSend
                 });
@@ -202,7 +202,7 @@ function AnnouncementsContent() {
         if (!confirmed) return;
 
         try {
-            const response = await fetch(`/api/admin/announcements?id=${id}`, {
+            const response = await fetch(`/stn-eoc/api/admin/announcements?id=${id}`, {
                 method: 'DELETE'
             });
 

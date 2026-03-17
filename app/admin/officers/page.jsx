@@ -42,7 +42,7 @@ export default function OfficersManagementPage() {
             if (filterRole) params.append('role', filterRole);
             if (searchTerm) params.append('search', searchTerm);
 
-            const response = await fetch(`/api/admin/officers?${params}`);
+            const response = await fetch(`/stn-eoc/api/admin/officers?${params}`);
             const data = await response.json();
 
             if (data.success) {
@@ -62,8 +62,8 @@ export default function OfficersManagementPage() {
 
         try {
             const url = editingOfficer
-                ? `/api/admin/officers/${editingOfficer.id}`
-                : '/api/admin/officers';
+                ? `/stn-eoc/api/admin/officers/${editingOfficer.id}`
+                : '/stn-eoc/api/admin/officers';
 
             const method = editingOfficer ? 'PUT' : 'POST';
 
@@ -116,7 +116,7 @@ export default function OfficersManagementPage() {
         }
 
         try {
-            const response = await fetch(`/api/admin/officers/${officer.id}`, {
+            const response = await fetch(`/stn-eoc/api/admin/officers/${officer.id}`, {
                 method: 'DELETE'
             });
 

@@ -12,7 +12,7 @@ export default function ThaiIDCallbackPage() {
         const handleCallback = async () => {
             try {
                 // ดึงข้อมูล session จาก cookie ผ่าน API
-                const response = await fetch('/api/auth/session');
+                const response = await fetch('/stn-eoc/api/auth/session/');
                 const data = await response.json();
 
                 if (data.success && data.user) {

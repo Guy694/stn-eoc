@@ -47,7 +47,7 @@ export default function ProfilePage() {
         setMessage({ type: "", text: "" });
 
         try {
-            const response = await fetch('/api/officer/profile', {
+            const response = await fetch('/stn-eoc/api/officer/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

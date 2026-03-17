@@ -11,7 +11,7 @@ export const DISASTER_TYPES = {
 // ดึงข้อมูล EOC Types จาก database (eoc_status table)
 export const fetchEOCTypesFromDB = async () => {
     try {
-        const response = await fetch('/api/admin/eoc-types?active=true');
+        const response = await fetch('/stn-eoc/api/admin/eoc-types?active=true');
         const result = await response.json();
 
         if (result.success && Array.isArray(result.data)) {
@@ -46,9 +46,9 @@ export const DISASTER_CONFIG = {
             history: '/eoc/flood/history'
         },
         api: {
-            sessions: '/api/eoc/flood/sessions-summary',
-            dailyRisk: '/api/eoc/flood/daily-risk',
-            dailyData: '/api/eoc/flood/daily-flood-village'
+            sessions: '/stn-eoc/api/eoc/flood/sessions-summary',
+            dailyRisk: '/stn-eoc/api/eoc/flood/daily-risk',
+            dailyData: '/stn-eoc/api/eoc/flood/daily-flood-village'
         },
         fields: {
             riskLevel: 'flood_level',
@@ -88,9 +88,9 @@ export const DISASTER_CONFIG = {
             history: '/eoc/disease/history'
         },
         api: {
-            sessions: '/api/eoc/disease/sessions-summary',
-            dailyRisk: '/api/eoc/disease/daily-risk',
-            dailyData: '/api/eoc/disease/daily-cases'
+            sessions: '/stn-eoc/api/eoc/disease/sessions-summary',
+            dailyRisk: '/stn-eoc/api/eoc/disease/daily-risk',
+            dailyData: '/stn-eoc/api/eoc/disease/daily-cases'
         },
         fields: {
             riskLevel: 'outbreak_level',

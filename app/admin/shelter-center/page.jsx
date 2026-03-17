@@ -78,7 +78,7 @@ function ShelterCenterContent() {
     const fetchShelterCenters = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/admin/shelter-center');
+            const response = await fetch('/stn-eoc/api/admin/shelter-center');
             const result = await response.json();
 
             const centersData = Array.isArray(result.data) ? result.data : [];
@@ -151,7 +151,7 @@ function ShelterCenterContent() {
     // Fetch districts
     const fetchDistricts = async () => {
         try {
-            const response = await fetch('/api/common/villages');
+            const response = await fetch('/stn-eoc/api/common/villages');
             const result = await response.json();
             if (result.success && Array.isArray(result.data)) {
                 const uniqueDistricts = [...new Set(result.data.map(v => v.district))];
@@ -165,7 +165,7 @@ function ShelterCenterContent() {
     // Fetch tambons based on selected district
     const fetchTambons = async (district) => {
         try {
-            const response = await fetch('/api/common/villages');
+            const response = await fetch('/stn-eoc/api/common/villages');
             const result = await response.json();
             if (result.success && Array.isArray(result.data)) {
                 const filteredTambons = result.data
@@ -182,7 +182,7 @@ function ShelterCenterContent() {
     // Fetch villages based on selected district and tambon
     const fetchVillages = async (district, tambon) => {
         try {
-            const response = await fetch('/api/common/villages');
+            const response = await fetch('/stn-eoc/api/common/villages');
             const result = await response.json();
             if (result.success && Array.isArray(result.data)) {
                 const filteredVillages = result.data
@@ -327,8 +327,8 @@ function ShelterCenterContent() {
             console.log('Submitting data:', dataToSend);
 
             const url = editingCenter
-                ? `/api/admin/shelter-center?id=${editingCenter.id}`
-                : '/api/admin/shelter-center';
+                ? `/stn-eoc/api/admin/shelter-center?id=${editingCenter.id}`
+                : '/stn-eoc/api/admin/shelter-center';
 
             const method = editingCenter ? 'PUT' : 'POST';
 

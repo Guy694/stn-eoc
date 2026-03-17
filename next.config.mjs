@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-  
-
+  basePath: '/stn-eoc',
+  assetPrefix: '/stn-eoc',
+  output: 'standalone',
+  trailingSlash: true,
   reactCompiler: true,
 };
 

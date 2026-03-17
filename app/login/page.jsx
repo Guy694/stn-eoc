@@ -198,7 +198,7 @@ function LoginForm() {
                     {/* ThaiID Login Button */}
                     <button
                         type="button"
-                        onClick={() => window.location.href = '/api/auth/thaiid/authorize'}
+                        onClick={() => window.location.href = '/stn-eoc/api/auth/thaiid/authorize/'}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-3"
                     >
                         <img src="/img/thaiid.png" alt="ThaiID" className="w-9 h-9" />

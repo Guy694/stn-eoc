@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
     const validateSession = async (skipReload = false) => {
         try {
             // 1. ตรวจสอบจาก cookie ก่อน (สำหรับ ThaiID login)
-            const cookieResponse = await fetch('/api/auth/session');
+            const cookieResponse = await fetch('/stn-eoc/api/auth/session/');
 
             if (cookieResponse.ok) {
                 const cookieData = await cookieResponse.json();
@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
 
             if (sessionToken && storedUser) {
                 // มี session ใน localStorage
-                const response = await fetch('/api/auth/validate', {
+                const response = await fetch('/stn-eoc/api/auth/validate/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionToken })
@@ -127,7 +127,7 @@ export function AuthProvider({ children }) {
 
     const login = async (username, password) => {
         try {
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('/stn-eoc/api/auth/login/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -159,7 +159,7 @@ export function AuthProvider({ children }) {
         try {
             const sessionToken = localStorage.getItem("sessionToken");
             if (sessionToken) {
-                await fetch('/api/auth/logout', {
+                await fetch('/stn-eoc/api/auth/logout/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionToken })

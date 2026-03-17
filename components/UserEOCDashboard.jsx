@@ -23,7 +23,7 @@ export default function UserEOCDashboard() {
     const loadAssignments = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/user/my-assignments', {
+            const response = await fetch('/stn-eoc/api/user/my-assignments', {
                 headers: {
                     'x-user-id': user.id.toString()
                 }

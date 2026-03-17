@@ -14,7 +14,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
         const fetchStats = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`/api/eoc/disease/daily-stats?session_id=${sessionId}`);
+                const response = await fetch(`/stn-eoc/api/eoc/disease/daily-stats?session_id=${sessionId}`);
                 const data = await response.json();
 
                 if (data.success) {

@@ -26,7 +26,7 @@ export default function DisasterSessionSelector({
 
     const fetchAvailableYears = async () => {
         try {
-            const response = await fetch(`/api/eoc/${disasterType}/sessions-summary`);
+            const response = await fetch(`/stn-eoc/api/eoc/${disasterType}/sessions-summary`);
             const data = await response.json();
             if (data.success) {
                 setYears(data.availableYears || []);
@@ -52,7 +52,7 @@ export default function DisasterSessionSelector({
     const fetchYearData = async (year) => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/eoc/${disasterType}/sessions-summary?year=${year}`);
+            const response = await fetch(`/stn-eoc/api/eoc/${disasterType}/sessions-summary?year=${year}`);
             const data = await response.json();
             if (data.success) {
                 setSessions(data.sessions || []);

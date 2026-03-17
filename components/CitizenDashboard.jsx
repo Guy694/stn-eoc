@@ -53,7 +53,7 @@ export default function CitizenDashboard() {
 
     const fetchActiveEOCs = async () => {
         try {
-            const response = await fetch('/api/eoc/status');
+            const response = await fetch('/stn-eoc/api/eoc/status');
             if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
@@ -71,7 +71,7 @@ export default function CitizenDashboard() {
     const fetchMyReports = async () => {
         try {
             setReportsLoading(true);
-            const response = await fetch('/api/citizen/my-reports', {
+            const response = await fetch('/stn-eoc/api/citizen/my-reports', {
                 headers: {
                     'x-citizen-id': user.id.toString()
                 }

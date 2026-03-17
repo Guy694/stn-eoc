@@ -22,7 +22,7 @@ export default function RecentActivitiesPage() {
         const fetchActivities = async () => {
             try {
                 setActivitiesLoading(true);
-                const response = await fetch('/api/dashboard/summary');
+                const response = await fetch('/stn-eoc/api/dashboard/summary');
                 const result = await response.json();
 
                 if (result.success) {

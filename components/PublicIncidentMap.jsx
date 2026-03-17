@@ -152,7 +152,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
 
     const fetchPolygons = async (level) => {
         try {
-            const response = await fetch(`/api/common/area-polygons?level=${level}`);
+            const response = await fetch(`/stn-eoc/api/common/area-polygons?level=${level}`);
             const data = await response.json();
             if (data.success) {
                 if (level === 'district') setDistrictPolygons(data.data);
@@ -172,7 +172,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
             if (startDate) params.append('start_date', startDate);
             if (endDate) params.append('end_date', endDate);
 
-            const response = await fetch(`/api/public/verified-incidents?${params}`);
+            const response = await fetch(`/stn-eoc/api/public/verified-incidents?${params}`);
             const data = await response.json();
             if (data.success) setIncidents(data.data);
         } catch (error) {

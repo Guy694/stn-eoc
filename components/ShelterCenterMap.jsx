@@ -98,7 +98,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
 
     const fetchPolygons = async (level) => {
         try {
-            const response = await fetch(`/api/common/area-polygons?level=${level}`);
+            const response = await fetch(`/stn-eoc/api/common/area-polygons?level=${level}`);
             const data = await response.json();
             if (data.success) {
                 if (level === 'district') setDistrictPolygons(data.data);
@@ -118,7 +118,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
             if (filterType) params.append('eoc_type', filterType);
             if (sessionId) params.append('session_id', sessionId);
 
-            const response = await fetch(`/api/eoc/shelter-centers?${params}`);
+            const response = await fetch(`/stn-eoc/api/eoc/shelter-centers?${params}`);
             const data = await response.json();
             if (data.success) setShelters(data.data);
         } catch (error) {

@@ -65,7 +65,7 @@ export default function AffectedPersonsPage() {
 
     const fetchSessions = async () => {
         try {
-            const response = await fetch('/api/eoc/sessions?limit=100');
+            const response = await fetch('/stn-eoc/api/eoc/sessions?limit=100');
             const result = await response.json();
             if (result.success) {
                 const sessionsList = Array.isArray(result.data) ? result.data : [];
@@ -89,7 +89,7 @@ export default function AffectedPersonsPage() {
             params.append('session_id', selectedSession.id);
             if (filterDate) params.append('date', filterDate);
 
-            const response = await fetch(`/api/eoc/flood/affected?${params}`);
+            const response = await fetch(`/stn-eoc/api/eoc/flood/affected?${params}`);
             const result = await response.json();
 
             if (result.success) {
@@ -135,8 +135,8 @@ export default function AffectedPersonsPage() {
 
         try {
             const url = editingReport
-                ? `/api/eoc/flood/affected?id=${editingReport.id}`
-                : '/api/eoc/flood/affected';
+                ? `/stn-eoc/api/eoc/flood/affected?id=${editingReport.id}`
+                : '/stn-eoc/api/eoc/flood/affected';
 
             const response = await fetch(url, {
                 method: editingReport ? 'PUT' : 'POST',
@@ -184,7 +184,7 @@ export default function AffectedPersonsPage() {
 
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`/api/eoc/flood/affected?id=${report.id}`, {
+                const response = await fetch(`/stn-eoc/api/eoc/flood/affected?id=${report.id}`, {
                     method: 'DELETE'
                 });
 

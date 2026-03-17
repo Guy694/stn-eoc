@@ -189,7 +189,7 @@ export default function ReportIncidentPage() {
     const searchVillages = async (searchTerm) => {
         setSearchingVillage(true);
         try {
-            const response = await fetch(`/api/public/villages?search=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`/stn-eoc/api/public/villages?search=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
 
             if (result.success) {
@@ -289,7 +289,7 @@ export default function ReportIncidentPage() {
                 formDataToSend.append('photo', formData.photo);
             }
 
-            const response = await fetch('/api/public/report-incident', {
+            const response = await fetch('/stn-eoc/api/public/report-incident', {
                 method: 'POST',
                 body: formDataToSend
             });
@@ -472,7 +472,7 @@ export default function ReportIncidentPage() {
                                 </p>
                                 <button
                                     type="button"
-                                    onClick={() => window.location.href = '/api/auth/citizen-thaiid/authorize'}
+                                    onClick={() => window.location.href = '/stn-eoc/api/auth/citizen-thaiid/authorize'}
                                     className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2"
                                 >
                                     <span className="text-xl">🇹🇭</span>
@@ -502,7 +502,7 @@ export default function ReportIncidentPage() {
                             <button
                                 type="button"
                                 onClick={async () => {
-                                    await fetch('/api/auth/citizen-thaiid/session', { method: 'DELETE' });
+                                    await fetch('/stn-eoc/api/auth/citizen-thaiid/session', { method: 'DELETE' });
                                     setCitizenSession(null);
                                     setFormData(prev => ({
                                         ...prev,

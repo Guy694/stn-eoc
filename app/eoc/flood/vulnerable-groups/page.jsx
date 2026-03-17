@@ -33,7 +33,7 @@ export default function VulnerableGroupsPage() {
     useEffect(() => {
         const fetchActiveSession = async () => {
             try {
-                const response = await fetch('/api/eoc/flood/area-status');
+                const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
                 const result = await response.json();
                 if (result.hasActiveSession && result.activeSession) {
                     setActiveSession(result.activeSession);
@@ -82,7 +82,7 @@ export default function VulnerableGroupsPage() {
             if (selectedDistrict !== 'all') params.append('district', selectedDistrict);
             if (selectedTambon !== 'all') params.append('tambon', selectedTambon);
 
-            const res = await fetch(`/api/eoc/flood/vulnerable-groups?${params}`);
+            const res = await fetch(`/stn-eoc/api/eoc/flood/vulnerable-groups?${params}`);
             const data = await res.json();
 
             if (data.success) {
@@ -99,7 +99,7 @@ export default function VulnerableGroupsPage() {
         if (!activeSession) return;
 
         try {
-            const res = await fetch(`/api/eoc/flood/vulnerable-groups/stats?session_id=${activeSession.id}`);
+            const res = await fetch(`/stn-eoc/api/eoc/flood/vulnerable-groups/stats?session_id=${activeSession.id}`);
             const data = await res.json();
 
             if (data.success) {
@@ -118,7 +118,7 @@ export default function VulnerableGroupsPage() {
         }
 
         try {
-            const url = '/api/eoc/flood/vulnerable-groups';
+            const url = '/stn-eoc/api/eoc/flood/vulnerable-groups';
             const method = editingRecord ? 'PUT' : 'POST';
 
             const body = {
@@ -173,7 +173,7 @@ export default function VulnerableGroupsPage() {
         if (!confirmed) return;
 
         try {
-            const res = await fetch(`/api/eoc/flood/vulnerable-groups?id=${id}`, {
+            const res = await fetch(`/stn-eoc/api/eoc/flood/vulnerable-groups?id=${id}`, {
                 method: 'DELETE'
             });
             const data = await res.json();

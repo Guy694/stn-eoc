@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
-import Breadcrumb from "@/components/Breadcrumb";
+
 import { useAuth } from "@/context/AuthContext";
 
 export default function EOCLayout({ children }) {

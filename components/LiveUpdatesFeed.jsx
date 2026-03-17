@@ -15,7 +15,7 @@ export default function LiveUpdatesFeed() {
 
     const fetchRecentReports = async () => {
         try {
-            const response = await fetch('/api/public/verified-incidents?limit=5');
+            const response = await fetch('/stn-eoc/api/public/verified-incidents?limit=5');
             const result = await response.json();
             if (result.success) {
                 setReports(result.data);

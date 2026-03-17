@@ -54,7 +54,7 @@ export default function AIChatbot() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/chatbot/query', {
+            const response = await fetch('/stn-eoc/api/chatbot/query', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

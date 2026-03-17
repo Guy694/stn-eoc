@@ -66,7 +66,7 @@ export default function DiseaseReportsPage() {
     useEffect(() => {
         const fetchDiseases = async () => {
             try {
-                const response = await fetch('/api/common/diseases');
+                const response = await fetch('/stn-eoc/api/common/diseases');
                 const result = await response.json();
                 console.log('Diseases API result:', result);
                 if (result.success) {
@@ -101,7 +101,7 @@ export default function DiseaseReportsPage() {
 
     const fetchSessions = async () => {
         try {
-            const response = await fetch('/api/eoc/sessions?limit=100');
+            const response = await fetch('/stn-eoc/api/eoc/sessions?limit=100');
             const result = await response.json();
             if (result.success) {
                 const sessionsList = Array.isArray(result.data) ? result.data : [];
@@ -119,7 +119,7 @@ export default function DiseaseReportsPage() {
 
     const fetchFacilities = async () => {
         try {
-            const response = await fetch('/api/admin/health-facilities');
+            const response = await fetch('/stn-eoc/api/admin/health-facilities');
             const result = await response.json();
             if (result.success) {
                 setFacilities(Array.isArray(result.data) ? result.data : []);
@@ -138,7 +138,7 @@ export default function DiseaseReportsPage() {
             params.append('session_id', selectedSession.id);
             if (filterDate) params.append('date', filterDate);
 
-            const response = await fetch(`/api/admin/disease-reports?${params}`);
+            const response = await fetch(`/stn-eoc/api/admin/disease-reports?${params}`);
             const result = await response.json();
 
             if (result.success) {
@@ -173,7 +173,7 @@ export default function DiseaseReportsPage() {
             diseaseName = customDisease.trim();
             // เพิ่มโรคใหม่เข้า database (ถ้ายังไม่มี)
             try {
-                const addDiseaseRes = await fetch('/api/common/diseases', {
+                const addDiseaseRes = await fetch('/stn-eoc/api/common/diseases', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: diseaseName })
@@ -215,8 +215,8 @@ export default function DiseaseReportsPage() {
 
         try {
             const url = editingReport
-                ? `/api/admin/disease-reports?id=${editingReport.id}`
-                : '/api/admin/disease-reports';
+                ? `/stn-eoc/api/admin/disease-reports?id=${editingReport.id}`
+                : '/stn-eoc/api/admin/disease-reports';
 
             const response = await fetch(url, {
                 method: editingReport ? 'PUT' : 'POST',
@@ -291,7 +291,7 @@ export default function DiseaseReportsPage() {
 
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`/api/admin/disease-reports?id=${report.id}`, {
+                const response = await fetch(`/stn-eoc/api/admin/disease-reports?id=${report.id}`, {
                     method: 'DELETE'
                 });
 

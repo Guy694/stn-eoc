@@ -21,7 +21,7 @@ export default function FloodSessionSelector({
 
     const fetchAvailableYears = async () => {
         try {
-            const response = await fetch('/api/eoc/flood/sessions-summary');
+            const response = await fetch('/stn-eoc/api/eoc/flood/sessions-summary');
             const data = await response.json();
             if (data.success) {
                 setYears(data.availableYears || []);
@@ -49,7 +49,7 @@ export default function FloodSessionSelector({
     const fetchYearData = async (year) => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/eoc/flood/sessions-summary?year=${year}`);
+            const response = await fetch(`/stn-eoc/api/eoc/flood/sessions-summary?year=${year}`);
             const data = await response.json();
             if (data.success) {
                 setSessions(data.sessions || []);

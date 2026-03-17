@@ -35,7 +35,7 @@ export default function ServicePointsPage() {
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const res = await fetch('/api/eoc/accident/area-status');
+                const res = await fetch('/stn-eoc/api/eoc/accident/area-status');
                 const result = await res.json();
                 if (result.hasActiveSession) {
                     setActiveSession(result.activeSession);
@@ -68,7 +68,7 @@ export default function ServicePointsPage() {
         if (!activeSession) return;
         try {
             setLoading(true);
-            const res = await fetch(`/api/admin/temporary-service-points?session_id=${activeSession.id}&active_only=false`);
+            const res = await fetch(`/stn-eoc/api/admin/temporary-service-points?session_id=${activeSession.id}&active_only=false`);
             const data = await res.json();
             if (data.success) {
                 setPoints(data.data || []);
@@ -89,8 +89,8 @@ export default function ServicePointsPage() {
 
         try {
             const url = editingPoint
-                ? `/api/admin/temporary-service-points?id=${editingPoint.id}`
-                : '/api/admin/temporary-service-points';
+                ? `/stn-eoc/api/admin/temporary-service-points?id=${editingPoint.id}`
+                : '/stn-eoc/api/admin/temporary-service-points';
             const method = editingPoint ? 'PUT' : 'POST';
 
             const res = await fetch(url, {
@@ -140,7 +140,7 @@ export default function ServicePointsPage() {
         if (!confirmed) return;
 
         try {
-            const res = await fetch(`/api/admin/temporary-service-points?id=${id}`, { method: 'DELETE' });
+            const res = await fetch(`/stn-eoc/api/admin/temporary-service-points?id=${id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
                 showSuccess('ลบจุดบริการสำเร็จ');
@@ -155,7 +155,7 @@ export default function ServicePointsPage() {
 
     const toggleActive = async (point) => {
         try {
-            const res = await fetch(`/api/admin/temporary-service-points?id=${point.id}`, {
+            const res = await fetch(`/stn-eoc/api/admin/temporary-service-points?id=${point.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_active: !point.is_active })

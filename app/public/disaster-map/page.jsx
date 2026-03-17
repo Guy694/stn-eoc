@@ -57,7 +57,7 @@ export default function DisasterMapPage() {
         const fetchIncidents = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/public/verified-incidents');
+                const response = await fetch('/stn-eoc/api/public/verified-incidents');
                 const result = await response.json();
 
                 if (result.success) {

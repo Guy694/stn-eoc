@@ -33,7 +33,7 @@ export default function FloodMapPage() {
 
     // โหลดข้อมูล polygon
     useEffect(() => {
-        fetch('/api/common/village-polygons')
+        fetch('/stn-eoc/api/common/village-polygons')
             .then(res => {
                 if (!res.ok) {
                     throw new Error(`HTTP error! status: ${res.status}`);
@@ -59,7 +59,7 @@ export default function FloodMapPage() {
     useEffect(() => {
         const checkActiveSession = async () => {
             try {
-                const response = await fetch('/api/eoc/flood/area-status');
+                const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
                 const result = await response.json();
                 setHasActiveSession(result.hasActiveSession || false);
 
@@ -88,7 +88,7 @@ export default function FloodMapPage() {
 
             setLoadingTeams(true);
             try {
-                const response = await fetch(`/api/eoc/sessions/${activeSessionData.id}/teams`);
+                const response = await fetch(`/stn-eoc/api/eoc/sessions/${activeSessionData.id}/teams`);
                 const result = await response.json();
 
                 if (result.success && Array.isArray(result.teams)) {
@@ -116,7 +116,7 @@ export default function FloodMapPage() {
         if (session?.id) {
             setLoadingTeams(true);
             try {
-                const response = await fetch(`/api/eoc/sessions/${session.id}/teams`);
+                const response = await fetch(`/stn-eoc/api/eoc/sessions/${session.id}/teams`);
                 const data = await response.json();
 
                 if (data.success && Array.isArray(data.teams)) {

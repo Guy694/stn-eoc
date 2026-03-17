@@ -15,7 +15,7 @@ export default function DisasterDashboard() {
     const loadDisasterTypes = async () => {
         try {
             // ดึงข้อมูล EOC Types จาก API
-            const response = await fetch('/api/admin/eoc-types?active=true');
+            const response = await fetch('/stn-eoc/api/admin/eoc-types?active=true');
             const result = await response.json();
 
             if (result.success && Array.isArray(result.data)) {
@@ -44,7 +44,7 @@ export default function DisasterDashboard() {
         await Promise.all(
             types.map(async (type) => {
                 try {
-                    const response = await fetch(`/api/eoc/${type}/sessions-summary`);
+                    const response = await fetch(`/stn-eoc/api/eoc/${type}/sessions-summary`);
                     const data = await response.json();
                     if (data.success && data.yearSummaries?.length > 0) {
                         const currentYear = data.yearSummaries[0];

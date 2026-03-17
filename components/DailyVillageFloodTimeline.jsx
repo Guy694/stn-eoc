@@ -120,7 +120,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
 
                 console.log('Fetching flood data for date:', dateStr, 'session:', session.id);
 
-                const response = await fetch(`/api/eoc/flood/area-status?session_id=${session.id}&date=${dateStr}`);
+                const response = await fetch(`/stn-eoc/api/eoc/flood/area-status?session_id=${session.id}&date=${dateStr}`);
                 const result = await response.json();
 
                 console.log('Flood data result:', {
@@ -173,7 +173,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     useEffect(() => {
         const fetchHealthFacilities = async () => {
             try {
-                const response = await fetch('/api/common/health-facilities');
+                const response = await fetch('/stn-eoc/api/common/health-facilities');
                 const result = await response.json();
                 if (result.success) {
                     setHealthFacilities(result.data);
@@ -190,7 +190,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     useEffect(() => {
         const fetchTambonBoundaries = async () => {
             try {
-                const response = await fetch('/api/common/tambon-boundaries');
+                const response = await fetch('/stn-eoc/api/common/tambon-boundaries');
                 const result = await response.json();
                 if (result.success) {
                     setTambonBoundaries(result.data);
@@ -300,7 +300,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 formData.append('date', selectedDate.toISOString().split('T')[0]);
                 formData.append('officer_id', '1');
 
-                const response = await fetch('/api/eoc/flood/daily-flood/upload', {
+                const response = await fetch('/stn-eoc/api/eoc/flood/daily-flood/upload', {
                     method: 'POST',
                     body: formData
                 });

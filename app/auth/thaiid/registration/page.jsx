@@ -54,7 +54,7 @@ export default function ThaiIDRegistrationPage() {
         setError('');
 
         try {
-            const response = await fetch('/api/auth/thaiid/register', {
+            const response = await fetch('/stn-eoc/api/auth/thaiid/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

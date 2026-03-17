@@ -13,7 +13,7 @@ export function EOCProvider({ children }) {
     // ดึงสถานะ EOC
     const fetchEOCStatus = async () => {
         try {
-            const response = await fetch('/api/eoc/status');
+            const response = await fetch('/stn-eoc/api/eoc/status/');
 
             // ตรวจสอบว่า response สำเร็จก่อน parse JSON
             if (!response.ok) {
@@ -70,7 +70,7 @@ export function EOCProvider({ children }) {
         }
 
         try {
-            const response = await fetch('/api/eoc/status', {
+            const response = await fetch('/stn-eoc/api/eoc/status/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

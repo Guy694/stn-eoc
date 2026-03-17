@@ -41,7 +41,7 @@ export default function EOCManagementPage() {
     // โหลด EOC Types จาก database
     const loadEOCTypes = async () => {
         try {
-            const response = await fetch('/api/admin/eoc-types');
+            const response = await fetch('/stn-eoc/api/admin/eoc-types');
             const result = await response.json();
 
             if (result.success && Array.isArray(result.data)) {
@@ -92,7 +92,7 @@ export default function EOCManagementPage() {
                 return;
             }
 
-            const response = await fetch('/api/admin/eoc-types', {
+            const response = await fetch('/stn-eoc/api/admin/eoc-types', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -122,7 +122,7 @@ export default function EOCManagementPage() {
     // แก้ไข EOC Type
     const handleEditEOCType = async () => {
         try {
-            const response = await fetch('/api/admin/eoc-types', {
+            const response = await fetch('/stn-eoc/api/admin/eoc-types', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -161,7 +161,7 @@ export default function EOCManagementPage() {
         if (!confirm.isConfirmed) return;
 
         try {
-            const response = await fetch(`/api/admin/eoc-types?id=${id}`, {
+            const response = await fetch(`/stn-eoc/api/admin/eoc-types?id=${id}`, {
                 method: 'DELETE'
             });
 
@@ -183,7 +183,7 @@ export default function EOCManagementPage() {
     // เปิด modal แก้ไข
     const openEditModal = async (typeId) => {
         try {
-            const response = await fetch('/api/admin/eoc-types');
+            const response = await fetch('/stn-eoc/api/admin/eoc-types');
             const result = await response.json();
 
             if (result.success) {

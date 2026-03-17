@@ -42,7 +42,7 @@ export default function EOCOverview() {
 
     const fetchActiveSessions = async () => {
         try {
-            const response = await fetch('/api/eoc/sessions?status=active');
+            const response = await fetch('/stn-eoc/api/eoc/sessions?status=active');
             const result = await response.json();
             if (result.success && result.data.length > 0) {
                 setActiveSessions(result.data);
@@ -59,7 +59,7 @@ export default function EOCOverview() {
     const fetchDashboardData = async (sessionId) => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/commander/dashboard?session_id=${sessionId}`);
+            const response = await fetch(`/stn-eoc/api/commander/dashboard?session_id=${sessionId}`);
             const result = await response.json();
 
             if (result.success) {

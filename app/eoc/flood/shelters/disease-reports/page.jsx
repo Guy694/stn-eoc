@@ -35,7 +35,7 @@ export default function ShelterDiseaseReportsPage() {
     useEffect(() => {
         const fetchActiveSession = async () => {
             try {
-                const response = await fetch('/api/eoc/flood/area-status');
+                const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
                 const result = await response.json();
                 if (result.hasActiveSession && result.activeSession) {
                     setSessionId(result.activeSession.id);
@@ -51,7 +51,7 @@ export default function ShelterDiseaseReportsPage() {
     useEffect(() => {
         const fetchDiseases = async () => {
             try {
-                const response = await fetch('/api/common/diseases');
+                const response = await fetch('/stn-eoc/api/common/diseases');
                 const result = await response.json();
                 if (result.success && result.data) {
                     // เพิ่ม "อื่นๆ" ไว้ท้ายสุด
@@ -84,14 +84,14 @@ export default function ShelterDiseaseReportsPage() {
             setLoading(true);
             try {
                 // ดึงศูนย์พักพิงที่ activate
-                const sheltersRes = await fetch(`/api/eoc/shelter-activations?session_id=${sessionId}&eoc_type=flood`);
+                const sheltersRes = await fetch(`/stn-eoc/api/eoc/shelter-activations?session_id=${sessionId}&eoc_type=flood`);
                 const sheltersData = await sheltersRes.json();
                 if (sheltersData.success) {
                     setActivatedShelters(sheltersData.data?.filter(s => s.is_activated_for_session) || []);
                 }
 
                 // ดึงรายงานโรค
-                const reportsRes = await fetch(`/api/eoc/shelter-disease-reports?session_id=${sessionId}&report_date=${selectedDate}`);
+                const reportsRes = await fetch(`/stn-eoc/api/eoc/shelter-disease-reports?session_id=${sessionId}&report_date=${selectedDate}`);
                 const reportsData = await reportsRes.json();
                 if (reportsData.success) {
                     setReports(reportsData.data || []);
@@ -117,7 +117,7 @@ export default function ShelterDiseaseReportsPage() {
 
         setSaving(true);
         try {
-            const response = await fetch('/api/eoc/shelter-disease-reports', {
+            const response = await fetch('/stn-eoc/api/eoc/shelter-disease-reports', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -130,7 +130,7 @@ export default function ShelterDiseaseReportsPage() {
             const result = await response.json();
             if (result.success) {
                 // Refresh data
-                const reportsRes = await fetch(`/api/eoc/shelter-disease-reports?session_id=${sessionId}&report_date=${selectedDate}`);
+                const reportsRes = await fetch(`/stn-eoc/api/eoc/shelter-disease-reports?session_id=${sessionId}&report_date=${selectedDate}`);
                 const reportsData = await reportsRes.json();
                 if (reportsData.success) {
                     setReports(reportsData.data || []);
@@ -165,7 +165,7 @@ export default function ShelterDiseaseReportsPage() {
         if (!confirm('ต้องการลบรายงานนี้หรือไม่?')) return;
 
         try {
-            const response = await fetch(`/api/eoc/shelter-disease-reports?id=${id}`, { method: 'DELETE' });
+            const response = await fetch(`/stn-eoc/api/eoc/shelter-disease-reports?id=${id}`, { method: 'DELETE' });
             const result = await response.json();
             if (result.success) {
                 setReports(reports.filter(r => r.id !== id));

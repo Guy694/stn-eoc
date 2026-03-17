@@ -32,7 +32,7 @@ export default function CitizensManagementPage() {
     const fetchCitizens = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/admin/citizens');
+            const response = await fetch('/stn-eoc/api/admin/citizens');
             const data = await response.json();
 
             if (data.success) {
@@ -75,7 +75,7 @@ export default function CitizensManagementPage() {
         if (!selectedCitizen) return;
 
         try {
-            const response = await fetch('/api/admin/citizens/promote', {
+            const response = await fetch('/stn-eoc/api/admin/citizens/promote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

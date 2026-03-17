@@ -25,12 +25,14 @@ export default function Home() {
 
   const [infographicsData, setInfographicsData] = useState({});
   const [floodStats, setFloodStats] = useState(null); // สถิติน้ำท่วมจาก database
+  const [accidentStats, setAccidentStats] = useState(null); // สถิติอุบัติเหตุจาก database
+  const [diseaseStats, setDiseaseStats] = useState(null); // สถิติโรคระบาดจาก database
 
   // ดึงข้อมูล EOC ที่เปิดอยู่
   useEffect(() => {
     const fetchActiveEOCs = async () => {
       try {
-        const response = await fetch('/api/eoc/status');
+        const response = await fetch('/stn-eoc/api/eoc/status/');
 
         if (!response.ok) {
           console.error('Failed to fetch EOC status:', response.status);
@@ -78,7 +80,7 @@ export default function Home() {
 
       for (const type of types) {
         try {
-          const response = await fetch(`/api/public/infographics?eocType=${type}`);
+          const response = await fetch(`/stn-eoc/api/public/infographics/?eocType=${type}`);
 
           if (!response.ok) {
             console.error(`Failed to fetch infographics for ${type}:`, response.status);
@@ -104,28 +106,54 @@ export default function Home() {
     fetchInfographics();
   }, []);
 
-  // ดึงข้อมูลสถิติน้ำท่วมจาก database
+  // ดึงข้อมูลสถิติจาก database ตาม EOC ที่เปิดอยู่
   useEffect(() => {
     const fetchFloodStats = async () => {
-      // หา session_id ของ flood EOC ที่ active
       const floodEOC = activeEOCs.find(eoc => eoc.eoc_type === 'flood');
       if (!floodEOC) return;
-
       try {
-        const response = await fetch(`/api/public/flood-stats?session_id=${floodEOC.id}`);
+        const response = await fetch(`/stn-eoc/api/public/flood-stats/?session_id=${floodEOC.id}`);
         if (response.ok) {
           const result = await response.json();
-          if (result.success) {
-            setFloodStats(result.data);
-          }
+          if (result.success) setFloodStats(result.data);
         }
       } catch (error) {
         console.error('Error fetching flood stats:', error);
       }
     };
 
+    const fetchAccidentStats = async () => {
+      const accidentEOC = activeEOCs.find(eoc => eoc.eoc_type === 'accident');
+      if (!accidentEOC) return;
+      try {
+        const response = await fetch(`/stn-eoc/api/public/accident-stats/?session_id=${accidentEOC.id}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) setAccidentStats(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching accident stats:', error);
+      }
+    };
+
+    const fetchDiseaseStats = async () => {
+      const diseaseEOC = activeEOCs.find(eoc => eoc.eoc_type === 'disease');
+      if (!diseaseEOC) return;
+      try {
+        const response = await fetch(`/stn-eoc/api/public/disease-stats/?session_id=${diseaseEOC.id}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) setDiseaseStats(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching disease stats:', error);
+      }
+    };
+
     if (activeEOCs.length > 0) {
       fetchFloodStats();
+      fetchAccidentStats();
+      fetchDiseaseStats();
     }
   }, [activeEOCs]);
 
@@ -247,30 +275,22 @@ export default function Home() {
           { icon: "⛑️", text: "สวมหมวกกันน็อคและคาดเข็มขัดนิรภัย", level: "warning" },
           { icon: "😴", text: "ง่วงไม่ขับ พักผ่อนให้เพียงพอ", level: "info" }
         ],
-        news: [
-          {
-            title: "มาตรการป้องกันและลดอุบัติเหตุ",
-            content: "จังหวัดสตูลตั้งจุดตรวจหลักและด่านชุมชนเพื่ออำนวยความสะดวกและกวดขันวินัยจราจร",
-            type: "warning",
-            date: "2026-01-01"
-          },
-          {
-            title: "แจ้งจุดเสี่ยงอุบัติเหตุ",
-            content: "ประชาสัมพันธ์จุดเสี่ยงและเส้นทางที่ต้องใช้ความระมัดระวังเป็นพิเศษ",
-            type: "info",
-            date: "2026-01-02"
-          }
-        ],
+        news: [],
         quickActions: [
           { icon: "🗺️", title: "แผนที่อุบัติเหตุ", link: "/eoc/accident", color: "orange" },
           { icon: "📝", title: "บันทึกข้อมูล", link: "/eoc/accident/records", color: "red" },
           { icon: "🏥", title: "จุดบริการ", link: "/eoc/accident/service-points", color: "blue" }
         ],
-        stats: {
-          accidents: 12,
-          injuries: 15,
+        stats: accidentStats ? {
+          accidents: accidentStats.accidents || 0,
+          injuries: accidentStats.injuries || 0,
+          deaths: accidentStats.deaths || 0,
+          checkpoints: accidentStats.checkpoints || 0
+        } : {
+          accidents: 0,
+          injuries: 0,
           deaths: 0,
-          checkpoints: 8
+          checkpoints: 0
         }
       },
       disease: {
@@ -280,30 +300,22 @@ export default function Home() {
           { icon: "🏥", text: "พบแพทย์ทันทีหากมีอาการป่วย", level: "danger" },
           { icon: "🚫", text: "หลีกเลี่ยงสถานที่แออัด รักษาระยะห่าง", level: "warning" }
         ],
-        news: [
-          {
-            title: "อัพเดทสถานการณ์โรคระบาด",
-            content: "จำนวนผู้ป่วยเพิ่มขึ้น ขอความร่วมมือปฏิบัติตามมาตรการป้องกัน",
-            type: "warning",
-            date: "2025-12-17"
-          },
-          {
-            title: "จุดให้บริการฉีดวัคซีน",
-            content: "เปิดจุดบริการฉีดวัคซีนฟรี ทุกวันจันทร์-ศุกร์ เวลา 09.00-16.00 น.",
-            type: "info",
-            date: "2025-12-16"
-          }
-        ],
+        news: [],
         quickActions: [
           { icon: "🦠", title: "แผนที่โรคระบาด", link: "/eoc/disease", color: "purple" },
           { icon: "💉", title: "จุดฉีดวัคซีน", link: "/eoc/village-map", color: "green" },
           { icon: "🏥", title: "โรงพยาบาล", link: "/public/disaster-map", color: "blue" }
         ],
-        stats: {
-          patients: 234,
-          vaccinated: 1456,
-          teams: 20,
-          hospitals: 12
+        stats: diseaseStats ? {
+          patients: diseaseStats.patients || 0,
+          affectedFacilities: diseaseStats.affectedFacilities || 0,
+          affectedDistricts: diseaseStats.affectedDistricts || 0,
+          hospitals: diseaseStats.hospitals || 0
+        } : {
+          patients: 0,
+          affectedFacilities: 0,
+          affectedDistricts: 0,
+          hospitals: 0
         }
       }
     };
@@ -554,12 +566,13 @@ export default function Home() {
                       alerts: { icon: "📡", title: "ระบบเตือนภัย", unit: "จุด" },
                       safeBuildings: { icon: "🏗️", title: "อาคารปลอดภัย", unit: "แห่ง" },
                       patients: { icon: "😷", title: "ผู้ป่วย", unit: "คน" },
-                      vaccinated: { icon: "💉", title: "ฉีดวัคซีน", unit: "คน" },
-                      hospitals: { icon: "🏥", title: "โรงพยาบาล", unit: "แห่ง" },
+                      affectedFacilities: { icon: "🏥", title: "สถานพยาบาลที่รายงาน", unit: "แห่ง" },
+                      affectedDistricts: { icon: "📍", title: "อำเภอที่ได้รับผลกระทบ", unit: "อำเภอ" },
+                      hospitals: { icon: "🏥", title: "สถานพยาบาลในระบบ", unit: "แห่ง" },
                       accidents: { icon: "💥", title: "อุบัติเหตุสะสม", unit: "ครั้ง" },
                       injuries: { icon: "🤕", title: "ผู้บาดเจ็บ", unit: "ราย" },
                       deaths: { icon: "💀", title: "ผู้เสียชีวิต", unit: "ราย" },
-                      checkpoints: { icon: "🚧", title: "จุดตรวจ", unit: "จุด" }
+                      checkpoints: { icon: "🚧", title: "จุดตรวจ/จุดบริการ", unit: "จุด" }
                     };
                     const label = labels[key] || { icon: "📊", title: key, unit: "" };
 
@@ -614,28 +627,55 @@ export default function Home() {
         }
 
 
-        {/* Infographic Stats */}
-        <section className="mb-8 hidden">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">📊 สถิติภาพรวม</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          </div>
-        </section>
-
         {/* Emergency Contact - แสดงเสมอ */}
-        <section className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-8 text-center">
-          <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4">☎️ หมายเลขฉุกเฉิน</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <div>
-              <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">191</div>
-              <div className="text-sm md:text-lg">ตำรวจ</div>
+        <section className="mb-6 md:mb-8">
+          <div className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-8 text-center">
+            <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4">☎️ หมายเลขฉุกเฉิน</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+              <div>
+                <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">191</div>
+                <div className="text-sm md:text-lg">ตำรวจ</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">1669</div>
+                <div className="text-sm md:text-lg">ฉุกเฉิน EMS</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">199</div>
+                <div className="text-sm md:text-lg">ดับเพลิง</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">1784</div>
+                <div className="text-sm md:text-lg">ปภ. สายด่วน</div>
+              </div>
             </div>
-            <div>
-              <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">1669</div>
-              <div className="text-sm md:text-lg">ฉุกเฉิน EMS</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">199</div>
-              <div className="text-sm md:text-lg">ดับเพลิง</div>
+          </div>
+
+          {/* ช่องทางติดต่อจังหวัดสตูล */}
+          <div className="bg-white rounded-lg md:rounded-xl shadow-md p-4 md:p-6 mt-3 md:mt-4">
+            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-3 text-center">📞 ช่องทางติดต่อ สนง.ปภ.จังหวัดสตูล</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+              <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-3">
+                <span className="text-2xl">📱</span>
+                <div>
+                  <div className="text-sm font-semibold text-gray-700">โทรศัพท์</div>
+                  <div className="text-blue-700 font-bold">074-711-067</div>
+                </div>
+              </div>
+              <a href="https://www.facebook.com/profile.php?id=100064630498498" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-blue-50 rounded-lg p-3 hover:bg-blue-100 transition-colors">
+                <span className="text-2xl">📘</span>
+                <div>
+                  <div className="text-sm font-semibold text-gray-700">Facebook</div>
+                  <div className="text-blue-700 font-bold text-sm">ปภ.จังหวัดสตูล</div>
+                </div>
+              </a>
+              <a href="https://lin.ee/satunddpm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-green-50 rounded-lg p-3 hover:bg-green-100 transition-colors">
+                <span className="text-2xl">💬</span>
+                <div>
+                  <div className="text-sm font-semibold text-gray-700">LINE Official</div>
+                  <div className="text-green-700 font-bold text-sm">@satunddpm</div>
+                </div>
+              </a>
             </div>
           </div>
         </section>
@@ -651,6 +691,9 @@ export default function Home() {
 
       {/* AI Chatbot */}
       <AIChatbot />
+
+      {/* PDPA Consent */}
+      <PDPAConsent />
     </div>
   );
 }
@@ -850,6 +893,4 @@ function QuickLinkCard({ icon, title, description, link, color = "gray" }) {
   );
 }
 
-{/* PDPA Consent */ }
-<PDPAConsent />
 

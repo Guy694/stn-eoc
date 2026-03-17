@@ -37,7 +37,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
             setLoading(true);
             try {
                 const dateStr = selectedDate.toISOString().split('T')[0];
-                const response = await fetch(`/api/daily-flood?date=${dateStr}`);
+                const response = await fetch(`/stn-eoc/api/daily-flood?date=${dateStr}`);
                 const data = await response.json();
                 setFloodData(data);
             } catch (error) {
@@ -109,7 +109,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                 formData.append('date', selectedDate.toISOString().split('T')[0]);
                 formData.append('officer_id', '1'); // ใช้ officer_id จริงจาก session
 
-                const response = await fetch('/api/eoc/flood/daily-flood/upload', {
+                const response = await fetch('/stn-eoc/api/eoc/flood/daily-flood/upload', {
                     method: 'POST',
                     body: formData
                 });

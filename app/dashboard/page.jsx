@@ -33,7 +33,7 @@ export default function DashboardPage() {
         const fetchDashboardData = async () => {
             try {
                 setStatsLoading(true);
-                const response = await fetch('/api/dashboard/summary');
+                const response = await fetch('/stn-eoc/api/dashboard/summary');
                 const result = await response.json();
 
                 if (result.success) {
