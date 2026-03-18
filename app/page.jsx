@@ -343,7 +343,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
             <div className="flex items-center gap-3 md:gap-6">
               <div className="w-16 h-16 md:w-24 md:h-24 bg-white rounded-full flex items-center justify-center shadow-2xl ring-2 md:ring-4 ring-green-400">
-                <Image src="/img/logo.png" alt="EOC Logo" width={80} height={80} className="w-14 h-14 md:w-20 md:h-20" />
+                <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="w-14 h-14 md:w-20 md:h-20" />
               </div>
               <div>
                 <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 drop-shadow-lg">EOC จังหวัดสตูล</h1>

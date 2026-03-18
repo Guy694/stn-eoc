@@ -97,7 +97,7 @@ function LoginForm() {
                 {/* Logo and Header */}
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 bg-green-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                        <img src="/img/logo.png" alt="" />
+                        <img src="/stn-eocç/img/logo.png" alt="" />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ EOC</h1>
                     <p className="text-gray-600">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>

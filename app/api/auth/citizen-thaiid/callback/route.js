@@ -6,7 +6,7 @@ const THAIID_CONFIG = {
     userInfoUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/',
     clientId: process.env.THAIID_CLIENT_ID,
     apiKey: process.env.THAIID_API_KEY,
-    redirectUri: process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/citizen-thaiid/callback',
+    redirectUri: process.env.NEXT_PUBLIC_BASE_URL + '/stn-eoc/api/auth/citizen-thaiid/callback',
 };
 
 export async function GET(request) {

@@ -93,7 +93,7 @@ export default function Sidebar() {
         // 1. DASHBOARD - ทุกคนเห็นได้
         // ============================================
         {
-            title: "แดshบอร์ด",
+            title: "แดชบอร์ด",
             section: "dashboard",
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
@@ -125,19 +125,20 @@ export default function Sidebar() {
             ],
         },
 
-        // {
-        //     title: "🚗 EOC อุบัติเหตุช่วงเทศกาล",
-        //     section: "eoc-accident",
-        //     key: "accident",
-        //     eocType: "accident",
-        //     collapsible: true,
-        //     requiresPermission: null,
-        //     items: [
-        //         { name: "แผนที่และสถานการณ์", path: "/eoc/accident", icon: "📊", description: "ภาพรวมสถานการณ์อุบัติเหตุ 7 วันอันตราย" },
-        //         { name: "บันทึกอุบัติเหตุ", path: "/eoc/accident/records", icon: "🚗", description: "บันทึกข้อมูลอุบัติเหตุ" },
-        //         { name: "จุดบริการชั่วคราว", path: "/eoc/accident/service-points", icon: "🚧", description: "จัดการจุดตรวจ/จุดบริการ" },
-        //     ],
-        // },
+        {
+            title: "🚗 EOC อุบัติเหตุช่วงเทศกาล",
+            section: "eoc-accident",
+            key: "accident",
+            eocType: "accident",
+            collapsible: true,
+            requiresPermission: null,
+            items: [
+                { name: "ภาพรวมเทศกาล", path: "/eoc/festival-accidents", icon: "📊", description: "Dashboard สถิติอุบัติเหตุ 7 วันอันตราย" },
+                { name: "บันทึกอุบัติเหตุ", path: "/eoc/accident/records", icon: "🚗", description: "บันทึกข้อมูลอุบัติเหตุ" },
+                { name: "จุดบริการชั่วคราว", path: "/eoc/accident/service-points", icon: "🚧", description: "จัดการจุดตรวจ/จุดบริการ" },
+                { name: "เปรียบเทียบเทศกาล", path: "/eoc/festival-accidents/compare", icon: "📈", description: "เปรียบเทียบสถิติข้ามเทศกาล/ปี" },
+            ],
+        },
 
         // {
         //     title: "🌊 EOC สึนามิ",

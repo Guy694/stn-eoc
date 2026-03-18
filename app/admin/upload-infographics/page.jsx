@@ -27,7 +27,7 @@ export default function UploadInfographics() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const response = await fetch('/api/auth/me');
+                const response = await fetch('/stn-eoc/api/auth/me');
                 if (!response.ok) {
                     router.push('/login');
                     return;
@@ -52,7 +52,7 @@ export default function UploadInfographics() {
 
     const fetchExistingFiles = async () => {
         try {
-            const response = await fetch('/api/admin/infographics/list');
+            const response = await fetch('/stn-eoc/api/admin/infographics/list');
             if (response.ok) {
                 const data = await response.json();
                 setExistingFiles(data.files || {});
@@ -86,7 +86,7 @@ export default function UploadInfographics() {
                 uploadFormData.append('files', file);
             });
 
-            const response = await fetch('/api/admin/infographics/upload', {
+            const response = await fetch('/stn-eoc/api/admin/infographics/upload', {
                 method: 'POST',
                 body: uploadFormData
             });
@@ -113,7 +113,7 @@ export default function UploadInfographics() {
         if (!confirm('ต้องการลบไฟล์นี้หรือไม่?')) return;
 
         try {
-            const response = await fetch('/api/admin/infographics/delete', {
+            const response = await fetch('/stn-eoc/api/admin/infographics/delete', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ eocType, filename })

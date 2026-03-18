@@ -4,7 +4,7 @@ import crypto from 'crypto';
 const THAIID_CONFIG = {
     authorizeUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/',
     clientId: process.env.THAIID_CLIENT_ID,
-    redirectUri: process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/citizen-thaiid/callback',
+    redirectUri: process.env.NEXT_PUBLIC_BASE_URL + '/stn-eoc/api/auth/citizen-thaiid/callback',
     scope: 'pid given_name family_name',
 };
 
