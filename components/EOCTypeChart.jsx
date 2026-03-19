@@ -25,14 +25,14 @@ ChartJS.register(
 const EOC_TYPE_LABELS = {
     flood: "น้ำท่วม",
     disease: "โรคระบาด",
-    accident: "อุบัติเหตุ"
+    'festival-accidents': "อุบัติเหตุ"
 };
 
 // สี Chart สำหรับแต่ละประเภท
 const EOC_TYPE_COLORS = {
     flood: { bg: "rgba(59, 130, 246, 0.6)", border: "rgb(59, 130, 246)" },
     disease: { bg: "rgba(168, 85, 247, 0.6)", border: "rgb(168, 85, 247)" },
-    accident: { bg: "rgba(249, 115, 22, 0.6)", border: "rgb(249, 115, 22)" }
+    'festival-accidents': { bg: "rgba(249, 115, 22, 0.6)", border: "rgb(249, 115, 22)" }
 };
 
 export default function EOCTypeChart() {
@@ -198,7 +198,7 @@ export default function EOCTypeChart() {
                         <div key={type} className="text-center p-4 bg-gray-50 rounded-lg border">
                             <div className="text-3xl mb-2">
                                 {type === 'flood' && '🌊'}
-                                {type === 'accident' && '🚗'}
+                                {type === 'festival-accidents' && '🚗'}
                                 {type === 'disease' && '🦠'}
                             </div>
                             <div className="text-2xl font-bold text-gray-800">{count}</div>

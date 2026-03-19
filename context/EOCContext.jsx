@@ -133,7 +133,7 @@ export function EOCProvider({ children }) {
         const fallbackNames = {
             flood: 'น้ำท่วม',
             disease: 'โรคระบาด',
-            accident: 'อุบัติเหตุช่วงเทศกาล'
+            'festival-accidents': 'อุบัติเหตุช่วงเทศกาล'
         };
         return fallbackNames[eocType] || eocType;
     };

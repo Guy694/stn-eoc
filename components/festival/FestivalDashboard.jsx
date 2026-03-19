@@ -222,7 +222,7 @@ export default function FestivalDashboard() {
                     <div className="text-6xl mb-4">📭</div>
                     <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีข้อมูลเทศกาล</h3>
                     <p className="text-gray-600">ยังไม่มี EOC Session สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
-                    <p className="text-gray-500 text-sm mt-1">กรุณาเปิด EOC Session ประเภท "accident" จากหน้าจัดการ EOC</p>
+                    <p className="text-gray-500 text-sm mt-1">กรุณาเปิด EOC Session ประเภท "festival-accidents" จากหน้าจัดการ EOC</p>
                 </div>
             )}
 

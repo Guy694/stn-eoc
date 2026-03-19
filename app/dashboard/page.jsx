@@ -21,7 +21,7 @@ const EOC_MODULES = [
         textColor: 'text-blue-700',
     },
     {
-        key: 'accident',
+        key: 'festival-accidents',
         name: 'อุบัติเหตุช่วงเทศกาล',
         icon: '🚗',
         description: 'ระบบติดตามอุบัติเหตุ 7 วันอันตราย ปีใหม่ / สงกรานต์',

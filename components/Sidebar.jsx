@@ -128,8 +128,8 @@ export default function Sidebar() {
         {
             title: "🚗 EOC อุบัติเหตุช่วงเทศกาล",
             section: "eoc-accident",
-            key: "accident",
-            eocType: "accident",
+            key: "festival-accidents",
+            eocType: "festival-accidents",
             collapsible: true,
             requiresPermission: null,
             items: [

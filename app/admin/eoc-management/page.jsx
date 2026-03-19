@@ -48,11 +48,11 @@ export default function EOCManagementPage() {
                 setEocTypes(result.data.map(item => item.id));
             } else {
                 // fallback ถ้าไม่มีข้อมูลใน database
-                setEocTypes(['flood', 'disease', 'accident']);
+                setEocTypes(['flood', 'disease', 'festival-accidents']);
             }
         } catch (error) {
             console.error("Error loading EOC types:", error);
-            setEocTypes(['flood', 'disease', 'accident']);
+            setEocTypes(['flood', 'disease', 'festival-accidents']);
         }
     };
 
