@@ -5,6 +5,9 @@ import dynamic from 'next/dynamic';
 import { showWarning } from '@/lib/sweetAlert';
 import { useAuth } from '@/context/AuthContext';
 
+// Festival label helper
+const FESTIVAL_LABEL = { newyear: 'เทศกาลปีใหม่ 🎄', songkran: 'เทศกาลสงกรานต์ 💦' };
+
 // Import Leaflet components with no SSR
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -44,6 +47,7 @@ export default function ReportIncidentPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    const [festivalEOC, setFestivalEOC] = useState(null); // active festival-accidents EOC
 
     // GPS Location states
     const [gpsStatus, setGpsStatus] = useState('idle'); // idle, requesting, success, error, denied
@@ -152,6 +156,17 @@ export default function ReportIncidentPage() {
             // ขอตำแหน่ง GPS อัตโนมัติเมื่อโหลดหน้า
             requestGpsLocation();
         }
+
+        // ตรวจสอบ active EOC
+        fetch('/stn-eoc/api/eoc/status/')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const fEOC = data.data.find(e => e.eoc_type === 'festival-accidents' && e.is_active);
+                    if (fEOC) setFestivalEOC(fEOC);
+                }
+            })
+            .catch(() => {});
     }, []);
 
     // Auto-fill form when user is logged in (citizen)
@@ -456,6 +471,33 @@ export default function ReportIncidentPage() {
                             </div>
                         </button>
                     </div>
+
+                    {/* Festival Accident Report Card - shows when festival EOC is active */}
+                    {festivalEOC && (
+                        <div className="mt-4">
+                            <div className="border-2 border-red-400 bg-red-50 rounded-xl overflow-hidden">
+                                <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 text-xs font-bold flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-white rounded-full animate-pulse inline-block"></span>
+                                    EOC เทศกาลเปิดอยู่: {FESTIVAL_LABEL[festivalEOC.festival_type] || 'อุบัติเหตุช่วงเทศกาล'}
+                                </div>
+                                <Link
+                                    href="/stn-eoc/public/festival-accidents/report"
+                                    className="flex items-start gap-3 p-4 md:p-5 hover:bg-red-100 transition"
+                                >
+                                    <div className="text-4xl md:text-5xl">🚗</div>
+                                    <div className="flex-1">
+                                        <h4 className="font-bold text-base md:text-lg text-red-700 mb-1">แจ้งเหตุอุบัติเหตุ (ช่วงเทศกาล)</h4>
+                                        <p className="text-xs md:text-sm text-gray-600">
+                                            รายงานอุบัติเหตุทางถนนในช่วงเทศกาล ระบุตำแหน่ง จำนวนผู้บาดเจ็บ/เสียชีวิต และสาเหตุ
+                                        </p>
+                                        <div className="mt-2 text-xs text-red-600 font-semibold flex items-center gap-1">
+                                            คลิกเพื่อกรอกแบบฟอร์ม →
+                                        </div>
+                                    </div>
+                                </Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* ThaiID Login Section - Show only if not logged in */}

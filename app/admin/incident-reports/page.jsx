@@ -196,13 +196,18 @@ export default function IncidentReportsPage() {
             return imagePath;
         }
 
-        // If it already starts with /uploads
-        if (imagePath.startsWith('/uploads/')) {
+        // If it already starts with /stn-eoc (already has basePath)
+        if (imagePath.startsWith('/stn-eoc/')) {
             return imagePath;
         }
 
-        // Otherwise, prepend /uploads/incidents/
-        return `/uploads/incidents/${imagePath}`;
+        // If it starts with /uploads, add basePath
+        if (imagePath.startsWith('/uploads/')) {
+            return `/stn-eoc${imagePath}`;
+        }
+
+        // Otherwise, prepend basePath + /uploads/incidents/
+        return `/stn-eoc/uploads/incidents/${imagePath}`;
     };
 
     const getPhotoArray = (photoPath) => {
@@ -610,7 +615,7 @@ export default function IncidentReportsPage() {
                                                                 className="w-full h-full object-cover"
                                                                 onError={(e) => {
                                                                     e.target.onerror = null;
-                                                                    e.target.src = '/img/no-image.png';
+                                                                    e.target.src = '/stn-eoc/img/no-image.png';
                                                                     e.target.alt = 'ไม่สามารถโหลดรูปภาพได้';
                                                                 }}
                                                             />

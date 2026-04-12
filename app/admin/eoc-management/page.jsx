@@ -57,17 +57,48 @@ export default function EOCManagementPage() {
     };
 
     const handleToggle = async (eocType) => {
-        setUpdating(prev => ({ ...prev, [eocType]: true }));
-        setMessage({ type: '', text: '' });
-
         const currentStatus = eocStatus[eocType]?.is_active || false;
         const newStatus = !currentStatus;
+        let festivalType = null;
+
+        if (eocType === 'festival-accidents' && newStatus) {
+            const { value: selectedType } = await Swal.fire({
+                title: 'เลือกประเภทเทศกาล',
+                input: 'select',
+                inputOptions: {
+                    newyear: 'เทศกาลปีใหม่',
+                    songkran: 'เทศกาลสงกรานต์'
+                },
+                inputPlaceholder: 'เลือกเทศกาล',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                inputValidator: (value) => {
+                    return new Promise((resolve) => {
+                        if (value) {
+                            resolve();
+                        } else {
+                            resolve('กรุณาเลือกประเภทเทศกาล');
+                        }
+                    });
+                }
+            });
+
+            if (!selectedType) {
+                return; // Cancelled
+            }
+            festivalType = selectedType;
+        }
+
+        setUpdating(prev => ({ ...prev, [eocType]: true }));
+        setMessage({ type: '', text: '' });
 
         try {
             const result = await toggleEOC(
                 eocType,
                 newStatus,
-                descriptions[eocType] || ''
+                descriptions[eocType] || '',
+                festivalType
             );
 
             if (result.success) {

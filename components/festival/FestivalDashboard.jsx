@@ -1,7 +1,14 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
+import dynamic from 'next/dynamic';
+
+const FestivalMap = dynamic(() => import('./FestivalMap'), {
+    ssr: false,
+    loading: () => <div className="h-[500px] flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 text-gray-400">กำลังโหลดแผนที่...</div>
+});
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
 
@@ -12,7 +19,11 @@ const FESTIVAL_TABS = [
 ];
 
 export default function FestivalDashboard() {
-    const [festivalType, setFestivalType] = useState('all');
+    const searchParams = useSearchParams();
+    const [festivalType, setFestivalType] = useState(() => {
+        const type = searchParams.get('festival_type');
+        return FESTIVAL_TABS.some(t => t.key === type) ? type : 'all';
+    });
     const [selectedSession, setSelectedSession] = useState('');
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -160,9 +171,13 @@ export default function FestivalDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold flex items-center gap-3">
-                            🚗 อุบัติเหตุช่วงเทศกาล
+                            🚗 อุบัติเหตุช่วงเทศกาล{data?.activeSession?.festival_type === 'newyear' ? 'ปีใหม่' : data?.activeSession?.festival_type === 'songkran' ? 'สงกรานต์' : ''}
                         </h1>
-                        <p className="text-red-100 mt-1">7 วันอันตราย — ระบบติดตามอุบัติเหตุทางถนนจังหวัดสตูล</p>
+                        <p className="text-red-100 mt-1">
+                            {data?.activeSession?.open_reason
+                                ? data.activeSession.open_reason
+                                : '7 วันอันตราย — ระบบติดตามอุบัติเหตุทางถนนจังหวัดสตูล'}
+                        </p>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -184,14 +199,18 @@ export default function FestivalDashboard() {
                         {FESTIVAL_TABS.map(tab => (
                             <button
                                 key={tab.key}
-                                onClick={() => { setFestivalType(tab.key); setSelectedSession(''); }}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                    festivalType === tab.key
-                                        ? tab.key === 'newyear' ? 'bg-blue-600 text-white shadow-md'
-                                            : tab.key === 'songkran' ? 'bg-orange-500 text-white shadow-md'
-                                                : 'bg-gray-700 text-white shadow-md'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
+                                onClick={() => {
+                                    setFestivalType(tab.key);
+                                    setSelectedSession('');
+                                    // Optionally update URL to reflect active tab
+                                    window.history.replaceState({}, '', `?festival_type=${tab.key}`);
+                                }}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${festivalType === tab.key
+                                    ? tab.key === 'newyear' ? 'bg-blue-600 text-white shadow-md'
+                                        : tab.key === 'songkran' ? 'bg-orange-500 text-white shadow-md'
+                                            : 'bg-gray-700 text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
                             >
                                 {tab.icon} {tab.label}
                             </button>
@@ -231,11 +250,10 @@ export default function FestivalDashboard() {
                     {/* Active Session Banner */}
                     <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 px-5 py-3 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                data.activeSession?.status === 'active' 
-                                    ? 'bg-green-100 text-green-700 animate-pulse' 
-                                    : 'bg-gray-200 text-gray-600'
-                            }`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${data.activeSession?.status === 'active'
+                                ? 'bg-green-100 text-green-700 animate-pulse'
+                                : 'bg-gray-200 text-gray-600'
+                                }`}>
                                 {data.activeSession?.status === 'active' ? '🟢 กำลังดำเนินการ' : '🔴 ปิดแล้ว'}
                             </span>
                             <span className="text-gray-700 font-medium">
@@ -366,12 +384,11 @@ export default function FestivalDashboard() {
                                     {data.stats?.totalAccidents > 0 && (
                                         <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                                             <div
-                                                className={`h-2 rounded-full transition-all duration-500 ${
-                                                    c.color === 'purple' ? 'bg-purple-500' :
+                                                className={`h-2 rounded-full transition-all duration-500 ${c.color === 'purple' ? 'bg-purple-500' :
                                                     c.color === 'orange' ? 'bg-orange-500' :
-                                                    c.color === 'yellow' ? 'bg-yellow-500' :
-                                                    'bg-red-500'
-                                                }`}
+                                                        c.color === 'yellow' ? 'bg-yellow-500' :
+                                                            'bg-red-500'
+                                                    }`}
                                                 style={{ width: `${Math.min(100, (c.count / data.stats.totalAccidents) * 100)}%` }}
                                             />
                                         </div>
@@ -408,8 +425,8 @@ export default function FestivalDashboard() {
                                                 return (
                                                     <tr key={d.district} className="hover:bg-gray-50">
                                                         <td className="px-4 py-3 font-medium text-gray-900 text-sm">
-                                                            <span 
-                                                                className="inline-block w-3 h-3 rounded-full mr-2" 
+                                                            <span
+                                                                className="inline-block w-3 h-3 rounded-full mr-2"
                                                                 style={{ backgroundColor: `rgba(239, 68, 68, ${0.2 + intensity * 0.8})` }}
                                                             />
                                                             {d.district}
@@ -488,6 +505,23 @@ export default function FestivalDashboard() {
                             )}
                         </div>
                     </div>
+
+                    {/* Map Section */}
+                    {data?.mapData && (
+                        <div className="bg-white rounded-xl shadow-md p-6">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                📍 แผนที่แสดงจุดเกิดเหตุและจุดบริการ (Session: {data.activeSession?.session_number || ''})
+                            </h3>
+                            <div className="mb-4 flex gap-4 text-sm">
+                                <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-600 block"></span> จุดเกิดอุบัติเหตุ</div>
+                                <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 block"></span> จุดบริการประชาชน / ด่านตรวจ</div>
+                            </div>
+                            <FestivalMap
+                                accidents={data.mapData.accidents || []}
+                                servicePoints={data.mapData.servicePoints || []}
+                            />
+                        </div>
+                    )}
                 </>
             )}
         </div>

@@ -64,7 +64,7 @@ export function EOCProvider({ children }) {
     }, []);
 
     // เปิด/ปิด EOC (admin only)
-    const toggleEOC = async (eocType, isActive, description = '') => {
+    const toggleEOC = async (eocType, isActive, description = '', festivalType = null) => {
         if (!user || user.role !== 'admin') {
             throw new Error('ต้องมีสิทธิ์ admin เท่านั้น');
         }
@@ -77,7 +77,8 @@ export function EOCProvider({ children }) {
                     eocType,
                     isActive,
                     userId: user.id,
-                    description
+                    description,
+                    festivalType
                 })
             });
 

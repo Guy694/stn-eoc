@@ -28,15 +28,15 @@ export async function GET(request) {
         let activeSession = null;
 
         if (!activeSessionId) {
-            const [sessionResult] = await connection.execute(`
-                SELECT id, session_number, opened_at, closed_at, open_reason
+            const [activeSessions] = await connection.execute(`
+                SELECT id, session_number, status, opened_at, eoc_type
                 FROM eoc_sessions 
-                WHERE eoc_type = 'accident' AND status = 'active' 
-                LIMIT 1
+                WHERE eoc_type = 'festival-accidents' AND status = 'active' 
+                ORDER BY opened_at DESC LIMIT 1
             `);
 
-            if (sessionResult.length > 0) {
-                activeSession = sessionResult[0];
+            if (activeSessions.length > 0) {
+                activeSession = activeSessions[0];
                 activeSessionId = activeSession.id;
             }
         } else {
@@ -84,9 +84,9 @@ export async function GET(request) {
 
         // ดึง health facilities
         const [healthFacilities] = await connection.execute(`
-            SELECT id, name, facility_type, lat, lng, district_name, tambon_name, address, phone
+            SELECT id, name, typecode as facility_type, lat, lon as lng, district_name, tambon as tambon_name, address
             FROM health_facilities
-            WHERE lat IS NOT NULL AND lng IS NOT NULL
+            WHERE lat IS NOT NULL AND lon IS NOT NULL
         `);
 
         // สถิติรวม

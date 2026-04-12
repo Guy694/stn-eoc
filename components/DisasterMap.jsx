@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker, LayerGroup } from
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { disasterTypeColors, severityColors } from "@/data/satunData";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useFullscreenMap } from "@/components/FullscreenMapWrapper";
 
 // แก้ไข icon default ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -15,6 +16,7 @@ L.Icon.Default.mergeOptions({
 
 export default function DisasterMap({ events, onEventClick }) {
     const [showEventLabels, setShowEventLabels] = useState(true);
+    const { isFullscreen, containerRef, buttonEl } = useFullscreenMap();
 
     // ศูนย์กลางของจังหวัดสตูล
     const satunCenter = [6.6238, 100.0673];
@@ -100,7 +102,12 @@ export default function DisasterMap({ events, onEventClick }) {
     };
 
     return (
-        <div className="relative w-full h-full">
+        <div
+            ref={containerRef}
+            className={`relative w-full h-full ${isFullscreen ? 'fixed inset-0 z-[99999]' : ''}`}
+            style={isFullscreen ? { height: '100vh' } : {}}
+        >
+            {buttonEl}
             <MapContainer
                 center={satunCenter}
                 zoom={10}
@@ -175,7 +182,7 @@ export default function DisasterMap({ events, onEventClick }) {
             </MapContainer>
 
             {/* Control สำหรับแสดง/ซ่อน labels */}
-            <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg z-[1000]">
+            <div className="absolute top-4 right-20 bg-white p-3 rounded-lg shadow-lg z-[1000]">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
                         type="checkbox"

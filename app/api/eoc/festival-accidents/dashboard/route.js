@@ -49,7 +49,7 @@ export async function GET(request) {
             let sessionQuery = `
                 SELECT id, session_number, eoc_type, ${festivalCol} status, opened_at, closed_at, open_reason 
                 FROM eoc_sessions 
-                WHERE eoc_type = 'accident' AND status = 'active'
+                WHERE eoc_type = 'festival-accidents' AND status = 'active'
             `;
             const sessionParams = [];
             if (festivalType && hasFestivalType) {
@@ -69,7 +69,7 @@ export async function GET(request) {
         let sessionsQuery = `
             SELECT id, session_number, ${festivalCol} status, opened_at, closed_at, open_reason
             FROM eoc_sessions 
-            WHERE eoc_type = 'accident'
+            WHERE eoc_type = 'festival-accidents'
         `;
         const sessionsParams = [];
         if (festivalType && hasFestivalType) {
@@ -148,12 +148,14 @@ export async function GET(request) {
 
         // จุดบริการชั่วคราว
         let checkpointCount = 0;
+        let servicePointsData = [];
         try {
             const [checkpoints] = await connection.execute(
-                'SELECT COUNT(*) as count FROM temporary_service_points WHERE session_id = ? AND is_active = 1',
+                'SELECT * FROM temporary_service_points WHERE session_id = ? AND is_active = 1',
                 [activeSessionId]
             );
-            checkpointCount = checkpoints[0]?.count || 0;
+            checkpointCount = checkpoints.length;
+            servicePointsData = checkpoints;
         } catch { checkpointCount = 0; }
 
         // 5 เหตุการณ์ล่าสุด
@@ -175,7 +177,11 @@ export async function GET(request) {
             accidentTypeBreakdown,
             districtBreakdown,
             causeAnalysis,
-            recentAccidents
+            recentAccidents,
+            mapData: {
+                accidents: accidents,
+                servicePoints: servicePointsData
+            }
         });
 
     } catch (error) {

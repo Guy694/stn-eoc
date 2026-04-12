@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { useFullscreenMap } from '@/components/FullscreenMapWrapper';
 
 // Dynamic import Leaflet components (client-side only)
 const MapContainer = dynamic(
@@ -40,6 +41,7 @@ export default function AccidentMap({
     const [showHealthFacilities, setShowHealthFacilities] = useState(true);
     const [showServicePoints, setShowServicePoints] = useState(true);
     const [showAccidents, setShowAccidents] = useState(true);
+    const { isFullscreen, containerRef, buttonEl } = useFullscreenMap();
 
     useEffect(() => {
         setIsClient(true);
@@ -104,7 +106,7 @@ export default function AccidentMap({
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div ref={containerRef} className={`bg-white rounded-lg shadow-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-[99999] flex flex-col' : ''}`}>
             {/* Stats Summary */}
             <div className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white">
                 <h3 className="text-xl font-bold mb-3">🗺️ แผนที่สถานการณ์อุบัติเหตุ</h3>
@@ -168,7 +170,8 @@ export default function AccidentMap({
             </div>
 
             {/* Map */}
-            <div className="h-[500px]">
+            <div className={isFullscreen ? 'flex-1' : 'h-[500px]'} style={{ position: 'relative' }}>
+                {buttonEl}
                 {L && (
                     <MapContainer
                         center={MAP_CENTER}

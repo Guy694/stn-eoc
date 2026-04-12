@@ -96,8 +96,8 @@ function LoginForm() {
             <div className="w-full max-w-md">
                 {/* Logo and Header */}
                 <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-green-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                        <img src="/stn-eocç/img/logo.png" alt="" />
+                    <div className="w-20 h-20 bg-green-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+                        <img src="/stn-eoc/img/logo.png" alt="EOC Logo" className="w-full h-full object-contain" onError={(e) => { e.target.style.display='none'; }} />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ EOC</h1>
                     <p className="text-gray-600">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
@@ -201,7 +201,7 @@ function LoginForm() {
                         onClick={() => window.location.href = '/stn-eoc/api/auth/thaiid/authorize/'}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-3"
                     >
-                        <img src="/img/thaiid.png" alt="ThaiID" className="w-9 h-9" />
+                        <img src="/stn-eoc/img/thaiid.png" alt="ThaiID" className="w-9 h-9" />
                         <span>เข้าสู่ระบบด้วย ThaiID</span>
                     </button>
 

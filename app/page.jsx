@@ -6,6 +6,9 @@ import AnnouncementPopup from "@/components/AnnouncementPopup";
 import SplashScreen from "@/components/SplashScreen";
 import AIChatbot from "@/components/AIChatbot";
 import PDPAConsent from "@/components/PDPAConsent";
+import dynamic from "next/dynamic";
+
+const FestivalPublicDashboard = dynamic(() => import("@/components/festival/FestivalPublicDashboard"), { ssr: false });
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
@@ -520,6 +523,21 @@ export default function Home() {
             </>
           )}
         </section>
+
+        {/* Festival Accidents Public Dashboard - แสดงเมื่อ EOC เทศกาลเปิดอยู่ */}
+        {(() => {
+          const festivalEOC = activeEOCs.find(eoc => eoc.eoc_type === 'festival-accidents');
+          if (!festivalEOC) return null;
+          return (
+            <FestivalPublicDashboard
+              festivalSession={{
+                is_active: festivalEOC.is_active,
+                session_id: festivalEOC.session_id,
+                festival_type: festivalEOC.festival_type,
+              }}
+            />
+          );
+        })()}
 
         {/* แสดงข้อมูลแยกตาม EOC ที่เปิด */}
         {activeEOCs.length > 0 && activeEOCs.map((eoc) => {

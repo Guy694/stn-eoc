@@ -299,20 +299,33 @@ export default function Sidebar() {
         : allMenuItems.filter(section => {
             // Admin-only sections
             if (section.requiresPermission === "admin") {
-                return user.role === 'admin';
+                if (user.role !== 'admin') return false;
             }
 
             // Resources section
             if (section.requiresPermission === "resources") {
-                return canAccessResources();
+                if (!canAccessResources()) return false;
             }
 
             // Reports section
             if (section.requiresPermission === "reports") {
-                return canAccessReports();
+                if (!canAccessReports()) return false;
             }
 
-            // Public sections (requiresPermission === null)
+            // Filter EOC modules based on active pathname
+            // This prevents staff from getting confused by seeing all EOC menus at once
+            if (section.eocType) {
+                if (pathname.startsWith('/eoc/flood') && section.eocType === 'flood') return true;
+                if ((pathname.startsWith('/eoc/festival-accidents') || pathname.startsWith('/eoc/accident')) && section.eocType === 'festival-accidents') return true;
+                if (pathname.startsWith('/eoc/disease') && section.eocType === 'disease') return true;
+                if (pathname.startsWith('/eoc/tsunami') && section.eocType === 'tsunami') return true;
+                if (pathname.startsWith('/eoc/earthquake') && section.eocType === 'earthquake') return true;
+                
+                // Hide EOC module if not currently viewing it
+                return false;
+            }
+
+            // Public sections (requiresPermission === null) and non-EOC modules
             return true;
         });
 

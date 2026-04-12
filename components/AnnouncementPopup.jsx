@@ -86,7 +86,7 @@ export default function AnnouncementPopup() {
                     {/* Image */}
                     <div className="px-6 pb-6">
                         <img
-                            src={announcement.image_path}
+                            src={announcement.image_path?.startsWith('http') ? announcement.image_path : `/stn-eoc${announcement.image_path?.startsWith('/') ? '' : '/'}${announcement.image_path}`}
                             alt={announcement.title}
                             className="w-full h-auto rounded-lg shadow-lg"
                         />

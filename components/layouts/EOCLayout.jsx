@@ -5,12 +5,15 @@ import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 
 import { useAuth } from "@/context/AuthContext";
+import { usePathname } from "next/navigation";
 
 export default function EOCLayout({ children }) {
     const { user } = useAuth();
+    const pathname = usePathname();
 
     // Citizens don't get sidebar - they only have access to public features
-    const showSidebar = user?.role !== 'citizen';
+    // Sidebar is hidden on the main /dashboard page
+    const showSidebar = user?.role !== 'citizen' && pathname !== '/dashboard';
 
     return (
         <div className="flex flex-col min-h-screen">

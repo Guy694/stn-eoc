@@ -256,7 +256,7 @@ export default function UploadInfographics() {
                                             {files.map((file, idx) => (
                                                 <div key={idx} className="relative group">
                                                     <img
-                                                        src={`/infographics/${type.value}/${file}`}
+                                                        src={`/stn-eoc/infographics/${type.value}/${file}`}
                                                         alt={file}
                                                         className="w-full h-40 object-cover rounded-lg border shadow-sm"
                                                     />

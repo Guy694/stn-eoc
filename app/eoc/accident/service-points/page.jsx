@@ -3,6 +3,12 @@ import { useState, useEffect } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import dynamic from 'next/dynamic';
+
+const MapSelector = dynamic(() => import('@/components/MapSelector'), {
+    ssr: false,
+    loading: () => <div className="h-[400px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">กำลังโหลดแผนที่...</div>
+});
 
 const pointTypes = ['จุดตรวจ', 'จุดบริการ', 'จุดพักรถ', 'ด่านชุมชน'];
 
@@ -409,27 +415,39 @@ export default function ServicePointsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ละติจูด</label>
-                                            <input
-                                                type="number"
-                                                step="any"
-                                                value={formData.lat}
-                                                onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                                                placeholder="6.xxxx"
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
-                                            />
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">พิกัดจุดบริการ (ปักหมุดบนแผนที่)</label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">ละติจูด</label>
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={formData.lat}
+                                                    onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
+                                                    placeholder="6.xxxx"
+                                                    className="text-gray-600 w-full px-3 py-2 border rounded-lg bg-white"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">ลองจิจูด</label>
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={formData.lng}
+                                                    onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
+                                                    placeholder="100.xxxx"
+                                                    className="text-gray-600 w-full px-3 py-2 border rounded-lg bg-white"
+                                                />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ลองจิจูด</label>
-                                            <input
-                                                type="number"
-                                                step="any"
-                                                value={formData.lng}
-                                                onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                                                placeholder="100.xxxx"
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                        <div className="border border-gray-200 rounded-lg overflow-hidden relative z-0">
+                                            <MapSelector
+                                                position={formData.lat && formData.lng ? {
+                                                    lat: parseFloat(formData.lat) || 6.6238,
+                                                    lng: parseFloat(formData.lng) || 100.0673
+                                                } : null}
+                                                onPositionChange={(pos) => setFormData({ ...formData, lat: pos.lat.toFixed(6), lng: pos.lng.toFixed(6) })}
                                             />
                                         </div>
                                     </div>

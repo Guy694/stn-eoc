@@ -10,12 +10,12 @@ export default function Navbar() {
     const { canAccessResources, canAccessReports } = useAuth();
 
     const allNavItems = [
-        { name: "หน้าหลัก", path: "/dashboard" },
+        { name: "หน้าหลัก", path: "/" },
         // { name: "แผนที่ภัยพิบัติ", path: "/public/disaster-map" },
-        { name: "แผนที่น้ำท่วม", path: "/eoc/flood" },
+        // { name: "แผนที่น้ำท่วม", path: "/eoc/flood" },
         // { name: "แผนที่หมู่บ้าน", path: "/eoc/village-map" },
-        { name: "โรคระบาด", path: "/eoc/disease" },
-        { name: "อุบัติเหตุช่วงเทศกาล", path: "/eoc/festival-accidents" },
+        //{ name: "โรคระบาด", path: "/eoc/disease" },
+        //{ name: "อุบัติเหตุช่วงเทศกาล", path: "/eoc/festival-accidents" },
         // { name: "ทรัพยากร", path: "/resources", requiresAdmin: true },
         // { name: "การแจ้งเตือน", path: "/alerts" },
     ];

@@ -409,7 +409,7 @@ function AnnouncementsContent() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="relative h-16 w-24">
                                                     <img
-                                                        src={announcement.image_path}
+                                                        src={announcement.image_path?.startsWith('http') ? announcement.image_path : `/stn-eoc${announcement.image_path?.startsWith('/') ? '' : '/'}${announcement.image_path}`}
                                                         alt={announcement.title}
                                                         className="h-full w-full object-cover rounded"
                                                     />

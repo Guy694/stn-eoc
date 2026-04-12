@@ -41,7 +41,7 @@ export async function GET(request) {
             // ถ้าไม่ระบุ ให้ดึง sessions ทั้งหมดที่เป็น accident
             const [sessions] = await connection.execute(`
                 SELECT id FROM eoc_sessions 
-                WHERE eoc_type = 'accident' 
+                WHERE eoc_type = 'festival-accidents' 
                 ORDER BY opened_at DESC 
                 LIMIT 10
             `);

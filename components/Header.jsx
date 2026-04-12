@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { showLogoutConfirm } from "@/lib/sweetAlert";
+import Image from "next/image";
 
 export default function Header() {
     const { user, logout } = useAuth();
@@ -24,7 +25,7 @@ export default function Header() {
                     {/* Logo and Title */}
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center flex-shrink-0">
-                            <img src="/img/logo.png" alt="EOC Logo" className="w-10 h-10 md:w-16 md:h-16" />
+                            <Image src="/img/logo.png" alt="EOC Logo" width={64} height={64} className="w-10 h-10 md:w-16 md:h-16 object-contain" />
                         </div>
                         <div>
                             <h1 className="text-lg sm:text-xl font-bold">EOC จังหวัดสตูล</h1>

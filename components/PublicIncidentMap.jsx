@@ -194,6 +194,15 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
     const getReportTypeLabel = (reportType) => ({ help_request: 'แจ้งความช่วยเหลือ', traffic_report: 'แจ้งเส้นทางการจราจร' }[reportType] || reportType);
     const getReportTypeIcon = (reportType) => ({ help_request: '🆘', traffic_report: '🚧' }[reportType] || '📍');
 
+    // แปลง photo_path ให้มี basePath
+    const getPhotoUrl = (photoPath) => {
+        if (!photoPath) return null;
+        if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) return photoPath;
+        if (photoPath.startsWith('/stn-eoc/')) return photoPath;
+        if (photoPath.startsWith('/uploads/')) return `/stn-eoc${photoPath}`;
+        return `/stn-eoc/uploads/incidents/${photoPath}`;
+    };
+
     // สร้าง icon key จาก report_type และ urgency
     const getMarkerIcon = (incident) => {
         const reportType = incident.report_type || 'help_request';
@@ -453,7 +462,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                             <p className="pt-2 border-t"><strong>รายละเอียด:</strong><br />{incident.description}</p>
                                             {incident.photo_path && (
                                                 <div className="pt-2 border-t">
-                                                    <img src={incident.photo_path} alt="รูปภาพ" className="w-full h-auto rounded mt-2" />
+                                                    <img src={getPhotoUrl(incident.photo_path)} alt="รูปภาพ" className="w-full h-auto rounded mt-2" />
                                                 </div>
                                             )}
                                         </div>

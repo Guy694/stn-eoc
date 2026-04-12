@@ -19,8 +19,9 @@ export async function GET(request) {
         let activeSessionId = sessionId;
         if (!activeSessionId) {
             const [sessionResult] = await connection.execute(`
-                SELECT id FROM eoc_sessions 
-                WHERE eoc_type = 'accident' AND status = 'active' 
+                SELECT id, session_number, opened_at, closed_at, open_reason
+                FROM eoc_sessions 
+                WHERE eoc_type = 'festival-accidents' AND status = 'active'
                 LIMIT 1
             `);
             if (sessionResult.length > 0) {

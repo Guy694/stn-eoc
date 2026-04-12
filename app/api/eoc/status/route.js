@@ -37,6 +37,7 @@ export async function GET(request) {
                 es.updated_at,
                 sess.id as session_id,
                 sess.session_number,
+                sess.festival_type,
                 sess.status as session_status,
                 ao.username as activated_by_username,
                 ao.title as activated_by_title,
@@ -100,7 +101,7 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { eocType, isActive, userId, description } = body;
+        const { eocType, isActive, userId, description, festivalType } = body;
 
         // Validate input
         if (!eocType || isActive === undefined || !userId) {
@@ -140,9 +141,9 @@ export async function POST(request) {
             // สร้าง session ใหม่
             const [sessionResult] = await connection.execute(
                 `INSERT INTO eoc_sessions 
-                (eoc_type, session_number, opened_at, opened_by, open_reason, status) 
-                VALUES (?, ?, NOW(), ?, ?, 'active')`,
-                [eocType, newSessionNumber, userId, description || '']
+                (eoc_type, session_number, opened_at, opened_by, open_reason, status, festival_type) 
+                VALUES (?, ?, NOW(), ?, ?, 'active', ?)`,
+                [eocType, newSessionNumber, userId, description || '', festivalType || null]
             );
             const sessionId = sessionResult.insertId;
 
