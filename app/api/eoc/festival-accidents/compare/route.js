@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -133,10 +134,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Compare error:', error);
-        return NextResponse.json({
-            success: false,
-            message: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการเปรียบเทียบข้อมูลเทศกาล');
     } finally {
         if (connection) connection.release();
     }

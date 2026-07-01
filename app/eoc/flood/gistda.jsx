@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import EOCLayout from '@/components/layouts/EOCLayout';
 
@@ -26,11 +26,7 @@ export default function GistdaFloodMapPage() {
         });
     }, []);
 
-    useEffect(() => {
-        fetchFloodData();
-    }, [selectedDays]);
-
-    const fetchFloodData = async () => {
+    const fetchFloodData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -49,7 +45,11 @@ export default function GistdaFloodMapPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedDays]);
+
+    useEffect(() => {
+        fetchFloodData();
+    }, [fetchFloodData]);
 
     const getFloodColor = (level) => {
         const colors = {
@@ -176,7 +176,7 @@ export default function GistdaFloodMapPage() {
                     {loading ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                             <div className="text-center">
-                                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-600 mx-auto mb-4"></div>
                                 <div className="text-gray-600">กำลังโหลดข้อมูล...</div>
                             </div>
                         </div>

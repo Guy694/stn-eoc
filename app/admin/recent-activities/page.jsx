@@ -47,7 +47,7 @@ export default function RecentActivitiesPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b border-green-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">กำลังโหลด...</p>
                 </div>
             </div>
@@ -71,7 +71,7 @@ export default function RecentActivitiesPage() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                     {activitiesLoading ? (
                         <div className="text-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b border-green-600 mx-auto mb-4"></div>
                             <p className="text-gray-500">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : activities.length > 0 ? (

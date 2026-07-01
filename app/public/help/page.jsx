@@ -23,7 +23,7 @@ export default function HelpCenterPage() {
             icon: "❓",
             description: "คำตอบสำหรับคำถามที่พบบ่อย",
             link: "/public/help/faq",
-            color: "from-purple-500 to-purple-600"
+            color: "from-teal-500 to-teal-600"
         }
     ];
 

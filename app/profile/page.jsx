@@ -23,6 +23,7 @@ export default function ProfilePage() {
         if (!loading && !user) {
             router.push("/login");
         } else if (user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData({
                 title: user.title || "",
                 givenName: user.givenName || "",
@@ -50,10 +51,7 @@ export default function ProfilePage() {
             const response = await fetch('/stn-eoc/api/officer/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: user.id,
-                    ...formData
-                })
+                body: JSON.stringify(formData)
             });
 
             const data = await response.json();
@@ -89,7 +87,7 @@ export default function ProfilePage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b border-green-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">กำลังโหลด...</p>
                 </div>
             </div>
@@ -331,7 +329,7 @@ function PermissionBadge({ label, color = "blue" }) {
         green: "bg-green-100 text-green-700",
         yellow: "bg-yellow-100 text-yellow-700",
         red: "bg-red-100 text-red-700",
-        purple: "bg-purple-100 text-purple-700",
+        purple: "bg-teal-100 text-teal-700",
         cyan: "bg-cyan-100 text-cyan-700"
     };
 

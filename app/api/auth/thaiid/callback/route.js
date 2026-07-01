@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { clearCitizenSessionCookie, setCitizenSessionCookie } from "@/lib/citizenAuth";
 
 // Database Pool
 const pool = mysql.createPool({
@@ -14,67 +14,14 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// ฟังก์ชันเข้ารหัส PID ด้วย AES-256-GCM สำหรับความปลอดภัย (PDPA Compliance)
-function encryptPID(pid) {
+// สร้างค่า PID hash แบบ deterministic สำหรับค้นผู้ใช้เดิมโดยไม่เก็บ PID ตรง ๆ
+function hashPID(pid) {
     const secretKey = process.env.SECRET_KEY;
     if (!secretKey) {
         throw new Error('SECRET_KEY is not defined in environment variables');
     }
 
-    // สร้าง key ขนาด 32 bytes จาก SECRET_KEY
-    const key = crypto.createHash('sha256').update(secretKey).digest();
-
-    // สร้าง initialization vector (IV) แบบสุ่ม
-    const iv = crypto.randomBytes(16);
-
-    // สร้าง cipher ด้วย AES-256-GCM
-    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-
-    // เข้ารหัสข้อมูล
-    let encrypted = cipher.update(pid, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-
-    // ดึง auth tag
-    const authTag = cipher.getAuthTag();
-
-    // รวม IV + encrypted data + auth tag เข้าด้วยกัน (คั่นด้วย :)
-    return iv.toString('hex') + ':' + encrypted + ':' + authTag.toString('hex');
-}
-
-// ฟังก์ชันถอดรหัส PID
-function decryptPID(encryptedPID) {
-    try {
-        const secretKey = process.env.SECRET_KEY;
-        if (!secretKey) {
-            throw new Error('SECRET_KEY is not defined in environment variables');
-        }
-
-        // แยก IV, encrypted data, และ auth tag
-        const parts = encryptedPID.split(':');
-        if (parts.length !== 3) {
-            throw new Error('Invalid encrypted PID format');
-        }
-
-        const iv = Buffer.from(parts[0], 'hex');
-        const encrypted = parts[1];
-        const authTag = Buffer.from(parts[2], 'hex');
-
-        // สร้าง key ขนาด 32 bytes จาก SECRET_KEY
-        const key = crypto.createHash('sha256').update(secretKey).digest();
-
-        // สร้าง decipher
-        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
-        decipher.setAuthTag(authTag);
-
-        // ถอดรหัส
-        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-
-        return decrypted;
-    } catch (error) {
-        console.error('Error decrypting PID:', error);
-        throw new Error('Failed to decrypt PID');
-    }
+    return crypto.createHmac('sha256', secretKey).update(pid).digest('hex');
 }
 
 // ThaiID Configuration ตามคู่มือ DOPA
@@ -86,6 +33,22 @@ const THAIID_CONFIG = {
     apiKey: process.env.APIKEY,
     redirectUri: process.env.CALLBACK,
 };
+
+function normalizeAppBaseUrl(value) {
+    const url = new URL(value);
+    const stnEocIndex = url.pathname.indexOf('/stn-eoc');
+    const basePath = stnEocIndex >= 0 ? url.pathname.slice(0, stnEocIndex + '/stn-eoc'.length) : '/stn-eoc';
+    return `${url.origin}${basePath}`;
+}
+
+function getAppBaseUrl(request) {
+    const configuredUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_API_URL || process.env.CALLBACK;
+    if (configuredUrl) {
+        return normalizeAppBaseUrl(configuredUrl);
+    }
+
+    return normalizeAppBaseUrl(request.url);
+}
 
 // กำหนด permissions สำหรับแต่ละ role
 const rolePermissions = {
@@ -162,15 +125,6 @@ async function exchangeCodeForToken(code) {
         client_secret: THAIID_CONFIG.clientSecret,
     });
 
-    console.log('Token Exchange Request:', {
-        url: THAIID_CONFIG.tokenUrl,
-        redirectUri: THAIID_CONFIG.redirectUri,
-        clientId: THAIID_CONFIG.clientId ? 'Present' : 'Missing',
-        clientSecret: THAIID_CONFIG.clientSecret ? 'Present' : 'Missing',
-        apiKey: THAIID_CONFIG.apiKey ? 'Present' : 'Missing',
-        code: code ? 'Present' : 'Missing'
-    });
-
     // สร้าง AbortController สำหรับ timeout
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000); // 30 วินาที
@@ -189,16 +143,12 @@ async function exchangeCodeForToken(code) {
         clearTimeout(timeout);
 
         const responseText = await response.text();
-        console.log('Token Exchange Response Status:', response.status);
-        console.log('Token Exchange Response Body:', responseText);
 
         if (!response.ok) {
             throw new Error(`Token exchange failed: ${response.status} - ${responseText}`);
         }
 
         const tokenData = JSON.parse(responseText);
-        console.log('Token Data Keys:', Object.keys(tokenData));
-        console.log('Access Token Present:', tokenData.access_token ? 'Yes' : 'No');
 
         return tokenData;
     } catch (error) {
@@ -222,47 +172,33 @@ export async function GET(request) {
 
         // ตรวจสอบว่ามี error จาก ThaiID หรือไม่
         if (error) {
+            const baseUrl = getAppBaseUrl(request);
             return NextResponse.redirect(
-                `${process.env.CALLBACK}login?error=thaiid_auth_failed&message=${error}`
+                `${baseUrl}/login?error=thaiid_auth_failed&message=${error}`
             );
         }
 
         // ตรวจสอบว่ามี code หรือไม่
         if (!code) {
+            const baseUrl = getAppBaseUrl(request);
             return NextResponse.redirect(
-                `${process.env.CALLBACK}login?error=no_code`
+                `${baseUrl}/login?error=no_code`
             );
         }
-
-        console.log('ThaiID Callback - Code received:', code);
 
         // 1. แลกเปลี่ยน Authorization Code กับ Access Token
         const tokenData = await exchangeCodeForToken(code);
         const accessToken = tokenData.access_token;
         const pid = tokenData.pid; // ThaiID ส่ง PID มาพร้อมกับ token response แล้ว
 
-        console.log('ThaiID - Access Token received:', accessToken ? 'Yes' : 'No');
-        console.log('ThaiID - Token Data:', JSON.stringify(tokenData));
-        console.log('ThaiID - PID from token:', pid);
-        console.log('ThaiID - Full Data:', {
-            pid: tokenData.pid,
-            name: tokenData.name,
-            given_name: tokenData.given_name,
-            family_name: tokenData.family_name,
-            birthdate: tokenData.birthdate,
-            gender: tokenData.gender,
-            address: tokenData.address
-        });
-
         if (!pid) {
+            const baseUrl = getAppBaseUrl(request);
             return NextResponse.redirect(
-                `${process.env.CALLBACK}login?error=no_pid`
+                `${baseUrl}/login?error=no_pid`
             );
         }
 
-        // เข้ารหัส PID เพื่อความปลอดภัย
-        const encryptedPID = encryptPID(pid);
-        console.log('ThaiID - PID Encrypted for security');
+        const pidHash = hashPID(pid);
 
         // 2. ค้นหาผู้ใช้ในฐานข้อมูลด้วย Encrypted PID
         const connection = await pool.getConnection();
@@ -271,7 +207,7 @@ export async function GET(request) {
             // STEP 2.1: Check Officer Table First
             const [officers] = await connection.execute(
                 'SELECT id, username, title, given_name, family_name, email, phone, role, pid_hash, is_approved, position, department FROM officer WHERE pid_hash = ?',
-                [encryptedPID]
+                [pidHash]
             );
 
             let userRecord;
@@ -280,7 +216,6 @@ export async function GET(request) {
 
             if (officers.length > 0) {
                 // FOUND IN OFFICERS -> Login as Officer
-                console.log('ThaiID - User found in OFFICERS table');
                 userRecord = officers[0];
                 userType = 'officer';
 
@@ -303,16 +238,13 @@ export async function GET(request) {
 
             } else {
                 // NOT FOUND IN OFFICERS -> Check Citizens Table
-                console.log('ThaiID - User NOT found in OFFICERS table. Checking CITIZENS table...');
-
                 const [citizens] = await connection.execute(
                     'SELECT id, pid_hash, title, given_name, family_name, birthdate, gender, address, phone FROM citizens WHERE pid_hash = ?',
-                    [encryptedPID]
+                    [pidHash]
                 );
 
                 if (citizens.length > 0) {
                     // FOUND IN CITIZENS -> Login as Citizen
-                    console.log('ThaiID - User found in CITIZENS table');
                     userRecord = citizens[0];
                     userType = 'citizen';
 
@@ -338,7 +270,6 @@ export async function GET(request) {
 
                 } else {
                     // NOT FOUND IN EITHER -> Create New Citizen
-                    console.log('ThaiID - User NOT found anywhere. Creating new CITIZEN record...');
                     userType = 'citizen';
                     isNewUser = true;
 
@@ -353,12 +284,12 @@ export async function GET(request) {
                         `INSERT INTO citizens 
                         (pid_hash, title, given_name, family_name, birthdate, gender, address, created_at) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-                        [encryptedPID, title, givenName, familyName, birthdate, gender, address]
+                        [pidHash, title, givenName, familyName, birthdate, gender, address]
                     );
 
                     userRecord = {
                         id: result.insertId,
-                        pid_hash: encryptedPID,
+                        pid_hash: pidHash,
                         title,
                         given_name: givenName,
                         family_name: familyName,
@@ -367,7 +298,6 @@ export async function GET(request) {
                         address
                     };
 
-                    console.log('ThaiID - New CITIZEN created:', userRecord.id);
                 }
             }
 
@@ -396,14 +326,11 @@ export async function GET(request) {
                     // For citizens, maybe just log to console or a different table if needed.
                     // Or query if activity_logs allows null user_id? 
                     // Let's safe-guard by not inserting if citizen for now to avoid FK error.
-                    console.log('Skipping activity log for citizen login (to avoid FK constraints)');
                 }
 
             } catch (logError) {
                 console.error('Failed to log activity:', logError);
             }
-
-            connection.release();
 
             // 6. สร้าง Session Data
             let userData = {};
@@ -446,36 +373,72 @@ export async function GET(request) {
                 };
             }
 
-            // Add ThaiID specific data
-            userData.thaiIdData = {
-                title: tokenData.title,
-                name: tokenData.name,
-                given_name: tokenData.given_name,
-                family_name: tokenData.family_name,
-                birthdate: tokenData.birthdate,
-                gender: tokenData.gender,
-                address: tokenData.address
-            };
-
             // 7. Redirect ไปหน้าที่เหมาะสม
-            const baseUrl = 'https://addilyn-oversubtle-untensely.ngrok-free.dev';
+            const baseUrl = getAppBaseUrl(request);
             let redirectPath = '/dashboard';
-
-            console.log('Redirecting to:', `${baseUrl}${redirectPath}`);
-            console.log('Setting user session cookie for user:', userData.givenName);
 
             const response = NextResponse.redirect(`${baseUrl}${redirectPath}`);
 
-            // เก็บข้อมูลใน cookie (encrypted ด้วย httpOnly)
-            response.cookies.set('user_session', JSON.stringify(userData), {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none',
-                maxAge: 60 * 60 * 24, // 24 hours
-                path: '/'
-            });
+            if (userType === 'officer') {
+                const sessionToken = crypto.randomBytes(32).toString('hex');
+                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+                    || request.headers.get('x-real-ip')
+                    || 'unknown';
+                const userAgent = request.headers.get('user-agent') || 'unknown';
 
-            console.log('Cookie set successfully');
+                await connection.execute(
+                    `INSERT INTO user_sessions
+                    (session_token, user_id, username, title, given_name, family_name, email, phone, role, ip_address, user_agent, expires_at, login_method)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'thaiid')`,
+                    [
+                        sessionToken,
+                        userRecord.id,
+                        userRecord.username,
+                        userRecord.title,
+                        userRecord.given_name,
+                        userRecord.family_name,
+                        userRecord.email,
+                        userRecord.phone,
+                        userRecord.role,
+                        ipAddress,
+                        userAgent,
+                        expiresAt
+                    ]
+                );
+
+                response.cookies.set('session_token', sessionToken, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'strict',
+                    maxAge: 60 * 60 * 24,
+                    path: '/'
+                });
+
+                response.cookies.set('user_session', '', {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: 0,
+                    path: '/'
+                });
+                clearCitizenSessionCookie(response);
+            } else {
+                response.cookies.set('user_session', JSON.stringify(userData), {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: 60 * 60 * 24,
+                    path: '/'
+                });
+                setCitizenSessionCookie(response, {
+                    pid,
+                    given_name: userRecord.given_name,
+                    family_name: userRecord.family_name
+                });
+            }
+
+            connection.release();
             return response;
 
         } catch (dbError) {
@@ -485,7 +448,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('ThaiID Callback Error:', error);
-        const baseUrl = 'https://addilyn-oversubtle-untensely.ngrok-free.dev';
+        const baseUrl = getAppBaseUrl(request);
         return NextResponse.redirect(
             `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent(error.message)}`
         );

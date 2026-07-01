@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - Fetch all IT resources
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const resourceType = searchParams.get('resource_type');
         const status = searchParams.get('status');
@@ -69,10 +74,9 @@ export async function GET(request) {
         console.error('Get IT resources error:', error);
         return NextResponse.json({
             success: false,
-            message: error.message.includes('Table')
+            message: error.code === 'ER_NO_SUCH_TABLE'
                 ? 'ยังไม่ได้สร้างตาราง it_resources กรุณารัน SQL ก่อน'
                 : 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message,
             data: [],
             stats: { total: 0, online: 0, offline: 0, maintenance: 0, unknown: 0 }
         });
@@ -82,6 +86,9 @@ export async function GET(request) {
 // POST - Create new IT resource
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const {
             resource_type,
@@ -139,16 +146,16 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Create IT resource error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
 }
 
 // PUT - Update IT resource
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -210,16 +217,16 @@ export async function PUT(request) {
         });
     } catch (error) {
         console.error('Update IT resource error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
     }
 }
 
 // DELETE - Delete IT resource
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -239,9 +246,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Delete IT resource error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการลบข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
 }

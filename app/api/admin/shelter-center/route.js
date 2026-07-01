@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - Fetch all shelter centers
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const eocType = searchParams.get('eoc_type');
 
@@ -30,10 +35,9 @@ export async function GET(request) {
         // Return empty array instead of error to prevent frontend crashes
         return NextResponse.json({
             success: false,
-            message: error.message.includes('Table')
+            message: error.code === 'ER_NO_SUCH_TABLE'
                 ? 'ยังไม่ได้สร้างตารางในฐานข้อมูล กรุณารัน SQL ก่อน'
                 : 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message,
             data: []
         });
     }
@@ -42,6 +46,9 @@ export async function GET(request) {
 // POST - Create new shelter center
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const {
             sheltername,
@@ -58,7 +65,7 @@ export async function POST(request) {
         } = body;
 
         // Validation
-        if (!sheltername || !eoc_type || !tambon || !lat || !lon || !shelter_capacity) {
+        if (!sheltername || !eoc_type || !tambon || !shelter_capacity) {
             return NextResponse.json(
                 { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึงประเภท EOC)' },
                 { status: 400 }
@@ -74,8 +81,6 @@ export async function POST(request) {
             );
         }
 
-        console.log('Inserting shelter center:', { sheltername, eoc_type, lat, lon, tambon, shelter_capacity, contact_phone });
-
         const pool = await getConnection();
         const [result] = await pool.query(
             `INSERT INTO shelter_centers 
@@ -84,8 +89,8 @@ export async function POST(request) {
             [
                 sheltername,
                 eoc_type,
-                lat,
-                lon,
+                lat || null,
+                lon || null,
                 address || null,
                 tambon,
                 district_name || null,
@@ -96,8 +101,6 @@ export async function POST(request) {
             ]
         );
 
-        console.log('Insert successful, ID:', result.insertId);
-
         return NextResponse.json({
             success: true,
             message: 'เพิ่มข้อมูลสำเร็จ',
@@ -107,14 +110,14 @@ export async function POST(request) {
         console.error('Create shelter center error:', error);
 
         let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
-        if (error.message.includes("Table 'shelter_centers' doesn't exist")) {
+        if (error.code === 'ER_NO_SUCH_TABLE') {
             errorMessage = 'ยังไม่ได้สร้างตาราง shelter_centers ในฐานข้อมูล กรุณารัน SQL ก่อน';
         } else if (error.code === 'ER_BAD_NULL_ERROR') {
             errorMessage = 'ข้อมูลที่จำเป็นไม่ครบถ้วน';
         }
 
         return NextResponse.json(
-            { success: false, message: errorMessage, error: error.message },
+            { success: false, message: errorMessage },
             { status: 500 }
         );
     }
@@ -123,6 +126,9 @@ export async function POST(request) {
 // PUT - Update shelter center
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -149,7 +155,7 @@ export async function PUT(request) {
         } = body;
 
         // Validation
-        if (!sheltername || !eoc_type || !tambon || !lat || !lon || !shelter_capacity) {
+        if (!sheltername || !eoc_type || !tambon || !shelter_capacity) {
             return NextResponse.json(
                 { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึงประเภท EOC)' },
                 { status: 400 }
@@ -165,8 +171,6 @@ export async function PUT(request) {
             );
         }
 
-        console.log('Updating shelter center:', id, { sheltername, eoc_type, lat, lon, tambon, shelter_capacity, contact_phone });
-
         const pool = await getConnection();
         await pool.query(
             `UPDATE shelter_centers 
@@ -176,8 +180,8 @@ export async function PUT(request) {
             [
                 sheltername,
                 eoc_type,
-                lat,
-                lon,
+                lat || null,
+                lon || null,
                 address || null,
                 tambon,
                 district_name || null,
@@ -189,8 +193,6 @@ export async function PUT(request) {
             ]
         );
 
-        console.log('Update successful for ID:', id);
-
         return NextResponse.json({
             success: true,
             message: 'แก้ไขข้อมูลสำเร็จ'
@@ -199,12 +201,12 @@ export async function PUT(request) {
         console.error('Update shelter center error:', error);
 
         let errorMessage = 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล';
-        if (error.message.includes("Table 'shelter_centers' doesn't exist")) {
+        if (error.code === 'ER_NO_SUCH_TABLE') {
             errorMessage = 'ยังไม่ได้สร้างตาราง shelter_centers ในฐานข้อมูล กรุณารัน SQL ก่อน';
         }
 
         return NextResponse.json(
-            { success: false, message: errorMessage, error: error.message },
+            { success: false, message: errorMessage },
             { status: 500 }
         );
     }
@@ -213,6 +215,9 @@ export async function PUT(request) {
 // DELETE - Delete shelter center
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         const force = searchParams.get('force') === 'true'; // ลบแบบบังคับพร้อมข้อมูลที่เกี่ยวข้อง
@@ -238,7 +243,7 @@ export async function DELETE(request) {
             activationsCount = activations[0].count;
         } catch (error) {
             // ถ้าตารางไม่มี ให้ข้ามไป
-            if (!error.message.includes("doesn't exist")) {
+            if (error.code !== 'ER_NO_SUCH_TABLE') {
                 throw error; // ถ้าเป็น error อื่นให้ throw ต่อ
             }
         }
@@ -252,7 +257,7 @@ export async function DELETE(request) {
             diseaseReportsCount = diseaseReports[0].count;
         } catch (error) {
             // ถ้าตารางไม่มี ให้ข้ามไป
-            if (!error.message.includes("doesn't exist")) {
+            if (error.code !== 'ER_NO_SUCH_TABLE') {
                 throw error; // ถ้าเป็น error อื่นให้ throw ต่อ
             }
         }
@@ -282,7 +287,7 @@ export async function DELETE(request) {
                 try {
                     await pool.query('DELETE FROM shelter_disease_reports WHERE shelter_id = ?', [id]);
                 } catch (error) {
-                    if (!error.message.includes("doesn't exist")) {
+                    if (error.code !== 'ER_NO_SUCH_TABLE') {
                         throw error;
                     }
                 }
@@ -293,7 +298,7 @@ export async function DELETE(request) {
                 try {
                     await pool.query('DELETE FROM shelter_activations WHERE shelter_id = ?', [id]);
                 } catch (error) {
-                    if (!error.message.includes("doesn't exist")) {
+                    if (error.code !== 'ER_NO_SUCH_TABLE') {
                         throw error;
                     }
                 }
@@ -330,9 +335,6 @@ export async function DELETE(request) {
             );
         }
 
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการลบข้อมูล: ' + error.message, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
 }

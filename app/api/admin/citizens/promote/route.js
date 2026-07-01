@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { requireAuth } from "@/lib/auth";
+import { publicInternalError } from "@/lib/apiResponse";
 
 // Database Pool
 const pool = mysql.createPool({
@@ -19,6 +22,9 @@ const pool = mysql.createPool({
  */
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { citizen_id, role, position, department, username } = body;
 
@@ -84,7 +90,7 @@ export async function POST(request) {
             }
 
             // 4. Generate a temporary password (user should change it on first login)
-            const tempPassword = Math.random().toString(36).slice(-8);
+            const tempPassword = crypto.randomBytes(12).toString('base64url');
             const passwordHash = await bcrypt.hash(tempPassword, 10);
 
             // 5. Insert into officer table
@@ -148,9 +154,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error promoting citizen:', error);
-        return NextResponse.json(
-            { success: false, message: 'Internal server error', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการปรับสิทธิ์ประชาชนเป็นเจ้าหน้าที่');
     }
 }

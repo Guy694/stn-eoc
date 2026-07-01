@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงรายการ shelter activations สำหรับ session
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const eocType = searchParams.get('eoc_type');
@@ -61,7 +66,7 @@ export async function GET(request) {
         console.error('Get shelter activations error:', error);
 
         // ถ้าตารางยังไม่มี ให้ return empty array
-        if (error.message.includes("doesn't exist")) {
+        if (error.code === 'ER_NO_SUCH_TABLE') {
             return NextResponse.json({
                 success: true,
                 data: [],
@@ -70,16 +75,16 @@ export async function GET(request) {
             });
         }
 
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลศูนย์พักพิง');
     }
 }
 
 // POST - Activate/Toggle shelter สำหรับ session
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { shelter_id, session_id, is_active, notes } = body;
 
@@ -132,16 +137,16 @@ export async function POST(request) {
         }
     } catch (error) {
         console.error('Toggle shelter activation error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเปิด/ปิดศูนย์พักพิง');
     }
 }
 
 // PUT - Update occupancy สำหรับ shelter ที่ activate แล้ว
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { shelter_id, session_id, current_occupancy, notes } = body;
 
@@ -168,16 +173,16 @@ export async function PUT(request) {
         });
     } catch (error) {
         console.error('Update shelter occupancy error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการอัพเดทข้อมูลศูนย์พักพิง');
     }
 }
 
 // DELETE - Deactivate shelter สำหรับ session
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const shelterId = searchParams.get('shelter_id');
         const sessionId = searchParams.get('session_id');
@@ -204,9 +209,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Deactivate shelter error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการปิดใช้งานศูนย์พักพิง');
     }
 }

@@ -5,10 +5,15 @@
 
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET: ดึงรายชื่อทีมทั้งหมด
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const active = searchParams.get('active');
 
@@ -26,17 +31,16 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('Error fetching teams:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลทีม');
     }
 }
 
 // POST: สร้างทีมใหม่
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { team_code, team_name_th, team_name_en, description, icon, color, sort_order } = body;
 
@@ -47,7 +51,7 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const [result] = await pool.query(`
+        const result = await pool.query(`
             INSERT INTO eoc_teams 
             (team_code, team_name_th, team_name_en, description, icon, color, sort_order)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -61,17 +65,16 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error creating team:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการสร้างทีม');
     }
 }
 
 // PUT: อัพเดทข้อมูลทีม
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { id, team_name_th, team_name_en, description, icon, color, sort_order, is_active } = body;
 
@@ -101,17 +104,16 @@ export async function PUT(request) {
 
     } catch (error) {
         console.error('Error updating team:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการอัพเดทข้อมูลทีม');
     }
 }
 
 // DELETE: ลบทีม (soft delete)
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const teamId = searchParams.get('id');
 
@@ -131,10 +133,6 @@ export async function DELETE(request) {
 
     } catch (error) {
         console.error('Error deleting team:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการลบทีม');
     }
 }

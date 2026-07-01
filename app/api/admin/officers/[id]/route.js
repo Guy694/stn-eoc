@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
 
 // GET - ดึงข้อมูลเจ้าหน้าที่คนเดียว
 export async function GET(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { id } = await params;
 
         const officers = await query(
@@ -27,16 +32,16 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Error fetching officer:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch officer', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลเจ้าหน้าที่');
     }
 }
 
 // PUT - แก้ไขข้อมูลเจ้าหน้าที่
 export async function PUT(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { id } = await params;
         const body = await request.json();
         const { username, password, title, given_name, family_name, email, phone, role } = body;
@@ -130,16 +135,16 @@ export async function PUT(request, { params }) {
 
     } catch (error) {
         console.error('Error updating officer:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to update officer', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขเจ้าหน้าที่');
     }
 }
 
 // DELETE - ลบเจ้าหน้าที่
 export async function DELETE(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { id } = await params;
 
         // ตรวจสอบว่ามีเจ้าหน้าที่นี้อยู่หรือไม่
@@ -161,9 +166,6 @@ export async function DELETE(request, { params }) {
 
     } catch (error) {
         console.error('Error deleting officer:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to delete officer', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบเจ้าหน้าที่');
     }
 }

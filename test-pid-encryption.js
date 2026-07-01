@@ -1,5 +1,5 @@
 // Test script สำหรับทดสอบการเข้ารหัสและถอดรหัส PID
-// ใช้คำสั่ง: SECRET_KEY=OKNAKANAKA node test-pid-encryption.js
+// ใช้คำสั่ง: SECRET_KEY="<your-local-test-secret>" node test-pid-encryption.js
 
 const crypto = require('crypto');
 

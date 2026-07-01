@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function SuccessMessage({
     title = "สำเร็จ!",
@@ -11,26 +11,24 @@ export default function SuccessMessage({
     dismissDelay = 5000
 }) {
     const [isVisible, setIsVisible] = useState(true);
-    const [isAnimating, setIsAnimating] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(true);
+
+    const handleClose = useCallback(() => {
+        setIsAnimating(false);
+        setTimeout(() => {
+            setIsVisible(false);
+            if (onClose) onClose();
+        }, 300);
+    }, [onClose]);
 
     useEffect(() => {
-        setIsAnimating(true);
-
         if (autoDismiss && dismissDelay) {
             const timer = setTimeout(() => {
                 handleClose();
             }, dismissDelay);
             return () => clearTimeout(timer);
         }
-    }, [autoDismiss, dismissDelay]);
-
-    const handleClose = () => {
-        setIsAnimating(false);
-        setTimeout(() => {
-            setIsVisible(false);
-            if (onClose) onClose();
-        }, 300);
-    };
+    }, [autoDismiss, dismissDelay, handleClose]);
 
     if (!isVisible) return null;
 
@@ -42,7 +40,7 @@ export default function SuccessMessage({
             >
                 {/* Animated Checkmark */}
                 <div className="bg-gradient-to-br from-green-500 to-green-600 p-8 text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 animate-bounce-slow">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 animate-float-soft">
                         <svg
                             className="w-12 h-12 text-green-600 animate-draw-check"
                             fill="none"

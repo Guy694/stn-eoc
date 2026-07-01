@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { publicInternalError } from "@/lib/apiResponse";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -150,13 +151,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Validate session error:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการตรวจสอบ session',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการตรวจสอบ session');
     }
 }

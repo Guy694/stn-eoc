@@ -16,13 +16,6 @@ export default function ThaiIDCallbackPage() {
                 const data = await response.json();
 
                 if (data.success && data.user) {
-                    // บันทึก user ลง localStorage เพื่อให้ AuthContext ใช้งานได้
-                    localStorage.setItem("user", JSON.stringify(data.user));
-
-                    // สร้าง sessionToken แบบง่ายๆ (ใช้ timestamp + random)
-                    const sessionToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                    localStorage.setItem("sessionToken", sessionToken);
-
                     // เซ็ต user ใน AuthContext
                     setUser(data.user);
                     setStatus('success');

@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -8,7 +9,20 @@ const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { 
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
 
-export default function PublicIncidentMap({ disasterType = 'flood', startDate, endDate }) {
+export default function PublicIncidentMap({
+    disasterType = 'flood',
+    startDate,
+    endDate,
+    chrome = 'card',
+    heightClass,
+    layers,
+    onLayersChange,
+    urgencyFilter = 'all',
+    reportTypeFilter = 'all',
+    districtFilter = 'all',
+    searchQuery = '',
+    onDataChange
+}) {
     const [incidents, setIncidents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [customIcon, setCustomIcon] = useState(null);
@@ -16,10 +30,22 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
     const mapContainerRef = useRef(null);
 
     // Layer states
-    const [showDistrictLayer, setShowDistrictLayer] = useState(true);
-    const [showTambonLayer, setShowTambonLayer] = useState(false);
-    const [showVillageLayer, setShowVillageLayer] = useState(false);
-    const [showLabels, setShowLabels] = useState(true);
+    const [internalLayers, setInternalLayers] = useState({
+        district: true,
+        tambon: false,
+        village: false,
+        labels: true
+    });
+    const activeLayers = layers || internalLayers;
+    const setLayer = (key, value) => {
+        const next = { ...activeLayers, [key]: value };
+        if (onLayersChange) onLayersChange(next);
+        else setInternalLayers(next);
+    };
+    const showDistrictLayer = activeLayers.district;
+    const showTambonLayer = activeLayers.tambon;
+    const showVillageLayer = activeLayers.village;
+    const showLabels = activeLayers.labels;
 
     // Polygon data
     const [districtPolygons, setDistrictPolygons] = useState([]);
@@ -32,8 +58,8 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         'ควนโดน': '#10B981',
         'ควนกาหลง': '#F59E0B',
         'ท่าแพ': '#EF4444',
-        'ละงู': '#8B5CF6',
-        'ทุ่งหว้า': '#EC4899',
+        'ละงู': '#64748B',
+        'ทุ่งหว้า': '#0EA5E9',
         'มะนัง': '#06B6D4'
     };
 
@@ -125,21 +151,6 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         });
     };
 
-    useEffect(() => { fetchIncidents(); }, [disasterType, startDate, endDate]);
-
-    // Fetch polygons based on layer toggles
-    useEffect(() => {
-        if (showDistrictLayer && districtPolygons.length === 0) fetchPolygons('district');
-    }, [showDistrictLayer]);
-
-    useEffect(() => {
-        if (showTambonLayer && tambonPolygons.length === 0) fetchPolygons('tambon');
-    }, [showTambonLayer]);
-
-    useEffect(() => {
-        if (showVillageLayer && villagePolygons.length === 0) fetchPolygons('village');
-    }, [showVillageLayer]);
-
     // Listen for fullscreen changes
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -150,7 +161,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
-    const fetchPolygons = async (level) => {
+    const fetchPolygons = useCallback(async (level) => {
         try {
             const response = await fetch(`/stn-eoc/api/common/area-polygons?level=${level}`);
             const data = await response.json();
@@ -162,9 +173,9 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         } catch (error) {
             console.error(`Error fetching ${level} polygons:`, error);
         }
-    };
+    }, []);
 
-    const fetchIncidents = async () => {
+    const fetchIncidents = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -174,13 +185,31 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
 
             const response = await fetch(`/stn-eoc/api/public/verified-incidents?${params}`);
             const data = await response.json();
-            if (data.success) setIncidents(data.data);
+            if (data.success) {
+                setIncidents(data.data);
+                if (onDataChange) onDataChange(data.data);
+            }
         } catch (error) {
             console.error('Error fetching incidents:', error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [disasterType, endDate, onDataChange, startDate]);
+
+    useEffect(() => { fetchIncidents(); }, [fetchIncidents]);
+
+    // Fetch polygons based on layer toggles
+    useEffect(() => {
+        if (showDistrictLayer && districtPolygons.length === 0) fetchPolygons('district');
+    }, [districtPolygons.length, fetchPolygons, showDistrictLayer]);
+
+    useEffect(() => {
+        if (showTambonLayer && tambonPolygons.length === 0) fetchPolygons('tambon');
+    }, [fetchPolygons, showTambonLayer, tambonPolygons.length]);
+
+    useEffect(() => {
+        if (showVillageLayer && villagePolygons.length === 0) fetchPolygons('village');
+    }, [fetchPolygons, showVillageLayer, villagePolygons.length]);
 
     const formatDate = (dateString) => {
         if (!dateString) return '-';
@@ -253,11 +282,34 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
         } catch { return null; }
     };
 
+    const filteredIncidents = incidents.filter((incident) => {
+        if (urgencyFilter !== 'all' && incident.urgency !== urgencyFilter) return false;
+        if (reportTypeFilter !== 'all' && incident.report_type !== reportTypeFilter) return false;
+        if (districtFilter !== 'all' && incident.district !== districtFilter) return false;
+        const normalizedSearch = searchQuery.trim().toLowerCase();
+        if (normalizedSearch) {
+            const searchableText = [
+                incident.district,
+                incident.sub_district,
+                incident.village,
+                incident.description,
+                incident.first_name,
+                incident.last_name
+            ].filter(Boolean).join(' ').toLowerCase();
+            if (!searchableText.includes(normalizedSearch)) return false;
+        }
+        return true;
+    });
+
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex items-center justify-center h-96">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className={`${chrome === 'full' ? 'h-full bg-slate-950/90' : 'min-h-[420px] rounded-xl border border-gray-200 bg-white'} flex items-center justify-center`}>
+                <div className="text-center">
+                    <svg className="animate-spin h-12 w-12 text-blue-500" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    <p className="mt-3 text-sm font-medium text-gray-600">กำลังโหลดแผนที่</p>
                 </div>
             </div>
         );
@@ -281,103 +333,100 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
     };
 
     return (
-        <div ref={mapContainerRef} className="text-gray-800 bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-green-50 relative">
-                <h3 className="text-xl md:text-2xl font-bold text-gray-800">📍 รายงานจากประชาชน (ยืนยันแล้ว)</h3>
-                <p className="text-sm mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงาน <span>({incidents.length} จุด)</span></p>
+        <div ref={mapContainerRef} className={`public-incident-map text-gray-800 overflow-visible ${chrome === 'full' ? 'h-full w-full seics-map-surface' : ''}`}>
+            {chrome !== 'full' && (
+            <div className="relative rounded-t-xl border border-b-0 border-gray-200 bg-white p-4 md:p-5">
+                <div className="pr-12">
+                    <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Verified Public Reports</p>
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-900">📍 รายงานจากประชาชนที่ยืนยันแล้ว</h3>
+                    <p className="text-sm text-gray-600 mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงานทั้งหมด {filteredIncidents.length} จุด</p>
+                </div>
 
                 {/* Fullscreen Button */}
                 <button
                     onClick={toggleFullscreen}
-                    className="absolute top-4 right-4 bg-white hover:bg-gray-100 text-gray-800 p-2 rounded-lg shadow-md transition-all hover:shadow-lg"
+                    className="absolute top-4 right-4 bg-white hover:bg-gray-100 text-gray-800 p-2 rounded-lg border border-gray-200 shadow-sm transition-colors"
                     title={isFullscreen ? "ออกจากโหมดเต็มจอ" : "เปิดแบบเต็มจอ"}
+                    aria-label={isFullscreen ? "ออกจากโหมดเต็มจอ" : "เปิดแผนที่แบบเต็มจอ"}
                 >
                     {isFullscreen ? (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     ) : (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                         </svg>
                     )}
                 </button>
             </div>
+            )}
 
-            <div className="p-4 bg-gradient-to-br from-blue-50 to-green-50">
-                {/* Layer Controls */}
-                <div className="mb-4 bg-white p-4 rounded-lg shadow">
-                    <label className="text-sm font-medium block mb-3">🗺️ แสดง Layer พื้นที่:</label>
-                    <div className="flex flex-wrap gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setShowDistrictLayer(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
-                            <span className="text-sm">🏛️ อำเภอ</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={showTambonLayer} onChange={(e) => setShowTambonLayer(e.target.checked)} className="w-4 h-4 text-green-600 rounded" />
-                            <span className="text-sm">📍 ตำบล</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={showVillageLayer} onChange={(e) => setShowVillageLayer(e.target.checked)} className="w-4 h-4 text-gray-600 rounded" />
-                            <span className="text-sm">🏘️ หมู่บ้าน</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} className="w-4 h-4 text-purple-600 rounded" />
-                            <span className="text-sm">🏷️ แสดงชื่อ</span>
-                        </label>
-                    </div>
-                </div>
-
-                {/* District Legend */}
-                {showDistrictLayer && (
-                    <div className="mb-4 bg-white p-3 rounded-lg shadow">
-                        <label className="text-sm font-medium block mb-2">สีเขตอำเภอ:</label>
-                        <div className="flex flex-wrap gap-3 text-xs">
-                            {Object.entries(districtColors).map(([name, color]) => (
-                                <div key={name} className="flex items-center gap-1">
-                                    <div className="w-3 h-3 rounded" style={{ backgroundColor: color, opacity: 0.5 }}></div>
-                                    <span>{name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Report Type Legend */}
-                <div className="mb-4 bg-white p-3 rounded-lg shadow">
-                    <label className="text-sm font-medium block mb-2">📋 ประเภทรายงาน:</label>
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                            <span className="text-sm">🆘 แจ้งความช่วยเหลือ (สีตามความเร่งด่วน)</span>
-                        </div>
+            <div className={chrome === 'full' ? 'h-full w-full' : 'rounded-b-xl border border-gray-200 bg-white p-3 md:p-4'}>
+                {chrome !== 'full' && (
+                <details className="mb-3" open>
+                    <summary className="cursor-pointer select-none py-2 text-sm font-bold text-gray-800">
+                        🗺️ ตัวกรองชั้นข้อมูลและคำอธิบายสัญลักษณ์
+                    </summary>
+                    <div className="grid gap-3 border-t border-gray-200 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
                         <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-semibold">🚧 แจ้งเส้นทางการจราจร (สัญลักษณ์ตามสถานะ):</span>
+                            <p className="text-sm font-semibold text-gray-800 mb-2">แสดง Layer พื้นที่</p>
+                            <div className="flex flex-wrap gap-2">
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
+                                    <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setLayer('district', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                                    <span>🏛️ อำเภอ</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 cursor-pointer">
+                                    <input type="checkbox" checked={showTambonLayer} onChange={(e) => setLayer('tambon', e.target.checked)} className="w-4 h-4 accent-emerald-600" />
+                                    <span>📍 ตำบล</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 cursor-pointer">
+                                    <input type="checkbox" checked={showVillageLayer} onChange={(e) => setLayer('village', e.target.checked)} className="w-4 h-4 accent-gray-700" />
+                                    <span>🏘️ หมู่บ้าน</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-900 cursor-pointer">
+                                    <input type="checkbox" checked={showLabels} onChange={(e) => setLayer('labels', e.target.checked)} className="w-4 h-4 accent-teal-600" />
+                                    <span>🏷️ แสดงชื่อ</span>
+                                </label>
                             </div>
-                            <div className="ml-4 space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg">✅</span>
-                                    <span className="text-xs">สัญจรได้ปกติ</span>
+                        </div>
+
+                        <div className="space-y-3 text-sm text-gray-700">
+                            {showDistrictLayer && (
+                                <div>
+                                    <p className="font-semibold text-gray-800 mb-2">สีเขตอำเภอ</p>
+                                    <div className="flex flex-wrap gap-2 text-xs">
+                                        {Object.entries(districtColors).map(([name, color]) => (
+                                            <div key={name} className="inline-flex items-center gap-1.5">
+                                                <span className="h-3 w-3 rounded" style={{ backgroundColor: color }} aria-hidden="true"></span>
+                                                <span>{name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg">⚠️</span>
-                                    <span className="text-xs">สัญจรได้ยากลำบาก</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg">🚫</span>
-                                    <span className="text-xs">ไม่สามารถสัญจรได้</span>
+                            )}
+                            <div>
+                                <p className="font-semibold text-gray-800 mb-2">ประเภทรายงาน</p>
+                                <div className="grid gap-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-3 w-3 rounded-full bg-red-500" aria-hidden="true"></span>
+                                        <span>🆘 แจ้งความช่วยเหลือ</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+                                        <span>✅ สัญจรได้</span>
+                                        <span>⚠️ สัญจรลำบาก</span>
+                                        <span>🚫 สัญจรไม่ได้</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-
+                </details>
+                )}
 
 
                 {/* Map */}
-                <div className={`${isFullscreen ? 'h-screen' : 'h-[400px]'} rounded-lg overflow-hidden border border-gray-200`}>
+                <div className={`${isFullscreen ? 'h-screen' : heightClass || 'h-[460px] md:h-[560px]'} overflow-visible`}>
                     <MapContainer center={[6.6238, 100.0673]} zoom={10} style={{ height: '100%', width: '100%' }}>
                         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -438,7 +487,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                         })}
 
                         {/* Incident Markers */}
-                        {incidents.map((incident) => (
+                        {filteredIncidents.map((incident) => (
                             <Marker
                                 key={incident.id}
                                 position={[parseFloat(incident.latitude), parseFloat(incident.longitude)]}
@@ -462,7 +511,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                                             <p className="pt-2 border-t"><strong>รายละเอียด:</strong><br />{incident.description}</p>
                                             {incident.photo_path && (
                                                 <div className="pt-2 border-t">
-                                                    <img src={getPhotoUrl(incident.photo_path)} alt="รูปภาพ" className="w-full h-auto rounded mt-2" />
+                                                    <Image src={getPhotoUrl(incident.photo_path)} alt="รูปภาพ" width={360} height={240} className="w-full h-auto rounded mt-2" unoptimized />
                                                 </div>
                                             )}
                                         </div>
@@ -473,7 +522,7 @@ export default function PublicIncidentMap({ disasterType = 'flood', startDate, e
                     </MapContainer>
                 </div>
 
-                {incidents.length === 0 && (
+                {filteredIncidents.length === 0 && chrome !== 'full' && (
                     <div className="mt-4 text-center text-gray-500 p-4 bg-white rounded-lg">
                         <p>ไม่มีรายงานที่ยืนยันแล้วในช่วงเวลานี้</p>
                     </div>

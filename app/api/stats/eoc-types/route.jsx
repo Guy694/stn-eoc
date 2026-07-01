@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
+import { publicInternalError } from "@/lib/apiResponse";
 
 export async function GET(req) {
     try {
@@ -27,9 +28,6 @@ export async function GET(req) {
         `;
 
         const [rows] = await pool.query(query, params);
-
-        console.log("Query result rows:", rows); // Debug log
-        console.log("Rows type:", typeof rows, "Is array:", Array.isArray(rows)); // Debug log
 
         // ตรวจสอบว่า rows เป็น array และมีข้อมูล
         if (!Array.isArray(rows)) {
@@ -61,11 +59,8 @@ export async function GET(req) {
             });
         }
 
-        console.log("Rows count:", rows.length); // Debug log
-
         // ถ้าไม่มีข้อมูลเลย ให้ return ข้อมูลว่าง
         if (rows.length === 0) {
-            console.log("No data found in eoc_sessions");
             return NextResponse.json({
                 success: true,
                 data: {},
@@ -83,8 +78,6 @@ export async function GET(req) {
             acc[row.eoc_type] += parseInt(row.count) || 0;
             return acc;
         }, {});
-
-        console.log("Result data:", result); // Debug log
 
         // ดึงรายการปีทั้งหมดที่มีข้อมูล
         const [yearRows] = await pool.query(`
@@ -104,9 +97,6 @@ export async function GET(req) {
         });
     } catch (error) {
         console.error("Error fetching EOC type stats:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการดึงสถิติประเภท EOC");
     }
 }

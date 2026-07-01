@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
@@ -28,16 +28,12 @@ export default function HealthFacilitiesPage() {
         { value: 'รพ.ชุมชน', label: 'โรงพยาบาลชุมชน', color: 'bg-orange-100 text-orange-700' },
         { value: 'รพ.สต.', label: 'โรงพยาบาลส่งเสริมสุขภาพตำบล', color: 'bg-green-100 text-green-700' },
         { value: 'ศสช.', label: 'ศูนย์สาธารณสุข', color: 'bg-blue-100 text-blue-700' },
-        { value: 'สสจ', label: 'สำนักงานสาธารณสุขจังหวัด', color: 'bg-purple-100 text-purple-700' },
+        { value: 'สสจ', label: 'สำนักงานสาธารณสุขจังหวัด', color: 'bg-teal-100 text-teal-700' },
         { value: 'สสอ.', label: 'สำนักงานสาธารณสุขอำเภอ', color: 'bg-pink-100 text-pink-700' },
         { value: 'สอน.', label: 'สถานีอนามัย', color: 'bg-cyan-100 text-cyan-700' }
     ];
 
-    useEffect(() => {
-        fetchFacilities();
-    }, [filterType, searchTerm]);
-
-    const fetchFacilities = async () => {
+    const fetchFacilities = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -57,7 +53,11 @@ export default function HealthFacilitiesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterType, searchTerm]);
+
+    useEffect(() => {
+        fetchFacilities();
+    }, [fetchFacilities]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -161,7 +161,7 @@ export default function HealthFacilitiesPage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
                     {facilityTypes.map(type => (
-                        <div key={type.value} className={`bg-white rounded-lg shadow p-4 border-l-4 ${getTypeColor(type.value)}`}>
+                        <div key={type.value} className={`bg-white rounded-lg shadow p-4 border ${getTypeColor(type.value)}`}>
                             <div className="text-sm text-gray-600 mb-1">{type.label}</div>
                             <div className="text-2xl font-bold">
                                 {stats[type.value] || 0}

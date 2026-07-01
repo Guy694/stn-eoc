@@ -25,9 +25,6 @@ export async function GET(request) {
             headers['api-key'] = process.env.GISTDA_API_KEY;
         }
 
-        console.log('Fetching GISTDA data from:', gistdaUrl);
-        console.log('Has API Key:', !!process.env.GISTDA_API_KEY);
-
         const response = await fetch(gistdaUrl, {
             method: 'GET',
             headers: headers,
@@ -82,7 +79,7 @@ export async function GET(request) {
         return NextResponse.json({
             success: false,
             error: 'Internal server error',
-            message: error.message,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลจาก GISTDA',
             useMockData: true,
             data: getMockFloodData()
         }, { status: 200 });

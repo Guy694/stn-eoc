@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -54,14 +54,6 @@ export default function ServicePointsPage() {
     }, []);
 
     useEffect(() => {
-        if (activeSession) {
-            fetchPoints();
-        } else {
-            setLoading(false);
-        }
-    }, [activeSession]);
-
-    useEffect(() => {
         if (formData.district) {
             const district = satunDistricts.find(d => d.name === formData.district);
             setTambonOptions(district?.tambons || []);
@@ -70,7 +62,7 @@ export default function ServicePointsPage() {
         }
     }, [formData.district]);
 
-    const fetchPoints = async () => {
+    const fetchPoints = useCallback(async () => {
         if (!activeSession) return;
         try {
             setLoading(true);
@@ -84,7 +76,15 @@ export default function ServicePointsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeSession]);
+
+    useEffect(() => {
+        if (activeSession) {
+            fetchPoints();
+        } else {
+            setLoading(false);
+        }
+    }, [activeSession, fetchPoints]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -241,20 +241,20 @@ export default function ServicePointsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-orange-500">
+                    <div className="bg-white rounded-lg p-4 shadow border border-orange-500">
                         <div className="text-3xl font-bold text-orange-600">{stats.total}</div>
                         <div className="text-sm text-gray-600">จุดบริการทั้งหมด</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-green-500">
+                    <div className="bg-white rounded-lg p-4 shadow border border-green-500">
                         <div className="text-3xl font-bold text-green-600">{stats.active}</div>
                         <div className="text-sm text-gray-600">🟢 เปิดให้บริการ</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-blue-500">
+                    <div className="bg-white rounded-lg p-4 shadow border border-blue-500">
                         <div className="text-3xl font-bold text-blue-600">{stats.officers}</div>
                         <div className="text-sm text-gray-600">👮 เจ้าหน้าที่</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-purple-500">
-                        <div className="text-3xl font-bold text-purple-600">{stats.vehicles}</div>
+                    <div className="bg-white rounded-lg p-4 shadow border border-teal-500">
+                        <div className="text-3xl font-bold text-teal-600">{stats.vehicles}</div>
                         <div className="text-sm text-gray-600">🚔 รถตรวจ</div>
                     </div>
                 </div>
@@ -262,21 +262,21 @@ export default function ServicePointsPage() {
                 {/* Cards View */}
                 {loading ? (
                     <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b border-orange-500 mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลด...</p>
                     </div>
                 ) : points.length === 0 ? (
                     <div className="bg-white rounded-lg shadow p-12 text-center">
                         <div className="text-6xl mb-4">📭</div>
                         <h3 className="text-xl font-bold text-gray-700 mb-2">ยังไม่มีจุดบริการ</h3>
-                        <p className="text-gray-500 mb-4">คลิกปุ่ม "เพิ่มจุดบริการ" เพื่อเริ่มต้น</p>
+                        <p className="text-gray-500 mb-4">คลิกปุ่ม &quot;เพิ่มจุดบริการ&quot; เพื่อเริ่มต้น</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {points.map((point) => (
                             <div
                                 key={point.id}
-                                className={`bg-white rounded-lg shadow-md overflow-hidden border-l-4 ${point.is_active ? 'border-green-500' : 'border-gray-300'
+                                className={`bg-white rounded-lg shadow-md overflow-hidden border ${point.is_active ? 'border-green-500' : 'border-gray-300'
                                     }`}
                             >
                                 <div className="p-4">
@@ -305,9 +305,9 @@ export default function ServicePointsPage() {
                                             <div className="font-bold text-blue-700">{point.officer_count || 0}</div>
                                             <div className="text-xs text-blue-600">👮 เจ้าหน้าที่</div>
                                         </div>
-                                        <div className="bg-purple-50 rounded p-2 text-center">
-                                            <div className="font-bold text-purple-700">{point.vehicle_count || 0}</div>
-                                            <div className="text-xs text-purple-600">🚔 รถตรวจ</div>
+                                        <div className="bg-teal-50 rounded p-2 text-center">
+                                            <div className="font-bold text-teal-700">{point.vehicle_count || 0}</div>
+                                            <div className="text-xs text-teal-600">🚔 รถตรวจ</div>
                                         </div>
                                     </div>
 

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import html2canvas from "html2canvas";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 export default function DailyFloodTimeline({ startDate, polygons }) {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -37,7 +38,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
             setLoading(true);
             try {
                 const dateStr = selectedDate.toISOString().split('T')[0];
-                const response = await fetch(`/stn-eoc/api/daily-flood?date=${dateStr}`);
+                const response = await fetch(`/stn-eoc/api/eoc/flood/daily-flood?date=${dateStr}`);
                 const data = await response.json();
                 setFloodData(data);
             } catch (error) {

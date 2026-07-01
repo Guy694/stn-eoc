@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { requireAuth } from "@/lib/auth";
+import { createRandomFilename, resolveInside, validateImageFile } from "@/lib/fileUpload";
+import { publicInternalError } from "@/lib/apiResponse";
+
+const MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -19,6 +24,9 @@ export async function GET(request) {
     const connection = await pool.getConnection();
 
     try {
+        const auth = await requireAuth(request, ['admin', 'commander']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const isActive = searchParams.get('is_active');
         const showPopup = searchParams.get('show_popup');
@@ -123,14 +131,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching announcements:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูล');
     } finally {
         connection.release();
     }
@@ -141,6 +142,9 @@ export async function POST(request) {
     const connection = await pool.getConnection();
 
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const formData = await request.formData();
         const title = formData.get('title');
         const eocType = formData.get('eoc_type');
@@ -150,13 +154,23 @@ export async function POST(request) {
         const isActive = formData.get('is_active') === 'true';
         const startDate = formData.get('start_date');
         const endDate = formData.get('end_date');
-        const createdBy = parseInt(formData.get('created_by') || '1');
+        const createdBy = auth.user.id;
         const image = formData.get('image');
 
         // Validate
         if (!title || !image) {
             return NextResponse.json(
                 { success: false, message: 'กรุณากรอกข้อมูลให้ครบถ้วน' },
+                { status: 400 }
+            );
+        }
+
+        const imageValidation = await validateImageFile(image, {
+            maxSizeBytes: MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES
+        });
+        if (!imageValidation.ok) {
+            return NextResponse.json(
+                { success: false, message: imageValidation.error },
                 { status: 400 }
             );
         }
@@ -173,20 +187,14 @@ export async function POST(request) {
         }
 
         // สร้างโฟลเดอร์สำหรับเก็บรูป
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'announcements');
-        try {
-            await mkdir(uploadDir, { recursive: true });
-        } catch (err) {
-            // Folder might already exist
-        }
+        const uploadBaseDir = path.join(process.cwd(), 'public', 'uploads');
+        const uploadDir = resolveInside(uploadBaseDir, 'announcements');
+        await mkdir(uploadDir, { recursive: true });
 
         // บันทึกรูปภาพ
-        const bytes = await image.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        const fileName = `${Date.now()}-${image.name}`;
-        const filePath = path.join(uploadDir, fileName);
-        await writeFile(filePath, buffer);
+        const fileName = createRandomFilename(imageValidation.extension);
+        const filePath = resolveInside(uploadDir, fileName);
+        await writeFile(filePath, imageValidation.buffer);
 
         const imagePath = `/uploads/announcements/${fileName}`;
 
@@ -222,14 +230,7 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error creating announcement:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการสร้างแบนเนอร์',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการสร้างแบนเนอร์');
     } finally {
         connection.release();
     }
@@ -240,6 +241,9 @@ export async function PUT(request) {
     const connection = await pool.getConnection();
 
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { id, title, eoc_type, description, show_popup, priority, is_active, start_date, end_date } = body;
 
@@ -303,14 +307,7 @@ export async function PUT(request) {
 
     } catch (error) {
         console.error('Error updating announcement:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการอัปเดตแบนเนอร์',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการอัปเดตแบนเนอร์');
     } finally {
         connection.release();
     }
@@ -321,6 +318,9 @@ export async function DELETE(request) {
     const connection = await pool.getConnection();
 
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -340,14 +340,7 @@ export async function DELETE(request) {
 
     } catch (error) {
         console.error('Error deleting announcement:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการลบแบนเนอร์',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบแบนเนอร์');
     } finally {
         connection.release();
     }

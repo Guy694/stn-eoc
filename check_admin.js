@@ -21,7 +21,8 @@ async function main() {
             console.log('account_locked_until:', u.account_locked_until);
             console.log('must_change_password:', u.must_change_password);
 
-            const match = await bcrypt.compare('password123', u.password_hash);
+            const passwordToCheck = process.env.TEST_PASSWORD || 'change_me';
+            const match = await bcrypt.compare(passwordToCheck, u.password_hash);
             console.log('Password match:', match);
         }
     } catch (error) {

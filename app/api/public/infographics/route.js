@@ -82,7 +82,7 @@ export async function GET(request) {
         console.error('Get infographics error:', error);
         return NextResponse.json({
             success: false,
-            message: 'เกิดข้อผิดพลาด: ' + error.message,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลอินโฟกราฟิก',
             data: [] // Return empty array on error
         }, { status: 500 });
     } finally {

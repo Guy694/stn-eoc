@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from "@/components/layouts/EOCLayout";
 
 export default function FloodDailyRiskPage() {
@@ -9,12 +9,7 @@ export default function FloodDailyRiskPage() {
     const [availableDates, setAvailableDates] = useState([]);
     const [showAllDates, setShowAllDates] = useState(false);
 
-    useEffect(() => {
-        fetchRiskData();
-        fetchAvailableDates();
-    }, [selectedDate]);
-
-    const fetchAvailableDates = async () => {
+    const fetchAvailableDates = useCallback(async () => {
         try {
             // สมมติว่ามี active session เริ่มต้นที่ 2025-12-20
             const startDate = new Date('2025-12-20');
@@ -29,9 +24,9 @@ export default function FloodDailyRiskPage() {
         } catch (error) {
             console.error('Error fetching dates:', error);
         }
-    };
+    }, []);
 
-    const fetchRiskData = async () => {
+    const fetchRiskData = useCallback(async () => {
         setLoading(true);
         try {
             const response = await fetch(`/stn-eoc/api/eoc/flood/daily-risk?date=${selectedDate}`);
@@ -44,7 +39,12 @@ export default function FloodDailyRiskPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedDate]);
+
+    useEffect(() => {
+        fetchRiskData();
+        fetchAvailableDates();
+    }, [fetchAvailableDates, fetchRiskData]);
 
     const getRiskColor = (level) => {
         const colors = {
@@ -99,7 +99,7 @@ export default function FloodDailyRiskPage() {
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
@@ -361,7 +361,7 @@ export default function FloodDailyRiskPage() {
                         {data.details?.map((item, index) => (
                             <div
                                 key={index}
-                                className={`${getRiskColor(item.flood_level)} border-l-4 p-4 rounded-r-lg`}
+                                className={`${getRiskColor(item.flood_level)} border p-4 rounded-r-lg`}
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -403,7 +403,7 @@ export default function FloodDailyRiskPage() {
 
 function StatCard({ icon, label, value, color }) {
     const colorClasses = {
-        purple: 'bg-purple-50 border-purple-200 text-purple-700',
+        purple: 'bg-teal-50 border-teal-200 text-teal-700',
         blue: 'bg-blue-50 border-blue-200 text-blue-700',
         green: 'bg-green-50 border-green-200 text-green-700',
         orange: 'bg-orange-50 border-orange-200 text-orange-700',

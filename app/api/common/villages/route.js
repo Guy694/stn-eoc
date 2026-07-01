@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { publicInternalError } from '@/lib/apiResponse';
 
 export async function GET() {
     try {
@@ -35,9 +36,6 @@ export async function GET() {
 
     } catch (error) {
         console.error('Error fetching villages:', error);
-        return NextResponse.json(
-            { success: false, message: 'Failed to fetch villages', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลหมู่บ้าน');
     }
 }

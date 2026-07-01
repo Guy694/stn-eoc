@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -17,6 +19,9 @@ export async function GET(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const district = searchParams.get('district');
@@ -74,10 +79,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching vulnerable groups:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลกลุ่มเปราะบาง');
     } finally {
         if (connection) connection.release();
     }
@@ -88,6 +90,9 @@ export async function POST(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const data = await request.json();
         connection = await pool.getConnection();
 
@@ -155,7 +160,7 @@ export async function POST(request) {
                 data.chronic_illness || 0,
                 data.notes || null,
                 data.needs || null,
-                data.created_by || 'System'
+                auth.user.username
             ]);
 
             return NextResponse.json({
@@ -165,10 +170,7 @@ export async function POST(request) {
         }
     } catch (error) {
         console.error('Error saving vulnerable group data:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูลกลุ่มเปราะบาง');
     } finally {
         if (connection) connection.release();
     }
@@ -179,6 +181,9 @@ export async function PUT(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const data = await request.json();
 
         if (!data.id) {
@@ -221,10 +226,7 @@ export async function PUT(request) {
 
     } catch (error) {
         console.error('Error updating vulnerable group data:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขข้อมูลกลุ่มเปราะบาง');
     } finally {
         if (connection) connection.release();
     }
@@ -235,6 +237,9 @@ export async function DELETE(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -259,10 +264,7 @@ export async function DELETE(request) {
 
     } catch (error) {
         console.error('Error deleting vulnerable group data:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลกลุ่มเปราะบาง');
     } finally {
         if (connection) connection.release();
     }

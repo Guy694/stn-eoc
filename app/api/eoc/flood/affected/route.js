@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงรายงานผู้ได้รับผลกระทบ
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
@@ -159,10 +164,9 @@ export async function GET(request) {
         console.error('Get affected persons error:', error);
         return NextResponse.json({
             success: false,
-            message: error.message.includes('Table')
+            message: error.code === 'ER_NO_SUCH_TABLE'
                 ? 'ยังไม่ได้สร้างตารางในฐานข้อมูล กรุณารัน SQL ก่อน'
                 : 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message,
             data: [],
             summary: { today: [], cumulative: [], province: {} }
         });
@@ -172,6 +176,9 @@ export async function GET(request) {
 // POST - บันทึกข้อมูลผู้ได้รับผลกระทบ
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const body = await request.json();
         const {
@@ -184,10 +191,7 @@ export async function POST(request) {
             injured,
             affected,
             notes,
-            reported_by
         } = body;
-
-        console.log('Received data:', body);
 
         // Validation
         if (!session_id || !report_date || !district_name) {
@@ -211,12 +215,6 @@ export async function POST(request) {
             );
         }
 
-        console.log('Executing INSERT query with:', [
-            session_id, report_date, district_name, tambon || null,
-            deathsVal, missingVal, injuredVal, affectedVal,
-            notes || null, reported_by || 1
-        ]);
-
         const [result] = await pool.query(
             `INSERT INTO affected_persons 
             (session_id, report_date, district_name, tambon, deaths, missing, injured, affected, notes, reported_by) 
@@ -232,7 +230,7 @@ export async function POST(request) {
             [
                 session_id, report_date, district_name, tambon || null,
                 deathsVal, missingVal, injuredVal, affectedVal,
-                notes || null, reported_by || 1
+                notes || null, auth.user.id
             ]
         );
 
@@ -243,8 +241,6 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Create affected persons error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error sqlMessage:', error.sqlMessage);
 
         let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
 
@@ -257,12 +253,7 @@ export async function POST(request) {
         }
 
         return NextResponse.json(
-            {
-                success: false,
-                message: errorMessage,
-                error: error.sqlMessage || error.message,
-                code: error.code
-            },
+            { success: false, message: errorMessage },
             { status: 500 }
         );
     }
@@ -271,6 +262,9 @@ export async function POST(request) {
 // PUT - แก้ไขข้อมูลผู้ได้รับผลกระทบ
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
@@ -325,16 +319,16 @@ export async function PUT(request) {
         });
     } catch (error) {
         console.error('Update affected persons error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
     }
 }
 
 // DELETE - ลบข้อมูลผู้ได้รับผลกระทบ
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
@@ -354,9 +348,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Delete affected persons error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการลบข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const GISTDA_API_BASE = 'https://api-gateway.gistda.or.th/api/2.0';
 const GISTDA_API_KEY = process.env.GISTDA_API_KEY || '';
@@ -103,8 +104,7 @@ export async function GET(request) {
                         source: 'gistda'
                     });
                 }
-            } catch (apiError) {
-                console.log('GISTDA API error, using mock data:', apiError.message);
+            } catch {
             }
         }
 
@@ -118,9 +118,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching flood frequency data:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่น้ำท่วมซ้ำซาก');
     }
 }

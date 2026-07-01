@@ -20,6 +20,14 @@
 # production
 /build
 
+# local database dumps and runtime uploads
+/database/dumps/
+/private/
+stneoc*.sql
+*dump*.sql
+*backup*.sql
+/public/uploads/
+
 # misc
 .DS_Store
 *.pem
@@ -32,6 +40,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

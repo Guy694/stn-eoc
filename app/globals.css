@@ -4,6 +4,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-kanit: Kanit, "Noto Sans Thai", "Th Sarabun New", Tahoma, Arial, sans-serif;
 }
 
 @theme inline {
@@ -12,17 +13,67 @@
   --font-sans: var(--font-kanit);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-kanit), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.eoc-bg-green-900 {
+  background-color: #14532d;
+}
+
+.eoc-bg-red-900 {
+  background-color: #7f1d1d;
+}
+
+.eoc-bg-red-950 {
+  background-color: #450a0a;
+}
+
+.eoc-bg-red-800 {
+  background-color: #991b1b;
+}
+
+.eoc-bg-red-700 {
+  background-color: #b91c1c;
+}
+
+.eoc-bg-gray-900 {
+  background-color: #111827;
+}
+
+.eoc-bg-amber-700 {
+  background-color: #b45309;
+}
+
+.seics-shell {
+  background: #08111f;
+}
+
+.seics-topbar {
+  background: #15273b;
+}
+
+.seics-rail {
+  background: #111f31;
+}
+
+.seics-sidebar {
+  background: linear-gradient(180deg, #17283c 0%, #0e1a2a 100%);
+}
+
+.seics-map-surface .leaflet-container {
+  border-radius: 0;
+}
+
+.seics-map-surface .leaflet-control-zoom,
+.seics-map-surface .leaflet-control-layers {
+  margin-right: 16px !important;
+}
+
+.seics-map-surface .leaflet-control-attribution {
+  margin-bottom: 8px !important;
 }
 
 /* Subtle Green Pattern Background */
@@ -59,9 +110,9 @@ body {
 }
 
 /* SplashScreen Animations */
-@keyframes bounce-slow {
+@keyframes float-soft {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes fade-in {
@@ -74,8 +125,8 @@ body {
   50% { opacity: 1; transform: scale(1.2); }
 }
 
-.animate-bounce-slow {
-  animation: bounce-slow 2s ease-in-out infinite;
+.animate-float-soft {
+  animation: float-soft 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .animate-fade-in {
@@ -155,13 +206,13 @@ body {
 }
 
 /* Speech Bubble Animations */
-@keyframes float-bounce {
+@keyframes float-subtle {
   0%, 100% {
     transform: translateY(0px);
     opacity: 1;
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-6px);
     opacity: 0.95;
   }
 }
@@ -178,8 +229,8 @@ body {
   }
 }
 
-.animate-float-bounce {
-  animation: float-bounce 2s ease-in-out infinite;
+.animate-float-subtle {
+  animation: float-subtle 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .animate-wiggle {
@@ -215,4 +266,35 @@ body {
 
 .animate-scale-in {
   animation: scale-in 0.4s ease-out forwards;
+}
+
+.public-incident-map .leaflet-container {
+  border-radius: 0.75rem;
+  font-family: var(--font-kanit), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.festival-map-surface .leaflet-container {
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.public-incident-map .leaflet-control a {
+  color: #1f2937;
+}
+
+.public-incident-map .leaflet-popup-content-wrapper,
+.public-incident-map .leaflet-popup-tip {
+  color: #1f2937;
+}
+
+.public-incident-map .leaflet-popup-content {
+  margin: 12px;
+  line-height: 1.45;
+}
+
+.leaflet-control-attribution {
+  margin: 0 8px 8px 0 !important;
+  padding: 2px 6px !important;
 }

@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import dynamic from 'next/dynamic';
+import { downloadCsv } from '@/lib/exportCsv';
 
 const FestivalMap = dynamic(() => import('./FestivalMap'), {
     ssr: false,
@@ -29,11 +30,7 @@ export default function FestivalDashboard() {
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
 
-    useEffect(() => {
-        fetchDashboard();
-    }, [festivalType, selectedSession]);
-
-    const fetchDashboard = async () => {
+    const fetchDashboard = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -50,17 +47,17 @@ export default function FestivalDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [festivalType, selectedSession]);
+
+    useEffect(() => {
+        fetchDashboard();
+    }, [fetchDashboard]);
 
     const handleExportExcel = async () => {
         if (!data?.activeSession) return;
         setExporting(true);
         try {
-            const XLSX = (await import('xlsx')).default;
-            const wb = XLSX.utils.book_new();
-
-            // Sheet 1: สรุปสถิติ
-            const summaryData = [
+            const rows = [
                 ['สถิติอุบัติเหตุช่วงเทศกาล - สรุปข้อมูล'],
                 ['Session', data.activeSession.open_reason || `Session #${data.activeSession.session_number}`],
                 [''],
@@ -71,31 +68,27 @@ export default function FestivalDashboard() {
                 ['เมาแล้วขับ', data.stats?.drunkCases || 0],
                 ['จุดตรวจ', data.stats?.checkpoints || 0],
             ];
-            const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-            XLSX.utils.book_append_sheet(wb, ws1, 'สรุปสถิติ');
 
-            // Sheet 2: สถิติรายวัน
             if (data.dailySummary?.length > 0) {
-                const dailyRows = [
+                rows.push(
+                    [''],
+                    ['สถิติรายวัน'],
                     ['วันที่', 'อุบัติเหตุ', 'เสียชีวิต', 'บาดเจ็บ', 'เมาแล้วขับ'],
                     ...data.dailySummary.map(d => [d.date, d.accidents, d.deaths, d.injuries, d.drunk])
-                ];
-                const ws2 = XLSX.utils.aoa_to_sheet(dailyRows);
-                XLSX.utils.book_append_sheet(wb, ws2, 'สถิติรายวัน');
+                );
             }
 
-            // Sheet 3: สถิติตามอำเภอ
             if (data.districtBreakdown?.length > 0) {
-                const distRows = [
+                rows.push(
+                    [''],
+                    ['สถิติตามอำเภอ'],
                     ['อำเภอ', 'อุบัติเหตุ', 'เสียชีวิต', 'บาดเจ็บ'],
                     ...data.districtBreakdown.map(d => [d.district, d.accidents, d.deaths, d.injuries])
-                ];
-                const ws3 = XLSX.utils.aoa_to_sheet(distRows);
-                XLSX.utils.book_append_sheet(wb, ws3, 'ตามอำเภอ');
+                );
             }
 
             const festivalLabel = festivalType === 'newyear' ? 'ปีใหม่' : festivalType === 'songkran' ? 'สงกรานต์' : 'เทศกาล';
-            XLSX.writeFile(wb, `อุบัติเหตุ_${festivalLabel}_${new Date().toISOString().split('T')[0]}.xlsx`);
+            downloadCsv(rows, `อุบัติเหตุ_${festivalLabel}_${new Date().toISOString().split('T')[0]}.csv`);
         } catch (error) {
             console.error('Export error:', error);
         } finally {
@@ -241,7 +234,7 @@ export default function FestivalDashboard() {
                     <div className="text-6xl mb-4">📭</div>
                     <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีข้อมูลเทศกาล</h3>
                     <p className="text-gray-600">ยังไม่มี EOC Session สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
-                    <p className="text-gray-500 text-sm mt-1">กรุณาเปิด EOC Session ประเภท "festival-accidents" จากหน้าจัดการ EOC</p>
+                    <p className="text-gray-500 text-sm mt-1">กรุณาเปิด EOC Session ประเภท &quot;festival-accidents&quot; จากหน้าจัดการ EOC</p>
                 </div>
             )}
 
@@ -384,7 +377,7 @@ export default function FestivalDashboard() {
                                     {data.stats?.totalAccidents > 0 && (
                                         <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                                             <div
-                                                className={`h-2 rounded-full transition-all duration-500 ${c.color === 'purple' ? 'bg-purple-500' :
+                                                className={`h-2 rounded-full transition-all duration-500 ${c.color === 'purple' ? 'bg-teal-500' :
                                                     c.color === 'orange' ? 'bg-orange-500' :
                                                         c.color === 'yellow' ? 'bg-yellow-500' :
                                                             'bg-red-500'
@@ -490,7 +483,7 @@ export default function FestivalDashboard() {
                                                 </div>
                                             </div>
                                             <div className="flex gap-1 mt-2">
-                                                {a.drunk_driving ? <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">🍺 เมา</span> : null}
+                                                {a.drunk_driving ? <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded text-xs">🍺 เมา</span> : null}
                                                 {a.no_helmet ? <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">⛑ ไม่สวมหมวก</span> : null}
                                                 {a.speeding ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs">🚀 เร็ว</span> : null}
                                             </div>
@@ -534,7 +527,7 @@ function StatCard({ icon, label, value, color, unit }) {
         red: 'from-red-500 to-red-600 border-red-300',
         gray: 'from-gray-700 to-gray-800 border-gray-400',
         yellow: 'from-amber-500 to-amber-600 border-amber-300',
-        purple: 'from-purple-500 to-purple-600 border-purple-300',
+        purple: 'from-teal-500 to-teal-600 border-teal-300',
         green: 'from-emerald-500 to-emerald-600 border-emerald-300',
     };
 

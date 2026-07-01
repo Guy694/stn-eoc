@@ -10,92 +10,54 @@ export function AuthProvider({ children }) {
     const [idleWarning, setIdleWarning] = useState(false);
     const router = useRouter();
 
-    // ตรวจสอบ session ทุก 1 นาที
-    useEffect(() => {
-        // ตรวจสอบ session ทั้งจาก localStorage และ cookie
-        validateSession();
-
-        // ตั้ง interval ตรวจสอบทุก 1 นาที
-        const intervalId = setInterval(() => {
-            validateSession();
-        }, 60000); // 60 วินาที
-
-        return () => clearInterval(intervalId);
+    const isPublicPath = useCallback(() => {
+        if (typeof window === 'undefined') return false;
+        const normalizedPath = window.location.pathname.replace(/^\/stn-eoc/, '') || '/';
+        const publicPages = ['/', '/login', '/privacy-policy', '/auth/thaiid'];
+        return normalizedPath.startsWith('/public/')
+            || publicPages.some(page => normalizedPath === page || normalizedPath.startsWith(`${page}/`));
     }, []);
 
-    const validateSession = async (skipReload = false) => {
+    const handleSessionExpired = useCallback((skipReload = false) => {
+        localStorage.removeItem("sessionToken");
+        localStorage.removeItem("user");
+        setUser(null);
+        setIdleWarning(false);
+
+        // Redirect ไป login เฉพาะหน้าที่ต้อง authentication
+        if (typeof window !== 'undefined' && !isPublicPath()) {
+            if (!skipReload) {
+                router.push('/login?timeout=true');
+            }
+        }
+    }, [isPublicPath, router]);
+
+    const validateSession = useCallback(async (skipReload = false) => {
+        if (isPublicPath()) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            // 1. ตรวจสอบจาก cookie ก่อน (สำหรับ ThaiID login)
             const cookieResponse = await fetch('/stn-eoc/api/auth/session/');
 
             if (cookieResponse.ok) {
                 const cookieData = await cookieResponse.json();
 
                 if (cookieData.success && cookieData.user) {
-                    // พบ session ใน cookie -> บันทึกลง localStorage เพื่อใช้ต่อ
+                    // พบ server session จาก httpOnly cookie
                     setUser(cookieData.user);
-                    localStorage.setItem("user", JSON.stringify(cookieData.user));
-
-                    // สร้าง sessionToken เฉพาะครั้งแรก (ถ้ายังไม่มี)
-                    const sessionToken = localStorage.getItem("sessionToken");
-                    if (!sessionToken) {
-                        const thaiIdToken = `thaiid_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                        localStorage.setItem("sessionToken", thaiIdToken);
-                    }
-
-                    setLoading(false);
-                    return;
-                }
-            }
-
-            // 2. ถ้าไม่มีใน cookie ให้ลองตรวจสอบจาก localStorage (สำหรับ username/password login)
-            const sessionToken = localStorage.getItem("sessionToken");
-            const storedUser = localStorage.getItem("user");
-
-            if (sessionToken && storedUser) {
-                // มี session ใน localStorage
-                const response = await fetch('/stn-eoc/api/auth/validate/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionToken })
-                });
-
-                if (!response.ok) {
-                    // 401 เป็นกรณีปกติเมื่อ session หมดอายุหรือไม่ valid
-                    if (response.status === 401) {
-                        console.log('Session expired or invalid');
-                    } else {
-                        console.error('Failed to validate session:', response.status);
-                    }
-                    localStorage.removeItem('sessionToken');
-                    localStorage.removeItem('user');
-                    setUser(null);
-                    setLoading(false);
-                    return;
-                }
-
-                const data = await response.json();
-
-                if (data.success && data.user) {
-                    setUser(data.user);
-                    setLoading(false);
-
-                    // แสดง warning ถ้าเหลือเวลาน้อยกว่า 2 นาที
-                    if (data.remainingMinutes !== undefined && data.remainingMinutes <= 2 && data.remainingMinutes > 0) {
+                    if (cookieData.remainingMinutes !== undefined && cookieData.remainingMinutes <= 2 && cookieData.remainingMinutes > 0) {
                         setIdleWarning(true);
                     } else {
                         setIdleWarning(false);
                     }
 
-                    return;
-                } else if (data.sessionExpired || data.idleTimeout) {
-                    // Session หมดอายุ - ล้างข้อมูลและ redirect
-                    handleSessionExpired(skipReload);
+                    setLoading(false);
                     return;
                 }
             }
 
-            // 3. ไม่พบ session ทั้ง 2 แบบ
             handleSessionExpired(skipReload);
 
         } catch (error) {
@@ -104,26 +66,18 @@ export function AuthProvider({ children }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [handleSessionExpired, isPublicPath]);
 
-    const handleSessionExpired = useCallback((skipReload = false) => {
-        localStorage.removeItem("sessionToken");
-        localStorage.removeItem("user");
-        setUser(null);
-        setIdleWarning(false);
+    // ตรวจสอบ session ทุก 1 นาที
+    useEffect(() => {
+        validateSession();
 
-        // หน้าสาธารณะที่ไม่ต้อง redirect
-        const publicPages = ['/', '/login', '/auth/thaiid'];
-        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-        const isPublicPage = publicPages.some(page => currentPath === page || currentPath.startsWith(page));
+        const intervalId = setInterval(() => {
+            validateSession();
+        }, 60000);
 
-        // Redirect ไป login เฉพาะหน้าที่ต้อง authentication
-        if (typeof window !== 'undefined' && !isPublicPage) {
-            if (!skipReload) {
-                router.push('/login?timeout=true');
-            }
-        }
-    }, [router]);
+        return () => clearInterval(intervalId);
+    }, [validateSession]);
 
     const login = async (username, password) => {
         try {
@@ -143,8 +97,6 @@ export function AuthProvider({ children }) {
 
             if (data.success && data.user) {
                 setUser(data.user);
-                localStorage.setItem("sessionToken", data.sessionToken);
-                localStorage.setItem("user", JSON.stringify(data.user));
                 return { success: true, message: data.message };
             } else {
                 return { success: false, message: data.message || 'เข้าสู่ระบบไม่สำเร็จ' };
@@ -157,17 +109,12 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         try {
-            const sessionToken = localStorage.getItem("sessionToken");
-            if (sessionToken) {
-                await fetch('/stn-eoc/api/auth/logout/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionToken })
-                });
-            }
+            await fetch('/stn-eoc/api/auth/logout/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
 
-            // ลบ cookie ด้วย (สำหรับ ThaiID session)
-            document.cookie = 'user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
         } catch (error) {
             console.error('Logout error:', error);

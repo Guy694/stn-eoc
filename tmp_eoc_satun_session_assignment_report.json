@@ -1,0 +1,1626 @@
+{
+  "dryRun": false,
+  "sourceFile": "ค่ำสั่ง eoc สตูล.pdf",
+  "session": {
+    "id": 54,
+    "eoc_type": "flood",
+    "session_number": 3,
+    "status": "active"
+  },
+  "teams": [
+    {
+      "action": "created",
+      "sessionTeamId": 38,
+      "teamCode": "COMMANDER",
+      "teamName": "ผู้บัญชาการเหตุการณ์และรองผู้บัญชาการเหตุการณ์",
+      "leadOfficerId": 324,
+      "leadUsername": "eoc2569_001",
+      "leadName": "นายแพทย์ธีรศักดิ์ เด่นดวง"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 39,
+      "teamCode": "SAT",
+      "teamName": "กลุ่มภารกิจตระหนักรู้สถานการณ์",
+      "leadOfficerId": 328,
+      "leadUsername": "eoc2569_005",
+      "leadName": "นายสุทธิมาศ บินสอาด"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 40,
+      "teamCode": "PLANNING",
+      "teamName": "กลุ่มภารกิจการวางแผน",
+      "leadOfficerId": 333,
+      "leadUsername": "eoc2569_010",
+      "leadName": "นางอรนุช นรารักษ์"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 41,
+      "teamCode": "SCIENTIFIC",
+      "teamName": "กลุ่มภารกิจวิชาการ",
+      "leadOfficerId": 341,
+      "leadUsername": "eoc2569_018",
+      "leadName": "นายแพทย์พิทวัส จินดาอิสรชัยกุล"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 42,
+      "teamCode": "JIT",
+      "teamName": "กลุ่มภารกิจปฏิบัติการสอบสวนควบคุมโรค",
+      "leadOfficerId": 349,
+      "leadUsername": "eoc2569_026",
+      "leadName": "นายแพทย์พันธุ์เชษฐ์ บุญช่วย"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 43,
+      "teamCode": "ACTIVE_SURV",
+      "teamName": "กลุ่มภารกิจการเฝ้าระวังเชิงรุก",
+      "leadOfficerId": 326,
+      "leadUsername": "eoc2569_003",
+      "leadName": "แพทย์หญิงอมรรัตน์ พันธ์คีรี"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 44,
+      "teamCode": "CASE_MGMT",
+      "teamName": "กลุ่มภารกิจการจัดการและดูแลรักษาผู้ป่วย",
+      "leadOfficerId": 364,
+      "leadUsername": "eoc2569_041",
+      "leadName": "แพทย์หญิงสุดารัตน์ นาคบรรพต"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 45,
+      "teamCode": "LAB",
+      "teamName": "กลุ่มภารกิจห้องปฏิบัติการด้านสาธารณสุข",
+      "leadOfficerId": 371,
+      "leadUsername": "eoc2569_048",
+      "leadName": "นางปวีณา เหมรา"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 46,
+      "teamCode": "RISKCOM",
+      "teamName": "กลุ่มภารกิจสื่อสารความเสี่ยง",
+      "leadOfficerId": 377,
+      "leadUsername": "eoc2569_054",
+      "leadName": "นางอัญชรีย์ สายพัทลุง"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 47,
+      "teamCode": "VACCINE",
+      "teamName": "กลุ่มภารกิจบริหารจัดการและบริการวัคซีน",
+      "leadOfficerId": 385,
+      "leadUsername": "eoc2569_062",
+      "leadName": "นายแพทย์อดิศักดิ์ ชุมขวัญ"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 48,
+      "teamCode": "MCATT",
+      "teamName": "กลุ่มภารกิจช่วยเหลือเยียวยาจิตใจผู้ประสบภาวะวิกฤต",
+      "leadOfficerId": 390,
+      "leadUsername": "eoc2569_067",
+      "leadName": "แพทย์หญิงสวรรยา เสาวภาพ"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 49,
+      "teamCode": "POE",
+      "teamName": "กลุ่มภารกิจด่านควบคุมโรคระหว่างประเทศ",
+      "leadOfficerId": 394,
+      "leadUsername": "eoc2569_071",
+      "leadName": "แพทย์หญิงวนพัชร์ ยิ้มซ้าย"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 50,
+      "teamCode": "QUARANTINE",
+      "teamName": "กลุ่มภารกิจปฏิบัติการกักกันโรค",
+      "leadOfficerId": 400,
+      "leadUsername": "eoc2569_077",
+      "leadName": "นายศุภเดช สุกใส"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 51,
+      "teamCode": "MERT",
+      "teamName": "กลุ่มภารกิจปฏิบัติการฉุกเฉินทางการแพทย์",
+      "leadOfficerId": 411,
+      "leadUsername": "eoc2569_088",
+      "leadName": "นายแพทย์จักรพงศ์ จันทนา"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 52,
+      "teamCode": "SeRHT",
+      "teamName": "กลุ่มภารกิจปฏิบัติการด้านอนามัยสิ่งแวดล้อม",
+      "leadOfficerId": 416,
+      "leadUsername": "eoc2569_093",
+      "leadName": "นายสุประพล บินต่ำมะหงง"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 53,
+      "teamCode": "LOGISTICS",
+      "teamName": "กลุ่มภารกิจสำรองวัสดุ เวชภัณฑ์ และส่งกำลังบำรุง",
+      "leadOfficerId": 420,
+      "leadUsername": "eoc2569_097",
+      "leadName": "นายภาษิต พิศาลสุทธิกุล"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 54,
+      "teamCode": "LEGAL",
+      "teamName": "กลุ่มภารกิจกฎหมาย",
+      "leadOfficerId": 431,
+      "leadUsername": "eoc2569_108",
+      "leadName": "นายยุทธพงษ์ ตันทเสนีย์"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 55,
+      "teamCode": "FINANCE",
+      "teamName": "กลุ่มภารกิจการเงินและงบประมาณ",
+      "leadOfficerId": 435,
+      "leadUsername": "eoc2569_112",
+      "leadName": "นางสาวอัญคนาย์ พูลสวัสดิ์"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 56,
+      "teamCode": "STAFFING",
+      "teamName": "กลุ่มภารกิจจัดสรรกำลังคนในภาวะฉุกเฉิน",
+      "leadOfficerId": 443,
+      "leadUsername": "eoc2569_120",
+      "leadName": "นายอัครเดช ยาแบโด"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 57,
+      "teamCode": "ADMIN",
+      "teamName": "กลุ่มภารกิจด้านบริหารและธุรการ",
+      "leadOfficerId": 453,
+      "leadUsername": "eoc2569_130",
+      "leadName": "นายเสรี พงศ์นฤเดช"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 58,
+      "teamCode": "ITSUPPORT",
+      "teamName": "กลุ่มภารกิจด้านเทคโนโลยีดิจิทัล",
+      "leadOfficerId": 459,
+      "leadUsername": "eoc2569_136",
+      "leadName": "นายเกษม ไปรฮูยัน"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 59,
+      "teamCode": "LIAISON",
+      "teamName": "กลุ่มภารกิจประสานงานและเลขานุการ",
+      "leadOfficerId": 463,
+      "leadUsername": "eoc2569_140",
+      "leadName": "นายประดิษฐ์ รัตนพันธ์"
+    },
+    {
+      "action": "created",
+      "sessionTeamId": 60,
+      "teamCode": "EOC_MGMT",
+      "teamName": "กลุ่มภารกิจการจัดการศูนย์ปฏิบัติการภาวะฉุกเฉิน",
+      "leadOfficerId": 327,
+      "leadUsername": "eoc2569_004",
+      "leadName": "นายวรายุส วรรณวิไล"
+    }
+  ],
+  "members": [
+    {
+      "action": "created",
+      "teamCode": "COMMANDER",
+      "sessionTeamId": 38,
+      "officerId": 324,
+      "username": "eoc2569_001",
+      "name": "นายแพทย์ธีรศักดิ์ เด่นดวง",
+      "roleInTeam": "ผู้บัญชาการเหตุการณ์"
+    },
+    {
+      "action": "created",
+      "teamCode": "COMMANDER",
+      "sessionTeamId": 38,
+      "officerId": 325,
+      "username": "eoc2569_002",
+      "name": "นายแพทย์สงกรานต์ จันทร์มุณี",
+      "roleInTeam": "รองผู้บัญชาการเหตุการณ์"
+    },
+    {
+      "action": "created",
+      "teamCode": "COMMANDER",
+      "sessionTeamId": 38,
+      "officerId": 326,
+      "username": "eoc2569_003",
+      "name": "แพทย์หญิงอมรรัตน์ พันธ์คีรี",
+      "roleInTeam": "รองผู้บัญชาการเหตุการณ์"
+    },
+    {
+      "action": "created",
+      "teamCode": "COMMANDER",
+      "sessionTeamId": 38,
+      "officerId": 327,
+      "username": "eoc2569_004",
+      "name": "นายวรายุส วรรณวิไล",
+      "roleInTeam": "รองผู้บัญชาการเหตุการณ์"
+    },
+    {
+      "action": "created",
+      "teamCode": "SAT",
+      "sessionTeamId": 39,
+      "officerId": 328,
+      "username": "eoc2569_005",
+      "name": "นายสุทธิมาศ บินสอาด",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SAT",
+      "sessionTeamId": 39,
+      "officerId": 329,
+      "username": "eoc2569_006",
+      "name": "นางสุขาภรณ์ รักษ์ศรีทอง",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SAT",
+      "sessionTeamId": 39,
+      "officerId": 15,
+      "username": "thaiid_19098007",
+      "name": "นางสาวณัฐสิมา ประทีปอนันต์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SAT",
+      "sessionTeamId": 39,
+      "officerId": 330,
+      "username": "eoc2569_007",
+      "name": "นายนาท ครูอ้น",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SAT",
+      "sessionTeamId": 39,
+      "officerId": 331,
+      "username": "eoc2569_008",
+      "name": "นางสาวนุสรีย์ ปะดุกา",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SAT",
+      "sessionTeamId": 39,
+      "officerId": 332,
+      "username": "eoc2569_009",
+      "name": "นายสันติพงษ์ ทองหอม",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 333,
+      "username": "eoc2569_010",
+      "name": "นางอรนุช นรารักษ์",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 334,
+      "username": "eoc2569_011",
+      "name": "นางสาวกันยารัตน์ ศิริชา",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 335,
+      "username": "eoc2569_012",
+      "name": "นายจักรพงศ์ แหล่ทองคำ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 336,
+      "username": "eoc2569_013",
+      "name": "นางสาวปาลิตา ศรีริภาพ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 337,
+      "username": "eoc2569_014",
+      "name": "นายมะรอฟี เจ๊ะสื่อแม",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 338,
+      "username": "eoc2569_015",
+      "name": "นางสาวโนรี อำมาตย์นิติกุล",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 339,
+      "username": "eoc2569_016",
+      "name": "นางสาวดรุณี หมาดมาสัน",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "PLANNING",
+      "sessionTeamId": 40,
+      "officerId": 340,
+      "username": "eoc2569_017",
+      "name": "นายณัฐสิทธิ์ สองเมือง",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 341,
+      "username": "eoc2569_018",
+      "name": "นายแพทย์พิทวัส จินดาอิสรชัยกุล",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 342,
+      "username": "eoc2569_019",
+      "name": "แพทย์หญิงกชมน ภู่เจริญ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 343,
+      "username": "eoc2569_020",
+      "name": "แพทย์หญิงกนกวรรณ แซ่ลิว",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 344,
+      "username": "eoc2569_021",
+      "name": "แพทย์หญิงจักรปราณี ตั้งสินมั่นคง",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 345,
+      "username": "eoc2569_022",
+      "name": "นางสาวนูรญามี หมาดโต๊ะโส๊ะ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 346,
+      "username": "eoc2569_023",
+      "name": "นางวีรียา มาลินี",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 347,
+      "username": "eoc2569_024",
+      "name": "นางสุวรรณา ยาแบโด",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SCIENTIFIC",
+      "sessionTeamId": 41,
+      "officerId": 348,
+      "username": "eoc2569_025",
+      "name": "นางลักขณา ผิวเหลือง",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "JIT",
+      "sessionTeamId": 42,
+      "officerId": 349,
+      "username": "eoc2569_026",
+      "name": "นายแพทย์พันธุ์เชษฐ์ บุญช่วย",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "JIT",
+      "sessionTeamId": 42,
+      "officerId": 350,
+      "username": "eoc2569_027",
+      "name": "นางสาวศิริมา ยุทธการกำธร",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "JIT",
+      "sessionTeamId": 42,
+      "officerId": 351,
+      "username": "eoc2569_028",
+      "name": "นางอนุสรา เจ๊ะสัน",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 326,
+      "username": "eoc2569_003",
+      "name": "แพทย์หญิงอมรรัตน์ พันธ์คีรี",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 352,
+      "username": "eoc2569_029",
+      "name": "แพทย์หญิงดาริน ธนปัญญาบูรณ์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 353,
+      "username": "eoc2569_030",
+      "name": "นายเจนฤทธิ์ รอเกตุ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 354,
+      "username": "eoc2569_031",
+      "name": "นางรุจกัลยา ขาวเชาะ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 355,
+      "username": "eoc2569_032",
+      "name": "นายธงชัย ทำเผือก",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 356,
+      "username": "eoc2569_033",
+      "name": "นายพงษ์ศักดิ์ นิยมรัฐ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 357,
+      "username": "eoc2569_034",
+      "name": "นายธานัท ยอดแก้ว",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 358,
+      "username": "eoc2569_035",
+      "name": "นายเฟาซี ดำยูโช๊ะ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 359,
+      "username": "eoc2569_036",
+      "name": "นายประกาศิต เพชรกาฬ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 360,
+      "username": "eoc2569_037",
+      "name": "นางสาวฐานิศา สาเบด",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 361,
+      "username": "eoc2569_038",
+      "name": "นายปรัชญา เสียมไหม",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 362,
+      "username": "eoc2569_039",
+      "name": "นายยูนุส มานะกล้า",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ACTIVE_SURV",
+      "sessionTeamId": 43,
+      "officerId": 363,
+      "username": "eoc2569_040",
+      "name": "นางสาวพิรินันทญาณ์ จันทร์ทิพย์",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "CASE_MGMT",
+      "sessionTeamId": 44,
+      "officerId": 364,
+      "username": "eoc2569_041",
+      "name": "แพทย์หญิงสุดารัตน์ นาคบรรพต",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "CASE_MGMT",
+      "sessionTeamId": 44,
+      "officerId": 365,
+      "username": "eoc2569_042",
+      "name": "นางสาวชนนรัก ถาวรบุญ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "CASE_MGMT",
+      "sessionTeamId": 44,
+      "officerId": 366,
+      "username": "eoc2569_043",
+      "name": "นางธัญญาลักษณ์ ดลระหมาน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "CASE_MGMT",
+      "sessionTeamId": 44,
+      "officerId": 367,
+      "username": "eoc2569_044",
+      "name": "นางฉัตรพิไล เจียระนัย",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "CASE_MGMT",
+      "sessionTeamId": 44,
+      "officerId": 368,
+      "username": "eoc2569_045",
+      "name": "นางจินตนา เรื่องหิรัญ",
+      "roleInTeam": "กรรมการและเลขานุการร่วม"
+    },
+    {
+      "action": "created",
+      "teamCode": "CASE_MGMT",
+      "sessionTeamId": 44,
+      "officerId": 369,
+      "username": "eoc2569_046",
+      "name": "นางเบญจวรรณ ใจเย็น",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "CASE_MGMT",
+      "sessionTeamId": 44,
+      "officerId": 370,
+      "username": "eoc2569_047",
+      "name": "นางอรอุมา พินธุ์สุวรรณ",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LAB",
+      "sessionTeamId": 45,
+      "officerId": 371,
+      "username": "eoc2569_048",
+      "name": "นางปวีณา เหมรา",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LAB",
+      "sessionTeamId": 45,
+      "officerId": 372,
+      "username": "eoc2569_049",
+      "name": "นางสาววารียา สัญญา",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LAB",
+      "sessionTeamId": 45,
+      "officerId": 373,
+      "username": "eoc2569_050",
+      "name": "นายสุทธิชาติ เมืองปาน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LAB",
+      "sessionTeamId": 45,
+      "officerId": 374,
+      "username": "eoc2569_051",
+      "name": "นางสาวต่วนบีรนี ดาราหมานเศษ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LAB",
+      "sessionTeamId": 45,
+      "officerId": 375,
+      "username": "eoc2569_052",
+      "name": "นางลักขณา ละอองวิจิตร",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LAB",
+      "sessionTeamId": 45,
+      "officerId": 376,
+      "username": "eoc2569_053",
+      "name": "นางสาวยาหรีย๊ะ เหมรา",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 377,
+      "username": "eoc2569_054",
+      "name": "นางอัญชรีย์ สายพัทลุง",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 378,
+      "username": "eoc2569_055",
+      "name": "นางสาวมริณา แดงงาม",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 379,
+      "username": "eoc2569_056",
+      "name": "นางนิรมล เผือกสม",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 380,
+      "username": "eoc2569_057",
+      "name": "นางสาวขวัญตา วงค์คลองเขื่อน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 381,
+      "username": "eoc2569_058",
+      "name": "นายอรรมพร ศรีปานรอด",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 382,
+      "username": "eoc2569_059",
+      "name": "นายสุขสันต์ มรรคาเขต",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 383,
+      "username": "eoc2569_060",
+      "name": "นางสาวรุ่งรัตน์ ดุลยาภรณ์",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "RISKCOM",
+      "sessionTeamId": 46,
+      "officerId": 384,
+      "username": "eoc2569_061",
+      "name": "นายราชันท์ ปักครึก",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "VACCINE",
+      "sessionTeamId": 47,
+      "officerId": 385,
+      "username": "eoc2569_062",
+      "name": "นายแพทย์อดิศักดิ์ ชุมขวัญ",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "VACCINE",
+      "sessionTeamId": 47,
+      "officerId": 386,
+      "username": "eoc2569_063",
+      "name": "นางสาววริญญา แซ่ตัน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "VACCINE",
+      "sessionTeamId": 47,
+      "officerId": 387,
+      "username": "eoc2569_064",
+      "name": "นางสาวเกตุอนิตย์สา เส็นสมมาตร",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "VACCINE",
+      "sessionTeamId": 47,
+      "officerId": 388,
+      "username": "eoc2569_065",
+      "name": "นางมีเนาะ แหล่ทองคำ",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "VACCINE",
+      "sessionTeamId": 47,
+      "officerId": 389,
+      "username": "eoc2569_066",
+      "name": "นางสาวชาลิสา หมัดโส๊ะ",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MCATT",
+      "sessionTeamId": 48,
+      "officerId": 390,
+      "username": "eoc2569_067",
+      "name": "แพทย์หญิงสวรรยา เสาวภาพ",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MCATT",
+      "sessionTeamId": 48,
+      "officerId": 391,
+      "username": "eoc2569_068",
+      "name": "นางคงขวัญ วิทยาศิริกุล",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MCATT",
+      "sessionTeamId": 48,
+      "officerId": 392,
+      "username": "eoc2569_069",
+      "name": "นางสุชาดา ปิติเศรษฐพันธุ์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MCATT",
+      "sessionTeamId": 48,
+      "officerId": 393,
+      "username": "eoc2569_070",
+      "name": "นางสาวเสาวภา หมาดแน้ง",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "POE",
+      "sessionTeamId": 49,
+      "officerId": 394,
+      "username": "eoc2569_071",
+      "name": "แพทย์หญิงวนพัชร์ ยิ้มซ้าย",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "POE",
+      "sessionTeamId": 49,
+      "officerId": 395,
+      "username": "eoc2569_072",
+      "name": "นายแพทย์ภูริวัจน์ ชูสิงห์แค",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "POE",
+      "sessionTeamId": 49,
+      "officerId": 396,
+      "username": "eoc2569_073",
+      "name": "นายภูวนาถ ภัทราภินันท์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "POE",
+      "sessionTeamId": 49,
+      "officerId": 397,
+      "username": "eoc2569_074",
+      "name": "นายพิทักษ์ หวังชัย",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "POE",
+      "sessionTeamId": 49,
+      "officerId": 398,
+      "username": "eoc2569_075",
+      "name": "นายภิเษก ณ นคร",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "POE",
+      "sessionTeamId": 49,
+      "officerId": 399,
+      "username": "eoc2569_076",
+      "name": "นายอับดลมาหยืด กาเส็มสัน",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 400,
+      "username": "eoc2569_077",
+      "name": "นายศุภเดช สุกใส",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 401,
+      "username": "eoc2569_078",
+      "name": "นางสาววราภรณ์ เส้นสมมาตร",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 402,
+      "username": "eoc2569_079",
+      "name": "นายธีรศักดิ์ มะแอเคียน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 403,
+      "username": "eoc2569_080",
+      "name": "นางสาวมญชุดา พิธกิจ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 404,
+      "username": "eoc2569_081",
+      "name": "นางสาวพัทธ์ธิดา ช่างนุ้ย",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 405,
+      "username": "eoc2569_082",
+      "name": "นางสาวปาริตา ลารีนู",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 406,
+      "username": "eoc2569_083",
+      "name": "นายคเณศ หนูน้อย",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 407,
+      "username": "eoc2569_084",
+      "name": "นายทวีศักดิ์ รักฤทธิ์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 408,
+      "username": "eoc2569_085",
+      "name": "นายฟารุค สาดีน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 409,
+      "username": "eoc2569_086",
+      "name": "นางสาวรัตนาวดี ณ ถลาง",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "QUARANTINE",
+      "sessionTeamId": 50,
+      "officerId": 410,
+      "username": "eoc2569_087",
+      "name": "นางสาวเจนจิรา นาดำ",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MERT",
+      "sessionTeamId": 51,
+      "officerId": 411,
+      "username": "eoc2569_088",
+      "name": "นายแพทย์จักรพงศ์ จันทนา",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MERT",
+      "sessionTeamId": 51,
+      "officerId": 412,
+      "username": "eoc2569_089",
+      "name": "แพทย์หญิงรัญชนา สิริวรรณาภรณ์",
+      "roleInTeam": "รองประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MERT",
+      "sessionTeamId": 51,
+      "officerId": 413,
+      "username": "eoc2569_090",
+      "name": "นางสาวธันธิวาท์ คงเพ็ชร",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "MERT",
+      "sessionTeamId": 51,
+      "officerId": 414,
+      "username": "eoc2569_091",
+      "name": "นางสไบทิพย์ วิเศษสิงห์",
+      "roleInTeam": "กรรมการและเลขานุการร่วม"
+    },
+    {
+      "action": "created",
+      "teamCode": "MERT",
+      "sessionTeamId": 51,
+      "officerId": 415,
+      "username": "eoc2569_092",
+      "name": "นางสาวพาขวัญ บุญเตี่ยว",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SeRHT",
+      "sessionTeamId": 52,
+      "officerId": 416,
+      "username": "eoc2569_093",
+      "name": "นายสุประพล บินต่ำมะหงง",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SeRHT",
+      "sessionTeamId": 52,
+      "officerId": 417,
+      "username": "eoc2569_094",
+      "name": "นางสุภัทร กาญจนกำเนิด",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SeRHT",
+      "sessionTeamId": 52,
+      "officerId": 418,
+      "username": "eoc2569_095",
+      "name": "นางลัดดาวรรณ ยาแบโด",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "SeRHT",
+      "sessionTeamId": 52,
+      "officerId": 419,
+      "username": "eoc2569_096",
+      "name": "นางสาวลิลลี่ สุวามีน",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 420,
+      "username": "eoc2569_097",
+      "name": "นายภาษิต พิศาลสุทธิกุล",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 421,
+      "username": "eoc2569_098",
+      "name": "นายอำไพ สัจจาพันธ์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 422,
+      "username": "eoc2569_099",
+      "name": "นางสาวจันนง โต๊ะหลัง",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 423,
+      "username": "eoc2569_100",
+      "name": "นางสาวอารีวรรณ์ ไชยรักษ์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 424,
+      "username": "eoc2569_101",
+      "name": "นายสุเมธิ พงศ์ดารา",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 425,
+      "username": "eoc2569_102",
+      "name": "นางอุษา หมาดทิ้ง",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 426,
+      "username": "eoc2569_103",
+      "name": "นายมณู สวนแก้ว",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 427,
+      "username": "eoc2569_104",
+      "name": "นางสุขมาลย์ พัฒนศิริ",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 428,
+      "username": "eoc2569_105",
+      "name": "นางวรรณี ภู่เจริญ",
+      "roleInTeam": "กรรมการและเลขานุการร่วม"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 429,
+      "username": "eoc2569_106",
+      "name": "นายนิธิศ สุธากุล",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LOGISTICS",
+      "sessionTeamId": 53,
+      "officerId": 430,
+      "username": "eoc2569_107",
+      "name": "นางวรรยา เมืองปาน",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LEGAL",
+      "sessionTeamId": 54,
+      "officerId": 431,
+      "username": "eoc2569_108",
+      "name": "นายยุทธพงษ์ ตันทเสนีย์",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LEGAL",
+      "sessionTeamId": 54,
+      "officerId": 432,
+      "username": "eoc2569_109",
+      "name": "นางสาวอินทิรา คณะแนม",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LEGAL",
+      "sessionTeamId": 54,
+      "officerId": 433,
+      "username": "eoc2569_110",
+      "name": "นางสาวณัชวา โต๊ะประดู่",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LEGAL",
+      "sessionTeamId": 54,
+      "officerId": 434,
+      "username": "eoc2569_111",
+      "name": "นายอิบรอเหม ขาวเชาะ",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 435,
+      "username": "eoc2569_112",
+      "name": "นางสาวอัญคนาย์ พูลสวัสดิ์",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 436,
+      "username": "eoc2569_113",
+      "name": "นายประพันธ์ ด้วยกาเด",
+      "roleInTeam": "รองประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 437,
+      "username": "eoc2569_114",
+      "name": "นางกัลยาพร เพชรรักษ์",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 438,
+      "username": "eoc2569_115",
+      "name": "นางเจ๊ะใหมซาเราะห์ จ๊ะสมัน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 439,
+      "username": "eoc2569_116",
+      "name": "นางกมลรัตน์ ขาวแก้ว",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 440,
+      "username": "eoc2569_117",
+      "name": "นางสาวนันท์นภัสร์ ขาวดี",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 441,
+      "username": "eoc2569_118",
+      "name": "นางสาวยุวธิดา ยูหันนั้น",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "FINANCE",
+      "sessionTeamId": 55,
+      "officerId": 442,
+      "username": "eoc2569_119",
+      "name": "นางสาวนิสรีน สาเร๊ะ",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 443,
+      "username": "eoc2569_120",
+      "name": "นายอัครเดช ยาแบโด",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 444,
+      "username": "eoc2569_121",
+      "name": "นางสาวนิลุบล หวันสตูล",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 445,
+      "username": "eoc2569_122",
+      "name": "นายอาณัติ เหมปันดัน",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 446,
+      "username": "eoc2569_123",
+      "name": "นายมนตรี หลังปูเต๊ะ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 447,
+      "username": "eoc2569_124",
+      "name": "นายอภิสิทธิ์ เส้งตี้",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 448,
+      "username": "eoc2569_125",
+      "name": "นางสาวจุฑามาศ ลำโป",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 449,
+      "username": "eoc2569_126",
+      "name": "นางสาวซารีตา กรมเมือง",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 450,
+      "username": "eoc2569_127",
+      "name": "นายบุรุษรัตน คมประมูล",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 451,
+      "username": "eoc2569_128",
+      "name": "นางนุศรา ไหมมะหาด",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "STAFFING",
+      "sessionTeamId": 56,
+      "officerId": 452,
+      "username": "eoc2569_129",
+      "name": "นางปิยวรรณ ทองจิบ",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ADMIN",
+      "sessionTeamId": 57,
+      "officerId": 453,
+      "username": "eoc2569_130",
+      "name": "นายเสรี พงศ์นฤเดช",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ADMIN",
+      "sessionTeamId": 57,
+      "officerId": 454,
+      "username": "eoc2569_131",
+      "name": "นางเกษร ถนอมศรีมงคล",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ADMIN",
+      "sessionTeamId": 57,
+      "officerId": 455,
+      "username": "eoc2569_132",
+      "name": "นางเพ็ญนภา เขาผึ้ง",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ADMIN",
+      "sessionTeamId": 57,
+      "officerId": 456,
+      "username": "eoc2569_133",
+      "name": "นางสาวปรียาภรณ์ สุวรรณจุณี",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ADMIN",
+      "sessionTeamId": 57,
+      "officerId": 457,
+      "username": "eoc2569_134",
+      "name": "นายสาชล กาญจนกำเนิด",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ADMIN",
+      "sessionTeamId": 57,
+      "officerId": 458,
+      "username": "eoc2569_135",
+      "name": "นางสาวดีวนา หาสกุล",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ITSUPPORT",
+      "sessionTeamId": 58,
+      "officerId": 459,
+      "username": "eoc2569_136",
+      "name": "นายเกษม ไปรฮูยัน",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ITSUPPORT",
+      "sessionTeamId": 58,
+      "officerId": 18,
+      "username": "ชาคริต.ทองนวล",
+      "name": "นายชาคริต ทองนวล",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ITSUPPORT",
+      "sessionTeamId": 58,
+      "officerId": 460,
+      "username": "eoc2569_137",
+      "name": "นายอำนาจ พันธภาค",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ITSUPPORT",
+      "sessionTeamId": 58,
+      "officerId": 461,
+      "username": "eoc2569_138",
+      "name": "นายประณต มหาวิจิตร",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "ITSUPPORT",
+      "sessionTeamId": 58,
+      "officerId": 462,
+      "username": "eoc2569_139",
+      "name": "นายอิสมาแอล เตบสัน",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LIAISON",
+      "sessionTeamId": 59,
+      "officerId": 463,
+      "username": "eoc2569_140",
+      "name": "นายประดิษฐ์ รัตนพันธ์",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LIAISON",
+      "sessionTeamId": 59,
+      "officerId": 464,
+      "username": "eoc2569_141",
+      "name": "นางศิริเพ็ญ เจ๊ะสื่อแม",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LIAISON",
+      "sessionTeamId": 59,
+      "officerId": 465,
+      "username": "eoc2569_142",
+      "name": "นางชญาดา ยูโช๊ะยูด๊ะ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LIAISON",
+      "sessionTeamId": 59,
+      "officerId": 466,
+      "username": "eoc2569_143",
+      "name": "นางสาววิไลพร ทองช่วย",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LIAISON",
+      "sessionTeamId": 59,
+      "officerId": 467,
+      "username": "eoc2569_144",
+      "name": "นายอับดุลเลาะห์ นารอยี่",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "LIAISON",
+      "sessionTeamId": 59,
+      "officerId": 468,
+      "username": "eoc2569_145",
+      "name": "นางอัตริยา เตาวะโต",
+      "roleInTeam": "กรรมการผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 327,
+      "username": "eoc2569_004",
+      "name": "นายวรายุส วรรณวิไล",
+      "roleInTeam": "ประธานกรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 469,
+      "username": "eoc2569_146",
+      "name": "นางสาวอรอุษา สุวรรณมณี",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 470,
+      "username": "eoc2569_147",
+      "name": "นายเลิศวิทย์ รัตนะ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 471,
+      "username": "eoc2569_148",
+      "name": "นายพีรพล สอนอำไพ",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 472,
+      "username": "eoc2569_149",
+      "name": "นายสุขุม รักษ์ศรีทอง",
+      "roleInTeam": "กรรมการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 473,
+      "username": "eoc2569_150",
+      "name": "นางสุนิสา แกสมาน",
+      "roleInTeam": "กรรมการและเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 474,
+      "username": "eoc2569_151",
+      "name": "นางสาวกัญญารัตน์ มุเก็ม",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    },
+    {
+      "action": "created",
+      "teamCode": "EOC_MGMT",
+      "sessionTeamId": 60,
+      "officerId": 475,
+      "username": "eoc2569_152",
+      "name": "นางสาวอัลฝีฉ๊ะ แกสมาน",
+      "roleInTeam": "กรรมการและผู้ช่วยเลขานุการ"
+    }
+  ],
+  "warnings": []
+}

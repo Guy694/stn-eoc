@@ -1,9 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import EOCLayout from '@/components/layouts/EOCLayout';
+
+function getFileUrl(filePath) {
+    if (!filePath) return '';
+    return filePath.startsWith('/stn-eoc') ? filePath : `/stn-eoc${filePath}`;
+}
 
 export default function EOCSessionsPage() {
     const { user } = useAuth();
@@ -29,17 +34,9 @@ export default function EOCSessionsPage() {
         hasMore: false
     });
 
-    useEffect(() => {
-        // ตรวจสอบสิทธิ์
-        if (!user) {
-            router.push('/login');
-            return;
-        }
+    const fetchSessions = useCallback(async () => {
+        if (!user) return;
 
-        fetchSessions();
-    }, [user, filters, pagination.offset]);
-
-    const fetchSessions = async () => {
         setLoading(true);
         setError('');
 
@@ -66,7 +63,17 @@ export default function EOCSessionsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters, pagination.limit, pagination.offset, user]);
+
+    useEffect(() => {
+        // ตรวจสอบสิทธิ์
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+
+        fetchSessions();
+    }, [fetchSessions, router, user]);
 
     const fetchSessionDetail = async (sessionId) => {
         setDetailLoading(true);
@@ -212,7 +219,7 @@ export default function EOCSessionsPage() {
                 {/* Sessions List */}
                 {loading ? (
                     <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto"></div>
                         <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 ) : error ? (
@@ -255,6 +262,20 @@ export default function EOCSessionsPage() {
                                             {session.open_reason && (
                                                 <p className="text-gray-600">
                                                     <span className="font-medium">เหตุผล:</span> {session.open_reason}
+                                                </p>
+                                            )}
+                                            {session.open_order_file_path && (
+                                                <p className="text-gray-600">
+                                                    <span className="font-medium">ไฟล์คำสั่ง:</span>{' '}
+                                                    <a
+                                                        href={getFileUrl(session.open_order_file_path)}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="text-blue-700 underline hover:text-blue-900"
+                                                        onClick={(event) => event.stopPropagation()}
+                                                    >
+                                                        {session.open_order_file_name || 'เปิดไฟล์คำสั่ง'}
+                                                    </a>
                                                 </p>
                                             )}
                                         </div>
@@ -331,7 +352,7 @@ export default function EOCSessionsPage() {
                             <div className="p-6">
                                 {detailLoading ? (
                                     <div className="text-center py-12">
-                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto"></div>
                                         <p className="mt-4 text-gray-600">กำลังโหลดรายละเอียด...</p>
                                     </div>
                                 ) : sessionDetail ? (
@@ -350,6 +371,19 @@ export default function EOCSessionsPage() {
                                                     {sessionDetail.session.open_reason && (
                                                         <p className="text-gray-600">
                                                             <span className="font-medium">เหตุผล:</span> {sessionDetail.session.open_reason}
+                                                        </p>
+                                                    )}
+                                                    {sessionDetail.session.open_order_file_path && (
+                                                        <p className="text-gray-600 mt-2">
+                                                            <span className="font-medium">ไฟล์คำสั่ง:</span>{' '}
+                                                            <a
+                                                                href={getFileUrl(sessionDetail.session.open_order_file_path)}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="text-blue-700 underline hover:text-blue-900"
+                                                            >
+                                                                {sessionDetail.session.open_order_file_name || 'เปิดไฟล์คำสั่ง'}
+                                                            </a>
                                                         </p>
                                                     )}
                                                 </div>

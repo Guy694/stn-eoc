@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -47,14 +47,6 @@ export default function VulnerableGroupsPage() {
         fetchActiveSession();
     }, []);
 
-    // โหลดข้อมูล
-    useEffect(() => {
-        if (activeSession) {
-            fetchRecords();
-            fetchStats();
-        }
-    }, [activeSession, selectedDistrict, selectedTambon]);
-
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
         if (selectedDistrict !== 'all') {
@@ -72,7 +64,7 @@ export default function VulnerableGroupsPage() {
         }
     }, [formData.district]);
 
-    const fetchRecords = async () => {
+    const fetchRecords = useCallback(async () => {
         if (!activeSession) return;
 
         try {
@@ -93,9 +85,9 @@ export default function VulnerableGroupsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeSession, selectedDistrict, selectedTambon]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         if (!activeSession) return;
 
         try {
@@ -108,7 +100,15 @@ export default function VulnerableGroupsPage() {
         } catch (error) {
             console.error('Error fetching stats:', error);
         }
-    };
+    }, [activeSession]);
+
+    // โหลดข้อมูล
+    useEffect(() => {
+        if (activeSession) {
+            fetchRecords();
+            fetchStats();
+        }
+    }, [activeSession, fetchRecords, fetchStats]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -288,7 +288,7 @@ export default function VulnerableGroupsPage() {
                                     <div className="text-3xl font-bold">{stats.province.total_chronic_illness || 0}</div>
                                     <div className="text-sm mt-1">💊 ป่วยเรื้อรัง</div>
                                 </div>
-                                <div className="bg-yellow-400 text-gray-900 rounded-lg p-4 text-center font-bold">
+                                <div className="bg-yellow-400 text-yellow-950 rounded-lg p-4 text-center font-bold">
                                     <div className="text-4xl">{stats.province.grand_total || 0}</div>
                                     <div className="text-sm mt-1">รวมทั้งหมด</div>
                                 </div>
@@ -430,14 +430,14 @@ export default function VulnerableGroupsPage() {
 
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b border-blue-500 mx-auto mb-2"></div>
                             <p className="text-gray-600 text-sm">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4">📭</div>
                             <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
-                            <p className="text-gray-500 text-sm">คลิกปุ่ม "เพิ่มข้อมูลใหม่" เพื่อเริ่มบันทึกข้อมูล</p>
+                            <p className="text-gray-500 text-sm">คลิกปุ่ม &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มบันทึกข้อมูล</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">

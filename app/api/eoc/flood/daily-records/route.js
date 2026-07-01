@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -17,6 +19,9 @@ export async function GET(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date');
         const sessionId = searchParams.get('session_id');
@@ -81,10 +86,7 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('Error fetching flood area status:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลน้ำท่วมรายวัน');
     } finally {
         if (connection) connection.release();
     }
@@ -95,6 +97,9 @@ export async function POST(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const data = await request.json();
         connection = await pool.getConnection();
 
@@ -164,10 +169,7 @@ export async function POST(request) {
         }
     } catch (error) {
         console.error('Error saving flood area status:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูลน้ำท่วมรายวัน');
     } finally {
         if (connection) connection.release();
     }
@@ -178,6 +180,9 @@ export async function DELETE(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -200,10 +205,7 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Error deleting flood area status:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลน้ำท่วมรายวัน');
     } finally {
         if (connection) connection.release();
     }

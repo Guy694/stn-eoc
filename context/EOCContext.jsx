@@ -34,6 +34,8 @@ export function EOCProvider({ children }) {
                         deactivated_at: item.deactivated_at,
                         activated_by_name: item.activated_by_name,
                         deactivated_by_name: item.deactivated_by_name,
+                        open_order_file_path: item.open_order_file_path,
+                        open_order_file_name: item.open_order_file_name,
                         name_th: item.name_th,
                         name_en: item.name_en,
                         icon: item.icon,
@@ -64,22 +66,46 @@ export function EOCProvider({ children }) {
     }, []);
 
     // เปิด/ปิด EOC (admin only)
-    const toggleEOC = async (eocType, isActive, description = '', festivalType = null) => {
+    const toggleEOC = async (eocType, isActive, description = '', festivalType = null, options = {}) => {
         if (!user || user.role !== 'admin') {
             throw new Error('ต้องมีสิทธิ์ admin เท่านั้น');
         }
 
         try {
+            const shouldUseFormData = Boolean(options.openedAt || options.closedAt || options.orderFile);
+            let requestOptions;
+
+            if (shouldUseFormData) {
+                const formData = new FormData();
+                formData.append('eocType', eocType);
+                formData.append('isActive', String(isActive));
+                formData.append('description', description || '');
+                if (festivalType) formData.append('festivalType', festivalType);
+                if (options.openedAt) formData.append('openedAt', options.openedAt);
+                if (options.closedAt) formData.append('closedAt', options.closedAt);
+                if (options.orderFile) formData.append('orderFile', options.orderFile);
+
+                requestOptions = {
+                    method: 'POST',
+                    body: formData
+                };
+            } else {
+                requestOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        eocType,
+                        isActive,
+                        userId: user.id,
+                        description,
+                        festivalType,
+                        closedAt: options.closedAt || null
+                    })
+                };
+            }
+
             const response = await fetch('/stn-eoc/api/eoc/status/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eocType,
-                    isActive,
-                    userId: user.id,
-                    description,
-                    festivalType
-                })
+                ...requestOptions
             });
 
             if (!response.ok) {

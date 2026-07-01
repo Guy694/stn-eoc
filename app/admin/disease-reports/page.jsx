@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
@@ -58,7 +58,6 @@ export default function DiseaseReportsPage() {
         const diseases = diseaseList.map(d => d.name || d);
         // ลบ "อื่นๆ" ออกก่อน แล้วเพิ่มไว้ท้ายสุด
         const filtered = diseases.filter(d => d !== 'อื่นๆ');
-        console.log('allDiseases computed:', [...filtered, 'อื่นๆ']);
         return [...filtered, 'อื่นๆ'];
     })();
 
@@ -68,7 +67,6 @@ export default function DiseaseReportsPage() {
             try {
                 const response = await fetch('/stn-eoc/api/common/diseases');
                 const result = await response.json();
-                console.log('Diseases API result:', result);
                 if (result.success) {
                     setDiseaseList(result.data || []);
                 }
@@ -88,18 +86,7 @@ export default function DiseaseReportsPage() {
         fetchDiseases();
     }, []);
 
-    useEffect(() => {
-        fetchSessions();
-        fetchFacilities();
-    }, []);
-
-    useEffect(() => {
-        if (selectedSession) {
-            fetchReports();
-        }
-    }, [selectedSession, filterDate]);
-
-    const fetchSessions = async () => {
+    const fetchSessions = useCallback(async () => {
         try {
             const response = await fetch('/stn-eoc/api/eoc/sessions?limit=100');
             const result = await response.json();
@@ -115,9 +102,9 @@ export default function DiseaseReportsPage() {
         } catch (error) {
             console.error('Fetch sessions error:', error);
         }
-    };
+    }, []);
 
-    const fetchFacilities = async () => {
+    const fetchFacilities = useCallback(async () => {
         try {
             const response = await fetch('/stn-eoc/api/admin/health-facilities');
             const result = await response.json();
@@ -127,9 +114,9 @@ export default function DiseaseReportsPage() {
         } catch (error) {
             console.error('Fetch facilities error:', error);
         }
-    };
+    }, []);
 
-    const fetchReports = async () => {
+    const fetchReports = useCallback(async () => {
         if (!selectedSession) return;
 
         try {
@@ -154,7 +141,18 @@ export default function DiseaseReportsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterDate, selectedSession]);
+
+    useEffect(() => {
+        fetchSessions();
+        fetchFacilities();
+    }, [fetchFacilities, fetchSessions]);
+
+    useEffect(() => {
+        if (selectedSession) {
+            fetchReports();
+        }
+    }, [fetchReports, selectedSession]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -163,9 +161,6 @@ export default function DiseaseReportsPage() {
             showWarning('กรุณาเลือก EOC Session');
             return;
         }
-
-        console.log('Selected session:', selectedSession);
-        console.log('Session ID:', selectedSession.id);
 
         // ถ้าเลือก "อื่นๆ" ให้ใช้ชื่อโรคที่กรอกเอง และเพิ่มเข้า database
         let diseaseName = formData.disease_name;
@@ -180,14 +175,12 @@ export default function DiseaseReportsPage() {
                 });
                 const addResult = await addDiseaseRes.json();
                 if (addResult.success) {
-                    console.log('Added new disease:', diseaseName);
                     fetchDiseases(); // รีเฟรชรายการโรค
                 } else if (addResult.existing_name) {
-                    console.log('Disease already exists:', addResult.existing_name);
                     diseaseName = addResult.existing_name; // ใช้ชื่อที่มีอยู่แล้ว
                 }
             } catch (err) {
-                console.log('Could not add disease to database:', err);
+                console.error('Could not add disease to database:', err);
             }
         }
 
@@ -211,8 +204,6 @@ export default function DiseaseReportsPage() {
             return;
         }
 
-        console.log('Submitting data:', submitData);
-
         try {
             const url = editingReport
                 ? `/stn-eoc/api/admin/disease-reports?id=${editingReport.id}`
@@ -224,21 +215,15 @@ export default function DiseaseReportsPage() {
                 body: JSON.stringify(submitData)
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-
             let result;
             try {
                 const text = await response.text();
-                console.log('Response text:', text);
                 result = JSON.parse(text);
             } catch (parseError) {
                 console.error('JSON parse error:', parseError);
                 showError('เกิดข้อผิดพลาดในการติดต่อเซิร์ฟเวอร์');
                 return;
             }
-
-            console.log('Parsed result:', result);
 
             if (result.success) {
                 showSuccess(editingReport ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ');
@@ -394,7 +379,7 @@ export default function DiseaseReportsPage() {
     const districts = [...new Set(facilities.map(f => f.district_name))].sort();
 
     // สร้างตารางสรุปรายโรคแบบ 7 อำเภอ
-    const getDistrictSummaryTable = () => {
+    const getDistrictSummaryTable = useCallback(() => {
         const mainDistricts = ['เมืองสตูล', 'ควนโดน', 'ควนกาหลง', 'ท่าแพ', 'ละงู', 'มะนัง', 'ทุ่งหว้า'];
 
         // สร้าง object สำหรับเก็บข้อมูลแต่ละโรค แต่ละอำเภอ
@@ -429,9 +414,9 @@ export default function DiseaseReportsPage() {
         };
 
         return { diseaseData, mainDistricts };
-    };
+    }, [summary]);
 
-    const { diseaseData, mainDistricts } = useMemo(() => getDistrictSummaryTable(), [summary]);
+    const { diseaseData, mainDistricts } = useMemo(() => getDistrictSummaryTable(), [getDistrictSummaryTable]);
 
     return (
         <EOCLayout>
@@ -459,7 +444,7 @@ export default function DiseaseReportsPage() {
                 </div>
 
                 {/* Session Selector */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md p-4 mb-6 border border-blue-200">
+                <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg shadow-md p-4 mb-6 border border-blue-200">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl">📋</span>
@@ -505,25 +490,25 @@ export default function DiseaseReportsPage() {
 
                         {/* Stats Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                                 <div className="text-sm text-gray-600 mb-1">รายงานวันนี้</div>
                                 <div className="text-2xl font-bold text-gray-800">
                                     {summary.today.reduce((sum, s) => sum + parseInt(s.today_patients || 0), 0)} คน
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-red-500">
                                 <div className="text-sm text-gray-600 mb-1">สะสมทั้งหมด</div>
                                 <div className="text-2xl font-bold text-red-600">
                                     {summary.cumulative.reduce((sum, s) => sum + parseInt(s.cumulative_patients || 0), 0)} คน
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-green-500">
                                 <div className="text-sm text-gray-600 mb-1">โรคที่รายงาน</div>
                                 <div className="text-2xl font-bold text-green-600">{summary.byDisease.length} โรค</div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-teal-500">
                                 <div className="text-sm text-gray-600 mb-1">หน่วยบริการ</div>
-                                <div className="text-2xl font-bold text-purple-600">{facilities.length} แห่ง</div>
+                                <div className="text-2xl font-bold text-teal-600">{facilities.length} แห่ง</div>
                             </div>
                         </div>
 
@@ -693,11 +678,11 @@ export default function DiseaseReportsPage() {
                                                             })}
                                                             <td className={`border border-gray-300 px-3 py-2 text-center font-bold ${rowTodayTotal > 0 ? 'text-red-600 bg-red-100' :
                                                                 rowTodayTotal < 0 ? 'text-green-600 bg-green-100' :
-                                                                    'text-gray-800 bg-yellow-100'
+                                                                    'text-yellow-900 bg-yellow-100'
                                                                 }`}>
                                                                 {rowTodayTotal !== 0 ? (rowTodayTotal > 0 ? `+${rowTodayTotal}` : rowTodayTotal) : 0}
                                                             </td>
-                                                            <td className="text-gray-800 border border-gray-300 px-3 py-2 text-center font-bold bg-green-100">
+                                                            <td className="text-green-900 border border-gray-300 px-3 py-2 text-center font-bold bg-green-100">
                                                                 {rowCumulativeTotal}
                                                             </td>
                                                         </tr>
@@ -798,7 +783,7 @@ export default function DiseaseReportsPage() {
                         <div className="bg-white rounded-lg shadow">
                             {loading ? (
                                 <div className="flex justify-center items-center py-12">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
                                 </div>
                             ) : filteredReports.length === 0 ? (
                                 <div className="text-center py-12 text-gray-500">

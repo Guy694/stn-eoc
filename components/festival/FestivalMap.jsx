@@ -77,7 +77,7 @@ export default function FestivalMap({ accidents = [], servicePoints = [] }) {
       ref={containerRef}
       className={isFullscreen
         ? 'fixed inset-0 z-[99999] bg-black flex flex-col'
-        : 'relative w-full rounded-xl overflow-hidden shadow-md border border-gray-200'}
+        : 'festival-map-surface relative w-full'}
       style={{ height: isFullscreen ? '100vh' : '500px' }}
     >
       {/* Fullscreen Button */}

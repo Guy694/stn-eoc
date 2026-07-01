@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
+import { publicInternalError } from "@/lib/apiResponse";
 
 // GET - ดึงข้อมูล EOC Types ทั้งหมด
 export async function GET(req) {
     try {
+        const auth = await requireAuth(req, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(req.url);
         const activeOnly = searchParams.get('active') === 'true';
 
@@ -52,16 +57,16 @@ export async function GET(req) {
         });
     } catch (error) {
         console.error("Error fetching EOC types:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการดึงข้อมูล EOC Types");
     }
 }
 
 // POST - เพิ่ม EOC Type ใหม่
 export async function POST(req) {
     try {
+        const auth = await requireAuth(req, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await req.json();
         const {
             id,
@@ -84,7 +89,7 @@ export async function POST(req) {
         }
 
         // ตรวจสอบว่า id ซ้ำหรือไม่
-        const [checkRows] = await pool.query(
+        const checkRows = await query(
             `SELECT id FROM eoc_status WHERE eoc_type = ?`,
             [id]
         );
@@ -97,7 +102,7 @@ export async function POST(req) {
         }
 
         // เพิ่มข้อมูล
-        await pool.query(
+        await query(
             `INSERT INTO eoc_status 
             (eoc_type, name_th, name_en, icon, color_primary, color_gradient, description, is_active, sort_order) 
             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
@@ -111,16 +116,16 @@ export async function POST(req) {
         });
     } catch (error) {
         console.error("Error creating EOC type:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการเพิ่ม EOC Type");
     }
 }
 
 // PUT - แก้ไข EOC Type
 export async function PUT(req) {
     try {
+        const auth = await requireAuth(req, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await req.json();
         const {
             id,
@@ -142,7 +147,7 @@ export async function PUT(req) {
         }
 
         // ตรวจสอบว่ามี EOC Type นี้อยู่หรือไม่
-        const [checkRows] = await pool.query(
+        const checkRows = await query(
             `SELECT id FROM eoc_status WHERE eoc_type = ?`,
             [id]
         );
@@ -176,7 +181,7 @@ export async function PUT(req) {
 
         values.push(id); // เพิ่ม id สำหรับ WHERE clause
 
-        await pool.query(
+        await query(
             `UPDATE eoc_status SET ${updates.join(', ')} WHERE eoc_type = ?`,
             values
         );
@@ -187,16 +192,16 @@ export async function PUT(req) {
         });
     } catch (error) {
         console.error("Error updating EOC type:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการแก้ไข EOC Type");
     }
 }
 
 // DELETE - ลบ EOC Type
 export async function DELETE(req) {
     try {
+        const auth = await requireAuth(req, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
 
@@ -208,7 +213,7 @@ export async function DELETE(req) {
         }
 
         // ตรวจสอบว่ามีการใช้งาน EOC Type นี้ใน eoc_sessions หรือไม่
-        const [checkUsageRows] = await pool.query(
+        const checkUsageRows = await query(
             `SELECT COUNT(*) as count FROM eoc_sessions WHERE eoc_type = ?`,
             [id]
         );
@@ -229,7 +234,7 @@ export async function DELETE(req) {
         }
 
         // ลบ EOC Type
-        await pool.query(
+        await query(
             `DELETE FROM eoc_status WHERE eoc_type = ?`,
             [id]
         );
@@ -240,9 +245,6 @@ export async function DELETE(req) {
         });
     } catch (error) {
         console.error("Error deleting EOC type:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการลบ EOC Type");
     }
 }

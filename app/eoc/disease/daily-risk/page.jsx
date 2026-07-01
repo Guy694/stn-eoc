@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from "@/components/layouts/EOCLayout";
 
 export default function DiseaseDailyRiskPage() {
@@ -9,12 +9,7 @@ export default function DiseaseDailyRiskPage() {
     const [availableDates, setAvailableDates] = useState([]);
     const [showAllDates, setShowAllDates] = useState(false);
 
-    useEffect(() => {
-        fetchRiskData();
-        fetchAvailableDates();
-    }, [selectedDate]);
-
-    const fetchAvailableDates = async () => {
+    const fetchAvailableDates = useCallback(async () => {
         try {
             // สมมติว่ามี active session เริ่มต้นที่ 2026-01-01
             const startDate = new Date('2026-01-01');
@@ -29,9 +24,9 @@ export default function DiseaseDailyRiskPage() {
         } catch (error) {
             console.error('Error fetching dates:', error);
         }
-    };
+    }, []);
 
-    const fetchRiskData = async () => {
+    const fetchRiskData = useCallback(async () => {
         setLoading(true);
         try {
             const response = await fetch(`/stn-eoc/api/eoc/disease/daily-risk?date=${selectedDate}`);
@@ -44,7 +39,12 @@ export default function DiseaseDailyRiskPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedDate]);
+
+    useEffect(() => {
+        fetchRiskData();
+        fetchAvailableDates();
+    }, [fetchAvailableDates, fetchRiskData]);
 
     const getSeverityColor = (severity) => {
         const colors = {
@@ -78,7 +78,7 @@ export default function DiseaseDailyRiskPage() {
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b border-teal-500 mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
@@ -126,7 +126,7 @@ export default function DiseaseDailyRiskPage() {
                         </label>
                         <button
                             onClick={() => setShowAllDates(!showAllDates)}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
                         >
                             {showAllDates ? '🔼 ซ่อนลิสวันที่' : '📅 แสดงลิสวันที่ทั้งหมด'}
                         </button>
@@ -136,7 +136,7 @@ export default function DiseaseDailyRiskPage() {
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         max={new Date().toISOString().split('T')[0]}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-gray-700 w-full md:w-auto"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-gray-700 w-full md:w-auto"
                     />
 
                     {/* Available Dates List */}
@@ -161,7 +161,7 @@ export default function DiseaseDailyRiskPage() {
                                                 setShowAllDates(false);
                                             }}
                                             className={`p-3 rounded-lg text-sm transition-all ${isSelected
-                                                ? 'bg-purple-600 text-white shadow-lg font-bold'
+                                                ? 'bg-teal-600 text-white shadow-lg font-bold'
                                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                 }`}
                                         >
@@ -177,7 +177,7 @@ export default function DiseaseDailyRiskPage() {
 
                 {/* Active EOC Session Info */}
                 {data.activeSession && (
-                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-lg p-6 mb-6">
+                    <div className="bg-gradient-to-r from-teal-500 to-pink-500 text-white rounded-lg shadow-lg p-6 mb-6">
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div>
                                 <h3 className="text-xl font-bold mb-2">
@@ -328,7 +328,7 @@ export default function DiseaseDailyRiskPage() {
                         {data.details?.map((item, index) => (
                             <div
                                 key={index}
-                                className="bg-gray-50 border-l-4 border-purple-500 p-4 rounded-r-lg"
+                                className="bg-gray-50 border border-teal-500 p-4 rounded-r-lg"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -371,7 +371,7 @@ export default function DiseaseDailyRiskPage() {
 
 function StatCard({ icon, label, value, color }) {
     const colorClasses = {
-        purple: 'bg-purple-50 border-purple-200 text-purple-700',
+        purple: 'bg-teal-50 border-teal-200 text-teal-700',
         blue: 'bg-blue-50 border-blue-200 text-blue-700',
         green: 'bg-green-50 border-green-200 text-green-700',
         orange: 'bg-orange-50 border-orange-200 text-orange-700',

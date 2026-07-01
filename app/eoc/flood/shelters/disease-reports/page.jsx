@@ -374,7 +374,7 @@ export default function ShelterDiseaseReportsPage() {
 
                     {loading ? (
                         <div className="flex items-center justify-center h-48">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
                         </div>
                     ) : reports.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">

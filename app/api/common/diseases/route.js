@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงรายการโรคทั้งหมด
 export async function GET(request) {
@@ -17,7 +19,7 @@ export async function GET(request) {
         console.error('Get diseases error:', error);
 
         // ถ้าตารางยังไม่มี ส่ง default list
-        if (error.message.includes("doesn't exist")) {
+        if (error.code === 'ER_NO_SUCH_TABLE') {
             return NextResponse.json({
                 success: true,
                 data: [
@@ -32,16 +34,16 @@ export async function GET(request) {
             });
         }
 
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงรายการโรค');
     }
 }
 
 // POST - เพิ่มโรคใหม่ (ตรวจสอบซ้ำ)
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { name, description } = body;
 
@@ -92,16 +94,16 @@ export async function POST(request) {
             }, { status: 409 });
         }
 
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเพิ่มโรค');
     }
 }
 
 // DELETE - ลบโรค (soft delete)
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -124,9 +126,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Delete disease error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบโรค');
     }
 }

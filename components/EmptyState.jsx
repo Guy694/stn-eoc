@@ -11,7 +11,7 @@ export default function EmptyState({
     return (
         <div className="flex flex-col items-center justify-center py-16 px-4">
             {/* Animated Icon */}
-            <div className="mb-6 animate-bounce-slow">
+            <div className="mb-6 animate-float-soft">
                 <div className="text-8xl opacity-50">
                     {icon}
                 </div>

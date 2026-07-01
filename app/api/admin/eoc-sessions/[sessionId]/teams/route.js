@@ -5,11 +5,15 @@
 
 import { NextResponse } from 'next/server';
 import { query, getConnection } from '@/lib/db';
-import mysql from 'mysql2/promise';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET: ดึงข้อมูลทีมงานทั้งหมดของ Session
 export async function GET(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { sessionId } = await params;
 
         // ดึงข้อมูล Session พร้อมทีมงาน
@@ -100,23 +104,22 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Error fetching session teams:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลทีมใน session');
     }
 }
 
 // POST: มอบหมายทีมใหม่เข้า Session
 export async function POST(request, { params }) {
+    const auth = await requireAuth(request, ['admin', 'commander']);
+    if (!auth.success) return auth.response;
+
     const pool = await getConnection();
     const conn = await pool.getConnection();
 
     try {
         const { sessionId } = await params;
         const body = await request.json();
-        const { teamId, teamLeadOfficerId, assignedBy, notes } = body;
+        const { teamId, teamLeadOfficerId, notes } = body;
 
         // ตรวจสอบว่า Session ยังเปิดอยู่หรือไม่
         const [session] = await conn.query(
@@ -159,7 +162,7 @@ export async function POST(request, { params }) {
             INSERT INTO eoc_session_teams 
             (eoc_session_id, team_id, team_lead_officer_id, assigned_by, notes)
             VALUES (?, ?, ?, ?, ?)
-        `, [sessionId, teamId, teamLeadOfficerId, assignedBy, notes]);
+        `, [sessionId, teamId, teamLeadOfficerId, auth.user.id, notes]);
 
         const sessionTeamId = result.insertId;
 
@@ -169,7 +172,7 @@ export async function POST(request, { params }) {
                 INSERT INTO eoc_team_members 
                 (session_team_id, officer_id, role_in_team, assigned_by)
                 VALUES (?, ?, 'หัวหน้าทีม', ?)
-            `, [sessionTeamId, teamLeadOfficerId, assignedBy]);
+            `, [sessionTeamId, teamLeadOfficerId, auth.user.id]);
         }
 
         await conn.commit();
@@ -183,11 +186,7 @@ export async function POST(request, { params }) {
     } catch (error) {
         await conn.rollback();
         console.error('Error assigning team:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการมอบหมายทีม',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการมอบหมายทีม');
     } finally {
         conn.release();
     }
@@ -195,6 +194,9 @@ export async function POST(request, { params }) {
 
 // DELETE: ถอดทีมออกจาก Session
 export async function DELETE(request, { params }) {
+    const auth = await requireAuth(request, ['admin', 'commander']);
+    if (!auth.success) return auth.response;
+
     const pool = await getConnection();
     const conn = await pool.getConnection();
 
@@ -238,11 +240,7 @@ export async function DELETE(request, { params }) {
     } catch (error) {
         await conn.rollback();
         console.error('Error removing team:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการถอดทีม',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการถอดทีม');
     } finally {
         conn.release();
     }

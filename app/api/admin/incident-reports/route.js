@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { requireAuth } from "@/lib/auth";
+import { publicInternalError } from "@/lib/apiResponse";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -14,6 +16,9 @@ const pool = mysql.createPool({
 
 // GET - ดึงรายการรายงานเหตุการณ์ทั้งหมด
 export async function GET(request) {
+    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+    if (!auth.success) return auth.response;
+
     const connection = await pool.getConnection();
 
     try {
@@ -109,14 +114,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching incident reports:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลรายงานเหตุการณ์');
     } finally {
         connection.release();
     }
@@ -124,14 +122,17 @@ export async function GET(request) {
 
 // PUT - อัปเดตสถานะรายงาน (อนุมัติ/ปฏิเสธ)
 export async function PUT(request) {
+    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT']);
+    if (!auth.success) return auth.response;
+
     const connection = await pool.getConnection();
 
     try {
         const body = await request.json();
-        const { reportId, status, adminNotes, reviewedBy } = body;
+        const { reportId, status, adminNotes } = body;
 
         // Validate input
-        if (!reportId || !status || !reviewedBy) {
+        if (!reportId || !status) {
             return NextResponse.json(
                 { success: false, message: 'ข้อมูลไม่ครบถ้วน' },
                 { status: 400 }
@@ -155,7 +156,7 @@ export async function PUT(request) {
                 reviewed_at = NOW(), 
                 admin_notes = ?
             WHERE id = ?`,
-            [status, reviewedBy, adminNotes || null, reportId]
+            [status, auth.user.id, adminNotes || null, reportId]
         );
 
         // ดึงข้อมูลที่อัปเดตแล้ว
@@ -172,14 +173,7 @@ export async function PUT(request) {
 
     } catch (error) {
         console.error('Error updating incident report:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการอัปเดตรายงานเหตุการณ์');
     } finally {
         connection.release();
     }
@@ -187,6 +181,9 @@ export async function PUT(request) {
 
 // DELETE - ลบรายงาน
 export async function DELETE(request) {
+    const auth = await requireAuth(request, ['admin']);
+    if (!auth.success) return auth.response;
+
     const connection = await pool.getConnection();
 
     try {
@@ -213,14 +210,7 @@ export async function DELETE(request) {
 
     } catch (error) {
         console.error('Error deleting incident report:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการลบข้อมูล',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบรายงานเหตุการณ์');
     } finally {
         connection.release();
     }

@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงรายการ polygon หมู่บ้านทั้งหมด
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const district = searchParams.get('district');
         const tambon = searchParams.get('tambon');
@@ -89,16 +94,16 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching village polygons:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch village polygons', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูล polygon หมู่บ้าน');
     }
 }
 
 // POST - เพิ่มข้อมูล polygon หมู่บ้านใหม่
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { villname, distname, subdistnam, coordinates } = body;
 
@@ -130,9 +135,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error creating village polygon:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to create village polygon', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเพิ่ม polygon หมู่บ้าน');
     }
 }

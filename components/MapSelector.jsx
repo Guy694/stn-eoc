@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -19,7 +19,7 @@ const MapSelector = ({ position, onPositionChange }) => {
     const [gpsError, setGpsError] = useState(null);
 
     // Helper: add/move draggable marker
-    const setMarker = (map, lat, lng) => {
+    const setMarker = useCallback((map, lat, lng) => {
         if (markerRef.current) {
             map.removeLayer(markerRef.current);
         }
@@ -29,7 +29,7 @@ const MapSelector = ({ position, onPositionChange }) => {
             onPositionChange({ lat: newPos.lat, lng: newPos.lng });
         });
         onPositionChange({ lat, lng });
-    };
+    }, [onPositionChange]);
 
     // GPS auto-detect
     const handleGPS = () => {
@@ -116,7 +116,7 @@ const MapSelector = ({ position, onPositionChange }) => {
             }
             mapInstanceRef.current.setView([position.lat, position.lng], 15);
         }
-    }, [position, onPositionChange]);
+    }, [position, onPositionChange, setMarker]);
 
     return (
         <div className="relative">

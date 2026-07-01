@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
-import { cookies } from 'next/headers';
+import { requireAuth } from '@/lib/auth';
+import { createRandomFilename, resolveInside, validateImageFile } from '@/lib/fileUpload';
+import { publicInternalError } from '@/lib/apiResponse';
+
+const MAX_INFOGRAPHIC_SIZE_BYTES = 10 * 1024 * 1024;
+const INFOGRAPHIC_IMAGE_TYPES = new Map([
+    ['image/jpeg', 'jpg'],
+    ['image/jpg', 'jpg'],
+    ['image/png', 'png']
+]);
 
 export async function POST(request) {
     try {
-        // Check authentication
-        const cookieStore = cookies();
-        const token = cookieStore.get('token');
-
-        if (!token) {
-            return NextResponse.json({
-                success: false,
-                message: 'ไม่ได้รับอนุญาต'
-            }, { status: 401 });
-        }
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
 
         const formData = await request.formData();
         const eocType = formData.get('eocType');
@@ -35,35 +36,26 @@ export async function POST(request) {
         }
 
         // Create directory if not exists
-        const uploadDir = path.join(process.cwd(), 'public', 'infographics', eocType);
+        const uploadBaseDir = path.join(process.cwd(), 'public', 'infographics');
+        const uploadDir = resolveInside(uploadBaseDir, eocType);
         await mkdir(uploadDir, { recursive: true });
 
         const uploadedFiles = [];
 
         for (const file of files) {
-            if (file.size === 0) continue;
-
-            // Validate file type
-            const fileType = file.type;
-            if (!['image/png', 'image/jpeg', 'image/jpg'].includes(fileType)) {
+            const validation = await validateImageFile(file, {
+                maxSizeBytes: MAX_INFOGRAPHIC_SIZE_BYTES,
+                allowedTypes: INFOGRAPHIC_IMAGE_TYPES
+            });
+            if (!validation.ok) {
                 continue;
             }
-
-            // Validate file size (max 10MB)
-            if (file.size > 10 * 1024 * 1024) {
-                continue;
-            }
-
-            const bytes = await file.arrayBuffer();
-            const buffer = Buffer.from(bytes);
 
             // Generate filename with timestamp
-            const timestamp = Date.now();
-            const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const filename = `${timestamp}_${originalName}`;
-            const filepath = path.join(uploadDir, filename);
+            const filename = createRandomFilename(validation.extension);
+            const filepath = resolveInside(uploadDir, filename);
 
-            await writeFile(filepath, buffer);
+            await writeFile(filepath, validation.buffer);
             uploadedFiles.push(filename);
         }
 
@@ -82,9 +74,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Upload error:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการอัปโหลด: ' + error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการอัปโหลด');
     }
 }

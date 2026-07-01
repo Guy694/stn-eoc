@@ -109,7 +109,7 @@ export default function FAQPage() {
                 <div className="space-y-8">
                     {faqs.map((category, catIndex) => (
                         <div key={catIndex} className="bg-white rounded-xl shadow-md p-6">
-                            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+                            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                                 <span className="text-4xl">{category.icon}</span>
                                 <h2 className="text-2xl font-bold text-gray-800">
                                     {category.category}
@@ -118,7 +118,7 @@ export default function FAQPage() {
 
                             <div className="space-y-6">
                                 {category.questions.map((faq, qIndex) => (
-                                    <div key={qIndex} className="border-l-4 border-green-500 pl-4">
+                                    <div key={qIndex} className="border border-green-500 pl-4">
                                         <h3 className="font-bold text-gray-800 mb-2 text-lg">
                                             {faq.q}
                                         </h3>

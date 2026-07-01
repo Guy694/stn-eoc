@@ -1,23 +1,43 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
+import fs from 'fs/promises';
+import path from 'path';
+import { isSafeFilename, resolveInside, validateImageFile } from '@/lib/fileUpload';
+import { publicInternalError } from '@/lib/apiResponse';
+
+const MAX_FLOOD_MAP_SIZE_BYTES = 10 * 1024 * 1024;
+const FLOOD_MAP_TYPES = new Map([
+    ['image/png', 'png']
+]);
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 // API สำหรับอัพโหลดและบันทึกภาพแผนที่รายวัน
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const formData = await request.formData();
         const imageFile = formData.get('image');
         const recordDate = formData.get('date');
-        const createdBy = formData.get('officer_id') || 1; // Default officer
 
-        if (!imageFile || !recordDate) {
+        if (!imageFile || !recordDate || !DATE_PATTERN.test(recordDate)) {
             return NextResponse.json(
-                { error: 'Missing required fields: image and date' },
+                { error: 'Missing or invalid required fields: image and date' },
                 { status: 400 }
             );
         }
 
-        // แปลงภาพเป็น Buffer
-        const bytes = await imageFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        const validation = await validateImageFile(imageFile, {
+            maxSizeBytes: MAX_FLOOD_MAP_SIZE_BYTES,
+            allowedTypes: FLOOD_MAP_TYPES
+        });
+        if (!validation.ok) {
+            return NextResponse.json(
+                { error: validation.error },
+                { status: 400 }
+            );
+        }
 
         // ในการใช้งานจริง ควรบันทึกลง MySQL
         // const connection = await mysql.createConnection({...});
@@ -27,22 +47,15 @@ export async function POST(request) {
         // );
 
         // หรือบันทึกเป็นไฟล์ในโฟลเดอร์ public/flood-maps/
-        const fs = require('fs').promises;
-        const path = require('path');
-
         const uploadDir = path.join(process.cwd(), 'public', 'flood-maps');
 
         // สร้างโฟลเดอร์ถ้ายังไม่มี
-        try {
-            await fs.access(uploadDir);
-        } catch {
-            await fs.mkdir(uploadDir, { recursive: true });
-        }
+        await fs.mkdir(uploadDir, { recursive: true });
 
         const fileName = `flood-map-${recordDate}.png`;
-        const filePath = path.join(uploadDir, fileName);
+        const filePath = resolveInside(uploadDir, fileName);
 
-        await fs.writeFile(filePath, buffer);
+        await fs.writeFile(filePath, validation.buffer);
 
         return NextResponse.json({
             success: true,
@@ -50,17 +63,14 @@ export async function POST(request) {
             data: {
                 fileName: fileName,
                 url: `/flood-maps/${fileName}`,
-                size: buffer.length,
+                size: validation.buffer.length,
                 date: recordDate
             }
         });
 
     } catch (error) {
         console.error('Error uploading map image:', error);
-        return NextResponse.json(
-            { error: 'Failed to upload map image', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('Failed to upload map image');
     }
 }
 
@@ -72,15 +82,12 @@ export async function GET(request) {
 
         if (!date) {
             // ส่งรายการภาพทั้งหมด
-            const fs = require('fs').promises;
-            const path = require('path');
-
             const uploadDir = path.join(process.cwd(), 'public', 'flood-maps');
 
             try {
                 const files = await fs.readdir(uploadDir);
                 const mapList = files
-                    .filter(f => f.endsWith('.png'))
+                    .filter(f => isSafeFilename(f) && /^flood-map-\d{4}-\d{2}-\d{2}\.png$/.test(f))
                     .map(f => ({
                         fileName: f,
                         url: `/flood-maps/${f}`,
@@ -92,6 +99,13 @@ export async function GET(request) {
                 return NextResponse.json({ maps: [] });
             }
         } else {
+            if (!DATE_PATTERN.test(date)) {
+                return NextResponse.json(
+                    { error: 'Invalid date' },
+                    { status: 400 }
+                );
+            }
+
             // ส่งภาพของวันที่ที่ระบุ
             const fileName = `flood-map-${date}.png`;
             const url = `/flood-maps/${fileName}`;

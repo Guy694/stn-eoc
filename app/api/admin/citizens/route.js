@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { requireAuth } from "@/lib/auth";
 
 // Database Pool
 const pool = mysql.createPool({
@@ -18,6 +19,9 @@ const pool = mysql.createPool({
  */
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const connection = await pool.getConnection();
 
         try {

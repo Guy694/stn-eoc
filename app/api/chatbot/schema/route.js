@@ -80,7 +80,7 @@ export async function GET(request) {
             {
                 success: false,
                 error: 'Failed to fetch database schema',
-                message: error.message
+                message: 'เกิดข้อผิดพลาดในการดึงโครงสร้างฐานข้อมูล'
             },
             { status: 500 }
         );

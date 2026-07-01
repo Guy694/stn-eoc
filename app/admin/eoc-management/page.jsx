@@ -7,6 +7,17 @@ import { useEOC } from "@/context/EOCContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import Swal from "sweetalert2";
 
+function getDefaultDateTimeLocal() {
+    const date = new Date();
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+}
+
+function getFileUrl(filePath) {
+    if (!filePath) return '';
+    return filePath.startsWith('/stn-eoc') ? filePath : `/stn-eoc${filePath}`;
+}
+
 export default function EOCManagementPage() {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
@@ -17,7 +28,21 @@ export default function EOCManagementPage() {
     const [eocTypes, setEocTypes] = useState([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showOpenModal, setShowOpenModal] = useState(false);
+    const [showCloseModal, setShowCloseModal] = useState(false);
+    const [openingType, setOpeningType] = useState(null);
+    const [closingType, setClosingType] = useState(null);
     const [editingType, setEditingType] = useState(null);
+    const [openForm, setOpenForm] = useState({
+        openedAt: getDefaultDateTimeLocal(),
+        description: '',
+        festivalType: '',
+        orderFile: null
+    });
+    const [closeForm, setCloseForm] = useState({
+        closedAt: getDefaultDateTimeLocal(),
+        description: ''
+    });
     const [formData, setFormData] = useState({
         id: '',
         name_th: '',
@@ -59,51 +84,60 @@ export default function EOCManagementPage() {
     const handleToggle = async (eocType) => {
         const currentStatus = eocStatus[eocType]?.is_active || false;
         const newStatus = !currentStatus;
-        let festivalType = null;
 
-        if (eocType === 'festival-accidents' && newStatus) {
-            const { value: selectedType } = await Swal.fire({
-                title: 'เลือกประเภทเทศกาล',
-                input: 'select',
-                inputOptions: {
-                    newyear: 'เทศกาลปีใหม่',
-                    songkran: 'เทศกาลสงกรานต์'
-                },
-                inputPlaceholder: 'เลือกเทศกาล',
-                showCancelButton: true,
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก',
-                inputValidator: (value) => {
-                    return new Promise((resolve) => {
-                        if (value) {
-                            resolve();
-                        } else {
-                            resolve('กรุณาเลือกประเภทเทศกาล');
-                        }
-                    });
-                }
-            });
-
-            if (!selectedType) {
-                return; // Cancelled
-            }
-            festivalType = selectedType;
+        if (newStatus) {
+            openEOCForm(eocType);
+            return;
         }
 
-        setUpdating(prev => ({ ...prev, [eocType]: true }));
+        openCloseEOCForm(eocType);
+    };
+
+    const openCloseEOCForm = (eocType) => {
+        setClosingType(eocType);
+        setCloseForm({
+            closedAt: getDefaultDateTimeLocal(),
+            description: descriptions[eocType] || ''
+        });
+        setShowCloseModal(true);
+        setMessage({ type: '', text: '' });
+    };
+
+    const closeCloseEOCForm = () => {
+        setShowCloseModal(false);
+        setClosingType(null);
+        setCloseForm({
+            closedAt: getDefaultDateTimeLocal(),
+            description: ''
+        });
+    };
+
+    const handleCloseEOC = async () => {
+        if (!closingType) return;
+
+        if (!closeForm.closedAt) {
+            await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันและเวลาปิด EOC', 'error');
+            return;
+        }
+
+        setUpdating(prev => ({ ...prev, [closingType]: true }));
         setMessage({ type: '', text: '' });
 
         try {
             const result = await toggleEOC(
-                eocType,
-                newStatus,
-                descriptions[eocType] || '',
-                festivalType
+                closingType,
+                false,
+                closeForm.description || '',
+                null,
+                {
+                    closedAt: closeForm.closedAt
+                }
             );
 
             if (result.success) {
                 setMessage({ type: 'success', text: result.message });
-                setDescriptions(prev => ({ ...prev, [eocType]: '' }));
+                setDescriptions(prev => ({ ...prev, [closingType]: '' }));
+                closeCloseEOCForm();
                 await refreshStatus();
             } else {
                 setMessage({ type: 'error', text: result.message });
@@ -111,7 +145,73 @@ export default function EOCManagementPage() {
         } catch (error) {
             setMessage({ type: 'error', text: error.message });
         } finally {
-            setUpdating(prev => ({ ...prev, [eocType]: false }));
+            setUpdating(prev => ({ ...prev, [closingType]: false }));
+        }
+    };
+
+    const openEOCForm = (eocType) => {
+        setOpeningType(eocType);
+        setOpenForm({
+            openedAt: getDefaultDateTimeLocal(),
+            description: descriptions[eocType] || '',
+            festivalType: eocType === 'festival-accidents' ? 'newyear' : '',
+            orderFile: null
+        });
+        setShowOpenModal(true);
+        setMessage({ type: '', text: '' });
+    };
+
+    const closeEOCForm = () => {
+        setShowOpenModal(false);
+        setOpeningType(null);
+        setOpenForm({
+            openedAt: getDefaultDateTimeLocal(),
+            description: '',
+            festivalType: '',
+            orderFile: null
+        });
+    };
+
+    const handleOpenEOC = async () => {
+        if (!openingType) return;
+
+        if (!openForm.openedAt) {
+            await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันและเวลาเปิด EOC', 'error');
+            return;
+        }
+
+        if (openingType === 'festival-accidents' && !openForm.festivalType) {
+            await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกประเภทเทศกาล', 'error');
+            return;
+        }
+
+        setUpdating(prev => ({ ...prev, [openingType]: true }));
+        setMessage({ type: '', text: '' });
+
+        try {
+            const result = await toggleEOC(
+                openingType,
+                true,
+                openForm.description || '',
+                openForm.festivalType || null,
+                {
+                    openedAt: openForm.openedAt,
+                    orderFile: openForm.orderFile
+                }
+            );
+
+            if (result.success) {
+                setMessage({ type: 'success', text: result.message });
+                setDescriptions(prev => ({ ...prev, [openingType]: '' }));
+                closeEOCForm();
+                await refreshStatus();
+            } else {
+                setMessage({ type: 'error', text: result.message });
+            }
+        } catch (error) {
+            setMessage({ type: 'error', text: error.message });
+        } finally {
+            setUpdating(prev => ({ ...prev, [openingType]: false }));
         }
     };
 
@@ -259,7 +359,7 @@ export default function EOCManagementPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b border-green-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">กำลังโหลด...</p>
                 </div>
             </div>
@@ -332,7 +432,7 @@ export default function EOCManagementPage() {
                                         <div className="flex gap-1">
                                             <button
                                                 onClick={() => router.push(`/admin/eoc-modules?eoc_type=${eocType}`)}
-                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded transition"
+                                                className="p-2 text-teal-600 hover:bg-teal-50 rounded transition"
                                                 title="จัดการเมนู Sidebar"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -372,6 +472,19 @@ export default function EOCManagementPage() {
                                             <p className="text-gray-700 mt-1">
                                                 <span className="font-medium">โดย:</span>{' '}
                                                 {status.activated_by_name}
+                                            </p>
+                                        )}
+                                        {status.open_order_file_path && (
+                                            <p className="text-gray-700 mt-1">
+                                                <span className="font-medium">ไฟล์คำสั่ง:</span>{' '}
+                                                <a
+                                                    href={getFileUrl(status.open_order_file_path)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-green-700 underline hover:text-green-900"
+                                                >
+                                                    {status.open_order_file_name || 'เปิดไฟล์คำสั่ง'}
+                                                </a>
                                             </p>
                                         )}
                                     </div>
@@ -432,7 +545,7 @@ export default function EOCManagementPage() {
                                     >
                                         {updating[eocType] ? (
                                             <span className="flex items-center justify-center gap-2">
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b border-white"></div>
                                                 กำลังดำเนินการ...
                                             </span>
                                         ) : (
@@ -468,6 +581,182 @@ export default function EOCManagementPage() {
                         )}
                     </div>
                 </div>
+
+                {/* Modal เปิด EOC */}
+                {showOpenModal && openingType && (
+                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6">
+                                <div className="flex items-start justify-between gap-4 mb-5">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-800">แบบฟอร์มเปิด EOC</h2>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                            EOC {getEOCDisplayName(openingType)}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={closeEOCForm}
+                                        className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                                        aria-label="ปิดแบบฟอร์ม"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                วันและเวลาเปิด EOC *
+                                            </label>
+                                            <input
+                                                type="datetime-local"
+                                                value={openForm.openedAt}
+                                                onChange={(e) => setOpenForm(prev => ({ ...prev, openedAt: e.target.value }))}
+                                                className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            />
+                                        </div>
+
+                                        {openingType === 'festival-accidents' && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    ประเภทเทศกาล *
+                                                </label>
+                                                <select
+                                                    value={openForm.festivalType}
+                                                    onChange={(e) => setOpenForm(prev => ({ ...prev, festivalType: e.target.value }))}
+                                                    className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                >
+                                                    <option value="newyear">เทศกาลปีใหม่</option>
+                                                    <option value="songkran">เทศกาลสงกรานต์</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            รายละเอียด/เหตุผลการเปิด
+                                        </label>
+                                        <textarea
+                                            value={openForm.description}
+                                            onChange={(e) => setOpenForm(prev => ({ ...prev, description: e.target.value }))}
+                                            placeholder="ระบุเหตุผลหรือสถานการณ์ที่ต้องเปิด EOC"
+                                            rows={3}
+                                            className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            ไฟล์คำสั่งการเปิด EOC
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+                                            onChange={(e) => setOpenForm(prev => ({ ...prev, orderFile: e.target.files?.[0] || null }))}
+                                            className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-green-100"
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            แนบได้ถ้ามี รองรับ PDF, DOC, DOCX, JPG, PNG ขนาดไม่เกิน 20MB
+                                        </p>
+                                        {openForm.orderFile && (
+                                            <p className="mt-2 text-sm text-green-700">
+                                                เลือกไฟล์แล้ว: {openForm.orderFile.name}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                                    <button
+                                        onClick={handleOpenEOC}
+                                        disabled={updating[openingType]}
+                                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {updating[openingType] ? 'กำลังเปิด EOC...' : 'ยืนยันเปิด EOC'}
+                                    </button>
+                                    <button
+                                        onClick={closeEOCForm}
+                                        disabled={updating[openingType]}
+                                        className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Modal ปิด EOC */}
+                {showCloseModal && closingType && (
+                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6">
+                                <div className="flex items-start justify-between gap-4 mb-5">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-800">แบบฟอร์มปิด EOC</h2>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                            EOC {getEOCDisplayName(closingType)}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={closeCloseEOCForm}
+                                        className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                                        aria-label="ปิดแบบฟอร์ม"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            วันและเวลาปิด EOC *
+                                        </label>
+                                        <input
+                                            type="datetime-local"
+                                            value={closeForm.closedAt}
+                                            onChange={(e) => setCloseForm(prev => ({ ...prev, closedAt: e.target.value }))}
+                                            className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            รายละเอียด/เหตุผลการปิด
+                                        </label>
+                                        <textarea
+                                            value={closeForm.description}
+                                            onChange={(e) => setCloseForm(prev => ({ ...prev, description: e.target.value }))}
+                                            placeholder="ระบุเหตุผลหรือสรุปสถานการณ์ก่อนปิด EOC"
+                                            rows={3}
+                                            className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                                    <button
+                                        onClick={handleCloseEOC}
+                                        disabled={updating[closingType]}
+                                        className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {updating[closingType] ? 'กำลังปิด EOC...' : 'ยืนยันปิด EOC'}
+                                    </button>
+                                    <button
+                                        onClick={closeCloseEOCForm}
+                                        disabled={updating[closingType]}
+                                        className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Modal เพิ่ม EOC Type */}
                 {showAddModal && (

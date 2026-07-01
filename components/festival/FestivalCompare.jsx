@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
@@ -20,11 +20,23 @@ export default function FestivalCompare() {
     const [loading, setLoading] = useState(true);
     const [comparing, setComparing] = useState(false);
 
-    useEffect(() => {
-        fetchSessions();
+    const fetchComparison = useCallback(async (ids) => {
+        if (ids.length === 0) { setComparisons([]); return; }
+        setComparing(true);
+        try {
+            const res = await fetch(`/stn-eoc/api/eoc/festival-accidents/compare?session_ids=${ids.join(',')}`);
+            const data = await res.json();
+            if (data.success) {
+                setComparisons(data.comparisons || []);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            setComparing(false);
+        }
     }, []);
 
-    const fetchSessions = async () => {
+    const fetchSessions = useCallback(async () => {
         try {
             const res = await fetch('/stn-eoc/api/eoc/festival-accidents/dashboard');
             const data = await res.json();
@@ -42,23 +54,11 @@ export default function FestivalCompare() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [fetchComparison]);
 
-    const fetchComparison = async (ids) => {
-        if (ids.length === 0) { setComparisons([]); return; }
-        setComparing(true);
-        try {
-            const res = await fetch(`/stn-eoc/api/eoc/festival-accidents/compare?session_ids=${ids.join(',')}`);
-            const data = await res.json();
-            if (data.success) {
-                setComparisons(data.comparisons || []);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            setComparing(false);
-        }
-    };
+    useEffect(() => {
+        fetchSessions();
+    }, [fetchSessions]);
 
     const toggleSession = (id) => {
         setSelectedIds(prev => {
@@ -102,7 +102,7 @@ export default function FestivalCompare() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-2xl p-6 text-white shadow-xl">
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-500 rounded-2xl p-6 text-white shadow-xl">
                 <h1 className="text-3xl font-bold flex items-center gap-3">
                     📊 เปรียบเทียบสถิติอุบัติเหตุช่วงเทศกาล
                 </h1>
@@ -144,7 +144,7 @@ export default function FestivalCompare() {
             {/* Comparing Indicator */}
             {comparing && (
                 <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b border-blue-500 mx-auto mb-2"></div>
                     <p className="text-gray-500 text-sm">กำลังเปรียบเทียบ...</p>
                 </div>
             )}
@@ -156,7 +156,7 @@ export default function FestivalCompare() {
                         {comparisons.map((c, idx) => {
                             const colorSet = COMPARE_COLORS[idx % COMPARE_COLORS.length];
                             return (
-                                <div key={c.session.id} className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4" 
+                                <div key={c.session.id} className="bg-white rounded-xl shadow-lg overflow-hidden border-t" 
                                      style={{ borderColor: colorSet.border }}>
                                     <div className="p-5">
                                         <div className="flex items-center justify-between mb-4">
@@ -165,7 +165,7 @@ export default function FestivalCompare() {
                                                 {' '}{c.session.openReason || c.session.festivalName}
                                             </h3>
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                                                c.session.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                                                c.session.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-green-50 text-green-900'
                                             }`}>
                                                 {c.session.status === 'active' ? 'เปิด' : 'ปิด'}
                                             </span>
@@ -184,9 +184,9 @@ export default function FestivalCompare() {
                                                 <div className="text-2xl font-bold text-amber-600">{c.stats.totalInjuries}</div>
                                                 <div className="text-xs text-amber-500">🤕 บาดเจ็บ</div>
                                             </div>
-                                            <div className="bg-purple-50 rounded-lg p-3 text-center">
-                                                <div className="text-2xl font-bold text-purple-600">{c.stats.drunkCases}</div>
-                                                <div className="text-xs text-purple-500">🍺 เมาแล้วขับ</div>
+                                            <div className="bg-teal-50 rounded-lg p-3 text-center">
+                                                <div className="text-2xl font-bold text-teal-600">{c.stats.drunkCases}</div>
+                                                <div className="text-xs text-teal-500">🍺 เมาแล้วขับ</div>
                                             </div>
                                         </div>
 

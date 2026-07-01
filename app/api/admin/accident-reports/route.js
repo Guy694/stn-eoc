@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -16,6 +18,9 @@ const pool = mysql.createPool({
 export async function GET(request) {
     let connection;
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const date = searchParams.get('date');
@@ -49,10 +54,7 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('Error fetching accident reports:', error);
-        return NextResponse.json({
-            success: false,
-            message: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงรายงานอุบัติเหตุ');
     } finally {
         if (connection) connection.release();
     }
@@ -62,6 +64,9 @@ export async function GET(request) {
 export async function POST(request) {
     let connection;
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const {
             session_id,
@@ -80,7 +85,6 @@ export async function POST(request) {
             no_seatbelt,
             speeding,
             notes,
-            reported_by
         } = body;
 
         if (!session_id || !report_date) {
@@ -115,7 +119,7 @@ export async function POST(request) {
             no_seatbelt ? 1 : 0,
             speeding ? 1 : 0,
             notes || null,
-            reported_by || null
+            auth.user.id
         ]);
 
         return NextResponse.json({
@@ -125,10 +129,7 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Error creating accident report:', error);
-        return NextResponse.json({
-            success: false,
-            message: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกรายงานอุบัติเหตุ');
     } finally {
         if (connection) connection.release();
     }
@@ -138,6 +139,9 @@ export async function POST(request) {
 export async function PUT(request) {
     let connection;
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         const body = await request.json();
@@ -154,8 +158,27 @@ export async function PUT(request) {
         const fields = [];
         const values = [];
 
+        const allowedFields = new Set([
+            'session_id',
+            'report_date',
+            'report_time',
+            'accident_type',
+            'location_name',
+            'lat',
+            'lng',
+            'district',
+            'tambon',
+            'deaths',
+            'injuries',
+            'drunk_driving',
+            'no_helmet',
+            'no_seatbelt',
+            'speeding',
+            'notes'
+        ]);
+
         Object.entries(body).forEach(([key, value]) => {
-            if (key !== 'id' && value !== undefined) {
+            if (allowedFields.has(key) && value !== undefined) {
                 fields.push(`${key} = ?`);
                 values.push(value);
             }
@@ -180,10 +203,7 @@ export async function PUT(request) {
         });
     } catch (error) {
         console.error('Error updating accident report:', error);
-        return NextResponse.json({
-            success: false,
-            message: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขรายงานอุบัติเหตุ');
     } finally {
         if (connection) connection.release();
     }
@@ -193,6 +213,9 @@ export async function PUT(request) {
 export async function DELETE(request) {
     let connection;
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -212,10 +235,7 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Error deleting accident report:', error);
-        return NextResponse.json({
-            success: false,
-            message: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการลบรายงานอุบัติเหตุ');
     } finally {
         if (connection) connection.release();
     }

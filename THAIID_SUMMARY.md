@@ -35,9 +35,9 @@
 ### Environment Variables (.env.local)
 ```env
 ✓ CALLBACK=https://stn-eoc.vercel.app/
-✓ APIKEY=jLCelfowueJoYeUuR20TjWEJL0hEAqXbwZOSjsOA
-✓ CLIENT_ID=TEMyaWFqbmhrVG9kNjhKTmdZYng3UG1YVm92ek1xdXI
-✓ CLIENT_SECRET=Y01VdDdKS0swdkdTc0dYNGpVWVY0YkhzSWtOOVl6SWZLQWt0dkh5Sg
+✓ APIKEY=your_thaiid_api_key
+✓ CLIENT_ID=your_thaiid_client_id
+✓ CLIENT_SECRET=your_thaiid_client_secret
 ```
 
 ### Database Changes

@@ -71,9 +71,9 @@ export default function DiseaseSummaryCards({ sessionId }) {
             title: 'โรคที่พบ',
             value: stats.diseases_count.toLocaleString(),
             suffix: 'โรค',
-            bgColor: 'bg-purple-50',
-            iconColor: 'text-purple-500',
-            textColor: 'text-purple-700'
+            bgColor: 'bg-teal-50',
+            iconColor: 'text-teal-500',
+            textColor: 'text-teal-700'
         },
         {
             icon: '🏥',
@@ -112,7 +112,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
 
             {/* Date Range Info */}
             {stats.date_range && (
-                <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4">
+                <div className="bg-amber-50 border border-amber-500 rounded-lg p-4">
                     <div className="flex items-center gap-2">
                         <span className="text-2xl">📅</span>
                         <div>

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function SessionTeamsList({ sessionId, showTitle = true }) {
     const [loading, setLoading] = useState(true);
@@ -14,13 +14,9 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
     const [session, setSession] = useState(null);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        if (sessionId) {
-            fetchTeams();
-        }
-    }, [sessionId]);
+    const fetchTeams = useCallback(async () => {
+        if (!sessionId) return;
 
-    const fetchTeams = async () => {
         try {
             setLoading(true);
             setError('');
@@ -39,13 +35,17 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [sessionId]);
+
+    useEffect(() => {
+        fetchTeams();
+    }, [fetchTeams]);
 
     if (loading) {
         return (
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b border-teal-500"></div>
                     <span className="ml-3 text-gray-600">กำลังโหลดข้อมูลทีม...</span>
                 </div>
             </div>
@@ -76,7 +76,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
     return (
         <div className="space-y-4">
             {/* {showTitle && (
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg shadow-md p-4">
+                <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg shadow-md p-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                         <span className="text-2xl">👥</span>
                         ทีมงานที่เปิดใช้งาน
@@ -109,7 +109,7 @@ function TeamCard({ team }) {
 
     return (
         <div
-            className={`bg-white rounded-lg shadow-md border-l-4 overflow-hidden transition-all hover:shadow-lg`}
+            className={`bg-white rounded-lg shadow-md border overflow-hidden transition-all hover:shadow-lg`}
             style={{ borderLeftColor: getColorClass(team.color) }}
         >
             {/* Team Header */}
@@ -154,7 +154,7 @@ function TeamCard({ team }) {
                     {team.members && team.members.length > 0 && (
                         <button
                             onClick={() => setExpanded(!expanded)}
-                            className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+                            className="text-xs text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
                         >
                             {expanded ? '▼ ซ่อน' : '▶ ดูรายชื่อ'}
                         </button>

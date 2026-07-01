@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { publicInternalError } from '@/lib/apiResponse';
 
 export async function GET() {
     try {
@@ -55,9 +56,6 @@ export async function GET() {
 
     } catch (error) {
         console.error('Error fetching village polygons:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch village polygons', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลขอบเขตหมู่บ้าน');
     }
 }

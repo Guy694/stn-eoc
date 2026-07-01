@@ -139,7 +139,7 @@ export default function FloodMapPage() {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
                     <p className="text-gray-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
@@ -165,7 +165,7 @@ export default function FloodMapPage() {
 
                 {/* แสดงทีมงาน EOC ที่เปิดใช้งาน - Realtime Mode */}
                 {mode === "realtime" && hasActiveSession && activeSessionData && sessionTeams.length > 0 && (
-                    <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6 shadow-sm">
+                    <div className="mb-6 bg-blue-50 border border-blue-500 rounded-lg p-6 shadow-sm">
                         <h2 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
                             <span className="text-2xl">👥</span>
                             ทีมงาน EOC ที่ปฏิบัติงาน
@@ -176,7 +176,7 @@ export default function FloodMapPage() {
 
                         {loadingTeams ? (
                             <div className="flex items-center gap-2 text-blue-700">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b border-blue-500"></div>
                                 <span>กำลังโหลดข้อมูลทีม...</span>
                             </div>
                         ) : (
@@ -347,7 +347,7 @@ export default function FloodMapPage() {
 
                         {/* แสดงทีมงานของ session ที่เลือก */}
                         {selectedSession && sessionTeams.length > 0 && (
-                            <div className="mt-6 mb-6 bg-amber-50 border-l-4 border-amber-500 rounded-lg p-6 shadow-sm">
+                            <div className="mt-6 mb-6 bg-amber-50 border border-amber-500 rounded-lg p-6 shadow-sm">
                                 <h2 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2">
                                     <span className="text-2xl">👥</span>
                                     ทีมงาน EOC ในช่วงเวลานี้
@@ -358,7 +358,7 @@ export default function FloodMapPage() {
 
                                 {loadingTeams ? (
                                     <div className="flex items-center gap-2 text-amber-700">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b border-amber-500"></div>
                                         <span>กำลังโหลดข้อมูลทีม...</span>
                                     </div>
                                 ) : (

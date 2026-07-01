@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
@@ -22,11 +22,7 @@ export default function VillagePolygonsPage() {
         coordinates: ''
     });
 
-    useEffect(() => {
-        fetchPolygons();
-    }, [filterDistrict, filterTambon, searchTerm, currentPage]);
-
-    const fetchPolygons = async () => {
+    const fetchPolygons = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -50,7 +46,11 @@ export default function VillagePolygonsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, filterDistrict, filterTambon, searchTerm]);
+
+    useEffect(() => {
+        fetchPolygons();
+    }, [fetchPolygons]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -151,19 +151,19 @@ export default function VillagePolygonsPage() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                         <div className="text-sm text-gray-600 mb-1">จำนวนหมู่บ้านทั้งหมด</div>
                         <div className="text-3xl font-bold text-gray-800">
                             {stats.total || 0}
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-green-500">
                         <div className="text-sm text-gray-600 mb-1">จำนวนอำเภอ</div>
                         <div className="text-3xl font-bold text-gray-800">
                             {stats.districts || 0}
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-yellow-500">
                         <div className="text-sm text-gray-600 mb-1">จำนวนตำบล</div>
                         <div className="text-3xl font-bold text-gray-800">
                             {stats.tambons || 0}

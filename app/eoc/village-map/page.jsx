@@ -9,7 +9,7 @@ const PolygonMap = dynamic(() => import("@/components/PolygonMap"), {
     loading: () => (
         <div className="flex items-center justify-center h-full">
             <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto mb-4"></div>
                 <p className="text-gray-600">กำลังโหลดแผนที่...</p>
             </div>
         </div>
@@ -27,6 +27,19 @@ export default function VillageMapPage() {
         districts: []
     });
 
+    const calculateStats = (data) => {
+        const totalHouseholds = data.reduce((sum, p) => sum + p.num_hh, 0);
+        const totalBuildings = data.reduce((sum, p) => sum + p.num_build, 0);
+        const districtsSet = new Set(data.map(p => p.distname));
+
+        setStats({
+            totalVillages: data.length,
+            totalHouseholds,
+            totalBuildings,
+            districts: Array.from(districtsSet)
+        });
+    };
+
     useEffect(() => {
         // โหลดข้อมูล polygon
         fetch('/stn-eoc/api/common/village-polygons')
@@ -42,28 +55,11 @@ export default function VillageMapPage() {
             });
     }, []);
 
-    const calculateStats = (data) => {
-        const totalHouseholds = data.reduce((sum, p) => sum + p.num_hh, 0);
-        const totalBuildings = data.reduce((sum, p) => sum + p.num_build, 0);
-        const districtsSet = new Set(data.map(p => p.distname));
-
-        setStats({
-            totalVillages: data.length,
-            totalHouseholds,
-            totalBuildings,
-            districts: Array.from(districtsSet)
-        });
-    };
-
-    const handlePolygonClick = (polygon) => {
-        console.log('Selected polygon:', polygon);
-    };
-
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
                     <p className="text-gray-600 text-lg">กำลังโหลดข้อมูลหมู่บ้าน...</p>
                 </div>
             </div>
@@ -157,7 +153,6 @@ export default function VillageMapPage() {
                 <PolygonMap
                     polygons={polygons}
                     colorMode={colorMode}
-                    onPolygonClick={handlePolygonClick}
                 />
             </div>
         </EOCLayout>
@@ -170,7 +165,7 @@ function StatCard({ label, value, icon, color }) {
         blue: 'bg-blue-50 text-blue-700',
         green: 'bg-green-50 text-green-700',
         orange: 'bg-orange-50 text-orange-700',
-        purple: 'bg-purple-50 text-purple-700',
+        purple: 'bg-teal-50 text-teal-700',
     };
 
     return (

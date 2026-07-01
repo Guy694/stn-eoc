@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
@@ -14,13 +14,9 @@ export default function UserEOCDashboard() {
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (user?.id) {
-            loadAssignments();
-        }
-    }, [user]);
+    const loadAssignments = useCallback(async () => {
+        if (!user?.id) return;
 
-    const loadAssignments = async () => {
         try {
             setLoading(true);
             const response = await fetch('/stn-eoc/api/user/my-assignments', {
@@ -38,12 +34,16 @@ export default function UserEOCDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user?.id]);
+
+    useEffect(() => {
+        loadAssignments();
+    }, [loadAssignments]);
 
     if (loading) {
         return (
             <div className="flex justify-center items-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
             </div>
         );
     }
@@ -99,7 +99,7 @@ export default function UserEOCDashboard() {
             {sessions.map((session) => (
                 <div
                     key={`${session.session_id}-${session.eoc_type}`}
-                    className="bg-white rounded-lg shadow-md border-l-4 border-blue-500 overflow-hidden"
+                    className="bg-white rounded-lg shadow-md border border-blue-500 overflow-hidden"
                 >
                     {/* Session Header */}
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">

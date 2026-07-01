@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { publicInternalError } from '@/lib/apiResponse';
 
 export async function GET(request) {
     try {
@@ -67,9 +68,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching boundary polygons:', error);
-        return Response.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการดึงข้อมูลขอบเขต', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลขอบเขต');
     }
 }

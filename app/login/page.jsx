@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import Image from "next/image";
 
 // Component แยกสำหรับจัดการ error จาก ThaiID callback
 function ThaiIDErrorHandler({ setError }) {
@@ -97,7 +98,7 @@ function LoginForm() {
                 {/* Logo and Header */}
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 bg-green-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
-                        <img src="/stn-eoc/img/logo.png" alt="EOC Logo" className="w-full h-full object-contain" onError={(e) => { e.target.style.display='none'; }} />
+                        <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ EOC</h1>
                     <p className="text-gray-600">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
@@ -201,23 +202,18 @@ function LoginForm() {
                         onClick={() => window.location.href = '/stn-eoc/api/auth/thaiid/authorize/'}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-3"
                     >
-                        <img src="/stn-eoc/img/thaiid.png" alt="ThaiID" className="w-9 h-9" />
+                        <Image src="/stn-eoc/img/thaiid.png" alt="ThaiID" width={36} height={36} className="w-9 h-9" />
                         <span>เข้าสู่ระบบด้วย ThaiID</span>
                     </button>
 
-                    {/* Demo Credentials - Updated for Officer Table */}
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
-                        <p className="text-xs text-green-800 font-semibold mb-2">🔑 บัญชีทดสอบ:</p>
-                        <div className="space-y-1 text-xs text-green-700">
-                            <p><strong>Admin:</strong> admin / password123</p>
-                            <p><strong>Commander:</strong> commander01 / commander123</p>
-                            <p><strong>MCATT:</strong> mcatt01 / password123</p>
-                            <p><strong>SAT:</strong> sat01 / password123</p>
-                            <p><strong>SeRHT:</strong> serht01 / password123</p>
-                            <p><strong>Staff:</strong> staff01 / password123</p>
+                    {process.env.NODE_ENV === 'development' && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+                            <p className="text-xs text-green-800 font-semibold mb-1">โหมดทดสอบระบบ</p>
+                            <p className="text-xs text-green-700">
+                                ใช้บัญชีทดสอบจากผู้ดูแลระบบหรือไฟล์ environment ภายในเท่านั้น
+                            </p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2 italic">* สำหรับทดสอบระบบเท่านั้น</p>
-                    </div>
+                    )}
                 </div>
 
                 {/* Public Access Link */}

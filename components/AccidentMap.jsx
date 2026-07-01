@@ -98,7 +98,7 @@ export default function AccidentMap({
         return (
             <div className="h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-orange-500 mx-auto mb-4"></div>
                     <p className="text-gray-600">กำลังโหลดแผนที่...</p>
                 </div>
             </div>
@@ -219,7 +219,7 @@ export default function AccidentMap({
                                                     </div>
                                                 </div>
                                                 {accident.drunk_driving && (
-                                                    <span className="inline-block mt-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                                                    <span className="inline-block mt-2 px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-full">
                                                         🍺 เมาแล้วขับ
                                                     </span>
                                                 )}

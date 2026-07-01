@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showConfirm, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -63,10 +64,6 @@ export default function IncidentReportsPage() {
     const [mapMounted, setMapMounted] = useState(false);
 
     useEffect(() => {
-        fetchReports();
-    }, [filters, pagination.page]);
-
-    useEffect(() => {
         setMapMounted(true);
 
         // Fix Leaflet marker icon issue in Next.js
@@ -82,7 +79,7 @@ export default function IncidentReportsPage() {
         }
     }, []);
 
-    const fetchReports = async () => {
+    const fetchReports = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -115,7 +112,11 @@ export default function IncidentReportsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters, pagination.limit, pagination.page]);
+
+    useEffect(() => {
+        fetchReports();
+    }, [fetchReports]);
 
     const handleViewReport = (report) => {
         setSelectedReport(report);
@@ -251,21 +252,21 @@ export default function IncidentReportsPage() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                         <div className="text-sm text-gray-600 mb-1">ทั้งหมด</div>
                         <div className="text-2xl font-bold text-gray-800">
                             {(stats.pending || 0) + (stats.approved || 0) + (stats.rejected || 0)}
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-yellow-500">
                         <div className="text-sm text-gray-600 mb-1">รอตรวจสอบ</div>
                         <div className="text-2xl font-bold text-yellow-600">{stats.pending || 0}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-green-500">
                         <div className="text-sm text-gray-600 mb-1">อนุมัติแล้ว</div>
                         <div className="text-2xl font-bold text-green-600">{stats.approved || 0}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-red-500">
                         <div className="text-sm text-gray-600 mb-1">ปฏิเสธ</div>
                         <div className="text-2xl font-bold text-red-600">{stats.rejected || 0}</div>
                     </div>
@@ -321,7 +322,7 @@ export default function IncidentReportsPage() {
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
                         </div>
                     ) : reports.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
@@ -609,10 +610,13 @@ export default function IncidentReportsPage() {
                                                     const imageUrl = getImageUrl(img);
                                                     return (
                                                         <div key={idx} className="relative h-48 bg-gray-200 rounded-lg overflow-hidden">
-                                                            <img
+                                                            <Image
                                                                 src={imageUrl}
                                                                 alt={`รูปภาพ ${idx + 1}`}
-                                                                className="w-full h-full object-cover"
+                                                                fill
+                                                                sizes="(min-width: 768px) 33vw, 50vw"
+                                                                className="object-cover"
+                                                                unoptimized
                                                                 onError={(e) => {
                                                                     e.target.onerror = null;
                                                                     e.target.src = '/stn-eoc/img/no-image.png';

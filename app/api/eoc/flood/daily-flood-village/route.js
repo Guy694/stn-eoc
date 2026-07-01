@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // ข้อมูลจำลองสำหรับทดสอบ (ใช้จนกว่าจะมีตาราง daily_village_flood_status)
 const mockFloodData = {
@@ -100,9 +101,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching daily flood village data:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch flood data', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลน้ำท่วมรายหมู่บ้าน');
     }
 }

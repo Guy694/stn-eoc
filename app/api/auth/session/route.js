@@ -1,26 +1,38 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getAuthSession } from "@/lib/auth";
+import { getCitizenSession } from "@/lib/citizenAuth";
 
 /**
  * API สำหรับดึงข้อมูล session ของผู้ใช้จาก cookie
  */
 export async function GET(request) {
     try {
-        const cookieStore = await cookies();
-        const userSession = cookieStore.get('user_session');
+        const auth = await getAuthSession(request);
+        if (!auth.success) {
+            const citizenSession = await getCitizenSession();
 
-        if (!userSession) {
-            return NextResponse.json(
-                { success: false, message: 'ไม่พบข้อมูล session' },
-                { status: 401 }
-            );
+            if (!citizenSession) return auth.response;
+
+            return NextResponse.json({
+                success: true,
+                user: {
+                    username: citizenSession.pidHash.substring(0, 10),
+                    givenName: citizenSession.firstName,
+                    familyName: citizenSession.lastName,
+                    role: 'citizen',
+                    roleDisplay: 'ประชาชน',
+                    permissions: { dashboard: true },
+                    isApproved: true,
+                    userType: 'citizen'
+                },
+                remainingMinutes: Math.max(0, Math.ceil((citizenSession.expiresAt - Date.now()) / 60000))
+            });
         }
-
-        const userData = JSON.parse(userSession.value);
 
         return NextResponse.json({
             success: true,
-            user: userData
+            user: auth.user,
+            remainingMinutes: auth.remainingMinutes
         });
 
     } catch (error) {

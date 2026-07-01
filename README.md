@@ -144,12 +144,12 @@ stn-eoc/
 ## 🔑 บัญชีทดสอบ (Development)
 
 ### Login แบบปกติ:
-```
-Admin:    admin / password123
-MCATT:    mcatt01 / password123
-SAT:      sat01 / password123
-SeRHT:    serht01 / password123
-Staff:    staff01 / password123
+ให้ผู้ดูแลระบบสร้างบัญชีทดสอบเฉพาะ environment และส่งรหัสผ่านผ่านช่องทางภายในเท่านั้น
+
+สำหรับ development สามารถ reset บัญชี `admin` ในฐานข้อมูล local ได้ด้วยคำสั่งนี้:
+
+```bash
+ADMIN_PASSWORD="<temporary-password>" npm run reset-dev-admin
 ```
 
 ### Login ด้วย ThaiID:
@@ -202,7 +202,7 @@ UPDATE officer SET pid = 'xxxxxxxxxxxxx' WHERE username = 'admin';
 # ทดสอบ Login ปกติ
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"password123"}'
+  -d '{"username":"your_username","password":"your_password"}'
 
 # ทดสอบ ThaiID OAuth
 curl -I http://localhost:3000/api/auth/thaiid/authorize

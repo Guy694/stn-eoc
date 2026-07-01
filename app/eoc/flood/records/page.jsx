@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -64,9 +64,7 @@ export default function FloodRecordsPage() {
         fetchPolygons();
 
         // Set initial date on client-side to avoid hydration mismatch
-        if (!selectedDate) {
-            setSelectedDate(getTodayDate());
-        }
+        setSelectedDate(current => current || getTodayDate());
     }, []);
 
     // ดึงข้อมูล Active EOC Session
@@ -75,10 +73,7 @@ export default function FloodRecordsPage() {
             try {
                 const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
                 const result = await response.json();
-                console.log('Active session result:', result);
                 if (result.hasActiveSession && result.activeSession) {
-                    console.log('Active session data:', result.activeSession);
-                    console.log('Session ID to use:', result.activeSession.id);
                     setActiveSession(result.activeSession);
                 } else {
                     console.error('No active session found!', result);
@@ -89,13 +84,6 @@ export default function FloodRecordsPage() {
         };
         fetchActiveSession();
     }, []);
-
-    // โหลดข้อมูล
-    useEffect(() => {
-        if (activeSession) {
-            fetchRecords();
-        }
-    }, [filters, activeSession, selectedDate]);
 
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
@@ -134,7 +122,7 @@ export default function FloodRecordsPage() {
         }
     }, [records, activeSession]);
 
-    const fetchRecords = async () => {
+    const fetchRecords = useCallback(async () => {
         if (!activeSession) return;
 
         try {
@@ -145,15 +133,10 @@ export default function FloodRecordsPage() {
             if (filters.tambon !== 'all') params.append('tambon', filters.tambon);
             if (filters.flood_level !== 'all') params.append('flood_level', filters.flood_level);
 
-            console.log('Fetching with filters:', filters);
-            console.log('Active session ID for fetch:', activeSession.id);
             const res = await fetch(`/stn-eoc/api/admin/flood-records?${params}`);
             const data = await res.json();
-            console.log('Fetched data:', data);
 
             if (data.success) {
-                console.log('Fetched records from DB:', data.data.length, 'records');
-
                 // เก็บข้อมูลทั้งหมดสำหรับคำนวณสถานะ
                 setAllRecords(data.data);
 
@@ -163,27 +146,19 @@ export default function FloodRecordsPage() {
                     return recordDate === selectedDate;
                 });
 
-                console.log(`Filtered to ${filteredRecords.length} records for ${selectedDate}`);
                 setRecords(filteredRecords);
 
                 // อัพเดทตำบลที่บันทึกแล้ววันนี้ทันที (ใช้วันที่ท้องถิ่น)
                 const now = new Date();
                 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                console.log('Today local:', today);
-                console.log('Sample record dates:', data.data.slice(0, 3).map(r => ({
-                    village: r.village || r.villname,
-                    date: r.flood_start_date?.split('T')[0]
-                })));
 
                 const recorded = new Set();
                 data.data.forEach(record => {
                     const recordDate = record.flood_start_date?.split('T')[0];
-                    console.log('Record date:', recordDate, 'equals today?', recordDate === today);
                     if (recordDate === today) {
                         recorded.add(`${record.district}-${record.tambon}`);
                     }
                 });
-                console.log('Recorded tambons:', Array.from(recorded));
                 setRecordedTambons(recorded);
             }
         } catch (error) {
@@ -191,7 +166,14 @@ export default function FloodRecordsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeSession, filters, selectedDate]);
+
+    // โหลดข้อมูล
+    useEffect(() => {
+        if (activeSession) {
+            fetchRecords();
+        }
+    }, [activeSession, fetchRecords]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -251,8 +233,6 @@ export default function FloodRecordsPage() {
                         relief_amount: 0
                     };
 
-                    console.log('Saving village:', village.villname, 'date:', selectedDate, 'body:', body);
-
                     try {
                         const res = await fetch(url, {
                             method: 'POST',
@@ -278,7 +258,6 @@ export default function FloodRecordsPage() {
 
                 // รอให้ข้อมูลบันทึกลงฐานข้อมูลเสร็จแล้ว fetch ข้อมูลใหม่
                 await new Promise(resolve => setTimeout(resolve, 800));
-                console.log('Fetching updated records after save...');
                 await fetchRecords();
 
                 showSuccess(message);
@@ -336,8 +315,6 @@ export default function FloodRecordsPage() {
                 damage_amount: 0,
                 relief_amount: 0
             };
-
-            console.log('Saving single village with session_id:', activeSession.id, 'full body:', body);
 
             try {
                 const res = await fetch(url, {
@@ -472,9 +449,6 @@ export default function FloodRecordsPage() {
         const targetDate = selectedDate;
         const allTambonsStatus = [];
 
-        console.log('Selected date:', targetDate);
-        console.log('Records count:', records.length);
-
         satunDistricts.forEach(district => {
             district.tambons.forEach(tambon => {
                 const key = `${district.name}-${tambon.name}`;
@@ -514,22 +488,6 @@ export default function FloodRecordsPage() {
                 );
                 const recordedCount = uniqueRecordedVillages.size;
 
-                // Debug log สำหรับทุกตำบลที่มีการบันทึก
-                if (recordedCount > 0 || totalVillages > 0) {
-                    const expectedVillages = Array.from(uniqueVillageNames);
-                    const recordedVillages = Array.from(uniqueRecordedVillages);
-                    const matched = recordedVillages.filter(r => expectedVillages.includes(r));
-                    const unmatched = recordedVillages.filter(r => !expectedVillages.includes(r));
-
-                    console.log(`${tambon.name} (${district.name}): ${recordedCount}/${totalVillages} villages`, {
-                        recorded: recordedVillages,
-                        expected: expectedVillages,
-                        matched: matched,
-                        unmatched: unmatched,
-                        status: recordedCount >= totalVillages ? 'COMPLETE ✅' : 'INCOMPLETE ⚠️'
-                    });
-                }
-
                 if (totalVillages > 0) {
                     const status = recordedCount >= totalVillages
                         ? 'complete'
@@ -545,22 +503,6 @@ export default function FloodRecordsPage() {
                         recordedVillages: recordedCount,
                         status: status
                     });
-
-                    // Debug log สำหรับตำบลที่มีปัญหา
-                    if (tambon.name === 'แป-ระ' || tambon.name === 'ทุ่งหว้า') {
-                        console.log(`${tambon.name} Debug:`, {
-                            district: district.name,
-                            totalVillages: totalVillages,
-                            recordedCount: recordedCount,
-                            status: status,
-                            uniqueVillages: Array.from(uniqueRecordedVillages),
-                            allRecords: recordedVillagesForDate.map(r => ({
-                                village: r.village,
-                                villname: r.villname,
-                                date: r.flood_start_date
-                            }))
-                        });
-                    }
                 }
             });
         });
@@ -633,7 +575,7 @@ export default function FloodRecordsPage() {
                 </div>
 
                 {/* Date Picker for Backdating */}
-                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg p-4 mb-6">
+                <div className="bg-gradient-to-r from-teal-50 to-sky-50 border-2 border-teal-200 rounded-lg p-4 mb-6">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">📅</span>
@@ -669,7 +611,7 @@ export default function FloodRecordsPage() {
                                 min={activeSession.opened_at?.split('T')[0]}
                                 max={getTodayDate()}
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="px-4 py-2 border-2 border-purple-300 rounded-lg text-gray-700 font-medium bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                className="px-4 py-2 border-2 border-teal-300 rounded-lg text-gray-700 font-medium bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                             />
 
                             {/* Next Day */}
@@ -694,8 +636,8 @@ export default function FloodRecordsPage() {
                             <button
                                 onClick={() => setSelectedDate(getTodayDate())}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedDate === getTodayDate()
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-white border border-purple-300 text-purple-700 hover:bg-purple-50'
+                                    ? 'bg-teal-600 text-white'
+                                    : 'bg-white border border-teal-300 text-teal-700 hover:bg-teal-50'
                                     }`}
                             >
                                 📆 วันนี้
@@ -707,7 +649,7 @@ export default function FloodRecordsPage() {
                                     setCopyConfig({ sourceDate: '', overwrite: false });
                                     setShowCopyModal(true);
                                 }}
-                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                                className="px-4 py-2 bg-sky-600 text-white rounded-lg font-medium hover:bg-sky-700 transition-colors flex items-center gap-2"
                                 title="คัดลอกข้อมูลจากวันอื่น"
                             >
                                 📋 คัดลอกข้อมูล
@@ -715,8 +657,8 @@ export default function FloodRecordsPage() {
                         </div>
 
                         {/* Selected Date Display */}
-                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-purple-200">
-                            <span className={`font-bold text-lg ${selectedDate === getTodayDate() ? 'text-green-600' : 'text-purple-600'}`}>
+                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-teal-200">
+                            <span className={`font-bold text-lg ${selectedDate === getTodayDate() ? 'text-green-600' : 'text-teal-600'}`}>
                                 {new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH', {
                                     weekday: 'long',
                                     year: 'numeric',
@@ -886,14 +828,14 @@ export default function FloodRecordsPage() {
 
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b border-blue-500 mx-auto mb-2"></div>
                             <p className="text-gray-600 text-sm">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4">📭</div>
                             <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
-                            <p className="text-gray-500 text-sm">คลิกปุ่ม "เพิ่มข้อมูลใหม่" เพื่อเริ่มบันทึกข้อมูล</p>
+                            <p className="text-gray-500 text-sm">คลิกปุ่ม &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มบันทึกข้อมูล</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -1158,21 +1100,21 @@ export default function FloodRecordsPage() {
                 {/* Copy Data Modal */}
                 {showCopyModal && (
                     <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-indigo-200">
+                        <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-sky-200">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4 flex items-center gap-2">
                                     📋 คัดลอกข้อมูลน้ำท่วม
                                 </h2>
 
-                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-4">
-                                    <p className="text-sm text-indigo-800 mb-2">
+                                <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">
+                                    <p className="text-sm text-sky-800 mb-2">
                                         <span className="font-bold">วันที่ปลายทาง:</span> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH', {
                                             year: 'numeric',
                                             month: 'long',
                                             day: 'numeric'
                                         })}
                                     </p>
-                                    <p className="text-xs text-indigo-600">
+                                    <p className="text-xs text-sky-600">
                                         ระบบจะคัดลอกข้อมูลจากวันที่ต้นทางไปยังวันที่ปลายทาง
                                     </p>
                                 </div>
@@ -1188,7 +1130,7 @@ export default function FloodRecordsPage() {
                                             min={activeSession?.opened_at?.split('T')[0]}
                                             max={getTodayDate()}
                                             onChange={(e) => setCopyConfig({ ...copyConfig, sourceDate: e.target.value })}
-                                            className="text-gray-600 w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            className="text-gray-600 w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-sky-500"
                                         />
                                     </div>
 
@@ -1224,7 +1166,7 @@ export default function FloodRecordsPage() {
                                         type="button"
                                         onClick={handleCopyData}
                                         disabled={!copyConfig.sourceDate}
-                                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         คัดลอกข้อมูล
                                     </button>

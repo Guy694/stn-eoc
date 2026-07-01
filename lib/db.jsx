@@ -33,4 +33,6 @@ export async function query(sql, params) {
     }
 }
 
-export default { getConnection, query };
+const db = { getConnection, query };
+
+export default db;

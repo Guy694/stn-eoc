@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useCallback, useEffect, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
@@ -55,10 +55,6 @@ function AnnouncementsContent() {
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
 
-    useEffect(() => {
-        fetchAnnouncements();
-    }, [filters, pagination.page]);
-
     // Update filter when URL parameter changes
     useEffect(() => {
         if (eocParam) {
@@ -66,7 +62,7 @@ function AnnouncementsContent() {
         }
     }, [eocParam]);
 
-    const fetchAnnouncements = async () => {
+    const fetchAnnouncements = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
@@ -78,8 +74,6 @@ function AnnouncementsContent() {
 
             const response = await fetch(`/stn-eoc/api/admin/announcements?${params}`);
             const data = await response.json();
-
-            console.log('Announcements API Response:', data);
 
             if (data.success) {
                 setAnnouncements(data.data);
@@ -96,7 +90,6 @@ function AnnouncementsContent() {
                         totalPages: data.pagination.totalPages
                     }));
                 }
-                console.log('Announcements data:', data.data);
             } else {
                 showError(data.message || 'ไม่สามารถโหลดข้อมูลได้');
             }
@@ -106,7 +99,11 @@ function AnnouncementsContent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters, pagination.limit, pagination.page]);
+
+    useEffect(() => {
+        fetchAnnouncements();
+    }, [fetchAnnouncements]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -267,19 +264,19 @@ function AnnouncementsContent() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                         <div className="text-sm text-gray-600 mb-1">ทั้งหมด</div>
                         <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-green-500">
                         <div className="text-sm text-gray-600 mb-1">เปิดใช้งาน</div>
                         <div className="text-2xl font-bold text-green-600">{stats.active}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                         <div className="text-sm text-gray-600 mb-1">แสดง Popup</div>
                         <div className="text-2xl font-bold text-blue-600">{stats.popup}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-gray-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-gray-500">
                         <div className="text-sm text-gray-600 mb-1">ปิดใช้งาน</div>
                         <div className="text-2xl font-bold text-gray-600">{stats.inactive}</div>
                     </div>
@@ -289,7 +286,7 @@ function AnnouncementsContent() {
                 {Object.keys(eocStats).length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                         {eocTypes.map(type => (
-                            <div key={type.value} className="bg-white rounded-lg shadow p-4 border-l-4 border-gray-300">
+                            <div key={type.value} className="bg-white rounded-lg shadow p-4 border border-gray-300">
                                 <div className="text-sm text-gray-600 mb-1">{type.label}</div>
                                 <div className="text-xl font-bold text-gray-800">
                                     {eocStats[type.value]?.count || 0}
@@ -363,7 +360,7 @@ function AnnouncementsContent() {
                 <div className="bg-white rounded-lg shadow">
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
                         </div>
                     ) : announcements.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
@@ -408,10 +405,13 @@ function AnnouncementsContent() {
                                         <tr key={announcement.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="relative h-16 w-24">
-                                                    <img
+                                                    <Image
                                                         src={announcement.image_path?.startsWith('http') ? announcement.image_path : `/stn-eoc${announcement.image_path?.startsWith('/') ? '' : '/'}${announcement.image_path}`}
                                                         alt={announcement.title}
-                                                        className="h-full w-full object-cover rounded"
+                                                        fill
+                                                        sizes="96px"
+                                                        className="object-cover rounded"
+                                                        unoptimized
                                                     />
                                                 </div>
                                             </td>
@@ -611,10 +611,13 @@ function AnnouncementsContent() {
                                         />
                                         {imagePreview && (
                                             <div className="mt-2">
-                                                <img
+                                                <Image
                                                     src={imagePreview}
                                                     alt="Preview"
-                                                    className=" text-gray-600 max-w-full h-48 object-contain rounded border"
+                                                    width={640}
+                                                    height={192}
+                                                    className="text-gray-600 max-w-full h-48 object-contain rounded border"
+                                                    unoptimized
                                                 />
                                             </div>
                                         )}
@@ -715,7 +718,7 @@ export default function AnnouncementsPage() {
         <Suspense fallback={
             <EOCLayout>
                 <div className="flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
                 </div>
             </EOCLayout>
         }>

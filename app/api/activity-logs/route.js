@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { publicInternalError } from "@/lib/apiResponse";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -78,14 +79,7 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error creating activity log:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการบันทึก log',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึก log');
     } finally {
         connection.release();
     }
@@ -161,14 +155,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching activity logs:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการดึงข้อมูล logs',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูล logs');
     } finally {
         connection.release();
     }

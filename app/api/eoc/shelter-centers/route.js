@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - Fetch shelter centers for a specific EOC session
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const eocType = searchParams.get('eoc_type');
@@ -72,7 +77,7 @@ export async function GET(request) {
         console.error('Get EOC shelter centers error:', error);
 
         // ถ้าตาราง activation ยังไม่มี fallback ไป query เดิม
-        if (error.message.includes("shelter_session_activations")) {
+        if (error.code === 'ER_NO_SUCH_TABLE') {
             try {
                 const { searchParams } = new URL(request.url);
                 const eocType = searchParams.get('eoc_type');
@@ -98,16 +103,16 @@ export async function GET(request) {
             }
         }
 
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการดึงข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลศูนย์พักพิง');
     }
 }
 
 // POST - Update shelter occupancy for EOC session
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { shelter_id, eoc_session_id, current_occupancy } = body;
 
@@ -153,9 +158,6 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Update shelter occupancy error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการอัพเดทข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการอัพเดทข้อมูลศูนย์พักพิง');
     }
 }

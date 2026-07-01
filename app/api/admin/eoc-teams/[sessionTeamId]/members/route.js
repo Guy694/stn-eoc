@@ -5,10 +5,15 @@
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET: ดึงรายชื่อสมาชิกในทีม
 export async function GET(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { sessionTeamId } = await params;
 
         const members = await query(`
@@ -38,25 +43,22 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Error fetching team members:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลสมาชิกทีม');
     }
 }
 
 // POST: เพิ่มสมาชิกเข้าทีม
 export async function POST(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander']);
+        if (!auth.success) return auth.response;
+
         const { sessionTeamId } = await params;
         const body = await request.json();
-        const { officerId, roleInTeam, assignedBy, notes } = body;
-
-        console.log('POST /members - Received:', { sessionTeamId, officerId, roleInTeam, assignedBy, notes });
+        const { officerId, roleInTeam, notes } = body;
 
         // Validate required fields
-        if (!sessionTeamId || !officerId || !roleInTeam || !assignedBy) {
+        if (!sessionTeamId || !officerId || !roleInTeam) {
             return NextResponse.json({
                 success: false,
                 message: 'ข้อมูลไม่ครบถ้วน'
@@ -81,7 +83,7 @@ export async function POST(request, { params }) {
             INSERT INTO eoc_team_members 
             (session_team_id, officer_id, role_in_team, assigned_by, notes)
             VALUES (?, ?, ?, ?, ?)
-        `, [sessionTeamId, officerId, roleInTeam || 'เจ้าหน้าที่', assignedBy, notes || null]);
+        `, [sessionTeamId, officerId, roleInTeam || 'เจ้าหน้าที่', auth.user.id, notes || null]);
 
         return NextResponse.json({
             success: true,
@@ -90,17 +92,16 @@ export async function POST(request, { params }) {
 
     } catch (error) {
         console.error('Error adding team member:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการเพิ่มสมาชิกทีม');
     }
 }
 
 // PATCH: อัพเดทบทบาทของสมาชิก
 export async function PATCH(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander']);
+        if (!auth.success) return auth.response;
+
         const { sessionTeamId } = await params;
         const body = await request.json();
         const { memberId, roleInTeam } = body;
@@ -118,17 +119,16 @@ export async function PATCH(request, { params }) {
 
     } catch (error) {
         console.error('Error updating team member:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการอัพเดทสมาชิกทีม');
     }
 }
 
 // DELETE: ถอดสมาชิกออกจากทีม
 export async function DELETE(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander']);
+        if (!auth.success) return auth.response;
+
         const { sessionTeamId } = await params;
         const { searchParams } = new URL(request.url);
         const memberId = searchParams.get('memberId');
@@ -154,10 +154,6 @@ export async function DELETE(request, { params }) {
 
     } catch (error) {
         console.error('Error removing team member:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการถอดสมาชิกทีม');
     }
 }

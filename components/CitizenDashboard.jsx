@@ -71,11 +71,7 @@ export default function CitizenDashboard() {
     const fetchMyReports = async () => {
         try {
             setReportsLoading(true);
-            const response = await fetch('/stn-eoc/api/citizen/my-reports', {
-                headers: {
-                    'x-citizen-id': user.id.toString()
-                }
-            });
+            const response = await fetch('/stn-eoc/api/citizen/my-reports');
             if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
@@ -162,7 +158,7 @@ export default function CitizenDashboard() {
 
                 {loading ? (
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลดข้อมูล EOC...</p>
                     </div>
                 ) : activeEOCs.length > 0 ? (
@@ -274,7 +270,7 @@ export default function CitizenDashboard() {
 
                 {reportsLoading ? (
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลดประวัติ...</p>
                     </div>
                 ) : myReports.length > 0 ? (

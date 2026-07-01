@@ -25,6 +25,13 @@ const customJestConfig = {
     testPathIgnorePatterns: [
         '/node_modules/',
         '/.next/',
+        '/__tests__/__mocks__/',
+    ],
+    modulePathIgnorePatterns: [
+        '<rootDir>/.next/',
+    ],
+    watchPathIgnorePatterns: [
+        '<rootDir>/.next/',
     ],
 }
 

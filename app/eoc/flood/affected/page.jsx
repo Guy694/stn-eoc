@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import {
@@ -53,17 +53,7 @@ export default function AffectedPersonsPage() {
     // รายการอำเภอในจังหวัดสตูล
     const districts = ['สตูล', 'ควนโดน', 'ควนกาหลง', 'ท่าแพ', 'ละงู', 'มะนัง', 'ทุ่งหว้า'];
 
-    useEffect(() => {
-        fetchSessions();
-    }, []);
-
-    useEffect(() => {
-        if (selectedSession) {
-            fetchReports();
-        }
-    }, [selectedSession, filterDate]);
-
-    const fetchSessions = async () => {
+    const fetchSessions = useCallback(async () => {
         try {
             const response = await fetch('/stn-eoc/api/eoc/sessions?limit=100');
             const result = await response.json();
@@ -78,9 +68,13 @@ export default function AffectedPersonsPage() {
         } catch (error) {
             console.error('Fetch sessions error:', error);
         }
-    };
+    }, []);
 
-    const fetchReports = async () => {
+    useEffect(() => {
+        fetchSessions();
+    }, [fetchSessions]);
+
+    const fetchReports = useCallback(async () => {
         if (!selectedSession) return;
 
         try {
@@ -104,7 +98,13 @@ export default function AffectedPersonsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterDate, selectedSession]);
+
+    useEffect(() => {
+        if (selectedSession) {
+            fetchReports();
+        }
+    }, [fetchReports, selectedSession]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -286,7 +286,7 @@ export default function AffectedPersonsPage() {
                 </div>
 
                 {/* Session Selector */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md p-4 mb-6 border border-blue-200">
+                <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg shadow-md p-4 mb-6 border border-blue-200">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl">📋</span>
@@ -331,25 +331,25 @@ export default function AffectedPersonsPage() {
                     <>
                         {/* Stats Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-600">
+                            <div className="bg-white rounded-lg shadow p-4 border border-red-600">
                                 <div className="text-sm text-gray-600 mb-1">ผู้เสียชีวิต</div>
                                 <div className="text-2xl font-bold text-red-600">
                                     {summary.province.province_deaths || 0} คน
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-yellow-500">
                                 <div className="text-sm text-gray-600 mb-1">ผู้สูญหาย</div>
                                 <div className="text-2xl font-bold text-yellow-600">
                                     {summary.province.province_missing || 0} คน
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-orange-500">
                                 <div className="text-sm text-gray-600 mb-1">ผู้ได้รับบาดเจ็บ</div>
                                 <div className="text-2xl font-bold text-orange-600">
                                     {summary.province.province_injured || 0} คน
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                                 <div className="text-sm text-gray-600 mb-1">ผู้ได้รับผลกระทบ</div>
                                 <div className="text-2xl font-bold text-blue-600">
                                     {summary.province.province_affected || 0} คน
@@ -543,7 +543,7 @@ export default function AffectedPersonsPage() {
                         <div className="bg-white rounded-lg shadow">
                             {loading ? (
                                 <div className="flex justify-center items-center py-12">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
                                 </div>
                             ) : filteredReports.length === 0 ? (
                                 <div className="text-center py-12 text-gray-500">

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getDisasterConfig, getDisasterIcon, getRiskLevelIcon } from '@/lib/disasterConfig';
 import SessionTeamsList from './SessionTeamsList';
 
@@ -20,11 +20,7 @@ export default function DisasterSessionSelector({
     const disasterIcon = getDisasterIcon(disasterType);
     const colorGradient = config?.color.gradient || 'from-gray-500 to-gray-600';
 
-    useEffect(() => {
-        fetchAvailableYears();
-    }, [disasterType]);
-
-    const fetchAvailableYears = async () => {
+    const fetchAvailableYears = useCallback(async () => {
         try {
             const response = await fetch(`/stn-eoc/api/eoc/${disasterType}/sessions-summary`);
             const data = await response.json();
@@ -41,15 +37,9 @@ export default function DisasterSessionSelector({
         } catch (error) {
             console.error('Error fetching years:', error);
         }
-    };
+    }, [disasterType]);
 
-    useEffect(() => {
-        if (selectedYear) {
-            fetchYearData(selectedYear);
-        }
-    }, [selectedYear, disasterType]);
-
-    const fetchYearData = async (year) => {
+    const fetchYearData = useCallback(async (year) => {
         setLoading(true);
         try {
             const response = await fetch(`/stn-eoc/api/eoc/${disasterType}/sessions-summary?year=${year}`);
@@ -72,7 +62,17 @@ export default function DisasterSessionSelector({
         } finally {
             setLoading(false);
         }
-    };
+    }, [disasterType, onSessionChange]);
+
+    useEffect(() => {
+        fetchAvailableYears();
+    }, [fetchAvailableYears]);
+
+    useEffect(() => {
+        if (selectedYear) {
+            fetchYearData(selectedYear);
+        }
+    }, [fetchYearData, selectedYear]);
 
     const handleSessionChange = (session) => {
         setSelectedSession(session);
@@ -190,7 +190,7 @@ export default function DisasterSessionSelector({
                     <select
                         value={selectedYear || ''}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
                     >
                         <option value="">-- เลือกปี --</option>
                         {years.map(year => (
@@ -212,7 +212,7 @@ export default function DisasterSessionSelector({
                                 const session = sessions.find(s => s.id === parseInt(e.target.value));
                                 handleSessionChange(session);
                             }}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
                         >
                             <option value="">-- เลือก Session --</option>
                             {sessions.map(session => (
@@ -228,12 +228,12 @@ export default function DisasterSessionSelector({
 
             {loading ? (
                 <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-teal-500 mx-auto mb-4"></div>
                     <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : yearSummary && (
-                <div className="bg-purple-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-purple-800 mb-3">
+                <div className="bg-teal-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-teal-800 mb-3">
                         สรุปข้อมูลปี {selectedYear + 543}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -297,12 +297,12 @@ export default function DisasterSessionSelector({
 
 function SummaryItem({ label, value, icon }) {
     return (
-        <div className="bg-white rounded p-3 border border-purple-200">
+        <div className="bg-white rounded p-3 border border-teal-200">
             <div className="flex items-center gap-2 mb-1">
                 <span>{icon}</span>
                 <span className="text-xs text-gray-600">{label}</span>
             </div>
-            <p className="text-lg font-bold text-purple-700">{value}</p>
+            <p className="text-lg font-bold text-teal-700">{value}</p>
         </div>
     );
 }

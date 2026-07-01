@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getDisasterConfig, getAllDisasterTypesSync } from '@/lib/disasterConfig';
 
@@ -8,36 +8,7 @@ export default function DisasterDashboard() {
     const [loading, setLoading] = useState(true);
     const [disasterTypes, setDisasterTypes] = useState([]);
 
-    useEffect(() => {
-        loadDisasterTypes();
-    }, []);
-
-    const loadDisasterTypes = async () => {
-        try {
-            // ดึงข้อมูล EOC Types จาก API
-            const response = await fetch('/stn-eoc/api/admin/eoc-types?active=true');
-            const result = await response.json();
-
-            if (result.success && Array.isArray(result.data)) {
-                const types = result.data.map(item => item.id);
-                setDisasterTypes(types);
-                // โหลด sessions หลังจากได้ types แล้ว
-                await fetchAllActiveSessions(types);
-            } else {
-                // fallback ถ้าไม่มีข้อมูล
-                const defaultTypes = getAllDisasterTypesSync();
-                setDisasterTypes(defaultTypes);
-                await fetchAllActiveSessions(defaultTypes);
-            }
-        } catch (error) {
-            console.error('Error loading disaster types:', error);
-            const defaultTypes = getAllDisasterTypesSync();
-            setDisasterTypes(defaultTypes);
-            await fetchAllActiveSessions(defaultTypes);
-        }
-    };
-
-    const fetchAllActiveSessions = async (types) => {
+    const fetchAllActiveSessions = useCallback(async (types) => {
         setLoading(true);
         const sessionsData = {};
 
@@ -62,12 +33,42 @@ export default function DisasterDashboard() {
 
         setActiveSessions(sessionsData);
         setLoading(false);
-    };
+    }, []);
+
+    const loadDisasterTypes = useCallback(async () => {
+        try {
+            // ดึงข้อมูล EOC Types จาก API
+            const response = await fetch('/stn-eoc/api/admin/eoc-types?active=true');
+            const result = await response.json();
+
+            if (result.success && Array.isArray(result.data)) {
+                const types = result.data.map(item => item.id);
+                setDisasterTypes(types);
+                // โหลด sessions หลังจากได้ types แล้ว
+                await fetchAllActiveSessions(types);
+            } else {
+                // fallback ถ้าไม่มีข้อมูล
+                const defaultTypes = getAllDisasterTypesSync();
+                setDisasterTypes(defaultTypes);
+                await fetchAllActiveSessions(defaultTypes);
+            }
+        } catch (error) {
+            console.error('Error loading disaster types:', error);
+            const defaultTypes = getAllDisasterTypesSync();
+            setDisasterTypes(defaultTypes);
+            await fetchAllActiveSessions(defaultTypes);
+        }
+    }, [fetchAllActiveSessions]);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        loadDisasterTypes();
+    }, [loadDisasterTypes]);
 
     if (loading) {
         return (
             <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto mb-4"></div>
                 <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
             </div>
         );

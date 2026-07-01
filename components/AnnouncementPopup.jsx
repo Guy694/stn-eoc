@@ -1,16 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export default function AnnouncementPopup() {
     const [announcement, setAnnouncement] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
 
-    useEffect(() => {
-        fetchPopupAnnouncement();
-    }, []);
-
-    const fetchPopupAnnouncement = async () => {
+    async function fetchPopupAnnouncement() {
         try {
             const response = await fetch('/stn-eoc/api/public/announcements/popup');
             const data = await response.json();
@@ -29,7 +26,12 @@ export default function AnnouncementPopup() {
         } catch (error) {
             console.error('Error fetching popup announcement:', error);
         }
-    };
+    }
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchPopupAnnouncement();
+    }, []);
 
     const handleClose = () => {
         if (announcement) {
@@ -85,10 +87,13 @@ export default function AnnouncementPopup() {
 
                     {/* Image */}
                     <div className="px-6 pb-6">
-                        <img
+                        <Image
                             src={announcement.image_path?.startsWith('http') ? announcement.image_path : `/stn-eoc${announcement.image_path?.startsWith('/') ? '' : '/'}${announcement.image_path}`}
                             alt={announcement.title}
+                            width={1200}
+                            height={675}
                             className="w-full h-auto rounded-lg shadow-lg"
+                            unoptimized
                         />
                     </div>
                 </div>

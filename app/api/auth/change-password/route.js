@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
+import { requireAuth } from "@/lib/auth";
+import { publicInternalError } from "@/lib/apiResponse";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -14,9 +16,13 @@ const pool = mysql.createPool({
 
 export async function POST(request) {
     try {
-        const { userId, currentPassword, newPassword } = await request.json();
+        const auth = await requireAuth(request);
+        if (!auth.success) return auth.response;
 
-        if (!userId || !currentPassword || !newPassword) {
+        const { currentPassword, newPassword } = await request.json();
+        const userId = auth.user.id;
+
+        if (!currentPassword || !newPassword) {
             return NextResponse.json(
                 { success: false, message: 'กรุณากรอกข้อมูลให้ครบถ้วน' },
                 { status: 400 }
@@ -74,27 +80,13 @@ export async function POST(request) {
             });
         } catch (error) {
             console.error('Change password error (inner):', error);
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน',
-                    error: error.message
-                },
-                { status: 500 }
-            );
+            return publicInternalError('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
         } finally {
             connection.release();
         }
 
     } catch (error) {
         console.error('Change password error:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
     }
 }

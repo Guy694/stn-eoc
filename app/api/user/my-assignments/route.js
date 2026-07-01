@@ -5,31 +5,26 @@
 
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 export async function GET(request) {
     try {
-        // ดึง user จาก session/cookie (ปรับตามระบบ auth ของคุณ)
-        const userId = request.headers.get('x-user-id') || request.cookies.get('userId')?.value;
-
-        if (!userId) {
-            return NextResponse.json({
-                success: false,
-                message: 'กรุณา login ก่อนใช้งาน'
-            }, { status: 401 });
-        }
+        const auth = await requireAuth(request);
+        if (!auth.success) return auth.response;
 
         // ดึงข้อมูลจาก view
-        const [assignments] = await pool.query(`
+        const assignments = await pool.query(`
             SELECT * FROM vw_officer_team_assignments
             WHERE officer_id = ? 
               AND is_active = TRUE
               AND session_status = 'active'
             ORDER BY assigned_at DESC
-        `, [userId]);
+        `, [auth.user.id]);
 
         // ดึง modules ที่แต่ละทีมสามารถเข้าถึงได้
         for (let assignment of assignments) {
-            const [modules] = await pool.query(`
+            const modules = await pool.query(`
                 SELECT 
                     m.id,
                     m.module_code,
@@ -62,10 +57,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching user assignments:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลงานที่รับผิดชอบ');
     }
 }

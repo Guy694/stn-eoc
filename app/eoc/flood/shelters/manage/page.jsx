@@ -1,7 +1,7 @@
 "use client";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useEOC } from "@/context/EOCContext";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { showSuccess, showError } from "@/lib/sweetAlert";
 
@@ -41,7 +41,7 @@ export default function ManageSheltersPage() {
     }, []);
 
     // ดึงรายการ shelter พร้อมสถานะ activation
-    const fetchShelters = async () => {
+    const fetchShelters = useCallback(async () => {
         if (!sessionId) return;
 
         try {
@@ -58,13 +58,13 @@ export default function ManageSheltersPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [sessionId]);
 
     useEffect(() => {
         if (sessionId) {
             fetchShelters();
         }
-    }, [sessionId]);
+    }, [fetchShelters, sessionId]);
 
     // Toggle activation
     const toggleActivation = async (shelterId, currentStatus) => {
@@ -249,9 +249,9 @@ export default function ManageSheltersPage() {
                         <p className="text-orange-600 text-sm">ผู้อพยพปัจจุบัน</p>
                         <p className="text-3xl font-bold text-orange-700">{stats.total_occupancy || 0} <span className="text-sm font-normal">คน</span></p>
                     </div>
-                    <div className="bg-purple-50 rounded-xl p-5 shadow-sm border border-purple-100">
-                        <p className="text-purple-600 text-sm">คงเหลือ</p>
-                        <p className="text-3xl font-bold text-purple-700">{(stats.total_capacity || 0) - (stats.total_occupancy || 0)} <span className="text-sm font-normal">คน</span></p>
+                    <div className="bg-teal-50 rounded-xl p-5 shadow-sm border border-teal-100">
+                        <p className="text-teal-600 text-sm">คงเหลือ</p>
+                        <p className="text-3xl font-bold text-teal-700">{(stats.total_capacity || 0) - (stats.total_occupancy || 0)} <span className="text-sm font-normal">คน</span></p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-200">
                         <p className="text-gray-500 text-sm">ยังไม่เปิด</p>
@@ -274,7 +274,7 @@ export default function ManageSheltersPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
                         </div>
                     ) : filteredShelters.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
@@ -311,7 +311,7 @@ export default function ManageSheltersPage() {
                                                             <span className="text-orange-600 font-medium">
                                                                 👥 ผู้อพยพ: {shelter.session_occupancy || 0}/{shelter.shelter_capacity} คน
                                                             </span>
-                                                            <span className="text-purple-600">
+                                                            <span className="text-teal-600">
                                                                 (คงเหลือ {(shelter.shelter_capacity || 0) - (shelter.session_occupancy || 0)} คน)
                                                             </span>
                                                             {shelter.contact_phone && (
@@ -456,7 +456,7 @@ export default function ManageSheltersPage() {
                                 </div>
                                 <div className="mt-2 flex justify-between text-sm">
                                     <span className="text-gray-500">
-                                        คงเหลือ: <span className="font-bold text-purple-600">{(editingShelter.shelter_capacity || 0) - (editOccupancy || 0)} คน</span>
+                                        คงเหลือ: <span className="font-bold text-teal-600">{(editingShelter.shelter_capacity || 0) - (editOccupancy || 0)} คน</span>
                                     </span>
                                     {editOccupancy > editingShelter.shelter_capacity && (
                                         <span className="text-red-600 font-medium">⚠️ เกินความจุ!</span>

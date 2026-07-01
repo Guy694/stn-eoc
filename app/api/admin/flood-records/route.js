@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
@@ -10,6 +12,9 @@ const dbConfig = {
 
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const year = searchParams.get('year');
         const sessionId = searchParams.get('session_id');
@@ -69,15 +74,15 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('Error fetching flood records:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลน้ำท่วม');
     }
 }
 
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const data = await request.json();
         const connection = await mysql.createConnection(dbConfig);
 
@@ -108,7 +113,7 @@ export async function POST(request) {
             data.damage_amount || 0,
             data.relief_amount || 0,
             data.status || 'รอดำเนินการ',
-            data.created_by || 'Admin'
+            auth.user.username
         ];
 
         const [result] = await connection.execute(query, params);
@@ -120,15 +125,15 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Error creating flood record:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูลน้ำท่วม');
     }
 }
 
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const data = await request.json();
         const connection = await mysql.createConnection(dbConfig);
 
@@ -172,15 +177,15 @@ export async function PUT(request) {
         });
     } catch (error) {
         console.error('Error updating flood record:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขข้อมูลน้ำท่วม');
     }
 }
 
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -201,9 +206,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Error deleting flood record:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลน้ำท่วม');
     }
 }

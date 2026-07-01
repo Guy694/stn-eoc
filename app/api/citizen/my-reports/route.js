@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { getCitizenSession } from "@/lib/citizenAuth";
 
 // Database Pool
 const pool = mysql.createPool({
@@ -16,32 +17,26 @@ const pool = mysql.createPool({
  * API: Get incident reports submitted by a specific citizen
  * GET /api/citizen/my-reports
  */
-export async function GET(request) {
+export async function GET() {
     try {
-        const citizenId = request.headers.get('x-citizen-id');
+        const session = await getCitizenSession();
 
-        if (!citizenId) {
+        if (!session?.pidHash) {
             return NextResponse.json(
-                { success: false, message: 'Citizen ID is required' },
-                { status: 400 }
+                { success: false, message: 'Authentication required' },
+                { status: 401 }
             );
         }
 
         const connection = await pool.getConnection();
 
         try {
-            // Query incident_reports where citizen_id matches
-            // Note: This assumes we have a citizen_id field in incident_reports table
-            // If not, we'll search by first_name and last_name matching the citizen's data
-
-            // First, get citizen info
             const [citizens] = await connection.execute(
-                'SELECT given_name, family_name FROM citizens WHERE id = ?',
-                [citizenId]
+                'SELECT id, given_name, family_name FROM citizens WHERE pid_hash = ?',
+                [session.pidHash]
             );
 
             if (citizens.length === 0) {
-                connection.release();
                 return NextResponse.json(
                     { success: false, message: 'Citizen not found' },
                     { status: 404 }
@@ -50,8 +45,6 @@ export async function GET(request) {
 
             const citizen = citizens[0];
 
-            // Query reports by matching name
-            // This is a temporary solution until we add citizen_id to incident_reports
             const [reports] = await connection.execute(
                 `SELECT 
                     id, 
@@ -63,14 +56,12 @@ export async function GET(request) {
                     village,
                     created_at,
                     occurred_at
-                FROM incident_reports 
-                WHERE first_name = ? AND last_name = ?
+                FROM public_incident_reports
+                WHERE citizen_id = ? OR citizen_pid_hash = ?
                 ORDER BY created_at DESC
                 LIMIT 50`,
-                [citizen.given_name, citizen.family_name]
+                [citizen.id, session.pidHash]
             );
-
-            connection.release();
 
             return NextResponse.json({
                 success: true,
@@ -78,8 +69,9 @@ export async function GET(request) {
             });
 
         } catch (dbError) {
-            connection.release();
             throw dbError;
+        } finally {
+            connection.release();
         }
 
     } catch (error) {

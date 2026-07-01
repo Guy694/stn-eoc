@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { publicInternalError } from "@/lib/apiResponse";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -57,14 +58,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching popup announcement:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูล');
     } finally {
         connection.release();
     }

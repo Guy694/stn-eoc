@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createCitizenSession } from '@/lib/citizenAuth';
+import { setCitizenSessionCookie } from '@/lib/citizenAuth';
 
 const THAIID_CONFIG = {
     tokenUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/token/',
@@ -74,17 +74,17 @@ export async function GET(request) {
 
         const userInfo = await userInfoResponse.json();
 
-        // Create citizen session
-        createCitizenSession({
-            pid: userInfo.sub, // National ID
-            given_name: userInfo.given_name,
-            family_name: userInfo.family_name,
-        });
-
         // Redirect back to report form
         const response = NextResponse.redirect(
             new URL('/public/report-incident?thaiid=success', request.url)
         );
+
+        // Create citizen session
+        setCitizenSessionCookie(response, {
+            pid: userInfo.sub, // National ID
+            given_name: userInfo.given_name,
+            family_name: userInfo.family_name,
+        });
 
         // Clear state cookie
         response.cookies.delete('thaiid_state');

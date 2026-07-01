@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
+import { publicInternalError } from "@/lib/apiResponse";
 
 // GET - ดึงข้อมูล EOC Modules ทั้งหมดหรือตาม eoc_type
 export async function GET(req) {
     try {
+        const auth = await requireAuth(req, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(req.url);
         const eocType = searchParams.get('eoc_type');
         const activeOnly = searchParams.get('active') === 'true';
@@ -51,16 +56,16 @@ export async function GET(req) {
         });
     } catch (error) {
         console.error("Error fetching EOC modules:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการดึงข้อมูล EOC Modules");
     }
 }
 
 // POST - เพิ่ม EOC Module ใหม่
 export async function POST(req) {
     try {
+        const auth = await requireAuth(req, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await req.json();
         const {
             eoc_type,
@@ -117,16 +122,16 @@ export async function POST(req) {
         });
     } catch (error) {
         console.error("Error creating EOC module:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการเพิ่ม EOC Module");
     }
 }
 
 // PUT - แก้ไข EOC Module
 export async function PUT(req) {
     try {
+        const auth = await requireAuth(req, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await req.json();
         const {
             id,
@@ -186,16 +191,16 @@ export async function PUT(req) {
         });
     } catch (error) {
         console.error("Error updating EOC module:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการแก้ไข EOC Module");
     }
 }
 
 // DELETE - ลบ EOC Module
 export async function DELETE(req) {
     try {
+        const auth = await requireAuth(req, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
 
@@ -217,9 +222,6 @@ export async function DELETE(req) {
         });
     } catch (error) {
         console.error("Error deleting EOC module:", error);
-        return NextResponse.json(
-            { success: false, error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError("เกิดข้อผิดพลาดในการลบ EOC Module");
     }
 }

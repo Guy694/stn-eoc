@@ -1,47 +1,11 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function SessionStats({ session, year }) {
     const [floodData, setFloodData] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (session && year) {
-            fetchSessionFloodData();
-        }
-    }, [session, year]);
-
-    const fetchSessionFloodData = async () => {
-        setLoading(true);
-        try {
-            // ดึงข้อมูลน้ำท่วมในช่วง session
-            const startDate = new Date(session.opened_at).toISOString().split('T')[0];
-            const endDate = session.closed_at
-                ? new Date(session.closed_at).toISOString().split('T')[0]
-                : new Date().toISOString().split('T')[0];
-
-            // เรียก API ดึงข้อมูล daily flood ในช่วงเวลานั้น
-            const response = await fetch(
-                `/api/eoc/flood/daily-flood-village?start=${startDate}&end=${endDate}`
-            );
-
-            if (response.ok) {
-                const data = await response.json();
-
-                // คำนวณสถิติ
-                const stats = calculateStats(data);
-                setFloodData(stats);
-            }
-        } catch (error) {
-            console.error('Error fetching session flood data:', error);
-            // ใช้ข้อมูลจำลอง
-            setFloodData(getMockStats(session));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const calculateStats = (data) => {
+    const calculateStats = useCallback((data) => {
         // คำนวณสถิติจากข้อมูลจริง
         const uniqueVillages = new Set();
         const uniqueTambons = new Set();
@@ -77,9 +41,9 @@ export default function SessionStats({ session, year }) {
             mildCount,
             totalRecords: data.length
         };
-    };
+    }, []);
 
-    const getMockStats = (session) => {
+    const getMockStats = useCallback((session) => {
         // ข้อมูลจำลองสำหรับ demo
         return {
             totalVillages: Math.floor(Math.random() * 50) + 20,
@@ -91,7 +55,46 @@ export default function SessionStats({ session, year }) {
             mildCount: Math.floor(Math.random() * 20) + 8,
             totalRecords: session?.total_data_entries || Math.floor(Math.random() * 100) + 50
         };
-    };
+    }, []);
+
+    const fetchSessionFloodData = useCallback(async () => {
+        if (!session || !year) return;
+
+        setLoading(true);
+        try {
+            // ดึงข้อมูลน้ำท่วมในช่วง session
+            const startDate = new Date(session.opened_at).toISOString().split('T')[0];
+            const endDate = session.closed_at
+                ? new Date(session.closed_at).toISOString().split('T')[0]
+                : new Date().toISOString().split('T')[0];
+
+            // เรียก API ดึงข้อมูล daily flood ในช่วงเวลานั้น
+            const response = await fetch(
+                `/stn-eoc/api/eoc/flood/daily-flood-village?date=${endDate}`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                const records = Array.isArray(data) ? data : data.villages || [];
+
+                // คำนวณสถิติ
+                const stats = calculateStats(records);
+                setFloodData(stats);
+            } else {
+                setFloodData(getMockStats(session));
+            }
+        } catch (error) {
+            console.error('Error fetching session flood data:', error);
+            // ใช้ข้อมูลจำลอง
+            setFloodData(getMockStats(session));
+        } finally {
+            setLoading(false);
+        }
+    }, [calculateStats, getMockStats, session, year]);
+
+    useEffect(() => {
+        fetchSessionFloodData();
+    }, [fetchSessionFloodData]);
 
     if (!session) {
         return null;
@@ -101,7 +104,7 @@ export default function SessionStats({ session, year }) {
         return (
             <div className="bg-white shadow-md rounded-lg p-6 mb-6">
                 <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b border-teal-500 mx-auto mb-2"></div>
                     <p className="text-gray-600 text-sm">กำลังโหลดสถิติ...</p>
                 </div>
             </div>
@@ -109,7 +112,7 @@ export default function SessionStats({ session, year }) {
     }
 
     return (
-        <div className="bg-linear-to-r from-purple-50 to-blue-50 shadow-md rounded-lg p-6 mb-6 border border-purple-200">
+        <div className="bg-linear-to-r from-teal-50 to-blue-50 shadow-md rounded-lg p-6 mb-6 border border-teal-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <span>📈</span>
                 สถิติสรุป - EOC Session #{session.session_number} (พ.ศ. {year + 543})
@@ -161,7 +164,7 @@ export default function SessionStats({ session, year }) {
                 />
             </div>
 
-            <div className="mt-4 pt-4 border-t border-purple-200">
+            <div className="mt-4 pt-4 border-t border-teal-200">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                     <div className="flex items-center gap-4">
                         <span>
@@ -190,7 +193,7 @@ function StatsCard({ label, value, icon, color, subLabel = '' }) {
     const colorClasses = {
         blue: 'bg-blue-100 border-blue-300 text-blue-700',
         green: 'bg-green-100 border-green-300 text-green-700',
-        purple: 'bg-purple-100 border-purple-300 text-purple-700',
+        purple: 'bg-teal-100 border-teal-300 text-teal-700',
         orange: 'bg-orange-100 border-orange-300 text-orange-700',
         red: 'bg-red-100 border-red-300 text-red-700',
         yellow: 'bg-yellow-100 border-yellow-300 text-yellow-700',

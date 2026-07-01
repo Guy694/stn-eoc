@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useCallback, useEffect, Suspense, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
@@ -12,6 +12,14 @@ const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
     loading: () => <div className="h-96 bg-gray-100 flex items-center justify-center">กำลังโหลดแผนที่...</div>
 });
+
+const EOC_TYPES = [
+    { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
+    { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow' },
+    { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan' },
+    { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange' },
+    { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
+];
 
 function ShelterCenterContent() {
     const searchParams = useSearchParams();
@@ -39,13 +47,7 @@ function ShelterCenterContent() {
     const [tambons, setTambons] = useState([]);
     const [villages, setVillages] = useState([]);
 
-    const eocTypes = [
-        { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
-        { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow' },
-        { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan' },
-        { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange' },
-        { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
-    ];
+    const eocTypes = EOC_TYPES;
 
     // Form data
     const [formData, setFormData] = useState({
@@ -62,12 +64,6 @@ function ShelterCenterContent() {
         contact_phone: ''
     });
 
-    useEffect(() => {
-        setMounted(true);
-        fetchShelterCenters();
-        fetchDistricts();
-    }, []);
-
     // Update filter when URL parameter changes
     useEffect(() => {
         if (eocParam) {
@@ -75,29 +71,7 @@ function ShelterCenterContent() {
         }
     }, [eocParam]);
 
-    const fetchShelterCenters = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch('/stn-eoc/api/admin/shelter-center');
-            const result = await response.json();
-
-            const centersData = Array.isArray(result.data) ? result.data : [];
-            setShelterCenters(centersData);
-            calculateStats(centersData);
-
-            if (!result.success && result.message) {
-                showError(result.message);
-            }
-        } catch (error) {
-            console.error('Fetch error:', error);
-            showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-            setShelterCenters([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const calculateStats = (data) => {
+    const calculateStats = useCallback((data) => {
         if (!Array.isArray(data)) {
             setStats({
                 total: 0,
@@ -126,7 +100,29 @@ function ShelterCenterContent() {
             by_type
         };
         setStats(stats);
-    };
+    }, [eocTypes]);
+
+    const fetchShelterCenters = useCallback(async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('/stn-eoc/api/admin/shelter-center');
+            const result = await response.json();
+
+            const centersData = Array.isArray(result.data) ? result.data : [];
+            setShelterCenters(centersData);
+            calculateStats(centersData);
+
+            if (!result.success && result.message) {
+                showError(result.message);
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+            setShelterCenters([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [calculateStats]);
 
     const resetForm = () => {
         setFormData({
@@ -149,7 +145,7 @@ function ShelterCenterContent() {
     };
 
     // Fetch districts
-    const fetchDistricts = async () => {
+    const fetchDistricts = useCallback(async () => {
         try {
             const response = await fetch('/stn-eoc/api/common/villages');
             const result = await response.json();
@@ -160,7 +156,13 @@ function ShelterCenterContent() {
         } catch (error) {
             console.error('Fetch districts error:', error);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        setMounted(true);
+        fetchShelterCenters();
+        fetchDistricts();
+    }, [fetchDistricts, fetchShelterCenters]);
 
     // Fetch tambons based on selected district
     const fetchTambons = async (district) => {
@@ -261,8 +263,8 @@ function ShelterCenterContent() {
 
         try {
             const url = forceDelete
-                ? `/api/admin/shelter-center?id=${center.id}&force=true`
-                : `/api/admin/shelter-center?id=${center.id}`;
+                ? `/stn-eoc/api/admin/shelter-center?id=${center.id}&force=true`
+                : `/stn-eoc/api/admin/shelter-center?id=${center.id}`;
 
             const response = await fetch(url, {
                 method: 'DELETE'
@@ -324,8 +326,6 @@ function ShelterCenterContent() {
                 lon: markerPosition ? markerPosition.lng : formData.lon
             };
 
-            console.log('Submitting data:', dataToSend);
-
             const url = editingCenter
                 ? `/stn-eoc/api/admin/shelter-center?id=${editingCenter.id}`
                 : '/stn-eoc/api/admin/shelter-center';
@@ -341,7 +341,6 @@ function ShelterCenterContent() {
             });
 
             const result = await response.json();
-            console.log('API Response:', result);
 
             if (result.success) {
                 showSuccess(editingCenter ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มข้อมูลสำเร็จ');
@@ -405,26 +404,26 @@ function ShelterCenterContent() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                         <div className="text-sm text-gray-600 mb-1">ทั้งหมด</div>
                         <div className="text-2xl font-bold text-blue-600">{stats.total || 0}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-green-500">
                         <div className="text-sm text-gray-600 mb-1">เปิดใช้งาน</div>
                         <div className="text-2xl font-bold text-green-600">{stats.active || 0}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-red-500">
                         <div className="text-sm text-gray-600 mb-1">ปิดใช้งาน</div>
                         <div className="text-2xl font-bold text-red-600">{stats.inactive || 0}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
+                    <div className="bg-white rounded-lg shadow p-4 border border-teal-500">
                         <div className="text-sm text-gray-600 mb-1">ความจุรวม</div>
-                        <div className="text-2xl font-bold text-purple-600">{stats.total_capacity || 0}</div>
+                        <div className="text-2xl font-bold text-teal-600">{stats.total_capacity || 0}</div>
                     </div>
                     {eocTypes.map(type => {
                         const typeStats = stats.by_type?.[type.value] || { count: 0, capacity: 0 };
                         return (
-                            <div key={type.value} className="bg-white rounded-lg shadow p-4 border-l-4 border-gray-400">
+                            <div key={type.value} className="bg-white rounded-lg shadow p-4 border border-gray-400">
                                 <div className="text-xs text-gray-600 mb-1">{type.label}</div>
                                 <div className="text-xl font-bold text-gray-700">
                                     {typeStats.count} ({typeStats.capacity})
@@ -783,7 +782,7 @@ export default function ShelterCenterPage() {
         <Suspense fallback={
             <EOCLayout>
                 <div className="flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
                 </div>
             </EOCLayout>
         }>

@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงรายงานโรคในศูนย์พักพิง
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const shelterId = searchParams.get('shelter_id');
@@ -79,7 +84,7 @@ export async function GET(request) {
         console.error('Get shelter disease reports error:', error);
 
         // ถ้าตารางยังไม่มี
-        if (error.message.includes("doesn't exist")) {
+        if (error.code === 'ER_NO_SUCH_TABLE') {
             return NextResponse.json({
                 success: true,
                 data: [],
@@ -88,16 +93,16 @@ export async function GET(request) {
             });
         }
 
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงรายงานโรคในศูนย์พักพิง');
     }
 }
 
 // POST - เพิ่มรายงานโรค
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const {
             shelter_id,
@@ -112,7 +117,6 @@ export async function POST(request) {
             symptoms,
             treatment_given,
             notes,
-            reported_by
         } = body;
 
         if (!shelter_id || !session_id || !report_date || !disease_type) {
@@ -162,7 +166,7 @@ export async function POST(request) {
             [
                 shelter_id, session_id, report_date, disease_type,
                 new_cases || 0, recovered || 0, hospitalized || 0, deaths || 0,
-                severity || 'low', symptoms, treatment_given, notes, reported_by
+                severity || 'low', symptoms, treatment_given, notes, auth.user.id
             ]
         );
 
@@ -173,16 +177,16 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Create shelter disease report error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกรายงานโรคในศูนย์พักพิง');
     }
 }
 
 // DELETE - ลบรายงานโรค
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -202,9 +206,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Delete shelter disease report error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบรายงานโรคในศูนย์พักพิง');
     }
 }

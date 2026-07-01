@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showWarning } from '@/lib/sweetAlert';
 
@@ -25,11 +25,7 @@ export default function CitizensManagementPage() {
         { value: 'staff', label: 'เจ้าหน้าที่ทั่วไป' }
     ];
 
-    useEffect(() => {
-        fetchCitizens();
-    }, [searchTerm]);
-
-    const fetchCitizens = async () => {
+    const fetchCitizens = useCallback(async () => {
         try {
             setLoading(true);
             const response = await fetch('/stn-eoc/api/admin/citizens');
@@ -54,7 +50,11 @@ export default function CitizensManagementPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [searchTerm]);
+
+    useEffect(() => {
+        fetchCitizens();
+    }, [fetchCitizens]);
 
     const handlePromoteClick = (citizen) => {
         setSelectedCitizen(citizen);

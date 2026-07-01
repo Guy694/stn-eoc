@@ -58,7 +58,7 @@ openssl rand -base64 32
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 # Copy ผลลัพธ์ใส่ใน .env
-SECRET_KEY=wK8mP2qL9tW3fN7dX4cV6iJ1sY5zF0bD8rG3nP7oQ2xE9=
+SECRET_KEY=your_generated_secret_key_here
 ```
 
 ---

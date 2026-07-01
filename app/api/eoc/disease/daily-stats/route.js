@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงสถิติโรครายวันสำหรับ EOC Session
 export async function GET(request) {
@@ -212,10 +213,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching disease daily stats:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงสถิติโรครายวัน');
     }
 }

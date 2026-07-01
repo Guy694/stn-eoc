@@ -49,8 +49,7 @@ export async function GET(request) {
                 SELECT COUNT(*) as count FROM eoc_status WHERE is_active = 1
             `);
             activeEOCsCount = activeEOCs[0]?.count || 0;
-        } catch (e) {
-            console.log('eoc_status table may not exist');
+        } catch {
         }
 
         // 2. นับจำนวนทีมที่ active
@@ -67,8 +66,7 @@ export async function GET(request) {
                     SELECT COUNT(*) as count FROM eoc_teams WHERE is_active = 1
                 `);
                 activeTeamsCount = teams[0]?.count || 0;
-            } catch (e2) {
-                console.log('No team tables available');
+            } catch {
             }
         }
 
@@ -80,8 +78,7 @@ export async function GET(request) {
                 WHERE DATE(created_at) = CURDATE()
             `);
             todayReportsCount = todayReports[0]?.count || 0;
-        } catch (e) {
-            console.log('activity_logs table may not exist');
+        } catch {
         }
 
         // 4. ดึง active sessions พร้อมข้อมูลเพิ่มเติม
@@ -99,8 +96,7 @@ export async function GET(request) {
                 WHERE es.is_active = 1
             `);
             activeSessions = sessions;
-        } catch (e) {
-            console.log('eoc_sessions table may not exist');
+        } catch {
         }
 
         // 5. คำนวณผู้ได้รับผลกระทบจากข้อมูลน้ำท่วมล่าสุด (ถ้ามี)
@@ -119,8 +115,7 @@ export async function GET(request) {
                 `, [floodSession[0].id]);
                 totalAffected = affectedData[0]?.total || 0;
             }
-        } catch (e) {
-            console.log('No flood data available');
+        } catch {
         }
 
         // 6. ดึงประกาศล่าสุด 3 รายการ
@@ -133,8 +128,7 @@ export async function GET(request) {
                 LIMIT 3
             `);
             announcements = announcementData;
-        } catch (e) {
-            console.log('announcements table may not exist');
+        } catch {
         }
 
         // 7. ดึงกิจกรรมล่าสุด 10 รายการ
@@ -163,8 +157,7 @@ export async function GET(request) {
                 time: formatThaiDateTime(activity.created_at),
                 user: activity.given_name ? `${activity.user_title || ''}${activity.given_name} ${activity.family_name || ''}`.trim() : 'ระบบ'
             }));
-        } catch (e) {
-            console.log('activity_logs table may not exist');
+        } catch {
         }
 
         return NextResponse.json({

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
+import { publicInternalError } from "@/lib/apiResponse";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -20,6 +21,13 @@ const rolePermissions = {
         admin: { view: true, create: true, edit: true, delete: true },
         reports: { view: true, create: true, export: true },
         users: { view: true, create: true, edit: true, delete: true }
+    },
+    commander: {
+        dashboard: true,
+        eoc: { view: true, create: true, edit: true, delete: false },
+        admin: { view: true, create: false, edit: false, delete: false },
+        reports: { view: true, create: true, export: true },
+        users: { view: true, create: false, edit: false, delete: false }
     },
     MCATT: {
         dashboard: true,
@@ -54,6 +62,7 @@ const rolePermissions = {
 // กำหนดชื่อแสดงสำหรับแต่ละ role
 const roleDisplayNames = {
     admin: 'ผู้ดูแลระบบ',
+    commander: 'ผู้บัญชาการเหตุการณ์',
     MCATT: 'ทีม MCATT',
     SAT: 'ทีม SAT',
     SeRHT: 'ทีม SeRHT',
@@ -249,8 +258,7 @@ export async function POST(request) {
                     roleDisplay: roleDisplayNames[officer.role] || officer.role,
                     permissions: permissions,
                     mustChangePassword: officer.must_change_password
-                },
-                sessionToken: sessionToken
+                }
             });
 
             // ตั้งค่า cookie สำหรับ session (httpOnly เพื่อความปลอดภัย)
@@ -269,13 +277,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Login error:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
     }
 }

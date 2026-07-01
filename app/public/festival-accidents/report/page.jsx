@@ -121,7 +121,7 @@ export default function CitizenFestivalReportPage() {
         setSubmitError("");
 
         try {
-            const res = await fetch("/stn-eoc/api/admin/accident-reports", {
+            const res = await fetch("/stn-eoc/api/public/accident-reports", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

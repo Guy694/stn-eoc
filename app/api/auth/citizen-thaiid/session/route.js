@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getCitizenSession, clearCitizenSession } from '@/lib/citizenAuth';
+import { getCitizenSession, clearCitizenSessionCookie } from '@/lib/citizenAuth';
 
 // GET - Check session
 export async function GET() {
     try {
-        const session = getCitizenSession();
+        const session = await getCitizenSession();
 
         if (!session) {
             return NextResponse.json({ authenticated: false }, { status: 401 });
@@ -15,7 +15,6 @@ export async function GET() {
             user: {
                 firstName: session.firstName,
                 lastName: session.lastName,
-                pid: session.pid,
             }
         });
     } catch (error) {
@@ -27,8 +26,9 @@ export async function GET() {
 // DELETE - Logout
 export async function DELETE() {
     try {
-        clearCitizenSession();
-        return NextResponse.json({ success: true });
+        const response = NextResponse.json({ success: true });
+        clearCitizenSessionCookie(response);
+        return response;
     } catch (error) {
         console.error('Logout error:', error);
         return NextResponse.json({ success: false }, { status: 500 });

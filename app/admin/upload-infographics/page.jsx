@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function UploadInfographics() {
     const router = useRouter();
@@ -27,13 +28,13 @@ export default function UploadInfographics() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const response = await fetch('/stn-eoc/api/auth/me');
+                const response = await fetch('/stn-eoc/api/auth/session/');
                 if (!response.ok) {
                     router.push('/login');
                     return;
                 }
                 const data = await response.json();
-                if (data.user.role !== 'admin' && data.user.role !== 'risk_communication') {
+                if (!data.success || data.user.role !== 'admin') {
                     router.push('/dashboard');
                     return;
                 }
@@ -137,7 +138,7 @@ export default function UploadInfographics() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto mb-4"></div>
                     <p>กำลังโหลด...</p>
                 </div>
             </div>
@@ -211,7 +212,7 @@ export default function UploadInfographics() {
                                 accept="image/png,image/jpeg,image/jpg"
                                 multiple
                                 onChange={handleFileChange}
-                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                className="block w-full text-sm text-blue-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
                             <p className="text-xs text-gray-500 mt-2">
                                 * สามารถเลือกหลายไฟล์พร้อมกันได้
@@ -255,10 +256,13 @@ export default function UploadInfographics() {
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             {files.map((file, idx) => (
                                                 <div key={idx} className="relative group">
-                                                    <img
+                                                    <Image
                                                         src={`/stn-eoc/infographics/${type.value}/${file}`}
                                                         alt={file}
+                                                        width={320}
+                                                        height={160}
                                                         className="w-full h-40 object-cover rounded-lg border shadow-sm"
+                                                        unoptimized
                                                     />
                                                     <div className="mt-2 text-xs text-gray-600 truncate">{file}</div>
                                                     <button

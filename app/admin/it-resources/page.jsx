@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import Swal from 'sweetalert2';
 import {
@@ -37,7 +37,7 @@ export default function ITResourcesPage() {
     const resourceTypes = [
         { value: 'server', label: '🖥️ Server', color: 'bg-blue-100 text-blue-800' },
         { value: 'internet', label: '🌐 Internet', color: 'bg-green-100 text-green-800' },
-        { value: 'network', label: '🔌 Network', color: 'bg-purple-100 text-purple-800' },
+        { value: 'network', label: '🔌 Network', color: 'bg-teal-100 text-teal-800' },
         { value: 'hardware', label: '💻 Hardware', color: 'bg-orange-100 text-orange-800' }
     ];
 
@@ -61,12 +61,7 @@ export default function ITResourcesPage() {
         notes: ''
     });
 
-    useEffect(() => {
-        fetchResources();
-        fetchHealthFacilities();
-    }, [filterType, filterStatus]);
-
-    const fetchHealthFacilities = async () => {
+    const fetchHealthFacilities = useCallback(async () => {
         try {
             const response = await fetch('/stn-eoc/api/common/health-facilities');
             const data = await response.json();
@@ -76,9 +71,9 @@ export default function ITResourcesPage() {
         } catch (error) {
             console.error('Fetch health facilities error:', error);
         }
-    };
+    }, []);
 
-    const fetchResources = async () => {
+    const fetchResources = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -97,7 +92,12 @@ export default function ITResourcesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterStatus, filterType]);
+
+    useEffect(() => {
+        fetchResources();
+        fetchHealthFacilities();
+    }, [fetchHealthFacilities, fetchResources]);
 
     const resetForm = () => {
         setFormData({
@@ -415,7 +415,7 @@ export default function ITResourcesPage() {
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     {loading ? (
                         <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto"></div>
                         </div>
                     ) : resources.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">

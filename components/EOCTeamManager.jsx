@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
@@ -21,15 +21,9 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [selectedSessionTeam, setSelectedSessionTeam] = useState(null);
 
-    useEffect(() => {
-        if (sessionId) {
-            loadSessionTeams();
-            loadAvailableTeams();
-            loadAvailableOfficers();
-        }
-    }, [sessionId]);
+    const loadSessionTeams = useCallback(async () => {
+        if (!sessionId) return;
 
-    const loadSessionTeams = async () => {
         try {
             setLoading(true);
             const response = await fetch(`/stn-eoc/api/admin/eoc-sessions/${sessionId}/teams`);
@@ -44,9 +38,9 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [sessionId]);
 
-    const loadAvailableTeams = async () => {
+    const loadAvailableTeams = useCallback(async () => {
         try {
             const response = await fetch('/stn-eoc/api/admin/eoc-teams?active=true');
             const data = await response.json();
@@ -56,9 +50,9 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
         } catch (error) {
             console.error('Error loading available teams:', error);
         }
-    };
+    }, []);
 
-    const loadAvailableOfficers = async () => {
+    const loadAvailableOfficers = useCallback(async () => {
         try {
             const response = await fetch('/stn-eoc/api/admin/officers?active=true');
             const data = await response.json();
@@ -68,7 +62,15 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
         } catch (error) {
             console.error('Error loading officers:', error);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        if (sessionId) {
+            loadSessionTeams();
+            loadAvailableTeams();
+            loadAvailableOfficers();
+        }
+    }, [loadAvailableOfficers, loadAvailableTeams, loadSessionTeams, sessionId]);
 
     const handleAddTeam = async (teamId, teamLeadId) => {
         try {
@@ -101,7 +103,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
 
         try {
             const response = await fetch(
-                `/api/admin/eoc-sessions/${sessionId}/teams?teamId=${teamId}`,
+                `/stn-eoc/api/admin/eoc-sessions/${sessionId}/teams?teamId=${teamId}`,
                 { method: 'DELETE' }
             );
 
@@ -117,10 +119,8 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
 
     const handleAddMember = async (sessionTeamId, officerId, roleInTeam) => {
         try {
-            console.log('Adding member:', { sessionTeamId, officerId, roleInTeam, assignedBy: user.id });
-
             const response = await fetch(
-                `/api/admin/eoc-teams/${sessionTeamId}/members`,
+                `/stn-eoc/api/admin/eoc-teams/${sessionTeamId}/members`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -133,7 +133,6 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             );
 
             const data = await response.json();
-            console.log('Add member response:', data);
 
             if (data.success) {
                 alert('เพิ่มสมาชิกสำเร็จ');
@@ -154,7 +153,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
 
         try {
             const response = await fetch(
-                `/api/admin/eoc-teams/${sessionTeamId}/members?memberId=${memberId}`,
+                `/stn-eoc/api/admin/eoc-teams/${sessionTeamId}/members?memberId=${memberId}`,
                 { method: 'DELETE' }
             );
 
@@ -170,7 +169,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     if (loading) {
         return (
             <div className="flex justify-center items-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
             </div>
         );
     }
@@ -263,7 +262,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
     const [expanded, setExpanded] = useState(true);
 
     return (
-        <div className={`bg-white rounded-lg shadow-md border-l-4 border-${team.color}-500`}>
+        <div className={`bg-white rounded-lg shadow-md border border-${team.color}-500`}>
             {/* Team Header */}
             <div className="p-4 border-b">
                 <div className="flex justify-between items-center">

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { requireAuth } from '@/lib/auth';
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -13,17 +14,14 @@ const pool = mysql.createPool({
 
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
-        const { userId, title, givenName, familyName, email, phone, department, position } = body;
+        const { title, givenName, familyName, email, phone, department, position } = body;
+        const userId = auth.user.id;
 
         // Validation
-        if (!userId) {
-            return NextResponse.json(
-                { success: false, message: 'ไม่พบข้อมูลผู้ใช้' },
-                { status: 400 }
-            );
-        }
-
         if (!givenName || !familyName) {
             return NextResponse.json(
                 { success: false, message: 'กรุณากรอกชื่อและนามสกุล' },

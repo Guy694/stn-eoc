@@ -79,7 +79,7 @@ export default function EOCOverview() {
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-600 mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
@@ -92,7 +92,7 @@ export default function EOCOverview() {
             <EOCLayout>
                 <div className="max-w-7xl mx-auto p-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-6">📊 ภาพรวม EOC</h1>
-                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg">
+                    <div className="bg-yellow-50 border border-yellow-400 p-6 rounded-lg">
                         <div className="flex items-center">
                             <div className="text-4xl mr-4">⚠️</div>
                             <div>
@@ -155,7 +155,7 @@ export default function EOCOverview() {
                 <div className="mb-6">
                     <h3 className="text-xl font-bold text-gray-800 mb-4">📋 สถิติผู้ประสบภัย</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                        <div className="bg-white rounded-lg shadow p-6 border border-red-500">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">ผู้เสียชีวิต</p>
@@ -165,7 +165,7 @@ export default function EOCOverview() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
+                        <div className="bg-white rounded-lg shadow p-6 border border-orange-500">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">ผู้สูญหาย</p>
@@ -175,7 +175,7 @@ export default function EOCOverview() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                        <div className="bg-white rounded-lg shadow p-6 border border-yellow-500">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">ผู้บาดเจ็บ</p>
@@ -185,11 +185,11 @@ export default function EOCOverview() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                        <div className="bg-white rounded-lg shadow p-6 border border-teal-500">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">รวมทั้งหมด</p>
-                                    <p className="text-3xl font-bold text-purple-600">{casualties.total}</p>
+                                    <p className="text-3xl font-bold text-teal-600">{casualties.total}</p>
                                 </div>
                                 <div className="text-4xl">👥</div>
                             </div>
@@ -401,10 +401,10 @@ export default function EOCOverview() {
                                 </div>
                                 <div className="text-4xl">✅</div>
                             </div>
-                            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                            <div className="flex items-center justify-between p-4 bg-teal-50 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">ความจุรวม</p>
-                                    <p className="text-3xl font-bold text-purple-600">{shelters.total_capacity || 0}</p>
+                                    <p className="text-3xl font-bold text-teal-600">{shelters.total_capacity || 0}</p>
                                     <p className="text-xs text-gray-500">คน</p>
                                 </div>
                                 <div className="text-4xl">👥</div>
@@ -419,7 +419,7 @@ export default function EOCOverview() {
                         <div className="mb-6">
                             <h3 className="text-xl font-bold text-gray-800 mb-4">🦠 สถิติโรครายวัน</h3>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                                <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                                <div className="bg-white rounded-lg shadow p-6 border border-blue-500">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm text-gray-600 mb-1">รายงานวันนี้</p>
@@ -430,7 +430,7 @@ export default function EOCOverview() {
                                         <div className="text-4xl">📊</div>
                                     </div>
                                 </div>
-                                <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                                <div className="bg-white rounded-lg shadow p-6 border border-red-500">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm text-gray-600 mb-1">สะสมทั้งหมด</p>
@@ -441,7 +441,7 @@ export default function EOCOverview() {
                                         <div className="text-4xl">📈</div>
                                     </div>
                                 </div>
-                                <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                                <div className="bg-white rounded-lg shadow p-6 border border-green-500">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm text-gray-600 mb-1">โรคที่รายงาน</p>
@@ -450,11 +450,11 @@ export default function EOCOverview() {
                                         <div className="text-4xl">🦠</div>
                                     </div>
                                 </div>
-                                <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                                <div className="bg-white rounded-lg shadow p-6 border border-teal-500">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm text-gray-600 mb-1">หน่วยบริการ</p>
-                                            <p className="text-3xl font-bold text-purple-600">{diseases.health_facilities || 0} แห่ง</p>
+                                            <p className="text-3xl font-bold text-teal-600">{diseases.health_facilities || 0} แห่ง</p>
                                         </div>
                                         <div className="text-4xl">🏥</div>
                                     </div>
@@ -551,7 +551,7 @@ export default function EOCOverview() {
                     <div className="mb-6">
                         <h3 className="text-xl font-bold text-gray-800 mb-4">🧑‍🦽 กลุ่มเปราะบาง</h3>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                            <div className="bg-white rounded-lg shadow p-6 border border-red-500">
                                 <div className="text-center">
                                     <div className="text-3xl mb-2">👴</div>
                                     <p className="text-sm text-gray-600 mb-1">ผู้สูงอายุ</p>
@@ -560,7 +560,7 @@ export default function EOCOverview() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                            <div className="bg-white rounded-lg shadow p-6 border border-blue-500">
                                 <div className="text-center">
                                     <div className="text-3xl mb-2">👶</div>
                                     <p className="text-sm text-gray-600 mb-1">เด็ก</p>
@@ -569,7 +569,7 @@ export default function EOCOverview() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                            <div className="bg-white rounded-lg shadow p-6 border border-yellow-500">
                                 <div className="text-center">
                                     <div className="text-3xl mb-2">♿</div>
                                     <p className="text-sm text-gray-600 mb-1">คนพิการ</p>
@@ -578,7 +578,7 @@ export default function EOCOverview() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-pink-500">
+                            <div className="bg-white rounded-lg shadow p-6 border border-pink-500">
                                 <div className="text-center">
                                     <div className="text-3xl mb-2">🤰</div>
                                     <p className="text-sm text-gray-600 mb-1">หญิงตั้งครรภ์</p>
@@ -587,11 +587,11 @@ export default function EOCOverview() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                            <div className="bg-white rounded-lg shadow p-6 border border-teal-500">
                                 <div className="text-center">
                                     <div className="text-3xl mb-2">🛏️</div>
                                     <p className="text-sm text-gray-600 mb-1">ผู้ป่วยติดเตียง</p>
-                                    <p className="text-2xl font-bold text-purple-600">
+                                    <p className="text-2xl font-bold text-teal-600">
                                         {parseInt(vulnerable_groups.summary?.total_bedridden) || 0}
                                     </p>
                                 </div>
@@ -636,7 +636,7 @@ export default function EOCOverview() {
                 )}
 
                 {/* Info Box */}
-                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
+                <div className="bg-blue-50 border border-blue-400 p-4 rounded-lg">
                     <div className="flex items-start">
                         <div className="text-2xl mr-3">ℹ️</div>
                         <div>

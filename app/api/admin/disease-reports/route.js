@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงรายงานโรครายวัน
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
@@ -163,10 +168,9 @@ export async function GET(request) {
         console.error('Get disease reports error:', error);
         return NextResponse.json({
             success: false,
-            message: error.message.includes('Table')
+            message: error.code === 'ER_NO_SUCH_TABLE'
                 ? 'ยังไม่ได้สร้างตารางในฐานข้อมูล กรุณารัน SQL ก่อน'
                 : 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message,
             data: [],
             summary: { today: [], cumulative: [], byDisease: [] }
         });
@@ -176,6 +180,9 @@ export async function GET(request) {
 // POST - บันทึกรายงานโรค
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const body = await request.json();
         const {
@@ -185,10 +192,7 @@ export async function POST(request) {
             disease_name,
             patient_count,
             notes,
-            reported_by
         } = body;
-
-        console.log('Received data:', body);
 
         // Validation
         if (!session_id || !report_date || !health_facility_id || !disease_name || patient_count === undefined || patient_count === null) {
@@ -201,8 +205,6 @@ export async function POST(request) {
 
         // อนุญาตให้กรอกค่าลบได้สำหรับกรณีลดจำนวนผู้ป่วย
 
-        console.log('Executing INSERT query with:', [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, reported_by || 1]);
-
         const [result] = await pool.query(
             `INSERT INTO disease_reports 
             (session_id, report_date, health_facility_id, disease_name, patient_count, notes, reported_by) 
@@ -212,7 +214,7 @@ export async function POST(request) {
                 notes = VALUES(notes),
                 reported_by = VALUES(reported_by),
                 updated_at = CURRENT_TIMESTAMP`,
-            [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, reported_by || 1]
+            [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, auth.user.id]
         );
 
         return NextResponse.json({
@@ -222,36 +224,21 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Create disease report error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error errno:', error.errno);
-        console.error('Error sqlMessage:', error.sqlMessage);
-        console.error('Error sqlState:', error.sqlState);
-        console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
         let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
 
         if (error.code === 'ER_DUP_ENTRY') {
             errorMessage = 'มีข้อมูลรายงานนี้อยู่แล้วในวันเดียวกัน';
         } else if (error.code === 'ER_NO_REFERENCED_ROW' || error.code === 'ER_NO_REFERENCED_ROW_2') {
-            errorMessage = 'ไม่พบหน่วยบริการที่เลือก (ID: ' + error.sqlMessage?.match(/\d+/)?.[0] + ')';
+            errorMessage = 'ไม่พบหน่วยบริการที่เลือก';
         } else if (error.code === 'ER_NO_SUCH_TABLE') {
             errorMessage = 'ยังไม่ได้สร้างตาราง disease_reports ในฐานข้อมูล กรุณารัน SQL script ก่อน';
         } else if (error.message?.includes('Table')) {
-            errorMessage = 'ตารางในฐานข้อมูลมีปัญหา: ' + error.message;
+            errorMessage = 'ตารางในฐานข้อมูลมีปัญหา';
         }
 
         return NextResponse.json(
-            {
-                success: false,
-                message: errorMessage,
-                error: error.sqlMessage || error.message,
-                code: error.code,
-                errno: error.errno,
-                details: process.env.NODE_ENV === 'development' ? {
-                    sqlState: error.sqlState,
-                    sql: error.sql
-                } : undefined
-            },
+            { success: false, message: errorMessage },
             { status: 500 }
         );
     }
@@ -260,6 +247,9 @@ export async function POST(request) {
 // PUT - แก้ไขรายงานโรค
 export async function PUT(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
@@ -302,16 +292,16 @@ export async function PUT(request) {
         });
     } catch (error) {
         console.error('Update disease report error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
     }
 }
 
 // DELETE - ลบรายงานโรค
 export async function DELETE(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const pool = await getConnection();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
@@ -331,9 +321,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Delete disease report error:', error);
-        return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการลบข้อมูล', error: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
 }

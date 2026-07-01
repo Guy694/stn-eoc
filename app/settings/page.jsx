@@ -68,7 +68,7 @@ export default function SettingsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b border-green-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">กำลังโหลด...</p>
                 </div>
             </div>
@@ -92,7 +92,7 @@ export default function SettingsPage() {
                         <div className="bg-white rounded-xl shadow-md overflow-hidden">
                             <button
                                 onClick={() => setActiveTab("password")}
-                                className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "password" ? "bg-green-50 text-green-700 border-l-4 border-green-600" : "text-gray-700 hover:bg-gray-50"}`}
+                                className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "password" ? "bg-green-50 text-green-700 border border-green-600" : "text-green-900 hover:bg-green-50"}`}
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">🔒</span>
@@ -104,7 +104,7 @@ export default function SettingsPage() {
                             </button>
                             <button
                                 onClick={() => setActiveTab("notifications")}
-                                className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "notifications" ? "bg-green-50 text-green-700 border-l-4 border-green-600" : "text-gray-700 hover:bg-gray-50"}`}
+                                className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "notifications" ? "bg-green-50 text-green-700 border border-green-600" : "text-green-900 hover:bg-green-50"}`}
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">🔔</span>
@@ -116,7 +116,7 @@ export default function SettingsPage() {
                             </button>
                             <button
                                 onClick={() => setActiveTab("preferences")}
-                                className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "preferences" ? "bg-green-50 text-green-700 border-l-4 border-green-600" : "text-gray-700 hover:bg-gray-50"}`}
+                                className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "preferences" ? "bg-green-50 text-green-700 border border-green-600" : "text-green-900 hover:bg-green-50"}`}
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">🎨</span>

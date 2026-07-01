@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 const FestivalMap = dynamic(() => import("./FestivalMap"), {
     ssr: false,
     loading: () => (
-        <div className="h-72 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 text-gray-400">
+        <div className="h-72 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600">
             <div className="text-center">
                 <div className="animate-spin h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
                 <p className="text-sm">กำลังโหลดแผนที่...</p>
@@ -75,7 +75,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                     <p className="text-gray-500 text-sm">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : !data?.hasActiveSession ? (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center text-gray-600 text-sm">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center text-yellow-900 text-sm">
                     <div className="text-3xl mb-2">📭</div>
                     <p>ยังไม่มีข้อมูลในช่วงเทศกาล</p>
                 </div>
@@ -83,17 +83,17 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                 <div className="space-y-4">
                     {/* Stat Cards */}
                     <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
+                        <div className="eoc-bg-red-700 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
                             <div className="text-xl mb-0.5">🚗</div>
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalAccidents || 0).toLocaleString()}</div>
                             <div className="text-red-100 text-xs">อุบัติเหตุ (ครั้ง)</div>
                         </div>
-                        <div className="bg-gradient-to-br from-gray-700 to-gray-800 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
+                        <div className="eoc-bg-gray-900 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
                             <div className="text-xl mb-0.5">💀</div>
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalDeaths || 0).toLocaleString()}</div>
                             <div className="text-gray-300 text-xs">เสียชีวิต (ราย)</div>
                         </div>
-                        <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
+                        <div className="eoc-bg-amber-700 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
                             <div className="text-xl mb-0.5">🤕</div>
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalInjuries || 0).toLocaleString()}</div>
                             <div className="text-amber-100 text-xs">บาดเจ็บ (ราย)</div>
@@ -106,7 +106,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                             <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
                                 📍 แผนที่จุดเกิดเหตุ &amp; จุดบริการ
                             </h3>
-                            <div className="flex items-center gap-3 text-xs text-gray-400">
+                            <div className="flex items-center gap-3 text-xs text-gray-600">
                                 <span className="flex items-center gap-1">
                                     <span className="w-2 h-2 rounded-full bg-red-600 inline-block"></span> จุดเกิดเหตุ
                                 </span>
@@ -115,7 +115,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                                 </span>
                             </div>
                         </div>
-                        <div className="h-72 rounded-lg overflow-hidden">
+                        <div className="h-72">
                             <FestivalMap
                                 accidents={data.mapData?.accidents || []}
                                 servicePoints={data.mapData?.servicePoints || []}

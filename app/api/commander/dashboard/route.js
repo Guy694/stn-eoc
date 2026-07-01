@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงข้อมูล Dashboard สำหรับ Commander
 export async function GET(request) {
@@ -300,9 +301,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching commander dashboard:', error);
-        return NextResponse.json(
-            { success: false, error: 'เกิดข้อผิดพลาดในการดึงข้อมูล', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลแดชบอร์ดผู้บัญชาการ');
     }
 }

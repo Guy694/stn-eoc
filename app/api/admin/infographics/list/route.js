@@ -1,32 +1,26 @@
 import { NextResponse } from 'next/server';
 import { readdir } from 'fs/promises';
 import path from 'path';
-import { cookies } from 'next/headers';
+import { requireAuth } from '@/lib/auth';
+import { isSafeFilename, resolveInside } from '@/lib/fileUpload';
+import { publicInternalError } from '@/lib/apiResponse';
 
 export async function GET(request) {
     try {
-        // Check authentication
-        const cookieStore = cookies();
-        const token = cookieStore.get('token');
-
-        if (!token) {
-            return NextResponse.json({
-                success: false,
-                message: 'ไม่ได้รับอนุญาต'
-            }, { status: 401 });
-        }
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
 
         const eocTypes = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
         const files = {};
 
         for (const eocType of eocTypes) {
-            const dirPath = path.join(process.cwd(), 'public', 'infographics', eocType);
+            const dirPath = resolveInside(path.join(process.cwd(), 'public', 'infographics'), eocType);
 
             try {
                 const fileList = await readdir(dirPath);
                 // Filter only image files
                 files[eocType] = fileList.filter(file =>
-                    /\.(jpg|jpeg|png)$/i.test(file)
+                    isSafeFilename(file) && /\.(jpg|jpeg|png)$/i.test(file)
                 ).sort();
             } catch (error) {
                 // Directory doesn't exist yet
@@ -41,9 +35,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('List files error:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาด: ' + error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการอ่านรายการไฟล์');
     }
 }

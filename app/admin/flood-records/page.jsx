@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -39,11 +39,6 @@ export default function FloodRecordsPage() {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
 
-    // โหลดข้อมูล
-    useEffect(() => {
-        fetchRecords();
-    }, [filters]);
-
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
         if (formData.district) {
@@ -54,7 +49,7 @@ export default function FloodRecordsPage() {
         }
     }, [formData.district]);
 
-    const fetchRecords = async () => {
+    const fetchRecords = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -74,7 +69,12 @@ export default function FloodRecordsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters]);
+
+    // โหลดข้อมูล
+    useEffect(() => {
+        fetchRecords();
+    }, [fetchRecords]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -325,7 +325,7 @@ export default function FloodRecordsPage() {
                     {loading ? (
                         <div className="flex items-center justify-center p-12">
                             <div className="text-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto mb-4"></div>
                                 <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                             </div>
                         </div>

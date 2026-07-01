@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
     Chart as ChartJS,
@@ -42,19 +42,13 @@ export default function EOCTypeChart() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetchEOCStats();
-    }, [selectedYear]);
-
-    const fetchEOCStats = async () => {
+    const fetchEOCStats = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
             const response = await fetch(`/stn-eoc/api/stats/eoc-types?year=${selectedYear}`);
             const result = await response.json();
-
-            console.log("EOC Stats API Result:", result); // Debug log
 
             if (!result.success) {
                 throw new Error(result.error || "ไม่สามารถดึงข้อมูลได้");
@@ -72,8 +66,6 @@ export default function EOCTypeChart() {
             const data = labels.map(type => result.data[type] || 0);
             const backgroundColors = labels.map(type => EOC_TYPE_COLORS[type].bg);
             const borderColors = labels.map(type => EOC_TYPE_COLORS[type].border);
-
-            console.log("Chart data prepared:", { labels, data }); // Debug log
 
             setChartData({
                 labels: labels.map(type => EOC_TYPE_LABELS[type]),
@@ -93,7 +85,11 @@ export default function EOCTypeChart() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedYear]);
+
+    useEffect(() => {
+        fetchEOCStats();
+    }, [fetchEOCStats]);
 
     const chartOptions = {
         responsive: true,
@@ -143,7 +139,7 @@ export default function EOCTypeChart() {
         return (
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600"></div>
                     <span className="ml-3 text-gray-600">กำลังโหลดข้อมูล...</span>
                 </div>
             </div>

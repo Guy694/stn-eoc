@@ -146,10 +146,9 @@ export default function HybridDisasterMap({
 
     // คำนวณระดับความเสี่ยง (ตัวอย่าง - ควรใช้ข้อมูลจริงจากฐานข้อมูล)
     const calculateRiskLevel = (polygon) => {
-        // ตัวอย่างการคำนวณความเสี่ยง
-        // ควรมีข้อมูลจริงจาก database หรือ API
         const risks = ['ปลอดภัย', 'ต่ำ', 'ปานกลาง', 'สูง', 'สูงมาก'];
-        return risks[Math.floor(Math.random() * risks.length)];
+        const seed = Number(polygon.id || polygon.num_hh || polygon.num_build || 0);
+        return risks[Math.abs(seed) % risks.length];
     };
 
     // Style สำหรับ polygon

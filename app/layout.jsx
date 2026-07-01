@@ -7,15 +7,16 @@ const kanit = Kanit({
   variable: "--font-kanit",
   subsets: ["latin", "thai"],
   weight: ["200", "300", "400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 export const metadata = {
   title: "EOC จังหวัดสตูล - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล",
   description: "Satun Geo-EOC Intelligence Platform - ระบบศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล",
   icons: {
-    icon: '/img/eoc-icon.png',
-    shortcut: '/img/eoc-icon.png',
-    apple: '/img/eoc-icon.png',
+    icon: '/stn-eoc/img/eoc-icon.png',
+    shortcut: '/stn-eoc/img/eoc-icon.png',
+    apple: '/stn-eoc/img/eoc-icon.png',
   },
 };
 

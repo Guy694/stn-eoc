@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 
-// Generate hash for password123
-const password = 'password123';
+const password = process.env.TEST_PASSWORD || 'change_me';
 const salt = bcrypt.genSaltSync(10);
 const hash = bcrypt.hashSync(password, salt);
 

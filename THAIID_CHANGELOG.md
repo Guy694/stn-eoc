@@ -152,9 +152,9 @@ mysql -u root -p stneoc < alter_officer_thaiid.sql
 #### ใหม่:
 ```env
 CALLBACK=https://stn-eoc.vercel.app/
-APIKEY=jLCelfowueJoYeUuR20TjWEJL0hEAqXbwZOSjsOA
-CLIENT_ID=TEMyaWFqbmhrVG9kNjhKTmdZYng3UG1YVm92ek1xdXI
-CLIENT_SECRET=Y01VdDdKS0swdkdTc0dYNGpVWVY0YkhzSWtOOVl6SWZLQWt0dkh5Sg
+APIKEY=your_thaiid_api_key
+CLIENT_ID=your_thaiid_client_id
+CLIENT_SECRET=your_thaiid_client_secret
 ```
 
 #### ที่มีอยู่แล้ว:
@@ -165,7 +165,7 @@ DB_USER=root
 DB_PASSWORD=
 DB_NAME=stneoc
 NEXT_PUBLIC_API_URL=http://localhost:3000
-GISTDA_API_KEY=XbN0ZuBJEcO37TBY4XgfMSItbhlpfmBsPftmaVQpI3M2z7BXh3pcyvASYHnLVGRV
+GISTDA_API_KEY=your_gistda_api_key
 ```
 
 ---

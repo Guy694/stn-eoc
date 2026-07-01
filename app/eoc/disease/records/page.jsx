@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -93,7 +93,6 @@ export default function DiseaseRecordsPage() {
             try {
                 const response = await fetch('/stn-eoc/api/eoc/disease/area-status');
                 const result = await response.json();
-                console.log('Active session result:', result);
                 if (result.hasActiveSession && result.activeSession) {
                     setActiveSession(result.activeSession);
                 } else {
@@ -105,13 +104,6 @@ export default function DiseaseRecordsPage() {
         };
         fetchActiveSession();
     }, []);
-
-    // โหลดข้อมูล
-    useEffect(() => {
-        if (activeSession) {
-            fetchRecords();
-        }
-    }, [filters, activeSession]);
 
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
@@ -135,7 +127,7 @@ export default function DiseaseRecordsPage() {
         }
     }, [formData.district, formData.tambon, polygons]);
 
-    const fetchRecords = async () => {
+    const fetchRecords = useCallback(async () => {
         if (!activeSession) return;
 
         try {
@@ -168,7 +160,14 @@ export default function DiseaseRecordsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeSession, filters]);
+
+    // โหลดข้อมูล
+    useEffect(() => {
+        if (activeSession) {
+            fetchRecords();
+        }
+    }, [activeSession, fetchRecords]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -206,7 +205,7 @@ export default function DiseaseRecordsPage() {
                         diseaseName = addResult.existing_name;
                     }
                 } catch (err) {
-                    console.log('Could not add disease to database:', err);
+                    console.error('Could not add disease to database:', err);
                 }
             }
 
@@ -464,7 +463,7 @@ export default function DiseaseRecordsPage() {
                             resetForm();
                             setShowModal(true);
                         }}
-                        className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                        className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2"
                     >
                         <span>➕</span>
                         เพิ่มข้อมูลใหม่
@@ -614,14 +613,14 @@ export default function DiseaseRecordsPage() {
 
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b border-teal-500 mx-auto mb-2"></div>
                             <p className="text-gray-600 text-sm">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4">📭</div>
                             <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
-                            <p className="text-gray-500 text-sm">คลิกปุ่ม "เพิ่มข้อมูลใหม่" เพื่อเริ่มบันทึกข้อมูล</p>
+                            <p className="text-gray-500 text-sm">คลิกปุ่ม &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มบันทึกข้อมูล</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -659,7 +658,7 @@ export default function DiseaseRecordsPage() {
                                                 <div className="text-sm text-gray-500">ต.{record.tambon_name} อ.{record.district_name}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-teal-100 text-teal-800">
                                                     🦠 {record.disease_name}
                                                 </span>
                                             </td>
@@ -709,14 +708,14 @@ export default function DiseaseRecordsPage() {
                                 </h2>
 
                                 {isTambonMode && !editingRecord && (
-                                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-                                        <p className="text-sm text-purple-800">
+                                    <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-4">
+                                        <p className="text-sm text-teal-800">
                                             🟣 โหมดบันทึกทั้งตำบล - ข้อมูลจะถูกบันทึกให้กับทุกหน่วยบริการในตำบล{formData.tambon} พร้อมกัน
                                         </p>
                                         <button
                                             type="button"
                                             onClick={() => setIsTambonMode(false)}
-                                            className="mt-2 text-sm text-purple-600 hover:text-purple-800 underline"
+                                            className="mt-2 text-sm text-teal-600 hover:text-teal-800 underline"
                                         >
                                             เปลี่ยนเป็นโหมดบันทึกรายหน่วยบริการ
                                         </button>

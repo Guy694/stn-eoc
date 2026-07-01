@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicInternalError } from "@/lib/apiResponse";
 
 // ThaiID OAuth Configuration - Production URLs ตามคู่มือ DOPA
 const THAIID_CONFIG = {
@@ -28,13 +29,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('ThaiID Authorization Error:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการเชื่อมต่อกับ ThaiID',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเชื่อมต่อกับ ThaiID');
     }
 }

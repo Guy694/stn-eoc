@@ -32,7 +32,7 @@
 ## 📁 ไฟล์ที่สร้าง
 
 1. **create_officer_table.sql** - สร้างตาราง officer
-2. **insert_officer_data.sql** - ข้อมูลตัวอย่าง (รหัสผ่าน: password123)
+2. **insert_officer_data.sql** - ข้อมูลตัวอย่างสำหรับ development เท่านั้น
 3. **context/AuthContext.js** - จัดการ authentication และ role
 4. **components/Sidebar.js** - อัพเดทให้กรองเมนูตาม role
 5. **components/Navbar.js** - อัพเดทให้กรองเมนูตาม role
@@ -83,11 +83,11 @@ function ResourcesPage() {
 
 | Username | Password | Role | Email |
 |----------|----------|------|-------|
-| admin | password123 | admin | admin@eoc.satun.go.th |
-| staff01 | password123 | staff | staff01@eoc.satun.go.th |
-| mcatt01 | password123 | MCATT | mcatt01@eoc.satun.go.th |
-| sat01 | password123 | SAT | sat01@eoc.satun.go.th |
-| serht01 | password123 | SeRHT | serht01@eoc.satun.go.th |
+| admin | ตั้งใน environment ภายใน | admin | admin@eoc.satun.go.th |
+| staff01 | ตั้งใน environment ภายใน | staff | staff01@eoc.satun.go.th |
+| mcatt01 | ตั้งใน environment ภายใน | MCATT | mcatt01@eoc.satun.go.th |
+| sat01 | ตั้งใน environment ภายใน | SAT | sat01@eoc.satun.go.th |
+| serht01 | ตั้งใน environment ภายใน | SeRHT | serht01@eoc.satun.go.th |
 
 ## 🔧 ฟังก์ชันใน AuthContext
 

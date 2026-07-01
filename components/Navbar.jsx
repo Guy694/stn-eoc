@@ -73,7 +73,7 @@ export default function Navbar() {
                         <li key={item.path} className="flex-shrink-0">
                             <Link
                                 href={item.path}
-                                className={`block px-4 xl:px-6 py-3 hover:bg-green-600 transition-colors whitespace-nowrap ${pathname === item.path ? "bg-green-600 border-b-2 border-white" : ""
+                                className={`block px-4 xl:px-6 py-3 hover:bg-green-600 transition-colors whitespace-nowrap ${pathname === item.path ? "bg-green-600 border-b border-white" : ""
                                     }`}
                             >
                                 {item.name}

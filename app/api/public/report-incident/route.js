@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { getCitizenSession } from '@/lib/citizenAuth';
+import { createRandomFilename, resolveInside, validateImageFile } from '@/lib/fileUpload';
+import { publicInternalError } from '@/lib/apiResponse';
+
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request) {
     try {
@@ -46,24 +51,27 @@ export async function POST(request) {
         let photoPath = null;
         if (photo && photo.size > 0) {
             try {
-                const bytes = await photo.arrayBuffer();
-                const buffer = Buffer.from(bytes);
-
-                // Create upload directory if not exists
-                const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'incidents');
-                try {
-                    await mkdir(uploadDir, { recursive: true });
-                } catch (err) {
-                    // Directory might already exist
+                const validation = await validateImageFile(photo, {
+                    maxSizeBytes: MAX_PHOTO_SIZE_BYTES
+                });
+                if (!validation.ok) {
+                    return NextResponse.json({
+                        success: false,
+                        message: validation.error
+                    }, { status: 400 });
                 }
 
+                // Create upload directory if not exists
+                const uploadBaseDir = path.join(process.cwd(), 'public', 'uploads');
+                const uploadDir = resolveInside(uploadBaseDir, 'incidents');
+                await mkdir(uploadDir, { recursive: true });
+
                 // Generate unique filename
-                const timestamp = Date.now();
-                const filename = `${timestamp}_${photo.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                const filepath = path.join(uploadDir, filename);
+                const filename = createRandomFilename(validation.extension);
+                const filepath = resolveInside(uploadDir, filename);
 
                 // Write file
-                await writeFile(filepath, buffer);
+                await writeFile(filepath, validation.buffer);
                 photoPath = `/uploads/incidents/${filename}`;
             } catch (uploadError) {
                 console.error('Photo upload error:', uploadError);
@@ -73,14 +81,29 @@ export async function POST(request) {
 
         // Connect to database
         const pool = await getConnection();
+        const citizenSession = await getCitizenSession();
+        let citizenId = null;
+        let citizenPidHash = null;
+
+        if (citizenSession?.pidHash) {
+            const [citizens] = await pool.execute(
+                'SELECT id FROM citizens WHERE pid_hash = ?',
+                [citizenSession.pidHash]
+            );
+
+            if (citizens.length > 0) {
+                citizenId = citizens[0].id;
+                citizenPidHash = citizenSession.pidHash;
+            }
+        }
 
         // Insert incident report
         const [result] = await pool.execute(
-            `INSERT INTO public_incident_reports 
+            `INSERT INTO public_incident_reports
             (first_name, last_name, phone, village, sub_district, district, 
              description, water_level, affected_people, urgency, travel_status, report_type, disaster_type, occurred_at, 
-             latitude, longitude, photo_path, status, reported_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+             latitude, longitude, photo_path, verified_by_thaiid, citizen_id, citizen_pid_hash, status, reported_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
             [
                 firstName,
                 lastName,
@@ -98,7 +121,10 @@ export async function POST(request) {
                 occurredAt,
                 latitude,
                 longitude,
-                photoPath
+                photoPath,
+                Boolean(citizenId),
+                citizenId,
+                citizenPidHash
             ]
         );
 
@@ -110,9 +136,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Report incident error:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
 }

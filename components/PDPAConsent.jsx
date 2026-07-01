@@ -9,6 +9,7 @@ export default function PDPAConsent() {
         // ตรวจสอบว่าผู้ใช้ยอมรับ PDPA แล้วหรือยัง
         const consent = localStorage.getItem('pdpa_consent');
         if (!consent) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setShowConsent(true);
         }
     }, []);
@@ -47,7 +48,7 @@ export default function PDPAConsent() {
                             ระบบศูนย์ปฏิบัติการฉุกเฉิน (EOC) จังหวัดสตูล ให้ความสำคัญกับการคุ้มครองข้อมูลส่วนบุคคลของท่าน
                         </p>
 
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <div className="border-t border-gray-200 pt-4">
                             <h3 className="font-bold text-gray-800 mb-2">📋 ข้อมูลที่เราเก็บรวบรวม</h3>
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                 <li>ชื่อ-นามสกุล และเบอร์โทรศัพท์</li>
@@ -57,7 +58,7 @@ export default function PDPAConsent() {
                             </ul>
                         </div>
 
-                        <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                        <div className="border-t border-gray-200 pt-4">
                             <h3 className="font-bold text-gray-800 mb-2">✅ วัตถุประสงค์การใช้ข้อมูล</h3>
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                 <li>ติดต่อและให้ความช่วยเหลือในกรณีฉุกเฉิน</li>
@@ -67,15 +68,15 @@ export default function PDPAConsent() {
                             </ul>
                         </div>
 
-                        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded">
+                        <div className="border-t border-gray-200 pt-4">
                             <h3 className="font-bold text-gray-800 mb-2">🔐 การรักษาความปลอดภัย</h3>
-                            <p className="text-sm">
+                            <p className="text-sm max-w-prose">
                                 เราใช้มาตรการรักษาความปลอดภัยที่เหมาะสมเพื่อป้องกันการเข้าถึง การใช้ หรือการเปิดเผยข้อมูลโดยไม่ได้รับอนุญาต
                                 ข้อมูลของท่านจะถูกเก็บไว้เฉพาะระยะเวลาที่จำเป็นตามวัตถุประสงค์
                             </p>
                         </div>
 
-                        <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded">
+                        <div className="border-t border-gray-200 pt-4">
                             <h3 className="font-bold text-gray-800 mb-2">👤 สิทธิของเจ้าของข้อมูล</h3>
                             <p className="text-sm mb-2">ท่านมีสิทธิ์:</p>
                             <ul className="list-disc list-inside space-y-1 text-sm">
@@ -87,9 +88,9 @@ export default function PDPAConsent() {
                             </ul>
                         </div>
 
-                        <div className="bg-gray-50 border-l-4 border-gray-500 p-4 rounded">
+                        <div className="border-t border-gray-200 pt-4">
                             <h3 className="font-bold text-gray-800 mb-2">📞 ติดต่อเรา</h3>
-                            <p className="text-sm">
+                            <p className="text-sm max-w-prose">
                                 หากมีข้อสงสัยเกี่ยวกับนโยบายนี้ กรุณาติดต่อ:<br />
                                 <strong>ศูนย์ปฏิบัติการฉุกเฉิน (EOC) จังหวัดสตูล</strong><br />
                                 โทร: 074-711-501<br />
@@ -97,13 +98,13 @@ export default function PDPAConsent() {
                             </p>
                         </div>
 
-                        <p className="text-xs text-gray-500 italic">
+                        <p className="text-xs text-gray-500 italic max-w-prose">
                             นโยบายนี้มีผลบังคับใช้ตั้งแต่วันที่ 1 มกราคม 2567 และอาจมีการปรับปรุงเป็นครั้งคราว
                         </p>
                     </div>
 
                     {/* Consent Checkbox */}
-                    <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-6">
+                    <div className="border-t border-yellow-300 pt-4 mb-6">
                         <label className="flex items-start gap-3 cursor-pointer">
                             <input
                                 type="checkbox"

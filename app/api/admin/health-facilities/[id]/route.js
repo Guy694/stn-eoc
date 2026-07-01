@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงข้อมูลสถานพยาบาลตาม ID
 export async function GET(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { id } = params;
 
         const facilities = await query(
@@ -25,16 +30,16 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Error fetching health facility:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch health facility', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลสถานพยาบาล');
     }
 }
 
 // PUT - แก้ไขข้อมูลสถานพยาบาล
 export async function PUT(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { id } = params;
         const body = await request.json();
         const { name, typecode, address, district, tambon, lat, lon, phone } = body;
@@ -82,16 +87,16 @@ export async function PUT(request, { params }) {
 
     } catch (error) {
         console.error('Error updating health facility:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to update health facility', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขสถานพยาบาล');
     }
 }
 
 // DELETE - ลบสถานพยาบาล
 export async function DELETE(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { id } = params;
 
         // ตรวจสอบว่ามีข้อมูลอยู่หรือไม่
@@ -117,9 +122,6 @@ export async function DELETE(request, { params }) {
 
     } catch (error) {
         console.error('Error deleting health facility:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to delete health facility', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการลบสถานพยาบาล');
     }
 }

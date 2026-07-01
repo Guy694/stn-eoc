@@ -229,7 +229,7 @@ INSTRUCTIONS:
             {
                 success: false,
                 error: 'Chatbot query failed',
-                message: error.message
+                message: 'เกิดข้อผิดพลาดในการประมวลผลคำถาม'
             },
             { status: 500 }
         );

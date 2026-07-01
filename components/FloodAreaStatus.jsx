@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 
 // Import Leaflet แบบ dynamic
@@ -85,15 +85,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             }
 
             setDates(dateList);
-            if (!selectedDate && dateList.length > 0) {
-                setSelectedDate(dateList[dateList.length - 1]); // เลือกวันล่าสุด
-            }
+            setSelectedDate(current => current || (dateList.length > 0 ? dateList[dateList.length - 1] : current));
         }
     }, [activeSession]);
-
-    useEffect(() => {
-        fetchFloodData();
-    }, [sessionId, selectedDate]);
 
     // ดึงข้อมูลสถานพยาบาล
     useEffect(() => {
@@ -101,9 +95,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             try {
                 const response = await fetch('/stn-eoc/api/common/health-facilities');
                 const result = await response.json();
-                console.log('Health Facilities Response:', result);
                 if (result.success) {
-                    console.log('Health Facilities Data:', result.data);
                     setHealthFacilities(result.data);
                 }
             } catch (error) {
@@ -120,7 +112,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 const response = await fetch('/stn-eoc/api/common/tambon-boundaries');
                 const result = await response.json();
                 if (result.success) {
-                    console.log('Tambon Boundaries:', result.data);
                     setTambonBoundaries(result.data);
                 }
             } catch (error) {
@@ -137,7 +128,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 const response = await fetch('/stn-eoc/api/common/district-boundaries');
                 const result = await response.json();
                 if (result.success) {
-                    console.log('District Boundaries:', result.data);
                     setDistrictBoundaries(result.data);
                 }
             } catch (error) {
@@ -147,7 +137,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         fetchDistrictBoundaries();
     }, []);
 
-    const fetchFloodData = async () => {
+    const fetchFloodData = useCallback(async () => {
         setLoading(true);
         setError(null);
 
@@ -173,10 +163,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             const response = await fetch(url);
             const result = await response.json();
 
-            console.log('FloodAreaStatus API Response:', result);
-            console.log('hasActiveSession:', result.hasActiveSession);
-            console.log('success:', result.success);
-
             if (result.success && result.hasActiveSession) {
                 setFloodData(result.data || []);
                 setStats(result.stats || {});
@@ -185,10 +171,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                     setActiveSession(result.activeSession);
                 }
             } else {
-                // ถ้า API ส่ง debug info กลับมาให้แสดง
-                if (result.debug) {
-                    console.log('Debug info:', result.debug);
-                }
                 setFloodData([]);
                 setStats({});
                 setHasActiveSession(result.hasActiveSession || false);
@@ -200,13 +182,17 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [date, selectedDate, sessionId]);
+
+    useEffect(() => {
+        fetchFloodData();
+    }, [fetchFloodData]);
 
     if (loading) {
         return (
             <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b border-blue-500"></div>
                     <span className="ml-3 text-gray-600">กำลังโหลดข้อมูล...</span>
                 </div>
             </div>
@@ -307,10 +293,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         }
     });
 
-    console.log('Flood Data Sample:', floodData.slice(0, 3));
-    console.log('Village Flood Levels Keys:', Object.keys(villageFloodLevels).slice(0, 10));
-    console.log('Polygon Sample:', polygons?.slice(0, 3).map(p => ({ id: p.id, villcode: p.villcode, villname: p.villname, distname: p.distname, subdistnam: p.subdistnam })));
-
     // จัดกลุ่ม polygon ตามระดับน้ำท่วม
     const getPolygonsByLevel = () => {
         const grouped = {
@@ -344,14 +326,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             }
         });
 
-        console.log('Polygon Groups:', {
-            severe: grouped.severe.length,
-            moderate: grouped.moderate.length,
-            mild: grouped.mild.length,
-            safe: grouped.safe.length,
-            nodata: grouped.nodata.length
-        });
-
         return grouped;
     };
 
@@ -373,8 +347,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         };
 
         const color = colors[typecode] || '#EF4444'; // default สีแดง
-
-        console.log('Creating facility icon for:', typecode, 'color:', color);
 
         return L.divIcon({
             className: 'custom-div-icon',
@@ -444,8 +416,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         const styleString = Object.entries(style).map(([key, value]) =>
             `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`
         ).join('; ');
-
-        console.log(`Creating ${type} label:`, text);
 
         return L.divIcon({
             className: 'label-icon',
@@ -528,7 +498,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             }
         });
 
-        console.log('Tambon Flood Levels Keys:', Object.keys(tambonData));
         return tambonData;
     };
 
@@ -577,14 +546,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
     const polygonGroupsByTambon = getPolygonsByTambon();
 
-    console.log('Polygon Groups by Tambon:', {
-        severe: polygonGroupsByTambon.severe?.length || 0,
-        moderate: polygonGroupsByTambon.moderate?.length || 0,
-        mild: polygonGroupsByTambon.mild?.length || 0,
-        safe: polygonGroupsByTambon.safe?.length || 0,
-        nodata: polygonGroupsByTambon.nodata?.length || 0
-    });
-
     return (
         <div className="space-y-6">
             {/* Timeline รายวัน */}
@@ -626,7 +587,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </div>
 
                         {selectedDate && (
-                            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                            <div className="text-sm text-blue-900 bg-blue-50 p-3 rounded-lg">
                                 💡 แสดงข้อมูลวันที่: <strong>{selectedDate.toLocaleDateString('th-TH', {
                                     weekday: 'long',
                                     day: 'numeric',
@@ -1011,18 +972,14 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     {showFacilities && healthFacilities && healthFacilities.length > 0 && (
                                         <LayerGroup>
                                             {(() => {
-                                                console.log('Total facilities:', healthFacilities.length);
                                                 const filtered = healthFacilities.filter(facility => {
                                                     // กรองตาม district และ tambon filter (ถ้ามีข้อมูล)
                                                     if (districtFilter !== 'all' && facility.district && facility.district !== districtFilter) return false;
                                                     if (tambonFilter !== 'all' && facility.tambon && facility.tambon !== tambonFilter) return false;
                                                     return true;
                                                 });
-                                                console.log('Filtered facilities:', filtered.length);
                                                 return filtered.map((facility, idx) => {
-                                                    console.log('Rendering facility:', facility.name, 'lat:', facility.lat, 'lon:', facility.lon, 'district:', facility.district);
                                                     if (!facility.lat || !facility.lon) {
-                                                        console.log('Skipping facility (no coords):', facility.name);
                                                         return null;
                                                     }
 
@@ -1063,7 +1020,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         if (tambonFilter !== 'all' && p.subdistnam !== tambonFilter) return false;
                                                         return true;
                                                     });
-                                                console.log('Showing village labels:', filtered.length, 'of', polygons.length);
                                                 return filtered.map((poly, idx) => (
                                                     <Marker
                                                         key={`village-label-${idx}`}
@@ -1115,7 +1071,6 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                     if (districtPolygons.length > 0) {
                                                         const avgLat = districtPolygons.reduce((sum, p) => sum + parseFloat(p.lat), 0) / districtPolygons.length;
                                                         const avgLng = districtPolygons.reduce((sum, p) => sum + parseFloat(p.lng), 0) / districtPolygons.length;
-                                                        console.log(`District ${distName}:`, { avgLat, avgLng, count: districtPolygons.length });
                                                         return (
                                                             <Marker
                                                                 key={`district-label-${idx}`}
@@ -1340,7 +1295,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             <div className="mb-4">
                                 <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-1 border-2 border-purple-500" style={{ borderStyle: 'dashed' }}></div>
+                                    <div className="w-12 h-1 border-2 border-teal-500" style={{ borderStyle: 'dashed' }}></div>
                                     <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
                                 </div>
                             </div>
@@ -1474,8 +1429,8 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 function StatCard({ label, value, icon, color }) {
     const colors = {
         blue: 'from-blue-500 to-blue-600',
-        indigo: 'from-indigo-500 to-indigo-600',
-        purple: 'from-purple-500 to-purple-600',
+        indigo: 'from-sky-500 to-sky-600',
+        purple: 'from-teal-500 to-teal-600',
         pink: 'from-pink-500 to-pink-600'
     };
 

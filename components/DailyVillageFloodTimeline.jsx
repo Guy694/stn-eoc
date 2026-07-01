@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import html2canvas from "html2canvas";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -76,32 +77,6 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             current.setDate(current.getDate() + 1);
         }
 
-
-        console.log('DailyVillageFloodTimeline - Debug Info:', {
-            session_opened_at: session.opened_at,
-            openedDate_full: openedDate.toString(),
-            openedDate_components: {
-                year: openedDate.getFullYear(),
-                month: openedDate.getMonth(),
-                date: openedDate.getDate()
-            },
-            start_full: start.toString(),
-            today_full: new Date().toString(),
-            today_components: {
-                year: new Date().getFullYear(),
-                month: new Date().getMonth(),
-                date: new Date().getDate()
-            },
-            end_full: end.toString()
-        });
-
-        console.log('DailyVillageFloodTimeline - Date range:', {
-            start: start.toISOString().split('T')[0],
-            end: end.toISOString().split('T')[0],
-            totalDays: dateList.length,
-            dates: dateList.map(d => d.toISOString().split('T')[0])
-        });
-
         setDates(dateList);
         setSelectedDate(dateList[dateList.length - 1]); // เลือกวันล่าสุด
     }, [session]);
@@ -118,16 +93,8 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 const day = String(selectedDate.getDate()).padStart(2, '0');
                 const dateStr = `${year}-${month}-${day}`;
 
-                console.log('Fetching flood data for date:', dateStr, 'session:', session.id);
-
                 const response = await fetch(`/stn-eoc/api/eoc/flood/area-status?session_id=${session.id}&date=${dateStr}`);
                 const result = await response.json();
-
-                console.log('Flood data result:', {
-                    success: result.success,
-                    dataCount: result.data?.length || 0,
-                    stats: result.stats
-                });
 
                 if (result.success && result.hasActiveSession) {
                     // แปลงข้อมูลจาก API ให้ตรงกับ component
@@ -347,10 +314,6 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         });
     }
 
-    console.log('Flood Data Sample:', floodData?.data?.slice(0, 3));
-    console.log('Village Flood Levels (first 10 keys):', Object.keys(villageFloodLevels).slice(0, 10));
-    console.log('Polygon Sample (first 3):', polygons?.slice(0, 3).map(p => ({ id: p.id, villcode: p.villcode, villname: p.villname })));
-
     // จัดกลุ่ม polygon ตามระดับน้ำท่วม
     const getPolygonsByLevel = () => {
         const grouped = {
@@ -371,14 +334,6 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                     floodInfo: floodInfo
                 });
             }
-        });
-
-        console.log('Polygon Groups:', {
-            severe: grouped.severe.length,
-            moderate: grouped.moderate.length,
-            mild: grouped.mild.length,
-            safe: grouped.safe.length,
-            nodata: grouped.nodata.length
         });
 
         return grouped;
@@ -499,7 +454,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 {loading ? (
                     <div className="flex items-center justify-center h-96">
                         <div className="text-center">
-                            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                            <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
                             <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                         </div>
                     </div>
@@ -677,7 +632,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                             >
                                                 <Popup>
                                                     <div className="text-sm">
-                                                        <strong className="text-purple-700">ตำบล{tambon.tambname}</strong><br />
+                                                        <strong className="text-teal-700">ตำบล{tambon.tambname}</strong><br />
                                                         อำเภอ: {tambon.distname}<br />
                                                         จำนวนหมู่บ้าน: {tambon.villages} หมู่บ้าน
                                                     </div>
@@ -738,7 +693,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                             <div className="mb-4">
                                 <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-1 border-2 border-purple-500" style={{ borderStyle: 'dashed' }}></div>
+                                    <div className="w-12 h-1 border-2 border-teal-500" style={{ borderStyle: 'dashed' }}></div>
                                     <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
                                 </div>
                             </div>

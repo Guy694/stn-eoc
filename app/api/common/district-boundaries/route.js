@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // API สำหรับดึงข้อมูลเขตอำเภอ
 export async function GET(request) {
@@ -84,9 +85,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error in district-boundaries API:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลเขตอำเภอ');
     }
 }

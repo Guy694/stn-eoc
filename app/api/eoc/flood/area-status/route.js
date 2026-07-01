@@ -32,8 +32,6 @@ export async function GET(request) {
             LIMIT 1
         `);
 
-        console.log('Active Sessions Found:', activeSessions);
-
         if (activeSessions.length === 0) {
             // ลองตรวจสอบว่ามี session อะไรบ้างในระบบ (สำหรับ debug)
             const [allFloodSessions] = await connection.execute(`
@@ -43,8 +41,6 @@ export async function GET(request) {
                 ORDER BY opened_at DESC
                 LIMIT 5
             `);
-            console.log('All Flood-related Sessions:', allFloodSessions);
-
             return NextResponse.json({
                 success: false,
                 hasActiveSession: false,
@@ -59,8 +55,6 @@ export async function GET(request) {
         // ใช้ session_id ที่ส่งมา หรือ active session id
         const targetSessionId = sessionId || activeSession.id;
 
-        console.log('Using session_id:', targetSessionId, 'for date:', date);
-
         // สร้าง WHERE clause - ใช้ session_id เป็นหลัก
         let whereClause = 'f.session_id = ?';
         let params = [targetSessionId];
@@ -74,7 +68,6 @@ export async function GET(request) {
                 WHERE session_id = ?
             `, [targetSessionId]);
             targetDate = latestDate[0]?.latest_date;
-            console.log('No date provided, using latest:', targetDate);
         }
 
         if (targetDate) {
@@ -150,11 +143,10 @@ ST_Y(ST_Centroid(ST_SRID(v.geom, 0))) as lat,
         console.error('Database error:', error);
         return NextResponse.json({
             success: false,
-            error: error.message,
+            error: 'เกิดข้อผิดพลาดในการดึงสถานะพื้นที่น้ำท่วม',
             hasActiveSession: false
         }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }
 }
-

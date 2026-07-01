@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
 
 // GET - ดึงรายการเจ้าหน้าที่ทั้งหมด
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const role = searchParams.get('role');
         const search = searchParams.get('search');
@@ -64,16 +69,16 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching officers:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch officers', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลเจ้าหน้าที่');
     }
 }
 
 // POST - เพิ่มเจ้าหน้าที่ใหม่
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { username, password, title, given_name, family_name, email, phone, role } = body;
 
@@ -121,9 +126,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error creating officer:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to create officer', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเพิ่มเจ้าหน้าที่');
     }
 }

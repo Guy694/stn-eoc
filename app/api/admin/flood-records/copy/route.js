@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
@@ -11,6 +13,9 @@ const dbConfig = {
 // API สำหรับคัดลอกข้อมูลน้ำท่วมจากวันหนึ่งไปยังอีกวันหนึ่ง
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        if (!auth.success) return auth.response;
+
         const data = await request.json();
         const { session_id, source_date, target_date, overwrite = false, district, tambon } = data;
 
@@ -134,7 +139,7 @@ export async function POST(request) {
                 record.damage_amount,
                 record.relief_amount,
                 record.status,
-                record.created_by || 'Admin'
+                auth.user.username
             ];
 
             await connection.execute(insertQuery, insertParams);
@@ -160,9 +165,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error copying flood records:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการคัดลอกข้อมูลน้ำท่วม');
     }
 }

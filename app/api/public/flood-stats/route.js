@@ -87,7 +87,7 @@ export async function GET(request) {
         console.error('Error fetching flood stats:', error);
         return NextResponse.json({
             success: false,
-            error: error.message,
+            error: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถิติน้ำท่วม',
             data: {
                 affected: 0,
                 affectedHouseholds: 0,

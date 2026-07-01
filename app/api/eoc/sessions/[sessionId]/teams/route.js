@@ -5,10 +5,15 @@
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET: ดึงข้อมูลทีมงานและสมาชิกทั้งหมดของ Session (สำหรับ public view)
 export async function GET(request, { params }) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { sessionId } = await params;
 
         // ดึงข้อมูล Session
@@ -98,10 +103,6 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Error fetching session teams:', error);
-        return NextResponse.json({
-            success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลทีมใน session');
     }
 }

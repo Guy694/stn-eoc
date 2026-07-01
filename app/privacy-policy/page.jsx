@@ -105,7 +105,7 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     {/* Security */}
-                    <section className="bg-purple-50 rounded-lg p-6">
+                    <section className="bg-teal-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <span>🔐</span> การรักษาความปลอดภัย
                         </h2>
@@ -133,7 +133,7 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     {/* User Rights */}
-                    <section className="bg-indigo-50 rounded-lg p-6">
+                    <section className="bg-sky-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <span>👤</span> สิทธิของเจ้าของข้อมูล
                         </h2>

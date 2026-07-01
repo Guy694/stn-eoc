@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { publicInternalError } from "@/lib/apiResponse";
+import { clearCitizenSessionCookie } from "@/lib/citizenAuth";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -13,17 +15,33 @@ const pool = mysql.createPool({
 
 export async function POST(request) {
     try {
-        const { sessionToken } = await request.json();
+        let body = {};
+        try {
+            body = await request.json();
+        } catch {
+            body = {};
+        }
+
+        const sessionToken = body.sessionToken || request.cookies.get('session_token')?.value;
         const ip_address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
             || request.headers.get('x-real-ip')
             || 'unknown';
         const user_agent = request.headers.get('user-agent') || 'unknown';
 
         if (!sessionToken) {
-            return NextResponse.json(
-                { success: false, message: 'ไม่พบ session token' },
-                { status: 400 }
-            );
+            const response = NextResponse.json({
+                success: true,
+                message: 'ออกจากระบบสำเร็จ'
+            });
+            clearCitizenSessionCookie(response);
+            response.cookies.set('user_session', '', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 0,
+                path: '/'
+            });
+            return response;
         }
 
         const connection = await pool.getConnection();
@@ -60,15 +78,18 @@ export async function POST(request) {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
-                maxAge: 0
+                maxAge: 0,
+                path: '/'
             });
 
             response.cookies.set('session_token', '', {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
-                maxAge: 0
+                maxAge: 0,
+                path: '/'
             });
+            clearCitizenSessionCookie(response);
 
             return response;
 
@@ -78,13 +99,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Logout error:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'เกิดข้อผิดพลาดในการออกจากระบบ',
-                error: error.message
-            },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการออกจากระบบ');
     }
 }

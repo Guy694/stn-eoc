@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - ดึงรายการสถานพยาบาลทั้งหมด
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        if (!auth.success) return auth.response;
+
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type');
         const search = searchParams.get('search');
@@ -60,16 +65,16 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching health facilities:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch health facilities', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลสถานพยาบาล');
     }
 }
 
 // POST - เพิ่มสถานพยาบาลใหม่
 export async function POST(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         const body = await request.json();
         const { name, typecode, address, district_name, tambon, lat, lon } = body;
 
@@ -101,9 +106,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error creating health facility:', error);
-        return NextResponse.json(
-            { success: false, error: 'Failed to create health facility', details: error.message },
-            { status: 500 }
-        );
+        return publicInternalError('เกิดข้อผิดพลาดในการเพิ่มสถานพยาบาล');
     }
 }

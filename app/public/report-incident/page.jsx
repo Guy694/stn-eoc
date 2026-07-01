@@ -545,13 +545,13 @@ export default function ReportIncidentPage() {
                                 type="button"
                                 onClick={async () => {
                                     await fetch('/stn-eoc/api/auth/citizen-thaiid/session', { method: 'DELETE' });
-                                    setCitizenSession(null);
                                     setFormData(prev => ({
                                         ...prev,
                                         firstName: '',
                                         lastName: '',
                                         nationalId: ''
                                     }));
+                                    window.location.reload();
                                 }}
                                 className="text-sm text-red-600 hover:text-red-800 font-medium"
                             >

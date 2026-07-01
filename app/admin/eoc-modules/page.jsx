@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
@@ -43,14 +43,9 @@ function EOCModulesContent() {
         }
     }, [user, authLoading, router]);
 
-    useEffect(() => {
-        if (eocType) {
-            loadModules();
-            loadEOCInfo();
-        }
-    }, [eocType]);
+    const loadEOCInfo = useCallback(async () => {
+        if (!eocType) return;
 
-    const loadEOCInfo = async () => {
         try {
             const response = await fetch(`/stn-eoc/api/admin/eoc-types`);
             const result = await response.json();
@@ -61,9 +56,11 @@ function EOCModulesContent() {
         } catch (error) {
             console.error("Error loading EOC info:", error);
         }
-    };
+    }, [eocType]);
 
-    const loadModules = async () => {
+    const loadModules = useCallback(async () => {
+        if (!eocType) return;
+
         try {
             setLoading(true);
             const response = await fetch(`/stn-eoc/api/admin/eoc-modules?eoc_type=${eocType}`);
@@ -81,7 +78,14 @@ function EOCModulesContent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [eocType]);
+
+    useEffect(() => {
+        if (eocType) {
+            loadModules();
+            loadEOCInfo();
+        }
+    }, [eocType, loadEOCInfo, loadModules]);
 
     const handleOpenAddModal = () => {
         setEditingModule(null);
@@ -201,7 +205,7 @@ function EOCModulesContent() {
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-600 mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลด...</p>
                     </div>
                 </div>
@@ -492,7 +496,7 @@ export default function EOCModulesManagement() {
         <Suspense fallback={
             <EOCLayout>
                 <div className="flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
                 </div>
             </EOCLayout>
         }>

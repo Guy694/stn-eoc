@@ -114,7 +114,7 @@ export default function AIChatbot() {
         <>
             {/* Speech Bubble Tooltip - "Ask Me" */}
             {!isOpen && (
-                <div className="fixed bottom-20 right-24 z-40 animate-float-bounce">
+                <div className="fixed bottom-20 right-24 z-40 animate-float-subtle">
                     <div className="relative bg-white rounded-2xl shadow-xl px-4 py-3 border-2 border-green-500">
                         <div className="flex items-center gap-2">
                             <svg className="w-5 h-5 text-green-600 animate-wiggle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +125,7 @@ export default function AIChatbot() {
                             </p>
                         </div>
                         {/* Speech bubble arrow */}
-                        <div className="absolute -right-2 bottom-4 w-4 h-4 bg-white border-r-2 border-b-2 border-green-500 transform rotate-45"></div>
+                        <div className="absolute -right-2 bottom-4 w-4 h-4 bg-white border-r-2 border-b border-green-500 transform rotate-45"></div>
                     </div>
                 </div>
             )}
@@ -241,7 +241,7 @@ export default function AIChatbot() {
                                         <button
                                             key={idx}
                                             onClick={() => sendMessage(q)}
-                                            className="block w-full text-left text-sm bg-white hover:bg-green-50 text-gray-700 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-300 transition-colors"
+                                            className="block w-full text-left text-sm bg-white hover:bg-emerald-50 text-emerald-900 px-3 py-2 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors"
                                         >
                                             💬 {q}
                                         </button>
@@ -279,9 +279,9 @@ export default function AIChatbot() {
                                 <div className="bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
                                     <div className="flex items-center gap-2">
                                         <div className="flex gap-1">
-                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
+                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
                                         </div>
                                         <span className="text-sm text-gray-600">กำลังคิด...</span>
                                     </div>
@@ -307,7 +307,7 @@ export default function AIChatbot() {
                             <button
                                 onClick={() => sendMessage()}
                                 disabled={!inputMessage.trim() || isLoading}
-                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors disabled:bg-green-100 disabled:text-green-900 disabled:cursor-not-allowed flex items-center gap-2"
                             >
                                 <span>ส่ง</span>
                                 <span>📤</span>

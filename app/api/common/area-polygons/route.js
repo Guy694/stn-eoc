@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { publicInternalError } from '@/lib/apiResponse';
 
 // API สำหรับดึง polygon ตามระดับ (village, tambon, district)
 // ใช้ satun_village_polygon เป็น source หลัก และรวม polygon ด้วย ST_Union
@@ -176,9 +177,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching polygons:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่');
     }
 }

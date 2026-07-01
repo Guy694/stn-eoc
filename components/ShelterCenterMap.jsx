@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -7,6 +7,14 @@ const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLaye
 const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
+
+const EOC_TYPES = [
+    { value: 'flood', label: '💧 น้ำท่วม', color: 'blue', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
+    { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png' },
+    { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
+    { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png' },
+    { value: 'disease', label: '🦠 โรคระบาด', color: 'red', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png' }
+];
 
 export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
     const [shelters, setShelters] = useState([]);
@@ -34,13 +42,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
         'มะนัง': '#06B6D4'
     };
 
-    const eocTypes = [
-        { value: 'flood', label: '💧 น้ำท่วม', color: 'blue', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
-        { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png' },
-        { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png' },
-        { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png' },
-        { value: 'disease', label: '🦠 โรคระบาด', color: 'red', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png' }
-    ];
+    const eocTypes = EOC_TYPES;
 
     // สร้าง custom icons
     useEffect(() => {
@@ -85,18 +87,9 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
             });
             setCustomIcons(icons);
         }
-    }, []);
+    }, [eocTypes]);
 
-    // Fetch polygons
-    useEffect(() => {
-        if (showDistrictLayer && districtPolygons.length === 0) fetchPolygons('district');
-    }, [showDistrictLayer]);
-
-    useEffect(() => {
-        if (showTambonLayer && tambonPolygons.length === 0) fetchPolygons('tambon');
-    }, [showTambonLayer]);
-
-    const fetchPolygons = async (level) => {
+    const fetchPolygons = useCallback(async (level) => {
         try {
             const response = await fetch(`/stn-eoc/api/common/area-polygons?level=${level}`);
             const data = await response.json();
@@ -107,11 +100,9 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
         } catch (error) {
             console.error(`Error fetching ${level} polygons:`, error);
         }
-    };
+    }, []);
 
-    useEffect(() => { fetchShelters(); }, [filterType, sessionId]);
-
-    const fetchShelters = async () => {
+    const fetchShelters = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -126,9 +117,27 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterType, sessionId]);
+
+    // Fetch polygons
+    useEffect(() => {
+        if (showDistrictLayer && districtPolygons.length === 0) fetchPolygons('district');
+    }, [districtPolygons.length, fetchPolygons, showDistrictLayer]);
+
+    useEffect(() => {
+        if (showTambonLayer && tambonPolygons.length === 0) fetchPolygons('tambon');
+    }, [fetchPolygons, showTambonLayer, tambonPolygons.length]);
+
+    useEffect(() => { fetchShelters(); }, [fetchShelters]);
 
     const getEocTypeLabel = (eocTypeValue) => eocTypes.find(t => t.value === eocTypeValue)?.label || eocTypeValue;
+
+    const sheltersWithCoordinates = shelters.filter((shelter) => {
+        const lat = Number.parseFloat(shelter.lat);
+        const lon = Number.parseFloat(shelter.lon);
+        return Number.isFinite(lat) && Number.isFinite(lon);
+    });
+    const sheltersWithoutCoordinates = shelters.length - sheltersWithCoordinates.length;
 
     const getOccupancyBadge = (shelter) => {
         if (!shelter.current_occupancy && shelter.current_occupancy !== 0) return null;
@@ -182,7 +191,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
         return (
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center justify-center h-96">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
                 </div>
             </div>
         );
@@ -192,7 +201,14 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
         <div className="text-gray-800 bg-white rounded-lg shadow-md overflow-hidden">
             <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
                 <h3 className="text-2xl font-bold text-gray-800">🏥 ศูนย์พักพิงชั่วคราว</h3>
-                <p className="text-lg mt-1">แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({shelters.length} แห่ง)</p>
+                <p className="text-lg mt-1">
+                    แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
+                </p>
+                {sheltersWithoutCoordinates > 0 && (
+                    <p className="text-sm text-amber-700 mt-1">
+                        มี {sheltersWithoutCoordinates} แห่งที่ยังไม่มีพิกัด จึงยังไม่แสดงบนแผนที่
+                    </p>
+                )}
             </div>
 
             <div className="p-4 bg-gradient-to-br from-green-50 to-blue-50">
@@ -202,9 +218,9 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                         <div className="flex flex-wrap items-center gap-4">
                             <label className="text-sm font-medium">กรองตามประเภท EOC:</label>
                             <div className="flex gap-2 flex-wrap">
-                                <button onClick={() => setFilterType('')} className={`px-3 py-1 rounded text-sm ${filterType === '' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>ทั้งหมด</button>
+                                <button onClick={() => setFilterType('')} className={`px-3 py-1 rounded text-sm ${filterType === '' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>ทั้งหมด</button>
                                 {eocTypes.map(type => (
-                                    <button key={type.value} onClick={() => setFilterType(type.value)} className={`px-3 py-1 rounded text-sm ${filterType === type.value ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>{type.label}</button>
+                                    <button key={type.value} onClick={() => setFilterType(type.value)} className={`px-3 py-1 rounded text-sm ${filterType === type.value ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>{type.label}</button>
                                 ))}
                             </div>
                         </div>
@@ -224,7 +240,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                             <span className="text-sm">📍 ตำบล</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} className="w-4 h-4 text-purple-600 rounded" />
+                            <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} className="w-4 h-4 text-teal-600 rounded" />
                             <span className="text-sm">🏷️ แสดงชื่อ</span>
                         </label>
                     </div>
@@ -292,7 +308,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                         })}
 
                         {/* Shelter Markers */}
-                        {shelters.map((shelter) => (
+                        {sheltersWithCoordinates.map((shelter) => (
                             <Marker
                                 key={shelter.id}
                                 position={[parseFloat(shelter.lat), parseFloat(shelter.lon)]}

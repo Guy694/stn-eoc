@@ -23,21 +23,19 @@ export default function SplashScreen({ onComplete }) {
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-green-700 via-green-600 to-green-800 transition-opacity duration-500 ${isAnimating ? 'opacity-100' : 'opacity-0'
+            className={`fixed inset-0 z-[9999] flex items-center justify-center bg-green-950 transition-opacity duration-500 ${isAnimating ? 'opacity-100' : 'opacity-0'
                 }`}
         >
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-10 left-10 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-                <div className="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white rounded-full blur-3xl opacity-20"></div>
+            <div className="absolute inset-0 bg-black/20">
+                <div className="absolute inset-x-0 top-0 h-px bg-white/20"></div>
             </div>
 
             {/* Main Content */}
             <div className="relative text-center">
                 {/* Logo with Animation */}
                 <div className="relative mb-8">
-                    <div className="w-32 h-32 md:w-40 md:h-40 mx-auto relative animate-bounce-slow">
+                    <div className="w-32 h-32 md:w-40 md:h-40 mx-auto relative animate-float-soft">
                         <Image
                             src="/img/logo.png"
                             alt="EOC Logo"
@@ -56,10 +54,10 @@ export default function SplashScreen({ onComplete }) {
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg animate-fade-in">
                     EOC จังหวัดสตูล
                 </h1>
-                <p className="text-lg md:text-xl text-green-100 mb-2 animate-fade-in-delay">
+                <p className="text-lg md:text-xl text-green-50 mb-2 animate-fade-in-delay">
                     Satun Geo-EOC Intelligence Platform
                 </p>
-                <p className="text-sm md:text-base text-green-200 animate-fade-in-delay-2">
+                <p className="text-sm md:text-base text-green-100 animate-fade-in-delay-2">
                     ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน
                 </p>
 

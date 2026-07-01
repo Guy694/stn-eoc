@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 
@@ -25,17 +25,13 @@ export default function OfficersManagementPage() {
 
     const roles = [
         { value: 'admin', label: 'ผู้ดูแลระบบ', color: 'bg-red-100 text-red-700' },
-        { value: 'MCATT', label: 'MCATT', color: 'bg-purple-100 text-purple-700' },
+        { value: 'MCATT', label: 'MCATT', color: 'bg-teal-100 text-teal-700' },
         { value: 'SAT', label: 'SAT', color: 'bg-blue-100 text-blue-700' },
         { value: 'SeRHT', label: 'SeRHT', color: 'bg-green-100 text-green-700' },
         { value: 'staff', label: 'เจ้าหน้าที่ทั่วไป', color: 'bg-gray-100 text-gray-700' }
     ];
 
-    useEffect(() => {
-        fetchOfficers();
-    }, [filterRole, searchTerm]);
-
-    const fetchOfficers = async () => {
+    const fetchOfficers = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -55,7 +51,11 @@ export default function OfficersManagementPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterRole, searchTerm]);
+
+    useEffect(() => {
+        fetchOfficers();
+    }, [fetchOfficers]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -170,7 +170,7 @@ export default function OfficersManagementPage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                     {roles.map(role => (
-                        <div key={role.value} className={`bg-white rounded-lg shadow p-4 border-l-4 ${getRoleColor(role.value)}`}>
+                        <div key={role.value} className={`bg-white rounded-lg shadow p-4 border ${getRoleColor(role.value)}`}>
                             <div className="text-sm text-gray-600 mb-1">{role.label}</div>
                             <div className="text-2xl font-bold">
                                 {stats[role.value] || 0}

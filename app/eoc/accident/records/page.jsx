@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -56,14 +56,6 @@ export default function AccidentRecordsPage() {
     }, []);
 
     useEffect(() => {
-        if (activeSession) {
-            fetchRecords();
-        } else {
-            setLoading(false);
-        }
-    }, [activeSession, filters]);
-
-    useEffect(() => {
         if (formData.district) {
             const district = satunDistricts.find(d => d.name === formData.district);
             setTambonOptions(district?.tambons || []);
@@ -72,7 +64,7 @@ export default function AccidentRecordsPage() {
         }
     }, [formData.district]);
 
-    const fetchRecords = async () => {
+    const fetchRecords = useCallback(async () => {
         if (!activeSession) return;
         try {
             setLoading(true);
@@ -90,7 +82,15 @@ export default function AccidentRecordsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeSession, filters]);
+
+    useEffect(() => {
+        if (activeSession) {
+            fetchRecords();
+        } else {
+            setLoading(false);
+        }
+    }, [activeSession, fetchRecords]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -232,20 +232,20 @@ export default function AccidentRecordsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-red-500">
+                    <div className="bg-white rounded-lg p-4 shadow border border-red-500">
                         <div className="text-3xl font-bold text-red-600">{stats.total}</div>
                         <div className="text-sm text-gray-600">อุบัติเหตุทั้งหมด</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-gray-800">
+                    <div className="bg-white rounded-lg p-4 shadow border border-gray-800">
                         <div className="text-3xl font-bold text-gray-800">{stats.deaths}</div>
                         <div className="text-sm text-gray-600">💀 เสียชีวิต</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-yellow-500">
+                    <div className="bg-white rounded-lg p-4 shadow border border-yellow-500">
                         <div className="text-3xl font-bold text-yellow-600">{stats.injuries}</div>
                         <div className="text-sm text-gray-600">🤕 บาดเจ็บ</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border-l-4 border-purple-500">
-                        <div className="text-3xl font-bold text-purple-600">{stats.drunk}</div>
+                    <div className="bg-white rounded-lg p-4 shadow border border-teal-500">
+                        <div className="text-3xl font-bold text-teal-600">{stats.drunk}</div>
                         <div className="text-sm text-gray-600">🍺 เมาแล้วขับ</div>
                     </div>
                 </div>
@@ -286,7 +286,7 @@ export default function AccidentRecordsPage() {
 
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-2"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b border-red-500 mx-auto mb-2"></div>
                             <p className="text-gray-600 text-sm">กำลังโหลด...</p>
                         </div>
                     ) : records.length === 0 ? (
@@ -335,7 +335,7 @@ export default function AccidentRecordsPage() {
                                             </td>
                                             <td className="px-4 py-3 text-xs">
                                                 <div className="flex flex-wrap gap-1">
-                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-purple-100 text-purple-700 rounded">🍺 เมา</span>}
+                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-teal-100 text-teal-700 rounded">🍺 เมา</span>}
                                                     {r.no_helmet && <span className="px-1 py-0.5 bg-orange-100 text-orange-700 rounded">⛑ ไม่สวมหมวก</span>}
                                                     {r.speeding && <span className="px-1 py-0.5 bg-red-100 text-red-700 rounded">🚀 เร็ว</span>}
                                                 </div>

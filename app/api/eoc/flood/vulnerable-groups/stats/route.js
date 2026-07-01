@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
+import { publicInternalError } from '@/lib/apiResponse';
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -111,10 +112,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching vulnerable groups stats:', error);
-        return NextResponse.json({
-            success: false,
-            error: error.message
-        }, { status: 500 });
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงสถิติกลุ่มเปราะบาง');
     } finally {
         if (connection) connection.release();
     }
