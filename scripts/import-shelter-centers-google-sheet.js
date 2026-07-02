@@ -6,13 +6,18 @@ const mysql = require('mysql2/promise');
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSs49yOMfr54tr_JILpj7sVKhKz4hqo5EcVOifGorgHF-udlNRptn26ToObDoMPB_mRBnM1a5AagzkK/pub?gid=653690817&single=true&output=csv';
 const SOURCE_AS_OF_DATE = '2025-12-01';
 const IMPORT_SOURCE = 'Google Sheet: ข้อมูลศูนย์พักพิงรองรับสถานการณ์อุทกภัยจังหวัดสตูล';
+const TAMBON_BOUNDARY_PATH = path.join(process.cwd(), 'tambonnn.geojson');
+const DISTRICT_BOUNDARY_PATH = path.join(process.cwd(), 'ampure.geojson');
 
 function normalizeText(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim();
+  return String(value || '').normalize('NFC').replace(/\s+/g, ' ').trim();
 }
 
 function normalizeKeyPart(value) {
-  return normalizeText(value).replace(/\s+/g, '').toLowerCase();
+  return normalizeText(value)
+    .replace(/\s+/g, '')
+    .replace(/([\u0E31\u0E34-\u0E3A\u0E47-\u0E4E])\1+/g, '$1')
+    .toLowerCase();
 }
 
 function parseNumber(value) {
@@ -77,6 +82,106 @@ function buildSourceKey(row) {
   ].join('|');
 
   return crypto.createHash('sha1').update(rawKey).digest('hex');
+}
+
+function ringAreaAndCentroid(ring) {
+  let twiceArea = 0;
+  let centroidLon = 0;
+  let centroidLat = 0;
+
+  for (let i = 0; i < ring.length - 1; i += 1) {
+    const [lon1, lat1] = ring[i];
+    const [lon2, lat2] = ring[i + 1];
+    const cross = lon1 * lat2 - lon2 * lat1;
+    twiceArea += cross;
+    centroidLon += (lon1 + lon2) * cross;
+    centroidLat += (lat1 + lat2) * cross;
+  }
+
+  if (Math.abs(twiceArea) < Number.EPSILON) {
+    const points = ring.filter(point => Array.isArray(point) && point.length >= 2);
+    const totals = points.reduce((sum, [lon, lat]) => ({ lon: sum.lon + lon, lat: sum.lat + lat }), { lon: 0, lat: 0 });
+    return {
+      area: 0,
+      lon: points.length ? totals.lon / points.length : null,
+      lat: points.length ? totals.lat / points.length : null,
+    };
+  }
+
+  return {
+    area: Math.abs(twiceArea / 2),
+    lon: centroidLon / (3 * twiceArea),
+    lat: centroidLat / (3 * twiceArea),
+  };
+}
+
+function geometryCentroid(geometry) {
+  if (!geometry?.coordinates) return null;
+  const polygons = geometry.type === 'MultiPolygon' ? geometry.coordinates : [geometry.coordinates];
+  const centroids = [];
+
+  for (const polygon of polygons) {
+    const outerRing = polygon?.[0];
+    if (!Array.isArray(outerRing) || outerRing.length < 3) continue;
+    const centroid = ringAreaAndCentroid(outerRing);
+    if (Number.isFinite(centroid.lon) && Number.isFinite(centroid.lat)) {
+      centroids.push(centroid);
+    }
+  }
+
+  if (!centroids.length) return null;
+  const totalArea = centroids.reduce((sum, item) => sum + item.area, 0);
+  if (!totalArea) return centroids[0];
+
+  return centroids.reduce(
+    (sum, item) => ({
+      lon: sum.lon + item.lon * item.area / totalArea,
+      lat: sum.lat + item.lat * item.area / totalArea,
+    }),
+    { lon: 0, lat: 0 }
+  );
+}
+
+function loadBoundaryCentroids() {
+  const tambonGeojson = JSON.parse(fs.readFileSync(TAMBON_BOUNDARY_PATH, 'utf8'));
+  const districtGeojson = JSON.parse(fs.readFileSync(DISTRICT_BOUNDARY_PATH, 'utf8'));
+  const tambons = new Map();
+  const districts = new Map();
+
+  for (const feature of tambonGeojson.features || []) {
+    const centroid = geometryCentroid(feature.geometry);
+    if (!centroid) continue;
+    const districtName = feature.properties?.dis_name;
+    const tambonName = feature.properties?.tam_name;
+    tambons.set(`${normalizeKeyPart(districtName)}|${normalizeKeyPart(tambonName)}`, {
+      lat: Number(centroid.lat.toFixed(7)),
+      lon: Number(centroid.lon.toFixed(7)),
+      source: `center:tambon:${districtName}/${tambonName}`,
+    });
+  }
+
+  for (const feature of districtGeojson.features || []) {
+    const centroid = geometryCentroid(feature.geometry);
+    if (!centroid) continue;
+    const districtName = feature.properties?.dis_name;
+    districts.set(normalizeKeyPart(districtName), {
+      lat: Number(centroid.lat.toFixed(7)),
+      lon: Number(centroid.lon.toFixed(7)),
+      source: `center:district:${districtName}`,
+    });
+  }
+
+  return { tambons, districts };
+}
+
+function resolveShelterCoordinates(shelter, centroids) {
+  const tambonKey = `${normalizeKeyPart(shelter.districtName)}|${normalizeKeyPart(shelter.tambon)}`;
+  const districtKey = normalizeKeyPart(shelter.districtName);
+  return centroids.tambons.get(tambonKey) || centroids.districts.get(districtKey) || {
+    lat: null,
+    lon: null,
+    source: 'not_found',
+  };
 }
 
 function rowToShelter(row, index) {
@@ -214,8 +319,8 @@ async function upsertShelter(connection, shelter) {
     shelter.sheltername,
     'flood',
     shelter.shelterStatus || null,
-    null,
-    null,
+    shelter.lat,
+    shelter.lon,
     shelter.address,
     shelter.tambon,
     shelter.districtName,
@@ -300,7 +405,16 @@ async function main() {
   if (!response.ok) throw new Error(`โหลด CSV ไม่สำเร็จ: ${response.status}`);
   const csvText = await response.text();
   const rows = parseCsv(csvText);
-  const shelters = rows.slice(5).map(rowToShelter).filter(Boolean);
+  const centroids = loadBoundaryCentroids();
+  const shelters = rows.slice(5).map(rowToShelter).filter(Boolean).map(shelter => {
+    const coordinates = resolveShelterCoordinates(shelter, centroids);
+    return {
+      ...shelter,
+      lat: coordinates.lat,
+      lon: coordinates.lon,
+      coordinateSource: coordinates.source,
+    };
+  });
 
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
@@ -345,6 +459,7 @@ async function main() {
   const csvPath = path.join(process.cwd(), 'tmp_shelter_centers_import.csv');
   const header = [
     'id', 'action', 'districtName', 'tambon', 'village', 'sheltername', 'shelterStatus',
+    'lat', 'lon', 'coordinateSource',
     'capacity', 'currentOccupancyTotal', 'responsibleOrg', 'coordinatorName', 'coordinatorPhone',
     'healthServiceName', 'healthStaffPerDay', 'healthContactPhone',
   ];

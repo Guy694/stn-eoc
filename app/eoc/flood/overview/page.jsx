@@ -109,6 +109,9 @@ export default function EOCOverview() {
     if (!dashboardData) return null;
 
     const { session, casualties, affected_areas, resources, teams, shelters, diseases, vulnerable_groups } = dashboardData;
+    const diseaseLatestDateLabel = diseases?.latest_report_date
+        ? new Date(`${String(diseases.latest_report_date).split('T')[0]}T00:00:00`).toLocaleDateString('th-TH')
+        : 'วันล่าสุด';
 
     return (
         <EOCLayout>
@@ -116,7 +119,7 @@ export default function EOCOverview() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">📊 ภาพรวม EOC</h1>
-                    <p className="text-gray-600">ภาพรวมสถานการณ์ EOC แบบเรียลไทม์</p>
+                    <p className="text-gray-600">ภาพรวมสถานการณ์ EOC ตามข้อมูลที่บันทึกและกรอกย้อนหลัง</p>
                 </div>
 
                 {/* Session Selector */}
@@ -417,12 +420,12 @@ export default function EOCOverview() {
                 {diseases && (
                     <>
                         <div className="mb-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">🦠 สถิติโรครายวัน</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-4">🦠 สถิติโรคจากข้อมูลย้อนหลัง</h3>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                                 <div className="bg-white rounded-lg shadow p-6 border border-blue-500">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm text-gray-600 mb-1">รายงานวันนี้</p>
+                                            <p className="text-sm text-gray-600 mb-1">รายงานวันล่าสุด ({diseaseLatestDateLabel})</p>
                                             <p className="text-3xl font-bold text-blue-600">
                                                 {diseases.today?.reduce((sum, d) => sum + parseInt(d.today_patients || 0), 0) || 0} คน
                                             </p>
@@ -465,7 +468,7 @@ export default function EOCOverview() {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Bar Chart by District */}
                                 <div className="bg-white rounded-lg shadow p-6">
-                                    <h4 className="text-lg font-bold text-gray-800 mb-4">📊 สถานการณ์แยกตามอำเภอ (วันนี้)</h4>
+                                    <h4 className="text-lg font-bold text-gray-800 mb-4">📊 สถานการณ์แยกตามอำเภอ ({diseaseLatestDateLabel})</h4>
                                     {diseases.today && diseases.today.length > 0 ? (
                                         <Bar
                                             data={(() => {
@@ -502,7 +505,7 @@ export default function EOCOverview() {
                                             }}
                                         />
                                     ) : (
-                                        <div className="text-center py-8 text-gray-500">ยังไม่มีข้อมูลวันนี้</div>
+                                        <div className="text-center py-8 text-gray-500">ยังไม่มีข้อมูลโรคย้อนหลังใน session นี้</div>
                                     )}
                                 </div>
 

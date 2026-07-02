@@ -3,6 +3,111 @@ import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 
+const IMPACT_FIELDS = [
+    'citizen_property',
+    'citizen_injured',
+    'citizen_deaths',
+    'citizen_missing',
+    'volunteer_property',
+    'volunteer_injured',
+    'volunteer_deaths',
+    'volunteer_missing',
+    'staff_property',
+    'staff_injured',
+    'staff_deaths',
+    'staff_missing',
+    'medicine_support',
+    'evacuated',
+    'not_evacuated',
+];
+
+function toCount(value) {
+    const number = parseInt(value);
+    return Number.isFinite(number) ? number : 0;
+}
+
+function hasDetailedImpact(body) {
+    return IMPACT_FIELDS.some(field => body[field] !== undefined && body[field] !== null && body[field] !== '');
+}
+
+function buildImpactValues(body) {
+    const values = IMPACT_FIELDS.reduce((acc, field) => {
+        acc[field] = toCount(body[field]);
+        return acc;
+    }, {});
+    const hasDetails = hasDetailedImpact(body);
+
+    return {
+        ...values,
+        deaths: hasDetails
+            ? values.citizen_deaths + values.volunteer_deaths + values.staff_deaths
+            : toCount(body.deaths),
+        missing: hasDetails
+            ? values.citizen_missing + values.volunteer_missing + values.staff_missing
+            : toCount(body.missing),
+        injured: hasDetails
+            ? values.citizen_injured + values.volunteer_injured + values.staff_injured
+            : toCount(body.injured),
+        affected: hasDetails
+            ? values.citizen_property + values.volunteer_property + values.staff_property
+            : toCount(body.affected),
+    };
+}
+
+async function columnExists(pool, columnName) {
+    const [rows] = await pool.query(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'affected_persons'
+           AND COLUMN_NAME = ?`,
+        [columnName]
+    );
+    return rows.length > 0;
+}
+
+async function indexExists(pool, indexName) {
+    const [rows] = await pool.query(
+        `SELECT INDEX_NAME
+         FROM INFORMATION_SCHEMA.STATISTICS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'affected_persons'
+           AND INDEX_NAME = ?`,
+        [indexName]
+    );
+    return rows.length > 0;
+}
+
+async function ensureAffectedPersonsImpactSchema(pool) {
+    const columns = [
+        ['citizen_property', 'INT NOT NULL DEFAULT 0 AFTER tambon'],
+        ['citizen_injured', 'INT NOT NULL DEFAULT 0 AFTER citizen_property'],
+        ['citizen_deaths', 'INT NOT NULL DEFAULT 0 AFTER citizen_injured'],
+        ['citizen_missing', 'INT NOT NULL DEFAULT 0 AFTER citizen_deaths'],
+        ['volunteer_property', 'INT NOT NULL DEFAULT 0 AFTER citizen_missing'],
+        ['volunteer_injured', 'INT NOT NULL DEFAULT 0 AFTER volunteer_property'],
+        ['volunteer_deaths', 'INT NOT NULL DEFAULT 0 AFTER volunteer_injured'],
+        ['volunteer_missing', 'INT NOT NULL DEFAULT 0 AFTER volunteer_deaths'],
+        ['staff_property', 'INT NOT NULL DEFAULT 0 AFTER volunteer_missing'],
+        ['staff_injured', 'INT NOT NULL DEFAULT 0 AFTER staff_property'],
+        ['staff_deaths', 'INT NOT NULL DEFAULT 0 AFTER staff_injured'],
+        ['staff_missing', 'INT NOT NULL DEFAULT 0 AFTER staff_deaths'],
+        ['medicine_support', 'INT NOT NULL DEFAULT 0 AFTER affected'],
+        ['evacuated', 'INT NOT NULL DEFAULT 0 AFTER medicine_support'],
+        ['not_evacuated', 'INT NOT NULL DEFAULT 0 AFTER evacuated'],
+    ];
+
+    for (const [name, definition] of columns) {
+        if (!(await columnExists(pool, name))) {
+            await pool.query(`ALTER TABLE affected_persons ADD COLUMN ${name} ${definition}`);
+        }
+    }
+
+    if (!(await indexExists(pool, 'idx_affected_persons_assistance'))) {
+        await pool.query('ALTER TABLE affected_persons ADD INDEX idx_affected_persons_assistance (medicine_support, evacuated, not_evacuated)');
+    }
+}
+
 // GET - ดึงรายงานผู้ได้รับผลกระทบ
 export async function GET(request) {
     try {
@@ -10,6 +115,7 @@ export async function GET(request) {
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
+        await ensureAffectedPersonsImpactSchema(pool);
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
         const sessionId = searchParams.get('session_id');
@@ -54,8 +160,8 @@ export async function GET(request) {
 
         const [reports] = await pool.query(query, params);
 
-        // สรุปข้อมูลรายวัน (Today)
-        const today = new Date().toISOString().split('T')[0];
+        // สรุปข้อมูลรายวันตามวันที่ที่เลือกในหน้า
+        const summaryDate = date || endDate || new Date().toISOString().split('T')[0];
         let todaySummaryQuery = `
             SELECT 
                 district_name,
@@ -63,11 +169,26 @@ export async function GET(request) {
                 SUM(missing) as today_missing,
                 SUM(injured) as today_injured,
                 SUM(affected) as today_affected,
+                SUM(citizen_property) as today_citizen_property,
+                SUM(citizen_injured) as today_citizen_injured,
+                SUM(citizen_deaths) as today_citizen_deaths,
+                SUM(citizen_missing) as today_citizen_missing,
+                SUM(volunteer_property) as today_volunteer_property,
+                SUM(volunteer_injured) as today_volunteer_injured,
+                SUM(volunteer_deaths) as today_volunteer_deaths,
+                SUM(volunteer_missing) as today_volunteer_missing,
+                SUM(staff_property) as today_staff_property,
+                SUM(staff_injured) as today_staff_injured,
+                SUM(staff_deaths) as today_staff_deaths,
+                SUM(staff_missing) as today_staff_missing,
+                SUM(medicine_support) as today_medicine_support,
+                SUM(evacuated) as today_evacuated,
+                SUM(not_evacuated) as today_not_evacuated,
                 COUNT(DISTINCT tambon) as tambon_count
             FROM affected_persons
             WHERE report_date = ?
         `;
-        const todayParams = [today];
+        const todayParams = [summaryDate];
 
         if (sessionId) {
             todaySummaryQuery += ` AND session_id = ?`;
@@ -89,6 +210,21 @@ export async function GET(request) {
                 SUM(missing) as cumulative_missing,
                 SUM(injured) as cumulative_injured,
                 SUM(affected) as cumulative_affected,
+                SUM(citizen_property) as cumulative_citizen_property,
+                SUM(citizen_injured) as cumulative_citizen_injured,
+                SUM(citizen_deaths) as cumulative_citizen_deaths,
+                SUM(citizen_missing) as cumulative_citizen_missing,
+                SUM(volunteer_property) as cumulative_volunteer_property,
+                SUM(volunteer_injured) as cumulative_volunteer_injured,
+                SUM(volunteer_deaths) as cumulative_volunteer_deaths,
+                SUM(volunteer_missing) as cumulative_volunteer_missing,
+                SUM(staff_property) as cumulative_staff_property,
+                SUM(staff_injured) as cumulative_staff_injured,
+                SUM(staff_deaths) as cumulative_staff_deaths,
+                SUM(staff_missing) as cumulative_staff_missing,
+                SUM(medicine_support) as cumulative_medicine_support,
+                SUM(evacuated) as cumulative_evacuated,
+                SUM(not_evacuated) as cumulative_not_evacuated,
                 COUNT(DISTINCT report_date) as report_days,
                 MAX(report_date) as last_report_date,
                 COUNT(DISTINCT tambon) as tambon_count
@@ -100,6 +236,16 @@ export async function GET(request) {
         if (sessionId) {
             cumulativeQuery += ` AND session_id = ?`;
             cumulativeParams.push(sessionId);
+        }
+
+        if (date) {
+            cumulativeQuery += ` AND report_date = ?`;
+            cumulativeParams.push(date);
+        }
+
+        if (startDate && endDate) {
+            cumulativeQuery += ` AND report_date BETWEEN ? AND ?`;
+            cumulativeParams.push(startDate, endDate);
         }
 
         cumulativeQuery += `
@@ -116,6 +262,21 @@ export async function GET(request) {
                 SUM(missing) as province_missing,
                 SUM(injured) as province_injured,
                 SUM(affected) as province_affected,
+                SUM(citizen_property) as province_citizen_property,
+                SUM(citizen_injured) as province_citizen_injured,
+                SUM(citizen_deaths) as province_citizen_deaths,
+                SUM(citizen_missing) as province_citizen_missing,
+                SUM(volunteer_property) as province_volunteer_property,
+                SUM(volunteer_injured) as province_volunteer_injured,
+                SUM(volunteer_deaths) as province_volunteer_deaths,
+                SUM(volunteer_missing) as province_volunteer_missing,
+                SUM(staff_property) as province_staff_property,
+                SUM(staff_injured) as province_staff_injured,
+                SUM(staff_deaths) as province_staff_deaths,
+                SUM(staff_missing) as province_staff_missing,
+                SUM(medicine_support) as province_medicine_support,
+                SUM(evacuated) as province_evacuated,
+                SUM(not_evacuated) as province_not_evacuated,
                 COUNT(DISTINCT district_name) as district_count,
                 COUNT(DISTINCT tambon) as tambon_count
             FROM affected_persons
@@ -131,6 +292,11 @@ export async function GET(request) {
         if (date) {
             provinceSummaryQuery += ` AND report_date = ?`;
             provinceParams.push(date);
+        }
+
+        if (startDate && endDate) {
+            provinceSummaryQuery += ` AND report_date BETWEEN ? AND ?`;
+            provinceParams.push(startDate, endDate);
         }
 
         const [provinceSummary] = await pool.query(provinceSummaryQuery, provinceParams);
@@ -180,16 +346,13 @@ export async function POST(request) {
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
+        await ensureAffectedPersonsImpactSchema(pool);
         const body = await request.json();
         const {
             session_id,
             report_date,
             district_name,
             tambon,
-            deaths,
-            missing,
-            injured,
-            affected,
             notes,
         } = body;
 
@@ -203,12 +366,9 @@ export async function POST(request) {
         }
 
         // ตรวจสอบจำนวนไม่เป็นลบ
-        const deathsVal = parseInt(deaths) || 0;
-        const missingVal = parseInt(missing) || 0;
-        const injuredVal = parseInt(injured) || 0;
-        const affectedVal = parseInt(affected) || 0;
+        const impact = buildImpactValues(body);
 
-        if (deathsVal < 0 || missingVal < 0 || injuredVal < 0 || affectedVal < 0) {
+        if (Object.values(impact).some(value => value < 0)) {
             return NextResponse.json(
                 { success: false, message: 'จำนวนผู้ได้รับผลกระทบต้องเป็นจำนวนบวก' },
                 { status: 400 }
@@ -217,19 +377,43 @@ export async function POST(request) {
 
         const [result] = await pool.query(
             `INSERT INTO affected_persons 
-            (session_id, report_date, district_name, tambon, deaths, missing, injured, affected, notes, reported_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (session_id, report_date, district_name, tambon,
+             citizen_property, citizen_injured, citizen_deaths, citizen_missing,
+             volunteer_property, volunteer_injured, volunteer_deaths, volunteer_missing,
+             staff_property, staff_injured, staff_deaths, staff_missing,
+             deaths, missing, injured, affected, medicine_support, evacuated, not_evacuated,
+             notes, reported_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
+                citizen_property = VALUES(citizen_property),
+                citizen_injured = VALUES(citizen_injured),
+                citizen_deaths = VALUES(citizen_deaths),
+                citizen_missing = VALUES(citizen_missing),
+                volunteer_property = VALUES(volunteer_property),
+                volunteer_injured = VALUES(volunteer_injured),
+                volunteer_deaths = VALUES(volunteer_deaths),
+                volunteer_missing = VALUES(volunteer_missing),
+                staff_property = VALUES(staff_property),
+                staff_injured = VALUES(staff_injured),
+                staff_deaths = VALUES(staff_deaths),
+                staff_missing = VALUES(staff_missing),
                 deaths = VALUES(deaths),
                 missing = VALUES(missing),
                 injured = VALUES(injured),
                 affected = VALUES(affected),
+                medicine_support = VALUES(medicine_support),
+                evacuated = VALUES(evacuated),
+                not_evacuated = VALUES(not_evacuated),
                 notes = VALUES(notes),
                 reported_by = VALUES(reported_by),
                 updated_at = CURRENT_TIMESTAMP`,
             [
                 session_id, report_date, district_name, tambon || null,
-                deathsVal, missingVal, injuredVal, affectedVal,
+                impact.citizen_property, impact.citizen_injured, impact.citizen_deaths, impact.citizen_missing,
+                impact.volunteer_property, impact.volunteer_injured, impact.volunteer_deaths, impact.volunteer_missing,
+                impact.staff_property, impact.staff_injured, impact.staff_deaths, impact.staff_missing,
+                impact.deaths, impact.missing, impact.injured, impact.affected,
+                impact.medicine_support, impact.evacuated, impact.not_evacuated,
                 notes || null, auth.user.id
             ]
         );
@@ -266,6 +450,7 @@ export async function PUT(request) {
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
+        await ensureAffectedPersonsImpactSchema(pool);
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -282,10 +467,6 @@ export async function PUT(request) {
             report_date,
             district_name,
             tambon,
-            deaths,
-            missing,
-            injured,
-            affected,
             notes
         } = body;
 
@@ -296,19 +477,25 @@ export async function PUT(request) {
             );
         }
 
-        const deathsVal = parseInt(deaths) || 0;
-        const missingVal = parseInt(missing) || 0;
-        const injuredVal = parseInt(injured) || 0;
-        const affectedVal = parseInt(affected) || 0;
+        const impact = buildImpactValues(body);
 
         await pool.query(
             `UPDATE affected_persons 
             SET session_id = ?, report_date = ?, district_name = ?, tambon = ?, 
-                deaths = ?, missing = ?, injured = ?, affected = ?, notes = ?
+                citizen_property = ?, citizen_injured = ?, citizen_deaths = ?, citizen_missing = ?,
+                volunteer_property = ?, volunteer_injured = ?, volunteer_deaths = ?, volunteer_missing = ?,
+                staff_property = ?, staff_injured = ?, staff_deaths = ?, staff_missing = ?,
+                deaths = ?, missing = ?, injured = ?, affected = ?,
+                medicine_support = ?, evacuated = ?, not_evacuated = ?,
+                notes = ?
             WHERE id = ?`,
             [
                 session_id, report_date, district_name, tambon || null,
-                deathsVal, missingVal, injuredVal, affectedVal,
+                impact.citizen_property, impact.citizen_injured, impact.citizen_deaths, impact.citizen_missing,
+                impact.volunteer_property, impact.volunteer_injured, impact.volunteer_deaths, impact.volunteer_missing,
+                impact.staff_property, impact.staff_injured, impact.staff_deaths, impact.staff_missing,
+                impact.deaths, impact.missing, impact.injured, impact.affected,
+                impact.medicine_support, impact.evacuated, impact.not_evacuated,
                 notes || null, id
             ]
         );

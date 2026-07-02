@@ -14,6 +14,105 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function tableExists(connection, tableName) {
+    const [rows] = await connection.execute(
+        `SELECT TABLE_NAME
+         FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?`,
+        [tableName]
+    );
+    return rows.length > 0;
+}
+
+function appendLocationFilters(whereParts, params, { district, tambon }) {
+    if (district && district !== 'all') {
+        whereParts.push('district = ?');
+        params.push(district);
+    }
+
+    if (tambon && tambon !== 'all') {
+        whereParts.push('tambon = ?');
+        params.push(tambon);
+    }
+}
+
+async function fetchSessionRows(connection, { sessionId, district, tambon }) {
+    const whereParts = ['1=1'];
+    const params = [];
+
+    if (sessionId) {
+        whereParts.push('session_id = ?');
+        params.push(sessionId);
+    }
+
+    appendLocationFilters(whereParts, params, { district, tambon });
+
+    const [rows] = await connection.execute(`
+        SELECT 
+            id,
+            session_id,
+            province,
+            district,
+            tambon,
+            village,
+            elderly,
+            children,
+            disabled,
+            bedridden,
+            pregnant,
+            chronic_illness,
+            notes,
+            needs,
+            created_by,
+            created_at,
+            updated_at,
+            'session' as source_type
+        FROM vulnerable_groups
+        WHERE ${whereParts.join(' AND ')}
+        ORDER BY district, tambon, village
+    `, params);
+
+    return rows;
+}
+
+async function fetchBaselineRows(connection, { district, tambon }) {
+    if (!(await tableExists(connection, 'vulnerable_group_baselines'))) {
+        return [];
+    }
+
+    const whereParts = ['1=1'];
+    const params = [];
+    appendLocationFilters(whereParts, params, { district, tambon });
+
+    const [rows] = await connection.execute(`
+        SELECT 
+            id,
+            NULL as session_id,
+            province,
+            district,
+            tambon,
+            village,
+            elderly,
+            children,
+            disabled,
+            bedridden,
+            pregnant,
+            chronic_illness,
+            notes,
+            needs,
+            created_by,
+            created_at,
+            updated_at,
+            'baseline' as source_type
+        FROM vulnerable_group_baselines
+        WHERE ${whereParts.join(' AND ')}
+        ORDER BY district, tambon, village
+    `, params);
+
+    return rows;
+}
+
 // GET - ดึงข้อมูลกลุ่มเปราะบาง
 export async function GET(request) {
     let connection;
@@ -26,55 +125,33 @@ export async function GET(request) {
         const sessionId = searchParams.get('session_id');
         const district = searchParams.get('district');
         const tambon = searchParams.get('tambon');
+        const source = searchParams.get('source'); // session, baseline
 
         connection = await pool.getConnection();
 
-        let whereClause = '1=1';
-        let params = [];
+        let sourceType = 'session';
+        let rows = [];
 
-        if (sessionId) {
-            whereClause += ' AND session_id = ?';
-            params.push(sessionId);
+        if (source === 'baseline' || source === 'base') {
+            rows = await fetchBaselineRows(connection, { district, tambon });
+            sourceType = 'baseline';
+        } else {
+            rows = await fetchSessionRows(connection, { sessionId, district, tambon });
+
+            if (sessionId && rows.length === 0) {
+                const baselineRows = await fetchBaselineRows(connection, { district, tambon });
+                if (baselineRows.length > 0) {
+                    rows = baselineRows;
+                    sourceType = 'baseline';
+                }
+            }
         }
-
-        if (district && district !== 'all') {
-            whereClause += ' AND district = ?';
-            params.push(district);
-        }
-
-        if (tambon && tambon !== 'all') {
-            whereClause += ' AND tambon = ?';
-            params.push(tambon);
-        }
-
-        const [rows] = await connection.execute(`
-            SELECT 
-                id,
-                session_id,
-                province,
-                district,
-                tambon,
-                village,
-                elderly,
-                children,
-                disabled,
-                bedridden,
-                pregnant,
-                chronic_illness,
-                notes,
-                needs,
-                created_by,
-                created_at,
-                updated_at
-            FROM vulnerable_groups
-            WHERE ${whereClause}
-            ORDER BY district, tambon, village
-        `, params);
 
         return NextResponse.json({
             success: true,
             data: rows,
-            count: rows.length
+            count: rows.length,
+            source: sourceType
         });
 
     } catch (error) {

@@ -12,7 +12,7 @@ import {
     Legend,
     ArcElement
 } from 'chart.js';
-import { Bar, Pie } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 
 ChartJS.register(
     CategoryScale,
@@ -36,22 +36,70 @@ export default function AffectedPersonsPage() {
     });
     const [showModal, setShowModal] = useState(false);
     const [editingReport, setEditingReport] = useState(null);
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+    const [filterStartDate, setFilterStartDate] = useState('2025-11-30');
+    const [filterEndDate, setFilterEndDate] = useState('2025-12-15');
     const [filterDistrict, setFilterDistrict] = useState('');
+    const impactGroups = [
+        {
+            title: 'ประชาชน',
+            fields: [
+                ['citizen_property', 'ทรัพย์สิน'],
+                ['citizen_injured', 'บาดเจ็บ'],
+                ['citizen_deaths', 'เสียชีวิต'],
+                ['citizen_missing', 'สูญหาย'],
+            ],
+        },
+        {
+            title: 'อสม.',
+            fields: [
+                ['volunteer_property', 'ทรัพย์สิน'],
+                ['volunteer_injured', 'บาดเจ็บ'],
+                ['volunteer_deaths', 'เสียชีวิต'],
+                ['volunteer_missing', 'สูญหาย'],
+            ],
+        },
+        {
+            title: 'บุคลากร',
+            fields: [
+                ['staff_property', 'ทรัพย์สิน'],
+                ['staff_injured', 'บาดเจ็บ'],
+                ['staff_deaths', 'เสียชีวิต'],
+                ['staff_missing', 'สูญหาย'],
+            ],
+        },
+    ];
+    const assistanceFields = [
+        ['medicine_support', 'จ่ายยา/เวชภัณฑ์'],
+        ['evacuated', 'อพยพ'],
+        ['not_evacuated', 'ไม่อพยพ'],
+    ];
+    const impactFieldKeys = [
+        ...impactGroups.flatMap(group => group.fields.map(([key]) => key)),
+        ...assistanceFields.map(([key]) => key),
+    ];
 
     const [formData, setFormData] = useState({
-        report_date: new Date().toISOString().split('T')[0],
+        report_date: filterEndDate,
         district_name: '',
         tambon: '',
         deaths: 0,
         missing: 0,
         injured: 0,
         affected: 0,
+        ...Object.fromEntries(impactFieldKeys.map(key => [key, 0])),
         notes: ''
     });
 
     // รายการอำเภอในจังหวัดสตูล
-    const districts = ['สตูล', 'ควนโดน', 'ควนกาหลง', 'ท่าแพ', 'ละงู', 'มะนัง', 'ทุ่งหว้า'];
+    const districts = ['ควนโดน', 'เมืองสตูล', 'ท่าแพ', 'มะนัง', 'ควนกาหลง', 'ละงู', 'ทุ่งหว้า'];
+    const toNumber = (value) => Number(value) || 0;
+    const formatNumber = (value) => toNumber(value).toLocaleString('th-TH');
+    const reportRangeLabel = useMemo(() => {
+        if (filterStartDate && filterEndDate) {
+            return `${new Date(filterStartDate).toLocaleDateString('th-TH')} - ${new Date(filterEndDate).toLocaleDateString('th-TH')}`;
+        }
+        return 'ทุกช่วงวันที่';
+    }, [filterEndDate, filterStartDate]);
 
     const fetchSessions = useCallback(async () => {
         try {
@@ -81,7 +129,10 @@ export default function AffectedPersonsPage() {
             setLoading(true);
             const params = new URLSearchParams();
             params.append('session_id', selectedSession.id);
-            if (filterDate) params.append('date', filterDate);
+            if (filterStartDate && filterEndDate) {
+                params.append('start_date', filterStartDate);
+                params.append('end_date', filterEndDate);
+            }
 
             const response = await fetch(`/stn-eoc/api/eoc/flood/affected?${params}`);
             const result = await response.json();
@@ -98,7 +149,7 @@ export default function AffectedPersonsPage() {
         } finally {
             setLoading(false);
         }
-    }, [filterDate, selectedSession]);
+    }, [filterEndDate, filterStartDate, selectedSession]);
 
     useEffect(() => {
         if (selectedSession) {
@@ -117,11 +168,12 @@ export default function AffectedPersonsPage() {
         const submitData = {
             ...formData,
             session_id: selectedSession.id,
-            deaths: parseInt(formData.deaths) || 0,
-            missing: parseInt(formData.missing) || 0,
-            injured: parseInt(formData.injured) || 0,
-            affected: parseInt(formData.affected) || 0
+            ...Object.fromEntries(impactFieldKeys.map(key => [key, parseInt(formData[key]) || 0])),
         };
+        submitData.deaths = submitData.citizen_deaths + submitData.volunteer_deaths + submitData.staff_deaths;
+        submitData.missing = submitData.citizen_missing + submitData.volunteer_missing + submitData.staff_missing;
+        submitData.injured = submitData.citizen_injured + submitData.volunteer_injured + submitData.staff_injured;
+        submitData.affected = submitData.citizen_property + submitData.volunteer_property + submitData.staff_property;
 
         if (!submitData.report_date || !submitData.district_name) {
             showWarning('กรุณากรอกวันที่และอำเภอ');
@@ -170,6 +222,7 @@ export default function AffectedPersonsPage() {
             missing: report.missing,
             injured: report.injured,
             affected: report.affected,
+            ...Object.fromEntries(impactFieldKeys.map(key => [key, report[key] || 0])),
             notes: report.notes || ''
         });
         setShowModal(true);
@@ -204,13 +257,14 @@ export default function AffectedPersonsPage() {
 
     const resetForm = () => {
         setFormData({
-            report_date: new Date().toISOString().split('T')[0],
+            report_date: filterEndDate,
             district_name: '',
             tambon: '',
             deaths: 0,
             missing: 0,
             injured: 0,
             affected: 0,
+            ...Object.fromEntries(impactFieldKeys.map(key => [key, 0])),
             notes: ''
         });
         setEditingReport(null);
@@ -228,32 +282,32 @@ export default function AffectedPersonsPage() {
                 {
                     label: 'ผู้เสียชีวิต',
                     data: districts.map(district => {
-                        const record = summary.today.find(s => s.district_name === district);
-                        return record ? record.today_deaths : 0;
+                        const record = summary.cumulative.find(s => s.district_name === district);
+                        return record ? record.cumulative_deaths : 0;
                     }),
                     backgroundColor: 'rgb(220, 38, 38)',
                 },
                 {
                     label: 'ผู้สูญหาย',
                     data: districts.map(district => {
-                        const record = summary.today.find(s => s.district_name === district);
-                        return record ? record.today_missing : 0;
+                        const record = summary.cumulative.find(s => s.district_name === district);
+                        return record ? record.cumulative_missing : 0;
                     }),
                     backgroundColor: 'rgb(234, 179, 8)',
                 },
                 {
                     label: 'ผู้ได้รับบาดเจ็บ',
                     data: districts.map(district => {
-                        const record = summary.today.find(s => s.district_name === district);
-                        return record ? record.today_injured : 0;
+                        const record = summary.cumulative.find(s => s.district_name === district);
+                        return record ? record.cumulative_injured : 0;
                     }),
                     backgroundColor: 'rgb(249, 115, 22)',
                 },
                 {
                     label: 'ผู้ได้รับผลกระทบ',
                     data: districts.map(district => {
-                        const record = summary.today.find(s => s.district_name === district);
-                        return record ? record.today_affected : 0;
+                        const record = summary.cumulative.find(s => s.district_name === district);
+                        return record ? record.cumulative_affected : 0;
                     }),
                     backgroundColor: 'rgb(59, 130, 246)',
                 }
@@ -269,9 +323,9 @@ export default function AffectedPersonsPage() {
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                             <span className="text-4xl">👥</span>
-                            ข้อมูลผู้ได้รับผลกระทบรายวัน
+                            ข้อมูลผู้ได้รับผลกระทบย้อนหลัง
                         </h1>
-                        <p className="text-gray-600">บันทึกและติดตามข้อมูลผู้เสียชีวิต ผู้สูญหาย ผู้บาดเจ็บ และผู้ได้รับผลกระทบ</p>
+                        <p className="text-gray-600">บันทึกและติดตามข้อมูลย้อนหลังตามช่วงวันที่รายงาน</p>
                     </div>
                     <button
                         onClick={() => {
@@ -334,25 +388,25 @@ export default function AffectedPersonsPage() {
                             <div className="bg-white rounded-lg shadow p-4 border border-red-600">
                                 <div className="text-sm text-gray-600 mb-1">ผู้เสียชีวิต</div>
                                 <div className="text-2xl font-bold text-red-600">
-                                    {summary.province.province_deaths || 0} คน
+                                    {formatNumber(summary.province.province_deaths)} คน
                                 </div>
                             </div>
                             <div className="bg-white rounded-lg shadow p-4 border border-yellow-500">
                                 <div className="text-sm text-gray-600 mb-1">ผู้สูญหาย</div>
                                 <div className="text-2xl font-bold text-yellow-600">
-                                    {summary.province.province_missing || 0} คน
+                                    {formatNumber(summary.province.province_missing)} คน
                                 </div>
                             </div>
                             <div className="bg-white rounded-lg shadow p-4 border border-orange-500">
                                 <div className="text-sm text-gray-600 mb-1">ผู้ได้รับบาดเจ็บ</div>
                                 <div className="text-2xl font-bold text-orange-600">
-                                    {summary.province.province_injured || 0} คน
+                                    {formatNumber(summary.province.province_injured)} คน
                                 </div>
                             </div>
                             <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
                                 <div className="text-sm text-gray-600 mb-1">ผู้ได้รับผลกระทบ</div>
                                 <div className="text-2xl font-bold text-blue-600">
-                                    {summary.province.province_affected || 0} คน
+                                    {formatNumber(summary.province.province_affected)} คน
                                 </div>
                             </div>
                         </div>
@@ -360,7 +414,7 @@ export default function AffectedPersonsPage() {
                         {/* Chart */}
                         <div className="bg-white rounded-lg shadow p-6 mb-6">
                             <h3 className="text-xl font-bold text-gray-800 mb-4">📊 สถานการณ์แยกตามอำเภอ</h3>
-                            {summary.today.length > 0 ? (
+                            {summary.cumulative.length > 0 ? (
                                 <Bar
                                     data={getDistrictChartData()}
                                     options={{
@@ -369,7 +423,7 @@ export default function AffectedPersonsPage() {
                                             legend: { position: 'top' },
                                             title: {
                                                 display: true,
-                                                text: `ข้อมูล ณ วันที่ ${new Date(filterDate).toLocaleDateString('th-TH')}`
+                                                text: `ข้อมูลสะสมช่วงวันที่ ${reportRangeLabel}`
                                             }
                                         },
                                         scales: {
@@ -401,112 +455,99 @@ export default function AffectedPersonsPage() {
                                     }}
                                 />
                             ) : (
-                                <div className="text-center py-8 text-gray-500">ยังไม่มีข้อมูลวันนี้</div>
+                                <div className="text-center py-8 text-gray-500">ยังไม่มีข้อมูลในช่วงวันที่ที่เลือก</div>
                             )}
                         </div>
 
-                        {/* Summary Table */}
-                        <div className="bg-white rounded-lg shadow p-6 mb-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">📋 ตารางสรุปรายอำเภอ</h3>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full border-collapse border border-gray-300 text-sm">
-                                    <thead>
-                                        <tr className="bg-gradient-to-r from-green-600 to-green-800 text-white">
-                                            <th className="border border-gray-300 px-3 py-2" rowSpan="2">อำเภอ</th>
-                                            <th className="border border-gray-300 px-3 py-2" colSpan="4">วันนี้</th>
-                                            <th className="border border-gray-300 px-3 py-2" colSpan="4">สะสม</th>
-                                        </tr>
-                                        <tr className="bg-green-500 text-white text-xs">
-                                            <th className="border border-gray-300 px-2 py-1">เสียชีวิต</th>
-                                            <th className="border border-gray-300 px-2 py-1">สูญหาย</th>
-                                            <th className="border border-gray-300 px-2 py-1">บาดเจ็บ</th>
-                                            <th className="border border-gray-300 px-2 py-1">ได้รับผลกระทบ</th>
-                                            <th className="border border-gray-300 px-2 py-1">เสียชีวิต</th>
-                                            <th className="border border-gray-300 px-2 py-1">สูญหาย</th>
-                                            <th className="border border-gray-300 px-2 py-1">บาดเจ็บ</th>
-                                            <th className="border border-gray-300 px-2 py-1">ได้รับผลกระทบ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {districts.map((district, idx) => {
-                                            const todayData = summary.today.find(s => s.district_name === district) || {};
-                                            const cumulativeData = summary.cumulative.find(s => s.district_name === district) || {};
-                                            return (
-                                                <tr key={district} className={idx % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
-                                                    <td className="border border-gray-300 px-3 py-2 font-medium text-gray-800">
-                                                        {district}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-red-700 font-semibold">
-                                                        {todayData.today_deaths || 0}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-yellow-700 font-semibold">
-                                                        {todayData.today_missing || 0}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-orange-700 font-semibold">
-                                                        {todayData.today_injured || 0}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-blue-700 font-semibold">
-                                                        {todayData.today_affected || 0}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-gray-600">
-                                                        {cumulativeData.cumulative_deaths || 0}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-gray-600">
-                                                        {cumulativeData.cumulative_missing || 0}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-gray-600">
-                                                        {cumulativeData.cumulative_injured || 0}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-gray-600">
-                                                        {cumulativeData.cumulative_affected || 0}
-                                                    </td>
+                        {/* Summary Tables */}
+                        <div className="space-y-6 mb-6">
+                            {[
+                                { title: `สะสมช่วงวันที่ ${reportRangeLabel}`, rows: summary.cumulative, prefix: 'cumulative' },
+                            ].map(section => (
+                                <div key={section.prefix} className="bg-white rounded-lg shadow p-6">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-4">📋 ตารางสรุปรายอำเภอ - {section.title}</h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full border-collapse border border-gray-300 text-sm">
+                                            <thead>
+                                                <tr className="bg-gradient-to-r from-green-700 to-green-900 text-white">
+                                                    <th className="border border-gray-300 px-3 py-2" rowSpan="2">อำเภอ</th>
+                                                    {impactGroups.map(group => (
+                                                        <th key={group.title} className="border border-gray-300 px-3 py-2" colSpan="4">{group.title}</th>
+                                                    ))}
+                                                    <th className="border border-gray-300 px-3 py-2" colSpan="3">การช่วยเหลือ</th>
                                                 </tr>
-                                            );
-                                        })}
-                                        {/* Total Row */}
-                                        <tr className="bg-blue-900 text-white font-bold">
-                                            <td className="border border-gray-300 px-3 py-2">รวม</td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.today.reduce((sum, s) => sum + (s.today_deaths || 0), 0)}
-                                            </td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.today.reduce((sum, s) => sum + (s.today_missing || 0), 0)}
-                                            </td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.today.reduce((sum, s) => sum + (s.today_injured || 0), 0)}
-                                            </td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.today.reduce((sum, s) => sum + (s.today_affected || 0), 0)}
-                                            </td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.cumulative.reduce((sum, s) => sum + (s.cumulative_deaths || 0), 0)}
-                                            </td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.cumulative.reduce((sum, s) => sum + (s.cumulative_missing || 0), 0)}
-                                            </td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.cumulative.reduce((sum, s) => sum + (s.cumulative_injured || 0), 0)}
-                                            </td>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">
-                                                {summary.cumulative.reduce((sum, s) => sum + (s.cumulative_affected || 0), 0)}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                                <tr className="bg-green-500 text-white text-xs">
+                                                    {impactGroups.map(group => group.fields.map(([, label]) => (
+                                                        <th key={`${group.title}-${label}`} className="border border-gray-300 px-2 py-1 whitespace-nowrap">{label}</th>
+                                                    )))}
+                                                    {assistanceFields.map(([, label]) => (
+                                                        <th key={label} className="border border-gray-300 px-2 py-1 whitespace-nowrap">{label}</th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {districts.map((district, idx) => {
+                                                    const row = section.rows.find(s => s.district_name === district) || {};
+                                                    return (
+                                                        <tr key={`${section.prefix}-${district}`} className={idx % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
+                                                            <td className="border border-gray-300 px-3 py-2 font-medium text-gray-800 whitespace-nowrap">
+                                                                {district}
+                                                            </td>
+                                                            {impactGroups.map(group => group.fields.map(([key]) => (
+                                                                <td key={`${district}-${section.prefix}-${key}`} className="border border-gray-300 px-2 py-1 text-center text-gray-700">
+                                                                    {formatNumber(row[`${section.prefix}_${key}`])}
+                                                                </td>
+                                                            )))}
+                                                            {assistanceFields.map(([key]) => (
+                                                                <td key={`${district}-${section.prefix}-${key}`} className="border border-gray-300 px-2 py-1 text-center text-gray-700">
+                                                                    {formatNumber(row[`${section.prefix}_${key}`])}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    );
+                                                })}
+                                                <tr className="bg-blue-900 text-white font-bold">
+                                                    <td className="border border-gray-300 px-3 py-2">รวม</td>
+                                                    {impactGroups.map(group => group.fields.map(([key]) => (
+                                                        <td key={`${section.prefix}-total-${key}`} className="border border-gray-300 px-2 py-2 text-center">
+                                                            {formatNumber(section.rows.reduce((sum, row) => sum + toNumber(row[`${section.prefix}_${key}`]), 0))}
+                                                        </td>
+                                                    )))}
+                                                    {assistanceFields.map(([key]) => (
+                                                        <td key={`${section.prefix}-total-${key}`} className="border border-gray-300 px-2 py-2 text-center">
+                                                            {formatNumber(section.rows.reduce((sum, row) => sum + toNumber(row[`${section.prefix}_${key}`]), 0))}
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         {/* Filters */}
                         <div className="bg-white rounded-lg shadow p-4 mb-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        วันที่
+                                        ตั้งแต่วันที่
                                     </label>
                                     <input
                                         type="date"
-                                        value={filterDate}
-                                        onChange={(e) => setFilterDate(e.target.value)}
+                                        value={filterStartDate}
+                                        onChange={(e) => setFilterStartDate(e.target.value)}
+                                        className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        ถึงวันที่
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={filterEndDate}
+                                        onChange={(e) => setFilterEndDate(e.target.value)}
                                         className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
                                     />
                                 </div>
@@ -528,7 +569,8 @@ export default function AffectedPersonsPage() {
                                 <div className="flex items-end">
                                     <button
                                         onClick={() => {
-                                            setFilterDate(new Date().toISOString().split('T')[0]);
+                                            setFilterStartDate('2025-11-30');
+                                            setFilterEndDate('2025-12-15');
                                             setFilterDistrict('');
                                         }}
                                         className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
@@ -547,7 +589,7 @@ export default function AffectedPersonsPage() {
                                 </div>
                             ) : filteredReports.length === 0 ? (
                                 <div className="text-center py-12 text-gray-500">
-                                    ยังไม่มีรายงานในวันนี้
+                                    ยังไม่มีรายงานในช่วงวันที่ที่เลือก
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
@@ -561,6 +603,16 @@ export default function AffectedPersonsPage() {
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">สูญหาย</th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">บาดเจ็บ</th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">ได้รับผลกระทบ</th>
+                                                {impactGroups.map(group => group.fields.map(([key, label]) => (
+                                                    <th key={key} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                                        {group.title}: {label}
+                                                    </th>
+                                                )))}
+                                                {assistanceFields.map(([key, label]) => (
+                                                    <th key={key} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                                        {label}
+                                                    </th>
+                                                ))}
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">หมายเหตุ</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">การดำเนินการ</th>
                                             </tr>
@@ -593,6 +645,16 @@ export default function AffectedPersonsPage() {
                                                             {report.affected}
                                                         </span>
                                                     </td>
+                                                    {impactGroups.map(group => group.fields.map(([key]) => (
+                                                        <td key={key} className="px-4 py-4 text-sm text-center text-gray-700">
+                                                            {report[key] || 0}
+                                                        </td>
+                                                    )))}
+                                                    {assistanceFields.map(([key]) => (
+                                                        <td key={key} className="px-4 py-4 text-sm text-center text-gray-700">
+                                                            {report[key] || 0}
+                                                        </td>
+                                                    ))}
                                                     <td className="px-6 py-4 text-sm text-gray-600">
                                                         {report.notes || '-'}
                                                     </td>
@@ -686,59 +748,45 @@ export default function AffectedPersonsPage() {
                                                 />
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        ผู้เสียชีวิต (คน)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={formData.deaths}
-                                                        onChange={(e) => setFormData({ ...formData, deaths: e.target.value })}
-                                                        className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                    />
+                                            {impactGroups.map(group => (
+                                                <div key={group.title} className="border border-gray-200 rounded-lg p-4">
+                                                    <h3 className="font-bold text-gray-800 mb-3">{group.title}</h3>
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                        {group.fields.map(([key, label]) => (
+                                                            <div key={key}>
+                                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                                    {label}
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={formData[key]}
+                                                                    onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                                                                    className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
+                                            ))}
 
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        ผู้สูญหาย (คน)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={formData.missing}
-                                                        onChange={(e) => setFormData({ ...formData, missing: e.target.value })}
-                                                        className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        ผู้บาดเจ็บ (คน)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={formData.injured}
-                                                        onChange={(e) => setFormData({ ...formData, injured: e.target.value })}
-                                                        className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        ผู้ได้รับผลกระทบ (คน)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={formData.affected}
-                                                        onChange={(e) => setFormData({ ...formData, affected: e.target.value })}
-                                                        className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                    />
+                                            <div className="border border-gray-200 rounded-lg p-4">
+                                                <h3 className="font-bold text-gray-800 mb-3">การช่วยเหลือ</h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    {assistanceFields.map(([key, label]) => (
+                                                        <div key={key}>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                                {label}
+                                                            </label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={formData[key]}
+                                                                onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                                                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
+                                                            />
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
 

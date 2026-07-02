@@ -119,9 +119,17 @@ export default function Sidebar() {
                 { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: "🏠", description: "แผนที่ศูนย์พักพิง" },
                 { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: "🦠", description: "บันทึกโรคในศูนย์พักพิง" },
                 { name: "รายชื่อผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", icon: "👥", description: "ข้อมูลผู้ประสบภัย" },
-                { name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", icon: "🧑‍🦽", description: "ผู้สูงอายุ เด็ก คนพิการ" },
                 { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: "📢", description: "ข่าวประชาสัมพันธ์" },
                 { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: "📋", description: "ติดตามโรคระบาดจากหน่วยบริการ" },
+            ],
+        },
+
+        {
+            title: "👥 ข้อมูลประชาชน",
+            section: "population-data",
+            requiresPermission: null,
+            items: [
+                { name: "กลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", icon: "🧑‍🦽", description: "ฐานข้อมูลกลาง เพิ่ม/ลดจำนวนรายกลุ่ม" },
             ],
         },
 

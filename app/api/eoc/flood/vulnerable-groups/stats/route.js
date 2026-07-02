@@ -13,6 +13,17 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function tableExists(connection, tableName) {
+    const [rows] = await connection.execute(
+        `SELECT TABLE_NAME
+         FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?`,
+        [tableName]
+    );
+    return rows.length > 0;
+}
+
 // GET - ดึงสถิติกลุ่มเปราะบาง แยกตามตำบล, อำเภอ, และจังหวัด
 export async function GET(request) {
     let connection;
@@ -20,6 +31,7 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
+        const source = searchParams.get('source'); // session, baseline
 
         if (!sessionId) {
             return NextResponse.json({
@@ -30,7 +42,52 @@ export async function GET(request) {
 
         connection = await pool.getConnection();
 
-        const params = [sessionId];
+        let tableName = 'vulnerable_groups';
+        let whereClause = 'session_id = ?';
+        let params = [sessionId];
+        let sourceType = 'session';
+
+        if (source === 'baseline' || source === 'base') {
+            if (!(await tableExists(connection, 'vulnerable_group_baselines'))) {
+                return NextResponse.json({
+                    success: true,
+                    data: {
+                        province: {
+                            province: 'สตูล',
+                            total_elderly: 0,
+                            total_children: 0,
+                            total_disabled: 0,
+                            total_bedridden: 0,
+                            total_pregnant: 0,
+                            total_chronic_illness: 0,
+                            grand_total: 0,
+                            district_count: 0,
+                            tambon_count: 0,
+                            village_count: 0
+                        },
+                        districts: [],
+                        tambons: []
+                    },
+                    source: 'baseline'
+                });
+            }
+            tableName = 'vulnerable_group_baselines';
+            whereClause = '1=1';
+            params = [];
+            sourceType = 'baseline';
+        } else {
+            const [sessionCount] = await connection.execute(
+                'SELECT COUNT(*) as count FROM vulnerable_groups WHERE session_id = ?',
+                [sessionId]
+            );
+
+            if (sessionCount[0].count === 0 && await tableExists(connection, 'vulnerable_group_baselines')) {
+                tableName = 'vulnerable_group_baselines';
+                whereClause = '1=1';
+                params = [];
+                sourceType = 'baseline';
+            }
+        }
 
         // สถิติรวมทั้งจังหวัด
         const [provinceStats] = await connection.execute(`
@@ -46,8 +103,8 @@ export async function GET(request) {
                 COUNT(DISTINCT district) as district_count,
                 COUNT(DISTINCT CONCAT(district, '-', tambon)) as tambon_count,
                 COUNT(*) as village_count
-            FROM vulnerable_groups
-            WHERE session_id = ?
+            FROM ${tableName}
+            WHERE ${whereClause}
             GROUP BY province
         `, params);
 
@@ -64,8 +121,8 @@ export async function GET(request) {
                 SUM(elderly + children + disabled + bedridden + pregnant + chronic_illness) as total,
                 COUNT(DISTINCT CONCAT(district, '-', tambon)) as tambon_count,
                 COUNT(*) as village_count
-            FROM vulnerable_groups
-            WHERE session_id = ?
+            FROM ${tableName}
+            WHERE ${whereClause}
             GROUP BY district
             ORDER BY district
         `, params);
@@ -83,8 +140,8 @@ export async function GET(request) {
                 SUM(chronic_illness) as total_chronic_illness,
                 SUM(elderly + children + disabled + bedridden + pregnant + chronic_illness) as total,
                 COUNT(*) as village_count
-            FROM vulnerable_groups
-            WHERE session_id = ?
+            FROM ${tableName}
+            WHERE ${whereClause}
             GROUP BY district, tambon
             ORDER BY district, tambon
         `, params);
@@ -107,7 +164,8 @@ export async function GET(request) {
                 },
                 districts: districtStats,
                 tambons: tambonStats
-            }
+            },
+            source: sourceType
         });
 
     } catch (error) {

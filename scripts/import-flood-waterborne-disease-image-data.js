@@ -2,11 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
-const IMPORT_SOURCE = 'นำเข้าจากภาพตารางโรคที่มากับน้ำท่วม';
-const TIMEZONE = 'Asia/Bangkok';
+const IMPORT_SOURCE = 'นำเข้าจากภาพตารางการเฝ้าระวังโรคที่มากับน้ำท่วม (สะสมตั้งแต่น้ำท่วม)';
+const DEFAULT_START_DATE = '2025-11-30';
+const DEFAULT_END_DATE = '2025-12-15';
 
 const FACILITIES = [
-  { key: 'satun', label: 'สตูล', name: 'รพ.สตูล' },
+  { key: 'satun', label: 'เมืองสตูล', name: 'รพ.สตูล' },
   { key: 'khuanDon', label: 'ควนโดน', name: 'รพ.ควนโดน' },
   { key: 'khuanKalong', label: 'ควนกาหลง', name: 'รพ.ควนกาหลง' },
   { key: 'thaPhae', label: 'ท่าแพ', name: 'รพ.ท่าแพ' },
@@ -17,93 +18,81 @@ const FACILITIES = [
 
 const DISEASES = [
   {
-    name: 'ทางเดินอาหาร',
-    description: 'กลุ่มอาการโรคระบบทางเดินอาหารที่สัมพันธ์กับน้ำท่วม',
-    totalToday: 12,
-    totalCumulative: 190,
-    facilities: {
-      satun: [10, 115],
-      khuanDon: [0, 24],
-      khuanKalong: [0, 9],
-      thaPhae: [1, 6],
-      laNgu: [1, 24],
-      manang: [0, 7],
-      thungWa: [0, 5],
-    },
-  },
-  {
     name: 'ไข้หวัดใหญ่',
     description: 'โรคไข้หวัดใหญ่',
-    totalToday: 16,
-    totalCumulative: 245,
     facilities: {
-      satun: [4, 89],
-      khuanDon: [2, 34],
-      khuanKalong: [2, 16],
-      thaPhae: [0, 8],
-      laNgu: [7, 40],
-      manang: [1, 48],
-      thungWa: [0, 10],
+      satun: 27,
+      khuanDon: 16,
+      khuanKalong: 1,
+      thaPhae: 0,
+      laNgu: 8,
+      thungWa: 1,
+      manang: 3,
     },
   },
   {
-    name: 'ปอดอักเสบ',
-    description: 'โรคปอดอักเสบ',
-    totalToday: 12,
-    totalCumulative: 12,
+    name: 'ทางเดินอาหาร',
+    description: 'กลุ่มอาการโรคระบบทางเดินอาหารที่สัมพันธ์กับน้ำท่วม',
     facilities: {
-      satun: [3, 3],
-      khuanDon: [0, 0],
-      khuanKalong: [9, 9],
-      thaPhae: [0, 0],
-      laNgu: [0, 0],
-      manang: [0, 0],
-      thungWa: [0, 0],
+      satun: 2,
+      khuanDon: 4,
+      khuanKalong: 0,
+      thaPhae: 0,
+      laNgu: 0,
+      thungWa: 0,
+      manang: 1,
     },
   },
   {
-    name: 'เลปโตสไปโรซีส',
-    description: 'โรคฉี่หนูหรือเลปโตสไปโรซีส',
-    totalToday: 2,
-    totalCumulative: 11,
+    name: 'เวียนศีรษะ',
+    description: 'อาการเวียนศีรษะที่รายงานในช่วงน้ำท่วม',
     facilities: {
-      satun: [1, 2],
-      khuanDon: [0, 0],
-      khuanKalong: [0, 0],
-      thaPhae: [0, 0],
-      laNgu: [1, 2],
-      manang: [0, 7],
-      thungWa: [0, 0],
+      satun: 2,
+      khuanDon: 0,
+      khuanKalong: 0,
+      thaPhae: 0,
+      laNgu: 0,
+      thungWa: 0,
+      manang: 2,
     },
   },
   {
-    name: 'ไข้เลือดออก',
-    description: 'โรคไข้เลือดออก',
-    totalToday: 0,
-    totalCumulative: 5,
+    name: 'ปวดเมื่อย',
+    description: 'อาการปวดเมื่อยที่รายงานในช่วงน้ำท่วม',
     facilities: {
-      satun: [0, 2],
-      khuanDon: [0, 0],
-      khuanKalong: [0, 0],
-      thaPhae: [0, 0],
-      laNgu: [0, 1],
-      manang: [0, 2],
-      thungWa: [0, 0],
+      satun: 10,
+      khuanDon: 6,
+      khuanKalong: 0,
+      thaPhae: 0,
+      laNgu: 12,
+      thungWa: 0,
+      manang: 7,
     },
   },
   {
-    name: 'ตาแดง',
-    description: 'โรคตาแดงหรือตาอักเสบ',
-    totalToday: 3,
-    totalCumulative: 4,
+    name: 'น้ำกัดเท้า',
+    description: 'โรคน้ำกัดเท้าหรือผิวหนังอักเสบจากการสัมผัสน้ำท่วม',
     facilities: {
-      satun: [2, 2],
-      khuanDon: [1, 2],
-      khuanKalong: [0, 0],
-      thaPhae: [0, 0],
-      laNgu: [0, 0],
-      manang: [0, 0],
-      thungWa: [0, 0],
+      satun: 32,
+      khuanDon: 18,
+      khuanKalong: 0,
+      thaPhae: 50,
+      laNgu: 22,
+      thungWa: 0,
+      manang: 35,
+    },
+  },
+  {
+    name: 'บาดแผล',
+    description: 'บาดแผลที่รายงานในช่วงน้ำท่วม',
+    facilities: {
+      satun: 3,
+      khuanDon: 0,
+      khuanKalong: 0,
+      thaPhae: 0,
+      laNgu: 0,
+      thungWa: 0,
+      manang: 0,
     },
   },
 ];
@@ -114,33 +103,51 @@ function getArgValue(name) {
   return arg ? arg.slice(prefix.length) : null;
 }
 
-function todayInBangkok() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: TIMEZONE });
-}
-
 function addDays(dateString, days) {
   const date = new Date(`${dateString}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
 
+function dateRange(startDate, endDate) {
+  const dates = [];
+  for (let date = startDate; date <= endDate; date = addDays(date, 1)) {
+    dates.push(date);
+  }
+  return dates;
+}
+
+function distributeTotal(total, slots) {
+  if (total <= 0) return Array.from({ length: slots }, () => 0);
+  const base = Math.floor(total / slots);
+  const remainder = total % slots;
+  return Array.from({ length: slots }, (_, index) => base + (index < remainder ? 1 : 0));
+}
+
 function validateData() {
-  const totals = { today: 0, cumulative: 0 };
+  const expectedByDisease = {
+    'ไข้หวัดใหญ่': 56,
+    'ทางเดินอาหาร': 7,
+    'เวียนศีรษะ': 4,
+    'ปวดเมื่อย': 35,
+    'น้ำกัดเท้า': 157,
+    'บาดแผล': 3,
+  };
+  let grandTotal = 0;
 
   for (const disease of DISEASES) {
-    const rowToday = FACILITIES.reduce((sum, facility) => sum + disease.facilities[facility.key][0], 0);
-    const rowCumulative = FACILITIES.reduce((sum, facility) => sum + disease.facilities[facility.key][1], 0);
+    const rowTotal = FACILITIES.reduce((sum, facility) => sum + disease.facilities[facility.key], 0);
+    const expectedTotal = expectedByDisease[disease.name];
 
-    if (rowToday !== disease.totalToday || rowCumulative !== disease.totalCumulative) {
-      throw new Error(`ยอดรวมโรค ${disease.name} ไม่ตรงกับภาพ: วันนี้ ${rowToday}/${disease.totalToday}, สะสม ${rowCumulative}/${disease.totalCumulative}`);
+    if (rowTotal !== expectedTotal) {
+      throw new Error(`ยอดรวมโรค ${disease.name} ไม่ตรงกับภาพ: ${rowTotal}/${expectedTotal}`);
     }
 
-    totals.today += rowToday;
-    totals.cumulative += rowCumulative;
+    grandTotal += rowTotal;
   }
 
-  if (totals.today !== 45 || totals.cumulative !== 467) {
-    throw new Error(`ยอดรวมทั้งหมดไม่ตรงกับภาพ: วันนี้ ${totals.today}/45, สะสม ${totals.cumulative}/467`);
+  if (grandTotal !== 262) {
+    throw new Error(`ยอดรวมทั้งหมดไม่ตรงกับภาพ: ${grandTotal}/262`);
   }
 }
 
@@ -202,47 +209,35 @@ async function upsertCommonDiseases(connection) {
   }
 }
 
-function buildRows({ sessionId, reportDate, baselineDate, reporterId, facilityMap }) {
+function buildRows({ sessionId, startDate, endDate, reporterId, facilityMap }) {
   const rows = [];
+  const dates = dateRange(startDate, endDate);
+
+  if (!dates.length) {
+    throw new Error(`ช่วงวันที่ไม่ถูกต้อง: ${startDate} ถึง ${endDate}`);
+  }
+
   for (const disease of DISEASES) {
     for (const facility of FACILITIES) {
-      const [todayCount, cumulativeCount] = disease.facilities[facility.key];
-      const priorCount = cumulativeCount - todayCount;
+      const totalCount = disease.facilities[facility.key];
       const facilityRecord = facilityMap.get(facility.key);
+      const dailyCounts = distributeTotal(totalCount, dates.length);
 
-      if (priorCount < 0) {
-        throw new Error(`ยอดสะสมน้อยกว่ายอดวันนี้: ${disease.name}/${facility.name}`);
-      }
-
-      if (priorCount > 0) {
+      dailyCounts.forEach((patientCount, index) => {
+        if (patientCount <= 0) return;
         rows.push({
           session_id: sessionId,
-          report_date: baselineDate,
+          report_date: dates[index],
           health_facility_id: facilityRecord.id,
           facility_name: facilityRecord.name,
           district_name: facilityRecord.district_name,
           disease_name: disease.name,
-          patient_count: priorCount,
-          notes: `${IMPORT_SOURCE} - ยอดสะสมก่อนวันที่ ${reportDate}`,
+          patient_count: patientCount,
+          notes: `${IMPORT_SOURCE} - เฉลี่ยช่วงวันที่ ${startDate} ถึง ${endDate} (ยอดรวม ${totalCount} ราย)`,
           reported_by: reporterId,
-          bucket: 'baseline',
+          bucket: 'average_range',
         });
-      }
-
-      if (todayCount > 0) {
-        rows.push({
-          session_id: sessionId,
-          report_date: reportDate,
-          health_facility_id: facilityRecord.id,
-          facility_name: facilityRecord.name,
-          district_name: facilityRecord.district_name,
-          disease_name: disease.name,
-          patient_count: todayCount,
-          notes: `${IMPORT_SOURCE} - ยอดวันนี้`,
-          reported_by: reporterId,
-          bucket: 'today',
-        });
-      }
+      });
     }
   }
   return rows;
@@ -301,8 +296,8 @@ async function main() {
   validateData();
 
   const dryRun = process.argv.includes('--dry-run');
-  const reportDate = getArgValue('date') || todayInBangkok();
-  const baselineDate = getArgValue('baseline-date') || addDays(reportDate, -1);
+  const startDate = getArgValue('start-date') || getArgValue('date') || DEFAULT_START_DATE;
+  const endDate = getArgValue('end-date') || DEFAULT_END_DATE;
 
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
@@ -316,9 +311,9 @@ async function main() {
   const report = {
     dryRun,
     importSource: IMPORT_SOURCE,
-    reportDate,
-    baselineDate,
-    expectedTotals: { today: 45, cumulative: 467 },
+    startDate,
+    endDate,
+    expectedTotals: { cumulative: 262 },
     session: null,
     rows: [],
   };
@@ -335,8 +330,8 @@ async function main() {
 
     const rows = buildRows({
       sessionId: session.id,
-      reportDate,
-      baselineDate,
+      startDate,
+      endDate,
       reporterId,
       facilityMap,
     });
@@ -359,14 +354,11 @@ async function main() {
   console.log(JSON.stringify({
     dryRun,
     sessionId: report.session.id,
-    reportDate,
-    baselineDate,
+    startDate,
+    endDate,
     rows: report.rows.length,
     created: report.rows.filter(row => row.action === 'created').length,
     updated: report.rows.filter(row => row.action === 'updated').length,
-    todayTotal: report.rows
-      .filter(row => row.bucket === 'today')
-      .reduce((sum, row) => sum + row.patient_count, 0),
     cumulativeTotal: report.rows.reduce((sum, row) => sum + row.patient_count, 0),
     reportPath,
     csvPath,

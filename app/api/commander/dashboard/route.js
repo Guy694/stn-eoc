@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
 
+async function tableExists(tableName) {
+    const rows = await pool.query(
+        `SELECT TABLE_NAME
+         FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?`,
+        [tableName]
+    );
+    return rows.length > 0;
+}
+
 // GET - ดึงข้อมูล Dashboard สำหรับ Commander
 export async function GET(request) {
     try {
@@ -156,7 +167,15 @@ export async function GET(request) {
             [session.eoc_type]
         );
 
-        // 9. สถิติโรครายวัน
+        // 9. สถิติโรคย้อนหลัง ใช้วันล่าสุดที่มีข้อมูลใน session แทนวันปัจจุบัน
+        const diseaseLatestDateRows = await pool.query(
+            `SELECT MAX(DATE(report_date)) as latest_report_date
+             FROM disease_reports
+             WHERE session_id = ?`,
+            [sessionId]
+        );
+        const diseaseLatestDate = diseaseLatestDateRows[0]?.latest_report_date || null;
+
         const diseaseToday = await pool.query(
             `SELECT 
                 dr.disease_name,
@@ -164,9 +183,9 @@ export async function GET(request) {
                 SUM(dr.patient_count) as today_patients
              FROM disease_reports dr
              JOIN health_facilities hf ON dr.health_facility_id = hf.id
-             WHERE dr.session_id = ? AND DATE(dr.report_date) = CURDATE()
+             WHERE dr.session_id = ? AND DATE(dr.report_date) = ?
              GROUP BY dr.disease_name, hf.district_name`,
-            [sessionId]
+            [sessionId, diseaseLatestDate]
         );
 
         const diseaseCumulative = await pool.query(
@@ -197,6 +216,18 @@ export async function GET(request) {
         );
 
         // 10. สถิติกลุ่มเปราะบาง
+        const vulnerableSessionCount = await pool.query(
+            `SELECT COUNT(*) as count
+             FROM vulnerable_groups
+             WHERE session_id = ?`,
+            [sessionId]
+        );
+        const useVulnerableBaseline = (parseInt(vulnerableSessionCount[0]?.count) || 0) === 0
+            && await tableExists('vulnerable_group_baselines');
+        const vulnerableTable = useVulnerableBaseline ? 'vulnerable_group_baselines' : 'vulnerable_groups';
+        const vulnerableWhere = useVulnerableBaseline ? '1=1' : 'session_id = ?';
+        const vulnerableParams = useVulnerableBaseline ? [] : [sessionId];
+
         const vulnerableGroups = await pool.query(
             `SELECT 
                 district,
@@ -206,10 +237,10 @@ export async function GET(request) {
                 SUM(disabled) as disabled,
                 SUM(pregnant) as pregnant,
                 SUM(bedridden) as bedridden
-             FROM vulnerable_groups
-             WHERE session_id = ?
+             FROM ${vulnerableTable}
+             WHERE ${vulnerableWhere}
              GROUP BY district, tambon`,
-            [sessionId]
+            vulnerableParams
         );
 
         const vulnerableTotal = await pool.query(
@@ -219,9 +250,9 @@ export async function GET(request) {
                 SUM(disabled) as total_disabled,
                 SUM(pregnant) as total_pregnant,
                 SUM(bedridden) as total_bedridden
-             FROM vulnerable_groups
-             WHERE session_id = ?`,
-            [sessionId]
+             FROM ${vulnerableTable}
+             WHERE ${vulnerableWhere}`,
+            vulnerableParams
         );
 
         // 11. กิจกรรมล่าสุด
@@ -276,12 +307,14 @@ export async function GET(request) {
                 },
                 diseases: {
                     today: diseaseToday,
+                    latest_report_date: diseaseLatestDate,
                     cumulative: diseaseCumulative,
                     by_disease: diseaseByType,
                     health_facilities: healthFacilitiesCount[0]?.total || 0
                 },
                 vulnerable_groups: {
                     by_location: vulnerableGroups,
+                    source: useVulnerableBaseline ? 'baseline' : 'session',
                     summary: vulnerableTotal[0] || {
                         total_elderly: 0,
                         total_children: 0,
