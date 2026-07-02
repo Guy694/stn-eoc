@@ -27,26 +27,29 @@ ChartJS.register(
 export default function EOCOverview() {
     const [loading, setLoading] = useState(true);
     const [dashboardData, setDashboardData] = useState(null);
-    const [activeSessions, setActiveSessions] = useState([]);
+    const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
+    const [viewMode, setViewMode] = useState('cumulative');
+    const [selectedDate, setSelectedDate] = useState('');
 
     useEffect(() => {
-        fetchActiveSessions();
+        fetchSessions();
     }, []);
 
     useEffect(() => {
         if (selectedSession) {
-            fetchDashboardData(selectedSession);
+            fetchDashboardData(selectedSession, viewMode, selectedDate);
         }
-    }, [selectedSession]);
+    }, [selectedDate, selectedSession, viewMode]);
 
-    const fetchActiveSessions = async () => {
+    const fetchSessions = async () => {
         try {
-            const response = await fetch('/stn-eoc/api/eoc/sessions?status=active');
+            const response = await fetch('/stn-eoc/api/eoc/sessions?type=flood&limit=100');
             const result = await response.json();
             if (result.success && result.data.length > 0) {
-                setActiveSessions(result.data);
-                setSelectedSession(result.data[0].id);
+                setSessions(result.data);
+                const activeSession = result.data.find(session => session.status === 'active') || result.data[0];
+                setSelectedSession(activeSession.id);
             } else {
                 setLoading(false);
             }
@@ -56,14 +59,24 @@ export default function EOCOverview() {
         }
     };
 
-    const fetchDashboardData = async (sessionId) => {
+    const fetchDashboardData = async (sessionId, mode, date) => {
         try {
             setLoading(true);
-            const response = await fetch(`/stn-eoc/api/commander/dashboard?session_id=${sessionId}`);
+            const params = new URLSearchParams({
+                session_id: String(sessionId),
+                mode
+            });
+            if (mode === 'daily' && date) {
+                params.append('date', date);
+            }
+            const response = await fetch(`/stn-eoc/api/commander/dashboard?${params}`);
             const result = await response.json();
 
             if (result.success) {
                 setDashboardData(result.data);
+                if (mode === 'daily' && !date && result.data?.filters?.effective_date) {
+                    setSelectedDate(result.data.filters.effective_date);
+                }
             } else {
                 console.error('Error:', result.error);
             }
@@ -87,7 +100,7 @@ export default function EOCOverview() {
         );
     }
 
-    if (activeSessions.length === 0) {
+    if (sessions.length === 0) {
         return (
             <EOCLayout>
                 <div className="max-w-7xl mx-auto p-6">
@@ -96,8 +109,8 @@ export default function EOCOverview() {
                         <div className="flex items-center">
                             <div className="text-4xl mr-4">⚠️</div>
                             <div>
-                                <h3 className="text-lg font-semibold text-yellow-800">ไม่มี EOC Session ที่เปิดอยู่</h3>
-                                <p className="text-yellow-700">กรุณารอให้ Admin เปิด EOC Session หรือติดต่อผู้ดูแลระบบ</p>
+                                <h3 className="text-lg font-semibold text-yellow-800">ไม่มี EOC Session</h3>
+                                <p className="text-yellow-700">ยังไม่มีข้อมูล session สำหรับแสดงผลย้อนหลัง</p>
                             </div>
                         </div>
                     </div>
@@ -109,9 +122,14 @@ export default function EOCOverview() {
     if (!dashboardData) return null;
 
     const { session, casualties, affected_areas, resources, teams, shelters, diseases, vulnerable_groups } = dashboardData;
+    const isDailyMode = dashboardData.filters?.mode === 'daily';
+    const effectiveDateLabel = dashboardData.filters?.effective_date
+        ? new Date(`${dashboardData.filters.effective_date}T00:00:00`).toLocaleDateString('th-TH')
+        : 'วันที่เลือก';
     const diseaseLatestDateLabel = diseases?.latest_report_date
         ? new Date(`${String(diseases.latest_report_date).split('T')[0]}T00:00:00`).toLocaleDateString('th-TH')
         : 'วันล่าสุด';
+    const impactScopeLabel = isDailyMode ? `ประจำวันที่ ${effectiveDateLabel}` : 'สะสมทั้ง session';
 
     return (
         <EOCLayout>
@@ -122,25 +140,81 @@ export default function EOCOverview() {
                     <p className="text-gray-600">ภาพรวมสถานการณ์ EOC ตามข้อมูลที่บันทึกและกรอกย้อนหลัง</p>
                 </div>
 
-                {/* Session Selector */}
-                {activeSessions.length > 1 && (
-                    <div className="bg-white rounded-lg shadow p-4 mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            เลือก EOC Session:
-                        </label>
-                        <select
-                            value={selectedSession}
-                            onChange={(e) => setSelectedSession(parseInt(e.target.value))}
-                            className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            {activeSessions.map(s => (
-                                <option key={s.id} value={s.id}>
-                                    {s.eoc_type_name} - Session #{s.session_number} ({new Date(s.open_time).toLocaleDateString('th-TH')})
-                                </option>
-                            ))}
-                        </select>
+                {/* Display Filters */}
+                <div className="bg-white rounded-lg shadow p-4 mb-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                เลือก EOC Session:
+                            </label>
+                            <select
+                                value={selectedSession}
+                                onChange={(e) => setSelectedSession(parseInt(e.target.value))}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                {sessions.map(s => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.eoc_type} - Session #{s.session_number} ({new Date(s.opened_at).toLocaleDateString('th-TH')}) {s.status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว'}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                รูปแบบการแสดงผล
+                            </label>
+                            <div className="inline-flex w-full rounded-lg border border-gray-300 overflow-hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('cumulative')}
+                                    className={`flex-1 px-4 py-2 text-sm font-medium ${viewMode === 'cumulative' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    สะสม
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('daily')}
+                                    className={`flex-1 px-4 py-2 text-sm font-medium border-l border-gray-300 ${viewMode === 'daily' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    รายวัน
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                วันที่รายงาน
+                            </label>
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => {
+                                    setSelectedDate(e.target.value);
+                                    setViewMode('daily');
+                                }}
+                                list="overview-report-dates"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                                disabled={viewMode !== 'daily'}
+                            />
+                            <datalist id="overview-report-dates">
+                                {(dashboardData.filters?.available_dates || []).map(date => (
+                                    <option key={date} value={date} />
+                                ))}
+                            </datalist>
+                        </div>
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setViewMode('daily');
+                                    setSelectedDate(dashboardData.filters?.available_dates?.[0] || '');
+                                }}
+                                className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800"
+                            >
+                                ดูวันล่าสุด
+                            </button>
+                        </div>
                     </div>
-                )}
+                </div>
 
                 {/* Session Info */}
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
@@ -156,7 +230,7 @@ export default function EOCOverview() {
 
                 {/* Casualties Statistics */}
                 <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">📋 สถิติผู้ประสบภัย</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">📋 สถิติผู้ประสบภัย ({impactScopeLabel})</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="bg-white rounded-lg shadow p-6 border border-red-500">
                             <div className="flex items-center justify-between">
@@ -202,7 +276,7 @@ export default function EOCOverview() {
 
                 {/* Affected Areas */}
                 <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">📍 พื้นที่ได้รับผลกระทบ</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">📍 พื้นที่ได้รับผลกระทบ ({impactScopeLabel})</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between">
@@ -240,6 +314,65 @@ export default function EOCOverview() {
                         </div>
                     )}
                 </div>
+
+                {isDailyMode && (
+                    <div className="mb-6">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">🗓️ เหตุการณ์ประจำวันที่ {effectiveDateLabel}</h3>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <h4 className="font-semibold text-gray-800 mb-3">ผู้ได้รับผลกระทบ</h4>
+                                {affected_areas.district_list?.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {affected_areas.district_list.map((district, index) => (
+                                            <div key={index} className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-b-0">
+                                                <span className="text-gray-700">{district.district}</span>
+                                                <span className="font-semibold text-blue-700">{Number(district.total_casualties || 0).toLocaleString('th-TH')} คน</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500 text-sm">ไม่มีรายงานผู้ได้รับผลกระทบในวันนี้</p>
+                                )}
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <h4 className="font-semibold text-gray-800 mb-3">โรคที่รายงาน</h4>
+                                {diseases.today?.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {diseases.today.map((item, index) => (
+                                            <div key={index} className="border-b border-gray-100 pb-2 last:border-b-0">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-700">{item.disease_name}</span>
+                                                    <span className="font-semibold text-red-700">{Number(item.today_patients || 0).toLocaleString('th-TH')} คน</span>
+                                                </div>
+                                                <p className="text-xs text-gray-500">{item.district_name}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500 text-sm">ไม่มีรายงานโรคในวันนี้</p>
+                                )}
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <h4 className="font-semibold text-gray-800 mb-3">กิจกรรม/บันทึก</h4>
+                                {dashboardData.recent_activities?.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {dashboardData.recent_activities.map((activity, index) => (
+                                            <div key={index} className="border-b border-gray-100 pb-2 last:border-b-0">
+                                                <p className="text-sm font-medium text-gray-800">{activity.action}</p>
+                                                <p className="text-sm text-gray-600">{activity.details}</p>
+                                                <p className="text-xs text-gray-500">{new Date(activity.time).toLocaleTimeString('th-TH')}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500 text-sm">ไม่มีกิจกรรมที่บันทึกในวันนี้</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* IT Resources */}
                 <div className="mb-6">
@@ -425,7 +558,9 @@ export default function EOCOverview() {
                                 <div className="bg-white rounded-lg shadow p-6 border border-blue-500">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm text-gray-600 mb-1">รายงานวันล่าสุด ({diseaseLatestDateLabel})</p>
+                                            <p className="text-sm text-gray-600 mb-1">
+                                                {isDailyMode ? `รายงานประจำวันที่ ${diseaseLatestDateLabel}` : `รายงานวันล่าสุด (${diseaseLatestDateLabel})`}
+                                            </p>
                                             <p className="text-3xl font-bold text-blue-600">
                                                 {diseases.today?.reduce((sum, d) => sum + parseInt(d.today_patients || 0), 0) || 0} คน
                                             </p>
@@ -447,7 +582,7 @@ export default function EOCOverview() {
                                 <div className="bg-white rounded-lg shadow p-6 border border-green-500">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm text-gray-600 mb-1">โรคที่รายงาน</p>
+                                            <p className="text-sm text-gray-600 mb-1">{isDailyMode ? 'โรคที่รายงานในวันนั้น' : 'โรคที่รายงาน'}</p>
                                             <p className="text-3xl font-bold text-green-600">{diseases.by_disease?.length || 0} โรค</p>
                                         </div>
                                         <div className="text-4xl">🦠</div>
@@ -511,7 +646,7 @@ export default function EOCOverview() {
 
                                 {/* Pie Chart by Disease */}
                                 <div className="bg-white rounded-lg shadow p-6">
-                                    <h4 className="text-lg font-bold text-gray-800 mb-4">🥧 สัดส่วนผู้ป่วยรายโรค (สะสม)</h4>
+                                    <h4 className="text-lg font-bold text-gray-800 mb-4">🥧 สัดส่วนผู้ป่วยรายโรค ({isDailyMode ? effectiveDateLabel : 'สะสม'})</h4>
                                     {diseases.by_disease && diseases.by_disease.length > 0 ? (
                                         <Pie
                                             data={(() => {

@@ -3,8 +3,8 @@ const path = require('path');
 const mysql = require('mysql2/promise');
 
 const IMPORT_SOURCE = 'นำเข้าจากภาพตารางการเฝ้าระวังโรคที่มากับน้ำท่วม (สะสมตั้งแต่น้ำท่วม)';
-const DEFAULT_START_DATE = '2025-11-30';
-const DEFAULT_END_DATE = '2025-12-15';
+const DEFAULT_START_DATE = '2025-11-20';
+const DEFAULT_END_DATE = '2025-11-30';
 
 const FACILITIES = [
   { key: 'satun', label: 'เมืองสตูล', name: 'รพ.สตูล' },

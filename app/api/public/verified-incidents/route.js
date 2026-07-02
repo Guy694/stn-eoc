@@ -13,6 +13,17 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function hasSessionColumn(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'public_incident_reports'
+           AND COLUMN_NAME = 'session_id'`
+    );
+    return columns.length > 0;
+}
+
 // GET - ดึงข้อมูลรายงานที่ verified แล้วตาม disaster_type
 export async function GET(request) {
     let connection;
@@ -20,13 +31,20 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const disasterType = searchParams.get('disaster_type') || 'flood';
+        const sessionId = searchParams.get('session_id');
         const startDate = searchParams.get('start_date');
         const endDate = searchParams.get('end_date');
 
         connection = await pool.getConnection();
+        const canFilterBySession = sessionId && await hasSessionColumn(connection);
 
         let whereClause = 'status = ? AND disaster_type = ?';
         let params = ['verified', disasterType];
+
+        if (canFilterBySession) {
+            whereClause += ' AND session_id = ?';
+            params.push(sessionId);
+        }
 
         if (startDate) {
             whereClause += ' AND DATE(occurred_at) >= ?';

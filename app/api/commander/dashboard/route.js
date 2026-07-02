@@ -18,6 +18,8 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
+        const mode = searchParams.get('mode') === 'daily' ? 'daily' : 'cumulative';
+        const requestedDate = searchParams.get('date');
 
         if (!sessionId) {
             return NextResponse.json(
@@ -45,6 +47,31 @@ export async function GET(request) {
         }
 
         const session = sessions[0];
+        const latestEventDateRows = await pool.query(
+            `SELECT DATE_FORMAT(MAX(event_date), '%Y-%m-%d') as latest_event_date
+             FROM (
+                SELECT DATE(report_date) as event_date FROM affected_persons WHERE session_id = ?
+                UNION ALL
+                SELECT DATE(report_date) as event_date FROM disease_reports WHERE session_id = ?
+             ) event_dates`,
+            [sessionId, sessionId]
+        );
+        const availableDateRows = await pool.query(
+            `SELECT DATE_FORMAT(event_date, '%Y-%m-%d') as event_date
+             FROM (
+                SELECT DATE(report_date) as event_date FROM affected_persons WHERE session_id = ?
+                UNION
+                SELECT DATE(report_date) as event_date FROM disease_reports WHERE session_id = ?
+             ) event_dates
+             WHERE event_date IS NOT NULL
+             ORDER BY event_date DESC`,
+            [sessionId, sessionId]
+        );
+        const effectiveDate = mode === 'daily'
+            ? (requestedDate || latestEventDateRows[0]?.latest_event_date || null)
+            : null;
+        const reportDateFilter = mode === 'daily' && effectiveDate ? ' AND DATE(report_date) = ?' : '';
+        const reportDateParams = mode === 'daily' && effectiveDate ? [effectiveDate] : [];
 
         // 2. สถิติผู้ประสบภัย (ใช้ affected_persons table)
         const casualtyData = await pool.query(
@@ -56,8 +83,8 @@ export async function GET(request) {
                 COUNT(DISTINCT district_name) as affected_districts,
                 COUNT(DISTINCT tambon) as affected_tambons
              FROM affected_persons
-             WHERE session_id = ?`,
-            [sessionId]
+             WHERE session_id = ?${reportDateFilter}`,
+            [sessionId, ...reportDateParams]
         );
 
         const casualties = {
@@ -76,8 +103,8 @@ export async function GET(request) {
                 COUNT(DISTINCT district_name) as total_districts,
                 COUNT(DISTINCT tambon) as total_tambons
              FROM affected_persons
-             WHERE session_id = ? AND (deaths > 0 OR missing > 0 OR injured > 0 OR affected > 0)`,
-            [sessionId]
+             WHERE session_id = ?${reportDateFilter} AND (deaths > 0 OR missing > 0 OR injured > 0 OR affected > 0)`,
+            [sessionId, ...reportDateParams]
         );
 
         const areas = affectedAreas[0] || {
@@ -91,10 +118,10 @@ export async function GET(request) {
                 district_name as district, 
                 SUM(deaths + missing + injured + affected) as total_casualties
              FROM affected_persons
-             WHERE session_id = ? AND district_name IS NOT NULL
+             WHERE session_id = ?${reportDateFilter} AND district_name IS NOT NULL
              GROUP BY district_name
              ORDER BY total_casualties DESC`,
-            [sessionId]
+            [sessionId, ...reportDateParams]
         );
 
         // 5. สถิติทรัพยากร IT (ใช้ it_resources table)
@@ -167,14 +194,16 @@ export async function GET(request) {
             [session.eoc_type]
         );
 
-        // 9. สถิติโรคย้อนหลัง ใช้วันล่าสุดที่มีข้อมูลใน session แทนวันปัจจุบัน
+        // 9. สถิติโรคย้อนหลัง ใช้วันที่เลือกในโหมดรายวัน หรือวันล่าสุดที่มีข้อมูลใน session
         const diseaseLatestDateRows = await pool.query(
-            `SELECT MAX(DATE(report_date)) as latest_report_date
+            `SELECT DATE_FORMAT(MAX(DATE(report_date)), '%Y-%m-%d') as latest_report_date
              FROM disease_reports
              WHERE session_id = ?`,
             [sessionId]
         );
-        const diseaseLatestDate = diseaseLatestDateRows[0]?.latest_report_date || null;
+        const diseaseDisplayDate = mode === 'daily'
+            ? effectiveDate
+            : (diseaseLatestDateRows[0]?.latest_report_date || null);
 
         const diseaseToday = await pool.query(
             `SELECT 
@@ -185,7 +214,7 @@ export async function GET(request) {
              JOIN health_facilities hf ON dr.health_facility_id = hf.id
              WHERE dr.session_id = ? AND DATE(dr.report_date) = ?
              GROUP BY dr.disease_name, hf.district_name`,
-            [sessionId, diseaseLatestDate]
+            [sessionId, diseaseDisplayDate]
         );
 
         const diseaseCumulative = await pool.query(
@@ -206,9 +235,10 @@ export async function GET(request) {
                 SUM(dr.patient_count) as cumulative_total
              FROM disease_reports dr
              WHERE dr.session_id = ?
+             ${mode === 'daily' && effectiveDate ? 'AND DATE(dr.report_date) = ?' : ''}
              GROUP BY dr.disease_name
              ORDER BY cumulative_total DESC`,
-            [sessionId]
+            mode === 'daily' && effectiveDate ? [sessionId, effectiveDate] : [sessionId]
         );
 
         const healthFacilitiesCount = await pool.query(
@@ -256,6 +286,7 @@ export async function GET(request) {
         );
 
         // 11. กิจกรรมล่าสุด
+        const activityDateFilter = mode === 'daily' && effectiveDate ? ' AND DATE(al.created_at) = ?' : '';
         const recentActivities = await pool.query(
             `SELECT 
                 al.action_type,
@@ -265,10 +296,10 @@ export async function GET(request) {
                 o.family_name
              FROM activity_logs al
              LEFT JOIN officer o ON al.user_id = o.id
-             WHERE al.eoc_session_id = ?
+             WHERE al.eoc_session_id = ?${activityDateFilter}
              ORDER BY al.created_at DESC
              LIMIT 10`,
-            [sessionId]
+            mode === 'daily' && effectiveDate ? [sessionId, effectiveDate] : [sessionId]
         );
 
         return NextResponse.json({
@@ -282,6 +313,12 @@ export async function GET(request) {
                     status: session.status,
                     open_time: session.opened_at,
                     opened_by_name: session.opened_by_name
+                },
+                filters: {
+                    mode,
+                    date: requestedDate,
+                    effective_date: effectiveDate,
+                    available_dates: availableDateRows.map(row => row.event_date)
                 },
                 casualties: casualties,
                 affected_areas: {
@@ -307,7 +344,7 @@ export async function GET(request) {
                 },
                 diseases: {
                     today: diseaseToday,
-                    latest_report_date: diseaseLatestDate,
+                    latest_report_date: diseaseDisplayDate,
                     cumulative: diseaseCumulative,
                     by_disease: diseaseByType,
                     health_facilities: healthFacilitiesCount[0]?.total || 0

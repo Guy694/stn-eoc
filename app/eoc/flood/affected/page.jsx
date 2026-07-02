@@ -36,8 +36,10 @@ export default function AffectedPersonsPage() {
     });
     const [showModal, setShowModal] = useState(false);
     const [editingReport, setEditingReport] = useState(null);
-    const [filterStartDate, setFilterStartDate] = useState('2025-11-30');
-    const [filterEndDate, setFilterEndDate] = useState('2025-12-15');
+    const [viewMode, setViewMode] = useState('range');
+    const [filterDate, setFilterDate] = useState('2025-11-30');
+    const [filterStartDate, setFilterStartDate] = useState('2025-11-20');
+    const [filterEndDate, setFilterEndDate] = useState('2025-11-30');
     const [filterDistrict, setFilterDistrict] = useState('');
     const impactGroups = [
         {
@@ -95,11 +97,14 @@ export default function AffectedPersonsPage() {
     const toNumber = (value) => Number(value) || 0;
     const formatNumber = (value) => toNumber(value).toLocaleString('th-TH');
     const reportRangeLabel = useMemo(() => {
+        if (viewMode === 'daily') {
+            return new Date(filterDate).toLocaleDateString('th-TH');
+        }
         if (filterStartDate && filterEndDate) {
             return `${new Date(filterStartDate).toLocaleDateString('th-TH')} - ${new Date(filterEndDate).toLocaleDateString('th-TH')}`;
         }
         return 'ทุกช่วงวันที่';
-    }, [filterEndDate, filterStartDate]);
+    }, [filterDate, filterEndDate, filterStartDate, viewMode]);
 
     const fetchSessions = useCallback(async () => {
         try {
@@ -129,7 +134,9 @@ export default function AffectedPersonsPage() {
             setLoading(true);
             const params = new URLSearchParams();
             params.append('session_id', selectedSession.id);
-            if (filterStartDate && filterEndDate) {
+            if (viewMode === 'daily' && filterDate) {
+                params.append('date', filterDate);
+            } else if (filterStartDate && filterEndDate) {
                 params.append('start_date', filterStartDate);
                 params.append('end_date', filterEndDate);
             }
@@ -149,7 +156,7 @@ export default function AffectedPersonsPage() {
         } finally {
             setLoading(false);
         }
-    }, [filterEndDate, filterStartDate, selectedSession]);
+    }, [filterDate, filterEndDate, filterStartDate, selectedSession, viewMode]);
 
     useEffect(() => {
         if (selectedSession) {
@@ -274,6 +281,12 @@ export default function AffectedPersonsPage() {
         ? reports.filter(r => r.district_name === filterDistrict)
         : reports;
 
+    const summaryPrefix = viewMode === 'daily' ? 'today' : 'cumulative';
+    const summaryRows = viewMode === 'daily' ? summary.today : summary.cumulative;
+    const summaryTitle = viewMode === 'daily'
+        ? `ประจำวันที่ ${reportRangeLabel}`
+        : `สะสมช่วงวันที่ ${reportRangeLabel}`;
+
     // เตรียมข้อมูลกราฟรายอำเภอ
     const getDistrictChartData = () => {
         return {
@@ -282,32 +295,32 @@ export default function AffectedPersonsPage() {
                 {
                     label: 'ผู้เสียชีวิต',
                     data: districts.map(district => {
-                        const record = summary.cumulative.find(s => s.district_name === district);
-                        return record ? record.cumulative_deaths : 0;
+                        const record = summaryRows.find(s => s.district_name === district);
+                        return record ? record[`${summaryPrefix}_deaths`] : 0;
                     }),
                     backgroundColor: 'rgb(220, 38, 38)',
                 },
                 {
                     label: 'ผู้สูญหาย',
                     data: districts.map(district => {
-                        const record = summary.cumulative.find(s => s.district_name === district);
-                        return record ? record.cumulative_missing : 0;
+                        const record = summaryRows.find(s => s.district_name === district);
+                        return record ? record[`${summaryPrefix}_missing`] : 0;
                     }),
                     backgroundColor: 'rgb(234, 179, 8)',
                 },
                 {
                     label: 'ผู้ได้รับบาดเจ็บ',
                     data: districts.map(district => {
-                        const record = summary.cumulative.find(s => s.district_name === district);
-                        return record ? record.cumulative_injured : 0;
+                        const record = summaryRows.find(s => s.district_name === district);
+                        return record ? record[`${summaryPrefix}_injured`] : 0;
                     }),
                     backgroundColor: 'rgb(249, 115, 22)',
                 },
                 {
                     label: 'ผู้ได้รับผลกระทบ',
                     data: districts.map(district => {
-                        const record = summary.cumulative.find(s => s.district_name === district);
-                        return record ? record.cumulative_affected : 0;
+                        const record = summaryRows.find(s => s.district_name === district);
+                        return record ? record[`${summaryPrefix}_affected`] : 0;
                     }),
                     backgroundColor: 'rgb(59, 130, 246)',
                 }
@@ -414,7 +427,7 @@ export default function AffectedPersonsPage() {
                         {/* Chart */}
                         <div className="bg-white rounded-lg shadow p-6 mb-6">
                             <h3 className="text-xl font-bold text-gray-800 mb-4">📊 สถานการณ์แยกตามอำเภอ</h3>
-                            {summary.cumulative.length > 0 ? (
+                            {summaryRows.length > 0 ? (
                                 <Bar
                                     data={getDistrictChartData()}
                                     options={{
@@ -423,7 +436,7 @@ export default function AffectedPersonsPage() {
                                             legend: { position: 'top' },
                                             title: {
                                                 display: true,
-                                                text: `ข้อมูลสะสมช่วงวันที่ ${reportRangeLabel}`
+                                                text: `ข้อมูล${summaryTitle}`
                                             }
                                         },
                                         scales: {
@@ -462,7 +475,7 @@ export default function AffectedPersonsPage() {
                         {/* Summary Tables */}
                         <div className="space-y-6 mb-6">
                             {[
-                                { title: `สะสมช่วงวันที่ ${reportRangeLabel}`, rows: summary.cumulative, prefix: 'cumulative' },
+                                { title: summaryTitle, rows: summaryRows, prefix: summaryPrefix },
                             ].map(section => (
                                 <div key={section.prefix} className="bg-white rounded-lg shadow p-6">
                                     <h3 className="text-xl font-bold text-gray-800 mb-4">📋 ตารางสรุปรายอำเภอ - {section.title}</h3>
@@ -528,7 +541,42 @@ export default function AffectedPersonsPage() {
 
                         {/* Filters */}
                         <div className="bg-white rounded-lg shadow p-4 mb-6">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        รูปแบบ
+                                    </label>
+                                    <div className="inline-flex w-full rounded-lg border border-gray-300 overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setViewMode('range')}
+                                            className={`flex-1 px-3 py-2 text-sm font-medium ${viewMode === 'range' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                        >
+                                            ช่วง
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setViewMode('daily')}
+                                            className={`flex-1 px-3 py-2 text-sm font-medium border-l border-gray-300 ${viewMode === 'daily' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                        >
+                                            รายวัน
+                                        </button>
+                                    </div>
+                                </div>
+                                {viewMode === 'daily' ? (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            วันที่รายงาน
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={filterDate}
+                                            onChange={(e) => setFilterDate(e.target.value)}
+                                            className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         ตั้งแต่วันที่
@@ -551,6 +599,8 @@ export default function AffectedPersonsPage() {
                                         className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
                                     />
                                 </div>
+                                    </>
+                                )}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         อำเภอ
@@ -569,8 +619,10 @@ export default function AffectedPersonsPage() {
                                 <div className="flex items-end">
                                     <button
                                         onClick={() => {
-                                            setFilterStartDate('2025-11-30');
-                                            setFilterEndDate('2025-12-15');
+                                            setViewMode('range');
+                                            setFilterDate('2025-11-30');
+                                            setFilterStartDate('2025-11-20');
+                                            setFilterEndDate('2025-11-30');
                                             setFilterDistrict('');
                                         }}
                                         className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"

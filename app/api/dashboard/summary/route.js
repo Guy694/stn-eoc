@@ -27,7 +27,12 @@ export async function GET(request) {
                 activeTeams: 0,
                 todayReports: 0,
                 totalAffected: 0,
+                publicReports: 0,
+                activeShelters: 0,
+                diseasePatients: 0,
                 activeSessions: [],
+                eocSessions: [],
+                eocOverview: [],
                 announcements: [],
                 recentActivities: []
             }
@@ -39,9 +44,14 @@ export async function GET(request) {
         let activeTeamsCount = 0;
         let todayReportsCount = 0;
         let totalAffected = 0;
+        let publicReportsCount = 0;
+        let activeSheltersCount = 0;
+        let diseasePatientsCount = 0;
         let activeSessions = [];
+        let eocSessions = [];
         let announcements = [];
         let recentActivities = [];
+        let eocOverview = [];
 
         // 1. นับจำนวน EOC ที่เปิดอยู่
         try {
@@ -52,15 +62,15 @@ export async function GET(request) {
         } catch {
         }
 
-        // 2. นับจำนวนทีมที่ active
+        // 2. นับจำนวนทีมที่ active / ทีมใน session
         try {
             const [activeTeams] = await connection.execute(`
-                SELECT COUNT(DISTINCT team_id) as count 
-                FROM eoc_team_modules 
+                SELECT COUNT(*) as count
+                FROM eoc_session_teams
                 WHERE is_active = 1
             `);
             activeTeamsCount = activeTeams[0]?.count || 0;
-        } catch (e) {
+        } catch {
             try {
                 const [teams] = await connection.execute(`
                     SELECT COUNT(*) as count FROM eoc_teams WHERE is_active = 1
@@ -70,12 +80,20 @@ export async function GET(request) {
             }
         }
 
-        // 3. นับรายงานวันนี้ (activity_logs)
+        // 3. นับรายงานวันนี้จากกิจกรรมและรายงานประชาชน
         try {
             const [todayReports] = await connection.execute(`
-                SELECT COUNT(*) as count 
-                FROM activity_logs 
-                WHERE DATE(created_at) = CURDATE()
+                SELECT
+                    (
+                        SELECT COUNT(*)
+                        FROM activity_logs
+                        WHERE DATE(created_at) = CURDATE()
+                    ) +
+                    (
+                        SELECT COUNT(*)
+                        FROM public_incident_reports
+                        WHERE DATE(reported_at) = CURDATE()
+                    ) as count
             `);
             todayReportsCount = todayReports[0]?.count || 0;
         } catch {
@@ -99,22 +117,62 @@ export async function GET(request) {
         } catch {
         }
 
-        // 5. คำนวณผู้ได้รับผลกระทบจากข้อมูลน้ำท่วมล่าสุด (ถ้ามี)
+        // 5. คำนวณผู้ได้รับผลกระทบจาก affected_persons
         try {
-            const [floodSession] = await connection.execute(`
-                SELECT id FROM eoc_sessions 
-                WHERE eoc_type = 'flood' AND status = 'active' 
-                LIMIT 1
+            const [affectedData] = await connection.execute(`
+                SELECT COALESCE(SUM(affected), 0) as total
+                FROM affected_persons
             `);
+            totalAffected = affectedData[0]?.total || 0;
+        } catch {
+        }
 
-            if (floodSession.length > 0) {
-                const [affectedData] = await connection.execute(`
-                    SELECT COALESCE(SUM(affected_people), 0) as total
-                    FROM daily_flood_village
-                    WHERE session_id = ?
-                `, [floodSession[0].id]);
-                totalAffected = affectedData[0]?.total || 0;
-            }
+        // 5.1 ตัวชี้วัดรวมที่หน้าแรกต้องใช้
+        try {
+            const [publicReports] = await connection.execute(`
+                SELECT COUNT(*) as count
+                FROM public_incident_reports
+            `);
+            publicReportsCount = publicReports[0]?.count || 0;
+        } catch {
+        }
+
+        try {
+            const [shelters] = await connection.execute(`
+                SELECT COUNT(*) as total, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active
+                FROM shelter_centers
+            `);
+            activeSheltersCount = shelters[0]?.active || 0;
+        } catch {
+        }
+
+        try {
+            const [diseases] = await connection.execute(`
+                SELECT COALESCE(SUM(patient_count), 0) as patients
+                FROM disease_reports
+            `);
+            diseasePatientsCount = diseases[0]?.patients || 0;
+        } catch {
+        }
+
+        // 5.2 รายการ session สำหรับตัวกรองหน้าแรก
+        try {
+            const [sessions] = await connection.execute(`
+                SELECT
+                    id,
+                    eoc_type,
+                    session_number,
+                    status,
+                    DATE_FORMAT(opened_at, '%Y-%m-%d %H:%i:%s') as opened_at,
+                    DATE_FORMAT(closed_at, '%Y-%m-%d %H:%i:%s') as closed_at,
+                    open_reason,
+                    close_reason,
+                    summary
+                FROM eoc_sessions
+                ORDER BY opened_at DESC, id DESC
+                LIMIT 100
+            `);
+            eocSessions = sessions;
         } catch {
         }
 
@@ -160,6 +218,228 @@ export async function GET(request) {
         } catch {
         }
 
+        // 8. ภาพรวมราย EOC สำหรับหน้าแรก
+        try {
+            const [eocRows] = await connection.execute(`
+                SELECT
+                    es.eoc_type,
+                    es.name_th,
+                    es.name_en,
+                    es.icon,
+                    es.color_primary,
+                    es.is_active,
+                    latest.id as session_id,
+                    latest.session_number,
+                    latest.status as session_status,
+                    latest.opened_at,
+                    latest.closed_at
+                FROM eoc_status es
+                LEFT JOIN (
+                    SELECT s1.*
+                    FROM eoc_sessions s1
+                    INNER JOIN (
+                        SELECT eoc_type, MAX(id) as latest_id
+                        FROM eoc_sessions
+                        GROUP BY eoc_type
+                    ) latest_session ON latest_session.latest_id = s1.id
+                ) latest ON latest.eoc_type = es.eoc_type
+                ORDER BY es.sort_order, es.eoc_type
+            `);
+
+            const [floodStats] = await connection.execute(`
+                SELECT
+                    COUNT(*) as rows_count,
+                    COUNT(DISTINCT session_id) as sessions,
+                    COUNT(DISTINCT district_name) as districts,
+                    COALESCE(SUM(affected), 0) as affected,
+                    COALESCE(SUM(injured), 0) as injured,
+                    COALESCE(SUM(deaths), 0) as deaths,
+                    COALESCE(SUM(missing), 0) as missing,
+                    DATE_FORMAT(MIN(report_date), '%Y-%m-%d') as first_date,
+                    DATE_FORMAT(MAX(report_date), '%Y-%m-%d') as last_date
+                FROM affected_persons
+            `);
+
+            const [floodVillageStats] = await connection.execute(`
+                SELECT
+                    COUNT(*) as records,
+                    COUNT(DISTINCT polygon_id) as villages,
+                    COUNT(DISTINCT district) as districts,
+                    COALESCE(SUM(affected_people), 0) as affected_people
+                FROM flood_records
+            `);
+
+            const [diseaseStats] = await connection.execute(`
+                SELECT
+                    COUNT(*) as rows_count,
+                    COUNT(DISTINCT disease_name) as disease_count,
+                    COUNT(DISTINCT health_facility_id) as facilities,
+                    COALESCE(SUM(patient_count), 0) as patients,
+                    DATE_FORMAT(MIN(report_date), '%Y-%m-%d') as first_date,
+                    DATE_FORMAT(MAX(report_date), '%Y-%m-%d') as last_date
+                FROM disease_reports
+            `);
+
+            const [accidentStatsRows] = await connection.execute(`
+                SELECT
+                    COUNT(*) as accidents,
+                    COALESCE(SUM(injuries), 0) as injuries,
+                    COALESCE(SUM(deaths), 0) as deaths,
+                    COUNT(DISTINCT district) as districts,
+                    DATE_FORMAT(MIN(report_date), '%Y-%m-%d') as first_date,
+                    DATE_FORMAT(MAX(report_date), '%Y-%m-%d') as last_date
+                FROM accident_reports
+            `);
+
+            const [servicePointStatsRows] = await connection.execute(`
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active
+                FROM temporary_service_points
+            `);
+
+            const [shelterStatsRows] = await connection.execute(`
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+                    COALESCE(SUM(shelter_capacity), 0) as capacity,
+                    COALESCE(SUM(current_occupancy_total), 0) as occupancy
+                FROM shelter_centers
+            `);
+
+            const [publicIncidentStatsRows] = await connection.execute(`
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status IN ('pending', 'reviewing') THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status IN ('verified', 'resolved') THEN 1 ELSE 0 END) as verified,
+                    SUM(CASE WHEN urgency = 'critical' THEN 1 ELSE 0 END) as critical
+                FROM public_incident_reports
+            `);
+
+            const [vulnerableStatsRows] = await connection.execute(`
+                SELECT
+                    COUNT(*) as locations,
+                    COALESCE(SUM(total_cared), 0) as total_cared,
+                    COALESCE(SUM(elderly), 0) as elderly,
+                    COALESCE(SUM(disabled), 0) as disabled,
+                    COALESCE(SUM(bedridden), 0) as bedridden
+                FROM vulnerable_group_baselines
+            `);
+
+            const flood = floodStats[0] || {};
+            const floodVillage = floodVillageStats[0] || {};
+            const disease = diseaseStats[0] || {};
+            const accident = accidentStatsRows[0] || {};
+            const servicePoints = servicePointStatsRows[0] || {};
+            const shelter = shelterStatsRows[0] || {};
+            const incidents = publicIncidentStatsRows[0] || {};
+            const vulnerable = vulnerableStatsRows[0] || {};
+
+            eocOverview = eocRows.map((eoc) => {
+                const base = {
+                    eoc_type: eoc.eoc_type,
+                    name_th: eoc.name_th,
+                    name_en: eoc.name_en,
+                    icon: eoc.icon,
+                    color_primary: eoc.color_primary,
+                    is_active: Boolean(eoc.is_active),
+                    session_id: eoc.session_id,
+                    session_number: eoc.session_number,
+                    session_status: eoc.session_status,
+                    opened_at: eoc.opened_at,
+                    closed_at: eoc.closed_at,
+                    summary: [],
+                    links: []
+                };
+
+                if (eoc.eoc_type === 'flood') {
+                    return {
+                        ...base,
+                        description: 'ภาพรวมสถานการณ์อุทกภัย ผู้ได้รับผลกระทบ ศูนย์พักพิง และรายงานประชาชน',
+                        summary: [
+                            { key: 'affected', label: 'ผู้ได้รับผลกระทบ', value: flood.affected || 0, unit: 'คน' },
+                            { key: 'injured', label: 'บาดเจ็บ', value: flood.injured || 0, unit: 'คน' },
+                            { key: 'deaths', label: 'เสียชีวิต', value: flood.deaths || 0, unit: 'คน' },
+                            { key: 'districts', label: 'อำเภอที่มีรายงาน', value: flood.districts || floodVillage.districts || 0, unit: 'อำเภอ' },
+                            { key: 'shelters', label: 'ศูนย์พักพิง', value: shelter.total || 0, unit: 'แห่ง' },
+                            { key: 'public_reports', label: 'รายงานประชาชน', value: incidents.total || 0, unit: 'รายการ' }
+                        ],
+                        period: { first_date: flood.first_date, last_date: flood.last_date },
+                        links: [
+                            { label: 'เปิดภาพรวม', href: '/eoc/flood/overview' },
+                            { label: 'ผู้ได้รับผลกระทบ', href: '/eoc/flood/affected' },
+                            { label: 'แผนที่', href: '/public/disaster-map' }
+                        ]
+                    };
+                }
+
+                if (eoc.eoc_type === 'disease') {
+                    return {
+                        ...base,
+                        description: 'ภาพรวมการเฝ้าระวังโรค จำนวนผู้ป่วย โรคที่รายงาน และหน่วยบริการ',
+                        summary: [
+                            { key: 'patients', label: 'ผู้ป่วย/อาการ', value: disease.patients || 0, unit: 'ราย' },
+                            { key: 'diseases', label: 'โรคที่รายงาน', value: disease.disease_count || 0, unit: 'โรค' },
+                            { key: 'facilities', label: 'หน่วยบริการ', value: disease.facilities || 0, unit: 'แห่ง' }
+                        ],
+                        period: { first_date: disease.first_date, last_date: disease.last_date },
+                        links: [
+                            { label: 'เปิดแผนที่โรค', href: '/eoc/disease' },
+                            { label: 'รายงานโรค', href: '/admin/disease-reports' }
+                        ]
+                    };
+                }
+
+                if (eoc.eoc_type === 'festival-accidents' || eoc.eoc_type === 'accident') {
+                    return {
+                        ...base,
+                        description: 'ภาพรวมอุบัติเหตุช่วงเทศกาล ผู้บาดเจ็บ ผู้เสียชีวิต และจุดบริการ',
+                        summary: [
+                            { key: 'accidents', label: 'อุบัติเหตุ', value: accident.accidents || 0, unit: 'ครั้ง' },
+                            { key: 'injuries', label: 'บาดเจ็บ', value: accident.injuries || 0, unit: 'ราย' },
+                            { key: 'deaths', label: 'เสียชีวิต', value: accident.deaths || 0, unit: 'ราย' },
+                            { key: 'service_points', label: 'จุดบริการ', value: servicePoints.total || 0, unit: 'จุด' }
+                        ],
+                        period: { first_date: accident.first_date, last_date: accident.last_date },
+                        links: [
+                            { label: 'เปิดภาพรวม', href: '/eoc/festival-accidents' },
+                            { label: 'บันทึกอุบัติเหตุ', href: '/eoc/accident/records' }
+                        ]
+                    };
+                }
+
+                return {
+                    ...base,
+                    description: 'ยังไม่มีข้อมูลสรุปเฉพาะประเภทภัยนี้',
+                    summary: [
+                        { key: 'sessions', label: 'Session', value: eoc.session_id ? 1 : 0, unit: 'ครั้ง' }
+                    ],
+                    links: []
+                };
+            });
+
+            eocOverview.push({
+                eoc_type: 'population',
+                name_th: 'ข้อมูลประชาชน/กลุ่มเปราะบาง',
+                name_en: 'Population Data',
+                icon: '👥',
+                color_primary: 'emerald',
+                is_active: false,
+                description: 'ฐานข้อมูลกลางสำหรับสนับสนุนทุก EOC',
+                summary: [
+                    { key: 'vulnerable_total', label: 'กลุ่มเปราะบางที่ดูแล', value: vulnerable.total_cared || 0, unit: 'คน' },
+                    { key: 'locations', label: 'พื้นที่', value: vulnerable.locations || 0, unit: 'พื้นที่' },
+                    { key: 'elderly', label: 'ผู้สูงอายุ', value: vulnerable.elderly || 0, unit: 'คน' },
+                    { key: 'bedridden', label: 'ติดเตียง', value: vulnerable.bedridden || 0, unit: 'คน' }
+                ],
+                links: [
+                    { label: 'เปิดข้อมูล', href: '/eoc/vulnerable-groups' }
+                ]
+            });
+        } catch (error) {
+            console.error('Error building EOC overview:', error);
+        }
+
         return NextResponse.json({
             success: true,
             data: {
@@ -167,7 +447,12 @@ export async function GET(request) {
                 activeTeams: activeTeamsCount,
                 todayReports: todayReportsCount,
                 totalAffected: totalAffected,
+                publicReports: publicReportsCount,
+                activeShelters: activeSheltersCount,
+                diseasePatients: diseasePatientsCount,
                 activeSessions: activeSessions,
+                eocSessions,
+                eocOverview,
                 announcements: announcements,
                 recentActivities: recentActivities
             }
@@ -182,7 +467,12 @@ export async function GET(request) {
                 activeTeams: 0,
                 todayReports: 0,
                 totalAffected: 0,
+                publicReports: 0,
+                activeShelters: 0,
+                diseasePatients: 0,
                 activeSessions: [],
+                eocSessions: [],
+                eocOverview: [],
                 announcements: [],
                 recentActivities: []
             }

@@ -11,6 +11,7 @@ const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), 
 
 export default function PublicIncidentMap({
     disasterType = 'flood',
+    sessionId,
     startDate,
     endDate,
     chrome = 'card',
@@ -180,6 +181,7 @@ export default function PublicIncidentMap({
             setLoading(true);
             const params = new URLSearchParams();
             params.append('disaster_type', disasterType);
+            if (sessionId) params.append('session_id', sessionId);
             if (startDate) params.append('start_date', startDate);
             if (endDate) params.append('end_date', endDate);
 
@@ -194,7 +196,7 @@ export default function PublicIncidentMap({
         } finally {
             setLoading(false);
         }
-    }, [disasterType, endDate, onDataChange, startDate]);
+    }, [disasterType, endDate, onDataChange, sessionId, startDate]);
 
     useEffect(() => { fetchIncidents(); }, [fetchIncidents]);
 

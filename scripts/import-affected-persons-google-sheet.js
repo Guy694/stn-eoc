@@ -4,8 +4,8 @@ const mysql = require('mysql2/promise');
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSs49yOMfr54tr_JILpj7sVKhKz4hqo5EcVOifGorgHF-udlNRptn26ToObDoMPB_mRBnM1a5AagzkK/pub?gid=1227196982&single=true&output=csv';
 const IMPORT_SOURCE = 'Google Sheet: ประชาชน/อสม./บุคลากร/ ที่ได้รับผลกระทบที่ให้การดูแล';
-const DEFAULT_START_DATE = '2025-11-30';
-const DEFAULT_END_DATE = '2025-12-15';
+const DEFAULT_START_DATE = '2025-11-20';
+const DEFAULT_END_DATE = '2025-11-30';
 const DISTRICT_TOTAL_TAMBON = 'รวมทั้งอำเภอ';
 
 const IMPACT_FIELDS = [

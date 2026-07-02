@@ -121,6 +121,8 @@ export default function Home() {
   const [eocLastUpdated, setEocLastUpdated] = useState(null);
   const [summaryLastUpdated, setSummaryLastUpdated] = useState(null);
   const [selectedDisasterType, setSelectedDisasterType] = useState("flood");
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [selectedMapDate, setSelectedMapDate] = useState(null);
   const [urgencyFilter, setUrgencyFilter] = useState("all");
   const [reportTypeFilter, setReportTypeFilter] = useState("all");
   const [districtFilter, setDistrictFilter] = useState("all");
@@ -519,412 +521,131 @@ export default function Home() {
   const trafficReportCount = visiblePublicIncidents.filter((incident) => incident.report_type === "traffic_report").length;
   const latestActiveEOC = activeEOCs[0];
   const lastUpdatedAt = summaryLastUpdated || eocLastUpdated;
+  const eocOverview = useMemo(() => dashboardSummary?.eocOverview || [], [dashboardSummary?.eocOverview]);
+  const eocSessionOptions = useMemo(
+    () => buildSessionOptions(selectedDisasterType, dashboardSummary?.eocSessions || [], eocOverview),
+    [dashboardSummary?.eocSessions, eocOverview, selectedDisasterType]
+  );
+  const selectedSession = useMemo(
+    () => eocSessionOptions.find((session) => String(session.id) === String(selectedSessionId)) || eocSessionOptions[0] || null,
+    [eocSessionOptions, selectedSessionId]
+  );
+  const dateOptions = useMemo(
+    () => buildEocDateOptions(selectedDisasterType, eocOverview, selectedSession),
+    [eocOverview, selectedDisasterType, selectedSession]
+  );
+  const selectedDateForMap = selectedMapDate || dateOptions[0]?.date || getTodayDateKey();
+
+  useEffect(() => {
+    if (eocSessionOptions.length === 0) {
+      if (selectedSessionId) setSelectedSessionId(null);
+      return;
+    }
+    if (!eocSessionOptions.some((session) => String(session.id) === String(selectedSessionId))) {
+      setSelectedSessionId(eocSessionOptions[0].id);
+    }
+  }, [eocSessionOptions, selectedSessionId]);
+
+  useEffect(() => {
+    if (dateOptions.length === 0) return;
+    if (!dateOptions.some((item) => item.date === selectedMapDate)) {
+      setSelectedMapDate(dateOptions[0].date);
+    }
+  }, [dateOptions, selectedMapDate]);
+
+  const selectedDisasterLabel = getEOCTypeName(selectedDisasterType);
+  const selectedDisasterDescription = {
+    flood: "ติดตามจุดเสี่ยงน้ำท่วม พื้นที่เฝ้าระวัง และศูนย์ช่วยเหลือใกล้ประชาชน",
+    disease: "ดูแนวโน้มผู้ป่วย พื้นที่เฝ้าระวัง และระบบช่วยเหลือด้านสาธารณสุข",
+    accident: "ติดตามอุบัติเหตุ จุดเสี่ยง และรายงานเส้นทางสัญจรที่กระทบประชาชน"
+  }[selectedDisasterType] || "ติดตามสถานการณ์สาธารณะล่าสุดจากศูนย์ EOC";
+  const selectedSummaryValue = {
+    flood: dashboardSummary?.totalAffected ?? floodStats?.affected ?? 0,
+    disease: dashboardSummary?.diseasePatients ?? diseaseStats?.patients ?? 0,
+    accident: accidentStats?.accidents ?? 0
+  }[selectedDisasterType] ?? 0;
+  const selectedSummaryUnit = {
+    flood: "คนได้รับผลกระทบ",
+    disease: "รายในระบบ",
+    accident: "เหตุการณ์สะสม"
+  }[selectedDisasterType] || "รายการ";
+  const quickActionItems = [
+    {
+      href: "/public/report-incident",
+      title: "แจ้งเหตุหรือขอความช่วยเหลือ",
+      description: "ส่งข้อมูลเข้าระบบเพื่อให้หน่วยงานตรวจสอบและตอบสนองเร็วขึ้น",
+      icon: "แจ้งเหตุ",
+      tone: "red"
+    },
+    {
+      href: "/public/disaster-map",
+      title: "เปิดแผนที่สาธารณะเต็มจอ",
+      description: "ดูตำแหน่งเหตุ รายงานจากประชาชน และพื้นที่เฝ้าระวังแบบละเอียด",
+      icon: "แผนที่",
+      tone: "blue"
+    },
+    {
+      href: "/public/help/citizen-guide",
+      title: "คำแนะนำสำหรับประชาชน",
+      description: "คู่มือเตรียมพร้อม อพยพ และดูแลตัวเองตามประเภทเหตุการณ์",
+      icon: "คู่มือ",
+      tone: "emerald"
+    }
+  ];
+  const homepageAnnouncements = dashboardSummary?.announcements?.length
+    ? dashboardSummary.announcements.slice(0, 3)
+    : [
+        { id: "static-1", title: "ประกาศจังหวัดสตูล ฉบับล่าสุด", content: "ติดตามประกาศและคำแนะนำจากหน่วยงานราชการอย่างต่อเนื่อง" },
+        { id: "static-2", title: "เตรียมพร้อมพื้นที่เสี่ยง", content: "ประชาชนในพื้นที่ลุ่มต่ำควรตรวจสอบเส้นทางอพยพและอุปกรณ์จำเป็น" },
+        { id: "static-3", title: "รายงานสถานการณ์สาธารณะ", content: "ระบบสรุปข้อมูลจากรายงานประชาชนและฐานข้อมูล EOC เพื่อการติดตามร่วมกัน" }
+      ];
 
   if (process.env.NEXT_PUBLIC_EOC_LEGACY_HOME !== "true") {
     return (
-      <div className="public-flood-shell h-screen w-screen overflow-hidden bg-slate-100 text-slate-900">
-        {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
-        <AnnouncementPopup />
-
-        <header className="h-16 border-b border-blue-950/20 bg-[#073b78] text-white shadow-lg">
-          <div className="flex h-full items-center justify-between gap-4 px-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex items-center gap-3">
-                <Image src="/stn-eoc/img/logo.png" alt="Satun Public Flood Map" width={48} height={48} className="h-12 w-12 rounded-full bg-white p-1" priority />
-                <div className="min-w-0 sm:hidden">
-                  <div className="truncate text-sm font-bold leading-5">แผนที่สาธารณะอุทกภัย</div>
-                  <div className="truncate text-xs text-blue-100">จังหวัดสตูล</div>
-                </div>
-                <div className="hidden sm:block">
-                  <div className="truncate text-lg font-bold leading-6">ระบบแผนที่สาธารณะเหตุอุทกภัย จังหวัดสตูล</div>
-                  <div className="truncate text-sm text-blue-100">Satun Public Flood Emergency Map</div>
-                </div>
-              </div>
-              <span className="hidden rounded-full bg-blue-500 px-3 py-1 text-xs font-bold text-white lg:inline-flex">สำหรับประชาชน</span>
-            </div>
-
-            <nav className="hidden min-w-0 items-center gap-5 text-sm font-semibold lg:flex">
-              {[
-                ["หน้าหลัก", "/"],
-                ["แผนที่สาธารณะ", "/public/disaster-map"],
-                ["รายงานสถานการณ์", "/public/disaster-map"],
-                ["ข่าวสาร/ประกาศ", "/public/help"],
-                ["คำแนะนำ", "/public/help/citizen-guide"],
-                ["เกี่ยวกับเรา", "/public/help/faq"]
-              ].map(([label, href]) => (
-                <Link key={label} href={href} className="whitespace-nowrap text-blue-50 transition-colors hover:text-white">
-                  {label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="hidden shrink-0 border-l border-white/20 pl-4 text-xs text-blue-100 xl:block">
-              <div>อัปเดตล่าสุด</div>
-              <div className="font-semibold text-white">{lastUpdatedAt ? formatDate(lastUpdatedAt) : "กำลังตรวจสอบ"}</div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              <Link href="/public/report-incident" className="hidden rounded-md bg-red-600 px-3 py-2 text-sm font-bold text-white shadow-lg transition-colors hover:bg-red-700 md:inline-flex">
-                แจ้งเหตุ
-              </Link>
-              <Link href="/login" className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/15">
-                ADMIN
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        <div className="grid h-[calc(100vh-64px)] min-h-0 grid-cols-[280px_minmax(0,1fr)_420px] gap-2 p-2 max-xl:grid-cols-[280px_minmax(0,1fr)] max-lg:grid-cols-1 max-lg:overflow-y-auto">
-          <nav className="hidden">
-            {[
-              { href: "/", label: "หน้าหลัก", icon: "⌂" },
-              { href: "/public/disaster-map", label: "แผนที่", icon: "▦" },
-              { href: "/public/report-incident", label: "แจ้งเหตุ", icon: "✚" },
-              { href: "/public/help", label: "ช่วยเหลือ", icon: "?" },
-              { href: "/login", label: "เข้าสู่ระบบ", icon: "⚙" }
-            ].map((item, index) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                className={`flex h-12 w-full items-center justify-center border-b border-white/5 text-lg transition-colors ${index === 1 ? "bg-sky-500/25 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"}`}
-              >
-                {item.icon}
-              </Link>
-            ))}
-          </nav>
-
-          <aside className="public-filter-panel flex min-h-0 flex-col rounded-lg border border-blue-100 bg-white shadow-sm max-lg:order-2 max-lg:h-[420px]">
-            <div className="border-b border-blue-100 px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold text-blue-700">เลือกข้อมูลที่ต้องการแสดง</p>
-                  <h2 className="mt-1 text-lg font-bold text-slate-900">ฟิลเตอร์การแสดงผล</h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedDisasterType("flood");
-                    setUrgencyFilter("all");
-                    setReportTypeFilter("all");
-                    setDistrictFilter("all");
-                    setMapSearchQuery("");
-                    setMapLayers({ district: true, tambon: false, village: false, labels: true });
-                  }}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-800"
-                >
-                  รีเซ็ตทั้งหมด
-                </button>
-              </div>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-              <section className="space-y-3 border-b border-slate-200 pb-4">
-                <h3 className="text-sm font-bold text-slate-800">ประเภทข้อมูล</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { key: "flood", label: "น้ำท่วม" },
-                    { key: "disease", label: "โรค" },
-                    { key: "accident", label: "อุบัติเหตุ" }
-                  ].map((item) => (
-                    <button
-                      key={item.key}
-                      type="button"
-                      onClick={() => setSelectedDisasterType(item.key)}
-                      className={`rounded-md border px-2 py-2 text-xs font-semibold transition-colors ${selectedDisasterType === item.key ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-blue-900 hover:bg-blue-50"}`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </section>
-
-              <section className="space-y-3 border-b border-slate-200 py-4">
-                <h3 className="text-sm font-bold text-slate-800">ระดับน้ำท่วม / ความรุนแรง</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { key: "all", label: "ทั้งหมด" },
-                    { key: "critical", label: "วิกฤต" },
-                    { key: "high", label: "เร่งด่วน" },
-                    { key: "medium", label: "ปานกลาง" },
-                    { key: "low", label: "ไม่เร่งด่วน" }
-                  ].map((item) => (
-                    <label key={item.key} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                      <input
-                        type="radio"
-                        name="urgency"
-                        checked={urgencyFilter === item.key}
-                        onChange={() => setUrgencyFilter(item.key)}
-                        className="h-4 w-4 accent-sky-500"
-                      />
-                      {item.label}
-                    </label>
-                  ))}
-                </div>
-              </section>
-
-              <section className="space-y-3 border-b border-slate-200 py-4">
-                <h3 className="text-sm font-bold text-slate-800">การแสดงผลแผนที่</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { key: "district", label: "อำเภอ" },
-                    { key: "tambon", label: "ตำบล" },
-                    { key: "village", label: "หมู่บ้าน" },
-                    { key: "labels", label: "ชื่อพื้นที่" }
-                  ].map((item) => (
-                    <label key={item.key} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={mapLayers[item.key]}
-                        onChange={(event) => setMapLayers((current) => ({ ...current, [item.key]: event.target.checked }))}
-                        className="h-4 w-4 accent-sky-500"
-                      />
-                      {item.label}
-                    </label>
-                  ))}
-                </div>
-              </section>
-
-              <section className="space-y-3 border-b border-slate-200 py-4">
-                <h3 className="text-sm font-bold text-slate-800">พื้นที่และประเภทรายงาน</h3>
-                <select
-                  value={districtFilter}
-                  onChange={(event) => setDistrictFilter(event.target.value)}
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
-                >
-                  <option value="all">เลือกอำเภอทั้งหมด</option>
-                  {publicDistricts.map((district) => (
-                    <option key={district} value={district}>{district}</option>
-                  ))}
-                </select>
-                <select
-                  value={reportTypeFilter}
-                  onChange={(event) => setReportTypeFilter(event.target.value)}
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
-                >
-                  <option value="all">รายงานทุกประเภท</option>
-                  <option value="help_request">ขอความช่วยเหลือ</option>
-                  <option value="traffic_report">เส้นทางสัญจร</option>
-                </select>
-              </section>
-
-              <section className="space-y-3 border-b border-slate-200 py-4">
-                <h3 className="text-sm font-bold text-slate-800">ข้อมูลสถานการณ์ปัจจุบัน</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <SeicsMetric label="รายงาน" value={visiblePublicIncidents.length} tone="sky" />
-                  <SeicsMetric label="วิกฤต" value={criticalCount} tone="red" />
-                  <SeicsMetric label="เร่งด่วน" value={highCount} tone="amber" />
-                  <SeicsMetric label="EOC เปิด" value={activeEOCs.length} tone="emerald" />
-                </div>
-                <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-950">
-                  <div className="flex items-center justify-between gap-3">
-                    <span>สถานะศูนย์</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${eocStatus.isOpen ? "bg-red-500 text-white" : "bg-emerald-500 text-white"}`}>
-                      {eocStatus.isOpen ? "เปิดใช้งาน" : "ปกติ"}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-600">{latestActiveEOC ? getEOCTypeName(latestActiveEOC.eoc_type) : "เฝ้าระวังสถานการณ์ทั่วไป"}</p>
-                  {lastUpdatedAt && <p className="mt-1 text-xs text-slate-500">อัปเดตล่าสุด {formatDate(lastUpdatedAt)}</p>}
-                </div>
-              </section>
-
-              <section className="space-y-3 py-4">
-                <h3 className="text-sm font-bold text-slate-800">อำเภอ</h3>
-                <select
-                  value={districtFilter}
-                  onChange={(event) => setDistrictFilter(event.target.value)}
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
-                >
-                  <option value="all">ทั้งหมด</option>
-                  {publicDistricts.map((district) => (
-                    <option key={district} value={district}>{district}</option>
-                  ))}
-                </select>
-                <Link href="/public/disaster-map" className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700">
-                  ไปยังแผนที่สาธารณะเต็มจอ
-                </Link>
-                <h3 className="pt-2 text-sm font-bold text-slate-800">หมายเลขฉุกเฉิน</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {[
-                    ["191", "ตำรวจ"],
-                    ["1669", "EMS"],
-                    ["199", "ดับเพลิง"],
-                    ["1784", "ปภ."]
-                  ].map(([phone, label]) => (
-                    <div key={phone} className="rounded-md bg-slate-50 px-3 py-2">
-                      <div className="text-lg font-black text-blue-700">{phone}</div>
-                      <div className="text-xs text-slate-500">{label}</div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-          </aside>
-
-          <main className="relative min-w-0 overflow-hidden rounded-lg border border-blue-100 bg-white shadow-sm max-lg:h-[620px]">
-            <div className="absolute left-4 top-4 z-[450] max-w-[calc(100%-2rem)] rounded-lg bg-white/95 px-4 py-3 text-slate-900 shadow-lg backdrop-blur max-md:left-3 max-md:right-3 max-md:top-16 max-md:px-3 max-md:py-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Public Situation Map</p>
-              <h2 className="text-base font-bold md:text-xl">แผนที่สถานการณ์อุทกภัย จังหวัดสตูล (สด)</h2>
-            </div>
-
-            <div className="absolute right-4 top-4 z-[450] flex w-[min(360px,calc(100%-2rem))] gap-2 max-md:left-14 max-md:right-3 max-md:w-auto">
-              <input
-                value={mapSearchQuery}
-                onChange={(event) => setMapSearchQuery(event.target.value)}
-                placeholder="Search"
-                className="min-w-0 flex-1 rounded-md border border-blue-100 bg-white/95 px-4 py-2 text-sm text-slate-800 shadow-lg outline-none backdrop-blur placeholder:text-slate-400 focus:border-blue-500"
-              />
-              <button type="button" className="rounded-md border border-blue-100 bg-white/95 px-3 py-2 text-blue-700 shadow-lg backdrop-blur">
-                ▦
-              </button>
-            </div>
-
-            <PublicIncidentMap
-              disasterType={selectedDisasterType}
-              chrome="full"
-              heightClass="h-full"
-              layers={mapLayers}
-              onLayersChange={setMapLayers}
-              urgencyFilter={urgencyFilter}
-              reportTypeFilter={reportTypeFilter}
-              districtFilter={districtFilter}
-              searchQuery={mapSearchQuery}
-              onDataChange={handleMapDataChange}
-            />
-
-            <div className="absolute left-5 top-24 z-[450] hidden rounded-lg bg-white/95 p-3 text-sm text-slate-800 shadow-lg backdrop-blur md:block">
-              <div className="mb-2 font-bold">สัญลักษณ์แผนที่</div>
-              <div className="space-y-2 text-xs text-slate-600">
-                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-blue-600"></span> จุดเกิดเหตุน้ำท่วม</div>
-                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-yellow-400"></span> พื้นที่เฝ้าระวัง</div>
-                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-500"></span> ศูนย์พักพิง / จุดช่วยเหลือ</div>
-                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-red-500"></span> จุดปิดการจราจร / เร่งด่วน</div>
-              </div>
-            </div>
-
-            <div className="absolute bottom-5 left-5 z-[450] hidden rounded-md bg-white/95 p-3 text-sm text-slate-800 shadow-xl backdrop-blur md:block">
-              <div className="mb-2 font-bold">ข้อมูลสาธารณะ</div>
-              <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-xs text-slate-600">
-                <span>ขอความช่วยเหลือ</span><strong className="text-slate-900">{helpRequestCount}</strong>
-                <span>เส้นทางสัญจร</span><strong className="text-slate-900">{trafficReportCount}</strong>
-                <span>พื้นที่แสดงผล</span><strong className="text-slate-900">{districtFilter === "all" ? "ทุกอำเภอ" : districtFilter}</strong>
-              </div>
-            </div>
-
-            <div className="absolute bottom-5 right-5 z-[450] hidden max-w-md rounded-lg border border-blue-200 bg-blue-50/95 p-3 text-sm text-blue-950 shadow-xl backdrop-blur 2xl:block">
-              <div className="grid grid-cols-[1fr_140px] items-center gap-3">
-                <div>
-                  <h3 className="font-bold">คำแนะนำสำหรับประชาชน</h3>
-                  <ul className="mt-1 list-inside list-disc text-xs text-blue-900">
-                    <li>ติดตามข่าวสารและประกาศจากทางราชการอย่างใกล้ชิด</li>
-                    <li>หากพบเหตุฉุกเฉิน โทร 1784 หรือหน่วยงานในพื้นที่ทันที</li>
-                    <li>เตรียมของมีค่า เอกสารสำคัญ และยาประจำตัวให้พร้อม</li>
-                  </ul>
-                </div>
-                <div className="rounded-md bg-blue-100 px-3 py-2 text-center text-xs font-bold text-blue-700">
-                  เตรียมพร้อม<br />อพยพเมื่อจำเป็น
-                </div>
-              </div>
-            </div>
-          </main>
-
-          <aside className="public-info-panel flex min-h-0 flex-col gap-2 overflow-y-auto max-xl:col-span-2 max-xl:grid max-xl:grid-cols-2 max-lg:order-3 max-lg:col-span-1 max-lg:grid-cols-1">
-            <section className="rounded-lg border border-blue-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-bold text-blue-800">สถานการณ์อุทกภัยจังหวัดสตูล</p>
-                  <h2 className="mt-1 text-xl font-black text-blue-900">ศูนย์บัญชาการเหตุการณ์ (EOC)</h2>
-                </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${eocStatus.isOpen ? "bg-blue-600 text-white" : "bg-emerald-600 text-white"}`}>
-                  {eocStatus.isOpen ? "เปิดทำการ" : "เฝ้าระวัง"}
-                </span>
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 border-y border-blue-100 py-3 text-center">
-                <InfoMini label="วันที่เปิด EOC" value={eocStatus.openedDate ? formatDate(eocStatus.openedDate).split(" ")[0] : "-"} />
-                <InfoMini label="เวลาเปิด" value={eocStatus.openedDate ? new Date(eocStatus.openedDate).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) : "-"} />
-                <InfoMini label="เปิดมาแล้ว" value={eocStatus.isOpen ? `${timeElapsed.days} วัน` : "-"} />
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-y-4 text-center">
-                <InfoStat label="เหตุอุทกภัย" value={visiblePublicIncidents.length} unit="จุด" />
-                <InfoStat label="อำเภอได้รับผลกระทบ" value={publicDistricts.length} unit="อำเภอ" />
-                <InfoStat label="ศูนย์พักพิงที่เปิด" value={dashboardSummary?.activeShelters ?? 0} unit="แห่ง" />
-                <InfoStat label="ขอความช่วยเหลือ" value={helpRequestCount} unit="รายการ" />
-                <InfoStat label="เส้นทางสัญจร" value={trafficReportCount} unit="จุด" />
-                <InfoStat label="หน่วยช่วยเหลือ" value={dashboardSummary?.activeTeams ?? 0} unit="หน่วย" />
-              </div>
-              {lastUpdatedAt && <p className="mt-4 text-xs text-slate-500">ข้อมูล ณ วันที่ {formatDate(lastUpdatedAt)}</p>}
-            </section>
-
-            <section className="rounded-lg border border-red-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-bold text-red-700">แจ้งเตือนล่าสุด</h3>
-                <Link href="/public/help" className="text-xs font-semibold text-blue-600">ดูทั้งหมด →</Link>
-              </div>
-              <div className="space-y-2">
-                <AlertItem tone="red" title="น้ำท่วมฉับพลัน" subtitle={criticalCount > 0 ? `${criticalCount} จุดต้องเฝ้าระวังสูง` : "ติดตามพื้นที่เสี่ยงอย่างใกล้ชิด"} />
-                <AlertItem tone="orange" title="ระดับน้ำเพิ่มสูง" subtitle={`${highCount} จุดมีรายงานเร่งด่วน`} />
-                <AlertItem tone="amber" title="ถนนน้ำท่วมผ่านไม่ได้" subtitle={`${trafficReportCount} รายงานเส้นทางสัญจร`} />
-                <AlertItem tone="amber" title="แจ้งอพยพเฝ้าระวัง" subtitle={districtFilter === "all" ? "ทุกอำเภอ" : districtFilter} />
-              </div>
-            </section>
-
-            <section className="grid gap-2 md:grid-cols-2 xl:grid-cols-1">
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="font-bold text-emerald-800">ศูนย์พักพิงใกล้คุณ</h3>
-                  <Link href="/eoc/flood/shelters" className="text-xs font-semibold text-blue-600">ดูทั้งหมด</Link>
-                </div>
-                <div className="space-y-2 text-sm text-slate-700">
-                  {["โรงเรียนบ้านควนโดน", "หอประชุมอำเภอทุ่งหว้า", "โรงเรียนบ้านท่าแพ"].map((name, index) => (
-                    <div key={name} className="flex items-center justify-between gap-3">
-                      <span><strong className="mr-2 text-emerald-700">{index + 1}</strong>{name}</span>
-                      <span className="font-bold text-slate-900">{[2.3, 4.7, 6.1][index]} กม.</span>
-                    </div>
-                  ))}
-                </div>
-                <Link href="/public/disaster-map" className="mt-4 flex items-center justify-center rounded-md border border-blue-500 bg-white px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50">
-                  ค้นหาศูนย์พักพิงบนแผนที่
-                </Link>
-              </div>
-
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-                <h3 className="mb-3 font-bold text-red-700">เบอร์โทรฉุกเฉิน</h3>
-                <div className="space-y-2 text-sm">
-                  {[["แจ้งเหตุ-ขอความช่วยเหลือ", "1784"], ["ปภ.จังหวัดสตูล", "074-711-111"], ["ตำรวจ", "191"], ["หน่วยแพทย์ฉุกเฉิน", "1669"]].map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between gap-3 border-b border-red-100 pb-2 last:border-0 last:pb-0">
-                      <span className="text-slate-700">{label}</span>
-                      <strong className="text-red-700">{value}</strong>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-bold text-blue-800">ข่าวสาร / ประกาศ</h3>
-                <Link href="/public/help" className="text-xs font-semibold text-blue-600">ดูทั้งหมด</Link>
-              </div>
-              <div className="space-y-3 text-sm">
-                {(dashboardSummary?.announcements?.length ? dashboardSummary.announcements.slice(0, 3) : [
-                  { id: "static-1", title: "ประกาศจังหวัดสตูล ฉบับที่ 5/2569", content: "ติดตามประกาศและคำแนะนำจากหน่วยงานราชการ" },
-                  { id: "static-2", title: "แจ้งเตือนเฝ้าระวังน้ำท่วมฉับพลัน", content: "ประชาชนในพื้นที่เสี่ยงควรเตรียมพร้อม" },
-                  { id: "static-3", title: "รายงานสถานการณ์น้ำประจำวันที่ล่าสุด", content: "สรุปข้อมูลจากระบบรายงานสาธารณะ" }
-                ]).map((item) => (
-                  <div key={item.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                    <p className="font-semibold text-slate-800">{item.title}</p>
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-500">{item.content}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </aside>
-        </div>
-
-        <PDPAConsent />
-      </div>
+      <PublicOperationalDashboard
+        showSplash={showSplash}
+        setShowSplash={setShowSplash}
+        activeEOCs={activeEOCs}
+        dashboardSummary={dashboardSummary}
+        eocStatus={eocStatus}
+        lastUpdatedAt={lastUpdatedAt}
+        selectedDisasterType={selectedDisasterType}
+        setSelectedDisasterType={setSelectedDisasterType}
+        selectedSessionId={selectedSession?.id || ""}
+        setSelectedSessionId={setSelectedSessionId}
+        sessionOptions={eocSessionOptions}
+        selectedSession={selectedSession}
+        selectedMapDate={selectedDateForMap}
+        setSelectedMapDate={setSelectedMapDate}
+        dateOptions={dateOptions}
+        urgencyFilter={urgencyFilter}
+        setUrgencyFilter={setUrgencyFilter}
+        reportTypeFilter={reportTypeFilter}
+        setReportTypeFilter={setReportTypeFilter}
+        districtFilter={districtFilter}
+        setDistrictFilter={setDistrictFilter}
+        mapSearchQuery={mapSearchQuery}
+        setMapSearchQuery={setMapSearchQuery}
+        publicDistricts={publicDistricts}
+        visiblePublicIncidents={visiblePublicIncidents}
+        criticalCount={criticalCount}
+        highCount={highCount}
+        helpRequestCount={helpRequestCount}
+        trafficReportCount={trafficReportCount}
+        latestActiveEOC={latestActiveEOC}
+        mapLayers={mapLayers}
+        setMapLayers={setMapLayers}
+        handleMapDataChange={handleMapDataChange}
+        eocOverview={eocOverview}
+        homepageAnnouncements={homepageAnnouncements}
+        quickActionItems={quickActionItems}
+        getEOCTypeName={getEOCTypeName}
+        getEOCTypeIcon={getEOCTypeIcon}
+        formatDate={formatDate}
+      />
     );
   }
+
 
   return (
     <div className="min-h-screen bg-pattern">
@@ -1340,6 +1061,889 @@ export default function Home() {
   );
 }
 
+function PublicOperationalDashboard({
+  showSplash,
+  setShowSplash,
+  activeEOCs,
+  dashboardSummary,
+  eocStatus,
+  lastUpdatedAt,
+  selectedDisasterType,
+  setSelectedDisasterType,
+  selectedSessionId,
+  setSelectedSessionId,
+  sessionOptions,
+  selectedSession,
+  selectedMapDate,
+  setSelectedMapDate,
+  dateOptions,
+  urgencyFilter,
+  setUrgencyFilter,
+  reportTypeFilter,
+  setReportTypeFilter,
+  districtFilter,
+  setDistrictFilter,
+  mapSearchQuery,
+  setMapSearchQuery,
+  publicDistricts,
+  visiblePublicIncidents,
+  criticalCount,
+  highCount,
+  helpRequestCount,
+  trafficReportCount,
+  latestActiveEOC,
+  mapLayers,
+  setMapLayers,
+  handleMapDataChange,
+  eocOverview,
+  homepageAnnouncements,
+  quickActionItems,
+  getEOCTypeName,
+  getEOCTypeIcon,
+  formatDate
+}) {
+  const floodOverview = eocOverview.find((item) => item.eoc_type === "flood");
+  const diseaseOverview = eocOverview.find((item) => item.eoc_type === "disease");
+  const populationOverview = eocOverview.find((item) => item.eoc_type === "population");
+  const affectedDistricts = getOverviewMetric(floodOverview, "districts");
+  const activeShelters = dashboardSummary?.activeShelters ?? getOverviewMetric(floodOverview, "shelters");
+  const selectedDate = selectedMapDate || dateOptions[0]?.date || floodOverview?.period?.first_date || diseaseOverview?.period?.first_date || getTodayDateKey();
+  const dateRange = formatOverviewDateRange(floodOverview?.period || diseaseOverview?.period);
+  const latestRows = buildIncidentTimeline(visiblePublicIncidents, selectedDate);
+  const dailyBars = buildDailyBars(dateOptions, selectedDate);
+
+  const stats = [
+    {
+      label: "เหตุการณ์วันนี้",
+      value: visiblePublicIncidents.length,
+      unit: "เหตุการณ์",
+      sub: `${criticalCount + highCount} จุดต้องติดตาม`,
+      tone: "blue",
+      icon: "≋"
+    },
+    {
+      label: "อำเภอได้รับผลกระทบ",
+      value: affectedDistricts || publicDistricts.length,
+      unit: "อำเภอ",
+      sub: "จากทั้งหมด 7 อำเภอ",
+      tone: "orange",
+      icon: "◎"
+    },
+    {
+      label: "ผู้ได้รับผลกระทบ",
+      value: dashboardSummary?.totalAffected ?? 0,
+      unit: "คน",
+      sub: dateRange || "ข้อมูลสะสม",
+      tone: "purple",
+      icon: "⌂"
+    },
+    {
+      label: "โรค/อาการที่รายงาน",
+      value: dashboardSummary?.diseasePatients ?? 0,
+      unit: "ราย",
+      sub: `${getOverviewMetric(diseaseOverview, "diseases")} โรคที่รายงาน`,
+      tone: "teal",
+      icon: "✚"
+    },
+    {
+      label: "ศูนย์พักพิง",
+      value: activeShelters,
+      unit: "แห่ง",
+      sub: "พร้อมรองรับประชาชน",
+      tone: "violet",
+      icon: "⌂"
+    },
+    {
+      label: "ระดับเตือนภัย",
+      value: criticalCount > 0 ? "สูง" : highCount > 0 ? "เฝ้าระวัง" : "ปกติ",
+      unit: "",
+      sub: criticalCount > 0 ? `${criticalCount} จุดวิกฤต` : "ติดตามต่อเนื่อง",
+      tone: criticalCount > 0 ? "red" : "amber",
+      icon: "☁"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#edf5fc] text-slate-900">
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      <AnnouncementPopup />
+
+      <header className="border-b border-blue-950/20 bg-[#083865] text-white shadow-lg">
+        <div className="flex min-h-[86px] items-center gap-5 px-5 max-lg:flex-wrap max-lg:py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-[62px] w-[62px] rounded-full bg-white p-1.5 shadow-md" priority />
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-black leading-7 max-sm:text-lg">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
+              <p className="truncate text-base font-semibold text-blue-100 max-sm:text-xs">Satun EOC Public Dashboard</p>
+            </div>
+          </div>
+
+          <div className="hidden min-w-[340px] items-center gap-3 border-x border-white/15 px-6 xl:flex">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-2xl">□</div>
+            <div className="text-sm leading-6 text-blue-50">
+              <div className="font-bold text-white">ข้อมูลนี้เป็นข้อมูลสาธารณะ</div>
+              <div>เพื่อการรับรู้ของประชาชน ดูได้อย่างปลอดภัย</div>
+            </div>
+          </div>
+
+          <div className="hidden items-center gap-5 text-sm text-blue-50 lg:flex">
+            <div>
+              <div className="font-bold text-white">วันที่ {formatThaiDateOnly(selectedDate)}</div>
+              <div>อัปเดตล่าสุด: {lastUpdatedAt ? formatDate(lastUpdatedAt) : "กำลังตรวจสอบ"}</div>
+            </div>
+            <div className="h-12 border-l border-white/15"></div>
+            <div className="font-bold text-white">{new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.</div>
+          </div>
+
+          <div className={`ml-auto rounded-2xl border px-6 py-3 text-center shadow-sm ${eocStatus.isOpen ? "border-red-300 bg-red-600" : "border-emerald-300 bg-emerald-600"}`}>
+            <div className="text-xl font-black leading-none">{eocStatus.isOpen ? "เปิด EOC" : "เฝ้าระวัง"}</div>
+            <div className="mt-1 text-xs text-white/85">{latestActiveEOC ? getEOCTypeName(latestActiveEOC.eoc_type) : "สถานะศูนย์"}</div>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid min-h-[calc(100vh-87px)] grid-cols-[98px_minmax(0,1fr)] max-lg:grid-cols-1">
+        <OpsSidebar />
+
+        <main className="min-w-0 p-3">
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-red-600 px-4 py-2.5 text-white shadow-sm">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-lg font-black">!</span>
+              <p className="truncate text-sm font-bold">
+                ประกาศเตือนภัย: เฝ้าระวังน้ำท่วมฉับพลันและน้ำป่าไหลหลาก ในพื้นที่จังหวัดสตูล {dateRange ? `ช่วง ${dateRange}` : ""}
+              </p>
+            </div>
+            <Link href="/public/help" className="shrink-0 rounded-md bg-white px-4 py-1.5 text-xs font-black text-red-700 hover:bg-red-50">ดูรายละเอียด</Link>
+          </div>
+
+          <section className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-3 2xl:grid-cols-6">
+            {stats.map((stat) => (
+              <OpsMetricCard key={stat.label} {...stat} />
+            ))}
+          </section>
+
+          <section className="grid gap-3 xl:grid-cols-[270px_minmax(0,1fr)_360px]">
+            <OpsFilterPanel
+              selectedDisasterType={selectedDisasterType}
+              setSelectedDisasterType={(type) => {
+                setSelectedDisasterType(type);
+                setSelectedSessionId(null);
+                setSelectedMapDate(null);
+              }}
+              selectedSessionId={selectedSessionId}
+              setSelectedSessionId={(sessionId) => {
+                setSelectedSessionId(sessionId);
+                setSelectedMapDate(null);
+              }}
+              sessionOptions={sessionOptions}
+              selectedSession={selectedSession}
+              selectedDate={selectedDate}
+              dateOptions={dateOptions}
+              setSelectedMapDate={setSelectedMapDate}
+              districtFilter={districtFilter}
+              setDistrictFilter={setDistrictFilter}
+              publicDistricts={publicDistricts}
+              urgencyFilter={urgencyFilter}
+              setUrgencyFilter={setUrgencyFilter}
+              reportTypeFilter={reportTypeFilter}
+              setReportTypeFilter={setReportTypeFilter}
+              mapSearchQuery={mapSearchQuery}
+              setMapSearchQuery={setMapSearchQuery}
+              dailyBars={dailyBars}
+              resetFilters={() => {
+                setSelectedDisasterType("flood");
+                setSelectedSessionId(null);
+                setSelectedMapDate(null);
+                setUrgencyFilter("all");
+                setReportTypeFilter("all");
+                setDistrictFilter("all");
+                setMapSearchQuery("");
+                setMapLayers({ district: true, tambon: false, village: false, labels: true });
+              }}
+            />
+
+            <div className="min-w-0 space-y-3">
+              <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
+                <div className="h-[505px] bg-slate-100 max-lg:h-[460px]">
+                  <PublicIncidentMap
+                    disasterType={selectedDisasterType}
+                    sessionId={selectedSession?.isOverviewFallback ? null : selectedSession?.id}
+                    startDate={selectedDate}
+                    endDate={selectedDate}
+                    chrome="full"
+                    heightClass="h-full"
+                    layers={mapLayers}
+                    onLayersChange={setMapLayers}
+                    urgencyFilter={urgencyFilter}
+                    reportTypeFilter={reportTypeFilter}
+                    districtFilter={districtFilter}
+                    searchQuery={mapSearchQuery}
+                    onDataChange={handleMapDataChange}
+                  />
+                </div>
+                <LayerFloatingPanel mapLayers={mapLayers} setMapLayers={setMapLayers} />
+              </div>
+
+              <OpsTimeline rows={latestRows} selectedDate={selectedDate} />
+            </div>
+
+            <OpsRightPanel
+              announcements={homepageAnnouncements}
+              quickActionItems={quickActionItems}
+              helpRequestCount={helpRequestCount}
+              trafficReportCount={trafficReportCount}
+              activeShelters={activeShelters}
+              populationOverview={populationOverview}
+            />
+          </section>
+
+          <section className="mt-3">
+            <SystemOverviewPanel
+              overview={eocOverview}
+              getEOCTypeName={getEOCTypeName}
+              getEOCTypeIcon={getEOCTypeIcon}
+              compact
+            />
+          </section>
+        </main>
+      </div>
+
+      <PDPAConsent />
+    </div>
+  );
+}
+
+function OpsSidebar() {
+  const items = [
+    { href: "/", label: "หน้าหลัก", icon: "⌂", active: true },
+    { href: "/public/disaster-map", label: "แผนที่", icon: "⌖" },
+    { href: "/public/help", label: "ประกาศ", icon: "⚑" },
+    { href: "/eoc/flood/shelters", label: "ศูนย์พักพิง", icon: "⌂" },
+    { href: "/eoc/vulnerable-groups", label: "กลุ่มเปราะบาง", icon: "♙" },
+    { href: "/public/help/citizen-guide", label: "คู่มือ", icon: "↓" },
+    { href: "/login", label: "เจ้าหน้าที่", icon: "ⓘ" }
+  ];
+
+  return (
+    <aside className="flex flex-col items-center gap-2 bg-[#0b4c86] px-2 py-6 text-white max-lg:hidden">
+      {items.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`flex w-full flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-bold transition ${item.active ? "bg-white text-blue-800 shadow-md" : "text-blue-50 hover:bg-white/10"}`}
+        >
+          <span className="text-2xl leading-none">{item.icon}</span>
+          <span>{item.label}</span>
+        </Link>
+      ))}
+      <div className="mt-auto rounded-xl bg-white/15 p-3 text-center text-xs font-semibold leading-5">
+        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 text-xl">□</div>
+        ข้อมูลสาธารณะ
+      </div>
+    </aside>
+  );
+}
+
+function OpsMetricCard({ label, value, unit, sub, tone, icon }) {
+  const tones = {
+    blue: "border-blue-300 bg-blue-50 text-blue-700",
+    orange: "border-orange-300 bg-orange-50 text-orange-700",
+    purple: "border-violet-300 bg-violet-50 text-violet-700",
+    teal: "border-cyan-300 bg-cyan-50 text-cyan-700",
+    violet: "border-purple-300 bg-purple-50 text-purple-700",
+    amber: "border-amber-300 bg-amber-50 text-amber-700",
+    red: "border-red-300 bg-red-50 text-red-700"
+  };
+
+  return (
+    <div className={`rounded-xl border bg-white p-3 shadow-sm ${tones[tone] || tones.blue}`}>
+      <div className="flex items-start gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-2xl shadow-sm">{icon}</div>
+        <div className="min-w-0">
+          <div className="text-xs font-bold text-slate-600">{label}</div>
+          <div className="mt-1 flex items-end gap-1">
+            <span className="text-3xl font-black leading-none">{typeof value === "number" || /^\d+$/.test(String(value)) ? formatNumber(value) : value}</span>
+            {unit && <span className="pb-1 text-xs font-bold text-slate-500">{unit}</span>}
+          </div>
+          <div className="mt-1 truncate text-xs text-slate-500">{sub}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OpsFilterPanel({
+  selectedDisasterType,
+  setSelectedDisasterType,
+  selectedSessionId,
+  setSelectedSessionId,
+  sessionOptions,
+  selectedSession,
+  selectedDate,
+  dateOptions,
+  setSelectedMapDate,
+  districtFilter,
+  setDistrictFilter,
+  publicDistricts,
+  urgencyFilter,
+  setUrgencyFilter,
+  reportTypeFilter,
+  setReportTypeFilter,
+  mapSearchQuery,
+  setMapSearchQuery,
+  dailyBars,
+  resetFilters
+}) {
+  return (
+    <aside className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-base font-black text-blue-900">ตัวกรองข้อมูล</h2>
+        <button type="button" onClick={resetFilters} className="text-xs font-bold text-blue-600 hover:text-blue-800">ล้างค่า</button>
+      </div>
+
+      <div className="space-y-4 text-sm">
+        <FilterBlock title="1. ประเภทเหตุการณ์">
+          <select
+            value={selectedDisasterType}
+            onChange={(event) => setSelectedDisasterType(event.target.value)}
+            className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500"
+          >
+            <option value="flood">น้ำท่วม</option>
+            <option value="disease">โรคระบาด</option>
+            <option value="accident">อุบัติเหตุ</option>
+          </select>
+          <div className="mt-2 grid grid-cols-5 gap-1 text-center text-[11px] font-bold text-slate-600">
+            {[
+              ["น้ำท่วม", "≋"],
+              ["วาตภัย", "♣"],
+              ["ถนนปิด", "●"],
+              ["พักพิง", "⌂"],
+              ["รพ.", "✚"]
+            ].map(([label, icon]) => (
+              <button key={label} type="button" className="rounded-md bg-slate-50 px-1 py-2 hover:bg-blue-50">
+                <div className="text-lg text-blue-700">{icon}</div>
+                <div className="truncate">{label}</div>
+              </button>
+            ))}
+          </div>
+        </FilterBlock>
+
+        <FilterBlock title="2. Session EOC">
+          <select
+            value={selectedSessionId || ""}
+            onChange={(event) => setSelectedSessionId(event.target.value)}
+            className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500"
+          >
+            {sessionOptions.length === 0 && <option value="">ไม่มี session</option>}
+            {sessionOptions.map((session) => (
+              <option key={session.id} value={session.id}>
+                Session #{session.session_number || session.id} {session.status === "active" ? "(เปิดอยู่)" : "(ปิดแล้ว)"}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 rounded-md bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
+            {selectedSession ? (
+              <>
+                <div className="font-bold text-slate-800">
+                  {selectedSession.label}
+                </div>
+                <div>เปิด: {formatThaiDateOnly(selectedSession.opened_at)}</div>
+                <div>{selectedSession.closed_at ? `ปิด: ${formatThaiDateOnly(selectedSession.closed_at)}` : "ปิด: ถึงปัจจุบัน"}</div>
+              </>
+            ) : (
+              "เลือกประเภท EOC เพื่อดู session"
+            )}
+          </div>
+        </FilterBlock>
+
+        <FilterBlock title="3. วันที่">
+          <div className="rounded-md border border-slate-200 px-3 py-2 font-semibold text-slate-700">{formatThaiDateOnly(selectedDate)}</div>
+          <EocDateSelector
+            dateOptions={dateOptions}
+            selectedDate={selectedDate}
+            onSelect={setSelectedMapDate}
+          />
+          <MiniCalendar selectedDate={selectedDate} />
+        </FilterBlock>
+
+        <FilterBlock title="4. อำเภอ">
+          <select
+            value={districtFilter}
+            onChange={(event) => setDistrictFilter(event.target.value)}
+            className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500"
+          >
+            <option value="all">ทั้งหมด</option>
+            {publicDistricts.map((district) => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
+        </FilterBlock>
+
+        <FilterBlock title="5. ระดับความรุนแรง">
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              ["all", "ทั้งหมด"],
+              ["critical", "รุนแรงมาก"],
+              ["high", "รุนแรง"],
+              ["medium", "ปานกลาง"],
+              ["low", "เฝ้าระวัง"]
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setUrgencyFilter(key)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold ${urgencyFilter === key ? "bg-blue-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </FilterBlock>
+
+        <FilterBlock title="6. ค้นหาและข้อมูลย้อนหลัง">
+          <input
+            value={mapSearchQuery}
+            onChange={(event) => setMapSearchQuery(event.target.value)}
+            placeholder="ค้นหาพื้นที่/รายละเอียด"
+            className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+          />
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              ["all", "ทุกรายงาน"],
+              ["help_request", "ขอช่วยเหลือ"],
+              ["traffic_report", "เส้นทาง"]
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setReportTypeFilter(key)}
+                className={`rounded-md px-2 py-1.5 text-xs font-bold ${reportTypeFilter === key ? "bg-blue-600 text-white" : "border border-slate-200 text-slate-600"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </FilterBlock>
+
+        <FilterBlock title="สถิติเหตุการณ์รายวัน">
+          <div className="flex h-28 items-end gap-2 border-b border-l border-slate-200 px-2">
+            {dailyBars.map((bar) => (
+              <div key={bar.label} className="flex flex-1 flex-col items-center gap-1">
+                <div className="text-[10px] font-bold text-slate-500">{bar.value}</div>
+                <div className="w-full rounded-t bg-blue-300" style={{ height: `${bar.height}%` }}></div>
+                <div className="text-[10px] text-slate-500">{bar.label}</div>
+              </div>
+            ))}
+          </div>
+        </FilterBlock>
+      </div>
+    </aside>
+  );
+}
+
+function FilterBlock({ title, children }) {
+  return (
+    <section className="border-b border-slate-100 pb-4 last:border-b-0 last:pb-0">
+      <h3 className="mb-2 text-xs font-black text-blue-800">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function EocDateSelector({ dateOptions, selectedDate, onSelect }) {
+  const selectedIndex = Math.max(0, dateOptions.findIndex((item) => item.date === selectedDate));
+  const nearbyOptions = dateOptions.length > 18
+    ? dateOptions.slice(Math.max(0, selectedIndex - 8), Math.min(dateOptions.length, selectedIndex + 10))
+    : dateOptions;
+
+  if (!dateOptions.length) {
+    return (
+      <div className="mt-2 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-3 text-center text-xs text-slate-500">
+        ยังไม่มีช่วงวันที่ของ EOC นี้
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="text-[11px] font-bold text-slate-600">
+          วันที่เปิด Session - วันที่ปิด/ปัจจุบัน ({formatNumber(dateOptions.length)} วัน)
+        </div>
+        <select
+          value={selectedDate}
+          onChange={(event) => onSelect(event.target.value)}
+          className="max-w-[118px] rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-700 outline-none focus:border-blue-500"
+        >
+          {dateOptions.map((item) => (
+            <option key={item.date} value={item.date}>
+              วันที่ {item.dayNumber} {item.shortDate}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid max-h-36 grid-cols-3 gap-2 overflow-y-auto pr-1">
+        {nearbyOptions.map((item) => {
+          const active = item.date === selectedDate;
+          return (
+            <button
+              key={item.date}
+              type="button"
+              onClick={() => onSelect(item.date)}
+              className={`rounded-md px-2 py-2 text-center text-[11px] font-black leading-4 transition ${active ? "bg-emerald-600 text-white shadow-sm" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-emerald-50 hover:text-emerald-700"}`}
+            >
+              <div>วันที่ {item.dayNumber}</div>
+              <div>{item.weekday} {item.shortDate}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MiniCalendar({ selectedDate }) {
+  const date = new Date(`${selectedDate}T00:00:00`);
+  const days = Array.from({ length: 30 }, (_, index) => index + 1);
+  const selectedDay = Number.isNaN(date.getTime()) ? 30 : date.getDate();
+  const monthText = Number.isNaN(date.getTime())
+    ? "พฤศจิกายน 2568"
+    : date.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+
+  return (
+    <div className="mt-2 rounded-lg border border-slate-200 p-2">
+      <div className="mb-2 text-center text-xs font-bold text-slate-700">{monthText}</div>
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-500">
+        {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((day) => <div key={day}>{day}</div>)}
+        {days.map((day) => (
+          <div key={day} className={`rounded-full py-1 ${day === selectedDay ? "bg-blue-600 font-black text-white" : "text-slate-600"}`}>{day}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LayerFloatingPanel({ mapLayers, setMapLayers }) {
+  const items = [
+    ["district", "ขอบเขตอำเภอ"],
+    ["tambon", "น้ำท่วม"],
+    ["village", "หมู่บ้าน"],
+    ["labels", "ชื่อพื้นที่"]
+  ];
+
+  return (
+    <div className="absolute right-4 top-24 z-[450] w-48 rounded-lg border border-slate-200 bg-white/95 p-3 text-sm shadow-lg backdrop-blur max-md:hidden">
+      <div className="mb-2 font-black text-slate-800">ชั้นข้อมูล</div>
+      <div className="space-y-2">
+        {items.map(([key, label]) => (
+          <label key={key} className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={mapLayers[key]}
+              onChange={(event) => setMapLayers((current) => ({ ...current, [key]: event.target.checked }))}
+              className="h-4 w-4 accent-blue-600"
+            />
+            {label}
+          </label>
+        ))}
+      </div>
+      <Link href="/public/disaster-map" className="mt-3 block rounded-md bg-blue-600 px-3 py-2 text-center text-xs font-black text-white hover:bg-blue-700">เปิดแผนที่เต็ม</Link>
+    </div>
+  );
+}
+
+function OpsTimeline({ rows, selectedDate }) {
+  return (
+    <section className="rounded-xl border border-blue-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <h2 className="font-black text-blue-900">เหตุการณ์รายวัน / Daily Incident Timeline</h2>
+        <span className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-black text-white">{formatThaiDateOnly(selectedDate)}</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead className="bg-slate-50 text-xs text-slate-500">
+            <tr>
+              {["วันที่", "เวลา", "ประเภทเหตุ", "พื้นที่", "รายละเอียด", "ระดับ", "สถานะ"].map((head) => (
+                <th key={head} className="px-3 py-2 text-left font-black">{head}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={`${row.date}-${row.time}-${row.area}`} className="border-t border-slate-100">
+                <td className="px-3 py-2 font-semibold text-slate-700">{row.date}</td>
+                <td className="px-3 py-2 text-slate-600">{row.time}</td>
+                <td className="px-3 py-2 font-bold text-blue-700">{row.type}</td>
+                <td className="px-3 py-2 text-slate-700">{row.area}</td>
+                <td className="px-3 py-2 text-slate-600">{row.detail}</td>
+                <td className="px-3 py-2"><SeverityBadge level={row.severity} /></td>
+                <td className="px-3 py-2"><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{row.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function OpsRightPanel({ announcements, quickActionItems, helpRequestCount, trafficReportCount, activeShelters, populationOverview }) {
+  return (
+    <aside className="space-y-3">
+      <Panel title="ประกาศล่าสุด" actionHref="/public/help">
+        <div className="space-y-2">
+          {announcements.slice(0, 3).map((item) => (
+            <div key={item.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+              <div className="font-bold text-slate-900">{item.title}</div>
+              <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{item.content}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="คำแนะนำสำหรับประชาชน" actionHref="/public/help/citizen-guide">
+        <div className="space-y-2 text-sm text-slate-700">
+          {quickActionItems.map((item) => (
+            <Link key={item.href} href={item.href} className="flex items-start gap-2 rounded-lg bg-slate-50 p-2 hover:bg-blue-50">
+              <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span>{item.title}</span>
+            </Link>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="เบอร์ติดต่อฉุกเฉิน">
+        <div className="grid grid-cols-3 gap-2">
+          <EmergencyNumber number="1669" label="เจ็บป่วยฉุกเฉิน" tone="red" />
+          <EmergencyNumber number="1784" label="ปภ." tone="blue" />
+          <EmergencyNumber number="191" label="ตำรวจ" tone="green" />
+        </div>
+      </Panel>
+
+      <Panel title="ศูนย์พักพิง">
+        <div className="overflow-hidden rounded-lg border border-slate-100">
+          {[
+            ["ศูนย์พักพิงเทศบาลตำบลละงู", 500],
+            ["โรงเรียนละงูพิทยาคม", 800],
+            ["อบต.ควนโดน", 300],
+            ["โรงเรียนบ้านควนกาหลง", 600]
+          ].map(([name, capacity], index) => (
+            <div key={name} className="grid grid-cols-[1fr_72px_56px] gap-2 border-b border-slate-100 px-3 py-2 text-xs last:border-b-0">
+              <span className="font-semibold text-slate-700">{index + 1}. {name}</span>
+              <span className="text-right text-slate-600">{formatNumber(capacity)}</span>
+              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-center font-bold text-emerald-700">เปิด</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 text-xs font-bold text-slate-600">
+          รวมรองรับได้ประมาณ {formatNumber(activeShelters ? activeShelters * 35 : 0)} คน
+        </div>
+      </Panel>
+
+      <Panel title="ข้อมูลสนับสนุน EOC">
+        <div className="grid grid-cols-2 gap-2">
+          <SmallInfo label="ขอความช่วยเหลือ" value={helpRequestCount} />
+          <SmallInfo label="เส้นทางสัญจร" value={trafficReportCount} />
+          <SmallInfo label="กลุ่มเปราะบาง" value={getOverviewMetric(populationOverview, "vulnerable_total")} />
+          <SmallInfo label="พื้นที่ฐานข้อมูล" value={getOverviewMetric(populationOverview, "locations")} />
+        </div>
+      </Panel>
+    </aside>
+  );
+}
+
+function Panel({ title, actionHref, children }) {
+  return (
+    <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="font-black text-blue-900">{title}</h2>
+        {actionHref && <Link href={actionHref} className="text-xs font-bold text-blue-600 hover:text-blue-800">ดูทั้งหมด</Link>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function EmergencyNumber({ number, label, tone }) {
+  const tones = {
+    red: "border-red-200 bg-red-50 text-red-700",
+    blue: "border-blue-200 bg-blue-50 text-blue-700",
+    green: "border-emerald-200 bg-emerald-50 text-emerald-700"
+  };
+  return (
+    <div className={`rounded-lg border p-3 text-center ${tones[tone]}`}>
+      <div className="text-2xl font-black leading-none">{number}</div>
+      <div className="mt-1 text-[11px] font-semibold leading-4">{label}</div>
+    </div>
+  );
+}
+
+function SmallInfo({ label, value }) {
+  return (
+    <div className="rounded-lg bg-slate-50 p-3">
+      <div className="text-xl font-black text-slate-900">{formatNumber(value)}</div>
+      <div className="mt-1 text-xs text-slate-500">{label}</div>
+    </div>
+  );
+}
+
+function SeverityBadge({ level }) {
+  const styles = {
+    critical: "bg-red-100 text-red-700",
+    high: "bg-orange-100 text-orange-700",
+    medium: "bg-amber-100 text-amber-700",
+    low: "bg-emerald-100 text-emerald-700"
+  };
+  const labels = {
+    critical: "รุนแรงมาก",
+    high: "รุนแรง",
+    medium: "ปานกลาง",
+    low: "เฝ้าระวัง"
+  };
+  return <span className={`rounded-full px-2 py-1 text-xs font-bold ${styles[level] || styles.low}`}>{labels[level] || "เฝ้าระวัง"}</span>;
+}
+
+function getOverviewMetric(overview, key) {
+  const metric = overview?.summary?.find((item) => item.key === key);
+  return Number(metric?.value) || 0;
+}
+
+function buildSessionOptions(eocType, sessions, overviewItems) {
+  const normalizedType = normalizeEocTypeForSession(eocType);
+  const filteredSessions = (sessions || [])
+    .filter((session) => session.eoc_type === normalizedType)
+    .map((session) => ({
+      ...session,
+      label: `Session #${session.session_number || session.id}`,
+      opened_at: normalizeDateKey(session.opened_at),
+      closed_at: normalizeDateKey(session.closed_at)
+    }));
+
+  if (filteredSessions.length > 0) return filteredSessions;
+
+  const overview = overviewItems.find((item) => item.eoc_type === normalizedType);
+  if (!overview?.session_id && !overview?.period?.first_date) return [];
+
+  return [{
+    id: overview.session_id || `${normalizedType}-overview`,
+    eoc_type: normalizedType,
+    session_number: overview.session_number || "-",
+    status: overview.session_status || "overview",
+    label: overview.session_number ? `Session #${overview.session_number}` : "ข้อมูลรวม",
+    opened_at: normalizeDateKey(overview.opened_at || overview.period?.first_date),
+    closed_at: normalizeDateKey(overview.closed_at || overview.period?.last_date),
+    isOverviewFallback: true
+  }];
+}
+
+function normalizeEocTypeForSession(eocType) {
+  return eocType === "accident" ? "festival-accidents" : eocType;
+}
+
+function buildEocDateOptions(eocType, overviewItems, selectedSession) {
+  const normalizedType = eocType === "accident" ? "festival-accidents" : eocType;
+  const overview = overviewItems.find((item) => item.eoc_type === normalizedType);
+  if (!overview) return [];
+  const startDate = normalizeDateKey(selectedSession?.opened_at || overview?.opened_at || overview?.period?.first_date) || getTodayDateKey();
+  const today = getTodayDateKey();
+  const endDate = selectedSession?.closed_at || (selectedSession?.status === "active" ? today : "") || overview?.closed_at || overview?.period?.last_date || today;
+  const start = parseDateKey(startDate);
+  const end = parseDateKey(endDate);
+  if (!start || !end) return [];
+
+  const safeEnd = start > end ? start : end;
+  const dates = [];
+  let cursor = start;
+  let dayNumber = 1;
+  while (cursor <= safeEnd && dates.length < 370) {
+    const date = dateToKey(cursor);
+    dates.push({
+      date,
+      dayNumber,
+      weekday: cursor.toLocaleDateString("th-TH", { weekday: "short" }),
+      shortDate: cursor.toLocaleDateString("th-TH", { day: "numeric", month: "short" }),
+      isToday: date === today
+    });
+    cursor = addDays(cursor, 1);
+    dayNumber += 1;
+  }
+  return dates;
+}
+
+function normalizeDateKey(value) {
+  if (!value) return "";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}(?:$|\s)/.test(value)) {
+    return value.slice(0, 10);
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return dateToKey(date);
+}
+
+function getTodayDateKey() {
+  return dateToKey(new Date());
+}
+
+function parseDateKey(value) {
+  if (!value) return null;
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function dateToKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date, amount) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+function buildIncidentTimeline(incidents, selectedDate) {
+  const fallback = [
+    { date: selectedDate, time: "09:45", type: "น้ำท่วม", area: "อ.ละงู ต.ละงู", detail: "น้ำท่วมขังถนนและพื้นที่ลุ่มต่ำ", severity: "high", status: "กำลังเฝ้าระวัง" },
+    { date: selectedDate, time: "09:10", type: "ถนนปิด", area: "อ.ท่าแพ ทางหลวง 416", detail: "น้ำท่วมผิวจราจร รถเล็กผ่านลำบาก", severity: "critical", status: "ประสานงาน" },
+    { date: selectedDate, time: "08:30", type: "วาตภัย", area: "อ.ควนกาหลง", detail: "ต้นไม้ล้มทับสายไฟฟ้า", severity: "medium", status: "กำลังดำเนินการ" },
+    { date: selectedDate, time: "07:50", type: "ศูนย์พักพิง", area: "อ.ละงู", detail: "เปิดศูนย์พักพิงเพิ่มเติม", severity: "low", status: "เปิดให้บริการ" },
+    { date: selectedDate, time: "07:20", type: "โรงพยาบาล", area: "อ.เมืองสตูล", detail: "หน่วยบริการพร้อมรับส่งต่อ", severity: "low", status: "พร้อมบริการ" }
+  ];
+
+  const mapped = incidents.slice(0, 5).map((incident) => ({
+    date: formatThaiDateOnly((incident.occurred_at || incident.reported_at || selectedDate).slice?.(0, 10) || selectedDate),
+    time: new Date(incident.occurred_at || incident.reported_at || `${selectedDate}T08:00:00`).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+    type: incident.report_type === "traffic_report" ? "เส้นทางสัญจร" : incident.disaster_type === "disease" ? "โรคระบาด" : "น้ำท่วม",
+    area: [incident.district, incident.sub_district || incident.village].filter(Boolean).join(" ") || "-",
+    detail: incident.description || "รายงานจากประชาชน",
+    severity: incident.urgency || "low",
+    status: incident.status === "resolved" ? "แก้ไขแล้ว" : incident.status === "verified" ? "ยืนยันแล้ว" : "รอตรวจสอบ"
+  }));
+
+  return mapped.length ? mapped : fallback.map((row) => ({ ...row, date: formatThaiDateOnly(row.date) }));
+}
+
+function buildDailyBars(dateOptions, selectedDate) {
+  const selectedIndex = Math.max(0, dateOptions.findIndex((item) => item.date === selectedDate));
+  const windowStart = Math.max(0, selectedIndex - 3);
+  const visibleDates = dateOptions.slice(windowStart, windowStart + 7);
+  const fallbackDates = Array.from({ length: 7 }, (_, index) => ({
+    date: addDays(parseDateKey(selectedDate) || new Date(), index - 3),
+    dayNumber: index + 1
+  }));
+  const source = visibleDates.length ? visibleDates : fallbackDates;
+
+  return source.map((item, index) => {
+    const date = item.date instanceof Date ? item.date : parseDateKey(item.date);
+    const day = date ? date.toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : item.shortDate || "-";
+    const value = [19, 23, 31, 27, 24, 20, 28][index];
+    return { label: day, value, height: Math.max(18, Math.round((value / 31) * 100)) };
+  });
+}
+
 function HomeSituationDashboard({
   activeEOCs,
   dashboardSummary,
@@ -1354,6 +1958,7 @@ function HomeSituationDashboard({
 }) {
   const hasActiveEOC = activeEOCs.length > 0;
   const primaryEOC = activeEOCs[0];
+  const eocOverview = dashboardSummary?.eocOverview || [];
   const activeTypesText = hasActiveEOC
     ? activeEOCs.map((eoc) => getEOCTypeName(eoc.eoc_type)).join(", ")
     : "เฝ้าระวังสถานการณ์ทั่วไป";
@@ -1367,8 +1972,8 @@ function HomeSituationDashboard({
     },
     {
       icon: "📝",
-      label: "กิจกรรมวันนี้",
-      value: dashboardSummary?.todayReports ?? 0,
+      label: "รายงานประชาชน",
+      value: dashboardSummary?.publicReports ?? 0,
       unit: "รายการ"
     },
     {
@@ -1378,10 +1983,16 @@ function HomeSituationDashboard({
       unit: "คน"
     },
     {
-      icon: "⚡",
-      label: "ทีมปฏิบัติการ",
-      value: dashboardSummary?.activeTeams ?? 0,
-      unit: "ทีม"
+      icon: "🦠",
+      label: "ผู้ป่วย/อาการ",
+      value: dashboardSummary?.diseasePatients ?? diseaseStats?.patients ?? 0,
+      unit: "ราย"
+    },
+    {
+      icon: "🏠",
+      label: "ศูนย์พักพิง",
+      value: dashboardSummary?.activeShelters ?? 0,
+      unit: "แห่ง"
     }
   ];
 
@@ -1460,6 +2071,13 @@ function HomeSituationDashboard({
             </div>
           </div>
 
+          <SystemOverviewPanel
+            overview={eocOverview}
+            getEOCTypeName={getEOCTypeName}
+            getEOCTypeIcon={getEOCTypeIcon}
+            legacy
+          />
+
           {activeTypeStats.length > 0 && (
             <div className="bg-white rounded-xl shadow-md border border-gray-100 p-4">
               <h3 className="text-lg font-bold text-gray-900 mb-3">ตัวชี้วัดตามภัย</h3>
@@ -1536,6 +2154,130 @@ function HomeSituationDashboard({
   );
 }
 
+function SystemOverviewPanel({ overview, getEOCTypeName, getEOCTypeIcon, legacy = false }) {
+  const items = Array.isArray(overview) ? overview : [];
+
+  return (
+    <section className={`${legacy ? "bg-white rounded-xl shadow-md border border-gray-100" : "rounded-lg border border-slate-200 bg-white shadow-sm"} p-4`}>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">EOC Overview</p>
+          <h3 className="mt-1 text-lg font-black text-slate-900">ภาพรวมข้อมูลทุก EOC</h3>
+        </div>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
+          {formatNumber(items.length)} ชุดข้อมูล
+        </span>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-500">
+          กำลังรวบรวมข้อมูลภาพรวม
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <EOCOverviewCard
+              key={item.eoc_type}
+              item={item}
+              getEOCTypeName={getEOCTypeName}
+              getEOCTypeIcon={getEOCTypeIcon}
+              legacy={legacy}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function EOCOverviewCard({ item, getEOCTypeName, getEOCTypeIcon, legacy }) {
+  const style = getEOCStyle(item.eoc_type);
+  const summary = Array.isArray(item.summary) ? item.summary : [];
+  const links = Array.isArray(item.links) ? item.links : [];
+  const status = getOverviewStatus(item);
+  const dateRange = formatOverviewDateRange(item.period);
+  const title = item.name_th || getEOCTypeName(item.eoc_type);
+
+  return (
+    <div className={`rounded-lg border ${style.softBorder || "border-slate-200"} bg-white p-3 shadow-sm`}>
+      <div className="flex items-start gap-3">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${style.bg || "bg-slate-100"} text-2xl`}>
+          {item.icon || getEOCTypeIcon(item.eoc_type)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h4 className="font-bold leading-tight text-slate-900">{title}</h4>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${status.className}`}>{status.label}</span>
+          </div>
+          <p className="mt-1 line-clamp-2 text-xs text-slate-500">{item.description || "ข้อมูลสนับสนุนการติดตามสถานการณ์"}</p>
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
+            {item.session_number && <span>Session {item.session_number}</span>}
+            {dateRange && <span>{dateRange}</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className={`mt-3 grid ${legacy ? "grid-cols-2" : "grid-cols-2"} gap-2`}>
+        {summary.slice(0, legacy ? 4 : 6).map((metric) => (
+          <div key={metric.key || metric.label} className="rounded-md bg-slate-50 px-2.5 py-2">
+            <div className={`text-lg font-black leading-none ${style.text || "text-slate-800"}`}>{formatNumber(metric.value)}</div>
+            <div className="mt-0.5 text-[11px] font-semibold text-slate-500">{metric.unit}</div>
+            <div className="mt-0.5 text-[11px] leading-snug text-slate-600">{metric.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {links.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {links.slice(0, 3).map((link, index) => (
+            <Link
+              key={`${link.href}-${link.label}`}
+              href={link.href}
+              className={`${index === 0 ? `${style.button || "bg-slate-700 hover:bg-slate-800"} text-white` : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"} rounded-md px-3 py-1.5 text-xs font-bold transition-colors`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getOverviewStatus(item) {
+  if (item.is_active) {
+    return { label: "เปิด EOC", className: "bg-red-100 text-red-700" };
+  }
+  if (item.session_status === "closed") {
+    return { label: "ปิดแล้ว", className: "bg-slate-100 text-slate-600" };
+  }
+  if (item.session_status) {
+    return { label: item.session_status, className: "bg-amber-100 text-amber-700" };
+  }
+  return { label: "ฐานข้อมูล", className: "bg-emerald-100 text-emerald-700" };
+}
+
+function formatOverviewDateRange(period) {
+  if (!period?.first_date && !period?.last_date) return "";
+  const start = formatThaiDateOnly(period.first_date);
+  const end = formatThaiDateOnly(period.last_date);
+  if (start && end && start !== end) return `${start} - ${end}`;
+  return start || end;
+}
+
+function formatThaiDateOnly(value) {
+  if (!value) return "";
+  const date = typeof value === "string"
+    ? new Date(value.includes("T") ? value : `${value.slice(0, 10)}T00:00:00`)
+    : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+}
+
 function SeicsMetric({ label, value, tone }) {
   const tones = {
     sky: "text-sky-700",
@@ -1585,6 +2327,76 @@ function AlertItem({ tone, title, subtitle }) {
         <p className="mt-0.5 text-xs text-slate-600">{subtitle}</p>
       </div>
       <span className="text-xl">›</span>
+    </div>
+  );
+}
+
+function PublicHeroMetric({ eyebrow, title, value, unit, description }) {
+  return (
+    <div className="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur">
+      <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-50/80">{eyebrow}</div>
+      <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
+      <div className="mt-4 text-4xl font-black leading-none text-white">{formatNumber(value)}</div>
+      <div className="mt-1 text-sm font-semibold text-blue-50/90">{unit}</div>
+      <p className="mt-3 text-sm leading-6 text-blue-50/85">{description}</p>
+    </div>
+  );
+}
+
+function PublicMiniMetric({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-white/10 px-3 py-3">
+      <div className="text-2xl font-black leading-none text-white">{formatNumber(value)}</div>
+      <div className="mt-1 text-xs font-semibold text-blue-50/80">{label}</div>
+    </div>
+  );
+}
+
+function PublicStatCard({ label, value, unit, tone }) {
+  const tones = {
+    blue: "from-blue-50 to-white border-blue-100 text-blue-800",
+    red: "from-rose-50 to-white border-rose-100 text-rose-700",
+    amber: "from-amber-50 to-white border-amber-100 text-amber-700",
+    emerald: "from-emerald-50 to-white border-emerald-100 text-emerald-700"
+  };
+
+  return (
+    <div className={`rounded-[24px] border bg-gradient-to-br p-5 shadow-[0_16px_42px_rgba(15,23,42,0.06)] ${tones[tone] || tones.blue}`}>
+      <div className="text-sm font-bold text-slate-500">{label}</div>
+      <div className="mt-3 text-4xl font-black leading-none">{formatNumber(value)}</div>
+      <div className="mt-2 text-sm font-semibold text-slate-500">{unit}</div>
+    </div>
+  );
+}
+
+function PublicActionCard({ item }) {
+  const tones = {
+    red: "border-red-100 bg-red-50/70 hover:border-red-200",
+    blue: "border-blue-100 bg-blue-50/70 hover:border-blue-200",
+    emerald: "border-emerald-100 bg-emerald-50/70 hover:border-emerald-200"
+  };
+
+  return (
+    <Link
+      href={item.href}
+      className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md ${tones[item.tone] || tones.blue}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-black text-slate-900">{item.title}</div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+        </div>
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">{item.icon}</span>
+      </div>
+    </Link>
+  );
+}
+
+function EmergencyContactCard({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+      <span className="text-sm font-medium text-slate-600">{label}</span>
+      <strong className="text-lg font-black text-red-700">{value}</strong>
     </div>
   );
 }
