@@ -420,7 +420,7 @@ export default function Home() {
         quickActions: [
           { icon: "🗺️", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/disaster-map", color: "blue" },
           { icon: "🚨", title: "แจ้งเหตุน้ำท่วม", link: "/public/report-incident", color: "red" },
-          { icon: "🏘️", title: "ศูนย์พักพิงชั่วคราว", link: "/eoc/flood/shelters", color: "green" }
+          { icon: "🏘️", title: "ศูนย์พักพิงชั่วคราว", link: "/public/shelters", color: "green" }
         ],
         stats: floodStats ? {
           affected: floodStats.affected || 0,
@@ -590,6 +590,13 @@ export default function Home() {
       description: "คู่มือเตรียมพร้อม อพยพ และดูแลตัวเองตามประเภทเหตุการณ์",
       icon: "คู่มือ",
       tone: "emerald"
+    },
+    {
+      href: "/public/agencies",
+      title: "หน่วยงานฉุกเฉิน",
+      description: "รวมช่องทางติดต่อและหน่วยงานที่เกี่ยวข้องในกรณีฉุกเฉิน",
+      icon: "หน่วยงาน",
+      tone: "blue"
     }
   ];
   const homepageAnnouncements = dashboardSummary?.announcements?.length
@@ -1110,7 +1117,6 @@ function PublicOperationalDashboard({
   const selectedDate = selectedMapDate || dateOptions[0]?.date || floodOverview?.period?.first_date || diseaseOverview?.period?.first_date || getTodayDateKey();
   const dateRange = formatOverviewDateRange(floodOverview?.period || diseaseOverview?.period);
   const latestRows = buildIncidentTimeline(visiblePublicIncidents, selectedDate);
-  const dailyBars = buildDailyBars(dateOptions, selectedDate);
 
   const stats = [
     {
@@ -1188,14 +1194,14 @@ function PublicOperationalDashboard({
 
           <div className="hidden items-center gap-5 text-sm text-blue-50 lg:flex">
             <div>
-              <div className="font-bold text-white">วันที่ {formatThaiDateOnly(selectedDate)}</div>
+              <div className="font-bold text-white">วันที่แสดงข้อมูล {formatThaiDateOnly(selectedDate)}</div>
               <div>อัปเดตล่าสุด: {lastUpdatedAt ? formatDate(lastUpdatedAt) : "กำลังตรวจสอบ"}</div>
             </div>
             <div className="h-12 border-l border-white/15"></div>
             <div className="font-bold text-white">{new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.</div>
           </div>
 
-          <div className={`ml-auto rounded-2xl border px-6 py-3 text-center shadow-sm ${eocStatus.isOpen ? "border-red-300 bg-red-600" : "border-emerald-300 bg-emerald-600"}`}>
+          <div className={`ml-auto rounded-2xl border px-6 py-3 text-center shadow-sm ${eocStatus.isOpen ? "border-emerald-300 bg-emerald-600" : "border-sky-300 bg-sky-700"}`}>
             <div className="text-xl font-black leading-none">{eocStatus.isOpen ? "เปิด EOC" : "เฝ้าระวัง"}</div>
             <div className="mt-1 text-xs text-white/85">{latestActiveEOC ? getEOCTypeName(latestActiveEOC.eoc_type) : "สถานะศูนย์"}</div>
           </div>
@@ -1205,7 +1211,7 @@ function PublicOperationalDashboard({
       <div className="grid min-h-[calc(100vh-87px)] grid-cols-[98px_minmax(0,1fr)] max-lg:grid-cols-1">
         <OpsSidebar />
 
-        <main className="min-w-0 p-3">
+        <main className="min-w-0 p-3 pb-24 lg:pb-3">
           <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-red-600 px-4 py-2.5 text-white shadow-sm">
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-lg font-black">!</span>
@@ -1213,7 +1219,7 @@ function PublicOperationalDashboard({
                 ประกาศเตือนภัย: เฝ้าระวังน้ำท่วมฉับพลันและน้ำป่าไหลหลาก ในพื้นที่จังหวัดสตูล {dateRange ? `ช่วง ${dateRange}` : ""}
               </p>
             </div>
-            <Link href="/public/help" className="shrink-0 rounded-md bg-white px-4 py-1.5 text-xs font-black text-red-700 hover:bg-red-50">ดูรายละเอียด</Link>
+            <Link href="/public/announcements" className="shrink-0 rounded-md bg-white px-4 py-1.5 text-xs font-black text-red-700 hover:bg-red-50">ดูรายละเอียด</Link>
           </div>
 
           <section className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-3 2xl:grid-cols-6">
@@ -1249,7 +1255,6 @@ function PublicOperationalDashboard({
               setReportTypeFilter={setReportTypeFilter}
               mapSearchQuery={mapSearchQuery}
               setMapSearchQuery={setMapSearchQuery}
-              dailyBars={dailyBars}
               resetFilters={() => {
                 setSelectedDisasterType("flood");
                 setSelectedSessionId(null);
@@ -1306,6 +1311,7 @@ function PublicOperationalDashboard({
             />
           </section>
         </main>
+        <OpsMobileNav />
       </div>
 
       <PDPAConsent />
@@ -1317,9 +1323,9 @@ function OpsSidebar() {
   const items = [
     { href: "/", label: "หน้าหลัก", icon: "⌂", active: true },
     { href: "/public/disaster-map", label: "แผนที่", icon: "⌖" },
-    { href: "/public/help", label: "ประกาศ", icon: "⚑" },
-    { href: "/eoc/flood/shelters", label: "ศูนย์พักพิง", icon: "⌂" },
-    { href: "/eoc/vulnerable-groups", label: "กลุ่มเปราะบาง", icon: "♙" },
+    { href: "/public/announcements", label: "ประกาศ", icon: "⚑" },
+    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂" },
+    { href: "/public/agencies", label: "หน่วยงาน", icon: "⚕" },
     { href: "/public/help/citizen-guide", label: "คู่มือ", icon: "↓" },
     { href: "/login", label: "เจ้าหน้าที่", icon: "ⓘ" }
   ];
@@ -1341,6 +1347,31 @@ function OpsSidebar() {
         ข้อมูลสาธารณะ
       </div>
     </aside>
+  );
+}
+
+function OpsMobileNav() {
+  const items = [
+    { href: "/", label: "หน้าหลัก", icon: "⌂", active: true },
+    { href: "/public/disaster-map", label: "แผนที่", icon: "⌖" },
+    { href: "/public/help", label: "ประกาศ", icon: "⚑" },
+    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂" },
+    { href: "/public/agencies", label: "หน่วยงาน", icon: "☎" }
+  ];
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
+      {items.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`flex flex-col items-center gap-1 px-1 py-2 text-[11px] font-bold ${item.active ? "text-blue-700" : "text-slate-500"}`}
+        >
+          <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${item.active ? "bg-blue-50" : "bg-transparent"}`}>{item.icon}</span>
+          <span className="truncate">{item.label}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }
 
@@ -1391,7 +1422,6 @@ function OpsFilterPanel({
   setReportTypeFilter,
   mapSearchQuery,
   setMapSearchQuery,
-  dailyBars,
   resetFilters
 }) {
   return (
@@ -1456,17 +1486,7 @@ function OpsFilterPanel({
           </div>
         </FilterBlock>
 
-        <FilterBlock title="3. วันที่">
-          <div className="rounded-md border border-slate-200 px-3 py-2 font-semibold text-slate-700">{formatThaiDateOnly(selectedDate)}</div>
-          <EocDateSelector
-            dateOptions={dateOptions}
-            selectedDate={selectedDate}
-            onSelect={setSelectedMapDate}
-          />
-          <MiniCalendar selectedDate={selectedDate} />
-        </FilterBlock>
-
-        <FilterBlock title="4. อำเภอ">
+        <FilterBlock title="3. อำเภอ">
           <select
             value={districtFilter}
             onChange={(event) => setDistrictFilter(event.target.value)}
@@ -1479,63 +1499,66 @@ function OpsFilterPanel({
           </select>
         </FilterBlock>
 
-        <FilterBlock title="5. ระดับความรุนแรง">
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              ["all", "ทั้งหมด"],
-              ["critical", "รุนแรงมาก"],
-              ["high", "รุนแรง"],
-              ["medium", "ปานกลาง"],
-              ["low", "เฝ้าระวัง"]
-            ].map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setUrgencyFilter(key)}
-                className={`rounded-full px-3 py-1.5 text-xs font-bold ${urgencyFilter === key ? "bg-blue-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </FilterBlock>
+        <details className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <summary className="cursor-pointer text-xs font-black text-blue-800">ตัวกรองขั้นสูง</summary>
+          <div className="mt-3 space-y-4">
+            <FilterBlock title="วันที่แสดงข้อมูล">
+              <div className="rounded-md border border-slate-200 bg-white px-3 py-2 font-semibold text-slate-700">{formatThaiDateOnly(selectedDate)}</div>
+              <EocDateSelector
+                dateOptions={dateOptions}
+                selectedDate={selectedDate}
+                onSelect={setSelectedMapDate}
+              />
+              <MiniCalendar selectedDate={selectedDate} />
+            </FilterBlock>
 
-        <FilterBlock title="6. ค้นหาและข้อมูลย้อนหลัง">
-          <input
-            value={mapSearchQuery}
-            onChange={(event) => setMapSearchQuery(event.target.value)}
-            placeholder="ค้นหาพื้นที่/รายละเอียด"
-            className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-          />
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {[
-              ["all", "ทุกรายงาน"],
-              ["help_request", "ขอช่วยเหลือ"],
-              ["traffic_report", "เส้นทาง"]
-            ].map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setReportTypeFilter(key)}
-                className={`rounded-md px-2 py-1.5 text-xs font-bold ${reportTypeFilter === key ? "bg-blue-600 text-white" : "border border-slate-200 text-slate-600"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </FilterBlock>
-
-        <FilterBlock title="สถิติเหตุการณ์รายวัน">
-          <div className="flex h-28 items-end gap-2 border-b border-l border-slate-200 px-2">
-            {dailyBars.map((bar) => (
-              <div key={bar.label} className="flex flex-1 flex-col items-center gap-1">
-                <div className="text-[10px] font-bold text-slate-500">{bar.value}</div>
-                <div className="w-full rounded-t bg-blue-300" style={{ height: `${bar.height}%` }}></div>
-                <div className="text-[10px] text-slate-500">{bar.label}</div>
+            <FilterBlock title="ระดับความรุนแรง">
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  ["all", "ทั้งหมด"],
+                  ["critical", "รุนแรงมาก"],
+                  ["high", "รุนแรง"],
+                  ["medium", "ปานกลาง"],
+                  ["low", "เฝ้าระวัง"]
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setUrgencyFilter(key)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold ${urgencyFilter === key ? "bg-blue-700 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-            ))}
+            </FilterBlock>
+
+            <FilterBlock title="ค้นหาและข้อมูลย้อนหลัง">
+              <input
+                value={mapSearchQuery}
+                onChange={(event) => setMapSearchQuery(event.target.value)}
+                placeholder="ค้นหาพื้นที่/รายละเอียด"
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
+              />
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {[
+                  ["all", "ทุกรายงาน"],
+                  ["help_request", "ขอช่วยเหลือ"],
+                  ["traffic_report", "เส้นทาง"]
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setReportTypeFilter(key)}
+                    className={`rounded-md px-2 py-1.5 text-xs font-bold ${reportTypeFilter === key ? "bg-blue-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </FilterBlock>
           </div>
-        </FilterBlock>
+        </details>
       </div>
     </aside>
   );
@@ -1670,17 +1693,25 @@ function OpsTimeline({ rows, selectedDate }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={`${row.date}-${row.time}-${row.area}`} className="border-t border-slate-100">
-                <td className="px-3 py-2 font-semibold text-slate-700">{row.date}</td>
-                <td className="px-3 py-2 text-slate-600">{row.time}</td>
-                <td className="px-3 py-2 font-bold text-blue-700">{row.type}</td>
-                <td className="px-3 py-2 text-slate-700">{row.area}</td>
-                <td className="px-3 py-2 text-slate-600">{row.detail}</td>
-                <td className="px-3 py-2"><SeverityBadge level={row.severity} /></td>
-                <td className="px-3 py-2"><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{row.status}</span></td>
+            {rows.length === 0 ? (
+              <tr className="border-t border-slate-100">
+                <td colSpan={7} className="px-3 py-8 text-center text-sm font-semibold text-slate-500">
+                  ยังไม่มีรายงานที่ยืนยันแล้วในวันที่เลือก
+                </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((row) => (
+                <tr key={`${row.date}-${row.time}-${row.area}`} className="border-t border-slate-100">
+                  <td className="px-3 py-2 font-semibold text-slate-700">{row.date}</td>
+                  <td className="px-3 py-2 text-slate-600">{row.time}</td>
+                  <td className="px-3 py-2 font-bold text-blue-700">{row.type}</td>
+                  <td className="px-3 py-2 text-slate-700">{row.area}</td>
+                  <td className="px-3 py-2 text-slate-600">{row.detail}</td>
+                  <td className="px-3 py-2"><SeverityBadge level={row.severity} /></td>
+                  <td className="px-3 py-2"><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{row.status}</span></td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -1691,7 +1722,7 @@ function OpsTimeline({ rows, selectedDate }) {
 function OpsRightPanel({ announcements, quickActionItems, helpRequestCount, trafficReportCount, activeShelters, populationOverview }) {
   return (
     <aside className="space-y-3">
-      <Panel title="ประกาศล่าสุด" actionHref="/public/help">
+      <Panel title="ประกาศล่าสุด" actionHref="/public/announcements">
         <div className="space-y-2">
           {announcements.slice(0, 3).map((item) => (
             <div key={item.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
@@ -1722,23 +1753,16 @@ function OpsRightPanel({ announcements, quickActionItems, helpRequestCount, traf
       </Panel>
 
       <Panel title="ศูนย์พักพิง">
-        <div className="overflow-hidden rounded-lg border border-slate-100">
-          {[
-            ["ศูนย์พักพิงเทศบาลตำบลละงู", 500],
-            ["โรงเรียนละงูพิทยาคม", 800],
-            ["อบต.ควนโดน", 300],
-            ["โรงเรียนบ้านควนกาหลง", 600]
-          ].map(([name, capacity], index) => (
-            <div key={name} className="grid grid-cols-[1fr_72px_56px] gap-2 border-b border-slate-100 px-3 py-2 text-xs last:border-b-0">
-              <span className="font-semibold text-slate-700">{index + 1}. {name}</span>
-              <span className="text-right text-slate-600">{formatNumber(capacity)}</span>
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-center font-bold text-emerald-700">เปิด</span>
-            </div>
-          ))}
+        <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+          <div className="text-3xl font-black text-violet-700">{formatNumber(activeShelters || 0)}</div>
+          <div className="mt-1 text-sm font-bold text-slate-700">ศูนย์พักพิงที่พร้อมแสดงในระบบ</div>
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            ตรวจสอบรายชื่อ ความจุ เบอร์ติดต่อ และตำแหน่งศูนย์พักพิงล่าสุดได้จากหน้าศูนย์พักพิง
+          </p>
         </div>
-        <div className="mt-2 text-xs font-bold text-slate-600">
-          รวมรองรับได้ประมาณ {formatNumber(activeShelters ? activeShelters * 35 : 0)} คน
-        </div>
+        <Link href="/public/shelters" className="mt-3 block rounded-md bg-violet-600 px-3 py-2 text-center text-xs font-black text-white hover:bg-violet-700">
+          เปิดหน้าศูนย์พักพิง
+        </Link>
       </Panel>
 
       <Panel title="ข้อมูลสนับสนุน EOC">
@@ -1772,10 +1796,10 @@ function EmergencyNumber({ number, label, tone }) {
     green: "border-emerald-200 bg-emerald-50 text-emerald-700"
   };
   return (
-    <div className={`rounded-lg border p-3 text-center ${tones[tone]}`}>
+    <a href={`tel:${number}`} className={`block rounded-lg border p-3 text-center transition hover:shadow-sm ${tones[tone]}`}>
       <div className="text-2xl font-black leading-none">{number}</div>
       <div className="mt-1 text-[11px] font-semibold leading-4">{label}</div>
-    </div>
+    </a>
   );
 }
 
@@ -1905,15 +1929,7 @@ function addDays(date, amount) {
 }
 
 function buildIncidentTimeline(incidents, selectedDate) {
-  const fallback = [
-    { date: selectedDate, time: "09:45", type: "น้ำท่วม", area: "อ.ละงู ต.ละงู", detail: "น้ำท่วมขังถนนและพื้นที่ลุ่มต่ำ", severity: "high", status: "กำลังเฝ้าระวัง" },
-    { date: selectedDate, time: "09:10", type: "ถนนปิด", area: "อ.ท่าแพ ทางหลวง 416", detail: "น้ำท่วมผิวจราจร รถเล็กผ่านลำบาก", severity: "critical", status: "ประสานงาน" },
-    { date: selectedDate, time: "08:30", type: "วาตภัย", area: "อ.ควนกาหลง", detail: "ต้นไม้ล้มทับสายไฟฟ้า", severity: "medium", status: "กำลังดำเนินการ" },
-    { date: selectedDate, time: "07:50", type: "ศูนย์พักพิง", area: "อ.ละงู", detail: "เปิดศูนย์พักพิงเพิ่มเติม", severity: "low", status: "เปิดให้บริการ" },
-    { date: selectedDate, time: "07:20", type: "โรงพยาบาล", area: "อ.เมืองสตูล", detail: "หน่วยบริการพร้อมรับส่งต่อ", severity: "low", status: "พร้อมบริการ" }
-  ];
-
-  const mapped = incidents.slice(0, 5).map((incident) => ({
+  return incidents.slice(0, 5).map((incident) => ({
     date: formatThaiDateOnly((incident.occurred_at || incident.reported_at || selectedDate).slice?.(0, 10) || selectedDate),
     time: new Date(incident.occurred_at || incident.reported_at || `${selectedDate}T08:00:00`).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
     type: incident.report_type === "traffic_report" ? "เส้นทางสัญจร" : incident.disaster_type === "disease" ? "โรคระบาด" : "น้ำท่วม",
@@ -1922,26 +1938,6 @@ function buildIncidentTimeline(incidents, selectedDate) {
     severity: incident.urgency || "low",
     status: incident.status === "resolved" ? "แก้ไขแล้ว" : incident.status === "verified" ? "ยืนยันแล้ว" : "รอตรวจสอบ"
   }));
-
-  return mapped.length ? mapped : fallback.map((row) => ({ ...row, date: formatThaiDateOnly(row.date) }));
-}
-
-function buildDailyBars(dateOptions, selectedDate) {
-  const selectedIndex = Math.max(0, dateOptions.findIndex((item) => item.date === selectedDate));
-  const windowStart = Math.max(0, selectedIndex - 3);
-  const visibleDates = dateOptions.slice(windowStart, windowStart + 7);
-  const fallbackDates = Array.from({ length: 7 }, (_, index) => ({
-    date: addDays(parseDateKey(selectedDate) || new Date(), index - 3),
-    dayNumber: index + 1
-  }));
-  const source = visibleDates.length ? visibleDates : fallbackDates;
-
-  return source.map((item, index) => {
-    const date = item.date instanceof Date ? item.date : parseDateKey(item.date);
-    const day = date ? date.toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : item.shortDate || "-";
-    const value = [19, 23, 31, 27, 24, 20, 28][index];
-    return { label: day, value, height: Math.max(18, Math.round((value / 31) * 100)) };
-  });
 }
 
 function HomeSituationDashboard({
@@ -2246,7 +2242,7 @@ function EOCOverviewCard({ item, getEOCTypeName, getEOCTypeIcon, legacy }) {
 
 function getOverviewStatus(item) {
   if (item.is_active) {
-    return { label: "เปิด EOC", className: "bg-red-100 text-red-700" };
+    return { label: "เปิด EOC", className: "bg-emerald-100 text-emerald-700" };
   }
   if (item.session_status === "closed") {
     return { label: "ปิดแล้ว", className: "bg-slate-100 text-slate-600" };

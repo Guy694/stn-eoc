@@ -9,6 +9,8 @@ const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { 
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
 
+const SHELTER_ICON_SRC = '/stn-eoc/img/shelter.png';
+
 export default function PublicIncidentMap({
     disasterType = 'flood',
     sessionId,
@@ -25,6 +27,8 @@ export default function PublicIncidentMap({
     onDataChange
 }) {
     const [incidents, setIncidents] = useState([]);
+    const [shelters, setShelters] = useState([]);
+    const [healthFacilities, setHealthFacilities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [customIcon, setCustomIcon] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -35,7 +39,11 @@ export default function PublicIncidentMap({
         district: true,
         tambon: false,
         village: false,
-        labels: true
+        labels: true,
+        incidents: true,
+        traffic: true,
+        shelters: false,
+        hospitals: false
     });
     const activeLayers = layers || internalLayers;
     const setLayer = (key, value) => {
@@ -47,6 +55,10 @@ export default function PublicIncidentMap({
     const showTambonLayer = activeLayers.tambon;
     const showVillageLayer = activeLayers.village;
     const showLabels = activeLayers.labels;
+    const showIncidentLayer = activeLayers.incidents !== false;
+    const showTrafficLayer = activeLayers.traffic !== false;
+    const showShelterLayer = Boolean(activeLayers.shelters);
+    const showHospitalLayer = Boolean(activeLayers.hospitals);
 
     // Polygon data
     const [districtPolygons, setDistrictPolygons] = useState([]);
@@ -200,6 +212,39 @@ export default function PublicIncidentMap({
 
     useEffect(() => { fetchIncidents(); }, [fetchIncidents]);
 
+    const fetchShelters = useCallback(async () => {
+        try {
+            const params = new URLSearchParams();
+            if (disasterType) params.append('eoc_type', disasterType === 'accident' ? 'flood' : disasterType);
+            if (sessionId) params.append('session_id', sessionId);
+            if (!sessionId) params.append('include_all', '1');
+
+            const response = await fetch(`/stn-eoc/api/public/shelter-centers?${params}`);
+            const data = await response.json();
+            if (data.success) setShelters(data.data || []);
+        } catch (error) {
+            console.error('Error fetching shelter layer:', error);
+        }
+    }, [disasterType, sessionId]);
+
+    const fetchHealthFacilities = useCallback(async () => {
+        try {
+            const response = await fetch('/stn-eoc/api/common/health-facilities');
+            const data = await response.json();
+            if (data.success) setHealthFacilities(data.data || []);
+        } catch (error) {
+            console.error('Error fetching hospital layer:', error);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (showShelterLayer && shelters.length === 0) fetchShelters();
+    }, [fetchShelters, shelters.length, showShelterLayer]);
+
+    useEffect(() => {
+        if (showHospitalLayer && healthFacilities.length === 0) fetchHealthFacilities();
+    }, [fetchHealthFacilities, healthFacilities.length, showHospitalLayer]);
+
     // Fetch polygons based on layer toggles
     useEffect(() => {
         if (showDistrictLayer && districtPolygons.length === 0) fetchPolygons('district');
@@ -224,6 +269,59 @@ export default function PublicIncidentMap({
     const getUrgencyColor = (urgency) => ({ low: 'text-blue-600', medium: 'text-yellow-600', high: 'text-orange-600', critical: 'text-red-600' }[urgency] || 'text-gray-600');
     const getReportTypeLabel = (reportType) => ({ help_request: 'แจ้งความช่วยเหลือ', traffic_report: 'แจ้งเส้นทางการจราจร' }[reportType] || reportType);
     const getReportTypeIcon = (reportType) => ({ help_request: '🆘', traffic_report: '🚧' }[reportType] || '📍');
+
+    const createShelterIcon = () => {
+        if (typeof window === 'undefined') return null;
+        const L = require('leaflet');
+        return L.divIcon({
+            className: 'public-shelter-icon',
+            html: `
+                <div style="
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    border: 3px solid #7C3AED;
+                    background: #8B5CF6;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.32);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <img src="${SHELTER_ICON_SRC}" alt="" style="width: 23px; height: 23px; object-fit: contain; display: block;" />
+                </div>
+            `,
+            iconSize: [38, 38],
+            iconAnchor: [19, 19],
+            popupAnchor: [0, -19]
+        });
+    };
+
+    const createHospitalIcon = () => {
+        if (typeof window === 'undefined') return null;
+        const L = require('leaflet');
+        return L.divIcon({
+            className: 'public-hospital-icon',
+            html: `
+                <div style="
+                    width: 34px;
+                    height: 34px;
+                    border-radius: 50%;
+                    border: 3px solid #047857;
+                    background: #059669;
+                    color: white;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.28);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 22px;
+                    font-weight: 900;
+                ">+</div>
+            `,
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+            popupAnchor: [0, -17]
+        });
+    };
 
     // แปลง photo_path ให้มี basePath
     const getPhotoUrl = (photoPath) => {
@@ -287,6 +385,8 @@ export default function PublicIncidentMap({
     const filteredIncidents = incidents.filter((incident) => {
         if (urgencyFilter !== 'all' && incident.urgency !== urgencyFilter) return false;
         if (reportTypeFilter !== 'all' && incident.report_type !== reportTypeFilter) return false;
+        if (incident.report_type === 'traffic_report' && !showTrafficLayer) return false;
+        if ((incident.report_type || 'help_request') !== 'traffic_report' && !showIncidentLayer) return false;
         if (districtFilter !== 'all' && incident.district !== districtFilter) return false;
         const normalizedSearch = searchQuery.trim().toLowerCase();
         if (normalizedSearch) {
@@ -389,6 +489,22 @@ export default function PublicIncidentMap({
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-900 cursor-pointer">
                                     <input type="checkbox" checked={showLabels} onChange={(e) => setLayer('labels', e.target.checked)} className="w-4 h-4 accent-teal-600" />
                                     <span>🏷️ แสดงชื่อ</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-900 cursor-pointer">
+                                    <input type="checkbox" checked={showIncidentLayer} onChange={(e) => setLayer('incidents', e.target.checked)} className="w-4 h-4 accent-orange-600" />
+                                    <span>⚠️ เหตุการณ์</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 cursor-pointer">
+                                    <input type="checkbox" checked={showTrafficLayer} onChange={(e) => setLayer('traffic', e.target.checked)} className="w-4 h-4 accent-red-600" />
+                                    <span>🚧 เส้นทาง</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900 cursor-pointer">
+                                    <input type="checkbox" checked={showShelterLayer} onChange={(e) => setLayer('shelters', e.target.checked)} className="w-4 h-4 accent-violet-600" />
+                                    <span>ศูนย์พักพิง</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 cursor-pointer">
+                                    <input type="checkbox" checked={showHospitalLayer} onChange={(e) => setLayer('hospitals', e.target.checked)} className="w-4 h-4 accent-emerald-600" />
+                                    <span>โรงพยาบาล</span>
                                 </label>
                             </div>
                         </div>
@@ -521,6 +637,44 @@ export default function PublicIncidentMap({
                                 </Popup>
                             </Marker>
                         ))}
+
+                        {/* Shelter Markers */}
+                        {showShelterLayer && shelters.map((shelter) => {
+                            const lat = Number.parseFloat(shelter.lat);
+                            const lon = Number.parseFloat(shelter.lon);
+                            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                            return (
+                                <Marker key={`shelter-${shelter.id}`} position={[lat, lon]} icon={createShelterIcon()}>
+                                    <Popup maxWidth={260}>
+                                        <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
+                                            <h4 className="font-bold text-gray-800">{shelter.sheltername}</h4>
+                                            <p className="mt-1 text-sm text-gray-600">ต.{shelter.tambon || '-'} อ.{shelter.district_name || '-'}</p>
+                                            <p className="mt-1 text-sm"><strong>ความจุ:</strong> {Number(shelter.shelter_capacity || 0).toLocaleString('th-TH')} คน</p>
+                                            {shelter.contact_phone && <p className="text-sm"><strong>โทร:</strong> {shelter.contact_phone}</p>}
+                                        </div>
+                                    </Popup>
+                                </Marker>
+                            );
+                        })}
+
+                        {/* Hospital Markers */}
+                        {showHospitalLayer && healthFacilities.map((facility) => {
+                            const lat = Number.parseFloat(facility.lat);
+                            const lon = Number.parseFloat(facility.lon);
+                            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                            return (
+                                <Marker key={`hospital-${facility.id}`} position={[lat, lon]} icon={createHospitalIcon()}>
+                                    <Popup maxWidth={240}>
+                                        <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
+                                            <h4 className="font-bold text-gray-800">{facility.name}</h4>
+                                            <p className="mt-1 text-sm text-gray-600">อ.{facility.district || facility.district_name || '-'}</p>
+                                            <p className="mt-1 text-sm"><strong>ประเภท:</strong> {facility.typecode || 'หน่วยบริการสุขภาพ'}</p>
+                                            {facility.risk_level && <p className="text-sm"><strong>ระดับ:</strong> {facility.risk_level}</p>}
+                                        </div>
+                                    </Popup>
+                                </Marker>
+                            );
+                        })}
                     </MapContainer>
                 </div>
 

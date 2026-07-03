@@ -16,7 +16,17 @@ const EOC_TYPES = [
     { value: 'disease', label: '🦠 โรคระบาด', color: 'red', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png' }
 ];
 
-export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
+const SHELTER_ICON_SRC = '/stn-eoc/img/shelter.png';
+
+export default function ShelterCenterMap({
+    eocType = null,
+    sessionId = null,
+    apiPath = '/stn-eoc/api/eoc/shelter-centers',
+    includeAll = false,
+    embedded = false,
+    heightClass = 'h-[600px]',
+    showLayerControls = true
+}) {
     const [shelters, setShelters] = useState([]);
     const [loading, setLoading] = useState(true);
     const [customIcons, setCustomIcons] = useState(null);
@@ -50,17 +60,17 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
             const L = require('leaflet');
             const icons = {};
 
-            // สร้าง icon สำหรับแต่ละประเภท EOC โดยใช้รูปบ้าน/ศูนย์พักพิง
+            // สร้าง icon สำหรับแต่ละประเภท EOC โดยใช้รูปศูนย์พักพิง
             const shelterIconColors = {
-                'flood': { bg: '#3B82F6', border: '#1D4ED8', emoji: '🏠' },      // น้ำเงิน
-                'drought': { bg: '#EAB308', border: '#CA8A04', emoji: '🏠' },    // เหลือง
-                'tsunami': { bg: '#8B5CF6', border: '#7C3AED', emoji: '🏠' },    // ม่วง
-                'earthquake': { bg: '#F97316', border: '#EA580C', emoji: '🏠' }, // ส้ม
-                'disease': { bg: '#EF4444', border: '#DC2626', emoji: '🏠' }     // แดง
+                'flood': { bg: '#3B82F6', border: '#1D4ED8' },      // น้ำเงิน
+                'drought': { bg: '#EAB308', border: '#CA8A04' },    // เหลือง
+                'tsunami': { bg: '#8B5CF6', border: '#7C3AED' },    // ม่วง
+                'earthquake': { bg: '#F97316', border: '#EA580C' }, // ส้ม
+                'disease': { bg: '#EF4444', border: '#DC2626' }     // แดง
             };
 
             eocTypes.forEach(type => {
-                const colors = shelterIconColors[type.value] || { bg: '#6B7280', border: '#4B5563', emoji: '🏠' };
+                const colors = shelterIconColors[type.value] || { bg: '#6B7280', border: '#4B5563' };
                 icons[type.value] = L.divIcon({
                     className: 'shelter-custom-icon',
                     html: `
@@ -77,7 +87,16 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
                             cursor: pointer;
                         ">
-                            ${colors.emoji}
+                            <img
+                                src="${SHELTER_ICON_SRC}"
+                                alt=""
+                                style="
+                                    width: 24px;
+                                    height: 24px;
+                                    object-fit: contain;
+                                    display: block;
+                                "
+                            />
                         </div>
                     `,
                     iconSize: [40, 40],
@@ -108,8 +127,9 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
             const params = new URLSearchParams();
             if (filterType) params.append('eoc_type', filterType);
             if (sessionId) params.append('session_id', sessionId);
+            if (includeAll) params.append('include_all', '1');
 
-            const response = await fetch(`/stn-eoc/api/eoc/shelter-centers?${params}`);
+            const response = await fetch(`${apiPath}?${params}`);
             const data = await response.json();
             if (data.success) setShelters(data.data);
         } catch (error) {
@@ -117,7 +137,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
         } finally {
             setLoading(false);
         }
-    }, [filterType, sessionId]);
+    }, [apiPath, filterType, includeAll, sessionId]);
 
     // Fetch polygons
     useEffect(() => {
@@ -198,22 +218,24 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
     }
 
     return (
-        <div className="text-gray-800 bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
-                <h3 className="text-2xl font-bold text-gray-800">🏥 ศูนย์พักพิงชั่วคราว</h3>
-                <p className="text-lg mt-1">
-                    แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
-                </p>
-                {sheltersWithoutCoordinates > 0 && (
-                    <p className="text-sm text-amber-700 mt-1">
-                        มี {sheltersWithoutCoordinates} แห่งที่ยังไม่มีพิกัด จึงยังไม่แสดงบนแผนที่
+        <div className={`text-gray-800 overflow-hidden ${embedded ? 'bg-transparent' : 'bg-white rounded-lg shadow-md'}`}>
+            {!embedded && (
+                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
+                    <h3 className="text-2xl font-bold text-gray-800">🏥 ศูนย์พักพิงชั่วคราว</h3>
+                    <p className="text-lg mt-1">
+                        แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
                     </p>
-                )}
-            </div>
+                    {sheltersWithoutCoordinates > 0 && (
+                        <p className="text-sm text-amber-700 mt-1">
+                            มี {sheltersWithoutCoordinates} แห่งที่ยังไม่มีพิกัด จึงยังไม่แสดงบนแผนที่
+                        </p>
+                    )}
+                </div>
+            )}
 
-            <div className="p-4 bg-gradient-to-br from-green-50 to-blue-50">
+            <div className={embedded ? "" : "p-4 bg-gradient-to-br from-green-50 to-blue-50"}>
                 {/* Filter Controls */}
-                {!eocType && (
+                {!embedded && !eocType && (
                     <div className="mb-4 bg-white p-4 rounded-lg shadow">
                         <div className="flex flex-wrap items-center gap-4">
                             <label className="text-sm font-medium">กรองตามประเภท EOC:</label>
@@ -228,7 +250,8 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                 )}
 
                 {/* Layer Controls */}
-                <div className="mb-4 bg-white p-4 rounded-lg shadow">
+                {showLayerControls && (
+                <div className={`${embedded ? 'mb-3 rounded-lg border border-slate-100 bg-white p-3' : 'mb-4 bg-white p-4 rounded-lg shadow'}`}>
                     <label className="text-sm font-medium block mb-3">🗺️ แสดง Layer พื้นที่:</label>
                     <div className="flex flex-wrap gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -245,6 +268,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                         </label>
                     </div>
                 </div>
+                )}
 
                 {/* District Legend */}
                 {showDistrictLayer && (
@@ -262,7 +286,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
                 )}
 
                 {/* Map */}
-                <div className="h-[600px] rounded-lg overflow-hidden border border-gray-200">
+                <div className={`${heightClass} rounded-lg overflow-hidden border border-gray-200`}>
                     <MapContainer center={[6.6238, 100.0673]} zoom={10} style={{ height: '100%', width: '100%' }}>
                         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -351,7 +375,7 @@ export default function ShelterCenterMap({ eocType = null, sessionId = null }) {
 
                 {shelters.length === 0 && (
                     <div className="mt-4 text-center text-gray-500 p-4 bg-white rounded-lg">
-                        <p>ไม่พบศูนย์พักพิงที่เปิดใช้งาน</p>
+                        <p>ไม่พบศูนย์พักพิงที่เปิดใช้งานในเงื่อนไขนี้</p>
                     </div>
                 )}
             </div>
