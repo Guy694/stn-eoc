@@ -39,6 +39,13 @@ export default function AIChatbot() {
         }
     }, [messages]);
 
+    // Allow other public UI controls to open the assistant directly.
+    useEffect(() => {
+        const handleOpen = () => setIsOpen(true);
+        window.addEventListener('eoc-assistant:open', handleOpen);
+        return () => window.removeEventListener('eoc-assistant:open', handleOpen);
+    }, []);
+
     const sendMessage = async (text = inputMessage) => {
         if (!text.trim() || isLoading) return;
 
@@ -133,7 +140,7 @@ export default function AIChatbot() {
             {/* Floating Bubble Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 z-50 group ${isOpen
+                className={`fixed bottom-24 right-6 lg:bottom-6 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 z-50 group ${isOpen
                     ? 'bg-red-600 hover:bg-red-700'
                     : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 hover:scale-110'
                     }`}
@@ -182,7 +189,7 @@ export default function AIChatbot() {
 
             {/* Chat Interface */}
             {isOpen && (
-                <div className="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200">
+                <div className="fixed bottom-40 right-6 lg:bottom-24 w-96 max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
                         <div className="flex items-center gap-3">

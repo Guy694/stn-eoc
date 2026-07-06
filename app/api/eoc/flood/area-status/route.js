@@ -12,6 +12,21 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+function parseGeoJsonValue(value) {
+    if (!value) return null;
+
+    if (Buffer.isBuffer(value)) {
+        const text = value.toString('utf8');
+        return text ? JSON.parse(text) : null;
+    }
+
+    if (typeof value === 'string') {
+        return JSON.parse(value);
+    }
+
+    return value;
+}
+
 function toDateKey(value) {
     if (!value) return null;
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
@@ -119,8 +134,8 @@ export async function GET(request) {
                 v.distname as district,
                 v.num_hh as total_households,
                 v.provname as province,
-                ST_X(ST_Centroid(ST_SRID(v.geom, 0))) as lng,
-ST_Y(ST_Centroid(ST_SRID(v.geom, 0))) as lat,
+                ST_X(ST_Centroid(v.geom)) as lng,
+                ST_Y(ST_Centroid(v.geom)) as lat,
                 ST_AsGeoJSON(v.geom) as geometry
             FROM flood_records f
             INNER JOIN satun_village_polygon v ON f.polygon_id = v.id
@@ -131,7 +146,7 @@ ST_Y(ST_Centroid(ST_SRID(v.geom, 0))) as lat,
         const processedData = floodData.map(item => ({
             ...item,
             water_level: parseFloat(item.water_level) || 0,
-            geometry: item.geometry ? (typeof item.geometry === 'string' ? JSON.parse(item.geometry) : item.geometry) : null
+            geometry: parseGeoJsonValue(item.geometry)
         }));
 
         // สถิติสรุป

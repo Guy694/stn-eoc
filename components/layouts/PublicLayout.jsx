@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AIChatbot from "@/components/AIChatbot";
 
 export default function PublicLayout({ children }) {
     return (
@@ -11,6 +12,7 @@ export default function PublicLayout({ children }) {
                 {children}
             </main>
             <Footer />
+            <AIChatbot />
         </div>
     );
 }

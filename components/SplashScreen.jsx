@@ -37,7 +37,7 @@ export default function SplashScreen({ onComplete }) {
                 <div className="relative mb-8">
                     <div className="w-32 h-32 md:w-40 md:h-40 mx-auto relative animate-float-soft">
                         <Image
-                            src="/img/logo.png"
+                            src="/stn-eoc/img/logo.png"
                             alt="EOC Logo"
                             fill
                             className="object-contain drop-shadow-2xl"

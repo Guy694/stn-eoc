@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
 
+function parseGeoJsonValue(value) {
+    if (!value) return null;
+
+    if (Buffer.isBuffer(value)) {
+        const text = value.toString('utf8');
+        return text ? JSON.parse(text) : null;
+    }
+
+    if (typeof value === 'string') {
+        return JSON.parse(value);
+    }
+
+    return value;
+}
+
 export async function GET() {
     try {
         // ดึงข้อมูล polygon จาก database
@@ -25,7 +40,7 @@ export async function GET() {
 
         // แปลง GeoJSON string เป็น object และดึง coordinates
         const polygons = results.map((row) => {
-            const geoJson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
+            const geoJson = parseGeoJsonValue(row.geojson);
 
             // แปลง coordinates จาก GeoJSON format
             let coordinates = [];

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import AIChatbot from "@/components/AIChatbot";
 
 function formatThaiDate() {
   try {
@@ -37,12 +38,19 @@ export default function PublicOpsScaffold({
   showPageHeader = true,
   mainClassName = ""
 }) {
+  const openAssistant = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("eoc-assistant:open"));
+    }
+  };
+
   const items = [
-    { href: "/", label: "หน้าหลัก", icon: "⌂", key: "home" },
+    { href: "/public", label: "หน้าหลัก", icon: "⌂", key: "home" },
     { href: "/public/disaster-map", label: "แผนที่", icon: "⌖", key: "map" },
     { href: "/public/announcements", label: "ประกาศ", icon: "⚑", key: "announce" },
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂", imageSrc: "/stn-eoc/img/shelter.png", key: "shelters" },
     { href: "/public/agencies", label: "หน่วยงาน", icon: "☎", key: "agencies" },
+    { href: "#", label: "EOC Assistant", icon: "🤖", key: "assistant", action: openAssistant },
     { href: "/public/help/citizen-guide", label: "คู่มือ", icon: "↓", key: "guide" },
     { href: "/login", label: "เจ้าหน้าที่", icon: "ⓘ", key: "staff" }
   ];
@@ -97,11 +105,27 @@ export default function PublicOpsScaffold({
         <aside className="flex flex-col items-center gap-2 bg-[#0b4c86] px-2 py-6 text-white max-lg:hidden">
           {items.map((item) => {
             const isActive = item.key === activeMenu;
+            const sharedClassName = `flex w-full flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-bold transition ${isActive ? "bg-white text-blue-800 shadow-md" : "text-blue-50 hover:bg-white/10"}`;
+
+            if (item.action) {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={item.action}
+                  className={sharedClassName}
+                >
+                  <span className="text-2xl leading-none">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex w-full flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-bold transition ${isActive ? "bg-white text-blue-800 shadow-md" : "text-blue-50 hover:bg-white/10"}`}
+                className={sharedClassName}
               >
                 {item.imageSrc ? (
                   <Image src={item.imageSrc} alt="" width={26} height={26} className="h-7 w-7 object-contain" />
@@ -128,9 +152,26 @@ export default function PublicOpsScaffold({
           {children}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
-          {items.slice(0, 5).map((item) => {
+        <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-6 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
+          {items.slice(0, 6).map((item) => {
             const isActive = item.key === activeMenu;
+
+            if (item.action) {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={item.action}
+                  className={`flex flex-col items-center gap-1 px-1 py-2 text-[11px] font-bold ${isActive ? "text-blue-700" : "text-slate-500"}`}
+                >
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${isActive ? "bg-blue-50" : "bg-transparent"}`}>
+                    {item.icon}
+                  </span>
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
@@ -150,6 +191,8 @@ export default function PublicOpsScaffold({
           })}
         </nav>
       </div>
+
+      <AIChatbot />
     </div>
   );
 }

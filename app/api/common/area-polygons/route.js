@@ -4,6 +4,21 @@ import path from 'path';
 import { query } from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
 
+function parseGeoJsonValue(value) {
+    if (!value) return null;
+
+    if (Buffer.isBuffer(value)) {
+        const text = value.toString('utf8');
+        return text ? JSON.parse(text) : null;
+    }
+
+    if (typeof value === 'string') {
+        return JSON.parse(value);
+    }
+
+    return value;
+}
+
 async function loadGeoJson(filename) {
     const filePath = path.join(process.cwd(), filename);
     const text = await readFile(filePath, 'utf8');
@@ -49,8 +64,8 @@ export async function GET(request) {
                     distname as district_name,
                     villcode as code,
                     ST_AsGeoJSON(geom) as geojson,
-                    ST_Y(ST_Centroid(ST_SRID(geom, 0))) as center_lat,
-                    ST_X(ST_Centroid(ST_SRID(geom, 0))) as center_lng
+                    ST_Y(ST_Centroid(geom)) as center_lat,
+                    ST_X(ST_Centroid(geom)) as center_lng
                 FROM satun_village_polygon
                 ORDER BY distname, subdistnam, villname
             `;
@@ -59,7 +74,7 @@ export async function GET(request) {
                 let geojson = null;
                 if (row.geojson) {
                     try {
-                        geojson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
+                        geojson = parseGeoJsonValue(row.geojson);
                     } catch (e) {
                         console.error('Error parsing village geojson:', e);
                     }
