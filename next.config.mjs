@@ -5,6 +5,16 @@ const nextConfig = {
   output: 'standalone',
   trailingSlash: true,
   reactCompiler: true,
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/stn-eoc/',
+        permanent: false,
+        basePath: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
