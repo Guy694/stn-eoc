@@ -45,7 +45,7 @@ export default function PublicOpsScaffold({
   };
 
   const items = [
-    { href: "/public", label: "หน้าหลัก", icon: "⌂", key: "home" },
+    { href: "/", label: "หน้าหลัก", icon: "⌂", key: "home" },
     { href: "/public/disaster-map", label: "แผนที่", icon: "⌖", key: "map" },
     { href: "/public/announcements", label: "ประกาศ", icon: "⚑", key: "announce" },
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂", imageSrc: "/stn-eoc/img/shelter.png", key: "shelters" },

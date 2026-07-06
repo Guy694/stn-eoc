@@ -4,6 +4,87 @@ import { query } from '@/lib/db';
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+const SENSITIVE_IDENTIFIER_PATTERNS = [
+    /pid/i,
+    /citizen/i,
+    /thaiid/i,
+    /id_card/i,
+    /passport/i,
+    /phone/i,
+    /mobile/i,
+    /tel/i,
+    /email/i,
+    /address/i,
+    /birth(date)?/i,
+    /first_name/i,
+    /last_name/i,
+    /given_name/i,
+    /family_name/i,
+    /fullname/i,
+    /name$/i,
+    /secret/i,
+    /password/i,
+    /token/i,
+    /cookie/i,
+    /session/i,
+    /hash/i,
+    /consent/i,
+    /lat/i,
+    /lon/i,
+    /latitude/i,
+    /longitude/i,
+    /exact_location/i
+];
+
+function isSensitiveIdentifier(value) {
+    if (!value) return false;
+    return SENSITIVE_IDENTIFIER_PATTERNS.some((pattern) => pattern.test(String(value)));
+}
+
+function filterSchemaForPdpa(rawSchema) {
+    const safeSchema = {};
+
+    for (const [tableName, tableDef] of Object.entries(rawSchema)) {
+        if (isSensitiveIdentifier(tableName)) continue;
+
+        const safeColumns = (tableDef.columns || []).filter((col) => {
+            return !isSensitiveIdentifier(col.name) && !isSensitiveIdentifier(col.comment);
+        });
+
+        if (safeColumns.length > 0) {
+            safeSchema[tableName] = {
+                comment: tableDef.comment || '',
+                columns: safeColumns
+            };
+        }
+    }
+
+    return safeSchema;
+}
+
+function containsSensitiveSql(sql) {
+    if (!sql) return false;
+    const lowered = String(sql).toLowerCase();
+    return SENSITIVE_IDENTIFIER_PATTERNS.some((pattern) => {
+        const source = pattern.source.replace(/^\^/, '').replace(/\$$/, '');
+        const simple = source.replace(/\\/g, '');
+        if (!simple || simple.includes('(') || simple.includes('[') || simple.includes('|')) return false;
+        const matcher = new RegExp(`\\b${simple}\\b`, 'i');
+        return matcher.test(lowered);
+    });
+}
+
+function redactSensitiveFields(rows) {
+    return rows.map((row) => {
+        const sanitized = {};
+        for (const [key, value] of Object.entries(row)) {
+            if (isSensitiveIdentifier(key)) continue;
+            sanitized[key] = value;
+        }
+        return sanitized;
+    });
+}
+
 /**
  * API Route: Chatbot Query
  * Processes user questions and returns AI-generated responses based on database data
@@ -102,6 +183,8 @@ export async function POST(request) {
             }, { status: 500 });
         }
 
+        const safeSchema = filterSchemaForPdpa(schema);
+
         // Step 2: Generate SQL query using Gemini
         // Using gemini-2.5-flash - fast and cost-efficient model available in 2026
         const model = genAI.getGenerativeModel({
@@ -114,8 +197,8 @@ export async function POST(request) {
 
         const sqlPrompt = `คุณเป็น SQL Expert สำหรับระบบ EOC (Satun Geo-EOC Intelligence Platform) จังหวัดสตูล
 
-DATABASE SCHEMA:
-${JSON.stringify(schema, null, 2)}
+DATABASE SCHEMA (PDPA SAFE VIEW):
+${JSON.stringify(safeSchema, null, 2)}
 
 RELATIONSHIPS:
 ${JSON.stringify(relationships, null, 2)}
@@ -136,6 +219,8 @@ RULES:
 - ถ้าคำถามไม่เกี่ยวกับข้อมูลในระบบ ให้ตอบ { "sql": null, "explanation": "คำถามนี้ไม่เกี่ยวข้องกับข้อมูลในระบบ EOC" }
 - ใช้ LIMIT เพื่อจำกัดผลลัพธ์ (ไม่เกิน 100 rows)
 - ตรวจสอบว่า table และ column ที่ใช้มีอยู่จริงใน schema
+- ห้ามใช้หรือเปิดเผยข้อมูลที่เข้าข่าย PDPA เช่น ชื่อบุคคล, เลขบัตร, เบอร์โทร, อีเมล, ที่อยู่, พิกัดระบุตัวบุคคล
+- ถ้าผู้ใช้ถามข้อมูลส่วนบุคคล ให้ตอบรวมเชิงสถิติเท่านั้น
 
 ตอบกลับเป็น JSON เท่านั้น:`;
 
@@ -177,6 +262,14 @@ RULES:
             }, { status: 400 });
         }
 
+        if (containsSensitiveSql(sqlData.sql)) {
+            return Response.json({
+                success: false,
+                error: 'PDPA restricted query',
+                message: 'คำขอนี้มีข้อมูลส่วนบุคคลตาม PDPA ระบบจึงไม่อนุญาต กรุณาถามเป็นข้อมูลสถิติภาพรวม'
+            }, { status: 403 });
+        }
+
         // Step 3: Execute SQL query
         let queryResults;
         try {
@@ -191,6 +284,8 @@ RULES:
             }, { status: 500 });
         }
 
+        const safeResults = redactSensitiveFields(queryResults);
+
         // Step 4: Generate natural language response using Gemini
         const answerPrompt = `คุณเป็นผู้ช่วย AI สำหรับระบบ EOC (Satun Geo-EOC Intelligence Platform) จังหวัดสตูล
 
@@ -199,7 +294,7 @@ USER QUESTION: ${message}
 SQL QUERY ที่ใช้: ${sqlData.sql}
 
 QUERY RESULTS:
-${JSON.stringify(queryResults, null, 2)}
+${JSON.stringify(safeResults, null, 2)}
 
 INSTRUCTIONS:
 1. วิเคราะห์ผลลัพธ์จาก database
@@ -218,8 +313,8 @@ INSTRUCTIONS:
             data: {
                 answer: answer.trim(),
                 sql: sqlData.sql,
-                results: queryResults,
-                resultCount: queryResults.length
+                results: safeResults,
+                resultCount: safeResults.length
             }
         });
 
@@ -229,7 +324,7 @@ INSTRUCTIONS:
             {
                 success: false,
                 error: 'Chatbot query failed',
-                message: 'เกิดข้อผิดพลาดในการประมวลผลคำถาม'
+                message: 'ไม่สามารถตอบคำถามได้ในขณะนี้ กรุณาลองใหม่'
             },
             { status: 500 }
         );
