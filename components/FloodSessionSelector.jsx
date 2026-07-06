@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import SessionTeamsList from './SessionTeamsList';
 
 export default function FloodSessionSelector({
@@ -13,6 +13,19 @@ export default function FloodSessionSelector({
     const [selectedSession, setSelectedSession] = useState(null);
     const [yearSummary, setYearSummary] = useState(null);
     const [loading, setLoading] = useState(false);
+    const selectedSessionIdRef = useRef(null);
+
+    const selectSession = useCallback((session, year) => {
+        if (!session) return;
+        if (selectedSessionIdRef.current === session.id) return;
+
+        selectedSessionIdRef.current = session.id;
+        setSelectedSession((current) => {
+            if (current?.id === session.id) return current;
+            return session;
+        });
+        onSessionChange?.(session, year);
+    }, [onSessionChange]);
 
     const fetchAvailableYears = useCallback(async () => {
         try {
@@ -46,11 +59,9 @@ export default function FloodSessionSelector({
                 // เลือก session แรก (active หรือล่าสุด) โดยอัตโนมัติ
                 const activeSessions = data.sessions?.filter(s => s.status === 'active') || [];
                 if (activeSessions.length > 0) {
-                    setSelectedSession(activeSessions[0]);
-                    onSessionChange?.(activeSessions[0], year);
+                    selectSession(activeSessions[0], year);
                 } else if (data.sessions?.length > 0) {
-                    setSelectedSession(data.sessions[0]);
-                    onSessionChange?.(data.sessions[0], year);
+                    selectSession(data.sessions[0], year);
                 }
             }
         } catch (error) {
@@ -58,7 +69,7 @@ export default function FloodSessionSelector({
         } finally {
             setLoading(false);
         }
-    }, [onSessionChange]);
+    }, [selectSession]);
 
     // โหลดรายการปีที่มีข้อมูล
     useEffect(() => {
@@ -73,8 +84,7 @@ export default function FloodSessionSelector({
     }, [fetchYearData, selectedYear]);
 
     const handleSessionChange = (session) => {
-        setSelectedSession(session);
-        onSessionChange?.(session, selectedYear);
+        selectSession(session, selectedYear);
     };
 
     const formatDate = (dateString) => {

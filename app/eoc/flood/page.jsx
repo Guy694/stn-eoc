@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
@@ -108,7 +108,7 @@ export default function FloodMapPage() {
     }, [activeSessionData]);
 
     // Handle session change
-    const handleSessionChange = async (session, year) => {
+    const handleSessionChange = useCallback(async (session, year) => {
         setSelectedSession(session);
         setSelectedYear(year);
 
@@ -133,7 +133,7 @@ export default function FloodMapPage() {
         } else {
             setSessionTeams([]);
         }
-    };
+    }, []);
 
     if (loading) {
         return (
@@ -151,15 +151,27 @@ export default function FloodMapPage() {
             <div className="container mx-auto p-6">
                 {/* Page Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
-                        <span className="text-4xl">💧</span>
-                        {mode === "realtime" ? "สถานการณ์น้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์น้ำท่วมรายวัน"}
-                    </h1>
-                    <p className="text-gray-600">
-                        {mode === "realtime"
-                            ? "ติดตามสถานการณ์น้ำท่วมแบบเรียลไทม์"
-                            : "ดูข้อมูลสรุปและประวัติการเกิดน้ำท่วมย้อนหลัง"}
-                    </p>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                                <span className="text-4xl">💧</span>
+                                {mode === "realtime" ? "สถานการณ์น้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์น้ำท่วมรายวัน"}
+                            </h1>
+                            <p className="text-gray-600">
+                                {mode === "realtime"
+                                    ? "ติดตามสถานการณ์น้ำท่วมแบบเรียลไทม์"
+                                    : "ดูข้อมูลสรุปและประวัติการเกิดน้ำท่วมย้อนหลัง"}
+                            </p>
+                        </div>
+                        {user && (
+                            <button
+                                onClick={() => router.push('/eoc/flood/records')}
+                                className="self-start rounded-lg bg-green-600 px-5 py-3 font-medium text-white transition-colors hover:bg-green-700"
+                            >
+                                💾 บันทึก/แก้ไขพื้นที่น้ำท่วม
+                            </button>
+                        )}
+                    </div>
                 </div>
 
 
@@ -287,14 +299,6 @@ export default function FloodMapPage() {
                         >
                             📅 โหมดข้อมูลย้อนหลัง
                         </button>
-                        {user && (
-                            <button
-                                onClick={() => router.push('/eoc/flood/records')}
-                                className="px-6 py-3 rounded-lg font-medium transition-all bg-green-600 text-white hover:bg-green-700"
-                            >
-                                💾 บันทึกพื้นที่น้ำท่วม
-                            </button>
-                        )}
                     </div>
                 )}
 
@@ -330,7 +334,10 @@ export default function FloodMapPage() {
                                 <p className="text-gray-600 mb-4">
                                     แสดงจุดที่มีการรายงานเหตุการณ์น้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
                                 </p>
-                                <PublicIncidentMap />
+                                <PublicIncidentMap
+                                    disasterType="flood"
+                                    sessionId={activeSessionData?.id || null}
+                                />
                             </div>
                         </div>
                     </>
@@ -469,7 +476,12 @@ export default function FloodMapPage() {
                                 <p className="text-gray-600 mb-4">
                                     แสดงจุดที่มีการรายงานเหตุการณ์น้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
                                 </p>
-                                <PublicIncidentMap />
+                                <PublicIncidentMap
+                                    disasterType="flood"
+                                    sessionId={selectedSession?.id || null}
+                                    startDate={selectedSession?.latest_flood_record_date || null}
+                                    endDate={selectedSession?.latest_flood_record_date || null}
+                                />
                             </div>
                         </div>
                     </>

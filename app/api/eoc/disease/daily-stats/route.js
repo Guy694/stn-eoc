@@ -8,37 +8,68 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
 
-        if (!sessionId) {
-            return NextResponse.json({
-                success: false,
-                message: 'กรุณาระบุ session_id'
-            }, { status: 400 });
-        }
-
-        // ดึงข้อมูล Session
-        const sessionData = await query(`
-            SELECT 
-                s.id,
-                s.session_number,
-                s.eoc_type,
-                s.status,
-                s.opened_at,
-                s.closed_at,
-                s.open_reason,
-                et.name_th as eoc_name
-            FROM eoc_sessions s
-            LEFT JOIN eoc_status et ON s.eoc_type = et.eoc_type
-            WHERE s.id = ?
-        `, [sessionId]);
+        // ดึงข้อมูล Session: ถ้าไม่ระบุ session_id ให้ใช้ session ล่าสุดที่มีรายงานโรค
+        const sessionData = sessionId
+            ? await query(`
+                SELECT 
+                    s.id,
+                    s.session_number,
+                    s.eoc_type,
+                    s.status,
+                    s.opened_at,
+                    s.closed_at,
+                    s.open_reason,
+                    et.name_th as eoc_name
+                FROM eoc_sessions s
+                LEFT JOIN eoc_status et ON s.eoc_type = et.eoc_type
+                WHERE s.id = ?
+            `, [sessionId])
+            : await query(`
+                SELECT 
+                    s.id,
+                    s.session_number,
+                    s.eoc_type,
+                    s.status,
+                    s.opened_at,
+                    s.closed_at,
+                    s.open_reason,
+                    et.name_th as eoc_name
+                FROM disease_reports dr
+                JOIN eoc_sessions s ON dr.session_id = s.id
+                LEFT JOIN eoc_status et ON s.eoc_type = et.eoc_type
+                GROUP BY
+                    s.id,
+                    s.session_number,
+                    s.eoc_type,
+                    s.status,
+                    s.opened_at,
+                    s.closed_at,
+                    s.open_reason,
+                    et.name_th
+                ORDER BY MAX(dr.report_date) DESC, s.opened_at DESC, s.id DESC
+                LIMIT 1
+            `);
 
         if (!sessionData || sessionData.length === 0) {
             return NextResponse.json({
-                success: false,
-                message: 'ไม่พบ Session นี้'
-            }, { status: 404 });
+                success: true,
+                session: null,
+                daily_data: [],
+                diseases: [],
+                summary: {
+                    total_patients: 0,
+                    total_reports: 0,
+                    diseases_count: 0,
+                    facilities_count: 0,
+                    date_range: { start: null, end: null, days: 0 }
+                },
+                disease_stats: [],
+                facility_stats: []
+            });
         }
 
         const session = sessionData[0];
+        const effectiveSessionId = session.id;
 
         // กำหนดช่วงวันที่
         const startDate = new Date(session.opened_at);
@@ -69,7 +100,7 @@ export async function GET(request) {
                 AND DATE(dr.report_date) BETWEEN ? AND ?
             GROUP BY DATE(dr.report_date), dr.disease_name
             ORDER BY DATE(dr.report_date) ASC, dr.disease_name ASC
-        `, [sessionId, startDateStr, endDateStr]);
+        `, [effectiveSessionId, startDateStr, endDateStr]);
 
         // จัดกลุ่มข้อมูลตามวันที่
         const groupedByDate = {};
@@ -135,7 +166,7 @@ export async function GET(request) {
             FROM disease_reports
             WHERE session_id = ?
                 AND DATE(report_date) BETWEEN ? AND ?
-        `, [sessionId, startDateStr, endDateStr]);
+        `, [effectiveSessionId, startDateStr, endDateStr]);
 
         // สถิติแยกตามโรค
         const diseaseStats = await query(`
@@ -151,7 +182,7 @@ export async function GET(request) {
                 AND DATE(report_date) BETWEEN ? AND ?
             GROUP BY disease_name
             ORDER BY SUM(patient_count) DESC
-        `, [sessionId, startDateStr, endDateStr]);
+        `, [effectiveSessionId, startDateStr, endDateStr]);
 
         // สถิติแยกตามหน่วยบริการ
         const facilityStats = await query(`
@@ -168,7 +199,7 @@ export async function GET(request) {
             GROUP BY dr.health_facility_id
             ORDER BY SUM(dr.patient_count) DESC
             LIMIT 10
-        `, [sessionId, startDateStr, endDateStr]);
+        `, [effectiveSessionId, startDateStr, endDateStr]);
 
         return NextResponse.json({
             success: true,

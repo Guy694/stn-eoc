@@ -88,6 +88,13 @@ export default function ReportIncidentPage() {
     // Map position
     const [markerPosition, setMarkerPosition] = useState(null);
     const defaultCenter = [6.6238, 100.0750]; // Satun coordinates
+    const isTrafficReport = formData.reportType === 'traffic_report';
+    const requiresWaterLevel = formData.reportType === 'help_request' && formData.disasterType === 'flood';
+    const detailTitle = isTrafficReport ? 'รายละเอียดเส้นทาง' : 'รายละเอียดเหตุการณ์';
+    const detailIcon = isTrafficReport ? '🚧' : '💧';
+    const descriptionPlaceholder = isTrafficReport
+        ? 'อธิบายสภาพเส้นทาง เช่น ถนนถูกน้ำท่วม รถเล็กผ่านไม่ได้ มีดินสไลด์ หรือควรใช้เส้นทางเลี่ยง'
+        : 'อธิบายสถานการณ์น้ำท่วม เช่น น้ำท่วมบริเวณถนนหน้าบ้าน สูงประมาณหัวเข่า ไม่สามารถสัญจรได้';
 
     // ฟังก์ชันขอตำแหน่ง GPS
     const requestGpsLocation = () => {
@@ -279,6 +286,14 @@ export default function ReportIncidentPage() {
             showWarning('กรุณาอธิบายเหตุการณ์');
             return;
         }
+        if (requiresWaterLevel && !formData.waterLevel) {
+            showWarning('กรุณาเลือกระดับน้ำ');
+            return;
+        }
+        if (isTrafficReport && !formData.travelStatus) {
+            showWarning('กรุณาเลือกสถานะการสัญจร');
+            return;
+        }
 
         setIsSubmitting(true);
         setSubmitError('');
@@ -449,7 +464,7 @@ export default function ReportIncidentPage() {
                         {/* Traffic Report */}
                         <button
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, reportType: 'traffic_report' }))}
+                            onClick={() => setFormData(prev => ({ ...prev, reportType: 'traffic_report', waterLevel: '' }))}
                             className={`p-4 md:p-6 rounded-xl border-2 transition-all text-left ${formData.reportType === 'traffic_report'
                                 ? 'border-orange-500 bg-orange-50 shadow-lg scale-105'
                                 : 'border-gray-300 bg-white hover:border-orange-300 hover:bg-orange-50'
@@ -481,7 +496,7 @@ export default function ReportIncidentPage() {
                                     EOC เทศกาลเปิดอยู่: {FESTIVAL_LABEL[festivalEOC.festival_type] || 'อุบัติเหตุช่วงเทศกาล'}
                                 </div>
                                 <Link
-                                    href="/stn-eoc/public/festival-accidents/report"
+                                    href="/public/festival-accidents/report"
                                     className="flex items-start gap-3 p-4 md:p-5 hover:bg-red-100 transition"
                                 >
                                     <div className="text-4xl md:text-5xl">🚗</div>
@@ -717,8 +732,8 @@ export default function ReportIncidentPage() {
                     {/* Incident Details Section */}
                     <div className="mb-6 md:mb-8">
                         <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center gap-2">
-                            <span className="text-2xl md:text-3xl">💧</span>
-                            รายละเอียดเหตุการณ์
+                            <span className="text-2xl md:text-3xl">{detailIcon}</span>
+                            {detailTitle}
                         </h2>
 
                         {/* Description */}
@@ -732,13 +747,14 @@ export default function ReportIncidentPage() {
                                 onChange={handleInputChange}
                                 rows="4"
                                 className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base resize-none"
-                                placeholder="อธิบายสถานการณ์น้ำท่วม เช่น น้ำท่วมบริเวณถนนหน้าบ้าน สูงประมาณหัวเข่า ไม่สามารถสัญจรได้"
+                                placeholder={descriptionPlaceholder}
                                 required
                             />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             {/* Water Level */}
+                            {requiresWaterLevel && (
                             <div>
                                 <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
                                     ระดับน้ำ (ซม.) <span className="text-red-500">*</span>
@@ -757,6 +773,7 @@ export default function ReportIncidentPage() {
                                     <option value="100+">สูงมาก (100+ ซม. / เหนืออก)</option>
                                 </select>
                             </div>
+                            )}
 
                             {/* Affected People */}
                             <div>
@@ -809,13 +826,14 @@ export default function ReportIncidentPage() {
                             {/* Travel Status */}
                             <div>
                                 <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    🚧 สถานะการสัญจร
+                                    🚧 สถานะการสัญจร {isTrafficReport && <span className="text-red-500">*</span>}
                                 </label>
                                 <select
                                     name="travelStatus"
                                     value={formData.travelStatus}
                                     onChange={handleInputChange}
                                     className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
+                                    required={isTrafficReport}
                                 >
                                     <option value="">-- เลือกสถานะ --</option>
                                     <option value="passable">✅ สัญจรได้ปกติ</option>

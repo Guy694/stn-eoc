@@ -41,16 +41,7 @@ export default function ShelterCenterMap({
     const [districtPolygons, setDistrictPolygons] = useState([]);
     const [tambonPolygons, setTambonPolygons] = useState([]);
 
-    // District colors
-    const districtColors = {
-        'เมืองสตูล': '#3B82F6',
-        'ควนโดน': '#10B981',
-        'ควนกาหลง': '#F59E0B',
-        'ท่าแพ': '#EF4444',
-        'ละงู': '#8B5CF6',
-        'ทุ่งหว้า': '#EC4899',
-        'มะนัง': '#06B6D4'
-    };
+    const districtBoundaryColor = '#111827';
 
     const eocTypes = EOC_TYPES;
 
@@ -273,14 +264,10 @@ export default function ShelterCenterMap({
                 {/* District Legend */}
                 {showDistrictLayer && (
                     <div className="mb-4 bg-white p-3 rounded-lg shadow">
-                        <label className="text-sm font-medium block mb-2">สีเขตอำเภอ:</label>
-                        <div className="flex flex-wrap gap-3 text-xs">
-                            {Object.entries(districtColors).map(([name, color]) => (
-                                <div key={name} className="flex items-center gap-1">
-                                    <div className="w-3 h-3 rounded" style={{ backgroundColor: color, opacity: 0.5 }}></div>
-                                    <span>{name}</span>
-                                </div>
-                            ))}
+                        <label className="text-sm font-medium block mb-2">ขอบเขตอำเภอ:</label>
+                        <div className="flex items-center gap-2 text-xs">
+                            <div className="h-1 w-8 rounded bg-gray-900"></div>
+                            <span>เส้นขอบเขตอำเภอสีดำ</span>
                         </div>
                     </div>
                 )}
@@ -293,13 +280,12 @@ export default function ShelterCenterMap({
                         {/* District Layer */}
                         {showDistrictLayer && districtPolygons.map((item, idx) => {
                             if (!item.geojson) return null;
-                            const color = districtColors[item.name] || '#6B7280';
                             const center = getPolygonCenter(item.geojson);
                             return (
                                 <div key={`district-${idx}`}>
                                     <GeoJSON
                                         data={item.geojson}
-                                        style={{ color: color, weight: 3, fillColor: color, fillOpacity: 0.2 }}
+                                        style={{ color: districtBoundaryColor, weight: 3, opacity: 0.95, fillOpacity: 0 }}
                                         onEachFeature={(feature, layer) => {
                                             layer.bindPopup(`<div class="text-center"><strong class="text-lg">อ.${item.name}</strong></div>`);
                                         }}

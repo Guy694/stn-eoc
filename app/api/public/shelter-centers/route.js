@@ -61,6 +61,24 @@ export async function GET(request) {
         let [rows] = await pool.query(query, params);
 
         if (sessionId && includeAll !== '1' && rows.length === 0) {
+            const [sessions] = await pool.query(
+                `SELECT
+                    es.status,
+                    COUNT(ssa.id) as activation_count
+                 FROM eoc_sessions es
+                 LEFT JOIN shelter_session_activations ssa ON ssa.session_id = es.id
+                 WHERE es.id = ?
+                 GROUP BY es.id, es.status
+                 LIMIT 1`,
+                [sessionId]
+            );
+            if (sessions[0]?.status === 'closed' || Number(sessions[0]?.activation_count || 0) > 0) {
+                return NextResponse.json({
+                    success: true,
+                    data: []
+                });
+            }
+
             let fallbackQuery = `
                 SELECT
                     sc.*,

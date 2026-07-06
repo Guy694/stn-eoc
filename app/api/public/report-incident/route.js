@@ -32,7 +32,7 @@ export async function POST(request) {
         const photo = formData.get('photo');
 
         // Validate required fields
-        if (!firstName || !lastName || !phone || !description || !waterLevel || !latitude || !longitude) {
+        if (!firstName || !lastName || !phone || !description || !latitude || !longitude) {
             return NextResponse.json({
                 success: false,
                 message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน'
@@ -44,6 +44,28 @@ export async function POST(request) {
             return NextResponse.json({
                 success: false,
                 message: 'ประเภทรายงานไม่ถูกต้อง'
+            }, { status: 400 });
+        }
+
+        const requiresWaterLevel = reportType === 'help_request' && disasterType === 'flood';
+        if (requiresWaterLevel && !waterLevel) {
+            return NextResponse.json({
+                success: false,
+                message: 'กรุณาระบุระดับน้ำ'
+            }, { status: 400 });
+        }
+
+        if (reportType === 'traffic_report' && !travelStatus) {
+            return NextResponse.json({
+                success: false,
+                message: 'กรุณาระบุสถานะการสัญจร'
+            }, { status: 400 });
+        }
+
+        if (travelStatus && !['passable', 'difficult', 'impassable'].includes(travelStatus)) {
+            return NextResponse.json({
+                success: false,
+                message: 'สถานะการสัญจรไม่ถูกต้อง'
             }, { status: 400 });
         }
 
@@ -112,7 +134,7 @@ export async function POST(request) {
                 subDistrict,
                 district,
                 description,
-                waterLevel,
+                requiresWaterLevel ? waterLevel : (waterLevel || ''),
                 affectedPeople,
                 urgency,
                 travelStatus,

@@ -59,9 +59,6 @@ export async function GET(request) {
         const [incidents] = await connection.execute(`
             SELECT 
                 id,
-                first_name,
-                last_name,
-                phone,
                 village,
                 sub_district,
                 district,

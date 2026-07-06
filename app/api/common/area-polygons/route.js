@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
+import { readFile } from 'fs/promises';
+import path from 'path';
 import { query } from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
+
+async function loadGeoJson(filename) {
+    const filePath = path.join(process.cwd(), filename);
+    const text = await readFile(filePath, 'utf8');
+    return JSON.parse(text);
+}
 
 // API สำหรับดึง polygon ตามระดับ (village, tambon, district)
 // ใช้ satun_village_polygon เป็น source หลัก และรวม polygon ด้วย ST_Union
@@ -13,122 +21,24 @@ export async function GET(request) {
         let data = [];
 
         if (level === 'district') {
-            // ดึง polygon ของทุกหมู่บ้านในแต่ละอำเภอ (MariaDB ไม่รองรับ ST_Union aggregate)
-            sql = `
-                SELECT 
-                    id,
-                    villname,
-                    distname as name,
-                    LEFT(villcode, 4) as code,
-                    ST_AsGeoJSON(geom) as geojson
-                FROM satun_village_polygon
-                ORDER BY distname, villname
-            `;
-            const results = await query(sql);
-
-            // จัดกลุ่ม polygon ตามอำเภอ
-            const districtMap = new Map();
-            results.forEach(row => {
-                const distName = row.name;
-                if (!districtMap.has(distName)) {
-                    districtMap.set(distName, {
-                        id: row.id,
-                        name: distName,
-                        code: row.code,
-                        type: 'district',
-                        polygons: []
-                    });
-                }
-                if (row.geojson) {
-                    try {
-                        const geojson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
-                        districtMap.get(distName).polygons.push(geojson);
-                    } catch (e) {
-                        console.error('Error parsing district geojson:', e);
-                    }
-                }
-            });
-
-            // แปลง Map เป็น array และสร้าง MultiPolygon/GeometryCollection
-            data = Array.from(districtMap.values()).map(dist => {
-                let geojson = null;
-                if (dist.polygons.length === 1) {
-                    geojson = dist.polygons[0];
-                } else if (dist.polygons.length > 1) {
-                    // รวมเป็น GeometryCollection
-                    geojson = {
-                        type: 'GeometryCollection',
-                        geometries: dist.polygons
-                    };
-                }
-                return {
-                    id: dist.id,
-                    name: dist.name,
-                    code: dist.code,
-                    type: 'district',
-                    geojson: geojson
-                };
-            });
+            const districts = await loadGeoJson('ampure.geojson');
+            data = (districts.features || []).map((feature, index) => ({
+                id: index + 1,
+                name: feature.properties?.dis_name || '',
+                code: feature.properties?.dis_code || '',
+                type: 'district',
+                geojson: feature.geometry
+            }));
         } else if (level === 'tambon') {
-            // ดึง polygon ของทุกหมู่บ้านในแต่ละตำบล (MariaDB ไม่รองรับ ST_Union aggregate)
-            sql = `
-                SELECT 
-                    id,
-                    villname,
-                    subdistnam as name,
-                    distname as district_name,
-                    LEFT(villcode, 6) as code,
-                    ST_AsGeoJSON(geom) as geojson
-                FROM satun_village_polygon
-                ORDER BY distname, subdistnam, villname
-            `;
-            const results = await query(sql);
-
-            // จัดกลุ่ม polygon ตามตำบล
-            const tambonMap = new Map();
-            results.forEach(row => {
-                const key = `${row.district_name}-${row.name}`;
-                if (!tambonMap.has(key)) {
-                    tambonMap.set(key, {
-                        id: row.id,
-                        name: row.name,
-                        district_name: row.district_name,
-                        code: row.code,
-                        type: 'tambon',
-                        polygons: []
-                    });
-                }
-                if (row.geojson) {
-                    try {
-                        const geojson = typeof row.geojson === 'string' ? JSON.parse(row.geojson) : row.geojson;
-                        tambonMap.get(key).polygons.push(geojson);
-                    } catch (e) {
-                        console.error('Error parsing tambon geojson:', e);
-                    }
-                }
-            });
-
-            // แปลง Map เป็น array และสร้าง MultiPolygon/GeometryCollection
-            data = Array.from(tambonMap.values()).map(tambon => {
-                let geojson = null;
-                if (tambon.polygons.length === 1) {
-                    geojson = tambon.polygons[0];
-                } else if (tambon.polygons.length > 1) {
-                    // รวมเป็น GeometryCollection
-                    geojson = {
-                        type: 'GeometryCollection',
-                        geometries: tambon.polygons
-                    };
-                }
-                return {
-                    id: tambon.id,
-                    name: tambon.name,
-                    district_name: tambon.district_name,
-                    code: tambon.code,
-                    type: 'tambon',
-                    geojson: geojson
-                };
-            });
+            const tambons = await loadGeoJson('tambonnn.geojson');
+            data = (tambons.features || []).map((feature, index) => ({
+                id: index + 1,
+                name: feature.properties?.tam_name || '',
+                district_name: feature.properties?.dis_name || '',
+                code: feature.properties?.tum_code || '',
+                type: 'tambon',
+                geojson: feature.geometry
+            }));
         } else {
             // ดึงจาก satun_village_polygon (default: village)
             sql = `

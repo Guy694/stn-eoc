@@ -12,6 +12,14 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+function toDateKey(value) {
+    if (!value) return null;
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 // GET - ดึงข้อมูล flood status พร้อม polygon data
 export async function GET(request) {
     let connection;
@@ -23,14 +31,22 @@ export async function GET(request) {
 
         connection = await pool.getConnection();
 
-        // ตรวจสอบ active session ก่อน
-        const [activeSessions] = await connection.execute(`
-            SELECT id, session_number, opened_at, closed_at, open_reason
+        let sessionQuery = `
+            SELECT id, session_number, opened_at, closed_at, open_reason, status
             FROM eoc_sessions 
-            WHERE LOWER(eoc_type) = 'flood' AND status = 'active'
-            ORDER BY opened_at DESC
-            LIMIT 1
-        `);
+            WHERE LOWER(eoc_type) = 'flood'
+        `;
+        const sessionParams = [];
+
+        if (sessionId) {
+            sessionQuery += ' AND id = ?';
+            sessionParams.push(sessionId);
+        } else {
+            sessionQuery += " AND status = 'active'";
+        }
+
+        sessionQuery += ' ORDER BY opened_at DESC LIMIT 1';
+        const [activeSessions] = await connection.execute(sessionQuery, sessionParams);
 
         if (activeSessions.length === 0) {
             // ลองตรวจสอบว่ามี session อะไรบ้างในระบบ (สำหรับ debug)
@@ -44,7 +60,7 @@ export async function GET(request) {
             return NextResponse.json({
                 success: false,
                 hasActiveSession: false,
-                message: 'ไม่มี EOC Session ที่เปิดอยู่',
+                message: sessionId ? 'ไม่พบ EOC Session น้ำท่วมที่เลือก' : 'ไม่มี EOC Session ที่เปิดอยู่',
                 debug: { allFloodSessions }
             });
         }
@@ -52,8 +68,7 @@ export async function GET(request) {
         const activeSession = activeSessions[0];
         const sessionYear = new Date(activeSession.opened_at).getFullYear();
 
-        // ใช้ session_id ที่ส่งมา หรือ active session id
-        const targetSessionId = sessionId || activeSession.id;
+        const targetSessionId = activeSession.id;
 
         // สร้าง WHERE clause - ใช้ session_id เป็นหลัก
         let whereClause = 'f.session_id = ?';
@@ -61,18 +76,23 @@ export async function GET(request) {
 
         // ถ้าไม่ระบุวันที่ ให้หาวันที่ล่าสุดที่มีข้อมูล
         let targetDate = date;
+        const [latestDate] = await connection.execute(`
+            SELECT
+                COALESCE(
+                    MAX(CASE WHEN flood_level <> 'ไม่มี' THEN flood_start_date END),
+                    MAX(flood_start_date)
+                ) as latest_date
+            FROM flood_records 
+            WHERE session_id = ?
+        `, [targetSessionId]);
+        const latestRecordDate = toDateKey(latestDate[0]?.latest_date);
         if (!targetDate) {
-            const [latestDate] = await connection.execute(`
-                SELECT MAX(flood_start_date) as latest_date 
-                FROM flood_records 
-                WHERE session_id = ?
-            `, [targetSessionId]);
             targetDate = latestDate[0]?.latest_date;
         }
 
         if (targetDate) {
             whereClause += ' AND DATE(f.flood_start_date) = ?';
-            params.push(targetDate);
+            params.push(toDateKey(targetDate));
         }
 
         // ดึงข้อมูล flood status จาก flood_records พร้อม village data
@@ -134,6 +154,8 @@ ST_Y(ST_Centroid(ST_SRID(v.geom, 0))) as lat,
             success: true,
             hasActiveSession: true,
             activeSession: activeSession,
+            targetDate: toDateKey(targetDate),
+            latestRecordDate,
             data: processedData,
             stats: stats[0] || {},
             count: processedData.length

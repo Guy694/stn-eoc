@@ -47,6 +47,14 @@ export async function GET(request) {
                     s.total_data_entries,
                     s.affected_areas,
                     s.summary,
+                    DATE_FORMAT(
+                        COALESCE(
+                            MAX(CASE WHEN fr.flood_level <> 'ไม่มี' THEN fr.flood_start_date END),
+                            MAX(fr.flood_start_date)
+                        ),
+                        '%Y-%m-%d'
+                    ) as latest_flood_record_date,
+                    COUNT(fr.id) as flood_record_count,
                     oo.title as opened_by_title,
                     oo.given_name as opened_by_given_name,
                     oo.family_name as opened_by_family_name,
@@ -56,8 +64,28 @@ export async function GET(request) {
                 FROM eoc_sessions s
                 LEFT JOIN officer oo ON s.opened_by = oo.id
                 LEFT JOIN officer co ON s.closed_by = co.id
+                LEFT JOIN flood_records fr ON fr.session_id = s.id
                 WHERE s.eoc_type = 'flood' 
                     AND YEAR(s.opened_at) = ?
+                GROUP BY
+                    s.id,
+                    s.session_number,
+                    s.opened_at,
+                    s.closed_at,
+                    s.open_reason,
+                    s.close_reason,
+                    s.duration_hours,
+                    s.status,
+                    s.total_activities,
+                    s.total_data_entries,
+                    s.affected_areas,
+                    s.summary,
+                    oo.title,
+                    oo.given_name,
+                    oo.family_name,
+                    co.title,
+                    co.given_name,
+                    co.family_name
                 ORDER BY s.opened_at DESC
             `, [year]);
 
@@ -82,7 +110,7 @@ export async function GET(request) {
                     COUNT(DISTINCT v.subdistnam) as total_tambons,
                     COUNT(DISTINCT v.distname) as total_districts
                 FROM flood_records f
-                INNER JOIN satun_village_polygon v ON f.id = v.id
+                INNER JOIN satun_village_polygon v ON f.polygon_id = v.id
                 INNER JOIN eoc_sessions s ON f.session_id = s.id
                 WHERE s.eoc_type = 'flood' AND YEAR(s.opened_at) = ?
             `, [year]);

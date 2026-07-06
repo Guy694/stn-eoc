@@ -31,6 +31,7 @@ export default function PublicOpsScaffold({
   subtitle,
   activeMenu,
   eocIsOpen,
+  eocStatus,
   eocLabel,
   children,
   showPageHeader = true,
@@ -45,6 +46,24 @@ export default function PublicOpsScaffold({
     { href: "/public/help/citizen-guide", label: "คู่มือ", icon: "↓", key: "guide" },
     { href: "/login", label: "เจ้าหน้าที่", icon: "ⓘ", key: "staff" }
   ];
+  const statusKey = eocStatus || (eocIsOpen ? "open" : "watch");
+  const statusMeta = {
+    open: {
+      title: "เปิด EOC",
+      className: "border-emerald-300 bg-emerald-600"
+    },
+    closed: {
+      title: "ปิด EOC",
+      className: "border-slate-300 bg-slate-700"
+    },
+    watch: {
+      title: "เฝ้าระวัง",
+      className: "border-sky-300 bg-sky-700"
+    }
+  }[statusKey] || {
+    title: eocIsOpen ? "เปิด EOC" : "เฝ้าระวัง",
+    className: eocIsOpen ? "border-emerald-300 bg-emerald-600" : "border-sky-300 bg-sky-700"
+  };
 
   return (
     <div className="min-h-screen bg-[#edf5fc] text-slate-900">
@@ -58,13 +77,7 @@ export default function PublicOpsScaffold({
             </div>
           </div>
 
-          <div className="hidden min-w-[340px] items-center gap-3 border-x border-white/15 px-6 xl:flex">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-2xl">◇</div>
-            <div className="text-sm leading-6 text-blue-50">
-              <div className="font-bold text-white">ข้อมูลนี้เป็นข้อมูลสาธารณะ</div>
-              <div>เพื่อการรับรู้ของประชาชน ดูได้อย่างปลอดภัย</div>
-            </div>
-          </div>
+        
 
           <div className="hidden items-center gap-5 text-sm text-blue-50 lg:flex">
             <div>
@@ -73,8 +86,8 @@ export default function PublicOpsScaffold({
             </div>
           </div>
 
-          <div className={`ml-auto rounded-2xl border px-6 py-3 text-center shadow-sm ${eocIsOpen ? "border-emerald-300 bg-emerald-600" : "border-sky-300 bg-sky-700"}`}>
-            <div className="text-xl font-black leading-none">{eocIsOpen ? "เปิด EOC" : "เฝ้าระวัง"}</div>
+          <div className={`ml-auto rounded-2xl border px-6 py-3 text-center shadow-sm ${statusMeta.className}`}>
+            <div className="text-xl font-black leading-none">{statusMeta.title}</div>
             <div className="mt-1 text-xs text-white/85">{eocLabel || "สถานะศูนย์"}</div>
           </div>
         </div>

@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import html2canvas from "html2canvas";
 import { showError, showSuccess } from "@/lib/sweetAlert";
+import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
+import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -38,10 +40,20 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     const [tambonBoundaries, setTambonBoundaries] = useState([]);
     const [showFacilities, setShowFacilities] = useState(true);
     const [showTambonBoundaries, setShowTambonBoundaries] = useState(false);
+    const [showWaterways, setShowWaterways] = useState(true);
+    const [showHillshade, setShowHillshade] = useState(false);
+    const [baseMap, setBaseMap] = useState('street');
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 12;
     const mapRef = useRef(null);
+    const selectedBaseLayer = getMapBaseLayer(baseMap);
+
+    const parseDateKey = (value) => {
+        if (!value || !/^\d{4}-\d{2}-\d{2}/.test(String(value))) return null;
+        const [year, month, day] = String(value).slice(0, 10).split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
 
     useEffect(() => {
         setCurrentPage(1);
@@ -78,7 +90,11 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         }
 
         setDates(dateList);
-        setSelectedDate(dateList[dateList.length - 1]); // เลือกวันล่าสุด
+        const latestRecordDate = parseDateKey(session.latest_flood_record_date);
+        const defaultDate = latestRecordDate && latestRecordDate >= start && latestRecordDate <= end
+            ? latestRecordDate
+            : dateList[dateList.length - 1];
+        setSelectedDate(defaultDate); // เลือกวันที่ล่าสุดที่มีข้อมูลก่อน ถ้าไม่มีค่อยใช้วันสุดท้าย
     }, [session]);
 
     useEffect(() => {
@@ -372,9 +388,21 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
 
             {/* Timeline Selector */}
             <div className="mb-6">
-                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <label className="font-semibold text-gray-700">เลือกวันที่:</label>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        <label className="font-semibold text-gray-700">เลือกวันที่:</label>
+                        <div className="flex gap-2 items-center">
+                            <label className="text-gray-700 flex items-center gap-2 text-sm">
+                                <span className="font-semibold">แผนที่พื้นหลัง</span>
+                                <select
+                                    value={baseMap}
+                                    onChange={(e) => setBaseMap(e.target.value)}
+                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-blue-400"
+                                >
+                                    {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
+                                        <option key={key} value={key}>{layer.label}</option>
+                                    ))}
+                                </select>
+                            </label>
 
                         <label className="text-gray-700 flex items-center gap-2 text-sm">
                             <input
@@ -384,6 +412,24 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                 className="w-4 h-4 text-blue-600 rounded"
                             />
                             แสดงสถานพยาบาล
+                        </label>
+                        <label className="text-gray-700 flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={showWaterways}
+                                onChange={(e) => setShowWaterways(e.target.checked)}
+                                className="w-4 h-4 text-sky-600 rounded"
+                            />
+                            เส้นทางน้ำ/คลอง
+                        </label>
+                        <label className="text-gray-700 flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={showHillshade}
+                                onChange={(e) => setShowHillshade(e.target.checked)}
+                                className="w-4 h-4 text-slate-600 rounded"
+                            />
+                            เงาภูมิประเทศ
                         </label>
                         <button
                             onClick={saveMapToServer}
@@ -468,9 +514,10 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                 style={{ height: '100%', width: '100%' }}
                             >
                                 <TileLayer
-                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                    url={selectedBaseLayer.url}
+                                    attribution={selectedBaseLayer.attribution}
                                 />
+                                <HydroTerrainOverlays showHillshade={showHillshade} showWaterways={showWaterways} />
 
                                 {/* วาด polygon ที่ไม่มีข้อมูลก่อน (สีใส ขอบสีดำ) */}
                                 {polygonGroups.nodata?.map((poly, idx) => (

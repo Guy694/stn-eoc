@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -7,10 +7,14 @@ import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 export default function FloodRecordsPage() {
     const [records, setRecords] = useState([]); // ข้อมูลที่แสดงในตาราง (กรองตามวันที่)
     const [allRecords, setAllRecords] = useState([]); // ข้อมูลทั้งหมด (สำหรับคำนวณสถานะ)
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
     const [activeSession, setActiveSession] = useState(null);
+    const [availableYears, setAvailableYears] = useState([]);
+    const [selectedYear, setSelectedYear] = useState('');
+    const [sessions, setSessions] = useState([]);
+    const [loadingSessions, setLoadingSessions] = useState(true);
     const [polygons, setPolygons] = useState([]);
     const [villageOptions, setVillageOptions] = useState([]);
     const [recordedTambons, setRecordedTambons] = useState(new Set());
@@ -49,6 +53,26 @@ export default function FloodRecordsPage() {
 
     const [tambonOptions, setTambonOptions] = useState([]);
 
+    const formatDateKey = (value) => {
+        if (!value) return '';
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    };
+
+    const selectedSessionStartDate = useMemo(
+        () => formatDateKey(activeSession?.opened_at),
+        [activeSession?.opened_at]
+    );
+    const selectedSessionEndDate = useMemo(() => {
+        const today = getTodayDate();
+        const closedDate = formatDateKey(activeSession?.closed_at);
+        if (!closedDate) return today;
+        return closedDate < today ? closedDate : today;
+    }, [activeSession?.closed_at]);
+    const selectedSessionStatusLabel = activeSession?.status === 'active' ? 'กำลังเปิดใช้งาน' : 'ปิดแล้ว';
+
 
     // ดึงข้อมูล polygon หมู่บ้าน
     useEffect(() => {
@@ -67,23 +91,74 @@ export default function FloodRecordsPage() {
         setSelectedDate(current => current || getTodayDate());
     }, []);
 
-    // ดึงข้อมูล Active EOC Session
+    // ดึงรายการ EOC Session ทั้งหมด เพื่อให้แก้ไขข้อมูลย้อนหลังได้แม้ปิด EOC แล้ว
     useEffect(() => {
-        const fetchActiveSession = async () => {
+        const fetchAvailableSessions = async () => {
             try {
-                const response = await fetch('/stn-eoc/api/eoc/flood/area-status');
+                setLoadingSessions(true);
+                const response = await fetch('/stn-eoc/api/eoc/flood/sessions-summary');
                 const result = await response.json();
-                if (result.hasActiveSession && result.activeSession) {
-                    setActiveSession(result.activeSession);
-                } else {
-                    console.error('No active session found!', result);
+                if (result.success && result.availableYears?.length > 0) {
+                    setAvailableYears(result.availableYears);
+                    const currentYear = new Date().getFullYear();
+                    const yearToLoad = result.availableYears.includes(currentYear)
+                        ? currentYear
+                        : result.availableYears[0];
+                    setSelectedYear(String(yearToLoad));
                 }
             } catch (error) {
-                console.error('Error fetching active session:', error);
+                console.error('Error fetching flood sessions:', error);
+                setAvailableYears([]);
+                setActiveSession(null);
+                setLoading(false);
+            } finally {
+                setLoadingSessions(false);
             }
         };
-        fetchActiveSession();
+        fetchAvailableSessions();
     }, []);
+
+    useEffect(() => {
+        if (!selectedYear) return;
+
+        const fetchSessionsByYear = async () => {
+            try {
+                setLoadingSessions(true);
+                const response = await fetch(`/stn-eoc/api/eoc/flood/sessions-summary?year=${selectedYear}`);
+                const result = await response.json();
+                if (result.success) {
+                    const rows = result.sessions || [];
+                    setSessions(rows);
+                    setActiveSession((current) => {
+                        if (current && rows.some((session) => session.id === current.id)) return current;
+                        return rows.find((session) => session.status === 'active') || rows[0] || null;
+                    });
+                } else {
+                    setSessions([]);
+                    setActiveSession(null);
+                }
+            } catch (error) {
+                console.error('Error fetching sessions by year:', error);
+                setSessions([]);
+                setActiveSession(null);
+            } finally {
+                setLoadingSessions(false);
+            }
+        };
+
+        fetchSessionsByYear();
+    }, [selectedYear]);
+
+    useEffect(() => {
+        if (!activeSession || !selectedSessionStartDate) return;
+
+        setSelectedDate((current) => {
+            if (!current) return selectedSessionEndDate || selectedSessionStartDate;
+            if (current < selectedSessionStartDate) return selectedSessionStartDate;
+            if (selectedSessionEndDate && current > selectedSessionEndDate) return selectedSessionEndDate;
+            return current;
+        });
+    }, [activeSession, selectedSessionEndDate, selectedSessionStartDate]);
 
     // อัพเดตตัวเลือกตำบลเมื่อเลือกอำเภอ
     useEffect(() => {
@@ -123,7 +198,12 @@ export default function FloodRecordsPage() {
     }, [records, activeSession]);
 
     const fetchRecords = useCallback(async () => {
-        if (!activeSession) return;
+        if (!activeSession) {
+            setRecords([]);
+            setAllRecords([]);
+            setLoading(false);
+            return;
+        }
 
         try {
             setLoading(true);
@@ -202,6 +282,8 @@ export default function FloodRecordsPage() {
 
                 let successCount = 0;
                 let skippedCount = 0;
+                let failedCount = 0;
+                const failedMessages = [];
 
                 for (const village of villagesToSave) {
                     // ตรวจสอบว่าหมู่บ้านนี้บันทึกไปแล้วในวันที่เลือกหรือยัง
@@ -243,15 +325,30 @@ export default function FloodRecordsPage() {
                         const data = await res.json();
                         if (data.success) {
                             successCount++;
+                        } else {
+                            failedCount++;
+                            if (failedMessages.length < 3) {
+                                failedMessages.push(`${village.villname}: ${data.error || 'บันทึกไม่สำเร็จ'}`);
+                            }
                         }
                     } catch (error) {
                         console.error('Error saving village:', village.villname, error);
+                        failedCount++;
+                        if (failedMessages.length < 3) {
+                            failedMessages.push(`${village.villname}: เกิดข้อผิดพลาดในการเชื่อมต่อ`);
+                        }
                     }
                 }
 
-                const message = skippedCount > 0
-                    ? `บันทึกข้อมูลสำเร็จ ${successCount} หมู่บ้าน (ข้าม ${skippedCount} หมู่บ้านที่บันทึกไปแล้ว)`
-                    : `บันทึกข้อมูลสำเร็จ ${successCount} จาก ${villagesToSave.length} หมู่บ้าน`;
+                if (successCount === 0 && failedCount > 0) {
+                    showError(`บันทึกข้อมูลไม่สำเร็จ ${failedCount} หมู่บ้าน\n${failedMessages.join('\n')}`);
+                    return;
+                }
+
+                const messageParts = [`บันทึกข้อมูลสำเร็จ ${successCount} จาก ${villagesToSave.length} หมู่บ้าน`];
+                if (skippedCount > 0) messageParts.push(`ข้าม ${skippedCount} หมู่บ้านที่บันทึกไปแล้ว`);
+                if (failedCount > 0) messageParts.push(`ไม่สำเร็จ ${failedCount} หมู่บ้าน`);
+                const message = messageParts.join(' • ');
 
                 // Reset filters ก่อน fetch เพื่อแสดงข้อมูลทั้งหมด
                 setFilters({ district: 'all', tambon: 'all', flood_level: 'all' });
@@ -260,7 +357,11 @@ export default function FloodRecordsPage() {
                 await new Promise(resolve => setTimeout(resolve, 800));
                 await fetchRecords();
 
-                showSuccess(message);
+                if (failedCount > 0) {
+                    showError(`${message}\n${failedMessages.join('\n')}`);
+                } else {
+                    showSuccess(message);
+                }
                 setShowModal(false);
                 setEditingRecord(null);
                 resetForm();
@@ -281,7 +382,7 @@ export default function FloodRecordsPage() {
 
                 if (existingRecord) {
                     const confirmOverwrite = confirm(
-                        `หมู่บ้าน ${formData.village} มีข้อมูลที่บันทึกไปแล้ววันนี้\n` +
+                        `หมู่บ้าน ${formData.village} มีข้อมูลที่บันทึกไว้ในวันที่ ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH')} แล้ว\n` +
                         `ต้องการบันทึกทับข้อมูลเดิมหรือไม่?`
                     );
                     if (!confirmOverwrite) {
@@ -307,6 +408,7 @@ export default function FloodRecordsPage() {
 
             const body = {
                 ...formData,
+                flood_start_date: formData.flood_start_date || selectedDate,
                 polygon_id: selectedVillage?.id || null,
                 session_id: activeSession.id,
                 year: new Date(activeSession.opened_at).getFullYear(),
@@ -531,15 +633,28 @@ export default function FloodRecordsPage() {
         return colors[level] || 'bg-gray-100 text-gray-800';
     };
 
+    if (loadingSessions || loading) {
+        return (
+            <EOCLayout>
+                <div className="p-6">
+                    <div className="bg-white rounded-lg shadow p-8 text-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b border-blue-500 mx-auto mb-3"></div>
+                        <p className="text-gray-600">กำลังโหลดข้อมูล EOC น้ำท่วม...</p>
+                    </div>
+                </div>
+            </EOCLayout>
+        );
+    }
+
     if (!activeSession) {
         return (
             <EOCLayout>
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4">⚠️</div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มี EOC Session น้ำท่วม</h3>
                         <p className="text-gray-600">
-                            กรุณาเปิด EOC Session ก่อนบันทึกข้อมูลพื้นที่น้ำท่วม
+                            กรุณาสร้างหรือเปิด EOC Session น้ำท่วมก่อนบันทึกข้อมูลพื้นที่น้ำท่วม
                         </p>
                     </div>
                 </div>
@@ -559,12 +674,20 @@ export default function FloodRecordsPage() {
                         </h1>
                         <p className="text-gray-600">
                             EOC Session #{activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
+                            {activeSession.closed_at && ` ถึง ${new Date(activeSession.closed_at).toLocaleDateString('th-TH')}`}
+                            <span className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${activeSession.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                {selectedSessionStatusLabel}
+                            </span>
                         </p>
                     </div>
                     <button
                         onClick={() => {
                             setEditingRecord(null);
                             resetForm();
+                            setFormData((current) => ({
+                                ...current,
+                                flood_start_date: selectedDate
+                            }));
                             setShowModal(true);
                         }}
                         className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -572,6 +695,57 @@ export default function FloodRecordsPage() {
                         <span>➕</span>
                         เพิ่มข้อมูลใหม่
                     </button>
+                </div>
+
+                {/* Session Selector */}
+                <div className="bg-white border border-blue-100 rounded-lg shadow p-4 mb-6">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
+                        <label className="block">
+                            <span className="block text-sm font-medium text-gray-700 mb-1">ปี EOC</span>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => {
+                                    setSelectedYear(e.target.value);
+                                    setActiveSession(null);
+                                    setRecords([]);
+                                    setAllRecords([]);
+                                }}
+                                className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            >
+                                {availableYears.map((year) => (
+                                    <option key={year} value={year}>พ.ศ. {Number(year) + 543}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="block">
+                            <span className="block text-sm font-medium text-gray-700 mb-1">เลือก EOC Session</span>
+                            <select
+                                value={activeSession?.id || ''}
+                                onChange={(e) => {
+                                    const session = sessions.find((item) => String(item.id) === e.target.value);
+                                    setActiveSession(session || null);
+                                    setRecords([]);
+                                    setAllRecords([]);
+                                }}
+                                className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                disabled={sessions.length === 0}
+                            >
+                                {sessions.length === 0 && <option value="">ไม่พบ session ในปีนี้</option>}
+                                {sessions.map((session) => (
+                                    <option key={session.id} value={session.id}>
+                                        Session #{session.session_number} - {new Date(session.opened_at).toLocaleDateString('th-TH')}
+                                        {session.closed_at ? ` ถึง ${new Date(session.closed_at).toLocaleDateString('th-TH')}` : ''}
+                                        {session.status === 'active' ? ' (กำลังเปิดใช้งาน)' : ' (ปิดแล้ว)'}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+                    {activeSession?.status === 'closed' && (
+                        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            Session นี้ปิด EOC แล้ว แต่ระบบเปิดให้เพิ่ม/แก้ไขข้อมูลย้อนหลังได้ภายในช่วงวันที่เปิดถึงวันที่ปิด EOC
+                        </div>
+                    )}
                 </div>
 
                 {/* Date Picker for Backdating */}
@@ -583,6 +757,7 @@ export default function FloodRecordsPage() {
                                 <h3 className="font-bold text-gray-800">เลือกวันที่บันทึก</h3>
                                 <p className="text-sm text-gray-600">
                                     บันทึกข้อมูลย้อนหลังตั้งแต่ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
+                                    {activeSession.closed_at && ` ถึง ${new Date(activeSession.closed_at).toLocaleDateString('th-TH')}`}
                                 </p>
                             </div>
                         </div>
@@ -592,12 +767,12 @@ export default function FloodRecordsPage() {
                                 onClick={() => {
                                     const current = new Date(selectedDate);
                                     current.setDate(current.getDate() - 1);
-                                    const minDate = new Date(activeSession.opened_at);
+                                    const minDate = new Date(`${selectedSessionStartDate}T00:00:00`);
                                     if (current >= minDate) {
                                         setSelectedDate(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`);
                                     }
                                 }}
-                                disabled={selectedDate <= activeSession.opened_at?.split('T')[0]}
+                                disabled={selectedDate <= selectedSessionStartDate}
                                 className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="วันก่อนหน้า"
                             >
@@ -608,8 +783,8 @@ export default function FloodRecordsPage() {
                             <input
                                 type="date"
                                 value={selectedDate}
-                                min={activeSession.opened_at?.split('T')[0]}
-                                max={getTodayDate()}
+                                min={selectedSessionStartDate}
+                                max={selectedSessionEndDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
                                 className="px-4 py-2 border-2 border-teal-300 rounded-lg text-gray-700 font-medium bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                             />
@@ -619,13 +794,13 @@ export default function FloodRecordsPage() {
                                 onClick={() => {
                                     const current = new Date(selectedDate);
                                     current.setDate(current.getDate() + 1);
-                                    const today = getTodayDate();
+                                    const maxDate = selectedSessionEndDate;
                                     const nextDateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
-                                    if (nextDateStr <= today) {
+                                    if (nextDateStr <= maxDate) {
                                         setSelectedDate(nextDateStr);
                                     }
                                 }}
-                                disabled={selectedDate >= getTodayDate()}
+                                disabled={selectedDate >= selectedSessionEndDate}
                                 className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="วันถัดไป"
                             >
@@ -634,13 +809,13 @@ export default function FloodRecordsPage() {
 
                             {/* Today Button */}
                             <button
-                                onClick={() => setSelectedDate(getTodayDate())}
-                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedDate === getTodayDate()
+                                onClick={() => setSelectedDate(selectedSessionEndDate)}
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedDate === selectedSessionEndDate
                                     ? 'bg-teal-600 text-white'
                                     : 'bg-white border border-teal-300 text-teal-700 hover:bg-teal-50'
                                     }`}
                             >
-                                📆 วันนี้
+                                📆 {activeSession.status === 'active' ? 'วันนี้' : 'วันปิด EOC'}
                             </button>
 
                             {/* Copy Data Button */}
@@ -1127,8 +1302,8 @@ export default function FloodRecordsPage() {
                                         <input
                                             type="date"
                                             value={copyConfig.sourceDate}
-                                            min={activeSession?.opened_at?.split('T')[0]}
-                                            max={getTodayDate()}
+                                            min={selectedSessionStartDate}
+                                            max={selectedSessionEndDate}
                                             onChange={(e) => setCopyConfig({ ...copyConfig, sourceDate: e.target.value })}
                                             className="text-gray-600 w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-sky-500"
                                         />

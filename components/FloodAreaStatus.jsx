@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
+import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -38,6 +40,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     const [showTambonBoundaries, setShowTambonBoundaries] = useState(false);
     const [showDistrictBoundaries, setShowDistrictBoundaries] = useState(false);
     const [showFacilities, setShowFacilities] = useState(true);
+    const [showWaterways, setShowWaterways] = useState(true);
+    const [showHillshade, setShowHillshade] = useState(false);
+    const [baseMap, setBaseMap] = useState('street');
     const [healthFacilities, setHealthFacilities] = useState([]);
     const [tambonBoundaries, setTambonBoundaries] = useState([]);
     const [districtBoundaries, setDistrictBoundaries] = useState([]);
@@ -49,8 +54,10 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     const [endDate, setEndDate] = useState('');
     const [dates, setDates] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
+    const [latestRecordDate, setLatestRecordDate] = useState(null);
     const [isMounted, setIsMounted] = useState(false);
     const mapRef = useRef(null);
+    const selectedBaseLayer = getMapBaseLayer(baseMap);
 
     // State สำหรับควบคุมการแสดงชื่อบนแผนที่
     const [showDistrictLabels, setShowDistrictLabels] = useState(false);
@@ -85,9 +92,16 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             }
 
             setDates(dateList);
-            setSelectedDate(current => current || (dateList.length > 0 ? dateList[dateList.length - 1] : current));
+            setSelectedDate(current => {
+                if (current) return current;
+                if (latestRecordDate) {
+                    const [year, month, day] = latestRecordDate.split('-').map(Number);
+                    return new Date(year, month - 1, day);
+                }
+                return dateList.length > 0 ? dateList[dateList.length - 1] : current;
+            });
         }
-    }, [activeSession]);
+    }, [activeSession, latestRecordDate]);
 
     // ดึงข้อมูลสถานพยาบาล
     useEffect(() => {
@@ -166,13 +180,24 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             if (result.success && result.hasActiveSession) {
                 setFloodData(result.data || []);
                 setStats(result.stats || {});
+                setLatestRecordDate(result.latestRecordDate || null);
                 setHasActiveSession(true);
                 if (result.activeSession) {
-                    setActiveSession(result.activeSession);
+                    setActiveSession((current) => {
+                        if (
+                            current?.id === result.activeSession.id &&
+                            current?.opened_at === result.activeSession.opened_at &&
+                            current?.closed_at === result.activeSession.closed_at
+                        ) {
+                            return current;
+                        }
+                        return result.activeSession;
+                    });
                 }
             } else {
                 setFloodData([]);
                 setStats({});
+                setLatestRecordDate(null);
                 setHasActiveSession(result.hasActiveSession || false);
             }
         } catch (err) {
@@ -563,6 +588,18 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                     </div>
                     <div className="space-y-4">
                         <div className="flex flex-wrap gap-2">
+                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                                <span className="font-semibold">แผนที่พื้นหลัง</span>
+                                <select
+                                    value={baseMap}
+                                    onChange={(e) => setBaseMap(e.target.value)}
+                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-blue-400"
+                                >
+                                    {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
+                                        <option key={key} value={key}>{layer.label}</option>
+                                    ))}
+                                </select>
+                            </label>
                             {dates.map((d, idx) => {
                                 const dateStr = d.toLocaleDateString('th-TH', {
                                     weekday: 'short',
@@ -605,7 +642,11 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-center">
                     <div className="text-2xl mb-2">📋</div>
                     <p className="text-blue-700 font-medium">ยังไม่มีข้อมูลน้ำท่วมในช่วงเวลาที่เลือก</p>
-                    <p className="text-blue-600 text-sm mt-1">แผนที่จะแสดงพื้นที่ทั้งหมดของจังหวัดสตูล</p>
+                    <p className="text-blue-600 text-sm mt-1">
+                        {latestRecordDate
+                            ? 'ลองเลือกวันที่ที่มีข้อมูลในไทม์ไลน์ด้านบน'
+                            : 'ยังไม่พบรายการในฐานข้อมูล flood_records สำหรับ session นี้'}
+                    </p>
                 </div>
             )}
 
@@ -749,6 +790,24 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 />
                                 แสดงสถานพยาบาล
                             </label>
+                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                                <input
+                                    type="checkbox"
+                                    checked={showWaterways}
+                                    onChange={(e) => setShowWaterways(e.target.checked)}
+                                    className="w-4 h-4 text-sky-600 rounded"
+                                />
+                                เส้นทางน้ำ/คลอง
+                            </label>
+                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                                <input
+                                    type="checkbox"
+                                    checked={showHillshade}
+                                    onChange={(e) => setShowHillshade(e.target.checked)}
+                                    className="w-4 h-4 text-slate-600 rounded"
+                                />
+                                เงาภูมิประเทศ
+                            </label>
                         </div>
 
                         {/* Map */}
@@ -761,9 +820,10 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     style={{ height: '100%', width: '100%' }}
                                 >
                                     <TileLayer
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                        url={selectedBaseLayer.url}
+                                        attribution={selectedBaseLayer.attribution}
                                     />
+                                    <HydroTerrainOverlays showHillshade={showHillshade} showWaterways={showWaterways} />
 
                                     {/* Polygons ระดับตำบล - nodata (ไม่มีข้อมูล - วาดก่อน) */}
                                     {polygonGroupsByTambon.nodata?.map((poly, idx) => {

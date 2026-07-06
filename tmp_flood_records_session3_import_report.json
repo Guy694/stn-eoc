@@ -1,0 +1,1476 @@
+{
+  "mode": "apply",
+  "session": {
+    "id": 54,
+    "session_number": 3,
+    "status": "closed",
+    "opened_at": "2025-11-20T02:00:00.000Z",
+    "closed_at": "2025-12-04T04:56:00.000Z"
+  },
+  "sessionStartDate": "2025-11-20",
+  "sessionEndDate": "2025-12-04",
+  "sheet": {
+    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiTjzYRgq24upnyhcWXoOZg6khLZKGzMjEy7oRto52FTYTEYlYs0FpO-2nOJ_IbYy2GsA6GwiykmqX/pub?output=csv",
+    "csvUrl": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiTjzYRgq24upnyhcWXoOZg6khLZKGzMjEy7oRto52FTYTEYlYs0FpO-2nOJ_IbYy2GsA6GwiykmqX/pub?output=csv",
+    "headers": [
+      "วันที่",
+      "ตำบล",
+      "ระดับน้ำท่วม"
+    ]
+  },
+  "sourceRows": 241,
+  "inserted": 3090,
+  "updated": 0,
+  "would_insert": 0,
+  "would_update": 0,
+  "unmatched": [],
+  "outOfRange": [],
+  "tambons": [
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-20",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-20",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-20",
+      "polygons": 18
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-20",
+      "polygons": 10
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-20",
+      "polygons": 15
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-20",
+      "polygons": 11
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-20",
+      "polygons": 7
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-21",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-21",
+      "polygons": 11
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-21",
+      "polygons": 15
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-21",
+      "polygons": 18
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-21",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-21",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-21",
+      "polygons": 10
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-21",
+      "polygons": 9
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-21",
+      "polygons": 24
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-21",
+      "polygons": 19
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-21",
+      "polygons": 8
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-22",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-22",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-22",
+      "polygons": 8
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-22",
+      "polygons": 10
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-22",
+      "polygons": 24
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-22",
+      "polygons": 15
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-22",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-22",
+      "polygons": 19
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-22",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-22",
+      "polygons": 18
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-22",
+      "polygons": 9
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-22",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-22",
+      "polygons": 4
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-22",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-22",
+      "polygons": 6
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-22",
+      "polygons": 7
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-23",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-23",
+      "polygons": 7
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-23",
+      "polygons": 11
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-23",
+      "polygons": 4
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-23",
+      "polygons": 8
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-23",
+      "polygons": 24
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-23",
+      "polygons": 11
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-23",
+      "polygons": 9
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-23",
+      "polygons": 10
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-23",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-23",
+      "polygons": 6
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-23",
+      "polygons": 18
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-23",
+      "polygons": 15
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-23",
+      "polygons": 11
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-23",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-23",
+      "polygons": 19
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "นาทอน",
+      "date": "2025-11-23",
+      "polygons": 9
+    },
+    {
+      "district": "ละงู",
+      "tambon": "กำแพง",
+      "date": "2025-11-23",
+      "polygons": 28
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ปากน้ำ",
+      "date": "2025-11-23",
+      "polygons": 12
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ทุ่งนุ้ย",
+      "date": "2025-11-23",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "วังประจัน",
+      "date": "2025-11-23",
+      "polygons": 4
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนสตอ",
+      "date": "2025-11-23",
+      "polygons": 12
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เกตรี",
+      "date": "2025-11-23",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "คลองขุด",
+      "date": "2025-11-23",
+      "polygons": 39
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนขัน",
+      "date": "2025-11-23",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "บ้านควน",
+      "date": "2025-11-23",
+      "polygons": 10
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-24",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-24",
+      "polygons": 7
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "นาทอน",
+      "date": "2025-11-24",
+      "polygons": 9
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-24",
+      "polygons": 4
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนโพธิ์",
+      "date": "2025-11-24",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "พิมาน",
+      "date": "2025-11-24",
+      "polygons": 48
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-24",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-24",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "กำแพง",
+      "date": "2025-11-24",
+      "polygons": 28
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ปากน้ำ",
+      "date": "2025-11-24",
+      "polygons": 12
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-24",
+      "polygons": 8
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-24",
+      "polygons": 24
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-24",
+      "polygons": 9
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-24",
+      "polygons": 10
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-24",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-24",
+      "polygons": 6
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-24",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-24",
+      "polygons": 18
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ทุ่งนุ้ย",
+      "date": "2025-11-24",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-24",
+      "polygons": 15
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-24",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนสตอ",
+      "date": "2025-11-24",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "วังประจัน",
+      "date": "2025-11-24",
+      "polygons": 4
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-24",
+      "polygons": 19
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เกตรี",
+      "date": "2025-11-24",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "บ้านควน",
+      "date": "2025-11-24",
+      "polygons": 10
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนขัน",
+      "date": "2025-11-24",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "คลองขุด",
+      "date": "2025-11-24",
+      "polygons": 39
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "นาทอน",
+      "date": "2025-11-25",
+      "polygons": 9
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-25",
+      "polygons": 4
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "สาคร",
+      "date": "2025-11-25",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เจ๊ะบิลัง",
+      "date": "2025-11-25",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-25",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-25",
+      "polygons": 7
+    },
+    {
+      "district": "ละงู",
+      "tambon": "กำแพง",
+      "date": "2025-11-25",
+      "polygons": 28
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ปากน้ำ",
+      "date": "2025-11-25",
+      "polygons": 12
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-25",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-25",
+      "polygons": 8
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-25",
+      "polygons": 24
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-25",
+      "polygons": 11
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-25",
+      "polygons": 9
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-25",
+      "polygons": 10
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-25",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-25",
+      "polygons": 6
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-25",
+      "polygons": 18
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-25",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ทุ่งนุ้ย",
+      "date": "2025-11-25",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-25",
+      "polygons": 15
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนโพธิ์",
+      "date": "2025-11-25",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-25",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนสตอ",
+      "date": "2025-11-25",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "วังประจัน",
+      "date": "2025-11-25",
+      "polygons": 4
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-25",
+      "polygons": 19
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เกตรี",
+      "date": "2025-11-25",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "บ้านควน",
+      "date": "2025-11-25",
+      "polygons": 10
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนขัน",
+      "date": "2025-11-25",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "พิมาน",
+      "date": "2025-11-25",
+      "polygons": 48
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "คลองขุด",
+      "date": "2025-11-25",
+      "polygons": 39
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "นาทอน",
+      "date": "2025-11-26",
+      "polygons": 9
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-26",
+      "polygons": 4
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "สาคร",
+      "date": "2025-11-26",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เจ๊ะบิลัง",
+      "date": "2025-11-26",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-26",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-26",
+      "polygons": 7
+    },
+    {
+      "district": "ละงู",
+      "tambon": "กำแพง",
+      "date": "2025-11-26",
+      "polygons": 28
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ปากน้ำ",
+      "date": "2025-11-26",
+      "polygons": 12
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-26",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-26",
+      "polygons": 8
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-26",
+      "polygons": 24
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-26",
+      "polygons": 11
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-26",
+      "polygons": 9
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-26",
+      "polygons": 10
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-26",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-26",
+      "polygons": 6
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-26",
+      "polygons": 18
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-26",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ทุ่งนุ้ย",
+      "date": "2025-11-26",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-26",
+      "polygons": 15
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนโพธิ์",
+      "date": "2025-11-26",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-26",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนสตอ",
+      "date": "2025-11-26",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "วังประจัน",
+      "date": "2025-11-26",
+      "polygons": 4
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-26",
+      "polygons": 19
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เกตรี",
+      "date": "2025-11-26",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "บ้านควน",
+      "date": "2025-11-26",
+      "polygons": 10
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนขัน",
+      "date": "2025-11-26",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "พิมาน",
+      "date": "2025-11-26",
+      "polygons": 48
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "คลองขุด",
+      "date": "2025-11-26",
+      "polygons": 39
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "นาทอน",
+      "date": "2025-11-27",
+      "polygons": 9
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-27",
+      "polygons": 4
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "สาคร",
+      "date": "2025-11-27",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เจ๊ะบิลัง",
+      "date": "2025-11-27",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-27",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-27",
+      "polygons": 7
+    },
+    {
+      "district": "ละงู",
+      "tambon": "กำแพง",
+      "date": "2025-11-27",
+      "polygons": 28
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ปากน้ำ",
+      "date": "2025-11-27",
+      "polygons": 12
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-27",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-27",
+      "polygons": 8
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-27",
+      "polygons": 24
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-27",
+      "polygons": 11
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-27",
+      "polygons": 9
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-27",
+      "polygons": 10
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-27",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-27",
+      "polygons": 6
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-27",
+      "polygons": 18
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-27",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ทุ่งนุ้ย",
+      "date": "2025-11-27",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-27",
+      "polygons": 15
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนโพธิ์",
+      "date": "2025-11-27",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-27",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนสตอ",
+      "date": "2025-11-27",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "วังประจัน",
+      "date": "2025-11-27",
+      "polygons": 4
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-27",
+      "polygons": 19
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เกตรี",
+      "date": "2025-11-27",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "บ้านควน",
+      "date": "2025-11-27",
+      "polygons": 10
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนขัน",
+      "date": "2025-11-27",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "พิมาน",
+      "date": "2025-11-27",
+      "polygons": 48
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "คลองขุด",
+      "date": "2025-11-27",
+      "polygons": 39
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งบุหลัง",
+      "date": "2025-11-27",
+      "polygons": 5
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "นาทอน",
+      "date": "2025-11-28",
+      "polygons": 9
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-28",
+      "polygons": 4
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "สาคร",
+      "date": "2025-11-28",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เจ๊ะบิลัง",
+      "date": "2025-11-28",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-28",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-28",
+      "polygons": 7
+    },
+    {
+      "district": "ละงู",
+      "tambon": "กำแพง",
+      "date": "2025-11-28",
+      "polygons": 28
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ปากน้ำ",
+      "date": "2025-11-28",
+      "polygons": 12
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-28",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-28",
+      "polygons": 8
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-28",
+      "polygons": 24
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-28",
+      "polygons": 11
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-28",
+      "polygons": 9
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-28",
+      "polygons": 10
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-28",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-28",
+      "polygons": 6
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-28",
+      "polygons": 18
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-28",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ทุ่งนุ้ย",
+      "date": "2025-11-28",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-28",
+      "polygons": 15
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนโพธิ์",
+      "date": "2025-11-28",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-28",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนสตอ",
+      "date": "2025-11-28",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "วังประจัน",
+      "date": "2025-11-28",
+      "polygons": 4
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-28",
+      "polygons": 19
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เกตรี",
+      "date": "2025-11-28",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "บ้านควน",
+      "date": "2025-11-28",
+      "polygons": 10
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนขัน",
+      "date": "2025-11-28",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "พิมาน",
+      "date": "2025-11-28",
+      "polygons": 48
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "คลองขุด",
+      "date": "2025-11-28",
+      "polygons": 39
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งบุหลัง",
+      "date": "2025-11-28",
+      "polygons": 5
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "นาทอน",
+      "date": "2025-11-29",
+      "polygons": 9
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ขอนคลาน",
+      "date": "2025-11-29",
+      "polygons": 4
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "สาคร",
+      "date": "2025-11-29",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เจ๊ะบิลัง",
+      "date": "2025-11-29",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งหว้า",
+      "date": "2025-11-29",
+      "polygons": 12
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ป่าแก่บ่อหิน",
+      "date": "2025-11-29",
+      "polygons": 7
+    },
+    {
+      "district": "ละงู",
+      "tambon": "กำแพง",
+      "date": "2025-11-29",
+      "polygons": 28
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ปากน้ำ",
+      "date": "2025-11-29",
+      "polygons": 12
+    },
+    {
+      "district": "ละงู",
+      "tambon": "น้ำผุด",
+      "date": "2025-11-29",
+      "polygons": 11
+    },
+    {
+      "district": "ละงู",
+      "tambon": "เขาขาว",
+      "date": "2025-11-29",
+      "polygons": 8
+    },
+    {
+      "district": "ละงู",
+      "tambon": "ละงู",
+      "date": "2025-11-29",
+      "polygons": 24
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "ปาล์มพัฒนา",
+      "date": "2025-11-29",
+      "polygons": 11
+    },
+    {
+      "district": "มะนัง",
+      "tambon": "นิคมพัฒนา",
+      "date": "2025-11-29",
+      "polygons": 9
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "อุใดเจริญ",
+      "date": "2025-11-29",
+      "polygons": 10
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "แป-ระ",
+      "date": "2025-11-29",
+      "polygons": 7
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าเรือ",
+      "date": "2025-11-29",
+      "polygons": 6
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ควนกาหลง",
+      "date": "2025-11-29",
+      "polygons": 18
+    },
+    {
+      "district": "ท่าแพ",
+      "tambon": "ท่าแพ",
+      "date": "2025-11-29",
+      "polygons": 11
+    },
+    {
+      "district": "ควนกาหลง",
+      "tambon": "ทุ่งนุ้ย",
+      "date": "2025-11-29",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนโดน",
+      "date": "2025-11-29",
+      "polygons": 15
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนโพธิ์",
+      "date": "2025-11-29",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ย่านซื่อ",
+      "date": "2025-11-29",
+      "polygons": 7
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "ควนสตอ",
+      "date": "2025-11-29",
+      "polygons": 12
+    },
+    {
+      "district": "ควนโดน",
+      "tambon": "วังประจัน",
+      "date": "2025-11-29",
+      "polygons": 4
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ฉลุง",
+      "date": "2025-11-29",
+      "polygons": 19
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "เกตรี",
+      "date": "2025-11-29",
+      "polygons": 7
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "บ้านควน",
+      "date": "2025-11-29",
+      "polygons": 10
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "ควนขัน",
+      "date": "2025-11-29",
+      "polygons": 8
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "พิมาน",
+      "date": "2025-11-29",
+      "polygons": 48
+    },
+    {
+      "district": "เมืองสตูล",
+      "tambon": "คลองขุด",
+      "date": "2025-11-29",
+      "polygons": 39
+    },
+    {
+      "district": "ทุ่งหว้า",
+      "tambon": "ทุ่งบุหลัง",
+      "date": "2025-11-29",
+      "polygons": 5
+    }
+  ]
+}

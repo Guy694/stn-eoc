@@ -180,6 +180,10 @@ export default function PublicSheltersPage() {
 
   const eocIsOpen = activeEocs.some((item) => Boolean(item.is_active));
   const latestActive = activeEocs.find((item) => item.is_active);
+  const scaffoldEocStatus = selectedContext?.mode === "active" ? "open" : selectedContext ? "closed" : eocIsOpen ? "open" : "closed";
+  const scaffoldEocLabel = selectedContext
+    ? `${selectedContext.label}${selectedContext.closed_at ? ` ปิดเมื่อ ${formatDate(selectedContext.closed_at)}` : ""}`
+    : latestActive ? getEocLabel(latestActive) : "ไม่มี EOC ที่เปิดอยู่";
 
   const loadShelters = useCallback(async () => {
     try {
@@ -301,7 +305,8 @@ export default function PublicSheltersPage() {
       subtitle="ค้นหาศูนย์พักพิงที่ใกล้ที่สุด ตรวจสอบความจุ และบริการที่มี"
       activeMenu="shelters"
       eocIsOpen={eocIsOpen}
-      eocLabel={latestActive ? getEocLabel(latestActive) : "สถานะศูนย์"}
+      eocStatus={scaffoldEocStatus}
+      eocLabel={scaffoldEocLabel}
     >
       <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-3">

@@ -132,6 +132,7 @@ function statusClass(status) {
 
 export default function PublicAgenciesPage() {
   const [eocIsOpen, setEocIsOpen] = useState(false);
+  const [eocStatus, setEocStatus] = useState("closed");
   const [eocLabel, setEocLabel] = useState("สถานะศูนย์");
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +153,8 @@ export default function PublicAgenciesPage() {
         const activeAll = (statusJson.success ? statusJson.data || [] : []).filter((item) => Boolean(item.is_active));
 
         setEocIsOpen(activeAll.length > 0);
-        setEocLabel(activeAll[0] ? activeAll[0].name_th || activeAll[0].eoc_type : "สถานะศูนย์");
+        setEocStatus(activeAll.length > 0 ? "open" : "closed");
+        setEocLabel(activeAll[0] ? activeAll[0].name_th || activeAll[0].eoc_type : "ไม่มี EOC ที่เปิดอยู่");
         setFacilities(facilitiesJson.success ? facilitiesJson.data || [] : []);
       } catch (error) {
         console.error("Error loading agencies:", error);
@@ -212,6 +214,7 @@ export default function PublicAgenciesPage() {
       subtitle="ข้อมูลหน่วยงานที่เกี่ยวข้องกับการปฏิบัติการฉุกเฉิน จังหวัดสตูล"
       activeMenu="agencies"
       eocIsOpen={eocIsOpen}
+      eocStatus={eocStatus}
       eocLabel={eocLabel}
     >
       <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_430px]">

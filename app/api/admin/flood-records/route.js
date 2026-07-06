@@ -10,6 +10,50 @@ const dbConfig = {
     database: process.env.DB_NAME || 'stneoc',
 };
 
+function toDateKey(value) {
+    if (!value) return '';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+async function validateFloodSessionDate(connection, sessionId, floodStartDate) {
+    if (!sessionId) {
+        return { ok: false, status: 400, error: 'กรุณาระบุ EOC Session' };
+    }
+
+    const [sessions] = await connection.execute(
+        `SELECT id, opened_at, closed_at, status
+         FROM eoc_sessions
+         WHERE id = ? AND eoc_type = 'flood'
+         LIMIT 1`,
+        [sessionId]
+    );
+
+    if (sessions.length === 0) {
+        return { ok: false, status: 404, error: 'ไม่พบ EOC Session น้ำท่วม' };
+    }
+
+    const dateKey = toDateKey(floodStartDate);
+    if (!dateKey) {
+        return { ok: false, status: 400, error: 'กรุณาระบุวันที่เริ่มน้ำท่วม' };
+    }
+
+    const openedKey = toDateKey(sessions[0].opened_at);
+    const closedKey = toDateKey(sessions[0].closed_at) || toDateKey(new Date());
+
+    if (openedKey && dateKey < openedKey) {
+        return { ok: false, status: 400, error: 'วันที่บันทึกต้องไม่ก่อนวันเปิด EOC' };
+    }
+
+    if (closedKey && dateKey > closedKey) {
+        return { ok: false, status: 400, error: 'วันที่บันทึกต้องไม่เกินวันปิด EOC' };
+    }
+
+    return { ok: true, session: sessions[0] };
+}
+
 export async function GET(request) {
     try {
         const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
@@ -80,11 +124,16 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
         const connection = await mysql.createConnection(dbConfig);
+        const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
+        if (!validation.ok) {
+            await connection.end();
+            return NextResponse.json({ success: false, error: validation.error }, { status: validation.status });
+        }
 
         const query = `
             INSERT INTO flood_records 
@@ -131,11 +180,16 @@ export async function POST(request) {
 
 export async function PUT(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
         const connection = await mysql.createConnection(dbConfig);
+        const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
+        if (!validation.ok) {
+            await connection.end();
+            return NextResponse.json({ success: false, error: validation.error }, { status: validation.status });
+        }
 
         const query = `
             UPDATE flood_records SET

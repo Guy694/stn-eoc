@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { getMapBaseLayer, getMapOverlayLayer, MAP_BASE_LAYERS } from '@/lib/mapBaseLayers';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -24,14 +25,19 @@ export default function PublicIncidentMap({
     reportTypeFilter = 'all',
     districtFilter = 'all',
     searchQuery = '',
+    baseMap = 'street',
+    onBaseMapChange,
     onDataChange
 }) {
     const [incidents, setIncidents] = useState([]);
+    const [floodAreas, setFloodAreas] = useState([]);
+    const [waterways, setWaterways] = useState(null);
     const [shelters, setShelters] = useState([]);
     const [healthFacilities, setHealthFacilities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [customIcon, setCustomIcon] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [internalBaseMap, setInternalBaseMap] = useState('street');
     const mapContainerRef = useRef(null);
 
     // Layer states
@@ -43,7 +49,9 @@ export default function PublicIncidentMap({
         incidents: true,
         traffic: true,
         shelters: false,
-        hospitals: false
+        hospitals: false,
+        waterways: false,
+        hillshade: false
     });
     const activeLayers = layers || internalLayers;
     const setLayer = (key, value) => {
@@ -54,26 +62,48 @@ export default function PublicIncidentMap({
     const showDistrictLayer = activeLayers.district;
     const showTambonLayer = activeLayers.tambon;
     const showVillageLayer = activeLayers.village;
+    const showFloodAreaLayer = disasterType === 'flood' && activeLayers.floodAreas !== false;
     const showLabels = activeLayers.labels;
     const showIncidentLayer = activeLayers.incidents !== false;
     const showTrafficLayer = activeLayers.traffic !== false;
     const showShelterLayer = Boolean(activeLayers.shelters);
     const showHospitalLayer = Boolean(activeLayers.hospitals);
+    const showWaterwayLayer = Boolean(activeLayers.waterways);
+    const showHillshadeLayer = Boolean(activeLayers.hillshade);
+    const activeBaseMap = baseMap || internalBaseMap;
+    const selectedBaseLayer = getMapBaseLayer(activeBaseMap);
+    const hillshadeLayer = getMapOverlayLayer('hillshade');
+    const setBaseMap = (nextBaseMap) => {
+        if (onBaseMapChange) onBaseMapChange(nextBaseMap);
+        else setInternalBaseMap(nextBaseMap);
+    };
 
     // Polygon data
     const [districtPolygons, setDistrictPolygons] = useState([]);
     const [tambonPolygons, setTambonPolygons] = useState([]);
     const [villagePolygons, setVillagePolygons] = useState([]);
 
-    // District colors
-    const districtColors = {
-        'เมืองสตูล': '#3B82F6',
-        'ควนโดน': '#10B981',
-        'ควนกาหลง': '#F59E0B',
-        'ท่าแพ': '#EF4444',
-        'ละงู': '#64748B',
-        'ทุ่งหว้า': '#0EA5E9',
-        'มะนัง': '#06B6D4'
+    const districtBoundaryColor = '#111827';
+
+    const floodLevelMeta = {
+        severe: { label: 'สูง/สูงมาก', color: '#DC2626', fillOpacity: 0.5 },
+        moderate: { label: 'ปานกลาง', color: '#F59E0B', fillOpacity: 0.42 },
+        mild: { label: 'ต่ำ', color: '#38BDF8', fillOpacity: 0.38 },
+        safe: { label: 'ไม่มีน้ำท่วม', color: '#22C55E', fillOpacity: 0.18 },
+        nodata: { label: 'ไม่มีข้อมูล', color: '#CBD5E1', fillOpacity: 0.08 }
+    };
+
+    const getFloodLevelMeta = (level) => floodLevelMeta[level] || floodLevelMeta.nodata;
+
+    const getWaterwayStyle = (feature) => {
+        const waterwayType = feature?.properties?.waterway;
+        const isMain = waterwayType === 'river' || waterwayType === 'canal';
+        return {
+            color: isMain ? '#0369A1' : '#0EA5E9',
+            weight: isMain ? 2.4 : 1.4,
+            opacity: isMain ? 0.95 : 0.72,
+            dashArray: feature?.properties?.intermittent ? '5, 6' : null
+        };
     };
 
     // สร้าง custom icon สำหรับแต่ละระดับความเร่งด่วน และประเภทรายงาน
@@ -212,6 +242,32 @@ export default function PublicIncidentMap({
 
     useEffect(() => { fetchIncidents(); }, [fetchIncidents]);
 
+    const fetchFloodAreas = useCallback(async () => {
+        if (disasterType !== 'flood' || !showFloodAreaLayer || !sessionId) {
+            setFloodAreas([]);
+            return;
+        }
+
+        try {
+            const params = new URLSearchParams();
+            params.append('session_id', sessionId);
+            if (startDate) params.append('date', startDate);
+
+            const response = await fetch(`/stn-eoc/api/eoc/flood/area-status?${params}`);
+            const data = await response.json();
+            if (data.success) {
+                setFloodAreas(data.data || []);
+            } else {
+                setFloodAreas([]);
+            }
+        } catch (error) {
+            console.error('Error fetching flood area layer:', error);
+            setFloodAreas([]);
+        }
+    }, [disasterType, sessionId, showFloodAreaLayer, startDate]);
+
+    useEffect(() => { fetchFloodAreas(); }, [fetchFloodAreas]);
+
     const fetchShelters = useCallback(async () => {
         try {
             const params = new URLSearchParams();
@@ -244,6 +300,31 @@ export default function PublicIncidentMap({
     useEffect(() => {
         if (showHospitalLayer && healthFacilities.length === 0) fetchHealthFacilities();
     }, [fetchHealthFacilities, healthFacilities.length, showHospitalLayer]);
+
+    useEffect(() => {
+        if (!showWaterwayLayer || waterways) return;
+        let ignore = false;
+
+        const loadWaterways = async () => {
+            try {
+                const response = await fetch('/stn-eoc/api/common/waterways');
+                const data = await response.json();
+                if (ignore) return;
+                if (data.success) {
+                    setWaterways(data.data);
+                } else {
+                    setWaterways({ type: 'FeatureCollection', features: [] });
+                }
+            } catch (error) {
+                if (ignore) return;
+                console.error('Error fetching waterways:', error);
+                setWaterways({ type: 'FeatureCollection', features: [] });
+            }
+        };
+
+        loadWaterways();
+        return () => { ignore = true; };
+    }, [showWaterwayLayer, waterways]);
 
     // Fetch polygons based on layer toggles
     useEffect(() => {
@@ -394,9 +475,7 @@ export default function PublicIncidentMap({
                 incident.district,
                 incident.sub_district,
                 incident.village,
-                incident.description,
-                incident.first_name,
-                incident.last_name
+                incident.description
             ].filter(Boolean).join(' ').toLowerCase();
             if (!searchableText.includes(normalizedSearch)) return false;
         }
@@ -473,7 +552,23 @@ export default function PublicIncidentMap({
                     <div className="grid gap-3 border-t border-gray-200 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
                         <div>
                             <p className="text-sm font-semibold text-gray-800 mb-2">แสดง Layer พื้นที่</p>
+                            <label className="mb-3 block max-w-xs">
+                                <span className="mb-1 block text-xs font-bold text-gray-500">แผนที่พื้นหลัง</span>
+                                <select
+                                    value={activeBaseMap}
+                                    onChange={(event) => setBaseMap(event.target.value)}
+                                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-blue-400"
+                                >
+                                    {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
+                                        <option key={key} value={key}>{layer.label}</option>
+                                    ))}
+                                </select>
+                            </label>
                             <div className="flex flex-wrap gap-2">
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
+                                    <input type="checkbox" checked={showFloodAreaLayer} onChange={(e) => setLayer('floodAreas', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                                    <span>พื้นที่น้ำท่วม</span>
+                                </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
                                     <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setLayer('district', e.target.checked)} className="w-4 h-4 accent-blue-600" />
                                     <span>🏛️ อำเภอ</span>
@@ -484,7 +579,15 @@ export default function PublicIncidentMap({
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 cursor-pointer">
                                     <input type="checkbox" checked={showVillageLayer} onChange={(e) => setLayer('village', e.target.checked)} className="w-4 h-4 accent-gray-700" />
-                                    <span>🏘️ หมู่บ้าน</span>
+                                    <span>🏘️ ขอบเขตหมู่บ้าน</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900 cursor-pointer">
+                                    <input type="checkbox" checked={showWaterwayLayer} onChange={(e) => setLayer('waterways', e.target.checked)} className="w-4 h-4 accent-sky-600" />
+                                    <span>เส้นทางน้ำ/คลอง</span>
+                                </label>
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 cursor-pointer">
+                                    <input type="checkbox" checked={showHillshadeLayer} onChange={(e) => setLayer('hillshade', e.target.checked)} className="w-4 h-4 accent-slate-600" />
+                                    <span>เงาภูมิประเทศ/ความสูง</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-900 cursor-pointer">
                                     <input type="checkbox" checked={showLabels} onChange={(e) => setLayer('labels', e.target.checked)} className="w-4 h-4 accent-teal-600" />
@@ -512,14 +615,41 @@ export default function PublicIncidentMap({
                         <div className="space-y-3 text-sm text-gray-700">
                             {showDistrictLayer && (
                                 <div>
-                                    <p className="font-semibold text-gray-800 mb-2">สีเขตอำเภอ</p>
+                                    <p className="font-semibold text-gray-800 mb-2">ขอบเขตอำเภอ</p>
+                                    <div className="inline-flex items-center gap-1.5 text-xs">
+                                        <span className="h-1 w-8 rounded bg-gray-900" aria-hidden="true"></span>
+                                        <span>เส้นขอบเขตอำเภอสีดำ</span>
+                                    </div>
+                                </div>
+                            )}
+                            {showFloodAreaLayer && (
+                                <div>
+                                    <p className="font-semibold text-gray-800 mb-2">ระดับพื้นที่น้ำท่วม</p>
                                     <div className="flex flex-wrap gap-2 text-xs">
-                                        {Object.entries(districtColors).map(([name, color]) => (
-                                            <div key={name} className="inline-flex items-center gap-1.5">
-                                                <span className="h-3 w-3 rounded" style={{ backgroundColor: color }} aria-hidden="true"></span>
-                                                <span>{name}</span>
-                                            </div>
-                                        ))}
+                                        {['severe', 'moderate', 'mild', 'safe'].map((level) => {
+                                            const meta = getFloodLevelMeta(level);
+                                            return (
+                                                <div key={level} className="inline-flex items-center gap-1.5">
+                                                    <span className="h-3 w-3 rounded" style={{ backgroundColor: meta.color }} aria-hidden="true"></span>
+                                                    <span>{meta.label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                            {showWaterwayLayer && (
+                                <div>
+                                    <p className="font-semibold text-gray-800 mb-2">เส้นทางน้ำ</p>
+                                    <div className="flex flex-wrap gap-2 text-xs">
+                                        <div className="inline-flex items-center gap-1.5">
+                                            <span className="h-1 w-8 rounded bg-sky-700" aria-hidden="true"></span>
+                                            <span>แม่น้ำ/คลองหลัก</span>
+                                        </div>
+                                        <div className="inline-flex items-center gap-1.5">
+                                            <span className="h-1 w-8 rounded bg-sky-400" aria-hidden="true"></span>
+                                            <span>ลำธาร/ทางระบายน้ำ</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -546,18 +676,25 @@ export default function PublicIncidentMap({
                 {/* Map */}
                 <div className={`${isFullscreen ? 'h-screen' : heightClass || 'h-[460px] md:h-[560px]'} overflow-visible`}>
                     <MapContainer center={[6.6238, 100.0673]} zoom={10} style={{ height: '100%', width: '100%' }}>
-                        <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        <TileLayer attribution={selectedBaseLayer.attribution} url={selectedBaseLayer.url} />
+                        {showHillshadeLayer && hillshadeLayer && (
+                            <TileLayer
+                                attribution={hillshadeLayer.attribution}
+                                url={hillshadeLayer.url}
+                                opacity={hillshadeLayer.opacity}
+                                zIndex={250}
+                            />
+                        )}
 
                         {/* District Layer */}
                         {showDistrictLayer && districtPolygons.map((item, idx) => {
                             if (!item.geojson) return null;
-                            const color = districtColors[item.name] || '#6B7280';
                             const center = getPolygonCenter(item.geojson);
                             return (
                                 <div key={`district-${idx}`}>
                                     <GeoJSON
                                         data={item.geojson}
-                                        style={{ color: color, weight: 1, fillColor: color, fillOpacity: 0.1 }}
+                                        style={{ color: districtBoundaryColor, weight: 3, opacity: 0.95, fillOpacity: 0, interactive: true }}
                                         onEachFeature={(feature, layer) => {
                                             layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong class="text-lg">อ.${item.name}</strong></div>`);
                                         }}
@@ -577,7 +714,7 @@ export default function PublicIncidentMap({
                                 <div key={`tambon-${idx}`}>
                                     <GeoJSON
                                         data={item.geojson}
-                                        style={{ color: '#059669', weight: 2, fillColor: '#10B981', fillOpacity: 0.1, dashArray: '5, 5' }}
+                                        style={{ color: '#059669', weight: 2.5, opacity: 0.95, fillOpacity: 0, dashArray: '5, 5', interactive: true }}
                                         onEachFeature={(feature, layer) => {
                                             layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>ต.${item.name}</strong><p class="text-sm">อ.${item.district_name}</p></div>`);
                                         }}
@@ -596,13 +733,61 @@ export default function PublicIncidentMap({
                                 <GeoJSON
                                     key={`village-${idx}`}
                                     data={item.geojson}
-                                    style={{ color: '#9CA3AF', weight: 1, fillColor: '#D1D5DB', fillOpacity: 0.1 }}
+                                    style={{ color: '#64748B', weight: 1, opacity: 0.8, fillOpacity: 0 }}
                                     onEachFeature={(feature, layer) => {
                                         layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>${item.name}</strong><p class="text-xs">ต.${item.tambon_name} อ.${item.district_name}</p></div>`);
                                     }}
                                 />
                             );
                         })}
+
+                        {/* Flood Area Layer */}
+                        {showFloodAreaLayer && floodAreas.map((area) => {
+                            if (!area.geometry) return null;
+                            const meta = getFloodLevelMeta(area.flood_level);
+                            return (
+                                <GeoJSON
+                                    key={`flood-area-${area.id || area.vid}`}
+                                    data={area.geometry}
+                                    style={{
+                                        color: meta.color,
+                                        weight: 2,
+                                        fillColor: meta.color,
+                                        fillOpacity: meta.fillOpacity
+                                    }}
+                                    onEachFeature={(feature, layer) => {
+                                        layer.bindPopup(`
+                                            <div style="font-family: var(--font-kanit); min-width: 180px">
+                                                <strong>พื้นที่น้ำท่วม</strong>
+                                                <p style="margin: 4px 0 0">อ.${area.district || '-'} ต.${area.tambon || '-'} ${area.villname || ''}</p>
+                                                <p style="margin: 4px 0 0"><strong>ระดับ:</strong> ${meta.label}</p>
+                                                <p style="margin: 4px 0 0"><strong>วันที่:</strong> ${area.recorded_day ? new Date(area.recorded_day).toLocaleDateString('th-TH') : '-'}</p>
+                                                ${area.water_level > 0 ? `<p style="margin: 4px 0 0"><strong>ระดับน้ำ:</strong> ${area.water_level} ม.</p>` : ''}
+                                                ${area.affected_population > 0 ? `<p style="margin: 4px 0 0"><strong>ผู้ได้รับผลกระทบ:</strong> ${Number(area.affected_population).toLocaleString('th-TH')} คน</p>` : ''}
+                                            </div>
+                                        `);
+                                    }}
+                                />
+                            );
+                        })}
+
+                        {showWaterwayLayer && waterways?.features?.length > 0 && (
+                            <GeoJSON
+                                key={`waterways-${waterways.features.length}`}
+                                data={waterways}
+                                style={getWaterwayStyle}
+                                onEachFeature={(feature, layer) => {
+                                    const props = feature.properties || {};
+                                    layer.bindPopup(`
+                                        <div style="font-family: var(--font-kanit); min-width: 160px">
+                                            <strong>${props.name || props.label || 'เส้นทางน้ำ'}</strong>
+                                            <p style="margin: 4px 0 0"><strong>ประเภท:</strong> ${props.label || props.waterway || '-'}</p>
+                                            <p style="margin: 4px 0 0"><strong>แหล่งข้อมูล:</strong> ${props.source || 'OpenStreetMap'}</p>
+                                        </div>
+                                    `);
+                                }}
+                            />
+                        )}
 
                         {/* Incident Markers */}
                         {filteredIncidents.map((incident) => (
@@ -617,12 +802,11 @@ export default function PublicIncidentMap({
                                             <span className="text-2xl">{getReportTypeIcon(incident.report_type)}</span>
                                             <h4 className="font-bold text-gray-800">{getReportTypeLabel(incident.report_type)}</h4>
                                         </div>
-                                        <h5 className="font-semibold text-gray-700 mb-2">รายงานจาก: {incident.first_name} {incident.last_name}</h5>
+                                        <h5 className="font-semibold text-gray-700 mb-2">รายงานที่ยืนยันแล้วจากเจ้าหน้าที่</h5>
                                         <div className="text-sm">
                                             <p><strong>สถานที่:</strong> {incident.village || '-'}, ต.{incident.sub_district || '-'}, อ.{incident.district || '-'}</p>
-                                            <p><strong>โทร:</strong> {incident.phone}</p>
                                             <p className={getUrgencyColor(incident.urgency)}><strong>ความเร่งด่วน:</strong> {getUrgencyLabel(incident.urgency)}</p>
-                                            <p><strong>ระดับน้ำ:</strong> {incident.water_level} ซม.</p>
+                                            {incident.water_level && <p><strong>ระดับน้ำ:</strong> {incident.water_level} ซม.</p>}
                                             {incident.affected_people > 0 && <p><strong>ผู้ได้รับผลกระทบ:</strong> {incident.affected_people} คน</p>}
                                             {incident.travel_status && <p><strong>สถานะการสัญจร:</strong> {incident.travel_status === 'passable' ? '✅ สัญจรได้ปกติ' : incident.travel_status === 'difficult' ? '⚠️ สัญจรได้ยากลำบาก' : '🚫 ไม่สามารถสัญจรได้'}</p>}
                                             <p><strong>เวลาเกิดเหตุ:</strong> {formatDate(incident.occurred_at)}</p>

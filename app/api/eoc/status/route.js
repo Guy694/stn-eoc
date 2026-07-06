@@ -55,6 +55,17 @@ async function hasOrderFileColumns(connection) {
     return columns.length === 2;
 }
 
+async function tableExists(connection, tableName) {
+    const [tables] = await connection.execute(
+        `SELECT TABLE_NAME
+         FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?`,
+        [tableName]
+    );
+    return tables.length > 0;
+}
+
 function getOrderFileExtension(file) {
     const mimeExtension = ORDER_FILE_TYPES.get(file.type);
     if (mimeExtension) return mimeExtension;
@@ -421,6 +432,25 @@ export async function POST(request) {
                     sessionId
                 ]);
 
+                let closedShelterCount = 0;
+                if (await tableExists(connection, 'shelter_session_activations')) {
+                    const closeShelterNote = `ปิดอัตโนมัติเมื่อปิด EOC ${eocType}`;
+                    const [closedShelters] = await connection.execute(
+                        `UPDATE shelter_session_activations
+                         SET is_active = 0,
+                             current_occupancy = 0,
+                             deactivated_at = COALESCE(deactivated_at, ?),
+                             notes = CASE
+                                 WHEN notes IS NULL OR notes = '' THEN ?
+                                 ELSE CONCAT(notes, '\n', ?)
+                             END
+                         WHERE session_id = ?
+                           AND is_active = 1`,
+                        [sessionClosedAt, closeShelterNote, closeShelterNote, sessionId]
+                    );
+                    closedShelterCount = closedShelters.affectedRows || 0;
+                }
+
                 // นับจำนวน activities ในช่วง session นี้
                 const [activityCount] = await connection.execute(
                     `SELECT COUNT(*) as total FROM activity_logs WHERE eoc_session_id = ?`,
@@ -444,7 +474,7 @@ export async function POST(request) {
                         'eoc_status',
                         eocType,
                         sessionId,
-                        `ปิด EOC ${eocType}: ${description || ''}`
+                        `ปิด EOC ${eocType}: ${description || ''}${closedShelterCount > 0 ? ` | ปิดศูนย์พักพิง ${closedShelterCount} แห่ง` : ''}`
                     ]
                 );
             }

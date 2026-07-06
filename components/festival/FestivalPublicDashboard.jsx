@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 const FestivalMap = dynamic(() => import("./FestivalMap"), {
     ssr: false,
@@ -19,7 +20,10 @@ export default function FestivalPublicDashboard({ festivalSession }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!festivalSession?.is_active) return;
+        if (festivalSession && !festivalSession.is_active) {
+            setLoading(false);
+            return;
+        }
         const fetchData = async () => {
             try {
                 setLoading(true);
@@ -40,9 +44,9 @@ export default function FestivalPublicDashboard({ festivalSession }) {
         return () => clearInterval(interval);
     }, [festivalSession]);
 
-    if (!festivalSession?.is_active) return null;
+    if (festivalSession && !festivalSession.is_active) return null;
 
-    const ft = festivalSession.festival_type;
+    const ft = festivalSession?.festival_type || data?.activeSession?.festival_type;
     const festivalLabel = ft === 'newyear' ? 'ปีใหม่' : ft === 'songkran' ? 'สงกรานต์' : 'เทศกาล';
     const festivalIcon = ft === 'newyear' ? '🎄' : ft === 'songkran' ? '💦' : '🚗';
     const accentColor = ft === 'newyear' ? 'blue' : ft === 'songkran' ? 'orange' : 'red';
@@ -61,12 +65,12 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                 <h2 className="text-lg md:text-xl font-bold text-gray-800">
                     {festivalIcon} สถิติอุบัติเหตุ{festivalLabel}
                 </h2>
-                <a
-                    href="/stn-eoc/eoc/festival-accidents"
+                <Link
+                    href="/public/festival-accidents"
                     className={`ml-auto text-xs px-3 py-1.5 bg-gradient-to-r ${ac.gradient} text-white rounded-lg hover:opacity-90 transition font-medium shadow-sm`}
                 >
                     ดูรายละเอียด →
-                </a>
+                </Link>
             </div>
 
             {loading ? (

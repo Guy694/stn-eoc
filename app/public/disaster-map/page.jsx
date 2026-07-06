@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
+import { MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 
 const EOC_TYPE_LABELS = {
   flood: "น้ำท่วม",
@@ -19,6 +20,7 @@ const DISASTER_OPTIONS = [
 ];
 
 const DEFAULT_LAYERS = {
+  floodAreas: true,
   district: true,
   tambon: false,
   village: false,
@@ -26,7 +28,9 @@ const DEFAULT_LAYERS = {
   incidents: true,
   traffic: true,
   shelters: true,
-  hospitals: true
+  hospitals: true,
+  waterways: true,
+  hillshade: false
 };
 
 function normalizeEocType(type) {
@@ -114,8 +118,18 @@ function buildContextOptions(activeEocs, sessions, disasterType) {
       status: session.status,
       label: `${EOC_TYPE_LABELS[session.eoc_type] || session.eoc_type} #${session.session_number || session.id}`,
       opened_at: normalizeDateKey(session.opened_at),
-      closed_at: normalizeDateKey(session.closed_at)
-    }));
+      closed_at: normalizeDateKey(session.closed_at),
+      latest_data_date: normalizeDateKey(session.latest_flood_record_date),
+      record_count: Number(session.flood_record_count || 0)
+    }))
+    .sort((a, b) => {
+      if (normalizedType === "flood") {
+        const dataDiff = Number(Boolean(b.latest_data_date)) - Number(Boolean(a.latest_data_date));
+        if (dataDiff !== 0) return dataDiff;
+        if (b.latest_data_date !== a.latest_data_date) return b.latest_data_date.localeCompare(a.latest_data_date);
+      }
+      return b.opened_at.localeCompare(a.opened_at);
+    });
 
   return [...active, ...history];
 }
@@ -162,6 +176,30 @@ function getUrgencyMeta(urgency) {
   return map[urgency] || map.low;
 }
 
+function getEventMeta(item) {
+  if (item?.event_kind === "flood_record") return getFloodSeverityMeta(item.flood_level);
+  return getUrgencyMeta(item?.urgency);
+}
+
+function getEventTypeLabel(item) {
+  if (item?.event_kind === "flood_record") return "บันทึกน้ำท่วม";
+  return getIncidentTypeLabel(item);
+}
+
+function getFloodSeverityMeta(level) {
+  const map = {
+    severe: { label: "น้ำท่วมสูง", urgency: "critical", className: "bg-red-100 text-red-700" },
+    moderate: { label: "น้ำท่วมปานกลาง", urgency: "high", className: "bg-orange-100 text-orange-700" },
+    mild: { label: "น้ำท่วมต่ำ", urgency: "medium", className: "bg-sky-100 text-sky-700" },
+    safe: { label: "ไม่มีน้ำท่วม", urgency: "low", className: "bg-emerald-100 text-emerald-700" }
+  };
+  return map[level] || map.mild;
+}
+
+function getFloodLevelRank(level) {
+  return { severe: 4, moderate: 3, mild: 2, safe: 1 }[level] || 0;
+}
+
 export default function PublicDisasterMapPage() {
   const [activeEocs, setActiveEocs] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -169,11 +207,13 @@ export default function PublicDisasterMapPage() {
   const [selectedContextKey, setSelectedContextKey] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [mapLayers, setMapLayers] = useState(DEFAULT_LAYERS);
+  const [baseMap, setBaseMap] = useState("street");
   const [urgencyFilter, setUrgencyFilter] = useState("all");
   const [reportTypeFilter, setReportTypeFilter] = useState("all");
   const [districtFilter, setDistrictFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [incidents, setIncidents] = useState([]);
+  const [floodAreas, setFloodAreas] = useState([]);
   const [shelterCount, setShelterCount] = useState(0);
   const [hospitalCount, setHospitalCount] = useState(0);
   const [loadingContext, setLoadingContext] = useState(true);
@@ -217,6 +257,7 @@ export default function PublicDisasterMapPage() {
     setSelectedContextKey("");
     setSelectedDate("");
     setIncidents([]);
+    setFloodAreas([]);
   }, [disasterType]);
 
   useEffect(() => {
@@ -237,14 +278,41 @@ export default function PublicDisasterMapPage() {
     if (dateOptions.length === 0) return;
     const fallbackDate = selectedContext?.status === "active"
       ? getTodayDateKey()
-      : dateOptions[dateOptions.length - 1]?.date;
+      : selectedContext?.latest_data_date || dateOptions[dateOptions.length - 1]?.date;
     if (!selectedDate || !dateOptions.some((item) => item.date === selectedDate)) {
       setSelectedDate(fallbackDate || dateOptions[0].date);
     }
-  }, [dateOptions, selectedContext?.status, selectedDate]);
+  }, [dateOptions, selectedContext?.latest_data_date, selectedContext?.status, selectedDate]);
+
+  useEffect(() => {
+    const loadFloodAreas = async () => {
+      if (disasterType !== "flood" || !selectedContext?.id || !selectedDate) {
+        setFloodAreas([]);
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams();
+        params.set("session_id", selectedContext.id);
+        params.set("date", selectedDate);
+        const response = await fetch(`/stn-eoc/api/eoc/flood/area-status?${params.toString()}`);
+        const json = response.ok ? await response.json() : { success: false, data: [] };
+        setFloodAreas(json.success ? json.data || [] : []);
+      } catch (error) {
+        console.error("Error loading flood records for event list:", error);
+        setFloodAreas([]);
+      }
+    };
+
+    loadFloodAreas();
+  }, [disasterType, selectedContext?.id, selectedDate]);
 
   const eocIsOpen = activeEocs.some((item) => item.is_active);
   const latestActive = activeEocs.find((item) => item.is_active);
+  const scaffoldEocStatus = selectedContext?.mode === "active" ? "open" : selectedContext ? "closed" : eocIsOpen ? "open" : "closed";
+  const scaffoldEocLabel = selectedContext
+    ? `${selectedContext.label}${selectedContext.closed_at ? ` ปิดเมื่อ ${formatThaiDate(selectedContext.closed_at)}` : ""}`
+    : latestActive ? latestActive.name_th || EOC_TYPE_LABELS[latestActive.eoc_type] : "ไม่มี EOC ที่เปิดอยู่";
 
   const visibleIncidents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -259,9 +327,7 @@ export default function PublicDisasterMapPage() {
           incident.district,
           incident.sub_district,
           incident.village,
-          incident.description,
-          incident.first_name,
-          incident.last_name
+          incident.description
         ].filter(Boolean).join(" ").toLowerCase();
         if (!haystack.includes(query)) return false;
       }
@@ -269,17 +335,92 @@ export default function PublicDisasterMapPage() {
     });
   }, [districtFilter, incidents, mapLayers.incidents, mapLayers.traffic, reportTypeFilter, searchQuery, urgencyFilter]);
 
+  const floodEventItems = useMemo(() => {
+    if (disasterType !== "flood") return [];
+    const query = searchQuery.trim().toLowerCase();
+    const grouped = new Map();
+
+    for (const area of floodAreas) {
+      if (!area || area.flood_level === "safe") continue;
+      if (districtFilter !== "all" && area.district !== districtFilter) continue;
+
+      const searchableText = [
+        area.district,
+        area.tambon,
+        area.villname,
+        area.notes
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (query && !searchableText.includes(query)) continue;
+
+      const key = `${area.district || "-"}|${area.tambon || "-"}`;
+      const current = grouped.get(key) || {
+        id: `flood-record-${key}`,
+        event_kind: "flood_record",
+        report_type: "flood_record",
+        disaster_type: "flood",
+        district: area.district || "-",
+        sub_district: area.tambon || "-",
+        village_count: 0,
+        affected_people: 0,
+        water_level: 0,
+        recorded_day: area.recorded_day,
+        occurred_at: area.recorded_day,
+        updated_at: area.updated_at,
+        urgency: "medium",
+        flood_level: area.flood_level,
+        village_names: []
+      };
+
+      current.village_count += 1;
+      current.affected_people += Number(area.affected_population || 0);
+      current.water_level = Math.max(current.water_level, Number(area.water_level || 0));
+      if (area.villname) current.village_names.push(area.villname);
+      if (getFloodLevelRank(area.flood_level) > getFloodLevelRank(current.flood_level)) {
+        current.flood_level = area.flood_level;
+      }
+      current.recorded_day = area.recorded_day || current.recorded_day;
+      current.occurred_at = current.recorded_day;
+      current.updated_at = area.updated_at || current.updated_at;
+      const meta = getFloodSeverityMeta(current.flood_level);
+      current.urgency = meta.urgency;
+      current.description = `พื้นที่น้ำท่วม ต.${current.sub_district} อ.${current.district} (${current.village_count} หมู่บ้าน)`;
+      grouped.set(key, current);
+    }
+
+    let items = [...grouped.values()];
+    if (urgencyFilter !== "all") {
+      items = items.filter((item) => item.urgency === urgencyFilter);
+    }
+    if (reportTypeFilter !== "all" && reportTypeFilter !== "flood_record") {
+      items = [];
+    }
+    return items.sort((a, b) => getFloodLevelRank(b.flood_level) - getFloodLevelRank(a.flood_level) || a.sub_district.localeCompare(b.sub_district, "th"));
+  }, [disasterType, districtFilter, floodAreas, reportTypeFilter, searchQuery, urgencyFilter]);
+
+  const visibleEventItems = useMemo(() => {
+    const incidentItems = reportTypeFilter === "flood_record" ? [] : visibleIncidents;
+    return [...floodEventItems, ...incidentItems].sort((a, b) => {
+      const aTime = new Date(a.occurred_at || a.reported_at || a.recorded_day || 0).getTime();
+      const bTime = new Date(b.occurred_at || b.reported_at || b.recorded_day || 0).getTime();
+      return bTime - aTime;
+    });
+  }, [floodEventItems, reportTypeFilter, visibleIncidents]);
+
   const districts = useMemo(
-    () => [...new Set(incidents.map((item) => item.district).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th")),
-    [incidents]
+    () => [...new Set([
+      ...incidents.map((item) => item.district).filter(Boolean),
+      ...floodAreas.map((item) => item.district).filter(Boolean)
+    ])].sort((a, b) => a.localeCompare(b, "th")),
+    [floodAreas, incidents]
   );
 
-  const criticalCount = visibleIncidents.filter((item) => item.urgency === "critical" || item.urgency === "high").length;
+  const criticalCount = visibleEventItems.filter((item) => item.urgency === "critical" || item.urgency === "high").length;
   const trafficCount = visibleIncidents.filter((item) => item.report_type === "traffic_report").length;
   const helpCount = visibleIncidents.filter((item) => (item.report_type || "help_request") !== "traffic_report").length;
-  const affectedPeople = visibleIncidents.reduce((sum, item) => sum + Number(item.affected_people || 0), 0);
-  const affectedDistricts = new Set(visibleIncidents.map((item) => item.district).filter(Boolean)).size;
-  const alertLevel = criticalCount > 0 ? "เฝ้าระวังสูง" : visibleIncidents.length > 0 ? "เฝ้าระวัง" : "ปกติ";
+  const floodRecordCount = floodEventItems.length;
+  const affectedPeople = visibleEventItems.reduce((sum, item) => sum + Number(item.affected_people || 0), 0);
+  const affectedDistricts = new Set(visibleEventItems.map((item) => item.district).filter(Boolean)).size;
+  const alertLevel = criticalCount > 0 ? "เฝ้าระวังสูง" : visibleEventItems.length > 0 ? "เฝ้าระวัง" : "ปกติ";
   const selectedDateLabel = formatThaiDate(selectedDate, { long: true });
   const selectedDateIndex = Math.max(0, dateOptions.findIndex((item) => item.date === selectedDate));
   const timelineItems = dateOptions.slice(
@@ -289,13 +430,13 @@ export default function PublicDisasterMapPage() {
 
   const exportCsv = useCallback(() => {
     const header = ["เวลา", "ประเภท", "อำเภอ", "ตำบล", "หมู่บ้าน", "ระดับ", "รายละเอียด"];
-    const rows = visibleIncidents.map((item) => [
-      formatTime(item.occurred_at || item.reported_at),
-      getIncidentTypeLabel(item),
+    const rows = visibleEventItems.map((item) => [
+      item.event_kind === "flood_record" ? formatThaiDate(item.recorded_day || selectedDate) : formatTime(item.occurred_at || item.reported_at),
+      getEventTypeLabel(item),
       item.district || "",
       item.sub_district || "",
-      item.village || "",
-      getUrgencyMeta(item.urgency).label,
+      item.village || item.village_names?.join("; ") || "",
+      getEventMeta(item).label,
       String(item.description || "").replace(/\n/g, " ")
     ]);
     const csv = [header, ...rows]
@@ -308,7 +449,7 @@ export default function PublicDisasterMapPage() {
     link.download = `satun-map-events-${selectedDate || "latest"}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-  }, [selectedDate, visibleIncidents]);
+  }, [selectedDate, visibleEventItems]);
 
   return (
     <PublicOpsScaffold
@@ -316,17 +457,18 @@ export default function PublicDisasterMapPage() {
       subtitle="แผนที่สถานการณ์ขนาดใหญ่ พร้อมตัวกรองข้อมูลย้อนหลัง ปัจจุบัน และชั้นข้อมูลเฉพาะ"
       activeMenu="map"
       eocIsOpen={eocIsOpen}
-      eocLabel={latestActive ? latestActive.name_th || EOC_TYPE_LABELS[latestActive.eoc_type] : "สถานะศูนย์"}
+      eocStatus={scaffoldEocStatus}
+      eocLabel={scaffoldEocLabel}
       showPageHeader={false}
       mainClassName="pb-3 lg:pb-3"
     >
       <section className="flex min-h-[calc(100vh-111px)] flex-col gap-3">
         <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-[repeat(6,minmax(0,1fr))_minmax(220px,1.05fr)]">
-          <MapStatCard icon="≈" label="เหตุการณ์ทั้งหมดวันนี้" value={visibleIncidents.length} unit="เหตุการณ์" subText={`${criticalCount} รายที่ต้องติดตาม`} tone="blue" />
+          <MapStatCard icon="≈" label="เหตุการณ์ทั้งหมดวันนี้" value={visibleEventItems.length} unit="เหตุการณ์" subText={`${criticalCount} รายที่ต้องติดตาม`} tone="blue" />
           <MapStatCard icon="⌖" label="อำเภอได้รับผลกระทบ" value={affectedDistricts} unit="อำเภอ" subText="จากทั้งหมด 7 อำเภอ" tone="orange" />
           <MapStatCard icon="⌂" label="ศูนย์พักพิงที่เปิด" value={shelterCount} unit="แห่ง" subText={`รองรับข้อมูล ${hospitalCount} จุดสุขภาพ`} tone="violet" />
-          <MapStatCard icon="−" label="เส้นทางที่มีรายงาน" value={trafficCount} unit="เส้นทาง" subText={`${helpCount} รายงานประชาชน`} tone="red" />
-          <MapStatCard icon="+" label="ผู้ได้รับผลกระทบเบื้องต้น" value={affectedPeople} unit="คน" subText="จากรายงานที่ยืนยันแล้ว" tone="emerald" />
+          <MapStatCard icon="−" label="บันทึกน้ำท่วม" value={floodRecordCount} unit="ตำบล" subText={`${trafficCount} เส้นทาง / ${helpCount} รายงานประชาชน`} tone="red" />
+          <MapStatCard icon="+" label="ผู้ได้รับผลกระทบเบื้องต้น" value={affectedPeople} unit="คน" subText="จากรายงานประชาชนและบันทึกน้ำท่วม" tone="emerald" />
           <MapStatCard icon="!" label="ระดับเฝ้าระวัง" value={alertLevel} unit="" subText={criticalCount > 0 ? `${criticalCount} รายการสำคัญ` : "ติดตามตามปกติ"} tone="amber" />
 
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -418,6 +560,8 @@ export default function PublicDisasterMapPage() {
                 reportTypeFilter={reportTypeFilter}
                 districtFilter={districtFilter}
                 searchQuery={searchQuery}
+                baseMap={baseMap}
+                onBaseMapChange={setBaseMap}
                 onDataChange={setIncidents}
               />
             </div>
@@ -426,6 +570,10 @@ export default function PublicDisasterMapPage() {
               <MapLayerPanel
                 layers={mapLayers}
                 setLayers={setMapLayers}
+                baseMap={baseMap}
+                setBaseMap={setBaseMap}
+                showLegend={showLegend}
+                setShowLegend={setShowLegend}
                 urgencyFilter={urgencyFilter}
                 setUrgencyFilter={setUrgencyFilter}
                 reportTypeFilter={reportTypeFilter}
@@ -447,7 +595,7 @@ export default function PublicDisasterMapPage() {
               </button>
             )}
 
-            {visibleIncidents.length === 0 && !loadingContext && (
+            {visibleEventItems.length === 0 && !loadingContext && (
               <div className="pointer-events-none absolute bottom-5 left-1/2 z-[520] -translate-x-1/2 rounded-lg bg-white/95 px-4 py-2 text-sm font-bold text-slate-600 shadow-md">
                 ไม่พบเหตุการณ์ในเงื่อนไขนี้
               </div>
@@ -461,10 +609,10 @@ export default function PublicDisasterMapPage() {
                   <h3 className="text-lg font-black text-blue-900">สรุปเหตุการณ์ของวันที่เลือก</h3>
                   <p className="text-xs text-slate-500">{selectedDateLabel} {selectedContext?.label ? `• ${selectedContext.label}` : ""}</p>
                 </div>
-                <span className="text-xs font-bold text-slate-500">ข้อมูลจากรายงานที่ยืนยันแล้ว</span>
+                <span className="text-xs font-bold text-slate-500">รายงานประชาชนและบันทึกน้ำท่วม</span>
               </div>
               <div className="grid grid-cols-3 divide-x divide-slate-100 rounded-xl border border-slate-100 p-3 text-center">
-                <MiniStat label="เหตุการณ์รวม" value={visibleIncidents.length} />
+                <MiniStat label="เหตุการณ์รวม" value={visibleEventItems.length} />
                 <MiniStat label="อำเภอ" value={`${affectedDistricts}/7`} />
                 <MiniStat label="ผู้ได้รับผลกระทบ" value={affectedPeople} />
               </div>
@@ -476,17 +624,21 @@ export default function PublicDisasterMapPage() {
                 <Link href="/public/help" className="text-xs font-bold text-blue-700">ดูทั้งหมด</Link>
               </div>
               <div className="max-h-[210px] space-y-2 overflow-auto pr-1">
-                {visibleIncidents.length === 0 ? (
+                {visibleEventItems.length === 0 ? (
                   <p className="rounded-lg border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">ยังไม่มีรายการในวันที่เลือก</p>
-                ) : visibleIncidents.slice(0, 5).map((item) => {
+                ) : visibleEventItems.slice(0, 5).map((item) => {
+                  const isFloodRecord = item.event_kind === "flood_record";
+                  const timeLabel = isFloodRecord ? formatThaiDate(item.recorded_day || selectedDate) : formatTime(item.occurred_at || item.reported_at);
                   return (
-                    <div key={`important-${item.id}`} className="grid grid-cols-[36px_minmax(0,1fr)_52px] gap-2 rounded-lg border border-slate-100 p-3 text-sm">
-                      <span className={`flex h-8 w-8 items-center justify-center rounded-full text-lg ${item.report_type === "traffic_report" ? "bg-red-50 text-red-700" : "bg-orange-50 text-orange-700"}`}>{item.report_type === "traffic_report" ? "−" : "!"}</span>
+                    <div key={`important-${item.event_kind || "incident"}-${item.id}`} className="grid grid-cols-[36px_minmax(0,1fr)_72px] gap-2 rounded-lg border border-slate-100 p-3 text-sm">
+                      <span className={`flex h-8 w-8 items-center justify-center rounded-full text-lg ${isFloodRecord ? "bg-sky-50 text-sky-700" : item.report_type === "traffic_report" ? "bg-red-50 text-red-700" : "bg-orange-50 text-orange-700"}`}>{isFloodRecord ? "≈" : item.report_type === "traffic_report" ? "−" : "!"}</span>
                       <div className="min-w-0">
-                        <p className="truncate font-black text-slate-800">{item.description || getIncidentTypeLabel(item)}</p>
-                        <p className="truncate text-xs text-slate-500">อ.{item.district || "-"} ต.{item.sub_district || "-"}</p>
+                        <p className="truncate font-black text-slate-800">{item.description || getEventTypeLabel(item)}</p>
+                        <p className="truncate text-xs text-slate-500">
+                          อ.{item.district || "-"} ต.{item.sub_district || "-"}{isFloodRecord ? ` • ${item.village_count || 0} หมู่บ้าน` : ""}
+                        </p>
                       </div>
-                      <span className="text-right text-xs text-slate-500">{formatTime(item.occurred_at || item.reported_at)}</span>
+                      <span className="text-right text-xs text-slate-500">{timeLabel}</span>
                     </div>
                   );
                 })}
@@ -495,13 +647,14 @@ export default function PublicDisasterMapPage() {
 
             <section className="flex min-h-0 flex-1 flex-col rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-black text-blue-900">รายการเหตุการณ์ ({formatNumber(visibleIncidents.length)})</h3>
+                <h3 className="text-lg font-black text-blue-900">รายการเหตุการณ์ ({formatNumber(visibleEventItems.length)})</h3>
                 <button type="button" onClick={exportCsv} className="text-xs font-bold text-blue-700">ดาวน์โหลด</button>
               </div>
               <div className="mb-3 flex flex-wrap gap-2">
                 {[
                   ["all", "ทั้งหมด", setReportTypeFilter, reportTypeFilter],
                   ["help_request", "เหตุการณ์", setReportTypeFilter, reportTypeFilter],
+                  ["flood_record", "น้ำท่วม", setReportTypeFilter, reportTypeFilter],
                   ["traffic_report", "เส้นทาง", setReportTypeFilter, reportTypeFilter]
                 ].map(([key, label, setter, current]) => (
                   <button
@@ -515,16 +668,21 @@ export default function PublicDisasterMapPage() {
                 ))}
               </div>
               <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-100">
-                {visibleIncidents.length === 0 ? (
+                {visibleEventItems.length === 0 ? (
                   <div className="p-5 text-center text-sm text-slate-500">ไม่มีรายการเหตุการณ์</div>
-                ) : visibleIncidents.map((item) => {
-                  const meta = getUrgencyMeta(item.urgency);
+                ) : visibleEventItems.map((item) => {
+                  const meta = getEventMeta(item);
+                  const isFloodRecord = item.event_kind === "flood_record";
+                  const timeLabel = isFloodRecord ? formatThaiDate(item.recorded_day || selectedDate) : formatTime(item.occurred_at || item.reported_at);
+                  const areaText = isFloodRecord
+                    ? `พื้นที่ท่วม: ต.${item.sub_district || "-"} อ.${item.district || "-"} • ${item.village_count || 0} หมู่บ้าน${item.water_level ? ` • ระดับน้ำสูงสุด ${item.water_level} ม.` : ""}`
+                    : `อ.${item.district || "-"} ต.${item.sub_district || "-"}`;
                   return (
-                    <article key={item.id} className="grid grid-cols-[54px_minmax(0,1fr)_76px] gap-2 border-b border-slate-100 px-3 py-2 text-sm last:border-b-0">
-                      <span className="font-bold text-slate-700">{formatTime(item.occurred_at || item.reported_at)}</span>
+                    <article key={`${item.event_kind || "incident"}-${item.id}`} className="grid grid-cols-[70px_minmax(0,1fr)_86px] gap-2 border-b border-slate-100 px-3 py-2 text-sm last:border-b-0">
+                      <span className="font-bold text-slate-700">{timeLabel}</span>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-slate-800">{item.description || getIncidentTypeLabel(item)}</p>
-                        <p className="truncate text-xs text-slate-500">อ.{item.district || "-"} ต.{item.sub_district || "-"}</p>
+                        <p className="truncate font-semibold text-slate-800">{item.description || getEventTypeLabel(item)}</p>
+                        <p className="truncate text-xs text-slate-500">{areaText}</p>
                       </div>
                       <span className={`self-center rounded-full px-2 py-1 text-center text-xs font-bold ${meta.className}`}>{meta.label}</span>
                     </article>
@@ -605,12 +763,15 @@ function MapStatCard({ icon, label, value, unit, subText, tone }) {
 
 function MapLegend({ onClose }) {
   const items = [
+    ["bg-red-600", "น้ำท่วมสูง/สูงมาก"],
+    ["bg-amber-400", "น้ำท่วมปานกลาง"],
+    ["bg-sky-400", "น้ำท่วมต่ำ"],
     ["bg-red-600", "เส้นทางปิด"],
+    ["bg-sky-700", "เส้นทางน้ำ/คลองหลัก"],
     ["bg-orange-500", "เหตุการณ์กำลังเกิด"],
     ["bg-violet-600", "ศูนย์พักพิง"],
     ["bg-emerald-600", "โรงพยาบาล"],
-    ["bg-blue-500", "จุดเฝ้าระวัง / ระดับน้ำ"],
-    ["bg-sky-200", "พื้นที่น้ำท่วม"]
+    ["bg-blue-500", "จุดเฝ้าระวัง / ระดับน้ำ"]
   ];
 
   return (
@@ -631,16 +792,19 @@ function MapLegend({ onClose }) {
   );
 }
 
-function MapLayerPanel({ layers, setLayers, urgencyFilter, setUrgencyFilter, reportTypeFilter, setReportTypeFilter }) {
+function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, setShowLegend, urgencyFilter, setUrgencyFilter, reportTypeFilter, setReportTypeFilter }) {
   const layerItems = [
+    ["floodAreas", "พื้นที่น้ำท่วม"],
     ["district", "ขอบเขตอำเภอ"],
     ["tambon", "ขอบเขตตำบล"],
     ["labels", "ชื่อพื้นที่"],
     ["incidents", "เหตุการณ์"],
     ["traffic", "เส้นทาง/ถนน"],
+    ["waterways", "เส้นทางน้ำ/คลอง"],
+    ["hillshade", "เงาภูมิประเทศ/ความสูง"],
     ["shelters", "ศูนย์พักพิง"],
     ["hospitals", "โรงพยาบาล"],
-    ["village", "หมู่บ้าน"]
+    ["village", "ขอบเขตหมู่บ้าน"]
   ];
 
   return (
@@ -649,13 +813,28 @@ function MapLayerPanel({ layers, setLayers, urgencyFilter, setUrgencyFilter, rep
         <h3 className="text-sm font-black text-blue-900">ชั้นข้อมูลแผนที่</h3>
         <button
           type="button"
-          onClick={() => setLayers(DEFAULT_LAYERS)}
+          onClick={() => {
+            setLayers(DEFAULT_LAYERS);
+            setShowLegend(true);
+          }}
           className="text-xs font-bold text-blue-700"
         >
           ค่าเริ่มต้น
         </button>
       </div>
       <div className="space-y-1.5">
+        <label className="mb-2 block">
+          <span className="mb-1 block text-xs font-black text-blue-800">แผนที่พื้นหลัง</span>
+          <select
+            value={baseMap}
+            onChange={(event) => setBaseMap(event.target.value)}
+            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-400"
+          >
+            {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
+              <option key={key} value={key}>{layer.label}</option>
+            ))}
+          </select>
+        </label>
         {layerItems.map(([key, label]) => (
           <label key={key} className="flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50">
             <input
@@ -667,14 +846,24 @@ function MapLayerPanel({ layers, setLayers, urgencyFilter, setUrgencyFilter, rep
             {label}
           </label>
         ))}
+        <label className="flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50">
+          <input
+            type="checkbox"
+            checked={showLegend}
+            onChange={(event) => setShowLegend(event.target.checked)}
+            className="h-4 w-4 accent-blue-700"
+          />
+          แสดง legend
+        </label>
       </div>
 
       <div className="mt-3 border-t border-slate-100 pt-3">
         <p className="mb-2 text-xs font-black text-blue-800">ประเภทข้อมูล</p>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5">
           {[
             ["all", "ทั้งหมด"],
             ["help_request", "เหตุการณ์"],
+            ["flood_record", "น้ำท่วม"],
             ["traffic_report", "เส้นทาง"]
           ].map(([key, label]) => (
             <button

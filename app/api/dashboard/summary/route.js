@@ -159,17 +159,74 @@ export async function GET(request) {
         try {
             const [sessions] = await connection.execute(`
                 SELECT
-                    id,
-                    eoc_type,
-                    session_number,
-                    status,
-                    DATE_FORMAT(opened_at, '%Y-%m-%d %H:%i:%s') as opened_at,
-                    DATE_FORMAT(closed_at, '%Y-%m-%d %H:%i:%s') as closed_at,
-                    open_reason,
-                    close_reason,
-                    summary
-                FROM eoc_sessions
-                ORDER BY opened_at DESC, id DESC
+                    s.id,
+                    s.eoc_type,
+                    s.session_number,
+                    s.status,
+                    DATE_FORMAT(s.opened_at, '%Y-%m-%d %H:%i:%s') as opened_at,
+                    DATE_FORMAT(s.closed_at, '%Y-%m-%d %H:%i:%s') as closed_at,
+                    s.open_reason,
+                    s.close_reason,
+                    s.summary,
+                    DATE_FORMAT(DATE(s.opened_at), '%Y-%m-%d') as affected_period_start,
+                    DATE_FORMAT(DATE(COALESCE(s.closed_at, NOW())), '%Y-%m-%d') as affected_period_end,
+                    (
+                        SELECT COALESCE(SUM(ap.affected), 0)
+                        FROM affected_persons ap
+                        WHERE ap.session_id = s.id
+                          AND ap.report_date BETWEEN DATE(s.opened_at) AND DATE(COALESCE(s.closed_at, NOW()))
+                    ) as affected_total,
+                    (
+                        SELECT COALESCE(SUM(ap.injured), 0)
+                        FROM affected_persons ap
+                        WHERE ap.session_id = s.id
+                          AND ap.report_date BETWEEN DATE(s.opened_at) AND DATE(COALESCE(s.closed_at, NOW()))
+                    ) as affected_injured,
+                    (
+                        SELECT COALESCE(SUM(ap.deaths), 0)
+                        FROM affected_persons ap
+                        WHERE ap.session_id = s.id
+                          AND ap.report_date BETWEEN DATE(s.opened_at) AND DATE(COALESCE(s.closed_at, NOW()))
+                    ) as affected_deaths,
+                    (
+                        SELECT COALESCE(SUM(ap.missing), 0)
+                        FROM affected_persons ap
+                        WHERE ap.session_id = s.id
+                          AND ap.report_date BETWEEN DATE(s.opened_at) AND DATE(COALESCE(s.closed_at, NOW()))
+                    ) as affected_missing,
+                    (
+                        SELECT COUNT(DISTINCT ap.district_name)
+                        FROM affected_persons ap
+                        WHERE ap.session_id = s.id
+                          AND ap.report_date BETWEEN DATE(s.opened_at) AND DATE(COALESCE(s.closed_at, NOW()))
+                    ) as affected_districts,
+                    (
+                        SELECT COUNT(DISTINCT ap.tambon)
+                        FROM affected_persons ap
+                        WHERE ap.session_id = s.id
+                          AND ap.report_date BETWEEN DATE(s.opened_at) AND DATE(COALESCE(s.closed_at, NOW()))
+                    ) as affected_tambons,
+                    DATE_FORMAT(
+                        COALESCE(
+                            MAX(CASE WHEN fr.flood_level <> 'ไม่มี' THEN fr.flood_start_date END),
+                            MAX(fr.flood_start_date)
+                        ),
+                        '%Y-%m-%d'
+                    ) as latest_flood_record_date,
+                    COUNT(fr.id) as flood_record_count
+                FROM eoc_sessions s
+                LEFT JOIN flood_records fr ON fr.session_id = s.id
+                GROUP BY
+                    s.id,
+                    s.eoc_type,
+                    s.session_number,
+                    s.status,
+                    s.opened_at,
+                    s.closed_at,
+                    s.open_reason,
+                    s.close_reason,
+                    s.summary
+                ORDER BY s.opened_at DESC, s.id DESC
                 LIMIT 100
             `);
             eocSessions = sessions;
@@ -179,9 +236,19 @@ export async function GET(request) {
         // 6. ดึงประกาศล่าสุด 3 รายการ
         try {
             const [announcementData] = await connection.execute(`
-                SELECT id, title, content, priority, created_at
+                SELECT
+                    id,
+                    title,
+                    description,
+                    description AS content,
+                    priority,
+                    start_date,
+                    end_date,
+                    created_at
                 FROM announcements
                 WHERE is_active = 1
+                    AND (start_date IS NULL OR start_date <= NOW())
+                    AND (end_date IS NULL OR end_date >= NOW())
                 ORDER BY priority DESC, created_at DESC
                 LIMIT 3
             `);
@@ -334,8 +401,12 @@ export async function GET(request) {
             const shelter = shelterStatsRows[0] || {};
             const incidents = publicIncidentStatsRows[0] || {};
             const vulnerable = vulnerableStatsRows[0] || {};
+            const sessionImpactById = new Map(
+                (eocSessions || []).map((session) => [String(session.id), session])
+            );
 
             eocOverview = eocRows.map((eoc) => {
+                const sessionImpact = sessionImpactById.get(String(eoc.session_id)) || {};
                 const base = {
                     eoc_type: eoc.eoc_type,
                     name_th: eoc.name_th,
@@ -348,6 +419,8 @@ export async function GET(request) {
                     session_status: eoc.session_status,
                     opened_at: eoc.opened_at,
                     closed_at: eoc.closed_at,
+                    affected_period_start: sessionImpact.affected_period_start || null,
+                    affected_period_end: sessionImpact.affected_period_end || null,
                     summary: [],
                     links: []
                 };
@@ -357,14 +430,17 @@ export async function GET(request) {
                         ...base,
                         description: 'ภาพรวมสถานการณ์อุทกภัย ผู้ได้รับผลกระทบ ศูนย์พักพิง และรายงานประชาชน',
                         summary: [
-                            { key: 'affected', label: 'ผู้ได้รับผลกระทบ', value: flood.affected || 0, unit: 'คน' },
-                            { key: 'injured', label: 'บาดเจ็บ', value: flood.injured || 0, unit: 'คน' },
-                            { key: 'deaths', label: 'เสียชีวิต', value: flood.deaths || 0, unit: 'คน' },
-                            { key: 'districts', label: 'อำเภอที่มีรายงาน', value: flood.districts || floodVillage.districts || 0, unit: 'อำเภอ' },
+                            { key: 'affected', label: 'ผู้ได้รับผลกระทบ', value: sessionImpact.affected_total || 0, unit: 'คน' },
+                            { key: 'injured', label: 'บาดเจ็บ', value: sessionImpact.affected_injured || 0, unit: 'คน' },
+                            { key: 'deaths', label: 'เสียชีวิต', value: sessionImpact.affected_deaths || 0, unit: 'คน' },
+                            { key: 'districts', label: 'อำเภอที่มีรายงาน', value: sessionImpact.affected_districts || flood.districts || floodVillage.districts || 0, unit: 'อำเภอ' },
                             { key: 'shelters', label: 'ศูนย์พักพิง', value: shelter.total || 0, unit: 'แห่ง' },
                             { key: 'public_reports', label: 'รายงานประชาชน', value: incidents.total || 0, unit: 'รายการ' }
                         ],
-                        period: { first_date: flood.first_date, last_date: flood.last_date },
+                        period: {
+                            first_date: sessionImpact.affected_period_start || flood.first_date,
+                            last_date: sessionImpact.affected_period_end || flood.last_date
+                        },
                         links: [
                             { label: 'เปิดภาพรวม', href: '/eoc/flood/overview' },
                             { label: 'ผู้ได้รับผลกระทบ', href: '/eoc/flood/affected' },

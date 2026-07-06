@@ -43,16 +43,14 @@ export default function DailyDiseaseChart({ sessionId }) {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (!sessionId) {
-            setLoading(false);
-            return;
-        }
-
         const fetchData = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`/stn-eoc/api/eoc/disease/daily-stats?session_id=${sessionId}`);
+                const params = new URLSearchParams();
+                if (sessionId) params.set('session_id', sessionId);
+                const url = `/stn-eoc/api/eoc/disease/daily-stats${params.toString() ? `?${params.toString()}` : ''}`;
+                const response = await fetch(url);
                 const result = await response.json();
 
                 if (result.success) {
