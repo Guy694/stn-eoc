@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
@@ -201,6 +201,7 @@ function getFloodLevelRank(level) {
 }
 
 export default function PublicDisasterMapPage() {
+  const mapWorkspaceRef = useRef(null);
   const [activeEocs, setActiveEocs] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [disasterType, setDisasterType] = useState("flood");
@@ -217,7 +218,9 @@ export default function PublicDisasterMapPage() {
   const [shelterCount, setShelterCount] = useState(0);
   const [hospitalCount, setHospitalCount] = useState(0);
   const [loadingContext, setLoadingContext] = useState(true);
+  const [showLayerPanel, setShowLayerPanel] = useState(true);
   const [showLegend, setShowLegend] = useState(true);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
 
   useEffect(() => {
     const loadContext = async () => {
@@ -246,6 +249,28 @@ export default function PublicDisasterMapPage() {
     };
 
     loadContext();
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentFullscreen = document.fullscreenElement === mapWorkspaceRef.current;
+      setIsMapFullscreen(isCurrentFullscreen);
+      window.setTimeout(() => window.dispatchEvent(new Event("resize")), 150);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleMapFullscreen = useCallback(() => {
+    if (!mapWorkspaceRef.current) return;
+    if (document.fullscreenElement === mapWorkspaceRef.current) {
+      document.exitFullscreen?.();
+      return;
+    }
+    mapWorkspaceRef.current.requestFullscreen?.().catch((error) => {
+      console.error("Error opening map fullscreen:", error);
+    });
   }, []);
 
   const contextOptions = useMemo(
@@ -489,7 +514,11 @@ export default function PublicDisasterMapPage() {
           </div>
         </div>
 
-        <section className="grid gap-3 rounded-xl border border-blue-100 bg-white p-3 shadow-sm lg:grid-cols-[170px_minmax(260px,1fr)_150px_minmax(190px,250px)]">
+        <section
+          ref={mapWorkspaceRef}
+          className={`flex flex-col gap-3 ${isMapFullscreen ? "h-screen overflow-auto bg-[#edf5fc] p-3" : ""}`}
+        >
+        <section className="grid gap-3 rounded-xl border border-blue-100 bg-white p-3 shadow-sm lg:grid-cols-[150px_minmax(230px,1fr)_140px_135px_minmax(170px,220px)_120px]">
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-slate-500">ประเภท EOC</span>
                 <select
@@ -522,6 +551,21 @@ export default function PublicDisasterMapPage() {
               </label>
 
               <label className="block">
+                <span className="mb-1 block text-xs font-bold text-slate-500">วันที่</span>
+                <select
+                  value={selectedDate}
+                  onChange={(event) => setSelectedDate(event.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400"
+                >
+                  {dateOptions.map((item) => (
+                    <option key={item.date} value={item.date}>
+                      วันที่ {item.dayNumber}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
                 <span className="mb-1 block text-xs font-bold text-slate-500">อำเภอ</span>
                 <select
                   value={districtFilter}
@@ -542,11 +586,23 @@ export default function PublicDisasterMapPage() {
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400"
                 />
               </label>
+
+              <button
+                type="button"
+                onClick={toggleMapFullscreen}
+                className={`flex h-full min-h-[58px] items-center justify-center rounded-lg border px-3 py-2 text-xs font-black shadow-sm transition ${
+                  isMapFullscreen
+                    ? "border-slate-300 bg-slate-800 text-white hover:bg-slate-700"
+                    : "border-blue-200 bg-blue-700 text-white hover:bg-blue-800"
+                }`}
+              >
+                {isMapFullscreen ? "ออกเต็มจอ" : "เต็มจอ"}
+              </button>
         </section>
 
-        <div className="grid flex-1 gap-3 xl:grid-cols-[minmax(0,1fr)_390px]">
-          <section className="relative min-h-[560px] overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
-            <div className="h-[calc(100vh-362px)] min-h-[560px] bg-slate-100 max-lg:h-[560px]">
+        <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,1fr)_390px]">
+          <section className={`relative overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${isMapFullscreen ? "min-h-0" : "min-h-[560px]"}`}>
+            <div className={`${isMapFullscreen ? "h-[calc(100vh-190px)] min-h-[420px]" : "h-[calc(100vh-362px)] min-h-[560px] max-lg:h-[560px]"} bg-slate-100`}>
               <PublicIncidentMap
                 disasterType={disasterType}
                 sessionId={selectedContext?.id || null}
@@ -566,20 +622,31 @@ export default function PublicDisasterMapPage() {
               />
             </div>
 
-            <div className="absolute right-4 top-4 z-[500] w-[230px] max-md:left-4 max-md:right-4 max-md:w-auto">
-              <MapLayerPanel
-                layers={mapLayers}
-                setLayers={setMapLayers}
-                baseMap={baseMap}
-                setBaseMap={setBaseMap}
-                showLegend={showLegend}
-                setShowLegend={setShowLegend}
-                urgencyFilter={urgencyFilter}
-                setUrgencyFilter={setUrgencyFilter}
-                reportTypeFilter={reportTypeFilter}
-                setReportTypeFilter={setReportTypeFilter}
-              />
-            </div>
+            {showLayerPanel ? (
+              <div className="absolute right-4 top-4 z-[500] w-[230px] max-md:left-4 max-md:right-4 max-md:w-auto">
+                <MapLayerPanel
+                  layers={mapLayers}
+                  setLayers={setMapLayers}
+                  baseMap={baseMap}
+                  setBaseMap={setBaseMap}
+                  showLegend={showLegend}
+                  setShowLegend={setShowLegend}
+                  onClose={() => setShowLayerPanel(false)}
+                  urgencyFilter={urgencyFilter}
+                  setUrgencyFilter={setUrgencyFilter}
+                  reportTypeFilter={reportTypeFilter}
+                  setReportTypeFilter={setReportTypeFilter}
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowLayerPanel(true)}
+                className="absolute right-4 top-4 z-[500] rounded-lg border border-blue-100 bg-white/95 px-3 py-2 text-xs font-black text-blue-700 shadow-lg backdrop-blur max-md:left-4 max-md:right-auto"
+              >
+                แสดงชั้นข้อมูล
+              </button>
+            )}
 
             {showLegend ? (
               <div className="absolute bottom-4 left-4 z-[500] max-w-[235px] max-md:hidden">
@@ -602,7 +669,7 @@ export default function PublicDisasterMapPage() {
             )}
           </section>
 
-          <aside className="flex min-h-[560px] flex-col gap-3 xl:h-[calc(100vh-362px)]">
+          <aside className={`flex flex-col gap-3 ${isMapFullscreen ? "h-[calc(100vh-190px)] min-h-0" : "min-h-[560px] xl:h-[calc(100vh-362px)]"}`}>
             <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
@@ -720,6 +787,7 @@ export default function PublicDisasterMapPage() {
             </button>
           </div>
         </section>
+        </section>
       </section>
     </PublicOpsScaffold>
   );
@@ -792,7 +860,7 @@ function MapLegend({ onClose }) {
   );
 }
 
-function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, setShowLegend, urgencyFilter, setUrgencyFilter, reportTypeFilter, setReportTypeFilter }) {
+function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, setShowLegend, onClose, urgencyFilter, setUrgencyFilter, reportTypeFilter, setReportTypeFilter }) {
   const layerItems = [
     ["floodAreas", "พื้นที่น้ำท่วม"],
     ["district", "ขอบเขตอำเภอ"],
@@ -811,16 +879,25 @@ function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, set
     <aside className="rounded-xl border border-blue-100 bg-white/95 p-3 shadow-lg backdrop-blur">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-black text-blue-900">ชั้นข้อมูลแผนที่</h3>
-        <button
-          type="button"
-          onClick={() => {
-            setLayers(DEFAULT_LAYERS);
-            setShowLegend(true);
-          }}
-          className="text-xs font-bold text-blue-700"
-        >
-          ค่าเริ่มต้น
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setLayers(DEFAULT_LAYERS);
+              setShowLegend(true);
+            }}
+            className="text-xs font-bold text-blue-700"
+          >
+            ค่าเริ่มต้น
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md px-2 py-1 text-[11px] font-black text-slate-500 hover:bg-slate-100"
+          >
+            ซ่อน
+          </button>
+        </div>
       </div>
       <div className="space-y-1.5">
         <label className="mb-2 block">

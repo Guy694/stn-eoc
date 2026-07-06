@@ -7,6 +7,7 @@ import { createRandomFilename, resolveInside, validateImageFile } from "@/lib/fi
 import { publicInternalError } from "@/lib/apiResponse";
 
 const MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const VALID_EOC_TYPES = ['flood', 'drought', 'tsunami', 'earthquake', 'disease', 'accident', 'festival-accidents'];
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -18,6 +19,40 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+
+async function hasAnnouncementColumn(connection, columnName) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'announcements'
+           AND COLUMN_NAME = ?`,
+        [columnName]
+    );
+    return columns.length > 0;
+}
+
+function normalizeOptionalId(value) {
+    if (value === undefined || value === null || value === '') return null;
+    const numericValue = Number(value);
+    return Number.isInteger(numericValue) && numericValue > 0 ? numericValue : null;
+}
+
+async function resolveSessionEocType(connection, sessionId) {
+    if (!sessionId) return null;
+    const [sessions] = await connection.execute(
+        `SELECT id, eoc_type FROM eoc_sessions WHERE id = ?`,
+        [sessionId]
+    );
+    return sessions[0]?.eoc_type || null;
+}
+
+function missingSessionResponse() {
+    return NextResponse.json(
+        { success: false, message: 'กรุณาเลือก EOC Session' },
+        { status: 400 }
+    );
+}
 
 // GET - ดึงรายการแบนเนอร์
 export async function GET(request) {
@@ -31,25 +66,35 @@ export async function GET(request) {
         const isActive = searchParams.get('is_active');
         const showPopup = searchParams.get('show_popup');
         const eocType = searchParams.get('eoc_type');
-        const page = parseInt(searchParams.get('page') || '1');
-        const limit = parseInt(searchParams.get('limit') || '20');
+        const sessionId = normalizeOptionalId(searchParams.get('session_id'));
+        const rawPage = parseInt(searchParams.get('page') || '1', 10);
+        const rawLimit = parseInt(searchParams.get('limit') || '20', 10);
+        const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+        const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 20;
         const offset = (page - 1) * limit;
+        const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
+        const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
 
         let whereConditions = [];
         let params = [];
 
-        if (eocType) {
-            whereConditions.push('eoc_type = ?');
+        if (hasEocType && eocType) {
+            whereConditions.push('a.eoc_type = ?');
             params.push(eocType);
         }
 
+        if (hasSessionId && sessionId) {
+            whereConditions.push('a.session_id = ?');
+            params.push(sessionId);
+        }
+
         if (isActive !== null && isActive !== undefined && isActive !== '') {
-            whereConditions.push('is_active = ?');
+            whereConditions.push('a.is_active = ?');
             params.push(isActive === 'true' ? 1 : 0);
         }
 
         if (showPopup !== null && showPopup !== undefined && showPopup !== '') {
-            whereConditions.push('show_popup = ?');
+            whereConditions.push('a.show_popup = ?');
             params.push(showPopup === 'true' ? 1 : 0);
         }
 
@@ -57,30 +102,42 @@ export async function GET(request) {
             ? 'WHERE ' + whereConditions.join(' AND ')
             : '';
 
-        // ตรวจสอบว่ามีคอลัมน์ eoc_type หรือไม่
-        const [columns] = await connection.execute(
-            `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
-        );
-        const hasEocType = columns.length > 0;
-
         // Query รายการแบนเนอร์
+        const sessionJoin = hasSessionId
+            ? 'LEFT JOIN eoc_sessions es ON a.session_id = es.id'
+            : '';
+        const sessionSelect = hasSessionId
+            ? `a.session_id,
+                es.session_number,
+                es.status as session_status,
+                es.opened_at as session_opened_at,
+                es.closed_at as session_closed_at,`
+            : `NULL as session_id,
+                NULL as session_number,
+                NULL as session_status,
+                NULL as session_opened_at,
+                NULL as session_closed_at,`;
         const selectFields = hasEocType
-            ? 'a.*, CONCAT(o.given_name, \' \', o.family_name) as created_by_name'
-            : 'a.id, a.title, a.description, a.image_path, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, \' \', o.family_name) as created_by_name, \'flood\' as eoc_type';
+            ? `a.id, a.title, a.eoc_type, ${sessionSelect} a.description, a.image_path, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, ' ', o.family_name) as created_by_name`
+            : `a.id, a.title, 'flood' as eoc_type, ${sessionSelect} a.description, a.image_path, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, ' ', o.family_name) as created_by_name`;
 
         const [announcements] = await connection.execute(
             `SELECT ${selectFields}
             FROM announcements a
             LEFT JOIN officer o ON a.created_by = o.id
+            ${sessionJoin}
             ${whereClause}
-            ORDER BY priority DESC, created_at DESC
-            LIMIT ? OFFSET ?`,
-            [...params, limit, offset]
+            ORDER BY a.priority DESC, a.created_at DESC
+            LIMIT ${limit} OFFSET ${offset}`,
+            params
         );
 
         // นับจำนวนทั้งหมด
         const [countResult] = await connection.execute(
-            `SELECT COUNT(*) as total FROM announcements ${whereClause}`,
+            `SELECT COUNT(*) as total
+             FROM announcements a
+             ${sessionJoin}
+             ${whereClause}`,
             params
         );
 
@@ -142,12 +199,14 @@ export async function POST(request) {
     const connection = await pool.getConnection();
 
     try {
-        const auth = await requireAuth(request, ['admin']);
+        const auth = await requireAuth(request, ['admin', 'commander']);
         if (!auth.success) return auth.response;
 
         const formData = await request.formData();
         const title = formData.get('title');
-        const eocType = formData.get('eoc_type');
+        const sessionId = normalizeOptionalId(formData.get('session_id'));
+        const sessionEocType = await resolveSessionEocType(connection, sessionId);
+        const eocType = sessionEocType;
         const description = formData.get('description');
         const showPopup = formData.get('show_popup') === 'true';
         const priority = parseInt(formData.get('priority') || '0');
@@ -165,6 +224,10 @@ export async function POST(request) {
             );
         }
 
+        if (!sessionId || !sessionEocType) {
+            return missingSessionResponse();
+        }
+
         const imageValidation = await validateImageFile(image, {
             maxSizeBytes: MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES
         });
@@ -177,8 +240,7 @@ export async function POST(request) {
 
         // Validate EOC type (ถ้ามี)
         if (eocType) {
-            const validEocTypes = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
-            if (!validEocTypes.includes(eocType)) {
+            if (!VALID_EOC_TYPES.includes(eocType)) {
                 return NextResponse.json(
                     { success: false, message: 'ประเภท EOC ไม่ถูกต้อง' },
                     { status: 400 }
@@ -198,15 +260,19 @@ export async function POST(request) {
 
         const imagePath = `/uploads/announcements/${fileName}`;
 
-        // ตรวจสอบว่ามีคอลัมน์ eoc_type หรือไม่
-        const [columns] = await connection.execute(
-            `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
-        );
-        const hasEocType = columns.length > 0;
+        const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
+        const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
 
         // บันทึกลงฐานข้อมูล
         let result;
-        if (hasEocType) {
+        if (hasEocType && hasSessionId) {
+            [result] = await connection.execute(
+                `INSERT INTO announcements
+                (title, eoc_type, session_id, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [title, eocType, sessionId, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy]
+            );
+        } else if (hasEocType) {
             [result] = await connection.execute(
                 `INSERT INTO announcements 
                 (title, eoc_type, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
@@ -241,11 +307,14 @@ export async function PUT(request) {
     const connection = await pool.getConnection();
 
     try {
-        const auth = await requireAuth(request, ['admin']);
+        const auth = await requireAuth(request, ['admin', 'commander']);
         if (!auth.success) return auth.response;
 
         const body = await request.json();
-        const { id, title, eoc_type, description, show_popup, priority, is_active, start_date, end_date } = body;
+        const { id, title, description, show_popup, priority, is_active, start_date, end_date } = body;
+        const sessionId = normalizeOptionalId(body.session_id);
+        const sessionEocType = await resolveSessionEocType(connection, sessionId);
+        const resolvedEocType = sessionEocType;
 
         if (!id) {
             return NextResponse.json(
@@ -254,10 +323,13 @@ export async function PUT(request) {
             );
         }
 
+        if (!sessionId || !sessionEocType) {
+            return missingSessionResponse();
+        }
+
         // Validate EOC type (ถ้ามี)
-        if (eoc_type) {
-            const validEocTypes = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
-            if (!validEocTypes.includes(eoc_type)) {
+        if (resolvedEocType) {
+            if (!VALID_EOC_TYPES.includes(resolvedEocType)) {
                 return NextResponse.json(
                     { success: false, message: 'ประเภท EOC ไม่ถูกต้อง' },
                     { status: 400 }
@@ -265,13 +337,25 @@ export async function PUT(request) {
             }
         }
 
-        // ตรวจสอบว่ามีคอลัมน์ eoc_type หรือไม่
-        const [columns] = await connection.execute(
-            `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
-        );
-        const hasEocType = columns.length > 0;
+        const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
+        const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
 
-        if (hasEocType && eoc_type) {
+        if (hasEocType && hasSessionId && resolvedEocType) {
+            await connection.execute(
+                `UPDATE announcements
+                SET title = ?,
+                    eoc_type = ?,
+                    session_id = ?,
+                    description = ?,
+                    show_popup = ?,
+                    priority = ?,
+                    is_active = ?,
+                    start_date = ?,
+                    end_date = ?
+                WHERE id = ?`,
+                [title, resolvedEocType, sessionId, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+            );
+        } else if (hasEocType && resolvedEocType) {
             await connection.execute(
                 `UPDATE announcements 
                 SET title = ?, 
@@ -283,7 +367,7 @@ export async function PUT(request) {
                     start_date = ?, 
                     end_date = ?
                 WHERE id = ?`,
-                [title, eoc_type, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+                [title, resolvedEocType, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
             );
         } else {
             await connection.execute(

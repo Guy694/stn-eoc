@@ -26,12 +26,11 @@ export async function GET(request) {
         );
         const hasEocType = columns.length > 0;
 
-        const now = new Date();
-        const params = [now, now];
+        const params = [];
         let whereClause = `
             WHERE a.is_active = 1
-            AND (a.start_date IS NULL OR a.start_date <= ?)
-            AND (a.end_date IS NULL OR a.end_date >= ?)
+            AND (a.start_date IS NULL OR a.start_date <= NOW())
+            AND (a.end_date IS NULL OR a.end_date >= NOW())
         `;
 
         if (hasEocType && eocType) {

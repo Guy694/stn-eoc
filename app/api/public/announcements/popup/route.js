@@ -18,8 +18,6 @@ export async function GET(request) {
     const connection = await pool.getConnection();
 
     try {
-        const now = new Date();
-
         // ดึงแบนเนอร์ที่:
         // 1. is_active = true
         // 2. show_popup = true
@@ -37,11 +35,11 @@ export async function GET(request) {
             FROM announcements
             WHERE is_active = 1 
             AND show_popup = 1
-            AND (start_date IS NULL OR start_date <= ?)
-            AND (end_date IS NULL OR end_date >= ?)
+            AND (start_date IS NULL OR start_date <= NOW())
+            AND (end_date IS NULL OR end_date >= NOW())
             ORDER BY priority DESC, created_at DESC
             LIMIT 1`,
-            [now, now]
+            []
         );
 
         if (announcements.length === 0) {

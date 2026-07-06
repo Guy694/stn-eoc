@@ -694,7 +694,6 @@ export default function Home() {
         setShowHomeMapLegend={setShowHomeMapLegend}
         handleMapDataChange={handleMapDataChange}
         eocOverview={eocOverview}
-        diseaseChartSession={diseaseChartSession}
         homepageAnnouncements={homepageAnnouncements}
         primaryAnnouncement={databaseAnnouncements[0] || null}
         quickActionItems={quickActionItems}
@@ -1160,7 +1159,6 @@ function PublicOperationalDashboard({
   setShowHomeMapLegend,
   handleMapDataChange,
   eocOverview,
-  diseaseChartSession,
   homepageAnnouncements,
   primaryAnnouncement,
   quickActionItems,
@@ -1402,7 +1400,7 @@ function PublicOperationalDashboard({
             />
           </section>
 
-          <DiseaseChartSection diseaseChartSession={diseaseChartSession} />
+          <DiseaseChartSection chartSession={selectedSession?.isOverviewFallback ? null : selectedSession} />
         </main>
         <OpsMobileNav />
       </div>
@@ -1909,7 +1907,7 @@ function SmallInfo({ label, value }) {
   );
 }
 
-function DiseaseChartSection({ diseaseChartSession }) {
+function DiseaseChartSection({ chartSession }) {
   return (
     <section className="mt-3 rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
@@ -1922,13 +1920,13 @@ function DiseaseChartSection({ diseaseChartSession }) {
         </div>
         <div className="rounded-lg bg-slate-50 px-3 py-2 text-right text-xs font-semibold text-slate-600">
           <div className="font-black text-slate-800">
-            {diseaseChartSession ? `Session #${diseaseChartSession.session_number || diseaseChartSession.id}` : "ข้อมูลโรคล่าสุด"}
+            {chartSession ? `รอบเหตุการณ์ที่ ${chartSession.session_number || chartSession.id}` : "ข้อมูลโรคล่าสุด"}
           </div>
-          <div>{diseaseChartSession ? formatSessionPeriod(diseaseChartSession) || "ช่วงวันที่ตามข้อมูล" : "จากฐานข้อมูลรายงานโรค"}</div>
+          <div>{chartSession ? formatSessionPeriod(chartSession) || "ช่วงวันที่ตามข้อมูล" : "จากฐานข้อมูลรายงานโรค"}</div>
         </div>
       </div>
 
-      <DailyDiseaseChart sessionId={diseaseChartSession?.id} />
+      <DailyDiseaseChart sessionId={chartSession?.id} />
     </section>
   );
 }
@@ -2261,7 +2259,7 @@ function HomeSituationDashboard({
         </aside>
       </div>
 
-      <DiseaseChartSection diseaseChartSession={diseaseChartSession} />
+      <DiseaseChartSection chartSession={diseaseChartSession} />
     </section>
   );
 }

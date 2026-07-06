@@ -7,18 +7,40 @@ import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showDeleteConfirm } from '@/lib/sweetAlert';
 import Image from 'next/image';
 
+const EOC_TYPES = [
+    { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
+    { value: 'accident', label: '🚨 อุบัติเหตุ', color: 'orange' },
+    { value: 'festival-accidents', label: '🎉 อุบัติเหตุช่วงเทศกาล', color: 'yellow' },
+    { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
+];
+
+function formatDateTime(value) {
+    if (!value) return 'ยังไม่ปิด';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('th-TH', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
 function AnnouncementsContent() {
     const { user } = useAuth();
     const searchParams = useSearchParams();
     const eocParam = searchParams.get('eoc');
 
     const [announcements, setAnnouncements] = useState([]);
+    const [eocSessions, setEocSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
     const [filters, setFilters] = useState({
         eoc_type: eocParam || '',
+        session_id: '',
         is_active: '',
         show_popup: ''
     });
@@ -36,15 +58,10 @@ function AnnouncementsContent() {
         totalPages: 0
     });
 
-    const eocTypes = [
-        { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
-        { value: 'festival-accidents', label: '🎉 อุบัติเหตุช่วงเทศกาล', color: 'yellow' },
-        { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
-    ];
-
     const [formData, setFormData] = useState({
         title: '',
         eoc_type: eocParam || 'flood',
+        session_id: '',
         description: '',
         show_popup: false,
         priority: 0,
@@ -62,6 +79,37 @@ function AnnouncementsContent() {
         }
     }, [eocParam]);
 
+    const getSessionLabel = useCallback((session) => {
+        if (!session) return 'ไม่ระบุรอบเหตุการณ์';
+        const eocLabel = EOC_TYPES.find(type => type.value === session.eoc_type)?.label || session.eoc_type || 'EOC';
+        const statusLabel = session.status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว';
+        return `${eocLabel} รอบที่ ${session.session_number || session.id} (${statusLabel}) | เปิด ${formatDateTime(session.opened_at)} - ปิด ${formatDateTime(session.closed_at)}`;
+    }, []);
+
+    const selectedFormSession = eocSessions.find(session => String(session.id) === String(formData.session_id));
+
+    const handleSessionChange = (sessionId) => {
+        const selectedSession = eocSessions.find(session => String(session.id) === String(sessionId));
+        setFormData(prev => ({
+            ...prev,
+            session_id: sessionId,
+            eoc_type: selectedSession?.eoc_type || prev.eoc_type
+        }));
+    };
+
+    const fetchEocSessions = useCallback(async () => {
+        try {
+            const response = await fetch('/stn-eoc/api/eoc/sessions?limit=500');
+            const data = await response.json();
+
+            if (data.success) {
+                setEocSessions(data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching EOC sessions:', error);
+        }
+    }, []);
+
     const fetchAnnouncements = useCallback(async () => {
         setLoading(true);
         try {
@@ -69,6 +117,7 @@ function AnnouncementsContent() {
             params.append('page', pagination.page);
             params.append('limit', pagination.limit);
             if (filters.eoc_type !== '') params.append('eoc_type', filters.eoc_type);
+            if (filters.session_id !== '') params.append('session_id', filters.session_id);
             if (filters.is_active !== '') params.append('is_active', filters.is_active);
             if (filters.show_popup !== '') params.append('show_popup', filters.show_popup);
 
@@ -105,6 +154,10 @@ function AnnouncementsContent() {
         fetchAnnouncements();
     }, [fetchAnnouncements]);
 
+    useEffect(() => {
+        fetchEocSessions();
+    }, [fetchEocSessions]);
+
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -125,6 +178,11 @@ function AnnouncementsContent() {
             return;
         }
 
+        if (!formData.session_id) {
+            showError('กรุณาเลือก EOC Session');
+            return;
+        }
+
         try {
             if (editMode) {
                 // Update
@@ -137,18 +195,23 @@ function AnnouncementsContent() {
                     })
                 });
 
-                const data = await response.json();
+                const data = await response.json().catch(() => ({
+                    success: false,
+                    message: 'ไม่สามารถอ่านผลลัพธ์จากเซิร์ฟเวอร์ได้'
+                }));
                 if (data.success) {
                     showSuccess('อัปเดตแบนเนอร์สำเร็จ');
                     setShowModal(false);
                     fetchAnnouncements();
                     resetForm();
+                } else {
+                    showError(data.message || 'ไม่สามารถอัปเดตแบนเนอร์ได้');
                 }
             } else {
                 // Create
                 const formDataToSend = new FormData();
                 formDataToSend.append('title', formData.title);
-                formDataToSend.append('eoc_type', formData.eoc_type);
+                formDataToSend.append('session_id', formData.session_id);
                 formDataToSend.append('description', formData.description);
                 formDataToSend.append('show_popup', formData.show_popup);
                 formDataToSend.append('priority', formData.priority);
@@ -163,12 +226,17 @@ function AnnouncementsContent() {
                     body: formDataToSend
                 });
 
-                const data = await response.json();
+                const data = await response.json().catch(() => ({
+                    success: false,
+                    message: 'ไม่สามารถอ่านผลลัพธ์จากเซิร์ฟเวอร์ได้'
+                }));
                 if (data.success) {
                     showSuccess('สร้างแบนเนอร์สำเร็จ');
                     setShowModal(false);
                     fetchAnnouncements();
                     resetForm();
+                } else {
+                    showError(data.message || 'ไม่สามารถสร้างแบนเนอร์ได้');
                 }
             }
         } catch (error) {
@@ -183,6 +251,7 @@ function AnnouncementsContent() {
         setFormData({
             title: announcement.title,
             eoc_type: announcement.eoc_type || 'flood',
+            session_id: announcement.session_id ? String(announcement.session_id) : '',
             description: announcement.description || '',
             show_popup: announcement.show_popup === 1,
             priority: announcement.priority,
@@ -218,6 +287,7 @@ function AnnouncementsContent() {
         setFormData({
             title: '',
             eoc_type: filters.eoc_type || 'flood',
+            session_id: filters.session_id || '',
             description: '',
             show_popup: false,
             priority: 0,
@@ -247,7 +317,7 @@ function AnnouncementsContent() {
                             จัดการประชาสัมพันธ์/แบนเนอร์
                             {filters.eoc_type && (
                                 <span className="text-xl text-gray-600">
-                                    ({eocTypes.find(t => t.value === filters.eoc_type)?.label})
+                                    ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label})
                                 </span>
                             )}
                         </h1>
@@ -285,7 +355,7 @@ function AnnouncementsContent() {
                 {/* EOC Stats */}
                 {Object.keys(eocStats).length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                        {eocTypes.map(type => (
+                        {EOC_TYPES.map(type => (
                             <div key={type.value} className="bg-white rounded-lg shadow p-4 border border-gray-300">
                                 <div className="text-sm text-gray-600 mb-1">{type.label}</div>
                                 <div className="text-xl font-bold text-gray-800">
@@ -301,7 +371,7 @@ function AnnouncementsContent() {
 
                 {/* Filters */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 ประเภท EOC
@@ -312,8 +382,23 @@ function AnnouncementsContent() {
                                 className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 <option value="">ทั้งหมด</option>
-                                {eocTypes.map(type => (
+                                {EOC_TYPES.map(type => (
                                     <option key={type.value} value={type.value}>{type.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                EOC Session
+                            </label>
+                            <select
+                                value={filters.session_id}
+                                onChange={(e) => setFilters({ ...filters, session_id: e.target.value })}
+                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                                <option value="">ทั้งหมด</option>
+                                {eocSessions.map(session => (
+                                    <option key={session.id} value={session.id}>{getSessionLabel(session)}</option>
                                 ))}
                             </select>
                         </div>
@@ -347,7 +432,7 @@ function AnnouncementsContent() {
                         </div>
                         <div className="flex items-end">
                             <button
-                                onClick={() => setFilters({ eoc_type: '', is_active: '', show_popup: '' })}
+                                onClick={() => setFilters({ eoc_type: '', session_id: '', is_active: '', show_popup: '' })}
                                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                             >
                                 ล้างตัวกรอง
@@ -379,6 +464,9 @@ function AnnouncementsContent() {
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             ประเภท EOC
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            EOC Session
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             สถานะ
@@ -427,8 +515,28 @@ function AnnouncementsContent() {
                                             </td>
                                             <td className="text-gray-600 px-6 py-4 whitespace-nowrap">
                                                 <span className="text-sm">
-                                                    {eocTypes.find(t => t.value === announcement.eoc_type)?.label || announcement.eoc_type}
+                                                    {EOC_TYPES.find(t => t.value === announcement.eoc_type)?.label || announcement.eoc_type}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4 min-w-[280px] text-sm text-gray-600">
+                                                {announcement.session_id ? (
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">
+                                                            รอบที่ {announcement.session_number || announcement.session_id}
+                                                            <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${announcement.session_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                                {announcement.session_status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="mt-1 text-xs text-gray-500">
+                                                            เปิด {formatDateTime(announcement.session_opened_at)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            ปิด {formatDateTime(announcement.session_closed_at)}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400">ไม่ระบุ session</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${announcement.is_active
@@ -568,21 +676,33 @@ function AnnouncementsContent() {
                                         />
                                     </div>
 
-                                    {/* EOC Type */}
+                                    {/* EOC Session */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            ประเภท EOC *
+                                            EOC Session *
                                         </label>
                                         <select
-                                            value={formData.eoc_type}
-                                            onChange={(e) => setFormData({ ...formData, eoc_type: e.target.value })}
+                                            value={formData.session_id}
+                                            onChange={(e) => handleSessionChange(e.target.value)}
                                             className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             required
                                         >
-                                            {eocTypes.map(type => (
-                                                <option key={type.value} value={type.value}>{type.label}</option>
+                                            <option value="">ไม่ระบุรอบเหตุการณ์</option>
+                                            {eocSessions.map(session => (
+                                                <option key={session.id} value={session.id}>{getSessionLabel(session)}</option>
                                             ))}
                                         </select>
+                                        {selectedFormSession && (
+                                            <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900">
+                                                <div className="font-semibold">
+                                                    {getSessionLabel(selectedFormSession)}
+                                                </div>
+                                                <div className="mt-1 grid gap-1 text-xs text-blue-800 sm:grid-cols-2">
+                                                    <span>วันเปิด: {formatDateTime(selectedFormSession.opened_at)}</span>
+                                                    <span>วันปิด: {formatDateTime(selectedFormSession.closed_at)}</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Description */}
