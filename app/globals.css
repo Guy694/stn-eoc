@@ -260,12 +260,41 @@ body {
   }
 }
 
+@keyframes public-alert-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 .animate-fade-in-up {
   animation: fade-in-up 0.6s ease-out forwards;
 }
 
 .animate-scale-in {
   animation: scale-in 0.4s ease-out forwards;
+}
+
+.public-alert-marquee {
+  animation: public-alert-marquee 26s linear infinite;
+}
+
+.public-alert-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-alert-marquee {
+    animation: none;
+    white-space: normal;
+    width: auto;
+  }
+
+  .public-alert-marquee [aria-hidden="true"] {
+    display: none;
+  }
 }
 
 .public-incident-map .leaflet-container {

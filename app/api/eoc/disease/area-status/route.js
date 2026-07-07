@@ -12,6 +12,17 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function hasDiseaseSubtypeColumns(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'eoc_sessions'
+           AND COLUMN_NAME IN ('disease_id', 'disease_name')`
+    );
+    return columns.length === 2;
+}
+
 // GET - ดึงข้อมูลสถานะพื้นที่โรคระบาด
 export async function GET(request) {
     let connection;
@@ -22,6 +33,10 @@ export async function GET(request) {
         const date = searchParams.get('date');
 
         connection = await pool.getConnection();
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
+        const diseaseSubtypeSelect = hasDiseaseColumns
+            ? `disease_id, disease_name,`
+            : `NULL as disease_id, NULL as disease_name,`;
 
         // ดึง active session ถ้าไม่ได้ระบุ session_id
         let activeSessionId = sessionId;
@@ -29,7 +44,7 @@ export async function GET(request) {
 
         if (!activeSessionId) {
             const [sessionResult] = await connection.execute(`
-                SELECT id, session_number, opened_at, closed_at, open_reason
+                SELECT id, session_number, ${diseaseSubtypeSelect} opened_at, closed_at, open_reason
                 FROM eoc_sessions 
                 WHERE eoc_type = 'disease' AND status = 'active' 
                 LIMIT 1
@@ -41,7 +56,7 @@ export async function GET(request) {
             }
         } else {
             const [sessionResult] = await connection.execute(
-                'SELECT id, session_number, opened_at, closed_at, open_reason FROM eoc_sessions WHERE id = ?',
+                `SELECT id, session_number, ${diseaseSubtypeSelect} opened_at, closed_at, open_reason FROM eoc_sessions WHERE id = ?`,
                 [activeSessionId]
             );
             if (sessionResult.length > 0) {

@@ -55,6 +55,17 @@ async function hasOrderFileColumns(connection) {
     return columns.length === 2;
 }
 
+async function hasDiseaseSubtypeColumns(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'eoc_sessions'
+           AND COLUMN_NAME IN ('disease_id', 'disease_name')`
+    );
+    return columns.length === 2;
+}
+
 async function tableExists(connection, tableName) {
     const [tables] = await connection.execute(
         `SELECT TABLE_NAME
@@ -64,6 +75,55 @@ async function tableExists(connection, tableName) {
         [tableName]
     );
     return tables.length > 0;
+}
+
+async function resolveDiseaseSubtype(connection, diseaseId, diseaseName) {
+    const trimmedName = String(diseaseName || '').trim();
+
+    if (diseaseId) {
+        const parsedId = Number(diseaseId);
+        if (!Number.isInteger(parsedId) || parsedId <= 0) {
+            return { ok: false, error: 'ประเภทโรคไม่ถูกต้อง' };
+        }
+
+        const [rows] = await connection.execute(
+            `SELECT id, name
+             FROM common_diseases
+             WHERE id = ? AND is_active = 1
+             LIMIT 1`,
+            [parsedId]
+        );
+
+        if (rows.length === 0) {
+            return { ok: false, error: 'ไม่พบประเภทโรคที่เลือก หรือประเภทโรคถูกปิดใช้งานแล้ว' };
+        }
+
+        return { ok: true, diseaseId: rows[0].id, diseaseName: rows[0].name };
+    }
+
+    if (!trimmedName) {
+        return { ok: false, error: 'กรุณาเลือกหรือระบุประเภทโรคระบาด' };
+    }
+
+    const normalizedName = trimmedName.slice(0, 150);
+    await connection.execute(
+        `INSERT IGNORE INTO common_diseases (name, description)
+         VALUES (?, ?)`,
+        [normalizedName, 'เพิ่มจากแบบฟอร์มเปิด EOC โรคระบาด']
+    );
+    const [rows] = await connection.execute(
+        `SELECT id, name
+         FROM common_diseases
+         WHERE name = ?
+         LIMIT 1`,
+        [normalizedName]
+    );
+
+    return {
+        ok: true,
+        diseaseId: rows[0]?.id || null,
+        diseaseName: rows[0]?.name || normalizedName
+    };
 }
 
 function getOrderFileExtension(file) {
@@ -124,11 +184,29 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const eocType = searchParams.get('type'); // flood, drought, tsunami, earthquake, disease
         const hasOrderColumns = await hasOrderFileColumns(connection);
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
         const orderFileSelect = hasOrderColumns
             ? `sess.open_order_file_path,
                 sess.open_order_file_name,`
             : `NULL as open_order_file_path,
                 NULL as open_order_file_name,`;
+        const diseaseSubtypeSelect = hasDiseaseColumns
+            ? `sess.disease_id,
+                sess.disease_name,`
+            : `NULL as disease_id,
+                NULL as disease_name,`;
+        const activeSessionJoin = `
+            LEFT JOIN (
+                SELECT s.*
+                FROM eoc_sessions s
+                INNER JOIN (
+                    SELECT eoc_type, MAX(id) AS latest_active_id
+                    FROM eoc_sessions
+                    WHERE status = 'active'
+                    GROUP BY eoc_type
+                ) latest ON latest.latest_active_id = s.id
+            ) sess ON es.eoc_type = sess.eoc_type
+        `;
 
         let query = isAuthenticatedRequest ? `
             SELECT 
@@ -147,7 +225,9 @@ export async function GET(request) {
                 es.updated_at,
                 sess.id as session_id,
                 sess.session_number,
+                sess.opened_at as session_opened_at,
                 sess.festival_type,
+                ${diseaseSubtypeSelect}
                 ${orderFileSelect}
                 sess.status as session_status,
                 ao.username as activated_by_username,
@@ -161,7 +241,7 @@ export async function GET(request) {
             FROM eoc_status es
             LEFT JOIN officer ao ON es.activated_by = ao.id
             LEFT JOIN officer do ON es.deactivated_by = do.id
-            LEFT JOIN eoc_sessions sess ON es.eoc_type = sess.eoc_type AND sess.status = 'active'
+            ${activeSessionJoin}
         ` : `
             SELECT 
                 es.id,
@@ -179,11 +259,13 @@ export async function GET(request) {
                 es.updated_at,
                 sess.id as session_id,
                 sess.session_number,
+                sess.opened_at as session_opened_at,
                 sess.festival_type,
+                ${diseaseSubtypeSelect}
                 ${orderFileSelect}
                 sess.status as session_status
             FROM eoc_status es
-            LEFT JOIN eoc_sessions sess ON es.eoc_type = sess.eoc_type AND sess.status = 'active'
+            ${activeSessionJoin}
         `;
 
         let params = [];
@@ -235,6 +317,8 @@ export async function POST(request) {
         let isActive;
         let description;
         let festivalType;
+        let diseaseId;
+        let diseaseName;
         let openedAt;
         let closedAt;
         let orderFile = null;
@@ -245,6 +329,8 @@ export async function POST(request) {
             isActive = formData.get('isActive') === 'true';
             description = formData.get('description') || '';
             festivalType = formData.get('festivalType') || null;
+            diseaseId = formData.get('diseaseId') || null;
+            diseaseName = formData.get('diseaseName') || null;
             openedAt = formData.get('openedAt') || null;
             closedAt = formData.get('closedAt') || null;
             orderFile = formData.get('orderFile');
@@ -254,6 +340,8 @@ export async function POST(request) {
             isActive = body.isActive;
             description = body.description;
             festivalType = body.festivalType;
+            diseaseId = body.diseaseId;
+            diseaseName = body.diseaseName;
             openedAt = body.openedAt;
             closedAt = body.closedAt;
         }
@@ -297,6 +385,36 @@ export async function POST(request) {
             );
         }
 
+        let diseaseSubtype = { diseaseId: null, diseaseName: null };
+        if (isActive && eocType === 'disease') {
+            const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
+            if (!hasDiseaseColumns) {
+                return NextResponse.json(
+                    { success: false, message: 'ฐานข้อมูลยังไม่มีคอลัมน์ประเภทโรค กรุณารัน migration add_disease_subtype_to_eoc_sessions.sql' },
+                    { status: 500 }
+                );
+            }
+
+            if (!await tableExists(connection, 'common_diseases')) {
+                return NextResponse.json(
+                    { success: false, message: 'ยังไม่มีตาราง common_diseases กรุณารัน migration add_disease_subtype_to_eoc_sessions.sql' },
+                    { status: 500 }
+                );
+            }
+
+            const resolvedDisease = await resolveDiseaseSubtype(connection, diseaseId, diseaseName);
+            if (!resolvedDisease.ok) {
+                return NextResponse.json(
+                    { success: false, message: resolvedDisease.error },
+                    { status: 400 }
+                );
+            }
+            diseaseSubtype = {
+                diseaseId: resolvedDisease.diseaseId,
+                diseaseName: resolvedDisease.diseaseName
+            };
+        }
+
         let orderFileData = null;
         if (isActive && orderFile && orderFile.size > 0) {
             const hasOrderColumns = await hasOrderFileColumns(connection);
@@ -331,32 +449,38 @@ export async function POST(request) {
             );
             const newSessionNumber = lastSession[0].last_number + 1;
             const hasOrderColumns = await hasOrderFileColumns(connection);
+            const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
             const sessionOpenedAt = openedAtSql || formatDateForMysql(new Date());
 
             // สร้าง session ใหม่
-            const [sessionResult] = hasOrderColumns
-                ? await connection.execute(
-                    `INSERT INTO eoc_sessions 
-                    (eoc_type, session_number, opened_at, opened_by, open_reason, open_order_file_path, open_order_file_name, status, festival_type) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)`,
-                    [
-                        eocType,
-                        newSessionNumber,
-                        sessionOpenedAt,
-                        userId,
-                        description || '',
-                        orderFileData?.filePath || null,
-                        orderFileData?.originalName || null,
-                        festivalType || null
-                    ]
-                )
-                : await connection.execute(
-                    `INSERT INTO eoc_sessions 
-                    (eoc_type, session_number, opened_at, opened_by, open_reason, status, festival_type) 
-                    VALUES (?, ?, ?, ?, ?, 'active', ?)`,
-                    [eocType, newSessionNumber, sessionOpenedAt, userId, description || '', festivalType || null]
+            const sessionColumns = ['eoc_type', 'session_number', 'opened_at', 'opened_by', 'open_reason', 'status', 'festival_type'];
+            const sessionPlaceholders = ['?', '?', '?', '?', '?', '?', '?'];
+            const sessionValues = [eocType, newSessionNumber, sessionOpenedAt, userId, description || '', 'active', festivalType || null];
+
+            if (hasOrderColumns) {
+                sessionColumns.push('open_order_file_path', 'open_order_file_name');
+                sessionPlaceholders.push('?', '?');
+                sessionValues.push(orderFileData?.filePath || null, orderFileData?.originalName || null);
+            }
+
+            if (hasDiseaseColumns) {
+                sessionColumns.push('disease_id', 'disease_name');
+                sessionPlaceholders.push('?', '?');
+                sessionValues.push(
+                    eocType === 'disease' ? diseaseSubtype.diseaseId : null,
+                    eocType === 'disease' ? diseaseSubtype.diseaseName : null
                 );
+            }
+
+            const [sessionResult] = await connection.execute(
+                `INSERT INTO eoc_sessions (${sessionColumns.join(', ')})
+                 VALUES (${sessionPlaceholders.join(', ')})`,
+                sessionValues
+            );
             const sessionId = sessionResult.insertId;
+            const diseaseLogSuffix = eocType === 'disease' && diseaseSubtype.diseaseName
+                ? ` (${diseaseSubtype.diseaseName})`
+                : '';
 
             // อัพเดทสถานะ EOC
             await connection.execute(
@@ -380,7 +504,7 @@ export async function POST(request) {
                     'eoc_status',
                     eocType,
                     sessionId,
-                    `เปิด EOC ${eocType} ครั้งที่ ${newSessionNumber}: ${description || ''}`
+                    `เปิด EOC ${eocType}${diseaseLogSuffix} ครั้งที่ ${newSessionNumber}: ${description || ''}`
                 ]
             );
 
@@ -398,18 +522,14 @@ export async function POST(request) {
             if (activeSessions.length > 0) {
                 const sessionId = activeSessions[0].id;
                 const openedAt = activeSessions[0].opened_at;
-                const sessionClosedAt = closedAtSql || formatDateForMysql(new Date());
+                let sessionClosedAt = closedAtSql || formatDateForMysql(new Date());
                 const openedAtDate = new Date(openedAt);
                 const closedAtDate = new Date(sessionClosedAt.replace(' ', 'T'));
 
                 if (!Number.isNaN(openedAtDate.getTime())
                     && !Number.isNaN(closedAtDate.getTime())
                     && closedAtDate < openedAtDate) {
-                    await connection.rollback();
-                    return NextResponse.json(
-                        { success: false, message: 'วันและเวลาปิด EOC ต้องไม่น้อยกว่าวันและเวลาเปิด EOC' },
-                        { status: 400 }
-                    );
+                    sessionClosedAt = formatDateForMysql(openedAtDate);
                 }
 
                 // คำนวณระยะเวลา (ชั่วโมง)
@@ -495,7 +615,7 @@ export async function POST(request) {
 
         return NextResponse.json({
             success: true,
-            message: `${isActive ? 'เปิด' : 'ปิด'} EOC ${eocType} สำเร็จ`
+            message: `${isActive ? 'เปิด' : 'ปิด'} EOC ${eocType}${isActive && eocType === 'disease' && diseaseSubtype.diseaseName ? ` (${diseaseSubtype.diseaseName})` : ''} สำเร็จ`
         });
 
     } catch (error) {

@@ -456,6 +456,11 @@ export default function DiseaseRecordsPage() {
                         <p className="text-gray-600">
                             EOC Session #{activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
                         </p>
+                        {activeSession.disease_name && (
+                            <p className="mt-1 text-sm font-semibold text-teal-700">
+                                ประเภทโรคที่เปิดติดตาม: {activeSession.disease_name}
+                            </p>
+                        )}
                     </div>
                     <button
                         onClick={() => {

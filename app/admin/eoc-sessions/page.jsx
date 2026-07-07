@@ -244,6 +244,11 @@ export default function EOCSessionsPage() {
                                             <h3 className="text-lg font-bold text-gray-800">
                                                 {getEOCTypeName(session.eoc_type)} (ครั้งที่ {session.session_number})
                                             </h3>
+                                            {session.eoc_type === 'disease' && session.disease_name && (
+                                                <span className="px-2 py-1 text-xs rounded-full bg-rose-100 text-rose-800">
+                                                    {session.disease_name}
+                                                </span>
+                                            )}
                                             {getStatusBadge(session.status)}
                                         </div>
                                         <span className="text-sm text-gray-500">
@@ -262,6 +267,11 @@ export default function EOCSessionsPage() {
                                             {session.open_reason && (
                                                 <p className="text-gray-600">
                                                     <span className="font-medium">เหตุผล:</span> {session.open_reason}
+                                                </p>
+                                            )}
+                                            {session.eoc_type === 'disease' && session.disease_name && (
+                                                <p className="text-gray-600">
+                                                    <span className="font-medium">ประเภทโรค:</span> {session.disease_name}
                                                 </p>
                                             )}
                                             {session.open_order_file_path && (
@@ -371,6 +381,11 @@ export default function EOCSessionsPage() {
                                                     {sessionDetail.session.open_reason && (
                                                         <p className="text-gray-600">
                                                             <span className="font-medium">เหตุผล:</span> {sessionDetail.session.open_reason}
+                                                        </p>
+                                                    )}
+                                                    {sessionDetail.session.eoc_type === 'disease' && sessionDetail.session.disease_name && (
+                                                        <p className="text-gray-600 mt-2">
+                                                            <span className="font-medium">ประเภทโรค:</span> {sessionDetail.session.disease_name}
                                                         </p>
                                                     )}
                                                     {sessionDetail.session.open_order_file_path && (

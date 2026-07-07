@@ -12,6 +12,17 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function hasDiseaseSubtypeColumns(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'eoc_sessions'
+           AND COLUMN_NAME IN ('disease_id', 'disease_name')`
+    );
+    return columns.length === 2;
+}
+
 // GET - ดึงข้อมูลสรุป sessions ของ disease EOC
 export async function GET(request) {
     let connection;
@@ -21,6 +32,10 @@ export async function GET(request) {
         const year = searchParams.get('year') || new Date().getFullYear();
 
         connection = await pool.getConnection();
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
+        const diseaseSubtypeSelect = hasDiseaseColumns
+            ? `es.disease_id, es.disease_name,`
+            : `NULL as disease_id, NULL as disease_name,`;
 
         // ดึงข้อมูล sessions ทั้งหมดของปีที่เลือก
         const [sessions] = await connection.execute(`
@@ -28,6 +43,7 @@ export async function GET(request) {
                 es.id,
                 es.session_number,
                 es.eoc_type,
+                ${diseaseSubtypeSelect}
                 es.status,
                 es.opened_at,
                 es.closed_at,
@@ -100,6 +116,8 @@ export async function GET(request) {
                         id: 3,
                         session_number: 3,
                         eoc_type: 'disease',
+                        disease_id: 1,
+                        disease_name: 'ไข้เลือดออก',
                         status: 'active',
                         opened_at: '2026-01-13T09:00:00.000Z',
                         closed_at: null,
@@ -112,6 +130,8 @@ export async function GET(request) {
                         id: 2,
                         session_number: 2,
                         eoc_type: 'disease',
+                        disease_id: 4,
+                        disease_name: 'ไข้หวัดใหญ่',
                         status: 'closed',
                         opened_at: '2025-08-01T09:00:00.000Z',
                         closed_at: '2025-08-15T17:00:00.000Z',

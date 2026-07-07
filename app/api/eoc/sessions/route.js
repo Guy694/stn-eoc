@@ -25,6 +25,17 @@ async function hasOrderFileColumns(connection) {
     return columns.length === 2;
 }
 
+async function hasDiseaseSubtypeColumns(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'eoc_sessions'
+           AND COLUMN_NAME IN ('disease_id', 'disease_name')`
+    );
+    return columns.length === 2;
+}
+
 // GET - ดึงประวัติ EOC sessions
 export async function GET(request) {
     const connection = await pool.getConnection();
@@ -39,11 +50,17 @@ export async function GET(request) {
         const limit = parseInt(searchParams.get('limit')) || 50;
         const offset = parseInt(searchParams.get('offset')) || 0;
         const hasOrderColumns = await hasOrderFileColumns(connection);
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
         const orderFileSelect = hasOrderColumns
             ? `s.open_order_file_path,
                 s.open_order_file_name,`
             : `NULL as open_order_file_path,
                 NULL as open_order_file_name,`;
+        const diseaseSubtypeSelect = hasDiseaseColumns
+            ? `s.disease_id,
+                s.disease_name,`
+            : `NULL as disease_id,
+                NULL as disease_name,`;
 
         let query = `
             SELECT 
@@ -54,6 +71,7 @@ export async function GET(request) {
                 s.closed_at,
                 s.open_reason,
                 ${orderFileSelect}
+                ${diseaseSubtypeSelect}
                 s.close_reason,
                 s.duration_hours,
                 s.status,
@@ -151,11 +169,17 @@ export async function POST(request) {
         const body = await request.json();
         const { sessionId } = body;
         const hasOrderColumns = await hasOrderFileColumns(connection);
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
         const orderFileSelect = hasOrderColumns
             ? `s.open_order_file_path,
                 s.open_order_file_name,`
             : `NULL as open_order_file_path,
                 NULL as open_order_file_name,`;
+        const diseaseSubtypeSelect = hasDiseaseColumns
+            ? `s.disease_id,
+                s.disease_name,`
+            : `NULL as disease_id,
+                NULL as disease_name,`;
 
         if (!sessionId) {
             return NextResponse.json(
@@ -169,6 +193,7 @@ export async function POST(request) {
             `SELECT 
                 s.*,
                 ${orderFileSelect}
+                ${diseaseSubtypeSelect}
                 oo.username as opened_by_username,
                 oo.title as opened_by_title,
                 oo.given_name as opened_by_given_name,

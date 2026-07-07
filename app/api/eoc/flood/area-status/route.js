@@ -27,6 +27,44 @@ function parseGeoJsonValue(value) {
     return value;
 }
 
+function collectCoordinatePairs(coordinates, pairs = []) {
+    if (!Array.isArray(coordinates)) return pairs;
+
+    if (
+        coordinates.length >= 2
+        && typeof coordinates[0] === 'number'
+        && typeof coordinates[1] === 'number'
+    ) {
+        pairs.push(coordinates);
+        return pairs;
+    }
+
+    coordinates.forEach((item) => collectCoordinatePairs(item, pairs));
+    return pairs;
+}
+
+function getGeoJsonCenter(geometry) {
+    const pairs = collectCoordinatePairs(geometry?.coordinates);
+    if (pairs.length === 0) return { lat: null, lng: null };
+
+    const bounds = pairs.reduce((acc, [lng, lat]) => ({
+        minLng: Math.min(acc.minLng, lng),
+        maxLng: Math.max(acc.maxLng, lng),
+        minLat: Math.min(acc.minLat, lat),
+        maxLat: Math.max(acc.maxLat, lat)
+    }), {
+        minLng: Number.POSITIVE_INFINITY,
+        maxLng: Number.NEGATIVE_INFINITY,
+        minLat: Number.POSITIVE_INFINITY,
+        maxLat: Number.NEGATIVE_INFINITY
+    });
+
+    return {
+        lat: (bounds.minLat + bounds.maxLat) / 2,
+        lng: (bounds.minLng + bounds.maxLng) / 2
+    };
+}
+
 function toDateKey(value) {
     if (!value) return null;
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
@@ -81,8 +119,6 @@ export async function GET(request) {
         }
 
         const activeSession = activeSessions[0];
-        const sessionYear = new Date(activeSession.opened_at).getFullYear();
-
         const targetSessionId = activeSession.id;
 
         // สร้าง WHERE clause - ใช้ session_id เป็นหลัก
@@ -134,8 +170,6 @@ export async function GET(request) {
                 v.distname as district,
                 v.num_hh as total_households,
                 v.provname as province,
-                ST_X(ST_Centroid(v.geom)) as lng,
-                ST_Y(ST_Centroid(v.geom)) as lat,
                 ST_AsGeoJSON(v.geom) as geometry
             FROM flood_records f
             INNER JOIN satun_village_polygon v ON f.polygon_id = v.id
@@ -143,11 +177,18 @@ export async function GET(request) {
             ORDER BY f.flood_start_date DESC, f.updated_at DESC
         `, params);
 
-        const processedData = floodData.map(item => ({
-            ...item,
-            water_level: parseFloat(item.water_level) || 0,
-            geometry: parseGeoJsonValue(item.geometry)
-        }));
+        const processedData = floodData.map((item) => {
+            const geometry = parseGeoJsonValue(item.geometry);
+            const center = getGeoJsonCenter(geometry);
+
+            return {
+                ...item,
+                lat: center.lat,
+                lng: center.lng,
+                water_level: parseFloat(item.water_level) || 0,
+                geometry
+            };
+        });
 
         // สถิติสรุป
         const [stats] = await connection.execute(`

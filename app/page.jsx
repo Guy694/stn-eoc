@@ -130,6 +130,12 @@ function buildHomepageAlertText(announcement, dateRange) {
   return `${alertText}${dateRange ? ` ช่วง ${dateRange}` : ""}`;
 }
 
+function mapEocTypeToPublicDisasterType(eocType) {
+  if (eocType === "disease") return "disease";
+  if (eocType === "festival-accidents" || eocType === "accident") return "accident";
+  return "flood";
+}
+
 export default function Home() {
   const [showSplash, setShowSplash] = useState(false);
   const [activeEOCs, setActiveEOCs] = useState([]);
@@ -183,6 +189,17 @@ export default function Home() {
     [activeEOCs]
   );
 
+  const latestActiveEOC = useMemo(
+    () => [...activeEOCs].sort(
+      (a, b) => new Date(b.session_opened_at || b.activated_at || 0) - new Date(a.session_opened_at || a.activated_at || 0)
+    )[0] || null,
+    [activeEOCs]
+  );
+  const availableDisasterTypes = useMemo(() => {
+    const activeTypes = [...new Set(activeEOCs.map((eoc) => mapEocTypeToPublicDisasterType(eoc.eoc_type)))];
+    return activeTypes.length > 0 ? activeTypes : ["flood"];
+  }, [activeEOCs]);
+
   const handleMapDataChange = useCallback((items) => {
     setPublicIncidents(items || []);
   }, []);
@@ -202,19 +219,19 @@ export default function Home() {
 
         if (result.success) {
           const active = result.data.filter(eoc => eoc.is_active);
-          setActiveEOCs(active);
+          const activeSorted = [...active].sort(
+            (a, b) => new Date(b.session_opened_at || b.activated_at || 0) - new Date(a.session_opened_at || a.activated_at || 0)
+          );
+          setActiveEOCs(activeSorted);
           setEocLastUpdated(new Date());
 
           // ถ้ามี EOC เปิดอยู่ตั้งค่า eocStatus เป็น true
-          if (active.length > 0) {
-            // ใช้ EOC แรกที่เปิด หรือจะใช้ที่เปิดล่าสุด
-            const latestEOC = [...active].sort((a, b) =>
-              new Date(b.activated_at) - new Date(a.activated_at)
-            )[0];
+          if (activeSorted.length > 0) {
+            const latestEOC = activeSorted[0];
 
             setEocStatus({
               isOpen: true,
-              openedDate: latestEOC.activated_at,
+              openedDate: latestEOC.session_opened_at || latestEOC.activated_at,
               reason: latestEOC.description || `เปิดศูนย์ EOC ${getEOCTypeName(latestEOC.eoc_type)}`
             });
           } else {
@@ -239,6 +256,25 @@ export default function Home() {
     }, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (activeEOCs.length === 0) {
+      if (selectedDisasterType !== "flood") {
+        setSelectedDisasterType("flood");
+        setSelectedSessionId(null);
+        setSelectedMapDate(null);
+      }
+      return;
+    }
+
+    const activePublicTypes = new Set(activeEOCs.map((eoc) => mapEocTypeToPublicDisasterType(eoc.eoc_type)));
+    if (!activePublicTypes.has(selectedDisasterType)) {
+      const nextType = mapEocTypeToPublicDisasterType(latestActiveEOC?.eoc_type);
+      setSelectedDisasterType(nextType);
+      setSelectedSessionId(null);
+      setSelectedMapDate(null);
+    }
+  }, [activeEOCs, latestActiveEOC, selectedDisasterType]);
 
   // ดึงข้อมูล infographics เฉพาะภัยที่กำลังเปิดอยู่
   useEffect(() => {
@@ -552,7 +588,6 @@ export default function Home() {
   const highCount = visiblePublicIncidents.filter((incident) => incident.urgency === "high").length;
   const helpRequestCount = visiblePublicIncidents.filter((incident) => (incident.report_type || "help_request") === "help_request").length;
   const trafficReportCount = visiblePublicIncidents.filter((incident) => incident.report_type === "traffic_report").length;
-  const latestActiveEOC = activeEOCs[0];
   const lastUpdatedAt = summaryLastUpdated || eocLastUpdated;
   const eocOverview = useMemo(() => dashboardSummary?.eocOverview || [], [dashboardSummary?.eocOverview]);
   const eocSessionOptions = useMemo(
@@ -686,6 +721,7 @@ export default function Home() {
         helpRequestCount={helpRequestCount}
         trafficReportCount={trafficReportCount}
         latestActiveEOC={latestActiveEOC}
+        availableDisasterTypes={availableDisasterTypes}
         mapLayers={mapLayers}
         setMapLayers={setMapLayers}
         showHomeLayerPanel={showHomeLayerPanel}
@@ -1151,6 +1187,7 @@ function PublicOperationalDashboard({
   helpRequestCount,
   trafficReportCount,
   latestActiveEOC,
+  availableDisasterTypes,
   mapLayers,
   setMapLayers,
   showHomeLayerPanel,
@@ -1166,6 +1203,8 @@ function PublicOperationalDashboard({
   getEOCTypeIcon,
   formatDate
 }) {
+  const normalizedSelectedType = normalizeEocTypeForSession(selectedDisasterType);
+  const selectedOverview = eocOverview.find((item) => item.eoc_type === normalizedSelectedType);
   const floodOverview = eocOverview.find((item) => item.eoc_type === "flood");
   const diseaseOverview = eocOverview.find((item) => item.eoc_type === "disease");
   const populationOverview = eocOverview.find((item) => item.eoc_type === "population");
@@ -1175,8 +1214,12 @@ function PublicOperationalDashboard({
   const selectedSessionMissing = Number(selectedSession?.affected_missing || 0);
   const selectedSessionAffectedDistricts = Number(selectedSession?.affected_districts || 0);
   const selectedSessionAffectedTambons = Number(selectedSession?.affected_tambons || 0);
-  const affectedDistricts = selectedSessionAffectedDistricts || getOverviewMetric(floodOverview, "districts");
-  const activeShelters = dashboardSummary?.activeShelters ?? getOverviewMetric(floodOverview, "shelters");
+  const affectedDistricts =
+    selectedSessionAffectedDistricts ||
+    getOverviewMetric(selectedOverview, "districts");
+  const activeShelters = getOverviewMetric(selectedOverview, "shelters");
+  const selectedDiseasePatients = getOverviewMetric(selectedOverview, "patients");
+  const selectedDiseaseCount = getOverviewMetric(selectedOverview, "diseases");
   const selectedDate = selectedMapDate || dateOptions[0]?.date || floodOverview?.period?.first_date || diseaseOverview?.period?.first_date || getTodayDateKey();
   const selectedSessionPeriod = formatSessionPeriod(selectedSession);
   const dateRange = selectedSessionPeriod || formatOverviewDateRange(floodOverview?.period || diseaseOverview?.period);
@@ -1184,7 +1227,7 @@ function PublicOperationalDashboard({
   const latestRows = buildIncidentTimeline(visiblePublicIncidents, selectedDate);
   const publicDataCards = [
     { label: "รายงานประชาชนที่ยืนยันแล้ว", value: visiblePublicIncidents.length, unit: "รายการ", href: "/public/disaster-map", tone: "blue" },
-    { label: "พื้นที่/อำเภอที่มีผลกระทบ", value: affectedDistricts || publicDistricts.length, unit: "อำเภอ", href: "/public/disaster-map", tone: "orange" },
+    { label: "พื้นที่/อำเภอที่มีผลกระทบ", value: affectedDistricts, unit: "อำเภอ", href: "/public/disaster-map", tone: "orange" },
     { label: "ศูนย์พักพิงในระบบ", value: activeShelters, unit: "แห่ง", href: "/public/shelters", tone: "violet" },
     { label: "ประกาศล่าสุด", value: homepageAnnouncements.length, unit: "ประกาศ", href: "/public/announcements", tone: "amber" },
     { label: "ข้อมูลกลุ่มเปราะบาง", value: getOverviewMetric(populationOverview, "vulnerable_total"), unit: "คน", href: "/public/agencies", tone: "emerald" }
@@ -1201,7 +1244,7 @@ function PublicOperationalDashboard({
     },
     {
       label: "อำเภอได้รับผลกระทบ",
-      value: affectedDistricts || publicDistricts.length,
+      value: affectedDistricts,
       unit: "อำเภอ",
       sub: "จากทั้งหมด 7 อำเภอ",
       tone: "orange",
@@ -1218,9 +1261,9 @@ function PublicOperationalDashboard({
 
     {
       label: "โรค/อาการที่รายงาน",
-      value: dashboardSummary?.diseasePatients ?? 0,
+      value: selectedDiseasePatients,
       unit: "ราย",
-      sub: `${getOverviewMetric(diseaseOverview, "diseases")} โรคที่รายงาน`,
+      sub: `${selectedDiseaseCount} โรคที่รายงาน`,
       tone: "teal",
       icon: "✚"
     },
@@ -1248,12 +1291,12 @@ function PublicOperationalDashboard({
       <AnnouncementPopup />
 
       <header className="border-b border-blue-950/20 bg-[#083865] text-white shadow-lg">
-        <div className="flex min-h-[86px] items-center gap-5 px-5 max-lg:flex-wrap max-lg:py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
-            <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-[62px] w-[62px] rounded-full bg-white p-1.5 shadow-md" priority />
+        <div className="flex min-h-[70px] items-center gap-3 px-3 py-2 sm:min-h-[78px] sm:px-4 lg:min-h-[86px] lg:gap-5 lg:px-5 lg:py-0">
+          <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-4">
+            <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-10 w-10 rounded-full bg-white p-1 shadow-md sm:h-12 sm:w-12 lg:h-[62px] lg:w-[62px] lg:p-1.5" priority />
             <div className="min-w-0">
-              <h1 className="truncate text-2xl font-black leading-7 max-sm:text-lg">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
-              <p className="truncate text-base font-semibold text-blue-100 max-sm:text-xs">Satun EOC Public Dashboard</p>
+              <h1 className="truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
+              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun EOC Public Dashboard</p>
             </div>
           </div>
 
@@ -1268,9 +1311,9 @@ function PublicOperationalDashboard({
             <div className="text-white">{new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.</div>
           </div>
 
-          <div className={`ml-auto rounded-2xl border px-6 py-3 text-center shadow-sm ${eocStatus.isOpen ? "border-emerald-300 bg-emerald-600" : "border-slate-300 bg-slate-700"}`}>
-            <div className="text-xl font-black leading-none">{eocStatus.isOpen ? "เปิด EOC" : "ปิด EOC"}</div>
-            <div className="mt-1 text-xs text-white/85">{latestActiveEOC ? getEOCTypeName(latestActiveEOC.eoc_type) : "สถานะศูนย์"}</div>
+          <div className={`ml-auto shrink-0 rounded-xl border px-3 py-2 text-center shadow-sm sm:px-4 lg:rounded-2xl lg:px-6 lg:py-3 ${eocStatus.isOpen ? "border-emerald-300 bg-emerald-600" : "border-slate-300 bg-slate-700"}`}>
+            <div className="text-sm font-black leading-none sm:text-base lg:text-xl">{eocStatus.isOpen ? "เปิด EOC" : "ปิด EOC"}</div>
+            <div className="mt-0.5 text-[10px] text-white/85 sm:text-[11px] lg:mt-1 lg:text-xs">{latestActiveEOC ? getEOCTypeName(latestActiveEOC.eoc_type) : "สถานะศูนย์"}</div>
           </div>
         </div>
       </header>
@@ -1278,18 +1321,21 @@ function PublicOperationalDashboard({
       <div className="grid min-h-[calc(100vh-87px)] grid-cols-[98px_minmax(0,1fr)] max-lg:grid-cols-1">
         <OpsSidebar />
 
-        <main className="min-w-0 p-3 pb-24 lg:pb-3">
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-red-600 px-4 py-2.5 text-white shadow-sm">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-lg font-black">!</span>
-              <p className="truncate text-sm font-bold">
-                {homepageAlertText}
-              </p>
+        <main className="min-w-0 p-2 pb-24 sm:p-3 lg:pb-3">
+          <div className="mb-2 flex items-center justify-between gap-2 overflow-hidden rounded-lg bg-red-600 px-3 py-2 text-white shadow-sm sm:mb-3 sm:gap-3 sm:px-4 sm:py-2.5">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-base font-black sm:h-8 sm:w-8 sm:text-lg">!</span>
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="public-alert-marquee flex w-max whitespace-nowrap text-xs font-bold sm:text-sm">
+                  <span className="pr-10">{homepageAlertText}</span>
+                  <span className="pr-10" aria-hidden="true">{homepageAlertText}</span>
+                </div>
+              </div>
             </div>
-            <Link href="/public/announcements" className="shrink-0 rounded-md bg-white px-4 py-1.5 text-xs font-black text-red-700 hover:bg-red-50">ดูรายละเอียด</Link>
+            <Link href="/public/announcements" className="shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-black text-red-700 hover:bg-red-50 sm:px-4">ดู</Link>
           </div>
 
-          <section className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-3 2xl:grid-cols-6">
+          <section className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
             {stats.map((stat) => (
               <OpsMetricCard key={stat.label} {...stat} />
             ))}
@@ -1305,6 +1351,7 @@ function PublicOperationalDashboard({
                 setSelectedSessionId(null);
                 setSelectedMapDate(null);
               }}
+              availableDisasterTypes={availableDisasterTypes}
               selectedSessionId={selectedSessionId}
               setSelectedSessionId={(sessionId) => {
                 setSelectedSessionId(sessionId);
@@ -1325,7 +1372,7 @@ function PublicOperationalDashboard({
               mapSearchQuery={mapSearchQuery}
               setMapSearchQuery={setMapSearchQuery}
               resetFilters={() => {
-                setSelectedDisasterType("flood");
+                setSelectedDisasterType(availableDisasterTypes[0] || "flood");
                 setSelectedSessionId(null);
                 setSelectedMapDate(null);
                 setUrgencyFilter("all");
@@ -1340,7 +1387,7 @@ function PublicOperationalDashboard({
 
             <div className="min-w-0 space-y-3">
               <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
-                <div className="h-[505px] bg-slate-100 max-lg:h-[460px]">
+                <div className="h-[505px] bg-slate-100 max-lg:h-[420px] max-sm:h-[340px]">
                   <PublicIncidentMap
                     disasterType={selectedDisasterType}
                     sessionId={selectedSession?.isOverviewFallback ? null : selectedSession?.id}
@@ -1444,14 +1491,13 @@ function OpsSidebar() {
 function OpsMobileNav() {
   const items = [
     { href: "/", label: "หน้าหลัก", icon: "⌂", active: true },
-    { href: "/public/disaster-map", label: "แผนที่", icon: "⌖" },
-    { href: "/public/help", label: "ประกาศ", icon: "⚑" },
+    { href: "/public/announcements", label: "ประกาศ", icon: "⚑" },
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂" },
     { href: "/public/agencies", label: "หน่วยงาน", icon: "☎" }
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-4 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
       {items.map((item) => (
         <Link
           key={item.href}
@@ -1478,16 +1524,16 @@ function OpsMetricCard({ label, value, unit, sub, tone, icon }) {
   };
 
   return (
-    <div className={`rounded-xl border bg-white p-3 shadow-sm ${tones[tone] || tones.blue}`}>
-      <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-2xl shadow-sm">{icon}</div>
+    <div className={`rounded-lg border bg-white p-2.5 shadow-sm sm:rounded-xl sm:p-3 ${tones[tone] || tones.blue}`}>
+      <div className="flex items-start gap-2.5 sm:gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-xl shadow-sm sm:h-12 sm:w-12 sm:rounded-xl sm:text-2xl">{icon}</div>
         <div className="min-w-0">
-          <div className="text-xs font-bold text-slate-600">{label}</div>
-          <div className="mt-1 flex items-end gap-1">
-            <span className="text-3xl font-black leading-none">{typeof value === "number" || /^\d+$/.test(String(value)) ? formatNumber(value) : value}</span>
-            {unit && <span className="pb-1 text-xs font-bold text-slate-500">{unit}</span>}
+          <div className="text-[11px] font-bold leading-4 text-slate-600 sm:text-xs">{label}</div>
+          <div className="mt-0.5 flex items-end gap-1 sm:mt-1">
+            <span className="text-2xl font-black leading-none sm:text-3xl">{typeof value === "number" || /^\d+$/.test(String(value)) ? formatNumber(value) : value}</span>
+            {unit && <span className="pb-0.5 text-[11px] font-bold text-slate-500 sm:pb-1 sm:text-xs">{unit}</span>}
           </div>
-          <div className="mt-1 truncate text-xs text-slate-500">{sub}</div>
+          <div className="mt-0.5 truncate text-[11px] text-slate-500 sm:mt-1 sm:text-xs">{sub}</div>
         </div>
       </div>
     </div>
@@ -1499,6 +1545,7 @@ function OpsMetricCard({ label, value, unit, sub, tone, icon }) {
 function OpsFilterPanel({
   selectedDisasterType,
   setSelectedDisasterType,
+  availableDisasterTypes,
   selectedSessionId,
   setSelectedSessionId,
   sessionOptions,
@@ -1517,6 +1564,12 @@ function OpsFilterPanel({
   setMapSearchQuery,
   resetFilters
 }) {
+  const disasterTypeLabels = {
+    flood: "น้ำท่วม",
+    disease: "โรคระบาด",
+    accident: "อุบัติเหตุ"
+  };
+
   return (
     <aside className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
@@ -1531,9 +1584,9 @@ function OpsFilterPanel({
             onChange={(event) => setSelectedDisasterType(event.target.value)}
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
           >
-            <option value="flood">น้ำท่วม</option>
-            <option value="disease">โรคระบาด</option>
-            <option value="accident">อุบัติเหตุ</option>
+            {availableDisasterTypes.map((type) => (
+              <option key={type} value={type}>{disasterTypeLabels[type] || type}</option>
+            ))}
           </select>
          
         </FilterBlock>
@@ -1846,28 +1899,6 @@ function OpsRightPanel({ announcements, quickActionItems, helpRequestCount, traf
           <EmergencyNumber number="191" label="ตำรวจ" tone="green" />
         </div>
       </Panel>
-
-      <Panel title="ศูนย์พักพิง">
-        <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
-          <div className="text-3xl font-black text-violet-700">{formatNumber(activeShelters || 0)}</div>
-          <div className="mt-1 text-sm font-bold text-slate-700">ศูนย์พักพิงที่พร้อมแสดงในระบบ</div>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            ตรวจสอบรายชื่อ ความจุ เบอร์ติดต่อ และตำแหน่งศูนย์พักพิงล่าสุดได้จากหน้าศูนย์พักพิง
-          </p>
-        </div>
-        <Link href="/public/shelters" className="mt-3 block rounded-md bg-violet-600 px-3 py-2 text-center text-xs font-black text-white hover:bg-violet-700">
-          เปิดหน้าศูนย์พักพิง
-        </Link>
-      </Panel>
-
-      <Panel title="ข้อมูลสนับสนุน EOC">
-        <div className="grid grid-cols-2 gap-2">
-          <SmallInfo label="ขอความช่วยเหลือ" value={helpRequestCount} />
-          <SmallInfo label="เส้นทางสัญจร" value={trafficReportCount} />
-          <SmallInfo label="กลุ่มเปราะบาง" value={getOverviewMetric(populationOverview, "vulnerable_total")} />
-          <SmallInfo label="พื้นที่ฐานข้อมูล" value={getOverviewMetric(populationOverview, "locations")} />
-        </div>
-      </Panel>
     </aside>
   );
 }
@@ -1958,7 +1989,7 @@ function buildSessionOptions(eocType, sessions, overviewItems) {
     .filter((session) => session.eoc_type === normalizedType)
     .map((session) => ({
       ...session,
-      label: `Session #${session.session_number || session.id}`,
+      label: `Session #${session.session_number || session.id}${session.eoc_type === "disease" && session.disease_name ? ` - ${session.disease_name}` : ""}`,
       opened_at: normalizeDateKey(session.opened_at),
       closed_at: normalizeDateKey(session.closed_at)
     }));
@@ -1973,7 +2004,7 @@ function buildSessionOptions(eocType, sessions, overviewItems) {
     eoc_type: normalizedType,
     session_number: overview.session_number || "-",
     status: overview.session_status || "overview",
-    label: overview.session_number ? `Session #${overview.session_number}` : "ข้อมูลรวม",
+    label: overview.session_number ? `Session #${overview.session_number}${overview.eoc_type === "disease" && overview.disease_name ? ` - ${overview.disease_name}` : ""}` : "ข้อมูลรวม",
     opened_at: normalizeDateKey(overview.opened_at || overview.period?.first_date),
     closed_at: normalizeDateKey(overview.closed_at || overview.period?.last_date),
     isOverviewFallback: true
@@ -2074,6 +2105,7 @@ function HomeSituationDashboard({
 }) {
   const hasActiveEOC = activeEOCs.length > 0;
   const primaryEOC = activeEOCs[0];
+  const primaryDisasterType = mapEocTypeToPublicDisasterType(primaryEOC?.eoc_type);
   const activeTypesText = hasActiveEOC
     ? activeEOCs.map((eoc) => getEOCTypeName(eoc.eoc_type)).join(", ")
     : "เฝ้าระวังสถานการณ์ทั่วไป";
@@ -2168,7 +2200,7 @@ function HomeSituationDashboard({
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 md:gap-5">
         <div className="min-h-[520px]">
-          <PublicIncidentMap disasterType={primaryEOC?.eoc_type === "disease" ? "disease" : "flood"} />
+          <PublicIncidentMap disasterType={primaryDisasterType} />
         </div>
 
         <aside className="space-y-4">

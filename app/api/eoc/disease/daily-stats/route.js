@@ -71,12 +71,6 @@ export async function GET(request) {
         const session = sessionData[0];
         const effectiveSessionId = session.id;
 
-        // กำหนดช่วงวันที่
-        const startDate = new Date(session.opened_at);
-        const endDate = session.closed_at
-            ? new Date(session.closed_at)
-            : new Date(); // ถ้ายังไม่ปิด ใช้วันปัจจุบัน
-
         // Format วันที่สำหรับ SQL (ใช้ local date เพื่อรองรับ timezone ไทย)
         const formatLocalDate = (date) => {
             const year = date.getFullYear();
@@ -84,6 +78,12 @@ export async function GET(request) {
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         };
+
+        // ให้กราฟแสดงเต็มช่วงเปิด-ปิด EOC และเติมวันที่ไม่มีรายงานเป็น 0
+        const startDate = new Date(session.opened_at);
+        const endDate = session.closed_at
+            ? new Date(session.closed_at)
+            : new Date(); // ถ้ายังไม่ปิด ใช้วันปัจจุบัน
 
         const startDateStr = formatLocalDate(startDate);
         const endDateStr = formatLocalDate(endDate);

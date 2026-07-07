@@ -19,6 +19,44 @@ function parseGeoJsonValue(value) {
     return value;
 }
 
+function collectCoordinatePairs(coordinates, pairs = []) {
+    if (!Array.isArray(coordinates)) return pairs;
+
+    if (
+        coordinates.length >= 2
+        && typeof coordinates[0] === 'number'
+        && typeof coordinates[1] === 'number'
+    ) {
+        pairs.push(coordinates);
+        return pairs;
+    }
+
+    coordinates.forEach((item) => collectCoordinatePairs(item, pairs));
+    return pairs;
+}
+
+function getGeoJsonCenter(geometry) {
+    const pairs = collectCoordinatePairs(geometry?.coordinates);
+    if (pairs.length === 0) return { center_lat: null, center_lng: null };
+
+    const bounds = pairs.reduce((acc, [lng, lat]) => ({
+        minLng: Math.min(acc.minLng, lng),
+        maxLng: Math.max(acc.maxLng, lng),
+        minLat: Math.min(acc.minLat, lat),
+        maxLat: Math.max(acc.maxLat, lat)
+    }), {
+        minLng: Number.POSITIVE_INFINITY,
+        maxLng: Number.NEGATIVE_INFINITY,
+        minLat: Number.POSITIVE_INFINITY,
+        maxLat: Number.NEGATIVE_INFINITY
+    });
+
+    return {
+        center_lat: (bounds.minLat + bounds.maxLat) / 2,
+        center_lng: (bounds.minLng + bounds.maxLng) / 2
+    };
+}
+
 async function loadGeoJson(filename) {
     const filePath = path.join(process.cwd(), filename);
     const text = await readFile(filePath, 'utf8');
@@ -63,9 +101,7 @@ export async function GET(request) {
                     subdistnam as tambon_name,
                     distname as district_name,
                     villcode as code,
-                    ST_AsGeoJSON(geom) as geojson,
-                    ST_Y(ST_Centroid(geom)) as center_lat,
-                    ST_X(ST_Centroid(geom)) as center_lng
+                    ST_AsGeoJSON(geom) as geojson
                 FROM satun_village_polygon
                 ORDER BY distname, subdistnam, villname
             `;
@@ -79,6 +115,7 @@ export async function GET(request) {
                         console.error('Error parsing village geojson:', e);
                     }
                 }
+                const center = getGeoJsonCenter(geojson);
                 return {
                     id: row.id,
                     name: row.name,
@@ -87,8 +124,8 @@ export async function GET(request) {
                     code: row.code,
                     type: 'village',
                     geojson: geojson,
-                    center_lat: row.center_lat,
-                    center_lng: row.center_lng
+                    center_lat: center.center_lat,
+                    center_lng: center.center_lng
                 };
             });
         }

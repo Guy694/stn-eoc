@@ -12,6 +12,36 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function hasDiseaseSubtypeColumns(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'eoc_sessions'
+           AND COLUMN_NAME IN ('disease_id', 'disease_name')`
+    );
+    return columns.length === 2;
+}
+
+async function getFacilityTypeSelectExpression(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'health_facilities'
+           AND COLUMN_NAME IN ('facility_type', 'typecode')`
+    );
+
+    const columnSet = new Set(columns.map((column) => column.COLUMN_NAME));
+    if (columnSet.has('facility_type')) {
+        return 'hf.facility_type as facility_type';
+    }
+    if (columnSet.has('typecode')) {
+        return 'hf.typecode as facility_type';
+    }
+    return `'' as facility_type`;
+}
+
 // GET - ดึงข้อมูลสรุปสถานการณ์โรครายวัน
 export async function GET(request) {
     let connection;
@@ -21,6 +51,11 @@ export async function GET(request) {
         const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
         connection = await pool.getConnection();
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
+        const facilityTypeSelect = await getFacilityTypeSelectExpression(connection);
+        const diseaseSubtypeSelect = hasDiseaseColumns
+            ? `disease_id, disease_name,`
+            : `NULL as disease_id, NULL as disease_name,`;
 
         // ดึง session ที่ active
         const [sessionResult] = await connection.execute(`
@@ -77,7 +112,7 @@ export async function GET(request) {
                 dr.report_date,
                 hf.name as facility_name,
                 hf.district_name,
-                hf.facility_type
+                ${facilityTypeSelect}
             FROM disease_reports dr
             JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE dr.session_id = ? AND DATE(dr.report_date) = ?
@@ -102,6 +137,7 @@ export async function GET(request) {
             SELECT 
                 id,
                 session_number,
+                ${diseaseSubtypeSelect}
                 opened_at,
                 open_reason,
                 total_activities,
@@ -163,6 +199,8 @@ export async function GET(request) {
             activeSession: {
                 id: 3,
                 session_number: 3,
+                disease_id: 1,
+                disease_name: 'ไข้เลือดออก',
                 opened_at: '2026-01-13T09:00:00.000Z',
                 open_reason: 'พบการระบาดของไข้เลือดออกในพื้นที่',
                 total_activities: 15,

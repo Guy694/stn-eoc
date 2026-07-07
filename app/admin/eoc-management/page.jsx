@@ -13,6 +13,21 @@ function getDefaultDateTimeLocal() {
     return date.toISOString().slice(0, 16);
 }
 
+function toDateTimeLocalInput(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+}
+
+function getSafeClosedAt(activatedAt) {
+    const nowInput = getDefaultDateTimeLocal();
+    const activatedInput = toDateTimeLocalInput(activatedAt);
+    if (!activatedInput) return nowInput;
+    return nowInput >= activatedInput ? nowInput : activatedInput;
+}
+
 function getFileUrl(filePath) {
     if (!filePath) return '';
     return filePath.startsWith('/stn-eoc') ? filePath : `/stn-eoc${filePath}`;
@@ -26,6 +41,7 @@ export default function EOCManagementPage() {
     const [descriptions, setDescriptions] = useState({});
     const [message, setMessage] = useState({ type: '', text: '' });
     const [eocTypes, setEocTypes] = useState([]);
+    const [diseaseOptions, setDiseaseOptions] = useState([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showOpenModal, setShowOpenModal] = useState(false);
@@ -37,6 +53,8 @@ export default function EOCManagementPage() {
         openedAt: getDefaultDateTimeLocal(),
         description: '',
         festivalType: '',
+        diseaseId: '',
+        customDiseaseName: '',
         orderFile: null
     });
     const [closeForm, setCloseForm] = useState({
@@ -61,6 +79,7 @@ export default function EOCManagementPage() {
 
     useEffect(() => {
         loadEOCTypes();
+        loadDiseaseOptions();
     }, []);
 
     // โหลด EOC Types จาก database
@@ -81,6 +100,21 @@ export default function EOCManagementPage() {
         }
     };
 
+    const loadDiseaseOptions = async () => {
+        try {
+            const response = await fetch('/stn-eoc/api/common/diseases');
+            const result = await response.json();
+            if (result.success && Array.isArray(result.data)) {
+                setDiseaseOptions(result.data);
+            } else {
+                setDiseaseOptions([]);
+            }
+        } catch (error) {
+            console.error("Error loading disease options:", error);
+            setDiseaseOptions([]);
+        }
+    };
+
     const handleToggle = async (eocType) => {
         const currentStatus = eocStatus[eocType]?.is_active || false;
         const newStatus = !currentStatus;
@@ -96,7 +130,7 @@ export default function EOCManagementPage() {
     const openCloseEOCForm = (eocType) => {
         setClosingType(eocType);
         setCloseForm({
-            closedAt: getDefaultDateTimeLocal(),
+            closedAt: getSafeClosedAt(eocStatus[eocType]?.activated_at),
             description: descriptions[eocType] || ''
         });
         setShowCloseModal(true);
@@ -155,6 +189,8 @@ export default function EOCManagementPage() {
             openedAt: getDefaultDateTimeLocal(),
             description: descriptions[eocType] || '',
             festivalType: eocType === 'festival-accidents' ? 'newyear' : '',
+            diseaseId: '',
+            customDiseaseName: '',
             orderFile: null
         });
         setShowOpenModal(true);
@@ -168,6 +204,8 @@ export default function EOCManagementPage() {
             openedAt: getDefaultDateTimeLocal(),
             description: '',
             festivalType: '',
+            diseaseId: '',
+            customDiseaseName: '',
             orderFile: null
         });
     };
@@ -185,6 +223,18 @@ export default function EOCManagementPage() {
             return;
         }
 
+        if (openingType === 'disease') {
+            if (!openForm.diseaseId) {
+                await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกประเภทโรคระบาด', 'error');
+                return;
+            }
+
+            if (openForm.diseaseId === '__custom__' && !openForm.customDiseaseName.trim()) {
+                await Swal.fire('ข้อผิดพลาด', 'กรุณาระบุชื่อโรคระบาด', 'error');
+                return;
+            }
+        }
+
         setUpdating(prev => ({ ...prev, [openingType]: true }));
         setMessage({ type: '', text: '' });
 
@@ -196,6 +246,8 @@ export default function EOCManagementPage() {
                 openForm.festivalType || null,
                 {
                     openedAt: openForm.openedAt,
+                    diseaseId: openingType === 'disease' && openForm.diseaseId !== '__custom__' ? openForm.diseaseId : null,
+                    diseaseName: openingType === 'disease' && openForm.diseaseId === '__custom__' ? openForm.customDiseaseName.trim() : null,
                     orderFile: openForm.orderFile
                 }
             );
@@ -474,6 +526,12 @@ export default function EOCManagementPage() {
                                                 {status.activated_by_name}
                                             </p>
                                         )}
+                                        {eocType === 'disease' && status.disease_name && (
+                                            <p className="text-gray-700 mt-1">
+                                                <span className="font-medium">ประเภทโรค:</span>{' '}
+                                                {status.disease_name}
+                                            </p>
+                                        )}
                                         {status.open_order_file_path && (
                                             <p className="text-gray-700 mt-1">
                                                 <span className="font-medium">ไฟล์คำสั่ง:</span>{' '}
@@ -571,6 +629,11 @@ export default function EOCManagementPage() {
                                     <div key={type} className="flex items-center gap-2 text-blue-800">
                                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                                         <span className="font-medium">EOC {getEOCDisplayName(type)}</span>
+                                        {type === 'disease' && eocStatus[type]?.disease_name && (
+                                            <span className="text-sm font-semibold text-blue-700">
+                                                ({eocStatus[type].disease_name})
+                                            </span>
+                                        )}
                                         <span className="text-sm text-blue-600">
                                             (เปิดเมื่อ: {new Date(eocStatus[type].activated_at).toLocaleString('th-TH')})
                                         </span>
@@ -630,6 +693,43 @@ export default function EOCManagementPage() {
                                                     <option value="newyear">เทศกาลปีใหม่</option>
                                                     <option value="songkran">เทศกาลสงกรานต์</option>
                                                 </select>
+                                            </div>
+                                        )}
+
+                                        {openingType === 'disease' && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    ประเภทโรคระบาด *
+                                                </label>
+                                                <select
+                                                    value={openForm.diseaseId}
+                                                    onChange={(e) => setOpenForm(prev => ({
+                                                        ...prev,
+                                                        diseaseId: e.target.value,
+                                                        customDiseaseName: e.target.value === '__custom__' ? prev.customDiseaseName : ''
+                                                    }))}
+                                                    className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                >
+                                                    <option value="">เลือกโรค/กลุ่มโรค</option>
+                                                    {diseaseOptions.map((disease) => (
+                                                        <option key={disease.id || disease.name} value={disease.id}>
+                                                            {disease.name}
+                                                        </option>
+                                                    ))}
+                                                    <option value="__custom__">อื่น ๆ / ระบุเอง</option>
+                                                </select>
+                                                {openForm.diseaseId === '__custom__' && (
+                                                    <input
+                                                        type="text"
+                                                        value={openForm.customDiseaseName}
+                                                        onChange={(e) => setOpenForm(prev => ({ ...prev, customDiseaseName: e.target.value }))}
+                                                        placeholder="ระบุชื่อโรคหรือกลุ่มโรค"
+                                                        className="mt-2 text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                    />
+                                                )}
+                                                <p className="mt-1 text-xs text-gray-500">
+                                                    ใช้ระบุว่า EOC โรคระบาดรอบนี้เปิดเพื่อติดตามโรคใด
+                                                </p>
                                             </div>
                                         )}
                                     </div>

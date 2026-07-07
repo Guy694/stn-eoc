@@ -49,12 +49,35 @@ export default function PublicAnnouncementsPage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const latestActiveEoc = useMemo(
+    () => [...activeEocs].sort(
+      (a, b) => new Date(b.session_opened_at || b.activated_at || 0) - new Date(a.session_opened_at || a.activated_at || 0)
+    )[0] || null,
+    [activeEocs]
+  );
+
   useEffect(() => {
     const loadAnnouncements = async () => {
+      setLoading(true);
       try {
-        const response = await fetch("/stn-eoc/api/public/announcements?limit=24");
-        const data = await response.json();
-        setAnnouncements(data.success ? data.data : []);
+        const eocType = latestActiveEoc?.eoc_type;
+        const typeScopedUrl = eocType
+          ? `/stn-eoc/api/public/announcements?limit=24&eocType=${encodeURIComponent(eocType)}`
+          : "/stn-eoc/api/public/announcements?limit=24";
+
+        const scopedResponse = await fetch(typeScopedUrl);
+        const scopedData = await scopedResponse.json();
+        const scopedItems = scopedData.success ? (scopedData.data || []) : [];
+
+        if (scopedItems.length > 0 || !eocType) {
+          setAnnouncements(scopedItems);
+          return;
+        }
+
+        // Fallback: ถ้ายังไม่มีข่าวใน EOC ที่เปิดอยู่ ให้แสดงข่าวรวมแทน
+        const fallbackResponse = await fetch('/stn-eoc/api/public/announcements?limit=24');
+        const fallbackData = await fallbackResponse.json();
+        setAnnouncements(fallbackData.success ? (fallbackData.data || []) : []);
       } catch (error) {
         console.error("Error loading public announcements:", error);
       } finally {
@@ -63,7 +86,7 @@ export default function PublicAnnouncementsPage() {
     };
 
     loadAnnouncements();
-  }, []);
+  }, [latestActiveEoc?.eoc_type]);
 
   useEffect(() => {
     const loadEocStatus = async () => {
@@ -100,7 +123,6 @@ export default function PublicAnnouncementsPage() {
   }, [announcements]);
 
   const popupCount = announcements.filter((item) => Boolean(item.show_popup)).length;
-  const latestActiveEoc = activeEocs[0] || null;
   const eocIsOpen = activeEocs.length > 0;
   const eocLabel = latestActiveEoc
     ? latestActiveEoc.name_th || EOC_TYPE_LABELS[latestActiveEoc.eoc_type] || latestActiveEoc.eoc_type
@@ -119,7 +141,7 @@ export default function PublicAnnouncementsPage() {
     >
       <div className="space-y-3">
         <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)]">
             <div>
               <div className="mb-2 inline-flex rounded-lg border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
                 ข่าวประชาสัมพันธ์ / ประกาศสำคัญ
@@ -141,20 +163,7 @@ export default function PublicAnnouncementsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-700">
-                <div className="text-sm font-bold">ประกาศทั้งหมด</div>
-                <div className="mt-2 text-4xl font-black">{loading ? "-" : announcements.length}</div>
-              </div>
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-                <div className="text-sm font-bold">แสดง Popup</div>
-                <div className="mt-2 text-4xl font-black">{popupCount}</div>
-              </div>
-              <div className="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
-                <div className="text-sm font-bold">พื้นที่สำหรับ infographic</div>
-                <div className="mt-1 text-sm font-semibold">รองรับภาพสรุป แผนผัง และสื่อประชาสัมพันธ์</div>
-              </div>
-            </div>
+           
           </div>
         </section>
 

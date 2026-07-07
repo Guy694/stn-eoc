@@ -54,6 +54,7 @@ export default function PublicOpsScaffold({
     { href: "/public/help/citizen-guide", label: "คู่มือ", icon: "↓", key: "guide" },
     { href: "/login", label: "เจ้าหน้าที่", icon: "ⓘ", key: "staff" }
   ];
+  const mobileItems = items.filter((item) => item.key !== "map").slice(0, 5);
   const statusKey = eocStatus || (eocIsOpen ? "open" : "watch");
   const statusMeta = {
     open: {
@@ -76,12 +77,12 @@ export default function PublicOpsScaffold({
   return (
     <div className="min-h-screen bg-[#edf5fc] text-slate-900">
       <header className="border-b border-blue-950/20 bg-[#083865] text-white shadow-lg">
-        <div className="flex min-h-[86px] items-center gap-5 px-5 max-lg:flex-wrap max-lg:py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
-            <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-[62px] w-[62px] rounded-full bg-white p-1.5 shadow-md" priority />
+        <div className="flex min-h-[70px] items-center gap-3 px-3 py-2 sm:min-h-[78px] sm:px-4 lg:min-h-[86px] lg:gap-5 lg:px-5 lg:py-0">
+          <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-4">
+            <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-10 w-10 rounded-full bg-white p-1 shadow-md sm:h-12 sm:w-12 lg:h-[62px] lg:w-[62px] lg:p-1.5" priority />
             <div className="min-w-0">
-              <h1 className="truncate text-2xl font-black leading-7 max-sm:text-lg">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
-              <p className="truncate text-base font-semibold text-blue-100 max-sm:text-xs">Satun EOC Public Dashboard</p>
+              <h1 className="truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
+              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun EOC Public Dashboard</p>
             </div>
           </div>
 
@@ -94,9 +95,9 @@ export default function PublicOpsScaffold({
             </div>
           </div>
 
-          <div className={`ml-auto rounded-2xl border px-6 py-3 text-center shadow-sm ${statusMeta.className}`}>
-            <div className="text-xl font-black leading-none">{statusMeta.title}</div>
-            <div className="mt-1 text-xs text-white/85">{eocLabel || "สถานะศูนย์"}</div>
+          <div className={`ml-auto shrink-0 rounded-xl border px-3 py-2 text-center shadow-sm sm:px-4 lg:rounded-2xl lg:px-6 lg:py-3 ${statusMeta.className}`}>
+            <div className="text-sm font-black leading-none sm:text-base lg:text-xl">{statusMeta.title}</div>
+            <div className="mt-0.5 text-[10px] text-white/85 sm:text-[11px] lg:mt-1 lg:text-xs">{eocLabel || "สถานะศูนย์"}</div>
           </div>
         </div>
       </header>
@@ -152,8 +153,8 @@ export default function PublicOpsScaffold({
           {children}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-6 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
-          {items.slice(0, 6).map((item) => {
+        <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
+          {mobileItems.map((item) => {
             const isActive = item.key === activeMenu;
 
             if (item.action) {

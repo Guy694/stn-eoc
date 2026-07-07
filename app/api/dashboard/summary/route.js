@@ -12,6 +12,28 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function hasDiseaseSubtypeColumns(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'eoc_sessions'
+           AND COLUMN_NAME IN ('disease_id', 'disease_name')`
+    );
+    return columns.length === 2;
+}
+
+async function hasAnnouncementEocTypeColumn(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'announcements'
+           AND COLUMN_NAME = 'eoc_type'`
+    );
+    return columns.length > 0;
+}
+
 // GET - ดึงข้อมูลสรุปสำหรับ Dashboard
 export async function GET(request) {
     let connection;
@@ -52,6 +74,21 @@ export async function GET(request) {
         let announcements = [];
         let recentActivities = [];
         let eocOverview = [];
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection).catch(() => false);
+        const activeDiseaseSelect = hasDiseaseColumns
+            ? `sess.disease_id,
+               sess.disease_name,`
+            : `NULL as disease_id,
+               NULL as disease_name,`;
+        const sessionDiseaseSelect = hasDiseaseColumns
+            ? `s.disease_id,
+               s.disease_name,`
+            : `NULL as disease_id,
+               NULL as disease_name,`;
+        const sessionDiseaseGroupBy = hasDiseaseColumns
+            ? `s.disease_id,
+                    s.disease_name,`
+            : '';
 
         // 1. นับจำนวน EOC ที่เปิดอยู่
         try {
@@ -108,6 +145,7 @@ export async function GET(request) {
                     es.icon,
                     sess.id as session_id,
                     sess.session_number,
+                    ${activeDiseaseSelect}
                     sess.opened_at
                 FROM eoc_status es
                 LEFT JOIN eoc_sessions sess ON es.eoc_type = sess.eoc_type AND sess.status = 'active'
@@ -162,6 +200,7 @@ export async function GET(request) {
                     s.id,
                     s.eoc_type,
                     s.session_number,
+                    ${sessionDiseaseSelect}
                     s.status,
                     DATE_FORMAT(s.opened_at, '%Y-%m-%d %H:%i:%s') as opened_at,
                     DATE_FORMAT(s.closed_at, '%Y-%m-%d %H:%i:%s') as closed_at,
@@ -220,6 +259,7 @@ export async function GET(request) {
                     s.id,
                     s.eoc_type,
                     s.session_number,
+                    ${sessionDiseaseGroupBy}
                     s.status,
                     s.opened_at,
                     s.closed_at,
@@ -235,7 +275,10 @@ export async function GET(request) {
 
         // 6. ดึงประกาศล่าสุด 3 รายการ
         try {
-            const [announcementData] = await connection.execute(`
+            const hasAnnouncementEocType = await hasAnnouncementEocTypeColumn(connection).catch(() => false);
+            const activeEocTypes = [...new Set((activeSessions || []).map((session) => session.eoc_type).filter(Boolean))];
+
+            let announcementQuery = `
                 SELECT
                     id,
                     title,
@@ -249,9 +292,35 @@ export async function GET(request) {
                 WHERE is_active = 1
                     AND (start_date IS NULL OR start_date <= NOW())
                     AND (end_date IS NULL OR end_date >= NOW())
-                ORDER BY priority DESC, created_at DESC
-                LIMIT 3
-            `);
+            `;
+            const announcementParams = [];
+
+            if (hasAnnouncementEocType && activeEocTypes.length > 0) {
+                announcementQuery += ` AND eoc_type IN (${activeEocTypes.map(() => '?').join(', ')})`;
+                announcementParams.push(...activeEocTypes);
+            }
+
+            announcementQuery += ' ORDER BY priority DESC, created_at DESC LIMIT 3';
+
+            let [announcementData] = await connection.execute(announcementQuery, announcementParams);
+            if (announcementData.length === 0) {
+                const [fallbackAnnouncementData] = await connection.execute(`
+                    SELECT
+                        id,
+                        title,
+                        description,
+                        description AS content,
+                        priority,
+                        start_date,
+                        end_date,
+                        created_at
+                    FROM announcements
+                    WHERE is_active = 1
+                    ORDER BY priority DESC, created_at DESC
+                    LIMIT 3
+                `);
+                announcementData = fallbackAnnouncementData;
+            }
             announcements = announcementData;
         } catch {
         }
@@ -336,15 +405,19 @@ export async function GET(request) {
                 FROM flood_records
             `);
 
-            const [diseaseStats] = await connection.execute(`
+            const [diseaseBySessionRows] = await connection.execute(`
                 SELECT
+                    dr.session_id,
                     COUNT(*) as rows_count,
-                    COUNT(DISTINCT disease_name) as disease_count,
-                    COUNT(DISTINCT health_facility_id) as facilities,
-                    COALESCE(SUM(patient_count), 0) as patients,
-                    DATE_FORMAT(MIN(report_date), '%Y-%m-%d') as first_date,
-                    DATE_FORMAT(MAX(report_date), '%Y-%m-%d') as last_date
-                FROM disease_reports
+                    COUNT(DISTINCT dr.disease_name) as disease_count,
+                    COUNT(DISTINCT dr.health_facility_id) as facilities,
+                    COUNT(DISTINCT hf.district_name) as districts,
+                    COALESCE(SUM(dr.patient_count), 0) as patients,
+                    DATE_FORMAT(MIN(dr.report_date), '%Y-%m-%d') as first_date,
+                    DATE_FORMAT(MAX(dr.report_date), '%Y-%m-%d') as last_date
+                FROM disease_reports dr
+                LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
+                GROUP BY dr.session_id
             `);
 
             const [accidentStatsRows] = await connection.execute(`
@@ -374,6 +447,15 @@ export async function GET(request) {
                 FROM shelter_centers
             `);
 
+            const [shelterByTypeRows] = await connection.execute(`
+                SELECT
+                    eoc_type,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active
+                FROM shelter_centers
+                GROUP BY eoc_type
+            `);
+
             const [publicIncidentStatsRows] = await connection.execute(`
                 SELECT
                     COUNT(*) as total,
@@ -395,10 +477,15 @@ export async function GET(request) {
 
             const flood = floodStats[0] || {};
             const floodVillage = floodVillageStats[0] || {};
-            const disease = diseaseStats[0] || {};
+            const diseaseBySession = new Map(
+                (diseaseBySessionRows || [])
+                    .filter((row) => row.session_id !== null && row.session_id !== undefined)
+                    .map((row) => [String(row.session_id), row])
+            );
             const accident = accidentStatsRows[0] || {};
             const servicePoints = servicePointStatsRows[0] || {};
             const shelter = shelterStatsRows[0] || {};
+            const shelterByType = new Map((shelterByTypeRows || []).map((row) => [row.eoc_type, row]));
             const incidents = publicIncidentStatsRows[0] || {};
             const vulnerable = vulnerableStatsRows[0] || {};
             const sessionImpactById = new Map(
@@ -434,7 +521,7 @@ export async function GET(request) {
                             { key: 'injured', label: 'บาดเจ็บ', value: sessionImpact.affected_injured || 0, unit: 'คน' },
                             { key: 'deaths', label: 'เสียชีวิต', value: sessionImpact.affected_deaths || 0, unit: 'คน' },
                             { key: 'districts', label: 'อำเภอที่มีรายงาน', value: sessionImpact.affected_districts || flood.districts || floodVillage.districts || 0, unit: 'อำเภอ' },
-                            { key: 'shelters', label: 'ศูนย์พักพิง', value: shelter.total || 0, unit: 'แห่ง' },
+                            { key: 'shelters', label: 'ศูนย์พักพิง', value: shelterByType.get('flood')?.total || shelter.total || 0, unit: 'แห่ง' },
                             { key: 'public_reports', label: 'รายงานประชาชน', value: incidents.total || 0, unit: 'รายการ' }
                         ],
                         period: {
@@ -450,15 +537,18 @@ export async function GET(request) {
                 }
 
                 if (eoc.eoc_type === 'disease') {
+                    const diseaseSession = diseaseBySession.get(String(eoc.session_id)) || {};
                     return {
                         ...base,
                         description: 'ภาพรวมการเฝ้าระวังโรค จำนวนผู้ป่วย โรคที่รายงาน และหน่วยบริการ',
                         summary: [
-                            { key: 'patients', label: 'ผู้ป่วย/อาการ', value: disease.patients || 0, unit: 'ราย' },
-                            { key: 'diseases', label: 'โรคที่รายงาน', value: disease.disease_count || 0, unit: 'โรค' },
-                            { key: 'facilities', label: 'หน่วยบริการ', value: disease.facilities || 0, unit: 'แห่ง' }
+                            { key: 'patients', label: 'ผู้ป่วย/อาการ', value: diseaseSession.patients || 0, unit: 'ราย' },
+                            { key: 'diseases', label: 'โรคที่รายงาน', value: diseaseSession.disease_count || 0, unit: 'โรค' },
+                            { key: 'facilities', label: 'หน่วยบริการ', value: diseaseSession.facilities || 0, unit: 'แห่ง' },
+                            { key: 'districts', label: 'อำเภอที่มีรายงาน', value: diseaseSession.districts || 0, unit: 'อำเภอ' },
+                            { key: 'shelters', label: 'ศูนย์พักพิง', value: shelterByType.get('disease')?.total || 0, unit: 'แห่ง' }
                         ],
-                        period: { first_date: disease.first_date, last_date: disease.last_date },
+                        period: { first_date: diseaseSession.first_date, last_date: diseaseSession.last_date },
                         links: [
                             { label: 'เปิดแผนที่โรค', href: '/eoc/disease' },
                             { label: 'รายงานโรค', href: '/admin/disease-reports' }
@@ -474,6 +564,7 @@ export async function GET(request) {
                             { key: 'accidents', label: 'อุบัติเหตุ', value: accident.accidents || 0, unit: 'ครั้ง' },
                             { key: 'injuries', label: 'บาดเจ็บ', value: accident.injuries || 0, unit: 'ราย' },
                             { key: 'deaths', label: 'เสียชีวิต', value: accident.deaths || 0, unit: 'ราย' },
+                            { key: 'districts', label: 'อำเภอที่มีรายงาน', value: accident.districts || 0, unit: 'อำเภอ' },
                             { key: 'service_points', label: 'จุดบริการ', value: servicePoints.total || 0, unit: 'จุด' }
                         ],
                         period: { first_date: accident.first_date, last_date: accident.last_date },

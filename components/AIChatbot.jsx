@@ -1,8 +1,12 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
 
+const CHATBOT_HISTORY_KEY = 'chatbot_history';
+const CHATBOT_LAUNCHER_HIDDEN_KEY = 'chatbot_launcher_hidden';
+
 export default function AIChatbot() {
     const [isOpen, setIsOpen] = useState(false);
+    const [isLauncherHidden, setIsLauncherHidden] = useState(false);
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +26,7 @@ export default function AIChatbot() {
 
     // Load conversation history from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem('chatbot_history');
+        const saved = localStorage.getItem(CHATBOT_HISTORY_KEY);
         if (saved) {
             try {
                 setMessages(JSON.parse(saved));
@@ -30,21 +34,32 @@ export default function AIChatbot() {
                 console.error('Failed to load chat history:', e);
             }
         }
+        setIsLauncherHidden(localStorage.getItem(CHATBOT_LAUNCHER_HIDDEN_KEY) === 'true');
     }, []);
 
     // Save conversation history to localStorage
     useEffect(() => {
         if (messages.length > 0) {
-            localStorage.setItem('chatbot_history', JSON.stringify(messages));
+            localStorage.setItem(CHATBOT_HISTORY_KEY, JSON.stringify(messages));
         }
     }, [messages]);
 
     // Allow other public UI controls to open the assistant directly.
     useEffect(() => {
-        const handleOpen = () => setIsOpen(true);
+        const handleOpen = () => {
+            setIsLauncherHidden(false);
+            localStorage.setItem(CHATBOT_LAUNCHER_HIDDEN_KEY, 'false');
+            setIsOpen(true);
+        };
         window.addEventListener('eoc-assistant:open', handleOpen);
         return () => window.removeEventListener('eoc-assistant:open', handleOpen);
     }, []);
+
+    const hideLauncher = () => {
+        setIsOpen(false);
+        setIsLauncherHidden(true);
+        localStorage.setItem(CHATBOT_LAUNCHER_HIDDEN_KEY, 'true');
+    };
 
     const sendMessage = async (text = inputMessage) => {
         if (!text.trim() || isLoading) return;
@@ -114,13 +129,13 @@ export default function AIChatbot() {
 
     const clearHistory = () => {
         setMessages([]);
-        localStorage.removeItem('chatbot_history');
+        localStorage.removeItem(CHATBOT_HISTORY_KEY);
     };
 
     return (
         <>
             {/* Speech Bubble Tooltip - "Ask Me" */}
-            {!isOpen && (
+            {!isOpen && !isLauncherHidden && (
                 <div className="fixed bottom-20 right-24 z-[1100] animate-float-subtle">
                     <div className="relative bg-white rounded-2xl shadow-xl px-4 py-3 border-2 border-green-500">
                         <div className="flex items-center gap-2">
@@ -138,54 +153,69 @@ export default function AIChatbot() {
             )}
 
             {/* Floating Bubble Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-24 right-6 lg:bottom-6 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 z-[1100] group ${isOpen
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 hover:scale-110'
-                    }`}
-                aria-label={isOpen ? 'ปิด chatbot' : 'เปิด chatbot'}
-            >
-                {isOpen ? (
-                    <svg className="w-8 h-8 text-white transition-transform duration-300 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                ) : (
-                    <div className="relative">
-                        {/* Robot Head */}
-                        <svg className="w-9 h-9 text-white transition-transform duration-300 group-hover:scale-110" viewBox="0 0 64 64" fill="none">
-                            {/* Antenna */}
-                            <line x1="32" y1="8" x2="32" y2="16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                            <circle cx="32" cy="6" r="3" fill="currentColor" className="animate-pulse-glow" />
+            {!isLauncherHidden && (
+                <div className="fixed bottom-24 right-6 lg:bottom-6 z-[1100]">
+                    {!isOpen && (
+                        <button
+                            type="button"
+                            onClick={hideLauncher}
+                            className="absolute -right-1 -top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-slate-800 text-sm font-black leading-none text-white shadow-lg transition-colors hover:bg-slate-950"
+                            aria-label="ซ่อน EOC Assistant"
+                            title="ซ่อน EOC Assistant"
+                        >
+                            ×
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className={`w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 group ${isOpen
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 hover:scale-110'
+                            }`}
+                        aria-label={isOpen ? 'ปิด chatbot' : 'เปิด chatbot'}
+                    >
+                        {isOpen ? (
+                            <svg className="w-8 h-8 text-white transition-transform duration-300 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        ) : (
+                            <div className="relative">
+                                {/* Robot Head */}
+                                <svg className="w-9 h-9 text-white transition-transform duration-300 group-hover:scale-110" viewBox="0 0 64 64" fill="none">
+                                    {/* Antenna */}
+                                    <line x1="32" y1="8" x2="32" y2="16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <circle cx="32" cy="6" r="3" fill="currentColor" className="animate-pulse-glow" />
 
-                            {/* Head */}
-                            <rect x="16" y="16" width="32" height="28" rx="6" fill="currentColor" stroke="currentColor" strokeWidth="2" />
+                                    {/* Head */}
+                                    <rect x="16" y="16" width="32" height="28" rx="6" fill="currentColor" stroke="currentColor" strokeWidth="2" />
 
-                            {/* Eyes */}
-                            <circle cx="24" cy="28" r="4" fill="#10b981" className="animate-blink-eye" />
-                            <circle cx="40" cy="28" r="4" fill="#10b981" className="animate-blink-eye" />
+                                    {/* Eyes */}
+                                    <circle cx="24" cy="28" r="4" fill="#10b981" className="animate-blink-eye" />
+                                    <circle cx="40" cy="28" r="4" fill="#10b981" className="animate-blink-eye" />
 
-                            {/* Eye highlights */}
-                            <circle cx="25" cy="27" r="1.5" fill="white" className="animate-blink-eye" />
-                            <circle cx="41" cy="27" r="1.5" fill="white" className="animate-blink-eye" />
+                                    {/* Eye highlights */}
+                                    <circle cx="25" cy="27" r="1.5" fill="white" className="animate-blink-eye" />
+                                    <circle cx="41" cy="27" r="1.5" fill="white" className="animate-blink-eye" />
 
-                            {/* Mouth */}
-                            <path d="M 24 36 Q 32 40 40 36" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                                    {/* Mouth */}
+                                    <path d="M 24 36 Q 32 40 40 36" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" fill="none" />
 
-                            {/* Ears/Side panels */}
-                            <rect x="12" y="24" width="4" height="12" rx="2" fill="currentColor" />
-                            <rect x="48" y="24" width="4" height="12" rx="2" fill="currentColor" />
+                                    {/* Ears/Side panels */}
+                                    <rect x="12" y="24" width="4" height="12" rx="2" fill="currentColor" />
+                                    <rect x="48" y="24" width="4" height="12" rx="2" fill="currentColor" />
 
-                            {/* Ear details */}
-                            <circle cx="14" cy="30" r="1" fill="#10b981" />
-                            <circle cx="50" cy="30" r="1" fill="#10b981" />
-                        </svg>
+                                    {/* Ear details */}
+                                    <circle cx="14" cy="30" r="1" fill="#10b981" />
+                                    <circle cx="50" cy="30" r="1" fill="#10b981" />
+                                </svg>
 
-                        {/* Pulse ring animation */}
-                        <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping-slow"></div>
-                    </div>
-                )}
-            </button>
+                                {/* Pulse ring animation */}
+                                <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping-slow"></div>
+                            </div>
+                        )}
+                    </button>
+                </div>
+            )}
 
             {/* Chat Interface */}
             {isOpen && (

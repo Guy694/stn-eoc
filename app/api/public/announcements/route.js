@@ -27,11 +27,12 @@ export async function GET(request) {
         const hasEocType = columns.length > 0;
 
         const params = [];
-        let whereClause = `
+        const activeWindowWhereClause = `
             WHERE a.is_active = 1
             AND (a.start_date IS NULL OR a.start_date <= NOW())
             AND (a.end_date IS NULL OR a.end_date >= NOW())
         `;
+        let whereClause = activeWindowWhereClause;
 
         if (hasEocType && eocType) {
             whereClause += ' AND a.eoc_type = ?';
@@ -40,8 +41,7 @@ export async function GET(request) {
 
         const selectEocType = hasEocType ? 'a.eoc_type,' : `'flood' as eoc_type,`;
 
-        const [rows] = await connection.execute(
-            `SELECT
+        const selectSql = `SELECT
                 a.id,
                 a.title,
                 a.description,
@@ -54,16 +54,43 @@ export async function GET(request) {
                 ${selectEocType}
                 CONCAT(o.given_name, ' ', o.family_name) as created_by_name
             FROM announcements a
-            LEFT JOIN officer o ON a.created_by = o.id
-            ${whereClause}
-            ORDER BY a.priority DESC, a.created_at DESC
-            LIMIT ${limit}`,
+            LEFT JOIN officer o ON a.created_by = o.id`;
+
+        let [rows] = await connection.execute(
+            `${selectSql}
+             ${whereClause}
+             ORDER BY a.priority DESC, a.created_at DESC
+             LIMIT ${limit}`,
             params
         );
 
+        let fallback = false;
+        if (rows.length === 0) {
+            fallback = true;
+            const fallbackParams = [];
+            let fallbackWhereClause = 'WHERE a.is_active = 1';
+
+            if (hasEocType && eocType) {
+                fallbackWhereClause += ' AND a.eoc_type = ?';
+                fallbackParams.push(eocType);
+            }
+
+            const [fallbackRows] = await connection.execute(
+                `${selectSql}
+                 ${fallbackWhereClause}
+                 ORDER BY a.priority DESC, a.created_at DESC
+                 LIMIT ${limit}`,
+                fallbackParams
+            );
+            rows = fallbackRows;
+        }
+
         return NextResponse.json({
             success: true,
-            data: rows
+            data: rows,
+            meta: {
+                fallback
+            }
         });
     } catch (error) {
         console.error('Get public announcements error:', error);

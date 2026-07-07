@@ -30,7 +30,7 @@ export function EOCProvider({ children }) {
                     statusMap[item.eoc_type] = {
                         is_active: Boolean(item.is_active),
                         description: item.description,
-                        activated_at: item.activated_at,
+                        activated_at: item.session_opened_at || item.activated_at,
                         deactivated_at: item.deactivated_at,
                         activated_by_name: item.activated_by_name,
                         deactivated_by_name: item.deactivated_by_name,
@@ -43,7 +43,10 @@ export function EOCProvider({ children }) {
                         color_gradient: item.color_gradient,
                         session_id: item.session_id,
                         session_number: item.session_number,
-                        session_status: item.session_status
+                        session_opened_at: item.session_opened_at,
+                        session_status: item.session_status,
+                        disease_id: item.disease_id,
+                        disease_name: item.disease_name
                     };
                     typesList.push(item.eoc_type);
                 });
@@ -81,6 +84,8 @@ export function EOCProvider({ children }) {
                 formData.append('isActive', String(isActive));
                 formData.append('description', description || '');
                 if (festivalType) formData.append('festivalType', festivalType);
+                if (options.diseaseId) formData.append('diseaseId', options.diseaseId);
+                if (options.diseaseName) formData.append('diseaseName', options.diseaseName);
                 if (options.openedAt) formData.append('openedAt', options.openedAt);
                 if (options.closedAt) formData.append('closedAt', options.closedAt);
                 if (options.orderFile) formData.append('orderFile', options.orderFile);
@@ -99,6 +104,8 @@ export function EOCProvider({ children }) {
                         userId: user.id,
                         description,
                         festivalType,
+                        diseaseId: options.diseaseId || null,
+                        diseaseName: options.diseaseName || null,
                         closedAt: options.closedAt || null
                     })
                 };
@@ -110,7 +117,16 @@ export function EOCProvider({ children }) {
 
             if (!response.ok) {
                 console.error('Failed to toggle EOC:', response.status);
-                return { success: false, message: 'ไม่สามารถอัพเดทสถานะ EOC ได้' };
+                let backendMessage = 'ไม่สามารถอัพเดทสถานะ EOC ได้';
+                try {
+                    const errorData = await response.json();
+                    if (errorData?.message) {
+                        backendMessage = errorData.message;
+                    }
+                } catch {
+                    // Ignore JSON parse errors and keep fallback message.
+                }
+                return { success: false, message: backendMessage };
             }
 
             const data = await response.json();

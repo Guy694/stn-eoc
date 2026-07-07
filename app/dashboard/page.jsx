@@ -21,6 +21,17 @@ const EOC_MODULES = [
         textColor: 'text-blue-700',
     },
     {
+        key: 'disease',
+        name: 'โรคระบาด',
+        icon: '🦠',
+        description: 'ระบบติดตามสถานการณ์โรคระบาด รายงานผู้ป่วย และเฝ้าระวังรายวัน',
+        path: '/eoc/disease',
+        gradient: 'from-teal-500 to-emerald-500',
+        bgLight: 'bg-teal-50',
+        borderActive: 'border-teal-500',
+        textColor: 'text-teal-700',
+    },
+    {
         key: 'festival-accidents',
         name: 'อุบัติเหตุช่วงเทศกาล',
         icon: '🚗',
@@ -164,6 +175,9 @@ function EventModuleCard({ module, isActive, eocLoading, sessionInfo }) {
                         Session #{sessionInfo.session_number}
                         {sessionInfo.activated_at && (
                             <> · เปิดเมื่อ {new Date(sessionInfo.activated_at).toLocaleDateString('th-TH')}</>
+                        )}
+                        {module.key === 'disease' && sessionInfo?.disease_name && (
+                            <> · เฝ้าระวัง {sessionInfo.disease_name}</>
                         )}
                     </div>
                 )}

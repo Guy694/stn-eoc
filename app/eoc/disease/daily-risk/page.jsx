@@ -181,7 +181,7 @@ export default function DiseaseDailyRiskPage() {
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div>
                                 <h3 className="text-xl font-bold mb-2">
-                                    🚨 EOC Session #{data.activeSession.session_number}/2026 - กำลังดำเนินการ
+                                    🚨 EOC Session #{data.activeSession.session_number}/2026 - {data.activeSession.disease_name || 'โรคระบาด'} - กำลังดำเนินการ
                                 </h3>
                                 <p className="opacity-90 mb-1">
                                     เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {

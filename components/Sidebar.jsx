@@ -174,18 +174,20 @@ export default function Sidebar() {
         //     ],
         // },
 
-        // {
-        //     title: "🦠 EOC โรคระบาด",
-        //     section: "eoc-disease",
-        //     key: "disease",
-        //     eocType: "disease",
-        //     collapsible: true,
-        //     requiresPermission: null,
-        //     items: [
-        //         { name: "แผนที่และสถานการณ์", path: "/eoc/disease", icon: "📊", description: "ภาพรวมการระบาด" },
-        //         { name: "รายงานผู้ป่วย", path: "/eoc/disease/reports", icon: "📋", description: "สถิติผู้ป่วยรายวัน" },
-        //     ],
-        // },
+        {
+            title: "🦠 EOC โรคระบาด",
+            section: "eoc-disease",
+            key: "disease",
+            eocType: "disease",
+            collapsible: true,
+            requiresPermission: null,
+            items: [
+                { name: "ภาพรวมโรคระบาด", path: "/eoc/disease", icon: "📊", description: "Dashboard ภาพรวมการระบาด" },
+                { name: "สรุปสถานการณ์รายวัน", path: "/eoc/disease/daily-risk", icon: "📈", description: "สรุปรายงานโรครายวัน" },
+                { name: "บันทึกรายงานผู้ป่วย", path: "/eoc/disease/records", icon: "📋", description: "บันทึกข้อมูลผู้ป่วยจากหน่วยบริการ" },
+                { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: "📢", description: "ข่าวประชาสัมพันธ์" },
+            ],
+        },
 
         // ============================================
         // 3. COMMANDER SECTION - REMOVED

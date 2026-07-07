@@ -12,129 +12,44 @@ const CATEGORY_META = {
   coordination: { label: "ประสานงาน", color: "bg-orange-50 text-orange-700 border-orange-200" }
 };
 
-const HOTLINES = [
-  { label: "เหตุฉุกเฉินตำรวจ", number: "191", category: "safety", tone: "border-blue-200 bg-blue-50 text-blue-700" },
-  { label: "ดับเพลิง", number: "199", category: "safety", tone: "border-red-200 bg-red-50 text-red-700" },
-  { label: "หน่วยแพทย์ฉุกเฉิน", number: "1669", category: "medical", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  { label: "ปภ. สายด่วน", number: "1784", category: "coordination", tone: "border-orange-200 bg-orange-50 text-orange-700" },
-  { label: "ศูนย์ดำรงธรรม", number: "1567", category: "coordination", tone: "border-violet-200 bg-violet-50 text-violet-700" }
-];
-
-const CORE_AGENCIES = [
-  {
-    id: "satun-health",
-    name: "สำนักงานสาธารณสุขจังหวัดสตูล",
-    role: "กำกับดูแลระบบสุขภาพและตอบโต้ภาวะฉุกเฉินด้านสุขภาพ",
-    area: "ทั้งจังหวัดสตูล",
-    phone: "074-711-123",
-    secondary: "โทรสาร 074-711-124",
-    category: "medical",
-    status: "ปฏิบัติการปกติ"
-  },
-  {
-    id: "ddpm-satun",
-    name: "สำนักงานป้องกันและบรรเทาสาธารณภัยจังหวัดสตูล",
-    role: "ประสานงานเหตุฉุกเฉินและสนับสนุนการช่วยเหลือ",
-    area: "ทั้งจังหวัดสตูล",
-    phone: "074-711-201",
-    secondary: "สายด่วน 1784",
-    category: "coordination",
-    status: "ปฏิบัติการปกติ"
-  },
-  {
-    id: "satun-hospital",
-    name: "โรงพยาบาลสตูล",
-    role: "ให้บริการรักษาพยาบาลระดับทุติยภูมิและรองรับส่งต่อ",
-    area: "อ.เมืองสตูล และพื้นที่ใกล้เคียง",
-    phone: "074-723-000",
-    secondary: "โทรสาร 074-723-001",
-    category: "medical",
-    status: "เปิดให้บริการ"
-  },
-  {
-    id: "police",
-    name: "ตำรวจภูธรจังหวัดสตูล",
-    role: "รักษาความปลอดภัย อำนวยความสะดวก และดูแลจราจร",
-    area: "ทั้งจังหวัดสตูล",
-    phone: "074-711-191",
-    secondary: "สายด่วน 191",
-    category: "safety",
-    status: "ปฏิบัติการปกติ"
-  },
-  {
-    id: "local-admin",
-    name: "องค์กรปกครองส่วนท้องถิ่น",
-    role: "ช่วยเหลือประชาชนในพื้นที่และสนับสนุนกำลังเจ้าหน้าที่",
-    area: "ครอบคลุมพื้นที่ตำบล/เทศบาล",
-    phone: "074-XXXXXX",
-    secondary: "ประจำแต่ละพื้นที่",
-    category: "local",
-    status: "พร้อมประสานงาน"
-  },
-  {
-    id: "districts",
-    name: "ที่ทำการอำเภอ / เทศบาล",
-    role: "บริหารจัดการพื้นที่และประสานงานเหตุฉุกเฉิน",
-    area: "7 อำเภอ / 26 เทศบาล",
-    phone: "074-XXXXXX",
-    secondary: "ประจำแต่ละอำเภอ/เทศบาล",
-    category: "local",
-    status: "ปฏิบัติการปกติ"
-  },
-  {
-    id: "electricity",
-    name: "การไฟฟ้าส่วนภูมิภาคจังหวัดสตูล",
-    role: "ดูแลเหตุไฟฟ้าขัดข้องและความปลอดภัยระบบไฟฟ้า",
-    area: "ทั้งจังหวัดสตูล",
-    phone: "1129",
-    secondary: "PEA Contact Center",
-    category: "utility",
-    status: "รับแจ้งเหตุ"
-  }
-];
-
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("th-TH");
-}
-
-function facilityTypeLabel(typeCode) {
-  const labels = {
-    hosp: "โรงพยาบาล",
-    rph: "รพ.สต.",
-    hos: "สถานพยาบาล",
-    pc: "หน่วยบริการปฐมภูมิ"
-  };
-  return labels[typeCode] || "หน่วยบริการสุขภาพ";
-}
-
-function toFacilityAgency(item) {
-  const area = item.district
-    ? String(item.district).startsWith("อ.") ? String(item.district) : `อ.${item.district}`
-    : "จังหวัดสตูล";
-
-  return {
-    id: `facility-${item.id}`,
-    name: item.name,
-    role: facilityTypeLabel(item.typecode),
-    area,
-    phone: "074-XXXXXX",
-    secondary: item.risk_level ? `ระดับเฝ้าระวัง ${item.risk_level}` : "หน่วยบริการในพื้นที่",
-    category: "medical",
-    status: "เปิดให้บริการ"
-  };
 }
 
 function statusClass(status) {
   if (status === "เปิดให้บริการ") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (status === "รับแจ้งเหตุ") return "border-orange-200 bg-orange-50 text-orange-700";
+  if (status === "24 ชั่วโมง") return "border-red-200 bg-red-50 text-red-700";
   return "border-blue-200 bg-blue-50 text-blue-700";
+}
+
+function hotlineTone(category) {
+  if (category === "medical") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (category === "safety") return "border-red-200 bg-red-50 text-red-700";
+  if (category === "coordination") return "border-orange-200 bg-orange-50 text-orange-700";
+  if (category === "local") return "border-violet-200 bg-violet-50 text-violet-700";
+  return "border-blue-200 bg-blue-50 text-blue-700";
+}
+
+function toAgencyContact(item) {
+  return {
+    id: item.slug || item.id,
+    name: item.name,
+    role: item.role_description || "-",
+    area: item.area || "-",
+    phone: item.phone || "",
+    secondary: item.secondary_contact || "",
+    category: item.category || "coordination",
+    status: item.status || "พร้อมประสานงาน",
+    isHotline: Boolean(item.is_hotline)
+  };
 }
 
 export default function PublicAgenciesPage() {
   const [eocIsOpen, setEocIsOpen] = useState(false);
   const [eocStatus, setEocStatus] = useState("closed");
   const [eocLabel, setEocLabel] = useState("สถานะศูนย์");
-  const [facilities, setFacilities] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
   const [district, setDistrict] = useState("all");
@@ -143,19 +58,19 @@ export default function PublicAgenciesPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [statusRes, facilitiesRes] = await Promise.all([
+        const [statusRes, contactsRes] = await Promise.all([
           fetch("/stn-eoc/api/eoc/status/"),
-          fetch("/stn-eoc/api/common/health-facilities")
+          fetch("/stn-eoc/api/public/agency-contacts")
         ]);
 
         const statusJson = statusRes.ok ? await statusRes.json() : { success: false, data: [] };
-        const facilitiesJson = facilitiesRes.ok ? await facilitiesRes.json() : { success: false, data: [] };
+        const contactsJson = contactsRes.ok ? await contactsRes.json() : { success: false, data: [] };
         const activeAll = (statusJson.success ? statusJson.data || [] : []).filter((item) => Boolean(item.is_active));
 
         setEocIsOpen(activeAll.length > 0);
         setEocStatus(activeAll.length > 0 ? "open" : "closed");
         setEocLabel(activeAll[0] ? activeAll[0].name_th || activeAll[0].eoc_type : "ไม่มี EOC ที่เปิดอยู่");
-        setFacilities(facilitiesJson.success ? facilitiesJson.data || [] : []);
+        setContacts(contactsJson.success ? (contactsJson.data || []).map(toAgencyContact) : []);
       } catch (error) {
         console.error("Error loading agencies:", error);
       } finally {
@@ -166,14 +81,14 @@ export default function PublicAgenciesPage() {
     loadData();
   }, []);
 
-  const facilityAgencies = useMemo(
-    () => facilities.slice(0, 40).map(toFacilityAgency),
-    [facilities]
+  const agencies = useMemo(
+    () => contacts.filter((item) => !item.isHotline),
+    [contacts]
   );
 
-  const agencies = useMemo(
-    () => [...CORE_AGENCIES, ...facilityAgencies],
-    [facilityAgencies]
+  const hotlines = useMemo(
+    () => contacts.filter((item) => item.isHotline),
+    [contacts]
   );
 
   const districts = useMemo(
@@ -192,21 +107,16 @@ export default function PublicAgenciesPage() {
   }, [agencies, category, district, search]);
 
   const stats = useMemo(() => {
-    const districtCount = new Set(facilities.map((item) => item.district).filter(Boolean)).size;
+    const districtCount = new Set(agencies.map((item) => item.area).filter((area) => area && area.startsWith("อ."))).size;
     return {
       total: agencies.length,
       medical: agencies.filter((item) => item.category === "medical").length,
       safety: agencies.filter((item) => item.category === "safety").length,
       local: agencies.filter((item) => item.category === "local").length,
+      hotlines: hotlines.length,
       districts: districtCount || 7
     };
-  }, [agencies, facilities]);
-
-  const areaContacts = [
-    ["อำเภอเมืองสตูล", "รพ.สต.บ้านคลองขุด", "074-XXXXXX"],
-    ["อำเภอละงู", "เทศบาลตำบลละงู", "074-XXXXXX"],
-    ["อำเภอควนโดน", "สถานีตำรวจภูธรควนโดน", "074-XXXXXX"]
-  ];
+  }, [agencies, hotlines]);
 
   return (
     <PublicOpsScaffold
@@ -217,28 +127,48 @@ export default function PublicAgenciesPage() {
       eocStatus={eocStatus}
       eocLabel={eocLabel}
     >
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_430px]">
+      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)]">
         <div className="min-w-0 space-y-3">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-            {[
-              { label: "จำนวนหน่วยงานที่เกี่ยวข้อง", value: stats.total, unit: "หน่วยงาน", className: "border-blue-200 bg-blue-50 text-blue-700" },
-              { label: "หน่วยบริการสุขภาพ", value: stats.medical, unit: "แห่ง", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-              { label: "หน่วยความปลอดภัย", value: stats.safety, unit: "ทีม", className: "border-violet-200 bg-violet-50 text-violet-700" },
-              { label: "พื้นที่ครอบคลุม", value: stats.districts, unit: "อำเภอ", className: "border-orange-200 bg-orange-50 text-orange-700" },
-              { label: "สายด่วนให้บริการ", value: HOTLINES.length, unit: "สาย", className: "border-red-200 bg-red-50 text-red-700" }
-            ].map((item) => (
-              <div key={item.label} className={`rounded-xl border p-4 shadow-sm ${item.className}`}>
-                <p className="text-xs font-bold">{item.label}</p>
-                <p className="mt-1 text-3xl font-black leading-none">{formatNumber(item.value)}</p>
-                <p className="mt-1 text-xs font-semibold">{item.unit}</p>
-              </div>
-            ))}
-          </div>
+          <aside className="space-y-3">
+          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-black text-blue-900">ช่องทางติดต่อฉุกเฉิน</h3>
+              <span className="text-xs font-bold text-slate-500">24 ชั่วโมง</span>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              {loading ? (
+                <div className="rounded-xl border border-slate-100 p-4 text-center text-sm text-slate-500">
+                  กำลังโหลดสายด่วน...
+                </div>
+              ) : hotlines.length === 0 ? (
+                <div className="rounded-xl border border-slate-100 p-4 text-center text-sm text-slate-500">
+                  ไม่พบข้อมูลสายด่วน
+                </div>
+              ) : hotlines.map((item) => (
+                <a
+                  key={item.id}
+                  href={`tel:${item.phone}`}
+                  className={`rounded-xl border p-4 shadow-sm transition hover:shadow-md ${hotlineTone(item.category)}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-3xl font-black leading-none">{item.phone}</p>
+                      <p className="mt-1 text-sm font-bold">{item.name}</p>
+                    </div>
+                    <span className="text-2xl">☎</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+
+     
+        </aside>
 
           <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-lg font-black text-blue-900">ไดเรกทอรีหน่วยงาน</h3>
+                <h3 className="text-lg font-black text-blue-900">หน่วยงาน</h3>
                 <p className="text-xs text-slate-500">เลือกหมวด ค้นหา และโทรติดต่อได้ทันทีในกรณีฉุกเฉิน</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -290,8 +220,12 @@ export default function PublicAgenciesPage() {
                     <article key={item.id} className="grid grid-cols-[minmax(220px,1.2fr)_minmax(180px,0.9fr)_minmax(140px,0.7fr)_150px] gap-3 border-t border-slate-100 px-4 py-3 text-sm max-lg:block">
                       <div className="min-w-0">
                         <p className="truncate font-black text-blue-900">{item.name}</p>
-                        <a href={`tel:${item.phone}`} className="mt-1 inline-flex font-bold text-blue-700 hover:underline">{item.phone}</a>
-                        <p className="text-xs text-slate-500">{item.secondary}</p>
+                        {item.phone ? (
+                          <a href={`tel:${item.phone}`} className="mt-1 inline-flex font-bold text-blue-700 hover:underline">{item.phone}</a>
+                        ) : (
+                          <p className="mt-1 text-xs font-bold text-slate-400">ไม่มีเบอร์ติดต่อ</p>
+                        )}
+                        {item.secondary && <p className="text-xs text-slate-500">{item.secondary}</p>}
                       </div>
                       <p className="text-slate-700 max-lg:mt-2">{item.role}</p>
                       <p className="font-semibold text-slate-600 max-lg:mt-2">{item.area}</p>
@@ -305,87 +239,9 @@ export default function PublicAgenciesPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-black text-blue-900">อัปเดตสำคัญรายวัน</h3>
-              <span className="text-xs font-bold text-blue-700">ดูประวัติทั้งหมด</span>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              {[
-                ["สำนักงาน ปภ.จังหวัด", "เตรียมทีมสนับสนุนภาคสนาม 5 ทีม"],
-                ["รพ.สต. ในอำเภอควนโดน", "เปิดให้บริการเพิ่ม 2 แห่ง"],
-                ["ท้องถิ่นร่วมซ้อมแผน", "เตรียมพื้นที่พักพิงและจุดบริการประชาชน"]
-              ].map(([source, text], index) => (
-                <div key={source} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                  <p className="text-xs font-bold text-blue-700">{index + 1}. {source}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-700">{text}</p>
-                </div>
-              ))}
-            </div>
-          </section>
         </div>
 
-        <aside className="space-y-3">
-          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-black text-blue-900">ช่องทางติดต่อฉุกเฉิน</h3>
-              <span className="text-xs font-bold text-slate-500">24 ชั่วโมง</span>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-              {HOTLINES.map((item) => (
-                <a
-                  key={item.number}
-                  href={`tel:${item.number}`}
-                  className={`rounded-xl border p-4 shadow-sm transition hover:shadow-md ${item.tone}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-3xl font-black leading-none">{item.number}</p>
-                      <p className="mt-1 text-sm font-bold">{item.label}</p>
-                    </div>
-                    <span className="text-2xl">☎</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-black text-blue-900">หน่วยงานแนะนำตามพื้นที่</h3>
-              <span className="text-xs font-bold text-blue-700">ดูทั้งหมด</span>
-            </div>
-            <div className="space-y-2">
-              {areaContacts.map(([area, name, phone]) => (
-                <div key={`${area}-${name}`} className="grid grid-cols-[minmax(0,1fr)_108px] gap-2 rounded-lg border border-slate-100 p-3 text-sm">
-                  <div className="min-w-0">
-                    <p className="font-black text-slate-800">{area}</p>
-                    <p className="truncate text-xs text-slate-500">{name}</p>
-                  </div>
-                  <a href={`tel:${phone}`} className="text-right text-xs font-black text-blue-700">{phone}</a>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-lg font-black text-blue-900">ขั้นตอนการขอความช่วยเหลือ</h3>
-            {[
-              ["1", "แจ้งเหตุ", "โทรสายด่วนหรือแจ้งผ่านช่องทางออนไลน์"],
-              ["2", "ประสานงาน", "หน่วยงานรับเรื่องและจัดส่งทีม"],
-              ["3", "ให้ความช่วยเหลือ", "ทีมภาคสนามเข้าพื้นที่และอพยพ"],
-              ["4", "ติดตามผล", "ประเมินสถานการณ์และฟื้นฟูพื้นที่"]
-            ].map(([step, title, text]) => (
-              <div key={step} className="mb-3 flex gap-3 last:mb-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 font-black text-blue-700">{step}</span>
-                <div>
-                  <p className="text-sm font-black text-slate-800">{title}</p>
-                  <p className="text-xs text-slate-500">{text}</p>
-                </div>
-              </div>
-            ))}
-          </section>
-        </aside>
+      
       </section>
     </PublicOpsScaffold>
   );
