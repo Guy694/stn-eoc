@@ -4,7 +4,7 @@ import { getSessionToken, requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
-import { createRandomFilename, resolveInside } from "@/lib/fileUpload";
+import { createRandomFilename, getUploadDir, resolveInside } from "@/lib/fileUpload";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -152,8 +152,7 @@ async function saveOrderFile(file, eocType) {
         return { ok: false, error: 'รองรับไฟล์คำสั่งเฉพาะ PDF, DOC, DOCX, JPG หรือ PNG' };
     }
 
-    const uploadBaseDir = path.join(process.cwd(), 'public', 'uploads');
-    const uploadDir = resolveInside(uploadBaseDir, 'eoc-orders', eocType);
+    const uploadDir = getUploadDir('eoc-orders', eocType);
     await mkdir(uploadDir, { recursive: true });
 
     const filename = createRandomFilename(extension, `${eocType}-order`);

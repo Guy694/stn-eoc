@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 
 // Festival label helper
 const FESTIVAL_LABEL = { newyear: 'เทศกาลปีใหม่ 🎄', songkran: 'เทศกาลสงกรานต์ 💦' };
+const MAX_UPLOAD_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 // Import Leaflet components with no SSR
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -74,10 +76,6 @@ export default function ReportIncidentPage() {
         disasterType: 'flood', // ประเภทภัย
         occurredAt: ''
     });
-
-    // Photos state (multiple photos)
-    const [photos, setPhotos] = useState([]);
-    const MAX_PHOTOS = 5;
 
     // Village autocomplete
     const [villages, setVillages] = useState([]);
@@ -254,9 +252,14 @@ export default function ReportIncidentPage() {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Check file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                showWarning('ขนาดไฟล์ใหญ่เกินไป (สูงสุด 5MB)');
+            if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+                showWarning('รองรับเฉพาะไฟล์ JPG, PNG หรือ WebP');
+                e.target.value = '';
+                return;
+            }
+            if (file.size > MAX_UPLOAD_IMAGE_SIZE_BYTES) {
+                showWarning('ขนาดไฟล์ใหญ่เกินไป (สูงสุด 10MB)');
+                e.target.value = '';
                 return;
             }
             setFormData(prev => ({
@@ -851,7 +854,8 @@ export default function ReportIncidentPage() {
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 md:p-6 text-center hover:border-blue-500 transition-colors">
                                 <input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                                    multiple={false}
                                     onChange={handleFileChange}
                                     className="hidden"
                                     id="photo-upload"
@@ -861,7 +865,7 @@ export default function ReportIncidentPage() {
                                     <p className="text-sm md:text-base text-gray-600 mb-1">
                                         {formData.photo ? formData.photo.name : 'คลิกเพื่ออัพโหลดรูปภาพ'}
                                     </p>
-                                    <p className="text-xs md:text-sm text-gray-500">รองรับไฟล์: JPG, PNG (ไม่เกิน 5MB)</p>
+                                    <p className="text-xs md:text-sm text-gray-500">อัปโหลดได้ 1 ภาพ รองรับ JPG, PNG, WebP (ไม่เกิน 10MB)</p>
                                 </label>
                             </div>
                         </div>

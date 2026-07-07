@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 import { getCitizenSession } from '@/lib/citizenAuth';
-import { createRandomFilename, resolveInside, validateImageFile } from '@/lib/fileUpload';
+import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
 import { publicInternalError } from '@/lib/apiResponse';
 
-const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 
 export async function POST(request) {
     try {
@@ -84,8 +83,7 @@ export async function POST(request) {
                 }
 
                 // Create upload directory if not exists
-                const uploadBaseDir = path.join(process.cwd(), 'public', 'uploads');
-                const uploadDir = resolveInside(uploadBaseDir, 'incidents');
+                const uploadDir = getUploadDir('incidents');
                 await mkdir(uploadDir, { recursive: true });
 
                 // Generate unique filename
@@ -97,7 +95,10 @@ export async function POST(request) {
                 photoPath = `/uploads/incidents/${filename}`;
             } catch (uploadError) {
                 console.error('Photo upload error:', uploadError);
-                // Continue without photo if upload fails
+                return NextResponse.json({
+                    success: false,
+                    message: 'ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่อีกครั้ง'
+                }, { status: 500 });
             }
         }
 

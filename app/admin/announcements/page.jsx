@@ -4,8 +4,11 @@ import { useCallback, useEffect, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
-import { showSuccess, showError, showDeleteConfirm } from '@/lib/sweetAlert';
+import { showSuccess, showError, showWarning, showDeleteConfirm } from '@/lib/sweetAlert';
 import Image from 'next/image';
+
+const MAX_UPLOAD_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const EOC_TYPES = [
     { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
@@ -25,6 +28,13 @@ function formatDateTime(value) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+function getAnnouncementImageSrc(imagePath) {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
+    const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return normalizedPath.startsWith('/stn-eoc/') ? normalizedPath : `/stn-eoc${normalizedPath}`;
 }
 
 function AnnouncementsContent() {
@@ -161,6 +171,16 @@ function AnnouncementsContent() {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+                showWarning('รองรับเฉพาะไฟล์ JPG, PNG หรือ WebP');
+                e.target.value = '';
+                return;
+            }
+            if (file.size > MAX_UPLOAD_IMAGE_SIZE_BYTES) {
+                showWarning('ขนาดไฟล์ใหญ่เกินไป (สูงสุด 10MB)');
+                e.target.value = '';
+                return;
+            }
             setImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -186,14 +206,35 @@ function AnnouncementsContent() {
         try {
             if (editMode) {
                 // Update
-                const response = await fetch('/stn-eoc/api/admin/announcements', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: selectedAnnouncement.id,
-                        ...formData
-                    })
-                });
+                let requestOptions;
+                if (imageFile) {
+                    const formDataToSend = new FormData();
+                    formDataToSend.append('id', selectedAnnouncement.id);
+                    formDataToSend.append('title', formData.title);
+                    formDataToSend.append('session_id', formData.session_id);
+                    formDataToSend.append('description', formData.description);
+                    formDataToSend.append('show_popup', formData.show_popup);
+                    formDataToSend.append('priority', formData.priority);
+                    formDataToSend.append('is_active', formData.is_active);
+                    formDataToSend.append('start_date', formData.start_date);
+                    formDataToSend.append('end_date', formData.end_date);
+                    formDataToSend.append('image', imageFile);
+                    requestOptions = {
+                        method: 'PUT',
+                        body: formDataToSend
+                    };
+                } else {
+                    requestOptions = {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: selectedAnnouncement.id,
+                            ...formData
+                        })
+                    };
+                }
+
+                const response = await fetch('/stn-eoc/api/admin/announcements', requestOptions);
 
                 const data = await response.json().catch(() => ({
                     success: false,
@@ -248,6 +289,7 @@ function AnnouncementsContent() {
     const handleEdit = (announcement) => {
         setEditMode(true);
         setSelectedAnnouncement(announcement);
+        setImageFile(null);
         setFormData({
             title: announcement.title,
             eoc_type: announcement.eoc_type || 'flood',
@@ -259,7 +301,7 @@ function AnnouncementsContent() {
             start_date: announcement.start_date ? announcement.start_date.slice(0, 16) : '',
             end_date: announcement.end_date ? announcement.end_date.slice(0, 16) : ''
         });
-        setImagePreview(announcement.image_path);
+        setImagePreview(getAnnouncementImageSrc(announcement.image_path));
         setShowModal(true);
     };
 
@@ -494,7 +536,7 @@ function AnnouncementsContent() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="relative h-16 w-24">
                                                     <Image
-                                                        src={announcement.image_path?.startsWith('http') ? announcement.image_path : `/stn-eoc${announcement.image_path?.startsWith('/') ? '' : '/'}${announcement.image_path}`}
+                                                        src={getAnnouncementImageSrc(announcement.image_path)}
                                                         alt={announcement.title}
                                                         fill
                                                         sizes="96px"
@@ -725,7 +767,8 @@ function AnnouncementsContent() {
                                         </label>
                                         <input
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                                            multiple={false}
                                             onChange={handleImageChange}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                         />
@@ -741,6 +784,9 @@ function AnnouncementsContent() {
                                                 />
                                             </div>
                                         )}
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            อัปโหลดได้ 1 ภาพ รองรับ JPG, PNG, WebP ขนาดไม่เกิน 10MB
+                                        </p>
                                     </div>
 
                                     {/* Checkboxes */}

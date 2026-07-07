@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { requireAuth } from "@/lib/auth";
-import { createRandomFilename, resolveInside, validateImageFile } from "@/lib/fileUpload";
+import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from "@/lib/fileUpload";
 import { publicInternalError } from "@/lib/apiResponse";
 
-const MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const VALID_EOC_TYPES = ['flood', 'drought', 'tsunami', 'earthquake', 'disease', 'accident', 'festival-accidents'];
 
 const pool = mysql.createPool({
@@ -52,6 +51,27 @@ function missingSessionResponse() {
         { success: false, message: 'กรุณาเลือก EOC Session' },
         { status: 400 }
     );
+}
+
+async function saveAnnouncementImage(image) {
+    const imageValidation = await validateImageFile(image, {
+        maxSizeBytes: MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES
+    });
+    if (!imageValidation.ok) {
+        return { ok: false, error: imageValidation.error };
+    }
+
+    const uploadDir = getUploadDir('announcements');
+    await mkdir(uploadDir, { recursive: true });
+
+    const fileName = createRandomFilename(imageValidation.extension);
+    const filePath = resolveInside(uploadDir, fileName);
+    await writeFile(filePath, imageValidation.buffer);
+
+    return {
+        ok: true,
+        imagePath: `/uploads/announcements/${fileName}`
+    };
 }
 
 // GET - ดึงรายการแบนเนอร์
@@ -228,12 +248,10 @@ export async function POST(request) {
             return missingSessionResponse();
         }
 
-        const imageValidation = await validateImageFile(image, {
-            maxSizeBytes: MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES
-        });
-        if (!imageValidation.ok) {
+        const savedImage = await saveAnnouncementImage(image);
+        if (!savedImage.ok) {
             return NextResponse.json(
-                { success: false, message: imageValidation.error },
+                { success: false, message: savedImage.error },
                 { status: 400 }
             );
         }
@@ -248,17 +266,7 @@ export async function POST(request) {
             }
         }
 
-        // สร้างโฟลเดอร์สำหรับเก็บรูป
-        const uploadBaseDir = path.join(process.cwd(), 'public', 'uploads');
-        const uploadDir = resolveInside(uploadBaseDir, 'announcements');
-        await mkdir(uploadDir, { recursive: true });
-
-        // บันทึกรูปภาพ
-        const fileName = createRandomFilename(imageValidation.extension);
-        const filePath = resolveInside(uploadDir, fileName);
-        await writeFile(filePath, imageValidation.buffer);
-
-        const imagePath = `/uploads/announcements/${fileName}`;
+        const imagePath = savedImage.imagePath;
 
         const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
         const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
@@ -310,9 +318,35 @@ export async function PUT(request) {
         const auth = await requireAuth(request, ['admin', 'commander']);
         if (!auth.success) return auth.response;
 
-        const body = await request.json();
-        const { id, title, description, show_popup, priority, is_active, start_date, end_date } = body;
-        const sessionId = normalizeOptionalId(body.session_id);
+        const contentType = request.headers.get('content-type') || '';
+        let id;
+        let title;
+        let description;
+        let show_popup;
+        let priority;
+        let is_active;
+        let start_date;
+        let end_date;
+        let sessionId;
+        let image = null;
+
+        if (contentType.includes('multipart/form-data')) {
+            const formData = await request.formData();
+            id = formData.get('id');
+            title = formData.get('title');
+            description = formData.get('description');
+            show_popup = formData.get('show_popup') === 'true';
+            priority = parseInt(formData.get('priority') || '0', 10);
+            is_active = formData.get('is_active') === 'true';
+            start_date = formData.get('start_date');
+            end_date = formData.get('end_date');
+            sessionId = normalizeOptionalId(formData.get('session_id'));
+            image = formData.get('image');
+        } else {
+            const body = await request.json();
+            ({ id, title, description, show_popup, priority, is_active, start_date, end_date } = body);
+            sessionId = normalizeOptionalId(body.session_id);
+        }
         const sessionEocType = await resolveSessionEocType(connection, sessionId);
         const resolvedEocType = sessionEocType;
 
@@ -339,8 +373,24 @@ export async function PUT(request) {
 
         const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
         const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
+        let updatedImagePath = null;
+        if (image && image.size > 0) {
+            const savedImage = await saveAnnouncementImage(image);
+            if (!savedImage.ok) {
+                return NextResponse.json(
+                    { success: false, message: savedImage.error },
+                    { status: 400 }
+                );
+            }
+            updatedImagePath = savedImage.imagePath;
+        }
+
+        const imageSetSql = updatedImagePath ? ', image_path = ?' : '';
 
         if (hasEocType && hasSessionId && resolvedEocType) {
+            const values = [title, resolvedEocType, sessionId, description, show_popup, priority, is_active, start_date || null, end_date || null];
+            if (updatedImagePath) values.push(updatedImagePath);
+            values.push(id);
             await connection.execute(
                 `UPDATE announcements
                 SET title = ?,
@@ -352,10 +402,14 @@ export async function PUT(request) {
                     is_active = ?,
                     start_date = ?,
                     end_date = ?
+                    ${imageSetSql}
                 WHERE id = ?`,
-                [title, resolvedEocType, sessionId, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+                values
             );
         } else if (hasEocType && resolvedEocType) {
+            const values = [title, resolvedEocType, description, show_popup, priority, is_active, start_date || null, end_date || null];
+            if (updatedImagePath) values.push(updatedImagePath);
+            values.push(id);
             await connection.execute(
                 `UPDATE announcements 
                 SET title = ?, 
@@ -366,10 +420,14 @@ export async function PUT(request) {
                     is_active = ?, 
                     start_date = ?, 
                     end_date = ?
+                    ${imageSetSql}
                 WHERE id = ?`,
-                [title, resolvedEocType, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+                values
             );
         } else {
+            const values = [title, description, show_popup, priority, is_active, start_date || null, end_date || null];
+            if (updatedImagePath) values.push(updatedImagePath);
+            values.push(id);
             await connection.execute(
                 `UPDATE announcements 
                 SET title = ?, 
@@ -379,8 +437,9 @@ export async function PUT(request) {
                     is_active = ?, 
                     start_date = ?, 
                     end_date = ?
+                    ${imageSetSql}
                 WHERE id = ?`,
-                [title, description, show_popup, priority, is_active, start_date || null, end_date || null, id]
+                values
             );
         }
 
