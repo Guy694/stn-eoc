@@ -22,6 +22,34 @@ export async function GET(request) {
             ORDER BY assigned_at DESC
         `, [auth.user.id]);
 
+        const diseaseSessionIds = [
+            ...new Set(assignments
+                .filter((assignment) => assignment.eoc_type === 'disease' && assignment.session_id)
+                .map((assignment) => assignment.session_id))
+        ];
+
+        if (diseaseSessionIds.length > 0) {
+            try {
+                const placeholders = diseaseSessionIds.map(() => '?').join(',');
+                const diseaseSessions = await pool.query(
+                    `SELECT id, disease_id, disease_name
+                     FROM eoc_sessions
+                     WHERE id IN (${placeholders})`,
+                    diseaseSessionIds
+                );
+                const diseaseBySessionId = new Map(diseaseSessions.map((session) => [String(session.id), session]));
+                assignments.forEach((assignment) => {
+                    const diseaseSession = diseaseBySessionId.get(String(assignment.session_id));
+                    if (diseaseSession) {
+                        assignment.disease_id = assignment.disease_id || diseaseSession.disease_id;
+                        assignment.disease_name = assignment.disease_name || diseaseSession.disease_name;
+                    }
+                });
+            } catch (error) {
+                console.warn('Could not enrich disease assignment names:', error.message);
+            }
+        }
+
         // ดึง modules ที่แต่ละทีมสามารถเข้าถึงได้
         for (let assignment of assignments) {
             const modules = await pool.query(`

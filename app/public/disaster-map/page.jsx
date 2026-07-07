@@ -5,6 +5,7 @@ import Link from "next/link";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 const EOC_TYPE_LABELS = {
   flood: "น้ำท่วม",
@@ -99,9 +100,10 @@ function buildContextOptions(activeEocs, sessions, disasterType) {
       mode: "active",
       id: item.session_id || null,
       eoc_type: item.eoc_type,
+      disease_name: item.disease_name,
       session_number: item.session_number,
       status: "active",
-      label: `${item.name_th || EOC_TYPE_LABELS[item.eoc_type] || item.eoc_type} ที่เปิดอยู่`,
+      label: `${formatEocDisplayName(item)} ที่เปิดอยู่`,
       opened_at: normalizeDateKey(item.activated_at),
       closed_at: ""
     }));
@@ -114,9 +116,10 @@ function buildContextOptions(activeEocs, sessions, disasterType) {
       mode: "history",
       id: session.id,
       eoc_type: session.eoc_type,
+      disease_name: session.disease_name,
       session_number: session.session_number,
       status: session.status,
-      label: `${EOC_TYPE_LABELS[session.eoc_type] || session.eoc_type} #${session.session_number || session.id}`,
+      label: `${formatEocDisplayName(session)} #${session.session_number || session.id}`,
       opened_at: normalizeDateKey(session.opened_at),
       closed_at: normalizeDateKey(session.closed_at),
       latest_data_date: normalizeDateKey(session.latest_flood_record_date),
@@ -337,7 +340,7 @@ export default function PublicDisasterMapPage() {
   const scaffoldEocStatus = selectedContext?.mode === "active" ? "open" : selectedContext ? "closed" : eocIsOpen ? "open" : "closed";
   const scaffoldEocLabel = selectedContext
     ? `${selectedContext.label}${selectedContext.closed_at ? ` ปิดเมื่อ ${formatThaiDate(selectedContext.closed_at)}` : ""}`
-    : latestActive ? latestActive.name_th || EOC_TYPE_LABELS[latestActive.eoc_type] : "ไม่มี EOC ที่เปิดอยู่";
+    : latestActive ? formatEocDisplayName(latestActive) : "ไม่มี EOC ที่เปิดอยู่";
 
   const visibleIncidents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ShelterCenterMap from "@/components/ShelterCenterMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
+import { formatEocDisplayName, getEocTypeLabel } from "@/lib/eocDisplay";
 
 const EOC_TYPE_LABELS = {
   flood: "อุทกภัย",
@@ -34,7 +35,7 @@ function formatNumber(value) {
 }
 
 function getEocLabel(item) {
-  return item?.name_th || EOC_TYPE_LABELS[item?.eoc_type] || item?.eoc_type || "EOC";
+  return formatEocDisplayName(item);
 }
 
 function getCapacity(shelter) {
@@ -102,6 +103,7 @@ function buildContextOptions(activeEocs, sessions) {
       mode: "active",
       session_id: item.session_id || null,
       eoc_type: item.eoc_type,
+      disease_name: item.disease_name,
       label: `${getEocLabel(item)} ที่เปิดอยู่`,
       opened_at: item.activated_at,
       closed_at: null
@@ -115,7 +117,8 @@ function buildContextOptions(activeEocs, sessions) {
       mode: "history",
       session_id: session.id,
       eoc_type: session.eoc_type,
-      label: `${EOC_TYPE_LABELS[session.eoc_type] || session.eoc_type || "EOC"} #${session.session_number || session.id}`,
+      disease_name: session.disease_name,
+      label: `${formatEocDisplayName(session) || getEocTypeLabel(session.eoc_type)} #${session.session_number || session.id}`,
       opened_at: session.opened_at,
       closed_at: session.closed_at
     }));
@@ -186,12 +189,17 @@ export default function PublicSheltersPage() {
     : latestActive ? getEocLabel(latestActive) : "ไม่มี EOC ที่เปิดอยู่";
 
   const loadShelters = useCallback(async () => {
+    if (!selectedContext?.session_id) {
+      setShelters([]);
+      setLoadingShelters(false);
+      return;
+    }
+
     try {
       setLoadingShelters(true);
       const params = new URLSearchParams();
       if (selectedContext?.eoc_type) params.set("eoc_type", selectedContext.eoc_type);
-      if (selectedContext?.session_id) params.set("session_id", selectedContext.session_id);
-      if (!selectedContext?.session_id) params.set("include_all", "1");
+      params.set("session_id", selectedContext.session_id);
 
       const response = await fetch(`/stn-eoc/api/public/shelter-centers?${params.toString()}`);
       const json = response.ok ? await response.json() : { success: false, data: [] };
@@ -410,15 +418,22 @@ export default function PublicSheltersPage() {
                 <h3 className="text-lg font-black text-blue-900">แผนที่ศูนย์พักพิง</h3>
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{formatNumber(filteredShelters.length)} แห่ง</span>
               </div>
-              <ShelterCenterMap
-                eocType={selectedContext?.eoc_type || null}
-                sessionId={selectedContext?.session_id || null}
-                apiPath="/stn-eoc/api/public/shelter-centers"
-                includeAll={!selectedContext?.session_id}
-                embedded
-                heightClass="h-[460px]"
-                showLayerControls={false}
-              />
+              {selectedContext?.session_id ? (
+                <ShelterCenterMap
+                  key={`shelter-map-${selectedContext.session_id}`}
+                  eocType={selectedContext?.eoc_type || null}
+                  sessionId={selectedContext.session_id}
+                  apiPath="/stn-eoc/api/public/shelter-centers"
+                  includeAll={false}
+                  embedded
+                  heightClass="h-[460px]"
+                  showLayerControls={false}
+                />
+              ) : (
+                <div className="flex h-[460px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
+                  ยังไม่มีรอบ EOC สำหรับแสดงศูนย์พักพิง
+                </div>
+              )}
               <p className="mt-3 text-xs text-slate-500">หมายเหตุ: ความจุและจำนวนผู้พักพิงอาจเปลี่ยนแปลงได้ตลอดเวลา กรุณาตรวจสอบล่าสุดก่อนเดินทาง</p>
             </section>
 

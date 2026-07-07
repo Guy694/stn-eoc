@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { getPublicAssetPath } from "@/lib/publicAssetPath";
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 const EOC_TYPE_LABELS = {
   flood: "น้ำท่วม",
@@ -37,8 +38,61 @@ function getPriorityTone(priority) {
   return "from-blue-600 to-blue-500";
 }
 
+function getDisplayStatusMeta(status) {
+  if (status === "expired") return { label: "ข่าวย้อนหลัง", className: "bg-slate-100 text-slate-600" };
+  if (status === "scheduled") return { label: "รอเผยแพร่", className: "bg-amber-50 text-amber-700" };
+  return { label: "กำลังเผยแพร่", className: "bg-emerald-50 text-emerald-700" };
+}
+
 function getAnnouncementImageSrc(imagePath) {
   return getPublicAssetPath(imagePath);
+}
+
+function AnnouncementCard({ item, onImageClick, compact = false }) {
+  const imageSrc = getAnnouncementImageSrc(item.image_path);
+  const statusMeta = getDisplayStatusMeta(item.display_status);
+
+  return (
+    <article className="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-blue-200 hover:shadow-md">
+      <div className={`flex flex-col gap-4 ${compact ? "" : "md:flex-row"}`}>
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2.5 py-1">{EOC_TYPE_LABELS[item.eoc_type] || item.eoc_type || "ทั่วไป"}</span>
+            <span className={`rounded-full px-2.5 py-1 ${statusMeta.className}`}>{statusMeta.label}</span>
+            {item.show_popup ? <span className="rounded-full bg-red-50 px-2.5 py-1 text-red-700">Popup</span> : null}
+          </div>
+          <h3 className={`${compact ? "text-base" : "text-lg"} font-black leading-snug text-slate-900`}>{item.title}</h3>
+          <p className={`${compact ? "line-clamp-3" : ""} mt-2 text-sm leading-6 text-slate-600`}>
+            {item.description || "ไม่มีรายละเอียดเพิ่มเติม"}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-400">
+            <span>เผยแพร่ {formatDate(item.created_at)}</span>
+            {item.created_by_name ? <span>โดย {item.created_by_name}</span> : null}
+          </div>
+        </div>
+
+        {imageSrc && (
+          <button
+            type="button"
+            onClick={() => onImageClick({ src: imageSrc, title: item.title })}
+            className={`relative w-full flex-none cursor-zoom-in overflow-hidden rounded-xl bg-slate-100 text-left ${compact ? "h-44" : "h-36 md:w-44"}`}
+          >
+            <Image
+              src={imageSrc}
+              alt={item.title}
+              fill
+              className="object-cover transition duration-200 hover:scale-105"
+              sizes={compact ? "(max-width: 1024px) 100vw, 360px" : "176px"}
+              unoptimized
+            />
+            <span className="absolute bottom-2 right-2 rounded-md bg-black/60 px-2 py-1 text-[11px] font-bold text-white">
+              ดูเต็ม
+            </span>
+          </button>
+        )}
+      </div>
+    </article>
+  );
 }
 
 export default function PublicAnnouncementsPage() {
@@ -60,8 +114,8 @@ export default function PublicAnnouncementsPage() {
       try {
         const eocType = latestActiveEoc?.eoc_type;
         const typeScopedUrl = eocType
-          ? `/stn-eoc/api/public/announcements?limit=24&eocType=${encodeURIComponent(eocType)}`
-          : "/stn-eoc/api/public/announcements?limit=24";
+          ? `/stn-eoc/api/public/announcements?limit=200&include_old=1&eocType=${encodeURIComponent(eocType)}`
+          : "/stn-eoc/api/public/announcements?limit=200&include_old=1";
 
         const scopedResponse = await fetch(typeScopedUrl);
         const scopedData = await scopedResponse.json();
@@ -73,7 +127,7 @@ export default function PublicAnnouncementsPage() {
         }
 
         // Fallback: ถ้ายังไม่มีข่าวใน EOC ที่เปิดอยู่ ให้แสดงข่าวรวมแทน
-        const fallbackResponse = await fetch('/stn-eoc/api/public/announcements?limit=24');
+        const fallbackResponse = await fetch('/stn-eoc/api/public/announcements?limit=200&include_old=1');
         const fallbackData = await fallbackResponse.json();
         setAnnouncements(fallbackData.success ? (fallbackData.data || []) : []);
       } catch (error) {
@@ -101,6 +155,8 @@ export default function PublicAnnouncementsPage() {
   }, []);
 
   const featured = announcements[0] || null;
+  const latestAnnouncements = announcements.slice(featured ? 1 : 0, featured ? 4 : 3);
+  const archiveAnnouncements = announcements.slice(featured ? 4 : 3);
   const infographicItems = useMemo(() => {
     const withImages = announcements.filter((item) => Boolean(item.image_path));
     if (withImages.length > 0) return withImages;
@@ -120,10 +176,11 @@ export default function PublicAnnouncementsPage() {
     ];
   }, [announcements]);
 
-  const popupCount = announcements.filter((item) => Boolean(item.show_popup)).length;
+  const currentCount = announcements.filter((item) => item.display_status === "current").length;
+  const archiveCount = announcements.filter((item) => item.display_status === "expired").length;
   const eocIsOpen = activeEocs.length > 0;
   const eocLabel = latestActiveEoc
-    ? latestActiveEoc.name_th || EOC_TYPE_LABELS[latestActiveEoc.eoc_type] || latestActiveEoc.eoc_type
+    ? formatEocDisplayName(latestActiveEoc)
     : "ไม่มี EOC ที่เปิดอยู่";
   const featuredImageSrc = getAnnouncementImageSrc(featured?.image_path);
 
@@ -148,8 +205,23 @@ export default function PublicAnnouncementsPage() {
                 ประกาศข่าวสารและข้อมูลประชาสัมพันธ์สำหรับประชาชน
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                รวมประกาศล่าสุดจากระบบ EOC จังหวัดสตูล ข่าวประชาสัมพันธ์ และพื้นที่สำหรับแสดง infographic เพื่อสื่อสารข้อมูลสำคัญอย่างรวดเร็วและชัดเจน
+                รวมประกาศล่าสุดจากระบบ EOC จังหวัดสตูล พร้อมข่าวย้อนหลังที่ยังเปิดให้ประชาชนตรวจสอบได้
               </p>
+
+              <div className="mt-4 grid gap-2 text-sm font-semibold sm:grid-cols-3">
+                <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2">
+                  <p className="text-xs text-blue-600">ประกาศทั้งหมด</p>
+                  <p className="text-xl font-black text-blue-950">{loading ? "-" : announcements.length.toLocaleString("th-TH")}</p>
+                </div>
+                <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
+                  <p className="text-xs text-emerald-700">กำลังเผยแพร่</p>
+                  <p className="text-xl font-black text-emerald-900">{loading ? "-" : currentCount.toLocaleString("th-TH")}</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-xs text-slate-500">ข่าวย้อนหลัง</p>
+                  <p className="text-xl font-black text-slate-800">{loading ? "-" : archiveCount.toLocaleString("th-TH")}</p>
+                </div>
+              </div>
 
               <div className="mt-4 flex flex-wrap gap-2 text-sm font-semibold">
                 <Link href="/public/shelters" className="rounded-lg bg-blue-700 px-4 py-2 text-white shadow-sm hover:bg-blue-800">
@@ -218,46 +290,17 @@ export default function PublicAnnouncementsPage() {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-black text-slate-900">ประกาศล่าสุด</h2>
-                  <p className="text-sm text-slate-500">เรียงตามความสำคัญและความใหม่ล่าสุด</p>
+                  <p className="text-sm text-slate-500">ข่าวใหม่และประกาศสำคัญยังแสดงเด่นเหมือนเดิม</p>
                 </div>
                 <div className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
-                  {loading ? 'กำลังโหลด...' : `${announcements.length} รายการ`}
+                  {loading ? 'กำลังโหลด...' : `${Math.min(announcements.length, featured ? 4 : 3)} รายการล่าสุด`}
                 </div>
               </div>
 
               <div className="space-y-3">
-                {announcements.map((item) => {
-                  const imageSrc = getAnnouncementImageSrc(item.image_path);
-                  return (
-                    <article key={item.id} className="rounded-xl border border-slate-200 p-4 transition hover:shadow-md">
-                      <div className="flex flex-col gap-4 md:flex-row">
-                        <div className="flex-1">
-                          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-                            <span className="rounded-full bg-slate-100 px-2.5 py-1">{item.eoc_type || 'ทั่วไป'}</span>
-                            {item.show_popup ? <span className="rounded-full bg-red-50 px-2.5 py-1 text-red-700">Popup</span> : null}
-                            <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">Priority {item.priority ?? 0}</span>
-                          </div>
-                          <h3 className="text-lg font-black text-slate-900">{item.title}</h3>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">{item.description || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
-                          <p className="mt-3 text-xs text-slate-400">เผยแพร่วันที่ {formatDate(item.created_at)}</p>
-                        </div>
-
-                        {imageSrc && (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedImage({ src: imageSrc, title: item.title })}
-                            className="relative h-36 w-full cursor-zoom-in overflow-hidden rounded-xl bg-slate-100 text-left md:w-44 md:flex-none"
-                          >
-                            <Image src={imageSrc} alt={item.title} fill className="object-cover transition duration-200 hover:scale-105" sizes="176px" unoptimized />
-                            <span className="absolute bottom-2 right-2 rounded-md bg-black/60 px-2 py-1 text-[11px] font-bold text-white">
-                              ดูเต็ม
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
+                {latestAnnouncements.map((item) => (
+                  <AnnouncementCard key={item.id} item={item} onImageClick={setSelectedImage} />
+                ))}
 
                 {!loading && announcements.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-300 p-10 text-center text-slate-500">
@@ -265,6 +308,30 @@ export default function PublicAnnouncementsPage() {
                   </div>
                 )}
               </div>
+            </section>
+
+            <section className="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm md:p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">ข่าวย้อนหลังและประกาศทั้งหมด</h2>
+                  <p className="text-sm text-slate-500">ประกาศเก่าจะเก็บไว้ให้ค้นดูต่อจากรายการล่าสุด</p>
+                </div>
+                <div className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700 shadow-sm">
+                  {loading ? 'กำลังโหลด...' : `${archiveAnnouncements.length.toLocaleString("th-TH")} รายการ`}
+                </div>
+              </div>
+
+              {archiveAnnouncements.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {archiveAnnouncements.map((item) => (
+                    <AnnouncementCard key={item.id} item={item} onImageClick={setSelectedImage} compact />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-semibold text-slate-500">
+                  ยังไม่มีข่าวย้อนหลังเพิ่มเติม
+                </div>
+              )}
             </section>
           </div>
 

@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { formatEocDisplayName } from '@/lib/eocDisplay';
 
 const EOCContext = createContext();
 
@@ -168,17 +169,10 @@ export function EOCProvider({ children }) {
 
     // แปลงชื่อ EOC เป็นภาษาไทย
     const getEOCDisplayName = (eocType) => {
-        // ดึงชื่อจาก eocStatus ที่โหลดจาก database
-        if (eocStatus[eocType]?.name_th) {
-            return eocStatus[eocType].name_th;
-        }
-        // Fallback สำหรับ EOC เดิม
-        const fallbackNames = {
-            flood: 'น้ำท่วม',
-            disease: 'โรคระบาด',
-            'festival-accidents': 'อุบัติเหตุช่วงเทศกาล'
-        };
-        return fallbackNames[eocType] || eocType;
+        return formatEocDisplayName({
+            eoc_type: eocType,
+            ...(eocStatus[eocType] || {})
+        });
     };
 
     const value = {

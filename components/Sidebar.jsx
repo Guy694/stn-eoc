@@ -175,7 +175,7 @@ export default function Sidebar() {
         // },
 
         {
-            title: "🦠 EOC โรคระบาด",
+            title: `🦠 EOC ${getEOCDisplayName('disease')}`,
             section: "eoc-disease",
             key: "disease",
             eocType: "disease",

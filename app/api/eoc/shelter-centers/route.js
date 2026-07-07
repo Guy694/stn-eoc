@@ -18,12 +18,23 @@ export async function GET(request) {
         let params = [];
 
         if (sessionId && !includeAll) {
+            const pool = await getConnection();
+            const [sessions] = await pool.query(
+                'SELECT status FROM eoc_sessions WHERE id = ? LIMIT 1',
+                [sessionId]
+            );
+            const isClosedSession = sessions[0]?.status === 'closed';
+            const activationFilter = isClosedSession ? '' : 'AND ssa.is_active = 1';
+            const shelterStatusFilter = isClosedSession ? 'WHERE 1=1' : 'WHERE sc.is_active = 1';
+
             // ดึงเฉพาะ shelter ที่ activate สำหรับ session นี้
             query = `
                 SELECT 
                     sc.*,
                     COALESCE(ssa.current_occupancy, 0) as current_occupancy,
                     ssa.activated_at,
+                    ssa.deactivated_at,
+                    ssa.is_active as session_is_active,
                     CASE 
                         WHEN COALESCE(ssa.current_occupancy, 0) >= sc.shelter_capacity THEN 'full'
                         WHEN COALESCE(ssa.current_occupancy, 0) >= sc.shelter_capacity * 0.8 THEN 'near_full'
@@ -33,8 +44,8 @@ export async function GET(request) {
                 INNER JOIN shelter_session_activations ssa 
                     ON sc.id = ssa.shelter_id 
                     AND ssa.session_id = ? 
-                    AND ssa.is_active = 1
-                WHERE sc.is_active = 1
+                    ${activationFilter}
+                ${shelterStatusFilter}
             `;
             params = [sessionId];
 
@@ -80,7 +91,17 @@ export async function GET(request) {
         if (error.code === 'ER_NO_SUCH_TABLE') {
             try {
                 const { searchParams } = new URL(request.url);
+                const sessionId = searchParams.get('session_id');
+                const includeAll = searchParams.get('include_all');
                 const eocType = searchParams.get('eoc_type');
+
+                if (sessionId && !includeAll) {
+                    return NextResponse.json({
+                        success: true,
+                        data: [],
+                        message: 'ยังไม่ได้สร้างตาราง shelter_session_activations'
+                    });
+                }
 
                 let fallbackQuery = `SELECT sc.*, 0 as current_occupancy FROM shelter_centers sc WHERE sc.is_active = 1`;
                 let fallbackParams = [];

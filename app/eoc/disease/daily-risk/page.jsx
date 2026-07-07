@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from "@/components/layouts/EOCLayout";
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 export default function DiseaseDailyRiskPage() {
     const [data, setData] = useState(null);
@@ -8,6 +9,9 @@ export default function DiseaseDailyRiskPage() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [availableDates, setAvailableDates] = useState([]);
     const [showAllDates, setShowAllDates] = useState(false);
+    const activeDiseaseEocName = data?.activeSession
+        ? formatEocDisplayName({ eoc_type: 'disease', ...data.activeSession })
+        : 'โรคระบาด';
 
     const fetchAvailableDates = useCallback(async () => {
         try {
@@ -181,7 +185,7 @@ export default function DiseaseDailyRiskPage() {
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div>
                                 <h3 className="text-xl font-bold mb-2">
-                                    🚨 EOC Session #{data.activeSession.session_number}/2026 - {data.activeSession.disease_name || 'โรคระบาด'} - กำลังดำเนินการ
+                                    🚨 {activeDiseaseEocName} Session #{data.activeSession.session_number}/2026 - กำลังดำเนินการ
                                 </h3>
                                 <p className="opacity-90 mb-1">
                                     เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {

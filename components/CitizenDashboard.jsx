@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { formatEocDisplayName } from '@/lib/eocDisplay';
 
 export default function CitizenDashboard() {
     const { user } = useAuth();
@@ -85,17 +86,7 @@ export default function CitizenDashboard() {
         }
     };
 
-    const getEOCTypeName = (type) => {
-        const names = {
-            flood: 'น้ำท่วม',
-            disease: 'โรคระบาด',
-            accident: 'อุบัติเหตุ',
-            drought: 'ภัยแล้ง',
-            tsunami: 'คลื่นสึนามิ',
-            earthquake: 'แผ่นดินไหว'
-        };
-        return names[type] || type;
-    };
+    const getEOCTypeName = (eocOrType) => formatEocDisplayName(eocOrType);
 
     const getEOCTypeIcon = (type) => {
         const icons = {
@@ -184,7 +175,7 @@ export default function CitizenDashboard() {
                                             </div>
                                             <div>
                                                 <h4 className="text-2xl font-bold mb-1">
-                                                    EOC {getEOCTypeName(eoc.eoc_type)} เปิดใช้งาน
+                                                    EOC {getEOCTypeName(eoc)} เปิดใช้งาน
                                                 </h4>
                                                 <p className="text-sm opacity-90">
                                                     {eoc.description || 'ไม่มีรายละเอียดเพิ่มเติม'}
@@ -215,7 +206,7 @@ export default function CitizenDashboard() {
                                             className="block w-full bg-white text-center font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
                                             style={{ color: `rgb(var(--color-${color}-600))` }}
                                         >
-                                            ⚡ แจ้งเหตุ{getEOCTypeName(eoc.eoc_type)}
+                                            ⚡ แจ้งเหตุ{getEOCTypeName(eoc)}
                                         </Link>
                                     </div>
                                 </div>

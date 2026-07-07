@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { formatEocDisplayName } from '@/lib/eocDisplay';
 
 export default function UserEOCDashboard() {
     const { user } = useAuth();
@@ -71,7 +72,8 @@ export default function UserEOCDashboard() {
             acc[key] = {
                 session_id: assignment.session_id,
                 eoc_type: assignment.eoc_type,
-                eoc_name: getEOCName(assignment.eoc_type),
+                disease_name: assignment.disease_name,
+                eoc_name: formatEocDisplayName(assignment),
                 session_number: assignment.session_number,
                 teams: []
             };
@@ -166,18 +168,6 @@ export default function UserEOCDashboard() {
             ))}
         </div>
     );
-}
-
-// Helper Functions
-function getEOCName(eocType) {
-    const names = {
-        flood: 'น้ำท่วม',
-        drought: 'ภัยแล้ง',
-        disease: 'โรคระบาด',
-        tsunami: 'คลื่นสึนามิ',
-        earthquake: 'แผ่นดินไหว'
-    };
-    return names[eocType] || eocType;
 }
 
 function getEOCIcon(eocType) {

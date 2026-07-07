@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 export default function DiseaseRecordsPage() {
     const [records, setRecords] = useState([]);
@@ -35,6 +36,9 @@ export default function DiseaseRecordsPage() {
     });
 
     const [tambonOptions, setTambonOptions] = useState([]);
+    const activeDiseaseEocName = activeSession
+        ? formatEocDisplayName({ eoc_type: 'disease', ...activeSession })
+        : 'โรคระบาด';
 
     // ดึงข้อมูล polygon หมู่บ้าน
     useEffect(() => {
@@ -451,14 +455,14 @@ export default function DiseaseRecordsPage() {
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                             <span className="text-4xl">🦠</span>
-                            บันทึกพื้นที่โรคระบาด
+                            บันทึกพื้นที่ {activeDiseaseEocName}
                         </h1>
                         <p className="text-gray-600">
                             EOC Session #{activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
                         </p>
                         {activeSession.disease_name && (
                             <p className="mt-1 text-sm font-semibold text-teal-700">
-                                ประเภทโรคที่เปิดติดตาม: {activeSession.disease_name}
+                                ประเภท EOC ที่เปิดติดตาม: {activeDiseaseEocName}
                             </p>
                         )}
                     </div>

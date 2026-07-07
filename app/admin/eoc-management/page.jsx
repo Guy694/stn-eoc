@@ -629,11 +629,6 @@ export default function EOCManagementPage() {
                                     <div key={type} className="flex items-center gap-2 text-blue-800">
                                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                                         <span className="font-medium">EOC {getEOCDisplayName(type)}</span>
-                                        {type === 'disease' && eocStatus[type]?.disease_name && (
-                                            <span className="text-sm font-semibold text-blue-700">
-                                                ({eocStatus[type].disease_name})
-                                            </span>
-                                        )}
                                         <span className="text-sm text-blue-600">
                                             (เปิดเมื่อ: {new Date(eocStatus[type].activated_at).toLocaleString('th-TH')})
                                         </span>

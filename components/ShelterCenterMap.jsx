@@ -45,6 +45,10 @@ export default function ShelterCenterMap({
 
     const eocTypes = EOC_TYPES;
 
+    useEffect(() => {
+        setFilterType(eocType || '');
+    }, [eocType]);
+
     // สร้าง custom icons
     useEffect(() => {
         if (typeof window !== 'undefined') {

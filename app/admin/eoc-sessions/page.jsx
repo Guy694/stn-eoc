@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import { formatEocDisplayName } from '@/lib/eocDisplay';
 
 function getFileUrl(filePath) {
     if (!filePath) return '';
@@ -137,16 +138,7 @@ export default function EOCSessionsPage() {
         });
     };
 
-    const getEOCTypeName = (type) => {
-        const names = {
-            flood: 'น้ำท่วม',
-            drought: 'ภัยแล้ง',
-            tsunami: 'คลื่นสึนามิ',
-            earthquake: 'แผ่นดินไหว',
-            disease: 'โรคระบาด'
-        };
-        return names[type] || type;
-    };
+    const getEOCTypeName = (sessionOrType) => formatEocDisplayName(sessionOrType);
 
     const getStatusBadge = (status) => {
         const badges = {
@@ -242,13 +234,8 @@ export default function EOCSessionsPage() {
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-3">
                                             <h3 className="text-lg font-bold text-gray-800">
-                                                {getEOCTypeName(session.eoc_type)} (ครั้งที่ {session.session_number})
+                                                {getEOCTypeName(session)} (ครั้งที่ {session.session_number})
                                             </h3>
-                                            {session.eoc_type === 'disease' && session.disease_name && (
-                                                <span className="px-2 py-1 text-xs rounded-full bg-rose-100 text-rose-800">
-                                                    {session.disease_name}
-                                                </span>
-                                            )}
                                             {getStatusBadge(session.status)}
                                         </div>
                                         <span className="text-sm text-gray-500">
@@ -349,7 +336,7 @@ export default function EOCSessionsPage() {
                         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
                                 <h2 className="text-xl font-bold text-gray-800">
-                                    รายละเอียด: {getEOCTypeName(selectedSession.eoc_type)} (ครั้งที่ {selectedSession.session_number})
+                                    รายละเอียด: {getEOCTypeName(selectedSession)} (ครั้งที่ {selectedSession.session_number})
                                 </h2>
                                 <button
                                     onClick={handleCloseDetail}

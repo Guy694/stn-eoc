@@ -85,6 +85,11 @@ export async function GET(request) {
                s.disease_name,`
             : `NULL as disease_id,
                NULL as disease_name,`;
+        const overviewDiseaseSelect = hasDiseaseColumns
+            ? `latest.disease_id,
+               latest.disease_name,`
+            : `NULL as disease_id,
+               NULL as disease_name,`;
         const sessionDiseaseGroupBy = hasDiseaseColumns
             ? `s.disease_id,
                     s.disease_name,`
@@ -367,6 +372,7 @@ export async function GET(request) {
                     latest.id as session_id,
                     latest.session_number,
                     latest.status as session_status,
+                    ${overviewDiseaseSelect}
                     latest.opened_at,
                     latest.closed_at
                 FROM eoc_status es
@@ -504,6 +510,8 @@ export async function GET(request) {
                     session_id: eoc.session_id,
                     session_number: eoc.session_number,
                     session_status: eoc.session_status,
+                    disease_id: eoc.disease_id,
+                    disease_name: eoc.disease_name,
                     opened_at: eoc.opened_at,
                     closed_at: eoc.closed_at,
                     affected_period_start: sessionImpact.affected_period_start || null,

@@ -557,7 +557,6 @@ export async function POST(request) {
                     const [closedShelters] = await connection.execute(
                         `UPDATE shelter_session_activations
                          SET is_active = 0,
-                             current_occupancy = 0,
                              deactivated_at = COALESCE(deactivated_at, ?),
                              notes = CASE
                                  WHEN notes IS NULL OR notes = '' THEN ?

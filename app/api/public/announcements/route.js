@@ -19,7 +19,8 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const eocType = searchParams.get('eocType');
-        const limit = Math.min(parseInt(searchParams.get('limit') || '12', 10), 50);
+        const includeOld = searchParams.get('include_old') === '1' || searchParams.get('includeArchived') === '1';
+        const limit = Math.min(parseInt(searchParams.get('limit') || '12', 10), includeOld ? 200 : 50);
 
         const [columns] = await connection.execute(
             `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
@@ -32,7 +33,10 @@ export async function GET(request) {
             AND (a.start_date IS NULL OR a.start_date <= NOW())
             AND (a.end_date IS NULL OR a.end_date >= NOW())
         `;
-        let whereClause = activeWindowWhereClause;
+        let whereClause = includeOld
+            ? `WHERE a.is_active = 1
+               AND (a.start_date IS NULL OR a.start_date <= NOW())`
+            : activeWindowWhereClause;
 
         if (hasEocType && eocType) {
             whereClause += ' AND a.eoc_type = ?';
@@ -51,6 +55,12 @@ export async function GET(request) {
                 a.start_date,
                 a.end_date,
                 a.created_at,
+                CASE
+                    WHEN (a.start_date IS NULL OR a.start_date <= NOW())
+                        AND (a.end_date IS NULL OR a.end_date >= NOW()) THEN 'current'
+                    WHEN a.end_date IS NOT NULL AND a.end_date < NOW() THEN 'expired'
+                    ELSE 'scheduled'
+                END as display_status,
                 ${selectEocType}
                 CONCAT(o.given_name, ' ', o.family_name) as created_by_name
             FROM announcements a
@@ -59,16 +69,27 @@ export async function GET(request) {
         let [rows] = await connection.execute(
             `${selectSql}
              ${whereClause}
-             ORDER BY a.priority DESC, a.created_at DESC
+             ORDER BY
+                CASE
+                    WHEN (a.start_date IS NULL OR a.start_date <= NOW())
+                        AND (a.end_date IS NULL OR a.end_date >= NOW()) THEN 0
+                    WHEN a.end_date IS NOT NULL AND a.end_date < NOW() THEN 1
+                    ELSE 2
+                END ASC,
+                a.priority DESC,
+                a.created_at DESC
              LIMIT ${limit}`,
             params
         );
 
         let fallback = false;
-        if (rows.length === 0) {
+        if (rows.length === 0 && !includeOld) {
             fallback = true;
             const fallbackParams = [];
-            let fallbackWhereClause = 'WHERE a.is_active = 1';
+            let fallbackWhereClause = `
+                WHERE a.is_active = 1
+                AND (a.start_date IS NULL OR a.start_date <= NOW())
+            `;
 
             if (hasEocType && eocType) {
                 fallbackWhereClause += ' AND a.eoc_type = ?';

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 const CATEGORY_META = {
   all: { label: "ทั้งหมด", color: "bg-blue-700 text-white border-blue-700" },
@@ -69,7 +70,7 @@ export default function PublicAgenciesPage() {
 
         setEocIsOpen(activeAll.length > 0);
         setEocStatus(activeAll.length > 0 ? "open" : "closed");
-        setEocLabel(activeAll[0] ? activeAll[0].name_th || activeAll[0].eoc_type : "ไม่มี EOC ที่เปิดอยู่");
+        setEocLabel(activeAll[0] ? formatEocDisplayName(activeAll[0]) : "ไม่มี EOC ที่เปิดอยู่");
         setContacts(contactsJson.success ? (contactsJson.data || []).map(toAgencyContact) : []);
       } catch (error) {
         console.error("Error loading agencies:", error);

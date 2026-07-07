@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 function formatDateTime(value) {
     if (!value) return "-";
@@ -45,14 +46,17 @@ export default function DiseasePage() {
 
     const activeSession = data?.activeSession;
     const stats = data?.totalStats || {};
+    const activeDiseaseEocName = activeSession
+        ? formatEocDisplayName({ eoc_type: "disease", ...activeSession })
+        : "โรคระบาด";
 
     return (
         <EOCLayout>
             <div className="container mx-auto p-4 md:p-6">
                 <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <p className="text-sm font-bold text-teal-700">EOC โรคระบาด</p>
-                        <h1 className="text-2xl font-black text-gray-900 md:text-3xl">ภาพรวมสถานการณ์โรคระบาด</h1>
+                        <p className="text-sm font-bold text-teal-700">{activeDiseaseEocName}</p>
+                        <h1 className="text-2xl font-black text-gray-900 md:text-3xl">ภาพรวมสถานการณ์{activeDiseaseEocName}</h1>
                         <p className="mt-1 text-sm text-gray-600">
                             ติดตามข้อมูลผู้ป่วย รายงานจากหน่วยบริการ และชนิดโรคของ EOC Session
                         </p>
@@ -90,7 +94,7 @@ export default function DiseasePage() {
                                     <div>
                                         <div className="text-sm font-semibold text-white/85">Session #{activeSession.session_number}</div>
                                         <h2 className="mt-1 text-2xl font-black">
-                                            {activeSession.disease_name || "โรคระบาด"}
+                                            {activeDiseaseEocName}
                                         </h2>
                                         <p className="mt-2 text-sm text-white/90">เปิดเมื่อ {formatDateTime(activeSession.opened_at)}</p>
                                         {activeSession.open_reason && (

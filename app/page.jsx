@@ -7,6 +7,7 @@ import SplashScreen from "@/components/SplashScreen";
 import AIChatbot from "@/components/AIChatbot";
 import PDPAConsent from "@/components/PDPAConsent";
 import { getPublicAssetPath } from "@/lib/publicAssetPath";
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 import dynamic from "next/dynamic";
 
 const FestivalPublicDashboard = dynamic(() => import("@/components/festival/FestivalPublicDashboard"), { ssr: false });
@@ -234,7 +235,7 @@ export default function Home() {
             setEocStatus({
               isOpen: true,
               openedDate: latestEOC.session_opened_at || latestEOC.activated_at,
-              reason: latestEOC.description || `เปิดศูนย์ EOC ${getEOCTypeName(latestEOC.eoc_type)}`
+              reason: latestEOC.description || `เปิดศูนย์ EOC ${getEOCTypeName(latestEOC)}`
             });
           } else {
             setEocStatus({
@@ -420,15 +421,7 @@ export default function Home() {
   }, [eocStatus]);
 
   // ฟังก์ชันแปลงชื่อ EOC
-  const getEOCTypeName = (type) => {
-    const names = {
-      flood: 'น้ำท่วม',
-      disease: 'โรคระบาด',
-      accident: 'อุบัติเหตุ',
-      'festival-accidents': 'อุบัติเหตุช่วงเทศกาล'
-    };
-    return names[type] || type;
-  };
+  const getEOCTypeName = (eocOrType) => formatEocDisplayName(eocOrType);
 
   const getEOCTypeIcon = (type) => {
     const icons = {
@@ -920,7 +913,7 @@ export default function Home() {
                                 <div className="flex items-center gap-2">
                                   <span className={`h-2.5 w-2.5 rounded-full ${style.accent || "bg-gray-500"}`}></span>
                                   <h3 className="text-lg font-bold text-gray-800 leading-tight">
-                                    {getEOCTypeName(eoc.eoc_type)}
+                                    {getEOCTypeName(eoc)}
                                   </h3>
                                 </div>
                                 <p className={`text-xs font-semibold ${style.label} tracking-wide`}>
@@ -1007,7 +1000,7 @@ export default function Home() {
                   <div className="flex items-center gap-2 md:gap-3 mb-4 pb-3 border-b border-gray-100">
                     <span className="text-3xl md:text-3xl">{getEOCTypeIcon(eoc.eoc_type)}</span>
                     <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-800">
-                      คำแนะนำสำหรับประชาชน - <span className={style.label}>{getEOCTypeName(eoc.eoc_type)}</span>
+                      คำแนะนำสำหรับประชาชน - <span className={style.label}>{getEOCTypeName(eoc)}</span>
                     </h2>
                   </div>
                   <InfographicCarousel
@@ -1020,7 +1013,7 @@ export default function Home() {
 
               {/* สถิติเฉพาะ EOC */}
               <section className="mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">📊 สถิติ{getEOCTypeName(eoc.eoc_type)}</h2>
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">📊 สถิติ{getEOCTypeName(eoc)}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                   {Object.entries(content.stats).map(([key, value]) => {
                     const labels = {
@@ -1063,7 +1056,7 @@ export default function Home() {
 
               {/* Quick Access เฉพาะ EOC */}
               <section className="mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚀 เข้าถึงด่วน - {getEOCTypeName(eoc.eoc_type)}</h2>
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚀 เข้าถึงด่วน - {getEOCTypeName(eoc)}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                   {content.quickActions.map((action, idx) => (
                     <QuickActionLink key={idx} action={action} />
@@ -1320,7 +1313,7 @@ function PublicOperationalDashboard({
 
           <div className={`ml-auto shrink-0 rounded-xl border px-3 py-2 text-center shadow-sm sm:px-4 lg:rounded-2xl lg:px-6 lg:py-3 ${eocStatus.isOpen ? "border-emerald-300 bg-emerald-600" : "border-slate-300 bg-slate-700"}`}>
             <div className="text-sm font-black leading-none sm:text-base lg:text-xl">{eocStatus.isOpen ? "เปิด EOC" : "ปิด EOC"}</div>
-            <div className="mt-0.5 text-[10px] text-white/85 sm:text-[11px] lg:mt-1 lg:text-xs">{latestActiveEOC ? getEOCTypeName(latestActiveEOC.eoc_type) : "สถานะศูนย์"}</div>
+              <div className="mt-0.5 text-[10px] text-white/85 sm:text-[11px] lg:mt-1 lg:text-xs">{latestActiveEOC ? getEOCTypeName(latestActiveEOC) : "สถานะศูนย์"}</div>
           </div>
         </div>
       </header>
@@ -1598,16 +1591,16 @@ function OpsFilterPanel({
          
         </FilterBlock>
 
-        <FilterBlock title="2. รอบเหตุกาณ์">
+        <FilterBlock title="2. รอบเหตุการณ์">
           <select
             value={selectedSessionId || ""}
             onChange={(event) => setSelectedSessionId(event.target.value)}
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm  outline-none focus:border-blue-500"
           >
-            {sessionOptions.length === 0 && <option value="">ไม่มี รอบเหตุกาณ์</option>}
+            {sessionOptions.length === 0 && <option value="">ไม่มี รอบเหตุการณ์</option>}
             {sessionOptions.map((session) => (
               <option key={session.id} value={session.id}>
-                รอบเหตุกาณ์ที่ {session.session_number || session.id} {session.status === "active" ? "(เปิดอยู่)" : "(ปิดแล้ว)"}
+                รอบเหตุการณ์ที่ {session.session_number || session.id} {session.status === "active" ? "(เปิดอยู่)" : "(ปิดแล้ว)"}
               </option>
             ))}
           </select>
@@ -1621,7 +1614,7 @@ function OpsFilterPanel({
                 <div>{selectedSession.closed_at ? `ปิด: ${formatThaiDateOnly(selectedSession.closed_at)}` : "ปิด: ถึงปัจจุบัน"}</div>
               </>
             ) : (
-              "เลือกประเภท EOC เพื่อดู รอบเหตุกาณ์"
+              "เลือกประเภท EOC เพื่อดู รอบเหตุการณ์"
             )}
           </div>
         </FilterBlock>
@@ -1996,7 +1989,7 @@ function buildSessionOptions(eocType, sessions, overviewItems) {
     .filter((session) => session.eoc_type === normalizedType)
     .map((session) => ({
       ...session,
-      label: `Session #${session.session_number || session.id}${session.eoc_type === "disease" && session.disease_name ? ` - ${session.disease_name}` : ""}`,
+      label: `${formatEocDisplayName(session)} Session #${session.session_number || session.id}`,
       opened_at: normalizeDateKey(session.opened_at),
       closed_at: normalizeDateKey(session.closed_at)
     }));
@@ -2011,7 +2004,9 @@ function buildSessionOptions(eocType, sessions, overviewItems) {
     eoc_type: normalizedType,
     session_number: overview.session_number || "-",
     status: overview.session_status || "overview",
-    label: overview.session_number ? `Session #${overview.session_number}${overview.eoc_type === "disease" && overview.disease_name ? ` - ${overview.disease_name}` : ""}` : "ข้อมูลรวม",
+    disease_id: overview.disease_id,
+    disease_name: overview.disease_name,
+    label: overview.session_number ? `${formatEocDisplayName(overview)} Session #${overview.session_number}` : "ข้อมูลรวม",
     opened_at: normalizeDateKey(overview.opened_at || overview.period?.first_date),
     closed_at: normalizeDateKey(overview.closed_at || overview.period?.last_date),
     isOverviewFallback: true
@@ -2114,7 +2109,7 @@ function HomeSituationDashboard({
   const primaryEOC = activeEOCs[0];
   const primaryDisasterType = mapEocTypeToPublicDisasterType(primaryEOC?.eoc_type);
   const activeTypesText = hasActiveEOC
-    ? activeEOCs.map((eoc) => getEOCTypeName(eoc.eoc_type)).join(", ")
+    ? activeEOCs.map((eoc) => getEOCTypeName(eoc)).join(", ")
     : "เฝ้าระวังสถานการณ์ทั่วไป";
 
   const summaryCards = [
@@ -2263,7 +2258,7 @@ function HomeSituationDashboard({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 font-bold text-gray-900">
                             <span className={`h-2.5 w-2.5 rounded-full ${style.accent || "bg-gray-500"}`}></span>
-                            <span>{getEOCTypeName(eoc.eoc_type)}</span>
+                            <span>{getEOCTypeName(eoc)}</span>
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">เปิดเมื่อ {formatDate(eoc.activated_at)} น.</div>
                           {eoc.description && <div className="text-xs text-gray-600 mt-1 line-clamp-2">{eoc.description}</div>}

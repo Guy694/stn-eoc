@@ -27,7 +27,8 @@ export default function PublicIncidentMap({
     searchQuery = '',
     baseMap = 'street',
     onBaseMapChange,
-    onDataChange
+    onDataChange,
+    includeAllShelters = false
 }) {
     const [incidents, setIncidents] = useState([]);
     const [floodAreas, setFloodAreas] = useState([]);
@@ -269,19 +270,29 @@ export default function PublicIncidentMap({
     useEffect(() => { fetchFloodAreas(); }, [fetchFloodAreas]);
 
     const fetchShelters = useCallback(async () => {
+        if (!sessionId && !includeAllShelters) {
+            setShelters([]);
+            return;
+        }
+
         try {
             const params = new URLSearchParams();
             if (disasterType) params.append('eoc_type', disasterType === 'accident' ? 'flood' : disasterType);
             if (sessionId) params.append('session_id', sessionId);
-            if (!sessionId) params.append('include_all', '1');
+            if (!sessionId && includeAllShelters) params.append('include_all', '1');
 
             const response = await fetch(`/stn-eoc/api/public/shelter-centers?${params}`);
             const data = await response.json();
             if (data.success) setShelters(data.data || []);
         } catch (error) {
             console.error('Error fetching shelter layer:', error);
+            setShelters([]);
         }
-    }, [disasterType, sessionId]);
+    }, [disasterType, includeAllShelters, sessionId]);
+
+    useEffect(() => {
+        setShelters([]);
+    }, [disasterType, includeAllShelters, sessionId]);
 
     const fetchHealthFacilities = useCallback(async () => {
         try {
