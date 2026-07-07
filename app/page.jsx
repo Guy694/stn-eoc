@@ -6,6 +6,7 @@ import AnnouncementPopup from "@/components/AnnouncementPopup";
 import SplashScreen from "@/components/SplashScreen";
 import AIChatbot from "@/components/AIChatbot";
 import PDPAConsent from "@/components/PDPAConsent";
+import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import dynamic from "next/dynamic";
 
 const FestivalPublicDashboard = dynamic(() => import("@/components/festival/FestivalPublicDashboard"), { ssr: false });
@@ -114,7 +115,8 @@ function getAnnouncementContent(announcement) {
 function normalizeAnnouncement(announcement) {
   return {
     ...announcement,
-    content: getAnnouncementContent(announcement)
+    content: getAnnouncementContent(announcement),
+    image_path: getPublicAssetPath(announcement?.image_path)
   };
 }
 
@@ -299,7 +301,12 @@ export default function Home() {
 
           const result = await response.json();
           if (result.success) {
-            data[type] = result.data;
+            data[type] = (result.data || [])
+              .map((item) => ({
+                ...item,
+                image: getPublicAssetPath(item.image)
+              }))
+              .filter((item) => Boolean(item.image));
           } else {
             data[type] = [];
           }
@@ -2554,7 +2561,7 @@ function InfographicCarousel({ infographics, eocType, lightMode = false }) {
               <div className={`flex w-full aspect-video items-center justify-center ${lightMode ? 'bg-gray-50' : 'bg-white/10'}`}>
                 {/* แสดงรูป Infographic */}
                 <Image
-                  src={infographic.image}
+                  src={getPublicAssetPath(infographic.image)}
                   alt={infographic.alt}
                   width={1280}
                   height={720}

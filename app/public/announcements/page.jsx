@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
+import { getPublicAssetPath } from "@/lib/publicAssetPath";
 
 const EOC_TYPE_LABELS = {
   flood: "น้ำท่วม",
@@ -37,10 +38,7 @@ function getPriorityTone(priority) {
 }
 
 function getAnnouncementImageSrc(imagePath) {
-  if (!imagePath) return null;
-  if (imagePath.startsWith("http")) return imagePath;
-  const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
-  return normalizedPath.startsWith("/stn-eoc/") ? normalizedPath : `/stn-eoc${normalizedPath}`;
+  return getPublicAssetPath(imagePath);
 }
 
 export default function PublicAnnouncementsPage() {

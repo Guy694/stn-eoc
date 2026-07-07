@@ -45,6 +45,8 @@ export async function GET(request) {
                     created_at
                 FROM announcements
                 WHERE eoc_type = ? AND is_active = 1
+                    AND image_path IS NOT NULL
+                    AND image_path <> ''
                 ORDER BY priority DESC, created_at DESC`,
                 [eocType]
             );
@@ -60,6 +62,8 @@ export async function GET(request) {
                     created_at
                 FROM announcements
                 WHERE is_active = 1
+                    AND image_path IS NOT NULL
+                    AND image_path <> ''
                 ORDER BY priority DESC, created_at DESC`
             );
         }

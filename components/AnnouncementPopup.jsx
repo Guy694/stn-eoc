@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { getPublicAssetPath } from '@/lib/publicAssetPath';
 
 export default function AnnouncementPopup() {
     const [announcement, setAnnouncement] = useState(null);
@@ -88,7 +89,7 @@ export default function AnnouncementPopup() {
                     {/* Image */}
                     <div className="px-6 pb-6">
                         <Image
-                            src={announcement.image_path?.startsWith('http') ? announcement.image_path : `/stn-eoc${announcement.image_path?.startsWith('/') ? '' : '/'}${announcement.image_path}`}
+                            src={getPublicAssetPath(announcement.image_path)}
                             alt={announcement.title}
                             width={1200}
                             height={675}
