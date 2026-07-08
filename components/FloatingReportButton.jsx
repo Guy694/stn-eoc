@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 
 export default function FloatingReportButton() {
     const [isVisible, setIsVisible] = useState(false);
+    const [isDismissed, setIsDismissed] = useState(() => (
+        typeof window !== 'undefined' && localStorage.getItem('help_request_floating_hidden') === 'true'
+    ));
 
     useEffect(() => {
         // Show button after page loads
@@ -11,20 +14,36 @@ export default function FloatingReportButton() {
         return () => clearTimeout(timer);
     }, []);
 
-    if (!isVisible) return null;
+    const hideButton = () => {
+        setIsDismissed(true);
+        localStorage.setItem('help_request_floating_hidden', 'true');
+    };
+
+    if (!isVisible || isDismissed) return null;
 
     return (
-        <Link
-            href="/public/report-incident"
-            className="fixed bottom-6 right-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-110 z-50 animate-float-soft"
-        >
-            <div className="flex items-center gap-3">
-                <span className="text-3xl">🚨</span>
-                <div className="hidden md:block">
-                    <p className="font-bold text-lg">แจ้งเหตุด่วน</p>
-                    <p className="text-xs opacity-90">คลิกเพื่อรายงาน</p>
+        <div className="fixed bottom-24 left-4 z-[1050] md:bottom-6 md:left-6">
+            <button
+                type="button"
+                onClick={hideButton}
+                className="absolute -right-1 -top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-slate-800 text-sm font-black leading-none text-white shadow-lg hover:bg-slate-950"
+                aria-label="ซ่อนปุ่มแจ้งขอความช่วยเหลือ"
+                title="ซ่อนปุ่มแจ้งขอความช่วยเหลือ"
+            >
+                ×
+            </button>
+            <Link
+                href="/public/report-incident"
+                className="block rounded-full bg-red-600 px-4 py-3 text-white shadow-2xl transition hover:scale-105 hover:bg-red-700 md:px-5 md:py-4"
+            >
+                <div className="flex items-center gap-3">
+                    <span className="text-2xl md:text-3xl">🆘</span>
+                    <div>
+                        <p className="text-sm font-black md:text-base">ขอความช่วยเหลือ</p>
+                        <p className="hidden text-xs text-white/90 md:block">แจ้งตำแหน่งให้เจ้าหน้าที่</p>
+                    </div>
                 </div>
-            </div>
-        </Link>
+            </Link>
+        </div>
     );
 }

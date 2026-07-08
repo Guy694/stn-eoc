@@ -32,6 +32,7 @@ export default function PublicIncidentMap({
 }) {
     const [incidents, setIncidents] = useState([]);
     const [floodAreas, setFloodAreas] = useState([]);
+    const [diseaseReports, setDiseaseReports] = useState([]);
     const [waterways, setWaterways] = useState(null);
     const [shelters, setShelters] = useState([]);
     const [healthFacilities, setHealthFacilities] = useState([]);
@@ -46,6 +47,7 @@ export default function PublicIncidentMap({
         district: true,
         tambon: false,
         village: false,
+        diseaseReports: false,
         labels: true,
         incidents: true,
         traffic: true,
@@ -64,6 +66,7 @@ export default function PublicIncidentMap({
     const showTambonLayer = activeLayers.tambon;
     const showVillageLayer = activeLayers.village;
     const showFloodAreaLayer = disasterType === 'flood' && activeLayers.floodAreas !== false;
+    const showDiseaseReportLayer = disasterType === 'disease' && Boolean(activeLayers.diseaseReports);
     const showLabels = activeLayers.labels;
     const showIncidentLayer = activeLayers.incidents !== false;
     const showTrafficLayer = activeLayers.traffic !== false;
@@ -95,6 +98,23 @@ export default function PublicIncidentMap({
     };
 
     const getFloodLevelMeta = (level) => floodLevelMeta[level] || floodLevelMeta.nodata;
+
+    const diseaseSeverityMeta = {
+        severe: { label: 'ระบาดหนัก', color: '#DC2626' },
+        moderate: { label: 'ระบาดปานกลาง', color: '#F59E0B' },
+        mild: { label: 'เฝ้าระวัง', color: '#14B8A6' },
+        safe: { label: 'ไม่พบผู้ป่วย', color: '#22C55E' },
+        nodata: { label: 'ไม่มีข้อมูล', color: '#94A3B8' }
+    };
+
+    const getDiseaseSeverityMeta = (level) => diseaseSeverityMeta[level] || diseaseSeverityMeta.nodata;
+    const getDiseaseSeverityLevel = (patientCount) => {
+        const count = Number(patientCount || 0);
+        if (count >= 300) return 'severe';
+        if (count >= 100) return 'moderate';
+        if (count >= 1) return 'mild';
+        return 'safe';
+    };
 
     const getWaterwayStyle = (feature) => {
         const waterwayType = feature?.properties?.waterway;
@@ -269,6 +289,32 @@ export default function PublicIncidentMap({
 
     useEffect(() => { fetchFloodAreas(); }, [fetchFloodAreas]);
 
+    const fetchDiseaseReports = useCallback(async () => {
+        if (disasterType !== 'disease' || !showDiseaseReportLayer) {
+            setDiseaseReports([]);
+            return;
+        }
+
+        try {
+            const params = new URLSearchParams();
+            if (sessionId) params.append('session_id', sessionId);
+            if (startDate) params.append('date', startDate);
+
+            const response = await fetch(`/stn-eoc/api/eoc/disease/area-status?${params}`);
+            const data = await response.json();
+            if (data.success) {
+                setDiseaseReports(data.data || []);
+            } else {
+                setDiseaseReports([]);
+            }
+        } catch (error) {
+            console.error('Error fetching disease report layer:', error);
+            setDiseaseReports([]);
+        }
+    }, [disasterType, sessionId, showDiseaseReportLayer, startDate]);
+
+    useEffect(() => { fetchDiseaseReports(); }, [fetchDiseaseReports]);
+
     const fetchShelters = useCallback(async () => {
         if (!sessionId && !includeAllShelters) {
             setShelters([]);
@@ -412,6 +458,42 @@ export default function PublicIncidentMap({
             iconSize: [34, 34],
             iconAnchor: [17, 17],
             popupAnchor: [0, -17]
+        });
+    };
+
+    const createDiseaseReportIcon = (report) => {
+        if (typeof window === 'undefined') return null;
+        const L = require('leaflet');
+        const severity = report.severity_level || getDiseaseSeverityLevel(report.patient_count);
+        const meta = getDiseaseSeverityMeta(severity);
+        const patientCount = Number(report.patient_count || 0);
+        const displayCount = patientCount > 99 ? '99+' : String(patientCount || 0);
+
+        return L.divIcon({
+            className: 'public-disease-report-icon',
+            html: `
+                <div style="
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    border: 3px solid ${meta.color};
+                    background: white;
+                    color: ${meta.color};
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 900;
+                    line-height: 1;
+                ">
+                    <span style="font-size: 13px;">+</span>
+                    <span style="font-size: 10px;">${displayCount}</span>
+                </div>
+            `,
+            iconSize: [38, 38],
+            iconAnchor: [19, 19],
+            popupAnchor: [0, -19]
         });
     };
 
@@ -576,10 +658,18 @@ export default function PublicIncidentMap({
                                 </select>
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
-                                    <input type="checkbox" checked={showFloodAreaLayer} onChange={(e) => setLayer('floodAreas', e.target.checked)} className="w-4 h-4 accent-blue-600" />
-                                    <span>พื้นที่น้ำท่วม</span>
-                                </label>
+                                {disasterType === 'flood' && (
+                                    <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
+                                        <input type="checkbox" checked={showFloodAreaLayer} onChange={(e) => setLayer('floodAreas', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                                        <span>พื้นที่น้ำท่วม</span>
+                                    </label>
+                                )}
+                                {disasterType === 'disease' && (
+                                    <label className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-900 cursor-pointer">
+                                        <input type="checkbox" checked={showDiseaseReportLayer} onChange={(e) => setLayer('diseaseReports', e.target.checked)} className="w-4 h-4 accent-teal-600" />
+                                        <span>รายงานโรคระบาด</span>
+                                    </label>
+                                )}
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
                                     <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setLayer('district', e.target.checked)} className="w-4 h-4 accent-blue-600" />
                                     <span>🏛️ อำเภอ</span>
@@ -642,6 +732,22 @@ export default function PublicIncidentMap({
                                             return (
                                                 <div key={level} className="inline-flex items-center gap-1.5">
                                                     <span className="h-3 w-3 rounded" style={{ backgroundColor: meta.color }} aria-hidden="true"></span>
+                                                    <span>{meta.label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                            {showDiseaseReportLayer && (
+                                <div>
+                                    <p className="font-semibold text-gray-800 mb-2">ระดับรายงานโรคระบาด</p>
+                                    <div className="flex flex-wrap gap-2 text-xs">
+                                        {['severe', 'moderate', 'mild'].map((level) => {
+                                            const meta = getDiseaseSeverityMeta(level);
+                                            return (
+                                                <div key={level} className="inline-flex items-center gap-1.5">
+                                                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: meta.color }} aria-hidden="true"></span>
                                                     <span>{meta.label}</span>
                                                 </div>
                                             );
@@ -799,6 +905,30 @@ export default function PublicIncidentMap({
                                 }}
                             />
                         )}
+
+                        {/* Disease Report Markers */}
+                        {showDiseaseReportLayer && diseaseReports.map((report) => {
+                            const lat = Number.parseFloat(report.lat);
+                            const lon = Number.parseFloat(report.lng);
+                            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                            const severity = report.severity_level || getDiseaseSeverityLevel(report.patient_count);
+                            const meta = getDiseaseSeverityMeta(severity);
+                            return (
+                                <Marker key={`disease-report-${report.id}`} position={[lat, lon]} icon={createDiseaseReportIcon(report)}>
+                                    <Popup maxWidth={260}>
+                                        <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
+                                            <h4 className="font-bold text-gray-800">{report.disease_name || 'รายงานโรคระบาด'}</h4>
+                                            <p className="mt-1 text-sm text-gray-600">{report.facility_name || 'หน่วยบริการสุขภาพ'}</p>
+                                            <p className="mt-1 text-sm">ต.{report.tambon || '-'} อ.{report.district || '-'}</p>
+                                            <p className="mt-1 text-sm"><strong>ผู้ป่วย:</strong> {Number(report.patient_count || 0).toLocaleString('th-TH')} ราย</p>
+                                            <p className="text-sm" style={{ color: meta.color }}><strong>ระดับ:</strong> {meta.label}</p>
+                                            <p className="text-sm"><strong>วันที่รายงาน:</strong> {report.report_date ? new Date(report.report_date).toLocaleDateString('th-TH') : '-'}</p>
+                                            {report.notes && <p className="mt-2 border-t pt-2 text-sm"><strong>หมายเหตุ:</strong><br />{report.notes}</p>}
+                                        </div>
+                                    </Popup>
+                                </Marker>
+                            );
+                        })}
 
                         {/* Incident Markers */}
                         {filteredIncidents.map((incident) => (

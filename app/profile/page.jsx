@@ -18,12 +18,17 @@ export default function ProfilePage() {
         position: ""
     });
     const [message, setMessage] = useState({ type: "", text: "" });
+    const [telegramSettings, setTelegramSettings] = useState({
+        telegramChatId: "",
+        telegramNotifyEnabled: false,
+        botLink: ""
+    });
+    const [telegramSaving, setTelegramSaving] = useState(false);
 
     useEffect(() => {
         if (!loading && !user) {
             router.push("/login");
         } else if (user) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData({
                 title: user.title || "",
                 givenName: user.givenName || "",
@@ -35,6 +40,24 @@ export default function ProfilePage() {
             });
         }
     }, [user, loading, router]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const loadTelegramSettings = async () => {
+            try {
+                const response = await fetch("/stn-eoc/api/officer/telegram");
+                const data = await response.json();
+                if (data.success) {
+                    setTelegramSettings(data.data);
+                }
+            } catch (error) {
+                console.error("Error loading Telegram settings:", error);
+            }
+        };
+
+        loadTelegramSettings();
+    }, [user]);
 
     const handleChange = (e) => {
         setFormData({
@@ -80,6 +103,32 @@ export default function ProfilePage() {
         } catch (error) {
             console.error('Error updating profile:', error);
             setMessage({ type: "error", text: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+        }
+    };
+
+    const handleTelegramSubmit = async (event) => {
+        event.preventDefault();
+        setTelegramSaving(true);
+        setMessage({ type: "", text: "" });
+
+        try {
+            const response = await fetch("/stn-eoc/api/officer/telegram", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(telegramSettings)
+            });
+            const data = await response.json();
+            if (data.success) {
+                setTelegramSettings((current) => ({ ...current, ...data.data }));
+                setMessage({ type: "success", text: "บันทึกการแจ้งเตือน Telegram สำเร็จ" });
+            } else {
+                setMessage({ type: "error", text: data.message || "บันทึก Telegram ไม่สำเร็จ" });
+            }
+        } catch (error) {
+            console.error("Error saving Telegram settings:", error);
+            setMessage({ type: "error", text: "เกิดข้อผิดพลาดในการบันทึก Telegram" });
+        } finally {
+            setTelegramSaving(false);
         }
     };
 
@@ -183,6 +232,63 @@ export default function ProfilePage() {
                                         )}
                                     </div>
                                 </div>
+
+                                <form onSubmit={handleTelegramSubmit} className="mt-8 rounded-xl border border-sky-100 bg-sky-50 p-5">
+                                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900">แจ้งเตือน Telegram</h3>
+                                            <p className="mt-1 text-sm text-slate-600">
+                                                เพิ่ม Bot แล้วบันทึก Chat ID เพื่อรับแจ้งเตือนเมื่อประชาชนส่งคำขอความช่วยเหลือ
+                                            </p>
+                                        </div>
+                                        {telegramSettings.botLink ? (
+                                            <a
+                                                href={telegramSettings.botLink}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="rounded-lg bg-sky-600 px-4 py-2 text-center text-sm font-bold text-white hover:bg-sky-700"
+                                            >
+                                                เพิ่ม Bot
+                                            </a>
+                                        ) : (
+                                            <span className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-500">
+                                                ยังไม่ได้ตั้งค่า Bot username
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+                                        <label className="block">
+                                            <span className="mb-2 block text-sm font-bold text-slate-700">Telegram Chat ID</span>
+                                            <input
+                                                type="text"
+                                                value={telegramSettings.telegramChatId || ""}
+                                                onChange={(event) => setTelegramSettings((current) => ({ ...current, telegramChatId: event.target.value }))}
+                                                placeholder="เช่น 123456789"
+                                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 outline-none focus:border-sky-500"
+                                            />
+                                        </label>
+                                        <label className="flex items-center gap-2 rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm font-bold text-slate-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={Boolean(telegramSettings.telegramNotifyEnabled)}
+                                                onChange={(event) => setTelegramSettings((current) => ({ ...current, telegramNotifyEnabled: event.target.checked }))}
+                                                className="h-4 w-4 accent-sky-600"
+                                            />
+                                            รับแจ้งเตือน
+                                        </label>
+                                    </div>
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        วิธีใช้งาน: กดเพิ่ม Bot, ส่งข้อความหา Bot จาก Telegram แล้วนำ Chat ID ที่ได้รับ/ที่ผู้ดูแลให้มาบันทึกในช่องนี้
+                                    </p>
+                                    <button
+                                        type="submit"
+                                        disabled={telegramSaving}
+                                        className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700 disabled:bg-slate-300"
+                                    >
+                                        {telegramSaving ? "กำลังบันทึก..." : "บันทึก Telegram"}
+                                    </button>
+                                </form>
 
                                 <div className="mt-8 flex gap-4">
                                     <button

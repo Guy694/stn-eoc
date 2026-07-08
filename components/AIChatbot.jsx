@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 
 const CHATBOT_HISTORY_KEY = 'chatbot_history';
 const CHATBOT_LAUNCHER_HIDDEN_KEY = 'chatbot_launcher_hidden';
@@ -17,6 +18,12 @@ export default function AIChatbot() {
         "สตูลประกาศเป็นพื้นที่ภัยพิบัติหรือยัง?",
         "แสดงข้อมูล EOC ตอนนี้",
         "มีกี่ตำบลในจังหวัดสตูล?"
+    ];
+    const emergencyNumbers = [
+        { number: '1669', label: 'แพทย์ฉุกเฉิน' },
+        { number: '1784', label: 'ปภ.' },
+        { number: '191', label: 'ตำรวจ' },
+        { number: '199', label: 'ดับเพลิง' }
     ];
 
     // Scroll to bottom when new messages arrive
@@ -272,6 +279,29 @@ export default function AIChatbot() {
                             <div className="text-center py-8">
                                 <div className="text-6xl mb-4">👋</div>
                                 <p className="text-gray-600 mb-4">สวัสดีครับ! ผมสามารถช่วยตอบคำถามเกี่ยวกับข้อมูลในระบบ EOC ได้</p>
+                                <div className="mb-4 grid gap-2">
+                                    <Link
+                                        href="/public/report-incident"
+                                        className="rounded-xl bg-red-600 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-red-700"
+                                    >
+                                        แจ้งขอความช่วยเหลือ
+                                    </Link>
+                                    <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-left">
+                                        <p className="mb-2 text-sm font-black text-red-900">เบอร์โทรฉุกเฉิน</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {emergencyNumbers.map((item) => (
+                                                <a
+                                                    key={item.number}
+                                                    href={`tel:${item.number}`}
+                                                    className="rounded-lg bg-white px-2 py-2 text-center text-xs font-bold text-red-800 shadow-sm hover:bg-red-100"
+                                                >
+                                                    <span className="block text-lg font-black">{item.number}</span>
+                                                    {item.label}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="space-y-2">
                                     <p className="text-sm text-gray-500 font-semibold">ตัวอย่างคำถาม:</p>
                                     {sampleQuestions.map((q, idx) => (

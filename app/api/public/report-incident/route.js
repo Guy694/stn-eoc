@@ -1,11 +1,72 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
-import { getCitizenSession } from '@/lib/citizenAuth';
 import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
 import { publicInternalError } from '@/lib/apiResponse';
+import { escapeTelegramHtml, sendTelegramMessage } from '@/lib/telegram';
 
 const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
+const HELP_CATEGORY_LABELS = {
+    medicine: 'ด้านยา',
+    vulnerable: 'ด้านกลุ่มเปราะบาง',
+    other: 'อื่นๆ'
+};
+
+function buildHelpDescription({ helpCategory, helpReason, description }) {
+    const categoryLabel = HELP_CATEGORY_LABELS[helpCategory] || helpCategory || '-';
+    const lines = [
+        `ประเภทความช่วยเหลือ: ${categoryLabel}`,
+        `เหตุผลการขอความช่วยเหลือ: ${helpReason || description || '-'}`
+    ];
+    if (description && description !== helpReason) {
+        lines.push(`รายละเอียดเพิ่มเติม: ${description}`);
+    }
+    return lines.join('\n');
+}
+
+async function notifyTelegramOfficers(pool, report) {
+    if (!process.env.TELEGRAM_BOT_TOKEN) return;
+
+    try {
+        const [columns] = await pool.execute(
+            `SELECT COLUMN_NAME
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'officer'
+               AND COLUMN_NAME IN ('telegram_chat_id', 'telegram_notify_enabled')`
+        );
+        const names = new Set(columns.map((column) => column.COLUMN_NAME));
+        if (!names.has('telegram_chat_id') || !names.has('telegram_notify_enabled')) return;
+
+        const [officers] = await pool.execute(
+            `SELECT telegram_chat_id
+             FROM officer
+             WHERE telegram_notify_enabled = 1
+               AND telegram_chat_id IS NOT NULL
+               AND telegram_chat_id <> ''`
+        );
+        if (!officers.length) return;
+
+        const mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`;
+        const text = [
+            '<b>คำขอความช่วยเหลือใหม่</b>',
+            `เลขที่: #${escapeTelegramHtml(report.id)}`,
+            `ประเภท: ${escapeTelegramHtml(report.helpCategoryLabel)}`,
+            `ผู้แจ้ง: ${escapeTelegramHtml(`${report.firstName} ${report.lastName}`)}`,
+            `โทร: ${escapeTelegramHtml(report.phone)}`,
+            `พื้นที่: ${escapeTelegramHtml([report.village, report.subDistrict, report.district].filter(Boolean).join(' ') || '-')}`,
+            `เหตุผล: ${escapeTelegramHtml(report.helpReason)}`,
+            `พิกัด: ${escapeTelegramHtml(`${report.latitude}, ${report.longitude}`)}`,
+            `<a href="${mapsUrl}">เปิดแผนที่</a>`
+        ].join('\n');
+
+        await Promise.allSettled(
+            officers.map((officer) => sendTelegramMessage(officer.telegram_chat_id, text))
+        );
+    } catch (error) {
+        console.error('Telegram notification error:', error);
+    }
+}
 
 export async function POST(request) {
     try {
@@ -19,19 +80,21 @@ export async function POST(request) {
         const subDistrict = formData.get('subDistrict') || null;
         const district = formData.get('district') || null;
         const description = formData.get('description');
+        const helpCategory = formData.get('helpCategory') || null;
+        const helpReason = formData.get('helpReason') || description;
         const waterLevel = formData.get('waterLevel');
         const affectedPeople = formData.get('affectedPeople') || null;
         const urgency = formData.get('urgency') || 'medium';
         const travelStatus = formData.get('travelStatus') || null; // สถานะการสัญจร
         const reportType = formData.get('reportType') || 'help_request'; // ประเภทรายงาน
-        const disasterType = formData.get('disasterType') || 'flood'; // ประเภทภัย
+        const disasterType = formData.get('disasterType') || 'assistance'; // ประเภทภัย
         const occurredAt = formData.get('occurredAt') || new Date().toISOString();
         const latitude = formData.get('latitude');
         const longitude = formData.get('longitude');
         const photo = formData.get('photo');
 
         // Validate required fields
-        if (!firstName || !lastName || !phone || !description || !latitude || !longitude) {
+        if (!firstName || !lastName || !phone || !latitude || !longitude) {
             return NextResponse.json({
                 success: false,
                 message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน'
@@ -43,6 +106,13 @@ export async function POST(request) {
             return NextResponse.json({
                 success: false,
                 message: 'ประเภทรายงานไม่ถูกต้อง'
+            }, { status: 400 });
+        }
+
+        if (reportType === 'help_request' && (!helpCategory || !helpReason)) {
+            return NextResponse.json({
+                success: false,
+                message: 'กรุณาระบุประเภทและเหตุผลการขอความช่วยเหลือ'
             }, { status: 400 });
         }
 
@@ -104,21 +174,9 @@ export async function POST(request) {
 
         // Connect to database
         const pool = await getConnection();
-        const citizenSession = await getCitizenSession();
-        let citizenId = null;
-        let citizenPidHash = null;
-
-        if (citizenSession?.pidHash) {
-            const [citizens] = await pool.execute(
-                'SELECT id FROM citizens WHERE pid_hash = ?',
-                [citizenSession.pidHash]
-            );
-
-            if (citizens.length > 0) {
-                citizenId = citizens[0].id;
-                citizenPidHash = citizenSession.pidHash;
-            }
-        }
+        const finalDescription = reportType === 'help_request'
+            ? buildHelpDescription({ helpCategory, helpReason, description })
+            : description;
 
         // Insert incident report
         const [result] = await pool.execute(
@@ -134,7 +192,7 @@ export async function POST(request) {
                 village,
                 subDistrict,
                 district,
-                description,
+                finalDescription,
                 requiresWaterLevel ? waterLevel : (waterLevel || ''),
                 affectedPeople,
                 urgency,
@@ -145,15 +203,29 @@ export async function POST(request) {
                 latitude,
                 longitude,
                 photoPath,
-                Boolean(citizenId),
-                citizenId,
-                citizenPidHash
+                false,
+                null,
+                null
             ]
         );
 
+        await notifyTelegramOfficers(pool, {
+            id: result.insertId,
+            firstName,
+            lastName,
+            phone,
+            village,
+            subDistrict,
+            district,
+            latitude,
+            longitude,
+            helpCategoryLabel: HELP_CATEGORY_LABELS[helpCategory] || helpCategory || '-',
+            helpReason: helpReason || description || '-'
+        });
+
         return NextResponse.json({
             success: true,
-            message: 'บันทึกรายงานเรียบร้อยแล้ว',
+            message: 'ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว เจ้าหน้าที่จะตรวจสอบและติดต่อกลับโดยเร็วที่สุด',
             reportId: result.insertId
         });
 

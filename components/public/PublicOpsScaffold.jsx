@@ -2,7 +2,20 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import {
+  Bell,
+  BookOpen,
+  Bot,
+  Building2,
+  Home,
+  LogIn,
+  Map,
+  Phone,
+  Tent,
+  CloudSun
+} from "lucide-react";
 import AIChatbot from "@/components/AIChatbot";
+import FloatingReportButton from "@/components/FloatingReportButton";
 
 function formatThaiDate() {
   try {
@@ -45,16 +58,17 @@ export default function PublicOpsScaffold({
   };
 
   const items = [
-    { href: "/", label: "หน้าหลัก", icon: "⌂", key: "home" },
-    { href: "/public/disaster-map", label: "แผนที่", icon: "⌖", key: "map" },
-    { href: "/public/announcements", label: "ประกาศ", icon: "⚑", key: "announce" },
-    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂", imageSrc: "/stn-eoc/img/shelter.png", key: "shelters" },
-    { href: "/public/agencies", label: "หน่วยงาน", icon: "☎", key: "agencies" },
-    { href: "#", label: "EOC Assistant", icon: "🤖", key: "assistant", action: openAssistant },
-    { href: "/public/help/citizen-guide", label: "คู่มือ", icon: "↓", key: "guide" },
-    { href: "/login", label: "เจ้าหน้าที่", icon: "ⓘ", key: "staff" }
+    { href: "/", label: "หน้าหลัก", icon: Home, key: "home" },
+    { href: "/public/disaster-map", label: "แผนที่", icon: Map, key: "map" },
+    { href: "/public/weather-watch", label: "อากาศ", icon: CloudSun, key: "weather" },
+    { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
+    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
+    { href: "/public/agencies", label: "หน่วยงาน", icon: Building2, key: "agencies" },
+    { href: "#", label: "EOC Assistant", icon: Bot, key: "assistant", action: openAssistant },
+    { href: "/public/help/citizen-guide", label: "คู่มือ", icon: BookOpen, key: "guide" },
+    { href: "/login", label: "เจ้าหน้าที่", icon: LogIn, key: "staff" }
   ];
-  const mobileItems = items.filter((item) => item.key !== "map").slice(0, 5);
+  const mobileItems = items.filter((item) => item.key !== "agencies").slice(0, 5);
   const statusKey = eocStatus || (eocIsOpen ? "open" : "watch");
   const statusMeta = {
     open: {
@@ -107,6 +121,7 @@ export default function PublicOpsScaffold({
           {items.map((item) => {
             const isActive = item.key === activeMenu;
             const sharedClassName = `flex w-full flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-bold transition ${isActive ? "bg-white text-blue-800 shadow-md" : "text-blue-50 hover:bg-white/10"}`;
+            const Icon = item.icon || Phone;
 
             if (item.action) {
               return (
@@ -116,7 +131,7 @@ export default function PublicOpsScaffold({
                   onClick={item.action}
                   className={sharedClassName}
                 >
-                  <span className="text-2xl leading-none">{item.icon}</span>
+                  <Icon className="h-6 w-6" aria-hidden="true" />
                   <span>{item.label}</span>
                 </button>
               );
@@ -128,11 +143,7 @@ export default function PublicOpsScaffold({
                 href={item.href}
                 className={sharedClassName}
               >
-                {item.imageSrc ? (
-                  <Image src={item.imageSrc} alt="" width={26} height={26} className="h-7 w-7 object-contain" />
-                ) : (
-                  <span className="text-2xl leading-none">{item.icon}</span>
-                )}
+                <Icon className="h-6 w-6" aria-hidden="true" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -156,6 +167,7 @@ export default function PublicOpsScaffold({
         <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
           {mobileItems.map((item) => {
             const isActive = item.key === activeMenu;
+            const Icon = item.icon || Phone;
 
             if (item.action) {
               return (
@@ -166,7 +178,7 @@ export default function PublicOpsScaffold({
                   className={`flex flex-col items-center gap-1 px-1 py-2 text-[11px] font-bold ${isActive ? "text-blue-700" : "text-slate-500"}`}
                 >
                   <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${isActive ? "bg-blue-50" : "bg-transparent"}`}>
-                    {item.icon}
+                    <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <span className="truncate">{item.label}</span>
                 </button>
@@ -180,11 +192,7 @@ export default function PublicOpsScaffold({
                 className={`flex flex-col items-center gap-1 px-1 py-2 text-[11px] font-bold ${isActive ? "text-blue-700" : "text-slate-500"}`}
               >
                 <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${isActive ? "bg-blue-50" : "bg-transparent"}`}>
-                  {item.imageSrc ? (
-                    <Image src={item.imageSrc} alt="" width={22} height={22} className="h-6 w-6 object-contain" />
-                  ) : (
-                    item.icon
-                  )}
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <span className="truncate">{item.label}</span>
               </Link>
@@ -193,6 +201,7 @@ export default function PublicOpsScaffold({
         </nav>
       </div>
 
+      <FloatingReportButton />
       <AIChatbot />
     </div>
   );

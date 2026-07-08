@@ -1,30 +1,23 @@
 "use client";
-import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import { showWarning } from '@/lib/sweetAlert';
-import { useAuth } from '@/context/AuthContext';
 
-// Festival label helper
-const FESTIVAL_LABEL = { newyear: 'เทศกาลปีใหม่ 🎄', songkran: 'เทศกาลสงกรานต์ 💦' };
-const MAX_UPLOAD_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { showWarning } from "@/lib/sweetAlert";
 
-// Import Leaflet components with no SSR
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
+const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
 
-// Create a separate component for map click handling
 const MapClickHandler = dynamic(
-    () => import('react-leaflet').then((mod) => {
+    () => import("react-leaflet").then((mod) => {
         const { useMapEvents } = mod;
 
         function MapClickHandlerInner({ setPosition }) {
             useMapEvents({
-                click(e) {
-                    setPosition(e.latlng);
-                },
+                click(event) {
+                    setPosition(event.latlng);
+                }
             });
             return null;
         }
@@ -34,7 +27,11 @@ const MapClickHandler = dynamic(
     { ssr: false }
 );
 
-// Location Marker Component
+const HELP_CATEGORIES = [
+    { value: "medicine", label: "ด้านยา", description: "ยา เวชภัณฑ์ หรืออุปกรณ์ดูแลสุขภาพ" },
+    { value: "vulnerable", label: "ด้านกลุ่มเปราะบาง", description: "ผู้สูงอายุ ผู้พิการ เด็ก ผู้ป่วยติดเตียง หรือผู้ที่ต้องดูแลพิเศษ" }
+];
+
 function LocationMarker({ position, setPosition }) {
     return (
         <>
@@ -44,93 +41,85 @@ function LocationMarker({ position, setPosition }) {
     );
 }
 
+function getLocalDateTimeValue() {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 export default function ReportIncidentPage() {
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
-    const [submitError, setSubmitError] = useState('');
-    const [festivalEOC, setFestivalEOC] = useState(null); // active festival-accidents EOC
-
-    // GPS Location states
-    const [gpsStatus, setGpsStatus] = useState('idle'); // idle, requesting, success, error, denied
-    const [gpsError, setGpsError] = useState('');
-    const [isGpsLocation, setIsGpsLocation] = useState(false); // ตำแหน่งมาจาก GPS หรือไม่
-
-    const { user } = useAuth(); // Get logged-in user (citizen or officer)
-
-    // Form data
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        nationalId: '', // เลขบัตรประชาชน
-        phone: '',
-        village: '',
-        subDistrict: '',
-        district: '',
-        description: '',
-        waterLevel: '',
-        affectedPeople: '',
-        urgency: 'medium',
-        travelStatus: '', // สถานะการสัญจร
-        reportType: 'help_request', // ประเภทรายงาน
-        disasterType: 'flood', // ประเภทภัย
-        occurredAt: ''
-    });
-
-    // Village autocomplete
+    const [submitError, setSubmitError] = useState("");
+    const [markerPosition, setMarkerPosition] = useState(null);
+    const [gpsStatus, setGpsStatus] = useState("idle");
+    const [gpsError, setGpsError] = useState("");
     const [villages, setVillages] = useState([]);
     const [showVillageDropdown, setShowVillageDropdown] = useState(false);
     const [searchingVillage, setSearchingVillage] = useState(false);
     const villageInputRef = useRef(null);
 
-    // Map position
-    const [markerPosition, setMarkerPosition] = useState(null);
-    const defaultCenter = [6.6238, 100.0750]; // Satun coordinates
-    const isTrafficReport = formData.reportType === 'traffic_report';
-    const requiresWaterLevel = formData.reportType === 'help_request' && formData.disasterType === 'flood';
-    const detailTitle = isTrafficReport ? 'รายละเอียดเส้นทาง' : 'รายละเอียดเหตุการณ์';
-    const detailIcon = isTrafficReport ? '🚧' : '💧';
-    const descriptionPlaceholder = isTrafficReport
-        ? 'อธิบายสภาพเส้นทาง เช่น ถนนถูกน้ำท่วม รถเล็กผ่านไม่ได้ มีดินสไลด์ หรือควรใช้เส้นทางเลี่ยง'
-        : 'อธิบายสถานการณ์น้ำท่วม เช่น น้ำท่วมบริเวณถนนหน้าบ้าน สูงประมาณหัวเข่า ไม่สามารถสัญจรได้';
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        helpCategory: "medicine",
+        helpReason: "",
+        village: "",
+        subDistrict: "",
+        district: "",
+        occurredAt: getLocalDateTimeValue()
+    });
 
-    // ฟังก์ชันขอตำแหน่ง GPS
+    useEffect(() => {
+        setMounted(true);
+
+        if (typeof window !== "undefined") {
+            import("leaflet").then((L) => {
+                delete L.Icon.Default.prototype._getIconUrl;
+                L.Icon.Default.mergeOptions({
+                    iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+                    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+                    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png"
+                });
+            });
+
+            requestGpsLocation();
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (villageInputRef.current && !villageInputRef.current.contains(event.target)) {
+                setShowVillageDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     const requestGpsLocation = () => {
         if (!navigator.geolocation) {
-            setGpsStatus('error');
-            setGpsError('เบราว์เซอร์ไม่รองรับ GPS');
+            setGpsStatus("error");
+            setGpsError("เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง");
             return;
         }
 
-        setGpsStatus('requesting');
-        setGpsError('');
+        setGpsStatus("requesting");
+        setGpsError("");
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const { latitude, longitude } = position.coords;
-                setMarkerPosition({ lat: latitude, lng: longitude });
-                setIsGpsLocation(true);
-                setGpsStatus('success');
+                setMarkerPosition({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                });
+                setGpsStatus("success");
             },
             (error) => {
-                setIsGpsLocation(false);
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        setGpsStatus('denied');
-                        setGpsError('ผู้ใช้ไม่อนุญาตให้เข้าถึงตำแหน่ง กรุณาปักหมุดบนแผนที่');
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        setGpsStatus('error');
-                        setGpsError('ไม่สามารถระบุตำแหน่งได้ กรุณาปักหมุดบนแผนที่');
-                        break;
-                    case error.TIMEOUT:
-                        setGpsStatus('error');
-                        setGpsError('หมดเวลาในการขอตำแหน่ง กรุณาปักหมุดบนแผนที่');
-                        break;
-                    default:
-                        setGpsStatus('error');
-                        setGpsError('เกิดข้อผิดพลาด กรุณาปักหมุดบนแผนที่');
-                }
+                setGpsStatus(error.code === error.PERMISSION_DENIED ? "denied" : "error");
+                setGpsError("ไม่สามารถดึงตำแหน่งอัตโนมัติได้ กรุณาปักหมุดบนแผนที่");
             },
             {
                 enableHighAccuracy: true,
@@ -140,93 +129,37 @@ export default function ReportIncidentPage() {
         );
     };
 
-    useEffect(() => {
-        setMounted(true);
-        // Set default occurrence time to now
-        const now = new Date();
-        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-        setFormData(prev => ({ ...prev, occurredAt: localDateTime }));
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setFormData((current) => ({ ...current, [name]: value }));
 
-        // Fix Leaflet marker icon issue in Next.js
-        if (typeof window !== 'undefined') {
-            import('leaflet').then((L) => {
-                delete L.Icon.Default.prototype._getIconUrl;
-                L.Icon.Default.mergeOptions({
-                    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-                    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                });
-            });
-
-            // ขอตำแหน่ง GPS อัตโนมัติเมื่อโหลดหน้า
-            requestGpsLocation();
-        }
-
-        // ตรวจสอบ active EOC
-        fetch('/stn-eoc/api/eoc/status/')
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    const fEOC = data.data.find(e => e.eoc_type === 'festival-accidents' && e.is_active);
-                    if (fEOC) setFestivalEOC(fEOC);
-                }
-            })
-            .catch(() => {});
-    }, []);
-
-    // Auto-fill form when user is logged in (citizen)
-    useEffect(() => {
-        if (user && user.role === 'citizen') {
-            // Pre-fill data from ThaiID
-            const givenName = user.thaiIdData?.given_name || user.givenName || '';
-            const familyName = user.thaiIdData?.family_name || user.familyName || '';
-
-            setFormData(prev => ({
-                ...prev,
-                firstName: givenName,
-                lastName: familyName
-            }));
-        }
-    }, [user]);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        // If village field changed, search for villages
-        if (name === 'village' && value.length >= 2) {
+        if (name === "village" && value.length >= 2) {
             searchVillages(value);
-        } else if (name === 'village' && value.length < 2) {
+        } else if (name === "village") {
             setVillages([]);
             setShowVillageDropdown(false);
         }
     };
 
-    // Search villages from database
     const searchVillages = async (searchTerm) => {
         setSearchingVillage(true);
         try {
             const response = await fetch(`/stn-eoc/api/public/villages?search=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
-
             if (result.success) {
-                setVillages(result.data);
-                setShowVillageDropdown(result.data.length > 0);
+                setVillages(result.data || []);
+                setShowVillageDropdown((result.data || []).length > 0);
             }
         } catch (error) {
-            console.error('Village search error:', error);
+            console.error("Village search error:", error);
         } finally {
             setSearchingVillage(false);
         }
     };
 
-    // Select village from dropdown
     const selectVillage = (village) => {
-        setFormData(prev => ({
-            ...prev,
+        setFormData((current) => ({
+            ...current,
             village: village.name,
             subDistrict: village.subDistrict,
             district: village.district
@@ -235,820 +168,286 @@ export default function ReportIncidentPage() {
         setVillages([]);
     };
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (villageInputRef.current && !villageInputRef.current.contains(event.target)) {
-                setShowVillageDropdown(false);
-            }
-        };
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setSubmitSuccess(false);
+        setSubmitError("");
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-                showWarning('รองรับเฉพาะไฟล์ JPG, PNG หรือ WebP');
-                e.target.value = '';
-                return;
-            }
-            if (file.size > MAX_UPLOAD_IMAGE_SIZE_BYTES) {
-                showWarning('ขนาดไฟล์ใหญ่เกินไป (สูงสุด 10MB)');
-                e.target.value = '';
-                return;
-            }
-            setFormData(prev => ({
-                ...prev,
-                photo: file
-            }));
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        // Validation
         if (!formData.firstName || !formData.lastName) {
-            showWarning('กรุณากรอกชื่อ-นามสกุล');
+            showWarning("กรุณากรอกชื่อและนามสกุล");
             return;
         }
+
         if (!formData.phone) {
-            showWarning('กรุณากรอกเบอร์โทรศัพท์');
+            showWarning("กรุณากรอกเบอร์โทรศัพท์");
             return;
         }
+
+        if (!formData.helpCategory) {
+            showWarning("กรุณาเลือกประเภทความช่วยเหลือ");
+            return;
+        }
+
+        if (!formData.helpReason.trim()) {
+            showWarning("กรุณาระบุเหตุผลการขอความช่วยเหลือ");
+            return;
+        }
+
         if (!markerPosition) {
-            showWarning('กรุณาปักหมุดตำแหน่งที่เกิดเหตุบนแผนที่');
-            return;
-        }
-        if (!formData.description) {
-            showWarning('กรุณาอธิบายเหตุการณ์');
-            return;
-        }
-        if (requiresWaterLevel && !formData.waterLevel) {
-            showWarning('กรุณาเลือกระดับน้ำ');
-            return;
-        }
-        if (isTrafficReport && !formData.travelStatus) {
-            showWarning('กรุณาเลือกสถานะการสัญจร');
+            showWarning("กรุณาปักหมุดจุดขอความช่วยเหลือบนแผนที่");
             return;
         }
 
         setIsSubmitting(true);
-        setSubmitError('');
 
         try {
-            const formDataToSend = new FormData();
+            const payload = new FormData();
+            payload.append("firstName", formData.firstName);
+            payload.append("lastName", formData.lastName);
+            payload.append("phone", formData.phone);
+            payload.append("helpCategory", formData.helpCategory);
+            payload.append("helpReason", formData.helpReason);
+            payload.append("description", formData.helpReason);
+            payload.append("village", formData.village);
+            payload.append("subDistrict", formData.subDistrict);
+            payload.append("district", formData.district);
+            payload.append("occurredAt", formData.occurredAt || getLocalDateTimeValue());
+            payload.append("latitude", markerPosition.lat);
+            payload.append("longitude", markerPosition.lng);
+            payload.append("reportType", "help_request");
+            payload.append("disasterType", "assistance");
+            payload.append("urgency", "high");
 
-            // Add all form fields
-            Object.keys(formData).forEach(key => {
-                if (formData[key] && key !== 'photo') {
-                    formDataToSend.append(key, formData[key]);
-                }
+            const response = await fetch("/stn-eoc/api/public/report-incident", {
+                method: "POST",
+                body: payload
             });
-
-            // Add location
-            if (markerPosition) {
-                formDataToSend.append('latitude', markerPosition.lat);
-                formDataToSend.append('longitude', markerPosition.lng);
-            }
-
-            // Add photo
-            if (formData.photo) {
-                formDataToSend.append('photo', formData.photo);
-            }
-
-            const response = await fetch('/stn-eoc/api/public/report-incident', {
-                method: 'POST',
-                body: formDataToSend
-            });
-
             const result = await response.json();
 
-            if (result.success) {
-                setSubmitSuccess(true);
-                // Reset form
-                setFormData({
-                    firstName: '',
-                    lastName: '',
-                    phone: '',
-                    village: '',
-                    subDistrict: '',
-                    district: '',
-                    description: '',
-                    waterLevel: '',
-                    affectedPeople: '',
-                    urgency: 'medium',
-                    travelStatus: '',
-                    reportType: 'help_request',
-                    disasterType: 'flood',
-                    occurredAt: new Date().toISOString().slice(0, 16),
-                    photo: null
-                });
-                setMarkerPosition(null);
-
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                setSubmitError(result.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล');
+            if (!result.success) {
+                setSubmitError(result.message || "เกิดข้อผิดพลาดในการส่งข้อมูล");
+                return;
             }
+
+            setSubmitSuccess(true);
+            setFormData({
+                firstName: "",
+                lastName: "",
+                phone: "",
+                helpCategory: "medicine",
+                helpReason: "",
+                village: "",
+                subDistrict: "",
+                district: "",
+                occurredAt: getLocalDateTimeValue()
+            });
+            setMarkerPosition(null);
+            window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (error) {
-            console.error('Submit error:', error);
-            setSubmitError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+            console.error("Submit help request error:", error);
+            setSubmitError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-            {/* Header */}
-            <header className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-4 md:py-6 shadow-lg">
-                <div className="container mx-auto px-4 md:px-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center">
-                                <span className="text-2xl md:text-3xl">💧</span>
-                            </div>
-                            <div>
-                                <h1 className="text-xl md:text-3xl font-bold">แจ้งเหตุน้ำท่วม</h1>
-                                <p className="text-xs md:text-sm text-blue-100">Flood Incident Report</p>
-                            </div>
-                        </div>
-                        <Link
-                            href="/"
-                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold transition-all backdrop-blur-sm text-sm md:text-base"
-                        >
-                            ← กลับหน้าหลัก
-                        </Link>
+        <div className="min-h-screen bg-slate-50">
+            <header className="border-b border-red-100 bg-white">
+                <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4">
+                    <div>
+                        <p className="text-sm font-bold text-red-700">ขอความช่วยเหลือจาก EOC</p>
+                        <h1 className="text-2xl font-black text-slate-900 md:text-3xl">แจ้งขอความช่วยเหลือ</h1>
                     </div>
+                    <Link href="/" className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100">
+                        กลับหน้าหลัก
+                    </Link>
                 </div>
             </header>
 
-            <main className="container mx-auto px-3 md:px-6 py-4 md:py-8">
-                {/* Success Message */}
+            <main className="mx-auto max-w-6xl px-4 py-5 md:py-8">
                 {submitSuccess && (
-                    <div className="bg-green-100 border-2 border-green-500 text-green-800 rounded-xl p-4 md:p-6 mb-4 md:mb-6 shadow-lg animate-pulse">
-                        <div className="flex items-center gap-3">
-                            <span className="text-3xl md:text-4xl">✅</span>
-                            <div>
-                                <h3 className="font-bold text-lg md:text-xl mb-1">ส่งรายงานเรียบร้อยแล้ว!</h3>
-                                <p className="text-sm md:text-base">ขอบคุณที่แจ้งข้อมูล เจ้าหน้าที่จะดำเนินการตรวจสอบโดยเร็วที่สุด</p>
-                            </div>
-                        </div>
-                    </div>
+                    <section className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-sm">
+                        <h2 className="text-lg font-black">ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว</h2>
+                        <p className="mt-1 text-sm">เจ้าหน้าที่ได้รับข้อมูลและจะตรวจสอบเพื่อประสานความช่วยเหลือต่อไป</p>
+                    </section>
                 )}
 
-                {/* Error Message */}
                 {submitError && (
-                    <div className="bg-red-100 border-2 border-red-500 text-red-800 rounded-xl p-4 md:p-6 mb-4 md:mb-6 shadow-lg">
-                        <div className="flex items-center gap-3">
-                            <span className="text-3xl md:text-4xl">❌</span>
-                            <div>
-                                <h3 className="font-bold text-lg md:text-xl mb-1">เกิดข้อผิดพลาด</h3>
-                                <p className="text-sm md:text-base">{submitError}</p>
-                            </div>
-                        </div>
-                    </div>
+                    <section className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
+                        <h2 className="text-lg font-black">ไม่สามารถส่งคำขอได้</h2>
+                        <p className="mt-1 text-sm">{submitError}</p>
+                    </section>
                 )}
 
-                {/* Info Box */}
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 md:p-6 mb-4 md:mb-6 shadow-md">
-                    <div className="flex items-start gap-3">
-                        <span className="text-3xl md:text-4xl">ℹ️</span>
-                        <div className="flex-1">
-                            <h3 className="font-bold text-lg md:text-xl text-blue-900 mb-2">คำแนะนำการแจ้งเหตุ</h3>
-                            <ul className="space-y-1 text-sm md:text-base text-blue-800">
-                                <li>• กรอกข้อมูลให้ครบถ้วนเพื่อความรวดเร็วในการช่วยเหลือ</li>
-                                <li>• ปักหมุดบนแผนที่ให้ตรงกับตำแหน่งที่เกิดเหตุ</li>
-                                <li>• ถ่ายภาพสถานการณ์เพื่อให้เจ้าหน้าที่ประเมินความรุนแรง</li>
-                                <li>• ระบุระดับน้ำและจำนวนผู้ประสบภัย (ถ้าทราบ)</li>
-                            </ul>
+                <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
+                    <section className="space-y-5">
+                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+                            <h2 className="mb-4 text-xl font-black text-slate-900">ข้อมูลผู้ขอความช่วยเหลือ</h2>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <TextField label="ชื่อ" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
+                                <TextField label="นามสกุล" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
+                                <TextField label="เบอร์โทรศัพท์" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} required placeholder="0812345678" />
+                                <label className="block">
+                                    <span className="mb-2 block text-sm font-bold text-slate-700">วันที่/เวลา</span>
+                                    <input
+                                        type="datetime-local"
+                                        name="occurredAt"
+                                        value={formData.occurredAt}
+                                        onChange={handleInputChange}
+                                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-red-400"
+                                    />
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Report Type Selection */}
-                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 md:p-6 mb-4 md:mb-6 shadow-md">
-                    <h3 className="font-bold text-lg md:text-xl text-blue-900 mb-3 md:mb-4 flex items-center gap-2">
-                        <span className="text-2xl">📋</span>
-                        เลือกประเภทการแจ้ง
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                        {/* Help Request */}
-                        <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, reportType: 'help_request' }))}
-                            className={`p-4 md:p-6 rounded-xl border-2 transition-all text-left ${formData.reportType === 'help_request'
-                                ? 'border-red-500 bg-red-50 shadow-lg scale-105'
-                                : 'border-gray-300 bg-white hover:border-red-300 hover:bg-red-50'
-                                }`}
-                        >
-                            <div className="flex items-start gap-3">
-                                <div className="text-4xl md:text-5xl">🆘</div>
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-base md:text-lg text-red-700 mb-1">แจ้งความช่วยเหลือ</h4>
-                                    <p className="text-xs md:text-sm text-gray-600">
-                                        สำหรับผู้ประสบภัยที่ต้องการความช่วยเหลือ เช่น ขอเสบียง อาหาร น้ำดื่ม หรือขอการอพยพ
-                                    </p>
-                                    {formData.reportType === 'help_request' && (
-                                        <div className="mt-2 text-xs md:text-sm text-red-600 font-semibold flex items-center gap-1">
-                                            <span>✓</span> เลือกแล้ว
+                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+                            <h2 className="mb-4 text-xl font-black text-slate-900">ประเภทและเหตุผล</h2>
+                            <div className="grid gap-3 md:grid-cols-2">
+                                {HELP_CATEGORIES.map((category) => (
+                                    <button
+                                        key={category.value}
+                                        type="button"
+                                        onClick={() => setFormData((current) => ({ ...current, helpCategory: category.value }))}
+                                        className={`rounded-xl border p-4 text-left transition ${
+                                            formData.helpCategory === category.value
+                                                ? "border-red-500 bg-red-50 text-red-900 shadow-sm"
+                                                : "border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:bg-red-50"
+                                        }`}
+                                    >
+                                        <div className="font-black">{category.label}</div>
+                                        <p className="mt-1 text-sm">{category.description}</p>
+                                    </button>
+                                ))}
+                            </div>
+                            <label className="mt-4 block">
+                                <span className="mb-2 block text-sm font-bold text-slate-700">เหตุผลการขอความช่วยเหลือ <span className="text-red-500">*</span></span>
+                                <textarea
+                                    name="helpReason"
+                                    value={formData.helpReason}
+                                    onChange={handleInputChange}
+                                    rows={5}
+                                    required
+                                    placeholder="เช่น ผู้ป่วยติดเตียงต้องการยา, มีผู้สูงอายุติดอยู่ในบ้าน, ต้องการเวชภัณฑ์เร่งด่วน"
+                                    className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-red-400"
+                                />
+                            </label>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+                            <h2 className="mb-4 text-xl font-black text-slate-900">พื้นที่โดยประมาณ</h2>
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <div className="relative md:col-span-1" ref={villageInputRef}>
+                                    <TextField label="หมู่บ้าน/ชุมชน" name="village" value={formData.village} onChange={handleInputChange} placeholder="พิมพ์ชื่อหมู่บ้าน" />
+                                    {searchingVillage && <span className="absolute right-3 top-10 text-sm text-slate-400">ค้นหา...</span>}
+                                    {showVillageDropdown && villages.length > 0 && (
+                                        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-red-200 bg-white shadow-xl">
+                                            {villages.map((village, index) => (
+                                                <button
+                                                    key={`${village.name}-${index}`}
+                                                    type="button"
+                                                    onClick={() => selectVillage(village)}
+                                                    className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-red-50"
+                                                >
+                                                    <div className="font-bold text-slate-800">{village.name}</div>
+                                                    <div className="text-slate-500">ต.{village.subDistrict} อ.{village.district}</div>
+                                                </button>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
-                            </div>
-                        </button>
-
-                        {/* Traffic Report */}
-                        <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, reportType: 'traffic_report', waterLevel: '' }))}
-                            className={`p-4 md:p-6 rounded-xl border-2 transition-all text-left ${formData.reportType === 'traffic_report'
-                                ? 'border-orange-500 bg-orange-50 shadow-lg scale-105'
-                                : 'border-gray-300 bg-white hover:border-orange-300 hover:bg-orange-50'
-                                }`}
-                        >
-                            <div className="flex items-start gap-3">
-                                <div className="text-4xl md:text-5xl">🚧</div>
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-base md:text-lg text-orange-700 mb-1">แจ้งเส้นทางการจราจร</h4>
-                                    <p className="text-xs md:text-sm text-gray-600">
-                                        สำหรับรายงานสภาพถนน เส้นทางปิด หรือสถานการณ์การจราจรที่ได้รับผลกระทบ
-                                    </p>
-                                    {formData.reportType === 'traffic_report' && (
-                                        <div className="mt-2 text-xs md:text-sm text-orange-600 font-semibold flex items-center gap-1">
-                                            <span>✓</span> เลือกแล้ว
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </button>
-                    </div>
-
-                    {/* Festival Accident Report Card - shows when festival EOC is active */}
-                    {festivalEOC && (
-                        <div className="mt-4">
-                            <div className="border-2 border-red-400 bg-red-50 rounded-xl overflow-hidden">
-                                <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 text-xs font-bold flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-white rounded-full animate-pulse inline-block"></span>
-                                    EOC เทศกาลเปิดอยู่: {FESTIVAL_LABEL[festivalEOC.festival_type] || 'อุบัติเหตุช่วงเทศกาล'}
-                                </div>
-                                <Link
-                                    href="/public/festival-accidents/report"
-                                    className="flex items-start gap-3 p-4 md:p-5 hover:bg-red-100 transition"
-                                >
-                                    <div className="text-4xl md:text-5xl">🚗</div>
-                                    <div className="flex-1">
-                                        <h4 className="font-bold text-base md:text-lg text-red-700 mb-1">แจ้งเหตุอุบัติเหตุ (ช่วงเทศกาล)</h4>
-                                        <p className="text-xs md:text-sm text-gray-600">
-                                            รายงานอุบัติเหตุทางถนนในช่วงเทศกาล ระบุตำแหน่ง จำนวนผู้บาดเจ็บ/เสียชีวิต และสาเหตุ
-                                        </p>
-                                        <div className="mt-2 text-xs text-red-600 font-semibold flex items-center gap-1">
-                                            คลิกเพื่อกรอกแบบฟอร์ม →
-                                        </div>
-                                    </div>
-                                </Link>
+                                <TextField label="ตำบล" name="subDistrict" value={formData.subDistrict} onChange={handleInputChange} />
+                                <TextField label="อำเภอ" name="district" value={formData.district} onChange={handleInputChange} />
                             </div>
                         </div>
-                    )}
-                </div>
+                    </section>
 
-                {/* ThaiID Login Section - Show only if not logged in */}
-                {!user && (
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
-                        <div className="flex items-start gap-4">
-                            <span className="text-4xl">🔐</span>
-                            <div className="flex-1">
-                                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                                    เข้าสู่ระบบด้วย ThaiID
-                                </h3>
-                                <p className="text-gray-600 mb-4">
-                                    กรอกข้อมูลอัตโนมัติจากบัตรประชาชน (ชื่อ, นามสกุล, เลขบัตร)
-                                </p>
+                    <aside className="space-y-5">
+                        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+                            <div className="mb-3 flex items-start justify-between gap-3">
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-900">ปักหมุดจุดขอความช่วยเหลือ</h2>
+                                    <p className="mt-1 text-sm text-slate-600">แตะบนแผนที่เพื่อระบุตำแหน่ง หรือใช้ตำแหน่งปัจจุบัน</p>
+                                </div>
                                 <button
                                     type="button"
-                                    onClick={() => window.location.href = '/stn-eoc/api/auth/citizen-thaiid/authorize'}
-                                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2"
+                                    onClick={requestGpsLocation}
+                                    className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-700"
                                 >
-                                    <span className="text-xl">🇹🇭</span>
-                                    <span>เข้าสู่ระบบด้วย ThaiID</span>
+                                    ใช้ GPS
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                )}
 
-                {/* Logged In Status */}
-                {/* Logged in as Citizen */}
-                {user && user.role === 'citizen' && (
-                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <span className="text-2xl">✅</span>
-                                <div>
-                                    <p className="font-semibold text-gray-800">
-                                        ยืนยันตัวตนด้วย ThaiID
-                                    </p>
-                                    <p className="text-sm text-gray-600">
-                                        {user.givenName} {user.familyName}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={async () => {
-                                    await fetch('/stn-eoc/api/auth/citizen-thaiid/session', { method: 'DELETE' });
-                                    setFormData(prev => ({
-                                        ...prev,
-                                        firstName: '',
-                                        lastName: '',
-                                        nationalId: ''
-                                    }));
-                                    window.location.reload();
-                                }}
-                                className="text-sm text-red-600 hover:text-red-800 font-medium"
-                            >
-                                ออกจากระบบ
-                            </button>
-                        </div>
-                    </div>
-                )}
+                            {gpsStatus === "requesting" && <p className="mb-2 text-sm font-semibold text-slate-500">กำลังขอตำแหน่ง...</p>}
+                            {gpsError && <p className="mb-2 rounded-lg bg-amber-50 p-2 text-sm font-semibold text-amber-700">{gpsError}</p>}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-xl p-4 md:p-8">
-                    {/* Personal Information Section */}
-                    <div className="mb-6 md:mb-8">
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center gap-2">
-                            <span className="text-2xl md:text-3xl">👤</span>
-                            ข้อมูลผู้แจ้ง
-                        </h2>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            {/* First Name */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    ชื่อ <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="firstName"
-                                    value={formData.firstName}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    placeholder="ระบุชื่อ"
-                                    required
-                                />
-                            </div>
-
-                            {/* Last Name */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    นามสกุล <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="lastName"
-                                    value={formData.lastName}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    placeholder="ระบุนามสกุล"
-                                    required
-                                />
-                            </div>
-
-                            {/* Phone */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    เบอร์โทรศัพท์ <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    placeholder="0812345678"
-                                    pattern="[0-9]{10}"
-                                    required
-                                />
-                            </div>
-
-                            {/* National ID */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    เลขบัตรประชาชน {user && user.role === 'citizen' && <span className="text-green-600 text-sm">(ยืนยันจาก ThaiID ✓)</span>}
-                                </label>
-                                <input
-                                    type="text"
-                                    name="nationalId"
-                                    value={formData.nationalId || ''}
-                                    onChange={handleInputChange}
-                                    disabled={user && user.role === 'citizen'}
-                                    maxLength="13"
-                                    className={`text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 rounded-lg focus:outline-none text-sm md:text-base ${user && user.role === 'citizen'
-                                        ? 'bg-green-50 border-green-300 cursor-not-allowed'
-                                        : 'border-gray-300 focus:border-blue-500'
-                                        }`}
-                                    placeholder="เลขบัตรประชาชน 13 หลัก (ไม่บังคับ)"
-                                />
-                                {user && user.role === 'citizen' && (
-                                    <p className="text-xs text-green-600 mt-1">
-                                        ข้อมูลนี้ได้รับการยืนยันจากระบบ ThaiID
-                                    </p>
+                            <div className="h-[380px] overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                                {mounted && (
+                                    <MapContainer center={markerPosition || [6.6238, 100.0750]} zoom={11} style={{ height: "100%", width: "100%" }}>
+                                        <TileLayer
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        />
+                                        <LocationMarker position={markerPosition} setPosition={setMarkerPosition} />
+                                    </MapContainer>
                                 )}
                             </div>
 
-                            {/* Village */}
-                            <div className="relative" ref={villageInputRef}>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    หมู่บ้าน/ชุมชน
-                                </label>
-                                <input
-                                    type="text"
-                                    name="village"
-                                    value={formData.village}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    placeholder="พิมพ์ชื่อหมู่บ้าน..."
-                                    autoComplete="off"
-                                />
-                                {searchingVillage && (
-                                    <div className="absolute right-3 top-11 text-gray-400">
-                                        <span className="animate-spin">🔄</span>
-                                    </div>
-                                )}
-                                {showVillageDropdown && villages.length > 0 && (
-                                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-blue-300 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                                        {villages.map((village, idx) => (
-                                            <div
-                                                key={idx}
-                                                onClick={() => selectVillage(village)}
-                                                className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                            >
-                                                <div className="font-semibold text-gray-800">{village.name}</div>
-                                                <div className="text-sm text-gray-600">
-                                                    ตำบล{village.subDistrict} อำเภอ{village.district}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Sub District */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    ตำบล
-                                </label>
-                                <input
-                                    type="text"
-                                    name="subDistrict"
-                                    value={formData.subDistrict}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    placeholder="ระบุตำบล"
-                                />
-                            </div>
-
-                            {/* District */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    อำเภอ
-                                </label>
-                                <input
-                                    type="text"
-                                    name="district"
-                                    value={formData.district}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    placeholder="ระบุอำเภอ"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Incident Details Section */}
-                    <div className="mb-6 md:mb-8">
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center gap-2">
-                            <span className="text-2xl md:text-3xl">{detailIcon}</span>
-                            {detailTitle}
-                        </h2>
-
-                        {/* Description */}
-                        <div className="mb-4 md:mb-6">
-                            <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                อธิบายสถานการณ์ <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleInputChange}
-                                rows="4"
-                                className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base resize-none"
-                                placeholder={descriptionPlaceholder}
-                                required
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            {/* Water Level */}
-                            {requiresWaterLevel && (
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    ระดับน้ำ (ซม.) <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    name="waterLevel"
-                                    value={formData.waterLevel}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    required
-                                >
-                                    <option value="">-- เลือกระดับน้ำ --</option>
-                                    <option value="0-20">ต่ำ (0-20 ซม. / ใต้เข่า)</option>
-                                    <option value="20-50">ปานกลาง (20-50 ซม. / เหนือเข่า)</option>
-                                    <option value="50-100">สูง (50-100 ซม. / เอว)</option>
-                                    <option value="100+">สูงมาก (100+ ซม. / เหนืออก)</option>
-                                </select>
-                            </div>
+                            {markerPosition && (
+                                <p className="mt-3 rounded-lg bg-red-50 p-2 text-xs font-bold text-red-800">
+                                    พิกัด: {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
+                                </p>
                             )}
+                        </section>
 
-                            {/* Affected People */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    จำนวนผู้ได้รับผลกระทบ (คน)
-                                </label>
-                                <input
-                                    type="number"
-                                    name="affectedPeople"
-                                    value={formData.affectedPeople}
-                                    onChange={handleInputChange}
-                                    min="0"
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    placeholder="ระบุจำนวน (ถ้าทราบ)"
-                                />
+                        <section className="rounded-xl border border-red-100 bg-red-50 p-4 text-red-900">
+                            <h3 className="font-black">เบอร์ฉุกเฉิน</h3>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                                <EmergencyCall number="1669" label="แพทย์ฉุกเฉิน" />
+                                <EmergencyCall number="1784" label="ปภ." />
+                                <EmergencyCall number="191" label="ตำรวจ" />
+                                <EmergencyCall number="199" label="ดับเพลิง" />
                             </div>
+                        </section>
 
-                            {/* Occurred At */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    วันเวลาที่เกิดเหตุ
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    name="occurredAt"
-                                    value={formData.occurredAt}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                />
-                            </div>
-
-                            {/* Urgency */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    ระดับความเร่งด่วน
-                                </label>
-                                <select
-                                    name="urgency"
-                                    value={formData.urgency}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                >
-                                    <option value="low">ต่ำ (สถานการณ์ปกติ)</option>
-                                    <option value="medium">ปานกลาง (ต้องเฝ้าระวัง)</option>
-                                    <option value="high">สูง (ต้องการความช่วยเหลือ)</option>
-                                    <option value="critical">วิกฤติ (ต้องช่วยเหลือทันที)</option>
-                                </select>
-                            </div>
-
-                            {/* Travel Status */}
-                            <div>
-                                <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                    🚧 สถานะการสัญจร {isTrafficReport && <span className="text-red-500">*</span>}
-                                </label>
-                                <select
-                                    name="travelStatus"
-                                    value={formData.travelStatus}
-                                    onChange={handleInputChange}
-                                    className="text-gray-700 w-full px-3 md:px-4 py-2 md:py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm md:text-base"
-                                    required={isTrafficReport}
-                                >
-                                    <option value="">-- เลือกสถานะ --</option>
-                                    <option value="passable">✅ สัญจรได้ปกติ</option>
-                                    <option value="difficult">⚠️ สัญจรได้ยากลำบาก</option>
-                                    <option value="impassable">🚫 ไม่สามารถสัญจรได้</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Photo Upload */}
-                        <div className="mt-4 md:mt-6">
-                            <label className="block text-sm md:text-base font-semibold text-gray-700 mb-2">
-                                รูปภาพประกอบ (ถ้ามี)
-                            </label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 md:p-6 text-center hover:border-blue-500 transition-colors">
-                                <input
-                                    type="file"
-                                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                                    multiple={false}
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                    id="photo-upload"
-                                />
-                                <label htmlFor="photo-upload" className="cursor-pointer">
-                                    <div className="text-4xl md:text-5xl mb-2">📷</div>
-                                    <p className="text-sm md:text-base text-gray-600 mb-1">
-                                        {formData.photo ? formData.photo.name : 'คลิกเพื่ออัพโหลดรูปภาพ'}
-                                    </p>
-                                    <p className="text-xs md:text-sm text-gray-500">อัปโหลดได้ 1 ภาพ รองรับ JPG, PNG, WebP (ไม่เกิน 10MB)</p>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Map Section */}
-                    <div className="mb-6 md:mb-8">
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center gap-2">
-                            <span className="text-2xl md:text-3xl">📍</span>
-                            ตำแหน่งที่เกิดเหตุ <span className="text-red-500">*</span>
-                        </h2>
-
-                        {/* GPS Status Section */}
-                        <div className="mb-4">
-                            {/* GPS Status Indicator */}
-                            {gpsStatus === 'requesting' && (
-                                <div className="flex items-center gap-3 bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-3">
-                                    <span className="animate-spin text-2xl">📡</span>
-                                    <div>
-                                        <p className="font-semibold text-blue-800">กำลังค้นหาตำแหน่งของคุณ...</p>
-                                        <p className="text-sm text-blue-600">กรุณารอสักครู่</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {gpsStatus === 'success' && isGpsLocation && (
-                                <div className="flex items-center gap-3 bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-3">
-                                    <span className="text-2xl">✅</span>
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-green-800">ปักหมุดจาก GPS สำเร็จ</p>
-                                        <p className="text-sm text-green-600">หากตำแหน่งไม่ตรง สามารถคลิกแผนที่เพื่อแก้ไขได้</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setMarkerPosition(null);
-                                            setIsGpsLocation(false);
-                                        }}
-                                        className="text-gray-500 hover:text-gray-700 text-sm"
-                                    >
-                                        ล้าง
-                                    </button>
-                                </div>
-                            )}
-
-                            {(gpsStatus === 'error' || gpsStatus === 'denied') && (
-                                <div className="flex items-center gap-3 bg-amber-50 border-2 border-amber-200 rounded-lg p-4 mb-3">
-                                    <span className="text-2xl">⚠️</span>
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-amber-800">{gpsError}</p>
-                                        <p className="text-sm text-amber-600">คลิกบนแผนที่เพื่อปักหมุดตำแหน่งที่เกิดเหตุ</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={requestGpsLocation}
-                                        className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
-                                    >
-                                        ลองใหม่
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Manual Location Button */}
-                            {gpsStatus !== 'requesting' && (
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    <button
-                                        type="button"
-                                        onClick={requestGpsLocation}
-                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
-                                    >
-                                        <span>📍</span>
-                                        <span>ใช้ตำแหน่งปัจจุบัน (GPS)</span>
-                                    </button>
-                                    <span className="flex items-center text-gray-500 text-sm">
-                                        หรือ คลิกบนแผนที่เพื่อปักหมุดเอง
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-
-                        {mounted && (
-                            <div className="border-4 border-blue-200 rounded-xl overflow-hidden shadow-lg">
-                                <MapContainer
-                                    center={markerPosition ? [markerPosition.lat, markerPosition.lng] : defaultCenter}
-                                    zoom={markerPosition ? 15 : 11}
-                                    style={{ height: '400px', width: '100%' }}
-                                    className="z-0"
-                                    scrollWheelZoom={true}
-                                >
-                                    <TileLayer
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    />
-                                    <LocationMarker position={markerPosition} setPosition={(pos) => {
-                                        setMarkerPosition(pos);
-                                        setIsGpsLocation(false); // ถ้าผู้ใช้คลิกแก้ไข ถือว่าไม่ใช่จาก GPS แล้ว
-                                    }} />
-                                </MapContainer>
-                            </div>
-                        )}
-
-                        {markerPosition && (
-                            <div className={`mt-3 md:mt-4 rounded-lg p-3 md:p-4 ${isGpsLocation ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'}`}>
-                                <div className="flex items-center justify-between flex-wrap gap-2">
-                                    <p className={`text-sm md:text-base ${isGpsLocation ? 'text-green-800' : 'text-blue-800'}`}>
-                                        <strong>ตำแหน่งที่เลือก:</strong> {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
-                                        {isGpsLocation && <span className="ml-2 text-green-600 text-sm">(จาก GPS)</span>}
-                                        {!isGpsLocation && markerPosition && <span className="ml-2 text-blue-600 text-sm">(ปักหมุดเอง)</span>}
-                                    </p>
-                                    {markerPosition && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setMarkerPosition(null);
-                                                setIsGpsLocation(false);
-                                            }}
-                                            className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1"
-                                        >
-                                            <span>🗑️</span> ล้างตำแหน่ง
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Submit Button */}
-                    <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-base md:text-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                                }`}
+                            className="w-full rounded-xl bg-red-600 px-5 py-4 text-lg font-black text-white shadow-lg transition hover:bg-red-700 disabled:bg-red-200 disabled:text-red-900"
                         >
-                            {isSubmitting ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="animate-spin">⏳</span>
-                                    กำลังส่งข้อมูล...
-                                </span>
-                            ) : (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span>📤</span>
-                                    แจ้งเหตุการณ์
-                                </span>
-                            )}
+                            {isSubmitting ? "กำลังส่งคำขอ..." : "ส่งคำขอความช่วยเหลือ"}
                         </button>
-
-                        <Link
-                            href="/"
-                            className="flex-1 sm:flex-none bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 md:px-8 md:py-4 rounded-xl font-bold shadow-lg transition-all text-center text-base md:text-lg"
-                        >
-                            ยกเลิก
-                        </Link>
-                    </div>
-
-                    {/* Emergency Contact */}
-                    <div className="mt-6 md:mt-8 bg-red-50 border-2 border-red-300 rounded-xl p-4 md:p-6">
-                        <h3 className="font-bold text-base md:text-lg text-red-800 mb-2">📞 กรณีฉุกเฉิน โทร:</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 text-center">
-                            <div className="bg-white rounded-lg p-2 md:p-3 shadow">
-                                <div className="text-xl md:text-2xl font-bold text-red-600">191</div>
-                                <div className="text-xs md:text-sm text-gray-600">ตำรวจ</div>
-                            </div>
-                            <div className="bg-white rounded-lg p-2 md:p-3 shadow">
-                                <div className="text-xl md:text-2xl font-bold text-red-600">1669</div>
-                                <div className="text-xs md:text-sm text-gray-600">ฉุกเฉิน</div>
-                            </div>
-                            <div className="bg-white rounded-lg p-2 md:p-3 shadow col-span-2 md:col-span-1">
-                                <div className="text-xl md:text-2xl font-bold text-red-600">199</div>
-                                <div className="text-xs md:text-sm text-gray-600">ดับเพลิง</div>
-                            </div>
-                        </div>
-                    </div>
+                    </aside>
                 </form>
             </main>
-
-            {/* Footer */}
-            <footer className="bg-gray-800 text-gray-300 py-4 md:py-6 mt-8 md:mt-12">
-                <div className="container mx-auto px-4 md:px-6 text-center">
-                    <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล</p>
-                    <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน</p>
-                </div>
-            </footer>
         </div>
+    );
+}
+
+function TextField({ label, name, value, onChange, type = "text", required = false, placeholder = "" }) {
+    return (
+        <label className="block">
+            <span className="mb-2 block text-sm font-bold text-slate-700">
+                {label} {required && <span className="text-red-500">*</span>}
+            </span>
+            <input
+                type={type}
+                name={name}
+                value={value}
+                onChange={onChange}
+                required={required}
+                placeholder={placeholder}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-red-400"
+            />
+        </label>
+    );
+}
+
+function EmergencyCall({ number, label }) {
+    return (
+        <a href={`tel:${number}`} className="rounded-lg bg-white px-3 py-2 text-center shadow-sm hover:bg-red-100">
+            <div className="text-xl font-black">{number}</div>
+            <div className="text-xs font-semibold">{label}</div>
+        </a>
     );
 }

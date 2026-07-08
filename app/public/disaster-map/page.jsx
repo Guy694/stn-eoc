@@ -22,6 +22,7 @@ const DISASTER_OPTIONS = [
 
 const DEFAULT_LAYERS = {
   floodAreas: true,
+  diseaseReports: false,
   district: true,
   tambon: false,
   village: false,
@@ -33,6 +34,19 @@ const DEFAULT_LAYERS = {
   waterways: true,
   hillshade: false
 };
+
+const DISEASE_DEFAULT_LAYERS = {
+  ...DEFAULT_LAYERS,
+  floodAreas: false,
+  diseaseReports: true,
+  waterways: false,
+  shelters: false,
+  hospitals: true
+};
+
+function getDefaultLayers(disasterType) {
+  return disasterType === "disease" ? DISEASE_DEFAULT_LAYERS : DEFAULT_LAYERS;
+}
 
 function normalizeEocType(type) {
   return type === "accident" ? "festival-accidents" : type;
@@ -181,11 +195,13 @@ function getUrgencyMeta(urgency) {
 
 function getEventMeta(item) {
   if (item?.event_kind === "flood_record") return getFloodSeverityMeta(item.flood_level);
+  if (item?.event_kind === "disease_report") return getDiseaseSeverityMeta(item.severity_level);
   return getUrgencyMeta(item?.urgency);
 }
 
 function getEventTypeLabel(item) {
   if (item?.event_kind === "flood_record") return "บันทึกน้ำท่วม";
+  if (item?.event_kind === "disease_report") return "รายงานโรคระบาด";
   return getIncidentTypeLabel(item);
 }
 
@@ -203,14 +219,28 @@ function getFloodLevelRank(level) {
   return { severe: 4, moderate: 3, mild: 2, safe: 1 }[level] || 0;
 }
 
-export default function PublicDisasterMapPage() {
+function getDiseaseSeverityMeta(level) {
+  const map = {
+    severe: { label: "ระบาดหนัก", urgency: "critical", className: "bg-red-100 text-red-700" },
+    moderate: { label: "ระบาดปานกลาง", urgency: "high", className: "bg-amber-100 text-amber-700" },
+    mild: { label: "เฝ้าระวัง", urgency: "medium", className: "bg-teal-100 text-teal-700" },
+    safe: { label: "ไม่พบผู้ป่วย", urgency: "low", className: "bg-emerald-100 text-emerald-700" }
+  };
+  return map[level] || map.mild;
+}
+
+function getDiseaseSeverityRank(level) {
+  return { severe: 4, moderate: 3, mild: 2, safe: 1 }[level] || 0;
+}
+
+export function PublicDisasterMapContent({ initialDisasterType = "flood", lockDisasterType = false } = {}) {
   const mapWorkspaceRef = useRef(null);
   const [activeEocs, setActiveEocs] = useState([]);
   const [sessions, setSessions] = useState([]);
-  const [disasterType, setDisasterType] = useState("flood");
+  const [disasterType, setDisasterType] = useState(initialDisasterType);
   const [selectedContextKey, setSelectedContextKey] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [mapLayers, setMapLayers] = useState(DEFAULT_LAYERS);
+  const [mapLayers, setMapLayers] = useState(() => getDefaultLayers(initialDisasterType));
   const [baseMap, setBaseMap] = useState("street");
   const [urgencyFilter, setUrgencyFilter] = useState("all");
   const [reportTypeFilter, setReportTypeFilter] = useState("all");
@@ -218,6 +248,7 @@ export default function PublicDisasterMapPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [incidents, setIncidents] = useState([]);
   const [floodAreas, setFloodAreas] = useState([]);
+  const [diseaseReports, setDiseaseReports] = useState([]);
   const [shelterCount, setShelterCount] = useState(0);
   const [hospitalCount, setHospitalCount] = useState(0);
   const [loadingContext, setLoadingContext] = useState(true);
@@ -286,6 +317,9 @@ export default function PublicDisasterMapPage() {
     setSelectedDate("");
     setIncidents([]);
     setFloodAreas([]);
+    setDiseaseReports([]);
+    setMapLayers(getDefaultLayers(disasterType));
+    setReportTypeFilter("all");
   }, [disasterType]);
 
   useEffect(() => {
@@ -333,6 +367,29 @@ export default function PublicDisasterMapPage() {
     };
 
     loadFloodAreas();
+  }, [disasterType, selectedContext?.id, selectedDate]);
+
+  useEffect(() => {
+    const loadDiseaseReports = async () => {
+      if (disasterType !== "disease" || !selectedContext?.id || !selectedDate) {
+        setDiseaseReports([]);
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams();
+        params.set("session_id", selectedContext.id);
+        params.set("date", selectedDate);
+        const response = await fetch(`/stn-eoc/api/eoc/disease/area-status?${params.toString()}`);
+        const json = response.ok ? await response.json() : { success: false, data: [] };
+        setDiseaseReports(json.success ? json.data || [] : []);
+      } catch (error) {
+        console.error("Error loading disease reports for event list:", error);
+        setDiseaseReports([]);
+      }
+    };
+
+    loadDiseaseReports();
   }, [disasterType, selectedContext?.id, selectedDate]);
 
   const eocIsOpen = activeEocs.some((item) => item.is_active);
@@ -425,27 +482,78 @@ export default function PublicDisasterMapPage() {
     return items.sort((a, b) => getFloodLevelRank(b.flood_level) - getFloodLevelRank(a.flood_level) || a.sub_district.localeCompare(b.sub_district, "th"));
   }, [disasterType, districtFilter, floodAreas, reportTypeFilter, searchQuery, urgencyFilter]);
 
+  const diseaseEventItems = useMemo(() => {
+    if (disasterType !== "disease") return [];
+    if (reportTypeFilter !== "all" && reportTypeFilter !== "disease_report") return [];
+
+    const query = searchQuery.trim().toLowerCase();
+    const items = diseaseReports
+      .filter((report) => {
+        if (!report) return false;
+        if (districtFilter !== "all" && report.district !== districtFilter) return false;
+
+        const searchableText = [
+          report.district,
+          report.tambon,
+          report.facility_name,
+          report.disease_name,
+          report.notes
+        ].filter(Boolean).join(" ").toLowerCase();
+        if (query && !searchableText.includes(query)) return false;
+
+        const severityLevel = report.severity_level || (Number(report.patient_count || 0) >= 300 ? "severe" : Number(report.patient_count || 0) >= 100 ? "moderate" : Number(report.patient_count || 0) > 0 ? "mild" : "safe");
+        const meta = getDiseaseSeverityMeta(severityLevel);
+        return urgencyFilter === "all" || meta.urgency === urgencyFilter;
+      })
+      .map((report) => {
+        const patientCount = Number(report.patient_count || 0);
+        const severityLevel = report.severity_level || (patientCount >= 300 ? "severe" : patientCount >= 100 ? "moderate" : patientCount > 0 ? "mild" : "safe");
+        const meta = getDiseaseSeverityMeta(severityLevel);
+        return {
+          id: `disease-report-${report.id}`,
+          event_kind: "disease_report",
+          report_type: "disease_report",
+          disaster_type: "disease",
+          district: report.district || "-",
+          sub_district: report.tambon || "-",
+          facility_name: report.facility_name,
+          disease_name: report.disease_name,
+          affected_people: patientCount,
+          patient_count: patientCount,
+          occurred_at: report.report_date,
+          reported_at: report.report_date,
+          urgency: meta.urgency,
+          severity_level: severityLevel,
+          description: `${report.disease_name || "โรคระบาด"} ${patientCount.toLocaleString("th-TH")} ราย • ${report.facility_name || "หน่วยบริการ"}`
+        };
+      });
+
+    return items.sort((a, b) => getDiseaseSeverityRank(b.severity_level) - getDiseaseSeverityRank(a.severity_level) || Number(b.patient_count || 0) - Number(a.patient_count || 0));
+  }, [disasterType, diseaseReports, districtFilter, reportTypeFilter, searchQuery, urgencyFilter]);
+
   const visibleEventItems = useMemo(() => {
-    const incidentItems = reportTypeFilter === "flood_record" ? [] : visibleIncidents;
-    return [...floodEventItems, ...incidentItems].sort((a, b) => {
+    const incidentItems = ["flood_record", "disease_report"].includes(reportTypeFilter) ? [] : visibleIncidents;
+    return [...floodEventItems, ...diseaseEventItems, ...incidentItems].sort((a, b) => {
       const aTime = new Date(a.occurred_at || a.reported_at || a.recorded_day || 0).getTime();
       const bTime = new Date(b.occurred_at || b.reported_at || b.recorded_day || 0).getTime();
       return bTime - aTime;
     });
-  }, [floodEventItems, reportTypeFilter, visibleIncidents]);
+  }, [diseaseEventItems, floodEventItems, reportTypeFilter, visibleIncidents]);
 
   const districts = useMemo(
     () => [...new Set([
       ...incidents.map((item) => item.district).filter(Boolean),
-      ...floodAreas.map((item) => item.district).filter(Boolean)
+      ...floodAreas.map((item) => item.district).filter(Boolean),
+      ...diseaseReports.map((item) => item.district).filter(Boolean)
     ])].sort((a, b) => a.localeCompare(b, "th")),
-    [floodAreas, incidents]
+    [diseaseReports, floodAreas, incidents]
   );
 
   const criticalCount = visibleEventItems.filter((item) => item.urgency === "critical" || item.urgency === "high").length;
   const trafficCount = visibleIncidents.filter((item) => item.report_type === "traffic_report").length;
   const helpCount = visibleIncidents.filter((item) => (item.report_type || "help_request") !== "traffic_report").length;
   const floodRecordCount = floodEventItems.length;
+  const diseaseReportCount = diseaseEventItems.length;
   const affectedPeople = visibleEventItems.reduce((sum, item) => sum + Number(item.affected_people || 0), 0);
   const affectedDistricts = new Set(visibleEventItems.map((item) => item.district).filter(Boolean)).size;
   const alertLevel = criticalCount > 0 ? "เฝ้าระวังสูง" : visibleEventItems.length > 0 ? "เฝ้าระวัง" : "ปกติ";
@@ -455,6 +563,12 @@ export default function PublicDisasterMapPage() {
     Math.max(0, selectedDateIndex - 4),
     Math.min(dateOptions.length, Math.max(9, selectedDateIndex + 5))
   );
+
+  const pageTitle = disasterType === "disease" ? "แผนที่โรคระบาด" : disasterType === "flood" ? "แผนที่น้ำท่วม" : "แผนที่ / Map";
+  const eventSourceText = disasterType === "disease" ? "รายงานประชาชนและรายงานโรคระบาด" : "รายงานประชาชนและบันทึกน้ำท่วม";
+  const domainRecordLabel = disasterType === "disease" ? "รายงานโรคระบาด" : "บันทึกน้ำท่วม";
+  const domainRecordCount = disasterType === "disease" ? diseaseReportCount : floodRecordCount;
+  const domainRecordUnit = disasterType === "disease" ? "รายการ" : "ตำบล";
 
   const exportCsv = useCallback(() => {
     const header = ["เวลา", "ประเภท", "อำเภอ", "ตำบล", "หมู่บ้าน", "ระดับ", "รายละเอียด"];
@@ -481,7 +595,7 @@ export default function PublicDisasterMapPage() {
 
   return (
     <PublicOpsScaffold
-      title="แผนที่ / Map"
+      title={pageTitle}
       subtitle="แผนที่สถานการณ์ขนาดใหญ่ พร้อมตัวกรองข้อมูลย้อนหลัง ปัจจุบัน และชั้นข้อมูลเฉพาะ"
       activeMenu="map"
       eocIsOpen={eocIsOpen}
@@ -495,8 +609,8 @@ export default function PublicDisasterMapPage() {
           <MapStatCard icon="≈" label="เหตุการณ์ทั้งหมดวันนี้" value={visibleEventItems.length} unit="เหตุการณ์" subText={`${criticalCount} รายที่ต้องติดตาม`} tone="blue" />
           <MapStatCard icon="⌖" label="อำเภอได้รับผลกระทบ" value={affectedDistricts} unit="อำเภอ" subText="จากทั้งหมด 7 อำเภอ" tone="orange" />
           <MapStatCard icon="⌂" label="ศูนย์พักพิงที่เปิด" value={shelterCount} unit="แห่ง" subText={`รองรับข้อมูล ${hospitalCount} จุดสุขภาพ`} tone="violet" />
-          <MapStatCard icon="−" label="บันทึกน้ำท่วม" value={floodRecordCount} unit="ตำบล" subText={`${trafficCount} เส้นทาง / ${helpCount} รายงานประชาชน`} tone="red" />
-          <MapStatCard icon="+" label="ผู้ได้รับผลกระทบเบื้องต้น" value={affectedPeople} unit="คน" subText="จากรายงานประชาชนและบันทึกน้ำท่วม" tone="emerald" />
+          <MapStatCard icon="−" label={domainRecordLabel} value={domainRecordCount} unit={domainRecordUnit} subText={`${trafficCount} เส้นทาง / ${helpCount} รายงานประชาชน`} tone="red" />
+          <MapStatCard icon="+" label={disasterType === "disease" ? "ผู้ป่วยจากรายงาน" : "ผู้ได้รับผลกระทบเบื้องต้น"} value={affectedPeople} unit="คน" subText={`จาก${eventSourceText}`} tone="emerald" />
           <MapStatCard icon="!" label="ระดับเฝ้าระวัง" value={alertLevel} unit="" subText={criticalCount > 0 ? `${criticalCount} รายการสำคัญ` : "ติดตามตามปกติ"} tone="amber" />
 
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -521,7 +635,8 @@ export default function PublicDisasterMapPage() {
           ref={mapWorkspaceRef}
           className={`flex flex-col gap-3 ${isMapFullscreen ? "h-screen overflow-auto bg-[#edf5fc] p-3" : ""}`}
         >
-        <section className="grid gap-3 rounded-xl border border-blue-100 bg-white p-3 shadow-sm lg:grid-cols-[150px_minmax(230px,1fr)_140px_135px_minmax(170px,220px)_120px]">
+        <section className={`grid gap-3 rounded-xl border border-blue-100 bg-white p-3 shadow-sm ${lockDisasterType ? "lg:grid-cols-[minmax(230px,1fr)_140px_135px_minmax(170px,220px)_120px]" : "lg:grid-cols-[150px_minmax(230px,1fr)_140px_135px_minmax(170px,220px)_120px]"}`}>
+              {!lockDisasterType ? (
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-slate-500">ประเภท EOC</span>
                 <select
@@ -532,6 +647,7 @@ export default function PublicDisasterMapPage() {
                   {DISASTER_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
                 </select>
               </label>
+              ) : null}
 
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-slate-500">ชุดข้อมูล</span>
@@ -639,6 +755,7 @@ export default function PublicDisasterMapPage() {
                   setUrgencyFilter={setUrgencyFilter}
                   reportTypeFilter={reportTypeFilter}
                   setReportTypeFilter={setReportTypeFilter}
+                  disasterType={disasterType}
                 />
               </div>
             ) : (
@@ -653,7 +770,7 @@ export default function PublicDisasterMapPage() {
 
             {showLegend ? (
               <div className="absolute bottom-4 left-4 z-[500] max-w-[235px] max-md:hidden">
-                <MapLegend onClose={() => setShowLegend(false)} />
+                <MapLegend disasterType={disasterType} onClose={() => setShowLegend(false)} />
               </div>
             ) : (
               <button
@@ -679,7 +796,7 @@ export default function PublicDisasterMapPage() {
                   <h3 className="text-lg font-black text-blue-900">สรุปเหตุการณ์ของวันที่เลือก</h3>
                   <p className="text-xs text-slate-500">{selectedDateLabel} {selectedContext?.label ? `• ${selectedContext.label}` : ""}</p>
                 </div>
-                <span className="text-xs font-bold text-slate-500">รายงานประชาชนและบันทึกน้ำท่วม</span>
+                <span className="text-xs font-bold text-slate-500">{eventSourceText}</span>
               </div>
               <div className="grid grid-cols-3 divide-x divide-slate-100 rounded-xl border border-slate-100 p-3 text-center">
                 <MiniStat label="เหตุการณ์รวม" value={visibleEventItems.length} />
@@ -698,14 +815,15 @@ export default function PublicDisasterMapPage() {
                   <p className="rounded-lg border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">ยังไม่มีรายการในวันที่เลือก</p>
                 ) : visibleEventItems.slice(0, 5).map((item) => {
                   const isFloodRecord = item.event_kind === "flood_record";
-                  const timeLabel = isFloodRecord ? formatThaiDate(item.recorded_day || selectedDate) : formatTime(item.occurred_at || item.reported_at);
+                  const isDiseaseReport = item.event_kind === "disease_report";
+                  const timeLabel = isFloodRecord ? formatThaiDate(item.recorded_day || selectedDate) : isDiseaseReport ? formatThaiDate(item.occurred_at || selectedDate) : formatTime(item.occurred_at || item.reported_at);
                   return (
                     <div key={`important-${item.event_kind || "incident"}-${item.id}`} className="grid grid-cols-[36px_minmax(0,1fr)_72px] gap-2 rounded-lg border border-slate-100 p-3 text-sm">
-                      <span className={`flex h-8 w-8 items-center justify-center rounded-full text-lg ${isFloodRecord ? "bg-sky-50 text-sky-700" : item.report_type === "traffic_report" ? "bg-red-50 text-red-700" : "bg-orange-50 text-orange-700"}`}>{isFloodRecord ? "≈" : item.report_type === "traffic_report" ? "−" : "!"}</span>
+                      <span className={`flex h-8 w-8 items-center justify-center rounded-full text-lg ${isFloodRecord ? "bg-sky-50 text-sky-700" : isDiseaseReport ? "bg-teal-50 text-teal-700" : item.report_type === "traffic_report" ? "bg-red-50 text-red-700" : "bg-orange-50 text-orange-700"}`}>{isFloodRecord ? "≈" : isDiseaseReport ? "+" : item.report_type === "traffic_report" ? "−" : "!"}</span>
                       <div className="min-w-0">
                         <p className="truncate font-black text-slate-800">{item.description || getEventTypeLabel(item)}</p>
                         <p className="truncate text-xs text-slate-500">
-                          อ.{item.district || "-"} ต.{item.sub_district || "-"}{isFloodRecord ? ` • ${item.village_count || 0} หมู่บ้าน` : ""}
+                          อ.{item.district || "-"} ต.{item.sub_district || "-"}{isFloodRecord ? ` • ${item.village_count || 0} หมู่บ้าน` : isDiseaseReport ? ` • ${item.patient_count || 0} ราย` : ""}
                         </p>
                       </div>
                       <span className="text-right text-xs text-slate-500">{timeLabel}</span>
@@ -724,7 +842,8 @@ export default function PublicDisasterMapPage() {
                 {[
                   ["all", "ทั้งหมด", setReportTypeFilter, reportTypeFilter],
                   ["help_request", "เหตุการณ์", setReportTypeFilter, reportTypeFilter],
-                  ["flood_record", "น้ำท่วม", setReportTypeFilter, reportTypeFilter],
+                  ...(disasterType === "flood" ? [["flood_record", "น้ำท่วม", setReportTypeFilter, reportTypeFilter]] : []),
+                  ...(disasterType === "disease" ? [["disease_report", "โรคระบาด", setReportTypeFilter, reportTypeFilter]] : []),
                   ["traffic_report", "เส้นทาง", setReportTypeFilter, reportTypeFilter]
                 ].map(([key, label, setter, current]) => (
                   <button
@@ -743,9 +862,12 @@ export default function PublicDisasterMapPage() {
                 ) : visibleEventItems.map((item) => {
                   const meta = getEventMeta(item);
                   const isFloodRecord = item.event_kind === "flood_record";
-                  const timeLabel = isFloodRecord ? formatThaiDate(item.recorded_day || selectedDate) : formatTime(item.occurred_at || item.reported_at);
+                  const isDiseaseReport = item.event_kind === "disease_report";
+                  const timeLabel = isFloodRecord ? formatThaiDate(item.recorded_day || selectedDate) : isDiseaseReport ? formatThaiDate(item.occurred_at || selectedDate) : formatTime(item.occurred_at || item.reported_at);
                   const areaText = isFloodRecord
                     ? `พื้นที่ท่วม: ต.${item.sub_district || "-"} อ.${item.district || "-"} • ${item.village_count || 0} หมู่บ้าน${item.water_level ? ` • ระดับน้ำสูงสุด ${item.water_level} ม.` : ""}`
+                    : isDiseaseReport
+                      ? `หน่วยบริการ: ${item.facility_name || "-"} • อ.${item.district || "-"} ต.${item.sub_district || "-"}`
                     : `อ.${item.district || "-"} ต.${item.sub_district || "-"}`;
                   return (
                     <article key={`${item.event_kind || "incident"}-${item.id}`} className="grid grid-cols-[70px_minmax(0,1fr)_86px] gap-2 border-b border-slate-100 px-3 py-2 text-sm last:border-b-0">
@@ -796,6 +918,10 @@ export default function PublicDisasterMapPage() {
   );
 }
 
+export default function PublicDisasterMapPage() {
+  return <PublicDisasterMapContent />;
+}
+
 function MiniStat({ label, value }) {
   return (
     <div className="px-2">
@@ -832,8 +958,8 @@ function MapStatCard({ icon, label, value, unit, subText, tone }) {
   );
 }
 
-function MapLegend({ onClose }) {
-  const items = [
+function MapLegend({ disasterType, onClose }) {
+  const floodItems = [
     ["bg-red-600", "น้ำท่วมสูง/สูงมาก"],
     ["bg-amber-400", "น้ำท่วมปานกลาง"],
     ["bg-sky-400", "น้ำท่วมต่ำ"],
@@ -844,6 +970,17 @@ function MapLegend({ onClose }) {
     ["bg-emerald-600", "โรงพยาบาล"],
     ["bg-blue-500", "จุดเฝ้าระวัง / ระดับน้ำ"]
   ];
+  const diseaseItems = [
+    ["bg-red-600", "ระบาดหนัก"],
+    ["bg-amber-400", "ระบาดปานกลาง"],
+    ["bg-teal-500", "เฝ้าระวัง"],
+    ["bg-emerald-600", "โรงพยาบาล/หน่วยบริการ"],
+    ["bg-orange-500", "เหตุการณ์กำลังเกิด"],
+    ["bg-violet-600", "ศูนย์พักพิง"],
+    ["bg-slate-900", "ขอบเขตอำเภอ"],
+    ["bg-slate-500", "ขอบเขตหมู่บ้าน/พื้นที่"]
+  ];
+  const items = disasterType === "disease" ? diseaseItems : floodItems;
 
   return (
     <aside className="rounded-xl border border-blue-100 bg-white/95 p-3 text-xs shadow-lg backdrop-blur">
@@ -863,9 +1000,10 @@ function MapLegend({ onClose }) {
   );
 }
 
-function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, setShowLegend, onClose, urgencyFilter, setUrgencyFilter, reportTypeFilter, setReportTypeFilter }) {
+function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, setShowLegend, onClose, urgencyFilter, setUrgencyFilter, reportTypeFilter, setReportTypeFilter, disasterType }) {
   const layerItems = [
-    ["floodAreas", "พื้นที่น้ำท่วม"],
+    ...(disasterType === "flood" ? [["floodAreas", "พื้นที่น้ำท่วม"]] : []),
+    ...(disasterType === "disease" ? [["diseaseReports", "รายงานโรคระบาด"]] : []),
     ["district", "ขอบเขตอำเภอ"],
     ["tambon", "ขอบเขตตำบล"],
     ["labels", "ชื่อพื้นที่"],
@@ -886,7 +1024,7 @@ function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, set
           <button
             type="button"
             onClick={() => {
-              setLayers(DEFAULT_LAYERS);
+              setLayers(getDefaultLayers(disasterType));
               setShowLegend(true);
             }}
             className="text-xs font-bold text-blue-700"
@@ -943,7 +1081,8 @@ function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, set
           {[
             ["all", "ทั้งหมด"],
             ["help_request", "เหตุการณ์"],
-            ["flood_record", "น้ำท่วม"],
+            ...(disasterType === "flood" ? [["flood_record", "น้ำท่วม"]] : []),
+            ...(disasterType === "disease" ? [["disease_report", "โรคระบาด"]] : []),
             ["traffic_report", "เส้นทาง"]
           ].map(([key, label]) => (
             <button

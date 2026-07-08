@@ -5,6 +5,7 @@ import { useCallback, useState, useEffect, useMemo, useRef } from "react";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
 import SplashScreen from "@/components/SplashScreen";
 import AIChatbot from "@/components/AIChatbot";
+import FloatingReportButton from "@/components/FloatingReportButton";
 import PDPAConsent from "@/components/PDPAConsent";
 import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
@@ -109,6 +110,50 @@ const EOC_STYLE_CLASSES = {
   }
 };
 
+function getPublicMapHref(eocType) {
+  if (eocType === "disease") return "/public/disease-map";
+  if (eocType === "flood") return "/public/flood-map";
+  return "/public/disaster-map";
+}
+
+const PUBLIC_DISASTER_TYPES = ["flood", "disease", "accident"];
+
+function getHomeDefaultMapLayers(disasterType) {
+  const baseLayers = {
+    district: true,
+    tambon: false,
+    village: false,
+    labels: true,
+    incidents: true,
+    traffic: true,
+    shelters: false,
+    hospitals: false,
+    floodAreas: false,
+    diseaseReports: false,
+    waterways: false,
+    hillshade: false
+  };
+
+  if (disasterType === "disease") {
+    return {
+      ...baseLayers,
+      diseaseReports: true,
+      hospitals: true
+    };
+  }
+
+  if (disasterType === "flood") {
+    return {
+      ...baseLayers,
+      floodAreas: true,
+      waterways: true,
+      shelters: true
+    };
+  }
+
+  return baseLayers;
+}
+
 function getAnnouncementContent(announcement) {
   return announcement?.content || announcement?.description || "";
 }
@@ -163,6 +208,7 @@ export default function Home() {
   const [eocLastUpdated, setEocLastUpdated] = useState(null);
   const [summaryLastUpdated, setSummaryLastUpdated] = useState(null);
   const [selectedDisasterType, setSelectedDisasterType] = useState("flood");
+  const [hasUserSelectedDisasterType, setHasUserSelectedDisasterType] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [selectedMapDate, setSelectedMapDate] = useState(null);
   const [urgencyFilter, setUrgencyFilter] = useState("all");
@@ -170,12 +216,7 @@ export default function Home() {
   const [districtFilter, setDistrictFilter] = useState("all");
   const [mapSearchQuery, setMapSearchQuery] = useState("");
   const [publicIncidents, setPublicIncidents] = useState([]);
-  const [mapLayers, setMapLayers] = useState({
-    district: true,
-    tambon: false,
-    village: false,
-    labels: true
-  });
+  const [mapLayers, setMapLayers] = useState(() => getHomeDefaultMapLayers("flood"));
   const [showHomeLayerPanel, setShowHomeLayerPanel] = useState(true);
   const [showHomeMapLegend, setShowHomeMapLegend] = useState(true);
 
@@ -191,6 +232,10 @@ export default function Home() {
     () => [...new Set(activeEOCs.map((eoc) => eoc.eoc_type).filter(Boolean))],
     [activeEOCs]
   );
+  const activeDisasterTypes = useMemo(
+    () => [...new Set(activeEOCs.map((eoc) => mapEocTypeToPublicDisasterType(eoc.eoc_type)))],
+    [activeEOCs]
+  );
 
   const latestActiveEOC = useMemo(
     () => [...activeEOCs].sort(
@@ -198,9 +243,13 @@ export default function Home() {
     )[0] || null,
     [activeEOCs]
   );
+  const defaultActiveDisasterType = useMemo(
+    () => mapEocTypeToPublicDisasterType(latestActiveEOC?.eoc_type),
+    [latestActiveEOC]
+  );
   const availableDisasterTypes = useMemo(() => {
     const activeTypes = [...new Set(activeEOCs.map((eoc) => mapEocTypeToPublicDisasterType(eoc.eoc_type)))];
-    return activeTypes.length > 0 ? activeTypes : ["flood"];
+    return [...new Set([...activeTypes, ...PUBLIC_DISASTER_TYPES])];
   }, [activeEOCs]);
 
   const handleMapDataChange = useCallback((items) => {
@@ -261,23 +310,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (activeEOCs.length === 0) {
-      if (selectedDisasterType !== "flood") {
-        setSelectedDisasterType("flood");
-        setSelectedSessionId(null);
-        setSelectedMapDate(null);
-      }
+    if (hasUserSelectedDisasterType) {
       return;
     }
 
-    const activePublicTypes = new Set(activeEOCs.map((eoc) => mapEocTypeToPublicDisasterType(eoc.eoc_type)));
-    if (!activePublicTypes.has(selectedDisasterType)) {
-      const nextType = mapEocTypeToPublicDisasterType(latestActiveEOC?.eoc_type);
+    const nextType = activeEOCs.length > 0 ? defaultActiveDisasterType : "flood";
+    if (selectedDisasterType !== nextType) {
       setSelectedDisasterType(nextType);
       setSelectedSessionId(null);
       setSelectedMapDate(null);
+      setReportTypeFilter("all");
+      setDistrictFilter("all");
+      setMapSearchQuery("");
+      setMapLayers(getHomeDefaultMapLayers(nextType));
     }
-  }, [activeEOCs, latestActiveEOC, selectedDisasterType]);
+  }, [activeEOCs.length, defaultActiveDisasterType, hasUserSelectedDisasterType, selectedDisasterType]);
 
   // ดึงข้อมูล infographics เฉพาะภัยที่กำลังเปิดอยู่
   useEffect(() => {
@@ -489,7 +536,7 @@ export default function Home() {
           }
         ],
         quickActions: [
-          { icon: "🗺️", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/disaster-map", color: "blue" },
+          { icon: "🗺️", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/flood-map", color: "blue" },
           { icon: "🚨", title: "แจ้งเหตุน้ำท่วม", link: "/public/report-incident", color: "red" },
           { icon: "🏘️", title: "ศูนย์พักพิงชั่วคราว", link: "/public/shelters", color: "green" }
         ],
@@ -539,9 +586,9 @@ export default function Home() {
         ],
         news: [],
         quickActions: [
-          { icon: "🦠", title: "แผนที่โรคระบาด", link: "/public/disaster-map", color: "teal" },
+          { icon: "🦠", title: "แผนที่โรคระบาด", link: "/public/disease-map", color: "teal" },
           { icon: "💉", title: "หน่วยบริการสุขภาพ", link: "/public/agencies", color: "green" },
-          { icon: "🏥", title: "โรงพยาบาล", link: "/public/disaster-map", color: "blue" }
+          { icon: "🏥", title: "โรงพยาบาล", link: "/public/disease-map", color: "blue" }
         ],
         stats: diseaseStats ? {
           patients: diseaseStats.patients || 0,
@@ -656,7 +703,7 @@ export default function Home() {
       tone: "red"
     },
     {
-      href: "/public/disaster-map",
+      href: getPublicMapHref(selectedDisasterType),
       title: "เปิดแผนที่สาธารณะเต็มจอ",
       description: "ดูตำแหน่งเหตุ รายงานจากประชาชน และพื้นที่เฝ้าระวังแบบละเอียด",
       icon: "แผนที่",
@@ -699,6 +746,8 @@ export default function Home() {
         lastUpdatedAt={lastUpdatedAt}
         selectedDisasterType={selectedDisasterType}
         setSelectedDisasterType={setSelectedDisasterType}
+        setHasUserSelectedDisasterType={setHasUserSelectedDisasterType}
+        defaultActiveDisasterType={defaultActiveDisasterType}
         selectedSessionId={selectedSession?.id || ""}
         setSelectedSessionId={setSelectedSessionId}
         sessionOptions={eocSessionOptions}
@@ -721,6 +770,7 @@ export default function Home() {
         helpRequestCount={helpRequestCount}
         trafficReportCount={trafficReportCount}
         latestActiveEOC={latestActiveEOC}
+        activeDisasterTypes={activeDisasterTypes}
         availableDisasterTypes={availableDisasterTypes}
         mapLayers={mapLayers}
         setMapLayers={setMapLayers}
@@ -1149,6 +1199,7 @@ export default function Home() {
 
       {/* AI Chatbot */}
       <AIChatbot />
+      <FloatingReportButton />
 
       {/* PDPA Consent */}
       <PDPAConsent />
@@ -1165,6 +1216,8 @@ function PublicOperationalDashboard({
   lastUpdatedAt,
   selectedDisasterType,
   setSelectedDisasterType,
+  setHasUserSelectedDisasterType,
+  defaultActiveDisasterType,
   selectedSessionId,
   setSelectedSessionId,
   sessionOptions,
@@ -1187,6 +1240,7 @@ function PublicOperationalDashboard({
   helpRequestCount,
   trafficReportCount,
   latestActiveEOC,
+  activeDisasterTypes,
   availableDisasterTypes,
   mapLayers,
   setMapLayers,
@@ -1346,10 +1400,16 @@ function PublicOperationalDashboard({
           <section className="grid gap-3 xl:grid-cols-[270px_minmax(0,1fr)_360px]">
             <OpsFilterPanel
               selectedDisasterType={selectedDisasterType}
+              activeDisasterTypes={activeDisasterTypes}
               setSelectedDisasterType={(type) => {
+                setHasUserSelectedDisasterType(true);
                 setSelectedDisasterType(type);
                 setSelectedSessionId(null);
                 setSelectedMapDate(null);
+                setReportTypeFilter("all");
+                setDistrictFilter("all");
+                setMapSearchQuery("");
+                setMapLayers(getHomeDefaultMapLayers(type));
               }}
               availableDisasterTypes={availableDisasterTypes}
               selectedSessionId={selectedSessionId}
@@ -1372,14 +1432,16 @@ function PublicOperationalDashboard({
               mapSearchQuery={mapSearchQuery}
               setMapSearchQuery={setMapSearchQuery}
               resetFilters={() => {
-                setSelectedDisasterType(availableDisasterTypes[0] || "flood");
+                const resetType = defaultActiveDisasterType || availableDisasterTypes[0] || "flood";
+                setHasUserSelectedDisasterType(false);
+                setSelectedDisasterType(resetType);
                 setSelectedSessionId(null);
                 setSelectedMapDate(null);
                 setUrgencyFilter("all");
                 setReportTypeFilter("all");
                 setDistrictFilter("all");
                 setMapSearchQuery("");
-                setMapLayers({ district: true, tambon: false, village: false, labels: true });
+                setMapLayers(getHomeDefaultMapLayers(resetType));
                 setShowHomeLayerPanel(true);
                 setShowHomeMapLegend(true);
               }}
@@ -1408,6 +1470,7 @@ function PublicOperationalDashboard({
                   <LayerFloatingPanel
                     mapLayers={mapLayers}
                     setMapLayers={setMapLayers}
+                    selectedDisasterType={selectedDisasterType}
                     onClose={() => setShowHomeLayerPanel(false)}
                   />
                 ) : (
@@ -1421,7 +1484,7 @@ function PublicOperationalDashboard({
                 )}
                 {showHomeMapLegend ? (
                   <div className="absolute bottom-4 left-4 z-[450] max-w-[250px] max-md:left-3 max-md:right-3 max-md:max-w-none">
-                    <HomeMapLegend mapLayers={mapLayers} onClose={() => setShowHomeMapLegend(false)} />
+                    <HomeMapLegend disasterType={selectedDisasterType} mapLayers={mapLayers} onClose={() => setShowHomeMapLegend(false)} />
                   </div>
                 ) : (
                   <button
@@ -1452,6 +1515,7 @@ function PublicOperationalDashboard({
         <OpsMobileNav />
       </div>
 
+      <FloatingReportButton />
       <PDPAConsent />
     </div>
   );
@@ -1545,6 +1609,7 @@ function OpsMetricCard({ label, value, unit, sub, tone, icon }) {
 function OpsFilterPanel({
   selectedDisasterType,
   setSelectedDisasterType,
+  activeDisasterTypes,
   availableDisasterTypes,
   selectedSessionId,
   setSelectedSessionId,
@@ -1585,7 +1650,9 @@ function OpsFilterPanel({
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
           >
             {availableDisasterTypes.map((type) => (
-              <option key={type} value={type}>{disasterTypeLabels[type] || type}</option>
+              <option key={type} value={type}>
+                {disasterTypeLabels[type] || type}{activeDisasterTypes.includes(type) ? " (เปิดอยู่)" : ""}
+              </option>
             ))}
           </select>
          
@@ -1727,12 +1794,18 @@ function MiniCalendar({ selectedDate }) {
   );
 }
 
-function LayerFloatingPanel({ mapLayers, setMapLayers, onClose }) {
+function LayerFloatingPanel({ mapLayers, setMapLayers, selectedDisasterType, onClose }) {
   const items = [
+    ...(selectedDisasterType === "flood" ? [["floodAreas", "พื้นที่น้ำท่วม"]] : []),
+    ...(selectedDisasterType === "disease" ? [["diseaseReports", "รายงานโรคระบาด"]] : []),
     ["district", "ขอบเขตอำเภอ"],
     ["tambon", "ขอบเขตตำบล"],
     ["village", "ขอบเขตหมู่บ้าน"],
-    ["labels", "ชื่อพื้นที่"]
+    ["labels", "ชื่อพื้นที่"],
+    ["incidents", "เหตุการณ์"],
+    ["traffic", "เส้นทาง/ถนน"],
+    ...(selectedDisasterType === "flood" ? [["waterways", "เส้นทางน้ำ/คลอง"], ["shelters", "ศูนย์พักพิง"]] : []),
+    ...(selectedDisasterType === "disease" ? [["hospitals", "โรงพยาบาล/หน่วยบริการ"]] : [])
   ];
 
   return (
@@ -1748,7 +1821,7 @@ function LayerFloatingPanel({ mapLayers, setMapLayers, onClose }) {
           <label key={key} className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700">
             <input
               type="checkbox"
-              checked={mapLayers[key]}
+              checked={Boolean(mapLayers[key])}
               onChange={(event) => setMapLayers((current) => ({ ...current, [key]: event.target.checked }))}
               className="h-4 w-4 accent-blue-600"
             />
@@ -1756,17 +1829,45 @@ function LayerFloatingPanel({ mapLayers, setMapLayers, onClose }) {
           </label>
         ))}
       </div>
-      <Link href="/public/disaster-map" className="mt-3 block rounded-md bg-blue-600 px-3 py-2 text-center text-xs font-black text-white hover:bg-blue-700">เปิดแผนที่เต็ม</Link>
+      <Link href={getPublicMapHref(selectedDisasterType)} className="mt-3 block rounded-md bg-blue-600 px-3 py-2 text-center text-xs font-black text-white hover:bg-blue-700">เปิดแผนที่เต็ม</Link>
     </div>
   );
 }
 
-function HomeMapLegend({ mapLayers, onClose }) {
+function HomeMapLegend({ disasterType, mapLayers, onClose }) {
   const boundaryItems = [
     mapLayers.district ? ["border-slate-900", "ขอบเขตอำเภอ"] : null,
     mapLayers.tambon ? ["border-emerald-600 border-dashed", "ขอบเขตตำบล"] : null,
     mapLayers.village ? ["border-slate-500", "ขอบเขตหมู่บ้าน"] : null
   ].filter(Boolean);
+
+  const domainLegend = {
+    flood: {
+      title: "พื้นที่น้ำท่วม",
+      items: [
+        ["bg-red-600", "น้ำท่วมสูง/สูงมาก"],
+        ["bg-amber-400", "น้ำท่วมปานกลาง"],
+        ["bg-sky-400", "น้ำท่วมต่ำ"]
+      ]
+    },
+    disease: {
+      title: "รายงานโรคระบาด",
+      items: [
+        ["bg-red-600", "ระบาดหนัก"],
+        ["bg-amber-400", "ระบาดปานกลาง"],
+        ["bg-teal-500", "เฝ้าระวัง"],
+        ["bg-emerald-600", "โรงพยาบาล/หน่วยบริการ"]
+      ]
+    },
+    accident: {
+      title: "อุบัติเหตุและเส้นทาง",
+      items: [
+        ["bg-red-600", "อุบัติเหตุรุนแรง"],
+        ["bg-orange-500", "จุดต้องติดตาม"],
+        ["bg-emerald-500", "จุดบริการ/สัญจรได้"]
+      ]
+    }
+  }[disasterType] || null;
 
   return (
     <aside className="rounded-xl border border-blue-100 bg-white/95 p-3 text-xs shadow-lg backdrop-blur">
@@ -1778,14 +1879,16 @@ function HomeMapLegend({ mapLayers, onClose }) {
       </div>
 
       <div className="space-y-2 font-semibold text-slate-700">
-        <div>
-          <p className="mb-1 font-black text-slate-800">พื้นที่น้ำท่วม</p>
-          <div className="space-y-1">
-            <LegendSwatch colorClass="bg-red-600" label="น้ำท่วมสูง/สูงมาก" />
-            <LegendSwatch colorClass="bg-amber-400" label="น้ำท่วมปานกลาง" />
-            <LegendSwatch colorClass="bg-sky-400" label="น้ำท่วมต่ำ" />
+        {domainLegend && (
+          <div>
+            <p className="mb-1 font-black text-slate-800">{domainLegend.title}</p>
+            <div className="space-y-1">
+              {domainLegend.items.map(([colorClass, label]) => (
+                <LegendSwatch key={label} colorClass={colorClass} label={label} rounded={disasterType !== "flood"} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {boundaryItems.length > 0 && (
           <div>
@@ -2191,7 +2294,7 @@ function HomeSituationDashboard({
             <span>แจ้งเหตุ</span>
           </Link>
           <Link
-            href="/public/disaster-map"
+            href={getPublicMapHref(primaryDisasterType)}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-4 py-2.5 text-sm font-bold shadow-sm transition-colors"
           >
             <span>🗺️</span>
@@ -2247,7 +2350,7 @@ function HomeSituationDashboard({
                   const style = getEOCStyle(eoc.eoc_type);
                   return (
                     <Link
-                      href="/public/disaster-map"
+                      href={getPublicMapHref(eoc.eoc_type)}
                       key={eoc.eoc_type}
                       className="block rounded-lg p-3 transition-colors hover:bg-gray-50"
                     >

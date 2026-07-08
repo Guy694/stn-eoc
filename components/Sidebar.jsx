@@ -2,8 +2,50 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import {
+    Activity,
+    BarChart3,
+    Bell,
+    BriefcaseMedical,
+    CalendarClock,
+    Car,
+    CloudSun,
+    ClipboardCheck,
+    ClipboardList,
+    FileChartColumn,
+    FileText,
+    Gauge,
+    HardDrive,
+    HeartPulse,
+    Home,
+    LayoutDashboard,
+    LifeBuoy,
+    Map,
+    MapPinned,
+    MonitorCog,
+    Package,
+    Radio,
+    Settings,
+    ShieldAlert,
+    Tent,
+    Users,
+    UserCog,
+    UserRoundCog,
+    UserRoundPlus,
+    Waves
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
+
+const iconClassName = "h-4 w-4 shrink-0";
+
+function MenuIcon({ icon: Icon, className = iconClassName }) {
+    if (!Icon) return null;
+    if (typeof Icon === "string") {
+        return <span className="text-base">{Icon}</span>;
+    }
+    return <Icon className={className} aria-hidden="true" strokeWidth={2.2} />;
+}
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -97,7 +139,8 @@ export default function Sidebar() {
             section: "dashboard",
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
-                { name: "ภาพรวมระบบ", path: "/dashboard", icon: "📊", description: "ภาพรวมข้อมูลทั้งหมด" },
+                { name: "ภาพรวมระบบ", path: "/dashboard", icon: LayoutDashboard, description: "ภาพรวมข้อมูลทั้งหมด" },
+                { name: "สภาพอากาศ / Weather Watch", path: "/public/weather-watch", icon: CloudSun, description: "แผนที่เฝ้าระวังสภาพอากาศและฝนสะสมจังหวัดสตูล" },
             ],
         },
 
@@ -106,45 +149,46 @@ export default function Sidebar() {
         // ============================================
         // เมนูเหล่านี้จะแสดงตามสถานะการเปิด/ปิด EOC
         {
-            title: "🌊 EOC น้ำท่วม",
+            title: "EOC น้ำท่วม",
             section: "eoc-flood",
             key: "flood",
             eocType: "flood",
             collapsible: true,
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
-                { name: "ภาพรวม EOC", path: "/eoc/flood/overview", icon: "📊", description: "Dashboard ภาพรวมสถานการณ์ทั้งหมด" },
-                { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: "🗺️", description: "ภาพรวมสถานการณ์น้ำท่วม" },
-                { name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", icon: "💧", description: "บันทึกข้อมูลพื้นที่น้ำท่วม" },
-                { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: "🏠", description: "แผนที่ศูนย์พักพิง" },
-                { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: "🦠", description: "บันทึกโรคในศูนย์พักพิง" },
-                { name: "รายชื่อผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", icon: "👥", description: "ข้อมูลผู้ประสบภัย" },
-                { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: "📢", description: "ข่าวประชาสัมพันธ์" },
-                { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: "📋", description: "ติดตามโรคระบาดจากหน่วยบริการ" },
+                { name: "ภาพรวม EOC", path: "/eoc/flood/overview", icon: BarChart3, description: "Dashboard ภาพรวมสถานการณ์ทั้งหมด" },
+                { name: "จัดการ EOC น้ำท่วม", path: "/eoc/flood/management", icon: MonitorCog, description: "Officer EOC Management Dashboard" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: Map, description: "ภาพรวมสถานการณ์น้ำท่วม" },
+                { name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", icon: Waves, description: "บันทึกข้อมูลพื้นที่น้ำท่วม" },
+                { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: Tent, description: "แผนที่ศูนย์พักพิง" },
+                { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: HeartPulse, description: "บันทึกโรคในศูนย์พักพิง" },
+                { name: "รายชื่อผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", icon: Users, description: "ข้อมูลผู้ประสบภัย" },
+                { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: Bell, description: "ข่าวประชาสัมพันธ์" },
+                { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: ClipboardList, description: "ติดตามโรคระบาดจากหน่วยบริการ" },
             ],
         },
 
         {
-            title: "👥 ข้อมูลประชาชน",
+            title: "ข้อมูลประชาชน",
             section: "population-data",
             requiresPermission: null,
             items: [
-                { name: "กลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", icon: "🧑‍🦽", description: "ฐานข้อมูลกลาง เพิ่ม/ลดจำนวนรายกลุ่ม" },
+                { name: "กลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", icon: LifeBuoy, description: "ฐานข้อมูลกลาง เพิ่ม/ลดจำนวนรายกลุ่ม" },
             ],
         },
 
         {
-            title: "🚗 EOC อุบัติเหตุช่วงเทศกาล",
+            title: "EOC อุบัติเหตุช่วงเทศกาล",
             section: "eoc-accident",
             key: "festival-accidents",
             eocType: "festival-accidents",
             collapsible: true,
             requiresPermission: null,
             items: [
-                { name: "ภาพรวมเทศกาล", path: "/eoc/festival-accidents", icon: "📊", description: "Dashboard สถิติอุบัติเหตุ 7 วันอันตราย" },
-                { name: "บันทึกอุบัติเหตุ", path: "/eoc/accident/records", icon: "🚗", description: "บันทึกข้อมูลอุบัติเหตุ" },
-                { name: "จุดบริการชั่วคราว", path: "/eoc/accident/service-points", icon: "🚧", description: "จัดการจุดตรวจ/จุดบริการ" },
-                { name: "เปรียบเทียบเทศกาล", path: "/eoc/festival-accidents/compare", icon: "📈", description: "เปรียบเทียบสถิติข้ามเทศกาล/ปี" },
+                { name: "ภาพรวมเทศกาล", path: "/eoc/festival-accidents", icon: BarChart3, description: "Dashboard สถิติอุบัติเหตุ 7 วันอันตราย" },
+                { name: "บันทึกอุบัติเหตุ", path: "/eoc/accident/records", icon: Car, description: "บันทึกข้อมูลอุบัติเหตุ" },
+                { name: "จุดบริการชั่วคราว", path: "/eoc/accident/service-points", icon: ShieldAlert, description: "จัดการจุดตรวจ/จุดบริการ" },
+                { name: "เปรียบเทียบเทศกาล", path: "/eoc/festival-accidents/compare", icon: FileChartColumn, description: "เปรียบเทียบสถิติข้ามเทศกาล/ปี" },
             ],
         },
 
@@ -175,17 +219,17 @@ export default function Sidebar() {
         // },
 
         {
-            title: `🦠 EOC ${getEOCDisplayName('disease')}`,
+            title: `EOC ${getEOCDisplayName('disease')}`,
             section: "eoc-disease",
             key: "disease",
             eocType: "disease",
             collapsible: true,
             requiresPermission: null,
             items: [
-                { name: "ภาพรวมโรคระบาด", path: "/eoc/disease", icon: "📊", description: "Dashboard ภาพรวมการระบาด" },
-                { name: "สรุปสถานการณ์รายวัน", path: "/eoc/disease/daily-risk", icon: "📈", description: "สรุปรายงานโรครายวัน" },
-                { name: "บันทึกรายงานผู้ป่วย", path: "/eoc/disease/records", icon: "📋", description: "บันทึกข้อมูลผู้ป่วยจากหน่วยบริการ" },
-                { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: "📢", description: "ข่าวประชาสัมพันธ์" },
+                { name: "ภาพรวมโรคระบาด", path: "/eoc/disease", icon: Activity, description: "Dashboard ภาพรวมการระบาด" },
+                { name: "สรุปสถานการณ์รายวัน", path: "/eoc/disease/daily-risk", icon: FileChartColumn, description: "สรุปรายงานโรครายวัน" },
+                { name: "บันทึกรายงานผู้ป่วย", path: "/eoc/disease/records", icon: ClipboardList, description: "บันทึกข้อมูลผู้ป่วยจากหน่วยบริการ" },
+                { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: Bell, description: "ข่าวประชาสัมพันธ์" },
             ],
         },
 
@@ -198,7 +242,7 @@ export default function Sidebar() {
         // 4. ADMIN MANAGEMENT - เฉพาะ Admin
         // ============================================
         {
-            title: "🔧 จัดการระบบ",
+            title: "จัดการระบบ",
             section: "admin",
             requiresPermission: "admin", // เฉพาะ admin
             collapsible: true,
@@ -206,17 +250,17 @@ export default function Sidebar() {
                 {
                     name: "รายงานเหตุการณ์",
                     path: "/admin/incident-reports",
-                    icon: "📋",
+                    icon: ClipboardList,
                     badge: "pendingReports",
                     description: "รายงานจากประชาชน"
                 },
-                { name: "กิจกรรมล่าสุด", path: "/admin/recent-activities", icon: "📋", description: "ติดตามกิจกรรมในระบบ" },
-                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: "👮", description: "ข้อมูลบุคลากร" },
-                { name: "จัดการผู้ใช้ประชาชน", path: "/admin/citizens", icon: "👥", description: "ประชาชนที่ลงทะเบียน ThaiID" },
-                { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: "🏥", description: "โรงพยาบาล/สถานีอนามัย" },
-                { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: "🗺️", description: "พื้นที่หมู่บ้าน" },
-                { name: "จัดการ EOC", path: "/admin/eoc-management", icon: "⚙️", description: "เปิด/ปิด EOC" },
-                { name: "ประวัติ EOC Sessions", path: "/admin/eoc-sessions", icon: "📜", description: "ประวัติการเปิด-ปิด EOC" },
+                { name: "กิจกรรมล่าสุด", path: "/admin/recent-activities", icon: CalendarClock, description: "ติดตามกิจกรรมในระบบ" },
+                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: UserRoundCog, description: "ข้อมูลบุคลากร" },
+                { name: "จัดการผู้ใช้ประชาชน", path: "/admin/citizens", icon: UserRoundPlus, description: "ประชาชนที่ลงทะเบียน ThaiID" },
+                { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: BriefcaseMedical, description: "โรงพยาบาล/สถานีอนามัย" },
+                { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: MapPinned, description: "พื้นที่หมู่บ้าน" },
+                { name: "จัดการ EOC", path: "/admin/eoc-management", icon: Settings, description: "เปิด/ปิด EOC" },
+                { name: "ประวัติ EOC Sessions", path: "/admin/eoc-sessions", icon: FileText, description: "ประวัติการเปิด-ปิด EOC" },
             ],
         },
 
@@ -224,16 +268,16 @@ export default function Sidebar() {
         // 4. RESOURCES - ต้องมีสิทธิ์เฉพาะ
         // ============================================
         {
-            title: "📦 ทรัพยากร",
+            title: "ทรัพยากร",
             section: "resources",
             requiresPermission: "resources", // ใช้ canAccessResources()
             collapsible: true,
             items: [
-                { name: "บุคลากร", path: "/resources/personnel", icon: "👥", description: "ทีมงานและอาสาสมัคร" },
-                { name: "ยานพาหนะ", path: "/resources/vehicles", icon: "🚑", description: "รถพยาบาล/รถบรรทุก" },
-                { name: "อุปกรณ์", path: "/resources/equipment", icon: "🛠️", description: "เครื่องมือและอุปกรณ์" },
-                { name: "ศูนย์พักพิง", path: "/admin/shelter-center", icon: "🏠", description: "ศูนย์พักพิงชั่วคราว" },
-                { name: "ทรัพยากร IT", path: "/admin/it-resources", icon: "🖥️", description: "Server/Internet/Network" },
+                { name: "บุคลากร", path: "/resources/personnel", icon: Users, description: "ทีมงานและอาสาสมัคร" },
+                { name: "ยานพาหนะ", path: "/resources/vehicles", icon: Car, description: "รถพยาบาล/รถบรรทุก" },
+                { name: "อุปกรณ์", path: "/resources/equipment", icon: Package, description: "เครื่องมือและอุปกรณ์" },
+                { name: "ศูนย์พักพิง", path: "/admin/shelter-center", icon: Home, description: "ศูนย์พักพิงชั่วคราว" },
+                { name: "ทรัพยากร IT", path: "/admin/it-resources", icon: HardDrive, description: "Server/Internet/Network" },
             ],
         },
 
@@ -241,14 +285,14 @@ export default function Sidebar() {
         // 5. REPORTS - ต้องมีสิทธิ์เฉพาะ
         // ============================================
         {
-            title: "📄 รายงาน",
+            title: "รายงาน",
             section: "reports",
             requiresPermission: "reports", // ใช้ canAccessReports()
             collapsible: true,
             items: [
-                { name: "สร้างรายงาน", path: "/reports/create", icon: "📝", description: "สร้างรายงานใหม่" },
-                { name: "รายงานทั้งหมด", path: "/reports", icon: "📄", description: "ดูรายงานที่ผ่านมา" },
-                { name: "สถิติและกราฟ", path: "/reports/statistics", icon: "📊", description: "วิเคราะห์ข้อมูล" },
+                { name: "สร้างรายงาน", path: "/reports/create", icon: FileText, description: "สร้างรายงานใหม่" },
+                { name: "รายงานทั้งหมด", path: "/reports", icon: ClipboardCheck, description: "ดูรายงานที่ผ่านมา" },
+                { name: "สถิติและกราฟ", path: "/reports/statistics", icon: BarChart3, description: "วิเคราะห์ข้อมูล" },
             ],
         },
 
@@ -256,12 +300,12 @@ export default function Sidebar() {
         // 6. SETTINGS - สำหรับการตั้งค่าส่วนตัว
         // ============================================
         {
-            title: "⚙️ ตั้งค่า",
+            title: "ตั้งค่า",
             section: "settings",
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
-                { name: "โปรไฟล์ของฉัน", path: "/profile", icon: "👤", description: "ข้อมูลส่วนตัว" },
-                { name: "ตั้งค่าระบบ", path: "/settings", icon: "🔧", description: "กำหนดค่าต่างๆ" },
+                { name: "โปรไฟล์ของฉัน", path: "/profile", icon: UserCog, description: "ข้อมูลส่วนตัว" },
+                { name: "ตั้งค่าระบบ", path: "/settings", icon: Settings, description: "กำหนดค่าต่างๆ" },
             ],
         },
     ];
@@ -277,15 +321,15 @@ export default function Sidebar() {
             title: "แดชบอร์ด",
             section: "dashboard",
             items: [
-                { name: "ภาพรวมระบบ", path: "/dashboard", icon: "📊", description: "ข้อมูลเบื้องต้น" },
+                { name: "ภาพรวมระบบ", path: "/dashboard", icon: LayoutDashboard, description: "ข้อมูลเบื้องต้น" },
             ],
         },
         {
-            title: "👤 บัญชีผู้ใช้",
+            title: "บัญชีผู้ใช้",
             section: "account",
             items: [
-                { name: "สมัครเจ้าหน้าที่", path: "/auth/thaiid/registration", icon: "📝", description: "ลงทะเบียนเป็นเจ้าหน้าที่" },
-                { name: "สถานะคำขอ", path: "/auth/thaiid/pending", icon: "⏳", description: "ตรวจสอบสถานะ" },
+                { name: "สมัครเจ้าหน้าที่", path: "/auth/thaiid/registration", icon: UserRoundPlus, description: "ลงทะเบียนเป็นเจ้าหน้าที่" },
+                { name: "สถานะคำขอ", path: "/auth/thaiid/pending", icon: Gauge, description: "ตรวจสอบสถานะ" },
             ],
         },
     ];
@@ -476,7 +520,7 @@ export default function Sidebar() {
                                                             }`}
                                                         title={item.description || item.name}
                                                     >
-                                                        <span className="text-base">{item.icon}</span>
+                                                        <MenuIcon icon={item.icon} />
                                                         <span className="flex-1">{item.name}</span>
                                                     </Link>
                                                 </li>
@@ -505,7 +549,7 @@ export default function Sidebar() {
                                                         }`}
                                                     title={item.description || item.name}
                                                 >
-                                                    <span className="text-lg">{item.icon}</span>
+                                                    <MenuIcon icon={item.icon} />
                                                     <span className="flex-1">{item.name}</span>
 
                                                     {/* Badge สำหรับแจ้งเตือน (เช่น รายงานค้าง) */}
