@@ -115,7 +115,7 @@ export default function WeatherWatchPage() {
         <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</div>
+              <div className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</div>
               <h2 className="mt-1 text-2xl font-black text-blue-950 lg:text-3xl">สภาพอากาศ / Weather Watch</h2>
               <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
                 ศูนย์ติดตามสภาพอากาศแบบแผนที่เป็นหลัก สำหรับฝนสะสม พยากรณ์ฝน คลื่นลมแรง และพื้นที่เสี่ยงของจังหวัดสตูล
@@ -187,24 +187,7 @@ export default function WeatherWatchPage() {
 
             {districts.length > 0 && <DistrictWeatherTable districts={districts} />}
 
-            <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h3 className="text-lg font-black text-slate-900">แหล่งข้อมูลสภาพอากาศจริง</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    หน้านี้เรียกข้อมูลผ่าน Backend API Route เท่านั้น และไม่ใช้ข้อมูลจำลองเมื่อ provider ไม่มีข้อมูล
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 gap-2 text-xs font-bold text-slate-600 sm:grid-cols-2">
-                  {(data?.integration_sources || []).map((source) => (
-                    <div key={source.name} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
-                      <div className="font-black text-slate-900">{source.name}</div>
-                      <div className="mt-1 line-clamp-2">{source.use}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
+        
           </>
         )}
       </div>
@@ -366,8 +349,8 @@ function DistrictWeatherTable({ districts }) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3">
-        <h3 className="text-lg font-black text-slate-900">District Weather Table</h3>
-        <p className="text-sm text-slate-600">ข้อมูลสภาพอากาศและความเสี่ยงรายอำเภอของจังหวัดสตูล</p>
+        <h3 className="text-lg font-black text-slate-900">ข้อมูลสภาพอากาศและความเสี่ยงรายอำเภอของจังหวัดสตูล</h3>
+     
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-[1100px] w-full text-sm">
@@ -382,7 +365,6 @@ function DistrictWeatherTable({ districts }) {
               <th className="px-3 py-2 text-right">ลม</th>
               <th className="px-3 py-2">อุทกภัยน้ำท่วม</th>
               <th className="px-3 py-2">ดินถล่ม</th>
-              <th className="px-3 py-2">คำแนะนำ</th>
               <th className="px-3 py-2">อัปเดตล่าสุด</th>
             </tr>
           </thead>
@@ -398,7 +380,6 @@ function DistrictWeatherTable({ districts }) {
                 <td className="px-3 py-3 text-right">{district.wind_speed} กม./ชม.</td>
                 <td className="px-3 py-3"><RiskPill level={district.flood_risk} /></td>
                 <td className="px-3 py-3"><RiskPill level={district.landslide_risk} /></td>
-                <td className="max-w-[260px] px-3 py-3 text-xs leading-5 text-slate-600">{district.advice}</td>
                 <td className="px-3 py-3 text-xs text-slate-500">{formatDateTime(district.updated_at)}</td>
               </tr>
             ))}

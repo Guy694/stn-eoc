@@ -835,7 +835,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 drop-shadow-lg">EOC จังหวัดสตูล</h1>
-                <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Satun Provincial Emergency Operations Centers (Satun Geo-EOC) Intelligence Platform</p>
+                <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Satun Provincial Emergency Operations Center (Satun Geo-EOC) Intelligence Platform</p>
                 <p className="text-xs md:text-sm text-green-200">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</p>
               </div>
             </div>
@@ -1212,7 +1212,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-800 text-gray-300 py-4 md:py-6 mt-8 md:mt-12">
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</p>
+          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
           <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</p>
         </div>
       </footer>
@@ -1370,7 +1370,7 @@ function PublicOperationalDashboard({
             <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-10 w-10 rounded-full bg-white p-1 shadow-md sm:h-12 sm:w-12 lg:h-[62px] lg:w-[62px] lg:p-1.5" priority />
             <div className="min-w-0">
               <h1 className="truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
-              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</p>
+              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
             </div>
           </div>
 

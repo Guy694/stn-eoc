@@ -12,7 +12,7 @@ const kanit = Kanit({
 
 export const metadata = {
   title: "EOC จังหวัดสตูล - ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล",
-  description: "Satun Provincial Emergency Operations Centers (Satun Geo-EOC) - ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล",
+  description: "Satun Provincial Emergency Operations Center (Satun Geo-EOC) - ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล",
   icons: {
     icon: '/stn-eoc/img/eoc-icon.png',
     shortcut: '/stn-eoc/img/eoc-icon.png',

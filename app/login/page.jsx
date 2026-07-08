@@ -101,7 +101,7 @@ function LoginForm() {
                     <div className="relative">
                         <Link href="/" className="inline-flex items-center gap-3 rounded-full bg-white/10 px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/15">
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={40} height={40} className="h-10 w-10 rounded-full bg-white p-1" />
-                            Satun Provincial Emergency Operations Centers (Satun Geo-EOC)
+                            Satun Provincial Emergency Operations Center (Satun Geo-EOC)
                         </Link>
                     </div>
 

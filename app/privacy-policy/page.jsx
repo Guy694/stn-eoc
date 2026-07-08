@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
                             <span>📌</span> บทนำ
                         </h2>
                         <p className="text-gray-700 leading-relaxed">
-                            ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล (Satun Provincial Emergency Operations Centers (Satun Geo-EOC))
+                            ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล (Satun Provincial Emergency Operations Center (Satun Geo-EOC))
                             ให้ความสำคัญกับการคุ้มครองข้อมูลส่วนบุคคลของท่านตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562
                             นโยบายนี้อธิบายวิธีการที่เราเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลของท่าน
                         </p>

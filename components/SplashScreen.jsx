@@ -55,7 +55,7 @@ export default function SplashScreen({ onComplete }) {
                     EOC จังหวัดสตูล
                 </h1>
                 <p className="text-lg md:text-xl text-green-50 mb-2 animate-fade-in-delay">
-                    Satun Provincial Emergency Operations Centers (Satun Geo-EOC)
+                    Satun Provincial Emergency Operations Center (Satun Geo-EOC)
                 </p>
                 <p className="text-sm md:text-base text-green-100 animate-fade-in-delay-2">
                     ศูนย์ปฏิบัติการฉุกเฉิน

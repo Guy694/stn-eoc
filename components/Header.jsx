@@ -29,7 +29,7 @@ export default function Header() {
                         </div>
                         <div>
                             <h1 className="text-lg sm:text-xl font-bold">EOC จังหวัดสตูล</h1>
-                            <p className="text-xs text-blue-100 hidden sm:block">Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</p>
+                            <p className="text-xs text-blue-100 hidden sm:block">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
                         </div>
                     </div>
 
