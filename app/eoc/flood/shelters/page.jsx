@@ -44,7 +44,7 @@ export default function FloodSheltersPage() {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800">ศูนย์พักพิงชั่วคราว</h1>
-                                <p className="text-gray-600">แผนที่และข้อมูลศูนย์พักพิงสำหรับผู้ประสบภัยน้ำท่วม</p>
+                                <p className="text-gray-600">แผนที่และข้อมูลศูนย์พักพิงสำหรับผู้ประสบภัยอุทกภัยน้ำท่วม</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
@@ -76,7 +76,7 @@ export default function FloodSheltersPage() {
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">⚠️</span>
                             <div>
-                                <h3 className="font-bold text-yellow-800">EOC น้ำท่วมยังไม่ได้เปิด</h3>
+                                <h3 className="font-bold text-yellow-800">EOC อุทกภัยน้ำท่วมยังไม่ได้เปิด</h3>
                                 <p className="text-yellow-700 text-sm">
                                     ข้อมูลที่แสดงเป็นข้อมูลศูนย์พักพิงทั้งหมดที่มีในระบบ
                                 </p>
@@ -105,7 +105,7 @@ export default function FloodSheltersPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-green-100 text-sm">ประเภทศูนย์พักพิง</p>
-                                <p className="text-2xl font-bold mt-1">น้ำท่วม</p>
+                                <p className="text-2xl font-bold mt-1">อุทกภัยน้ำท่วม</p>
                             </div>
                             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                                 <span className="text-2xl">🌊</span>

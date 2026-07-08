@@ -12,7 +12,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// GET - ดึงข้อมูลสรุปความเสี่ยงน้ำท่วมรายวัน
+// GET - ดึงข้อมูลสรุปความเสี่ยงอุทกภัยน้ำท่วมรายวัน
 export async function GET(request) {
     let connection;
 

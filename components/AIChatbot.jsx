@@ -381,7 +381,7 @@ export default function AIChatbot() {
                             </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-2 text-center">
-                            💡 ลองถามเกี่ยวกับข้อมูล EOC, ผู้ป่วย, น้ำท่วม, หรืออุบัติเหตุ
+                            💡 ลองถามเกี่ยวกับข้อมูล EOC, ผู้ป่วย, อุทกภัยน้ำท่วม, หรืออุบัติเหตุ
                         </p>
                     </div>
                 </div>

@@ -11,7 +11,7 @@ const MAX_UPLOAD_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 const EOC_TYPES = [
-    { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
+    { value: 'flood', label: '💧 อุทกภัยน้ำท่วม', color: 'blue' },
     { value: 'accident', label: '🚨 อุบัติเหตุ', color: 'orange' },
     { value: 'festival-accidents', label: '🎉 อุบัติเหตุช่วงเทศกาล', color: 'yellow' },
     { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }

@@ -171,7 +171,7 @@ export default function EOCSessionsPage() {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                                 <option value="">ทั้งหมด</option>
-                                <option value="flood">น้ำท่วม</option>
+                                <option value="flood">อุทกภัยน้ำท่วม</option>
                                 <option value="drought">ภัยแล้ง</option>
                                 <option value="tsunami">คลื่นสึนามิ</option>
                                 <option value="earthquake">แผ่นดินไหว</option>

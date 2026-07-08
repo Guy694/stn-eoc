@@ -639,7 +639,7 @@ export default function FloodRecordsPage() {
                 <div className="p-6">
                     <div className="bg-white rounded-lg shadow p-8 text-center">
                         <div className="animate-spin rounded-full h-10 w-10 border-b border-blue-500 mx-auto mb-3"></div>
-                        <p className="text-gray-600">กำลังโหลดข้อมูล EOC น้ำท่วม...</p>
+                        <p className="text-gray-600">กำลังโหลดข้อมูล EOC อุทกภัยน้ำท่วม...</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -652,9 +652,9 @@ export default function FloodRecordsPage() {
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4">⚠️</div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มี EOC Session น้ำท่วม</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มี EOC Session อุทกภัยน้ำท่วม</h3>
                         <p className="text-gray-600">
-                            กรุณาสร้างหรือเปิด EOC Session น้ำท่วมก่อนบันทึกข้อมูลพื้นที่น้ำท่วม
+                            กรุณาสร้างหรือเปิด EOC Session อุทกภัยน้ำท่วมก่อนบันทึกข้อมูลพื้นที่อุทกภัยน้ำท่วม
                         </p>
                     </div>
                 </div>
@@ -670,7 +670,7 @@ export default function FloodRecordsPage() {
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                             <span className="text-4xl">💧</span>
-                            บันทึกพื้นที่น้ำท่วม
+                            บันทึกพื้นที่อุทกภัยน้ำท่วม
                         </h1>
                         <p className="text-gray-600">
                             EOC Session #{activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
@@ -977,7 +977,7 @@ export default function FloodRecordsPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">ระดับน้ำท่วม</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">ระดับอุทกภัยน้ำท่วม</label>
                             <select
                                 value={filters.flood_level}
                                 onChange={(e) => setFilters({ ...filters, flood_level: e.target.value })}
@@ -1024,7 +1024,7 @@ export default function FloodRecordsPage() {
                                             พื้นที่
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ระดับน้ำท่วม
+                                            ระดับอุทกภัยน้ำท่วม
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             วันที่เริ่ม
@@ -1174,7 +1174,7 @@ export default function FloodRecordsPage() {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                ระดับน้ำท่วม <span className="text-red-500">*</span>
+                                                ระดับอุทกภัยน้ำท่วม <span className="text-red-500">*</span>
                                             </label>
                                             <select
                                                 value={formData.flood_level}
@@ -1191,7 +1191,7 @@ export default function FloodRecordsPage() {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                วันที่เริ่มน้ำท่วม <span className="text-red-500">*</span>
+                                                วันที่เริ่มอุทกภัยน้ำท่วม <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 type="date"
@@ -1278,7 +1278,7 @@ export default function FloodRecordsPage() {
                         <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-sky-200">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4 flex items-center gap-2">
-                                    📋 คัดลอกข้อมูลน้ำท่วม
+                                    📋 คัดลอกข้อมูลอุทกภัยน้ำท่วม
                                 </h2>
 
                                 <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">

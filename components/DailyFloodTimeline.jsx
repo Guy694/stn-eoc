@@ -49,12 +49,12 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
         };
 
         fetchFloodData();
-    }, [selectedDate]);    // สีตามระดับน้ำท่วม (เหมือนภาพตัวอย่าง)
+    }, [selectedDate]);    // สีตามระดับอุทกภัยน้ำท่วม (เหมือนภาพตัวอย่าง)
     const getFloodColor = (level) => {
         const colors = {
-            'severe': '#DC2626', // แดงเข้ม - น้ำท่วมหนัก
-            'moderate': '#FBBF24', // เหลือง - น้ำท่วมปานกลาง
-            'mild': '#34D399', // เขียวอ่อน - น้ำท่วมเล็กน้อย
+            'severe': '#DC2626', // แดงเข้ม - อุทกภัยน้ำท่วมหนัก
+            'moderate': '#FBBF24', // เหลือง - อุทกภัยน้ำท่วมปานกลาง
+            'mild': '#34D399', // เขียวอ่อน - อุทกภัยน้ำท่วมเล็กน้อย
             'safe': '#10B981', // เขียว - ปลอดภัย
             'nodata': '#E5E7EB', // เทา - ไม่มีข้อมูล
         };
@@ -63,9 +63,9 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
 
     const getFloodLabel = (level) => {
         const labels = {
-            'severe': 'น้ำท่วมสูง',
-            'moderate': 'น้ำท่วมปานกลาง',
-            'mild': 'น้ำท่วมต่ำ',
+            'severe': 'อุทกภัยน้ำท่วมสูง',
+            'moderate': 'อุทกภัยน้ำท่วมปานกลาง',
+            'mild': 'อุทกภัยน้ำท่วมต่ำ',
             'safe': 'ปลอดภัย',
             'nodata': 'ไม่มีข้อมูล',
         };
@@ -151,10 +151,10 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
         <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    📅 แผนที่สถานการณ์น้ำท่วมรายวัน
+                    📅 แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                 </h2>
                 <p className="text-gray-600">
-                    ติดตามสถานการณ์น้ำท่วมตั้งแต่เปิด EOC - {dates.length} วัน
+                    ติดตามสถานการณ์อุทกภัยน้ำท่วมตั้งแต่เปิด EOC - {dates.length} วัน
                 </p>
             </div>
 
@@ -217,7 +217,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                 {/* Header */}
                 <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                        สถานการณ์น้ำท่วม จังหวัดสตูล
+                        สถานการณ์อุทกภัยน้ำท่วม จังหวัดสตูล
                     </h3>
                     <p className="text-lg text-gray-600">
                         {selectedDate ? `ข้อมูลวันที่: ${selectedDate.toLocaleDateString('th-TH', {
@@ -307,9 +307,9 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
 
                 {/* Legend */}
                 <div className="flex justify-center gap-4 flex-wrap">
-                    <LegendItem color="#DC2626" label="น้ำท่วมสูง" />
-                    <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
-                    <LegendItem color="#34D399" label="น้ำท่วมต่ำ" />
+                    <LegendItem color="#DC2626" label="อุทกภัยน้ำท่วมสูง" />
+                    <LegendItem color="#FBBF24" label="อุทกภัยน้ำท่วมปานกลาง" />
+                    <LegendItem color="#34D399" label="อุทกภัยน้ำท่วมต่ำ" />
                     <LegendItem color="#10B981" label="ปลอดภัย" />
                     <LegendItem color="#E5E7EB" label="ไม่มีข้อมูล" />
                 </div>
@@ -318,17 +318,17 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                 {floodData && floodData.summary && (
                     <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                         <StatBox
-                            label="น้ำท่วมสูง"
+                            label="อุทกภัยน้ำท่วมสูง"
                             value={floodData.summary.severeCount}
                             color="bg-red-100 text-red-700"
                         />
                         <StatBox
-                            label="น้ำท่วมปานกลาง"
+                            label="อุทกภัยน้ำท่วมปานกลาง"
                             value={floodData.summary.moderateCount}
                             color="bg-yellow-100 text-yellow-700"
                         />
                         <StatBox
-                            label="น้ำท่วมต่ำ"
+                            label="อุทกภัยน้ำท่วมต่ำ"
                             value={floodData.summary.mildCount}
                             color="bg-green-100 text-green-700"
                         />

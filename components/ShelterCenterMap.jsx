@@ -9,7 +9,7 @@ const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ss
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
 
 const EOC_TYPES = [
-    { value: 'flood', label: '💧 น้ำท่วม', color: 'blue', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
+    { value: 'flood', label: '💧 อุทกภัยน้ำท่วม', color: 'blue', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
     { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png' },
     { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
     { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png' },

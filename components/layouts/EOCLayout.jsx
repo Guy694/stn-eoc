@@ -21,7 +21,7 @@ export default function EOCLayout({ children }) {
             <Navbar />
             <div className="flex flex-1 relative">
                 {showSidebar && <Sidebar />}
-                <main className="flex-1 bg-gray-50 overflow-auto w-full lg:w-auto">
+                <main className="flex-1 bg-[#edf5fc] overflow-auto w-full lg:w-auto">
                     {/* <Breadcrumb /> */}
                     <div className="p-4 sm:p-6">
                         {children}

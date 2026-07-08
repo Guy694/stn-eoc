@@ -80,11 +80,11 @@ export default function FloodDailyRiskPage() {
 
     const getRiskLabel = (level) => {
         const labels = {
-            'สูงมาก': 'น้ำท่วมสูงมาก',
-            'สูง': 'น้ำท่วมสูง',
-            'ปานกลาง': 'น้ำท่วมปานกลาง',
-            'ต่ำ': 'น้ำท่วมต่ำ',
-            'ไม่มี': 'ไม่มีน้ำท่วม / ปกติ',
+            'สูงมาก': 'อุทกภัยน้ำท่วมสูงมาก',
+            'สูง': 'อุทกภัยน้ำท่วมสูง',
+            'ปานกลาง': 'อุทกภัยน้ำท่วมปานกลาง',
+            'ต่ำ': 'อุทกภัยน้ำท่วมต่ำ',
+            'ไม่มี': 'ไม่มีอุทกภัยน้ำท่วม / ปกติ',
             // รองรับภาษาอังกฤษ
             'severe': 'รุนแรงมาก',
             'moderate': 'ปานกลาง',
@@ -134,7 +134,7 @@ export default function FloodDailyRiskPage() {
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                         <span className="text-4xl">📊</span>
-                        สรุปความเสี่ยงน้ำท่วมรายวัน
+                        สรุปความเสี่ยงอุทกภัยน้ำท่วมรายวัน
                     </h1>
                     <p className="text-gray-600">แสดงข้อมูลวันที่: {formatDate}</p>
                 </div>

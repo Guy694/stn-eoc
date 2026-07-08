@@ -28,7 +28,7 @@ export const fetchEOCTypesFromDB = async () => {
 export const DISASTER_CONFIG = {
     flood: {
         id: 'flood',
-        name: 'น้ำท่วม',
+        name: 'อุทกภัยน้ำท่วม',
         nameEn: 'Flood',
         icon: '💧',
         color: {
@@ -39,7 +39,7 @@ export const DISASTER_CONFIG = {
             text: 'text-blue-700'
         },
         routes: {
-            main: '/eoc/flood',
+            main: '/eoc/flood/overview',
             map: '/eoc/flood',
             dailyRisk: '/eoc/flood/daily-risk',
             reports: '/eoc/flood/reports',

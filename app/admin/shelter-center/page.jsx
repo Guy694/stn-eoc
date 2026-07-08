@@ -14,7 +14,7 @@ const MapSelector = dynamic(() => import('@/components/MapSelector'), {
 });
 
 const EOC_TYPES = [
-    { value: 'flood', label: '💧 น้ำท่วม', color: 'blue' },
+    { value: 'flood', label: '💧 อุทกภัยน้ำท่วม', color: 'blue' },
     { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow' },
     { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan' },
     { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange' },

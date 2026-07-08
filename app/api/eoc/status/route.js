@@ -173,11 +173,11 @@ export async function GET(request) {
 
     try {
         const sessionToken = getSessionToken(request);
-        const isAuthenticatedRequest = Boolean(sessionToken);
+        let isAuthenticatedRequest = false;
 
-        if (isAuthenticatedRequest) {
+        if (sessionToken) {
             const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
-            if (!auth.success) return auth.response;
+            isAuthenticatedRequest = auth.success;
         }
 
         const { searchParams } = new URL(request.url);

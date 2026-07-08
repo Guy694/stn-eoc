@@ -32,12 +32,12 @@ async function validateFloodSessionDate(connection, sessionId, floodStartDate) {
     );
 
     if (sessions.length === 0) {
-        return { ok: false, status: 404, error: 'ไม่พบ EOC Session น้ำท่วม' };
+        return { ok: false, status: 404, error: 'ไม่พบ EOC Session อุทกภัยน้ำท่วม' };
     }
 
     const dateKey = toDateKey(floodStartDate);
     if (!dateKey) {
-        return { ok: false, status: 400, error: 'กรุณาระบุวันที่เริ่มน้ำท่วม' };
+        return { ok: false, status: 400, error: 'กรุณาระบุวันที่เริ่มอุทกภัยน้ำท่วม' };
     }
 
     const openedKey = toDateKey(sessions[0].opened_at);
@@ -118,7 +118,7 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('Error fetching flood records:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลน้ำท่วม');
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลอุทกภัยน้ำท่วม');
     }
 }
 
@@ -174,7 +174,7 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Error creating flood record:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูลน้ำท่วม');
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูลอุทกภัยน้ำท่วม');
     }
 }
 
@@ -231,7 +231,7 @@ export async function PUT(request) {
         });
     } catch (error) {
         console.error('Error updating flood record:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขข้อมูลน้ำท่วม');
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขข้อมูลอุทกภัยน้ำท่วม');
     }
 }
 
@@ -260,6 +260,6 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Error deleting flood record:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลน้ำท่วม');
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลอุทกภัยน้ำท่วม');
     }
 }

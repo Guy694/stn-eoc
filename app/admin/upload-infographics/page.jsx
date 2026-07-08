@@ -18,7 +18,7 @@ export default function UploadInfographics() {
     const [existingFiles, setExistingFiles] = useState({});
 
     const eocTypes = [
-        { value: 'flood', label: 'น้ำท่วม', icon: '💧' },
+        { value: 'flood', label: 'อุทกภัยน้ำท่วม', icon: '💧' },
         { value: 'drought', label: 'ภัยแล้ง', icon: '☀️' },
         { value: 'tsunami', label: 'คลื่นสึนามิ', icon: '🌊' },
         { value: 'earthquake', label: 'แผ่นดินไหว', icon: '🌍' },

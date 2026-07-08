@@ -195,7 +195,7 @@ export async function POST(request) {
             }
         });
 
-        const sqlPrompt = `คุณเป็น SQL Expert สำหรับระบบ EOC (Satun Geo-EOC Intelligence Platform) จังหวัดสตูล
+        const sqlPrompt = `คุณเป็น SQL Expert สำหรับระบบ EOC (Satun Provincial Emergency Operations Centers (Satun Geo-EOC)) จังหวัดสตูล
 
 DATABASE SCHEMA (PDPA SAFE VIEW):
 ${JSON.stringify(safeSchema, null, 2)}

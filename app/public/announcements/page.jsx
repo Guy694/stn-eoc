@@ -8,7 +8,7 @@ import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 const EOC_TYPE_LABELS = {
-  flood: "น้ำท่วม",
+  flood: "อุทกภัยน้ำท่วม",
   disease: "โรคระบาด",
   accident: "อุบัติเหตุ",
   "festival-accidents": "อุบัติเหตุช่วงเทศกาล"

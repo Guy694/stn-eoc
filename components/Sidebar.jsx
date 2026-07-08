@@ -10,7 +10,6 @@ import {
     CalendarClock,
     Car,
     CloudSun,
-    ClipboardCheck,
     ClipboardList,
     FileChartColumn,
     FileText,
@@ -24,7 +23,6 @@ import {
     MapPinned,
     MonitorCog,
     Package,
-    Radio,
     Settings,
     ShieldAlert,
     Tent,
@@ -53,7 +51,7 @@ export default function Sidebar() {
     const [isMobile, setIsMobile] = useState(false);
     const [pendingReportsCount, setPendingReportsCount] = useState(0);
     const [expandedSections, setExpandedSections] = useState({});
-    const { user, canAccessResources, canAccessReports } = useAuth();
+    const { user, canAccessResources } = useAuth();
     const { eocStatus, getEOCDisplayName } = useEOC();
 
     // Toggle expanded section
@@ -63,6 +61,9 @@ export default function Sidebar() {
             [sectionKey]: !prev[sectionKey]
         }));
     };
+
+    const hasPendingReportsBadge = (item) => item.badge === "pendingReports" && pendingReportsCount > 0;
+    const sectionHasPendingReports = (section) => section.items?.some(hasPendingReportsBadge);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -131,25 +132,16 @@ export default function Sidebar() {
     // ============================================
 
     const allMenuItems = [
-        // ============================================
-        // 1. DASHBOARD - ทุกคนเห็นได้
-        // ============================================
         {
-            title: "แดชบอร์ด",
-            section: "dashboard",
-            requiresPermission: null, // ทุกคนเห็นได้
+            title: "ภาพรวมผู้บริหาร",
+            section: "executive-overview",
+            requiresPermission: null,
             items: [
                 { name: "ภาพรวมระบบ", path: "/dashboard", icon: LayoutDashboard, description: "ภาพรวมข้อมูลทั้งหมด" },
-                { name: "สภาพอากาศ / Weather Watch", path: "/public/weather-watch", icon: CloudSun, description: "แผนที่เฝ้าระวังสภาพอากาศและฝนสะสมจังหวัดสตูล" },
             ],
         },
-
-        // ============================================
-        // 2. EOC MODULES - แยกตามประเภทภัยพิบัติ
-        // ============================================
-        // เมนูเหล่านี้จะแสดงตามสถานะการเปิด/ปิด EOC
         {
-            title: "EOC น้ำท่วม",
+            title: "EOC อุทกภัยน้ำท่วม",
             section: "eoc-flood",
             key: "flood",
             eocType: "flood",
@@ -157,23 +149,14 @@ export default function Sidebar() {
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
                 { name: "ภาพรวม EOC", path: "/eoc/flood/overview", icon: BarChart3, description: "Dashboard ภาพรวมสถานการณ์ทั้งหมด" },
-                { name: "จัดการ EOC น้ำท่วม", path: "/eoc/flood/management", icon: MonitorCog, description: "Officer EOC Management Dashboard" },
-                { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: Map, description: "ภาพรวมสถานการณ์น้ำท่วม" },
-                { name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", icon: Waves, description: "บันทึกข้อมูลพื้นที่น้ำท่วม" },
+                { name: "จัดการ EOC อุทกภัยน้ำท่วม", path: "/eoc/flood/management", icon: MonitorCog, description: "Officer EOC Management Dashboard" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: Map, description: "ภาพรวมสถานการณ์อุทกภัยน้ำท่วม" },
+                { name: "บันทึกพื้นที่อุทกภัยน้ำท่วม", path: "/eoc/flood/records", icon: Waves, description: "บันทึกข้อมูลพื้นที่อุทกภัยน้ำท่วม" },
                 { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: Tent, description: "แผนที่ศูนย์พักพิง" },
                 { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: HeartPulse, description: "บันทึกโรคในศูนย์พักพิง" },
                 { name: "รายชื่อผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", icon: Users, description: "ข้อมูลผู้ประสบภัย" },
                 { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: Bell, description: "ข่าวประชาสัมพันธ์" },
                 { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: ClipboardList, description: "ติดตามโรคระบาดจากหน่วยบริการ" },
-            ],
-        },
-
-        {
-            title: "ข้อมูลประชาชน",
-            section: "population-data",
-            requiresPermission: null,
-            items: [
-                { name: "กลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", icon: LifeBuoy, description: "ฐานข้อมูลกลาง เพิ่ม/ลดจำนวนรายกลุ่ม" },
             ],
         },
 
@@ -233,18 +216,10 @@ export default function Sidebar() {
             ],
         },
 
-        // ============================================
-        // 3. COMMANDER SECTION - REMOVED
-        // Dashboard moved to /eoc/flood/overview (accessible to all)
-        // ============================================
-
-        // ============================================
-        // 4. ADMIN MANAGEMENT - เฉพาะ Admin
-        // ============================================
         {
-            title: "จัดการระบบ",
-            section: "admin",
-            requiresPermission: "admin", // เฉพาะ admin
+            title: "ปฏิบัติการเหตุการณ์",
+            section: "incident-operations",
+            requiresPermission: "admin",
             collapsible: true,
             items: [
                 {
@@ -255,22 +230,32 @@ export default function Sidebar() {
                     description: "รายงานจากประชาชน"
                 },
                 { name: "กิจกรรมล่าสุด", path: "/admin/recent-activities", icon: CalendarClock, description: "ติดตามกิจกรรมในระบบ" },
-                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: UserRoundCog, description: "ข้อมูลบุคลากร" },
-                { name: "จัดการผู้ใช้ประชาชน", path: "/admin/citizens", icon: UserRoundPlus, description: "ประชาชนที่ลงทะเบียน ThaiID" },
-                { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: BriefcaseMedical, description: "โรงพยาบาล/สถานีอนามัย" },
-                { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: MapPinned, description: "พื้นที่หมู่บ้าน" },
+            ],
+        },
+        {
+            title: "บริหาร EOC",
+            section: "eoc-administration",
+            requiresPermission: "admin",
+            collapsible: true,
+            items: [
                 { name: "จัดการ EOC", path: "/admin/eoc-management", icon: Settings, description: "เปิด/ปิด EOC" },
                 { name: "ประวัติ EOC Sessions", path: "/admin/eoc-sessions", icon: FileText, description: "ประวัติการเปิด-ปิด EOC" },
             ],
         },
-
-        // ============================================
-        // 4. RESOURCES - ต้องมีสิทธิ์เฉพาะ
-        // ============================================
         {
-            title: "ทรัพยากร",
-            section: "resources",
-            requiresPermission: "resources", // ใช้ canAccessResources()
+            title: "ข้อมูลประชาชน",
+            section: "population-data",
+            requiresPermission: null,
+            collapsible: true,
+            items: [
+                { name: "กลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", icon: LifeBuoy, description: "ฐานข้อมูลกลาง เพิ่ม/ลดจำนวนรายกลุ่ม" },
+                { name: "จัดการผู้ใช้ประชาชน", path: "/admin/citizens", icon: UserRoundPlus, description: "ประชาชนที่ลงทะเบียน ThaiID", requiresPermission: "admin" },
+            ],
+        },
+        {
+            title: "ทรัพยากรและโลจิสติกส์",
+            section: "resources-logistics",
+            requiresPermission: "resources",
             collapsible: true,
             items: [
                 { name: "บุคลากร", path: "/resources/personnel", icon: Users, description: "ทีมงานและอาสาสมัคร" },
@@ -278,31 +263,32 @@ export default function Sidebar() {
                 { name: "อุปกรณ์", path: "/resources/equipment", icon: Package, description: "เครื่องมือและอุปกรณ์" },
                 { name: "ศูนย์พักพิง", path: "/admin/shelter-center", icon: Home, description: "ศูนย์พักพิงชั่วคราว" },
                 { name: "ทรัพยากร IT", path: "/admin/it-resources", icon: HardDrive, description: "Server/Internet/Network" },
+                { name: "เวชภัณฑ์และคงคลัง", path: "/resources/medical-inventory", icon: BriefcaseMedical, description: "ยา เวชภัณฑ์ วัสดุการแพทย์ และรายการเบิกจ่าย EOC" },
             ],
         },
-
-        // ============================================
-        // 5. REPORTS - ต้องมีสิทธิ์เฉพาะ
-        // ============================================
         {
-            title: "รายงาน",
-            section: "reports",
-            requiresPermission: "reports", // ใช้ canAccessReports()
+            title: "ข้อมูลพื้นฐานบริการสุขภาพ",
+            section: "master-data",
+            requiresPermission: "admin",
             collapsible: true,
             items: [
-                { name: "สร้างรายงาน", path: "/reports/create", icon: FileText, description: "สร้างรายงานใหม่" },
-                { name: "รายงานทั้งหมด", path: "/reports", icon: ClipboardCheck, description: "ดูรายงานที่ผ่านมา" },
-                { name: "สถิติและกราฟ", path: "/reports/statistics", icon: BarChart3, description: "วิเคราะห์ข้อมูล" },
+                { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: BriefcaseMedical, description: "โรงพยาบาล/สถานีอนามัย" },
+                { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: MapPinned, description: "พื้นที่หมู่บ้าน" },
             ],
         },
-
-        // ============================================
-        // 6. SETTINGS - สำหรับการตั้งค่าส่วนตัว
-        // ============================================
+        {
+            title: "ผู้ใช้งานและสิทธิ์",
+            section: "users-permissions",
+            requiresPermission: "admin",
+            collapsible: true,
+            items: [
+                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: UserRoundCog, description: "บัญชีเจ้าหน้าที่ บทบาท และสิทธิ์ใช้งาน" },
+            ],
+        },
         {
             title: "ตั้งค่า",
             section: "settings",
-            requiresPermission: null, // ทุกคนเห็นได้
+            requiresPermission: null,
             items: [
                 { name: "โปรไฟล์ของฉัน", path: "/profile", icon: UserCog, description: "ข้อมูลส่วนตัว" },
                 { name: "ตั้งค่าระบบ", path: "/settings", icon: Settings, description: "กำหนดค่าต่างๆ" },
@@ -381,14 +367,21 @@ export default function Sidebar() {
 
             // Public sections (requiresPermission === null) and non-EOC modules
             return true;
-        });
+        }).map(section => ({
+            ...section,
+            items: section.items.filter(item => {
+                if (item.requiresPermission === "admin") return user.role === 'admin';
+                if (item.requiresPermission === "resources") return canAccessResources();
+                return true;
+            })
+        })).filter(section => section.items.length > 0);
 
     return (
         <>
             {/* Mobile Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="sidebar-toggle lg:hidden fixed bottom-6 right-6 z-50 bg-green-700 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+                className="sidebar-toggle lg:hidden fixed bottom-6 right-6 z-50 bg-[#0b4c86] text-white p-4 rounded-full shadow-lg hover:bg-[#083865] transition-colors"
                 aria-label="Toggle sidebar"
             >
                 <svg
@@ -430,7 +423,7 @@ export default function Sidebar() {
                     top-0 left-0
                     
                     w-64
-                    bg-gray-50 border-r border-gray-200
+                    bg-[#f8fbff] border-r border-blue-100
                     overflow-y-auto
                     z-40
                     transform transition-transform duration-300 ease-in-out
@@ -470,10 +463,15 @@ export default function Sidebar() {
                                 // ============================================
                                 <>
                                     {/* Collapsible Section Header */}
+                                    {(() => {
+                                        const hasPendingReports = sectionHasPendingReports(section);
+                                        return (
                                     <button
-                                        onClick={() => toggleSection(section.key)}
-                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${section.items.some(item => pathname.startsWith(item.path))
-                                            ? "bg-green-50 text-green-800"
+                                        onClick={() => toggleSection(section.key || section.section)}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${hasPendingReports
+                                            ? "bg-red-50 text-red-700 ring-1 ring-red-200 hover:bg-red-100"
+                                            : section.items.some(item => pathname.startsWith(item.path))
+                                            ? "bg-blue-50 text-blue-800"
                                             : "text-gray-700 hover:bg-gray-100"
                                             }`}
                                         title={section.description || section.title}
@@ -489,9 +487,14 @@ export default function Sidebar() {
                                                     {eocStatus[section.eocType].is_active ? "เปิด" : "ปิด"}
                                                 </span>
                                             )}
+                                            {hasPendingReports && (
+                                                <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-black text-white">
+                                                    {pendingReportsCount}
+                                                </span>
+                                            )}
                                         </span>
                                         <svg
-                                            className={`w-4 h-4 transition-transform ${expandedSections[section.key] ? "rotate-180" : ""
+                                            className={`w-4 h-4 transition-transform ${expandedSections[section.key || section.section] ? "rotate-180" : ""
                                                 }`}
                                             fill="none"
                                             stroke="currentColor"
@@ -505,26 +508,39 @@ export default function Sidebar() {
                                             />
                                         </svg>
                                     </button>
+                                        );
+                                    })()}
 
                                     {/* Collapsible Menu Items */}
-                                    {expandedSections[section.key] && (
+                                    {expandedSections[section.key || section.section] && (
                                         <ul className="mt-1 ml-4 space-y-1">
-                                            {section.items.map((item) => (
-                                                <li key={item.path}>
-                                                    <Link
-                                                        href={item.path}
-                                                        onClick={() => isMobile && setIsOpen(false)}
-                                                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${pathname === item.path
-                                                            ? "bg-green-100 text-green-800 font-medium"
-                                                            : "text-gray-600 hover:bg-gray-100"
-                                                            }`}
-                                                        title={item.description || item.name}
-                                                    >
-                                                        <MenuIcon icon={item.icon} />
-                                                        <span className="flex-1">{item.name}</span>
-                                                    </Link>
-                                                </li>
-                                            ))}
+                                            {section.items.map((item) => {
+                                                const hasPendingReports = hasPendingReportsBadge(item);
+                                                return (
+                                                    <li key={item.path}>
+                                                        <Link
+                                                            href={item.path}
+                                                            onClick={() => isMobile && setIsOpen(false)}
+                                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${hasPendingReports
+                                                                ? "bg-red-50 text-red-700 font-semibold hover:bg-red-100"
+                                                                : pathname === item.path
+                                                                ? "bg-blue-100 text-blue-800 font-medium"
+                                                                : "text-gray-600 hover:bg-gray-100"
+                                                                }`}
+                                                            title={item.description || item.name}
+                                                        >
+                                                            <MenuIcon icon={item.icon} className={hasPendingReports ? "h-4 w-4 shrink-0 text-red-600" : iconClassName} />
+                                                            <span className="flex-1">{item.name}</span>
+
+                                                            {hasPendingReports && (
+                                                                <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-black text-white">
+                                                                    {pendingReportsCount}
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                    </li>
+                                                );
+                                            })}
                                         </ul>
                                     )}
                                 </>
@@ -538,22 +554,26 @@ export default function Sidebar() {
                                         {section.title}
                                     </h3>
                                     <ul className="space-y-1">
-                                        {section.items.map((item) => (
+                                        {section.items.map((item) => {
+                                            const hasPendingReports = hasPendingReportsBadge(item);
+                                            return (
                                             <li key={item.path}>
                                                 <Link
                                                     href={item.path}
                                                     onClick={() => isMobile && setIsOpen(false)}
-                                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${pathname === item.path
-                                                        ? "bg-green-100 text-green-800 font-medium"
+                                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${hasPendingReports
+                                                        ? "bg-red-50 text-red-700 font-semibold hover:bg-red-100"
+                                                        : pathname === item.path
+                                                        ? "bg-blue-100 text-blue-800 font-medium"
                                                         : "text-gray-700 hover:bg-gray-100"
                                                         }`}
                                                     title={item.description || item.name}
                                                 >
-                                                    <MenuIcon icon={item.icon} />
+                                                    <MenuIcon icon={item.icon} className={hasPendingReports ? "h-4 w-4 shrink-0 text-red-600" : iconClassName} />
                                                     <span className="flex-1">{item.name}</span>
 
                                                     {/* Badge สำหรับแจ้งเตือน (เช่น รายงานค้าง) */}
-                                                    {item.badge === "pendingReports" && pendingReportsCount > 0 && (
+                                                    {hasPendingReports && (
                                                         <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
                                                             {pendingReportsCount}
                                                         </span>
@@ -570,7 +590,8 @@ export default function Sidebar() {
                                                     )}
                                                 </Link>
                                             </li>
-                                        ))}
+                                            );
+                                        })}
                                     </ul>
                                 </>
                             )}

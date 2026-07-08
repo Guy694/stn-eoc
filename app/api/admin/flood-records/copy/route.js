@@ -28,7 +28,7 @@ async function validateSessionDateRange(connection, sessionId, dates) {
     );
 
     if (sessions.length === 0) {
-        return { ok: false, status: 404, error: 'ไม่พบ EOC Session น้ำท่วม' };
+        return { ok: false, status: 404, error: 'ไม่พบ EOC Session อุทกภัยน้ำท่วม' };
     }
 
     const openedKey = toDateKey(sessions[0].opened_at);
@@ -48,7 +48,7 @@ async function validateSessionDateRange(connection, sessionId, dates) {
     return { ok: true };
 }
 
-// API สำหรับคัดลอกข้อมูลน้ำท่วมจากวันหนึ่งไปยังอีกวันหนึ่ง
+// API สำหรับคัดลอกข้อมูลอุทกภัยน้ำท่วมจากวันหนึ่งไปยังอีกวันหนึ่ง
 export async function POST(request) {
     try {
         const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
@@ -208,6 +208,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error copying flood records:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการคัดลอกข้อมูลน้ำท่วม');
+        return publicInternalError('เกิดข้อผิดพลาดในการคัดลอกข้อมูลอุทกภัยน้ำท่วม');
     }
 }

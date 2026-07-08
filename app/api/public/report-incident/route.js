@@ -3,7 +3,7 @@ import { getConnection } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
 import { publicInternalError } from '@/lib/apiResponse';
-import { escapeTelegramHtml, sendTelegramMessage } from '@/lib/telegram';
+import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage } from '@/lib/telegram';
 
 const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const HELP_CATEGORY_LABELS = {
@@ -28,6 +28,7 @@ async function notifyTelegramOfficers(pool, report) {
     if (!process.env.TELEGRAM_BOT_TOKEN) return;
 
     try {
+        const chatIds = getTelegramHelpNotifyChatIds();
         const [columns] = await pool.execute(
             `SELECT COLUMN_NAME
              FROM INFORMATION_SCHEMA.COLUMNS
@@ -36,16 +37,19 @@ async function notifyTelegramOfficers(pool, report) {
                AND COLUMN_NAME IN ('telegram_chat_id', 'telegram_notify_enabled')`
         );
         const names = new Set(columns.map((column) => column.COLUMN_NAME));
-        if (!names.has('telegram_chat_id') || !names.has('telegram_notify_enabled')) return;
+        if (names.has('telegram_chat_id') && names.has('telegram_notify_enabled')) {
+            const [officers] = await pool.execute(
+                `SELECT telegram_chat_id
+                 FROM officer
+                 WHERE telegram_notify_enabled = 1
+                   AND telegram_chat_id IS NOT NULL
+                   AND telegram_chat_id <> ''`
+            );
+            chatIds.push(...officers.map((officer) => officer.telegram_chat_id));
+        }
 
-        const [officers] = await pool.execute(
-            `SELECT telegram_chat_id
-             FROM officer
-             WHERE telegram_notify_enabled = 1
-               AND telegram_chat_id IS NOT NULL
-               AND telegram_chat_id <> ''`
-        );
-        if (!officers.length) return;
+        const recipients = [...new Set(chatIds.map((chatId) => String(chatId || '').trim()).filter(Boolean))];
+        if (!recipients.length) return;
 
         const mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`;
         const text = [
@@ -61,7 +65,7 @@ async function notifyTelegramOfficers(pool, report) {
         ].join('\n');
 
         await Promise.allSettled(
-            officers.map((officer) => sendTelegramMessage(officer.telegram_chat_id, text))
+            recipients.map((chatId) => sendTelegramMessage(chatId, text))
         );
     } catch (error) {
         console.error('Telegram notification error:', error);
@@ -209,19 +213,21 @@ export async function POST(request) {
             ]
         );
 
-        await notifyTelegramOfficers(pool, {
-            id: result.insertId,
-            firstName,
-            lastName,
-            phone,
-            village,
-            subDistrict,
-            district,
-            latitude,
-            longitude,
-            helpCategoryLabel: HELP_CATEGORY_LABELS[helpCategory] || helpCategory || '-',
-            helpReason: helpReason || description || '-'
-        });
+        if (reportType === 'help_request') {
+            await notifyTelegramOfficers(pool, {
+                id: result.insertId,
+                firstName,
+                lastName,
+                phone,
+                village,
+                subDistrict,
+                district,
+                latitude,
+                longitude,
+                helpCategoryLabel: HELP_CATEGORY_LABELS[helpCategory] || helpCategory || '-',
+                helpReason: helpReason || description || '-'
+            });
+        }
 
         return NextResponse.json({
             success: true,

@@ -1,6 +1,51 @@
 import { query } from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
 
+function parseGeoJson(value) {
+    if (!value) return null;
+    if (Buffer.isBuffer(value)) {
+        const text = value.toString('utf8');
+        return text ? JSON.parse(text) : null;
+    }
+    return typeof value === 'string' ? JSON.parse(value) : value;
+}
+
+function makeFeatureCollection(rows, nameField = 'name') {
+    const groups = new Map();
+
+    rows.forEach((row) => {
+        const name = row[nameField] || row.name || '-';
+        const geometry = parseGeoJson(row.geometry);
+        if (!geometry) return;
+
+        if (!groups.has(name)) {
+            groups.set(name, {
+                name,
+                features: []
+            });
+        }
+
+        groups.get(name).features.push({
+            type: 'Feature',
+            properties: {
+                name,
+                distname: row.distname,
+                subdistnam: row.subdistnam,
+                villname: row.villname
+            },
+            geometry
+        });
+    });
+
+    return [...groups.values()].map((group) => ({
+        name: group.name,
+        geometry: {
+            type: 'FeatureCollection',
+            features: group.features
+        }
+    }));
+}
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -8,56 +53,79 @@ export async function GET(request) {
 
         let sql;
         let results;
+        let polygons;
 
         switch (level) {
             case 'province':
-                // รวม polygon ทั้งหมดของจังหวัด
                 sql = `
                     SELECT 
                         'สตูล' as name,
-                        ST_AsGeoJSON(ST_Union(geom)) as geometry
-                    FROM satun_village_polygon
-                    WHERE provname = 'สตูล'
+                        pro_name,
+                        dis_name,
+                        ST_AsGeoJSON(geometry) as geometry
+                    FROM districts_polygon
+                    WHERE pro_name = 'สตูล'
+                    ORDER BY dis_code
                 `;
                 results = await query(sql);
+                polygons = makeFeatureCollection(results);
                 break;
 
             case 'district':
-                // รวม polygon แยกตามอำเภอ
                 sql = `
                     SELECT 
-                        distname as name,
-                        ST_AsGeoJSON(ST_Union(geom)) as geometry
-                    FROM satun_village_polygon
-                    WHERE provname = 'สตูล'
-                    GROUP BY distname
+                        id,
+                        dis_name as name,
+                        pro_name,
+                        dis_code,
+                        pro_code,
+                        ST_AsGeoJSON(geometry) as geometry
+                    FROM districts_polygon
+                    WHERE pro_name = 'สตูล'
+                    ORDER BY dis_code
                 `;
                 results = await query(sql);
+                polygons = results.map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    pro_name: row.pro_name,
+                    dis_code: row.dis_code,
+                    pro_code: row.pro_code,
+                    geometry: row.geometry ? parseGeoJson(row.geometry) : null
+                }));
                 break;
 
             case 'tambon':
             default:
-                // แสดง polygon แยกตามตำบล (ทั้งหมด)
                 sql = `
                     SELECT 
                         id,
-                        area_name as name,
-                        distname,
-                        subdistnam,
-                        villname,
-                        ST_AsGeoJSON(geom) as geometry
-                    FROM satun_village_polygon
-                    ORDER BY distname, subdistnam, villname
+                        tam_name as name,
+                        tam_name,
+                        dis_name,
+                        pro_name,
+                        tum_code,
+                        dis_code,
+                        pro_code,
+                        ST_AsGeoJSON(geometry) as geometry
+                    FROM tambons_polygon
+                    WHERE pro_name = 'สตูล'
+                    ORDER BY dis_name, tam_name
                 `;
                 results = await query(sql);
+                polygons = results.map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    tam_name: row.tam_name,
+                    dis_name: row.dis_name,
+                    pro_name: row.pro_name,
+                    tum_code: row.tum_code,
+                    dis_code: row.dis_code,
+                    pro_code: row.pro_code,
+                    geometry: row.geometry ? parseGeoJson(row.geometry) : null
+                }));
                 break;
         }
-
-        // แปลง geometry string เป็น JSON object
-        const polygons = results.map(row => ({
-            ...row,
-            geometry: row.geometry ? JSON.parse(row.geometry) : null
-        }));
 
         return Response.json({
             success: true,

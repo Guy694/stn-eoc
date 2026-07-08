@@ -17,7 +17,7 @@ VALUES (
     'สมชาย',
     'ใจกล้า',
     'ผู้บัญชาการ EOC',
-    'ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน',
+    'ศูนย์ปฏิบัติการฉุกเฉิน',
     1,
     NOW(),
     'commander@satun.go.th',
@@ -29,6 +29,6 @@ ON DUPLICATE KEY UPDATE
     given_name = 'สมชาย',
     family_name = 'ใจกล้า',
     position = 'ผู้บัญชาการ EOC',
-    department = 'ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน',
+    department = 'ศูนย์ปฏิบัติการฉุกเฉิน',
     is_approved = 1,
     approved_time = COALESCE(approved_time, NOW());

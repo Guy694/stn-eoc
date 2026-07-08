@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import {
     Chart as ChartJS,
@@ -13,6 +14,15 @@ import {
     ArcElement
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+
+const PublicIncidentMap = dynamic(() => import('@/components/PublicIncidentMap'), {
+    ssr: false,
+    loading: () => (
+        <div className="flex h-full min-h-[420px] items-center justify-center bg-slate-100 text-slate-500">
+            กำลังโหลดแผนที่...
+        </div>
+    )
+});
 
 ChartJS.register(
     CategoryScale,
@@ -121,8 +131,26 @@ export default function EOCOverview() {
 
     if (!dashboardData) return null;
 
-    const { session, casualties, affected_areas, resources, teams, shelters, diseases, vulnerable_groups } = dashboardData;
+    const {
+        session,
+        casualties,
+        affected_areas,
+        resources,
+        teams,
+        shelters,
+        diseases,
+        vulnerable_groups,
+        flood_map,
+        shelter_diseases,
+        medical_inventory,
+        meeting_summary
+    } = dashboardData;
     const isDailyMode = dashboardData.filters?.mode === 'daily';
+    const formatNumber = (value) => Number(value || 0).toLocaleString('th-TH');
+    const formatDateKey = (value) => {
+        if (!value) return '-';
+        return new Date(`${String(value).slice(0, 10)}T00:00:00`).toLocaleDateString('th-TH');
+    };
     const effectiveDateLabel = dashboardData.filters?.effective_date
         ? new Date(`${dashboardData.filters.effective_date}T00:00:00`).toLocaleDateString('th-TH')
         : 'วันที่เลือก';
@@ -130,6 +158,8 @@ export default function EOCOverview() {
         ? new Date(`${String(diseases.latest_report_date).split('T')[0]}T00:00:00`).toLocaleDateString('th-TH')
         : 'วันล่าสุด';
     const impactScopeLabel = isDailyMode ? `ประจำวันที่ ${effectiveDateLabel}` : 'สะสมทั้ง session';
+    const mapStartDate = flood_map?.start_date || (session.open_time ? String(session.open_time).slice(0, 10) : '');
+    const mapEndDate = flood_map?.end_date || (session.close_time ? String(session.close_time).slice(0, 10) : mapStartDate);
 
     return (
         <EOCLayout>
@@ -223,10 +253,71 @@ export default function EOCOverview() {
                             <h2 className="text-2xl font-bold mb-2">{session.eoc_type_name}</h2>
                             <p className="opacity-90">Session #{session.session_number} | เปิดโดย: {session.opened_by_name}</p>
                             <p className="text-sm opacity-75">เปิดเมื่อ: {new Date(session.open_time).toLocaleString('th-TH')}</p>
+                            {session.close_time && (
+                                <p className="text-sm opacity-75">ปิดเมื่อ: {new Date(session.close_time).toLocaleString('th-TH')}</p>
+                            )}
                         </div>
                         <div className="text-5xl">🚨</div>
                     </div>
                 </div>
+
+                {/* Meeting Summary */}
+                {meeting_summary && (
+                    <div className="mb-6">
+                        <div className="flex flex-col gap-1 mb-4 md:flex-row md:items-end md:justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-800">สรุปสำหรับห้องประชุมภาวะฉุกเฉิน</h3>
+                                <p className="text-sm text-gray-500">
+                                    ช่วงข้อมูล {formatDateKey(meeting_summary.period?.start_date)} - {formatDateKey(meeting_summary.period?.end_date)}
+                                </p>
+                            </div>
+                            <span className="inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                                {isDailyMode ? `มุมมองรายวัน ${effectiveDateLabel}` : 'มุมมองสะสมทั้ง session'}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                            <div className="bg-white rounded-lg shadow p-5 border border-blue-100">
+                                <p className="text-xs font-semibold text-gray-500">ผู้ได้รับผลกระทบ</p>
+                                <p className="mt-2 text-3xl font-bold text-blue-700">{formatNumber(meeting_summary.kpis?.affected_people)}</p>
+                                <p className="text-xs text-gray-500">คน</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5 border border-cyan-100">
+                                <p className="text-xs font-semibold text-gray-500">บันทึกอุทกภัยน้ำท่วม</p>
+                                <p className="mt-2 text-3xl font-bold text-cyan-700">{formatNumber(meeting_summary.kpis?.flood_records)}</p>
+                                <p className="text-xs text-gray-500">จุด/หมู่บ้าน</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5 border border-violet-100">
+                                <p className="text-xs font-semibold text-gray-500">ศูนย์พักพิงเปิด</p>
+                                <p className="mt-2 text-3xl font-bold text-violet-700">{formatNumber(meeting_summary.kpis?.active_shelters)}</p>
+                                <p className="text-xs text-gray-500">แห่ง</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5 border border-rose-100">
+                                <p className="text-xs font-semibold text-gray-500">ผู้ป่วยสะสม</p>
+                                <p className="mt-2 text-3xl font-bold text-rose-700">{formatNumber(meeting_summary.kpis?.disease_patients)}</p>
+                                <p className="text-xs text-gray-500">ราย</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5 border border-emerald-100">
+                                <p className="text-xs font-semibold text-gray-500">รายการเวชภัณฑ์</p>
+                                <p className="mt-2 text-3xl font-bold text-emerald-700">{formatNumber(meeting_summary.kpis?.medical_item_types)}</p>
+                                <p className="text-xs text-gray-500">ชนิด</p>
+                            </div>
+                        </div>
+                        <div className="mt-4 bg-white rounded-lg shadow p-5">
+                            <h4 className="font-semibold text-gray-800 mb-3">ประเด็นที่ควรติดตามในการประชุม</h4>
+                            {meeting_summary.focus_points?.length > 0 ? (
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    {meeting_summary.focus_points.map((item, index) => (
+                                        <div key={index} className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+                                            {item}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500">ยังไม่มีประเด็นเร่งด่วนจากข้อมูลที่บันทึกใน session นี้</p>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Casualties Statistics */}
                 <div className="mb-6">
@@ -313,6 +404,95 @@ export default function EOCOverview() {
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* Flood Map */}
+                <div className="mb-6">
+                    <div className="flex flex-col gap-1 mb-4 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-800">แผนที่อุทกภัยน้ำท่วมช่วง EOC</h3>
+                            <p className="text-sm text-gray-500">
+                                แสดงข้อมูลจากวันที่เปิดถึงวันที่ปิด EOC: {formatDateKey(mapStartDate)} - {formatDateKey(mapEndDate)}
+                            </p>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                            วันที่มีข้อมูล {formatNumber(flood_map?.available_dates?.length)} วัน
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-4 lg:grid-cols-5">
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <p className="text-xs text-gray-500">บันทึกอุทกภัยน้ำท่วม</p>
+                            <p className="text-2xl font-bold text-blue-700">{formatNumber(flood_map?.stats?.total_records)}</p>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <p className="text-xs text-gray-500">พื้นที่ระดับสูง</p>
+                            <p className="text-2xl font-bold text-red-700">{formatNumber(flood_map?.stats?.severe_count)}</p>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <p className="text-xs text-gray-500">พื้นที่ระดับปานกลาง</p>
+                            <p className="text-2xl font-bold text-amber-700">{formatNumber(flood_map?.stats?.moderate_count)}</p>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <p className="text-xs text-gray-500">ครัวเรือนกระทบ</p>
+                            <p className="text-2xl font-bold text-cyan-700">{formatNumber(flood_map?.stats?.affected_households)}</p>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <p className="text-xs text-gray-500">ประชาชนกระทบ</p>
+                            <p className="text-2xl font-bold text-emerald-700">{formatNumber(flood_map?.stats?.affected_people)}</p>
+                        </div>
+                    </div>
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+                        <div className="h-[560px] overflow-hidden rounded-lg border border-blue-100 bg-white shadow">
+                            <PublicIncidentMap
+                                disasterType="flood"
+                                sessionId={session.id}
+                                startDate={mapStartDate}
+                                endDate={mapEndDate}
+                                chrome="full"
+                                heightClass="h-full"
+                                layers={{
+                                    floodAreas: true,
+                                    district: true,
+                                    tambon: false,
+                                    village: false,
+                                    labels: true,
+                                    incidents: true,
+                                    traffic: true,
+                                    shelters: true,
+                                    hospitals: true,
+                                    waterways: true,
+                                    hillshade: false
+                                }}
+                                baseMap="street"
+                                includeAllShelters
+                            />
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-5">
+                            <h4 className="font-semibold text-gray-800 mb-3">พื้นที่สำคัญจากบันทึกอุทกภัยน้ำท่วม</h4>
+                            {flood_map?.events?.length > 0 ? (
+                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                                    {flood_map.events.slice(0, 12).map((event) => (
+                                        <div key={event.id} className="rounded-lg border border-gray-100 p-3">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <p className="font-semibold text-gray-800">ต.{event.tambon || '-'} อ.{event.district || '-'}</p>
+                                                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${event.severity === 'severe' ? 'bg-red-100 text-red-700' : event.severity === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-cyan-100 text-cyan-700'}`}>
+                                                    {event.severity_label}
+                                                </span>
+                                            </div>
+                                            <p className="mt-1 text-sm text-gray-600">{event.village || '-'}</p>
+                                            <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
+                                                <span>{formatDateKey(event.recorded_day)}</span>
+                                                <span>{formatNumber(event.affected_people)} คน</span>
+                                                {event.water_depth_cm > 0 && <span>น้ำ {formatNumber(event.water_depth_cm)} ซม.</span>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500">ยังไม่มีบันทึกอุทกภัยน้ำท่วมในช่วง session นี้</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {isDailyMode && (
@@ -532,15 +712,23 @@ export default function EOCOverview() {
                             </div>
                             <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
                                 <div>
-                                    <p className="text-sm text-gray-600">เปิดให้บริการ</p>
-                                    <p className="text-3xl font-bold text-green-600">{shelters.active_shelters || 0}</p>
+                                    <p className="text-sm text-gray-600">เปิดใน session นี้</p>
+                                    <p className="text-3xl font-bold text-green-600">{formatNumber(shelters.session?.active_session_shelters || shelters.active_shelters)}</p>
                                 </div>
                                 <div className="text-4xl">✅</div>
+                            </div>
+                            <div className="flex items-center justify-between p-4 bg-violet-50 rounded-lg">
+                                <div>
+                                    <p className="text-sm text-gray-600">ผู้พักพิงปัจจุบัน</p>
+                                    <p className="text-3xl font-bold text-violet-600">{formatNumber(shelters.session?.session_occupancy || shelters.current_occupancy_total)}</p>
+                                    <p className="text-xs text-gray-500">คน</p>
+                                </div>
+                                <div className="text-4xl">🧍</div>
                             </div>
                             <div className="flex items-center justify-between p-4 bg-teal-50 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">ความจุรวม</p>
-                                    <p className="text-3xl font-bold text-teal-600">{shelters.total_capacity || 0}</p>
+                                    <p className="text-3xl font-bold text-teal-600">{formatNumber(shelters.total_capacity)}</p>
                                     <p className="text-xs text-gray-500">คน</p>
                                 </div>
                                 <div className="text-4xl">👥</div>
@@ -684,6 +872,85 @@ export default function EOCOverview() {
                     </>
                 )}
 
+                {/* Shelter Disease Statistics */}
+                {shelter_diseases && (
+                    <div className="mb-6">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">สถิติโรคในศูนย์พักพิง ({impactScopeLabel})</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-white rounded-lg shadow p-6 border border-blue-100">
+                                <p className="text-sm text-gray-600">รายงานทั้งหมด</p>
+                                <p className="text-3xl font-bold text-blue-700">{formatNumber(shelter_diseases.summary?.total_reports)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6 border border-red-100">
+                                <p className="text-sm text-gray-600">ผู้ป่วยรายใหม่</p>
+                                <p className="text-3xl font-bold text-red-700">{formatNumber(shelter_diseases.summary?.total_new_cases)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6 border border-amber-100">
+                                <p className="text-sm text-gray-600">ส่งต่อ/นอน รพ.</p>
+                                <p className="text-3xl font-bold text-amber-700">{formatNumber(shelter_diseases.summary?.total_hospitalized)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6 border border-violet-100">
+                                <p className="text-sm text-gray-600">ศูนย์ที่มีรายงาน</p>
+                                <p className="text-3xl font-bold text-violet-700">{formatNumber(shelter_diseases.summary?.shelters_with_reports)}</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h4 className="text-lg font-bold text-gray-800 mb-4">โรคที่พบในศูนย์พักพิง</h4>
+                                {shelter_diseases.by_disease?.length > 0 ? (
+                                    <Bar
+                                        data={{
+                                            labels: shelter_diseases.by_disease.map(item => item.disease_name),
+                                            datasets: [
+                                                {
+                                                    label: 'รายใหม่',
+                                                    data: shelter_diseases.by_disease.map(item => Number(item.new_cases || 0)),
+                                                    backgroundColor: 'rgba(239, 68, 68, 0.75)'
+                                                },
+                                                {
+                                                    label: 'ส่งต่อ/นอน รพ.',
+                                                    data: shelter_diseases.by_disease.map(item => Number(item.hospitalized || 0)),
+                                                    backgroundColor: 'rgba(245, 158, 11, 0.75)'
+                                                }
+                                            ]
+                                        }}
+                                        options={{
+                                            responsive: true,
+                                            plugins: { legend: { position: 'top' } },
+                                            scales: { y: { beginAtZero: true } }
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">ยังไม่มีรายงานโรคในศูนย์พักพิง</div>
+                                )}
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h4 className="text-lg font-bold text-gray-800 mb-4">ศูนย์พักพิงที่ต้องติดตาม</h4>
+                                {shelter_diseases.by_shelter?.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {shelter_diseases.by_shelter.map((item, index) => (
+                                            <div key={index} className="rounded-lg border border-gray-100 p-3">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800">{item.sheltername || 'ไม่ระบุศูนย์พักพิง'}</p>
+                                                        <p className="text-xs text-gray-500">ต.{item.tambon || '-'} อ.{item.district_name || '-'}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-lg font-bold text-red-700">{formatNumber(item.new_cases)}</p>
+                                                        <p className="text-xs text-gray-500">รายใหม่</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500">ยังไม่มีศูนย์พักพิงที่มีรายงานโรค</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Vulnerable Groups Section */}
                 {vulnerable_groups && (
                     <div className="mb-6">
@@ -769,6 +1036,104 @@ export default function EOCOverview() {
                                     />
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Medical Inventory */}
+                {medical_inventory && (
+                    <div className="mb-6">
+                        <div className="flex flex-col gap-1 mb-4 md:flex-row md:items-end md:justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-800">ข้อมูลเวชภัณฑ์</h3>
+                                <p className="text-sm text-gray-500">
+                                    บันทึกในฐานข้อมูล{medical_inventory.event?.event_name ? `: ${medical_inventory.event.event_name}` : ''}
+                                </p>
+                            </div>
+                            <span className="inline-flex w-fit rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                                source: {medical_inventory.source || 'database'}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-6 lg:grid-cols-6">
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <p className="text-xs text-gray-500">หน่วยบริการ</p>
+                                <p className="text-2xl font-bold text-blue-700">{formatNumber(medical_inventory.summary?.agency_count)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <p className="text-xs text-gray-500">ชนิดเวชภัณฑ์</p>
+                                <p className="text-2xl font-bold text-emerald-700">{formatNumber(medical_inventory.summary?.item_types)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <p className="text-xs text-gray-500">ยอดยกมา</p>
+                                <p className="text-2xl font-bold text-slate-700">{formatNumber(medical_inventory.summary?.opening_qty)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <p className="text-xs text-gray-500">รับเข้า</p>
+                                <p className="text-2xl font-bold text-cyan-700">{formatNumber(medical_inventory.summary?.received_qty)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <p className="text-xs text-gray-500">เบิกจ่าย</p>
+                                <p className="text-2xl font-bold text-amber-700">{formatNumber(medical_inventory.summary?.issued_qty)}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-5">
+                                <p className="text-xs text-gray-500">คงเหลือ</p>
+                                <p className="text-2xl font-bold text-green-700">{formatNumber(medical_inventory.summary?.balance_qty)}</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h4 className="text-lg font-bold text-gray-800 mb-4">เวชภัณฑ์ที่มีการเบิก/คงเหลือสูง</h4>
+                                {medical_inventory.top_items?.length > 0 ? (
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full text-sm">
+                                            <thead>
+                                                <tr className="border-b text-left text-gray-500">
+                                                    <th className="py-2 pr-3">รายการ</th>
+                                                    <th className="py-2 pr-3 text-right">เบิกจ่าย</th>
+                                                    <th className="py-2 text-right">คงเหลือ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {medical_inventory.top_items.map((item) => (
+                                                    <tr key={item.item_code} className="border-b last:border-b-0">
+                                                        <td className="py-3 pr-3">
+                                                            <p className="font-semibold text-gray-800">{item.item_name}</p>
+                                                            <p className="text-xs text-gray-500">{item.item_code} • {item.unit || '-'}</p>
+                                                        </td>
+                                                        <td className="py-3 pr-3 text-right font-semibold text-amber-700">{formatNumber(item.issued_qty)}</td>
+                                                        <td className="py-3 text-right font-semibold text-green-700">{formatNumber(item.balance_qty)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500">ยังไม่มีข้อมูลเวชภัณฑ์ในฐานข้อมูลสำหรับ session นี้</p>
+                                )}
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h4 className="text-lg font-bold text-gray-800 mb-4">สรุปตามหน่วยบริการ</h4>
+                                {medical_inventory.agency_summary?.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {medical_inventory.agency_summary.map((agency) => (
+                                            <div key={agency.agency_name} className="rounded-lg border border-gray-100 p-3">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800">{agency.agency_name}</p>
+                                                        <p className="text-xs text-gray-500">{formatNumber(agency.item_types)} ชนิด • ยังไม่บันทึก {formatNumber(agency.not_recorded_rows)} รายการ</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-bold text-green-700">{formatNumber(agency.balance_qty)}</p>
+                                                        <p className="text-xs text-gray-500">คงเหลือ</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500">ยังไม่มีสรุปตามหน่วยบริการ</p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

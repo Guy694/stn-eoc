@@ -199,9 +199,9 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
 
     const getFloodLabel = (level) => {
         const labels = {
-            'severe': 'น้ำท่วมสูง',
-            'moderate': 'น้ำท่วมปานกลาง',
-            'mild': 'น้ำท่วมต่ำ',
+            'severe': 'อุทกภัยน้ำท่วมสูง',
+            'moderate': 'อุทกภัยน้ำท่วมปานกลาง',
+            'mild': 'อุทกภัยน้ำท่วมต่ำ',
             'safe': 'ปลอดภัย',
             'nodata': 'ไม่มีข้อมูล',
         };
@@ -330,7 +330,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         });
     }
 
-    // จัดกลุ่ม polygon ตามระดับน้ำท่วม
+    // จัดกลุ่ม polygon ตามระดับอุทกภัยน้ำท่วม
     const getPolygonsByLevel = () => {
         const grouped = {
             severe: [],
@@ -364,7 +364,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 <div className="text-6xl mb-4">📊</div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือก EOC Session</h3>
                 <p className="text-gray-600">
-                    เลือกปีและ EOC Session จากด้านบนเพื่อดูข้อมูลประวัติการเกิดน้ำท่วม
+                    เลือกปีและ EOC Session จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
                     💡 ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
@@ -377,7 +377,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    📅 แผนที่สถานการณ์น้ำท่วมรายวัน (ระดับหมู่บ้าน)
+                    📅 แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
                 </h2>
                 <p className="text-gray-600">
                     Session #{session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
@@ -485,7 +485,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 {/* Header */}
                 <div className="text-center mb-4">
                     <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                        สถานการณ์น้ำท่วม จังหวัดสตูล (ระดับหมู่บ้าน)
+                        สถานการณ์อุทกภัยน้ำท่วม จังหวัดสตูล (ระดับหมู่บ้าน)
                     </h3>
                     <p className="text-lg text-gray-600">
                         {selectedDate ? `ข้อมูลวันที่: ${selectedDate.toLocaleDateString('th-TH', {
@@ -723,11 +723,11 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
 
                         {/* Legend */}
                         < div className="mb-4" >
-                            <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่น้ำท่วม:</h3>
+                            <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่อุทกภัยน้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
-                                <LegendItem color="#DC2626" label="น้ำท่วมสูง" />
-                                <LegendItem color="#FBBF24" label="น้ำท่วมปานกลาง" />
-                                <LegendItem color="#34D399" label="น้ำท่วมต่ำ" />
+                                <LegendItem color="#DC2626" label="อุทกภัยน้ำท่วมสูง" />
+                                <LegendItem color="#FBBF24" label="อุทกภัยน้ำท่วมปานกลาง" />
+                                <LegendItem color="#34D399" label="อุทกภัยน้ำท่วมต่ำ" />
                                 <LegendItem color="#10B981" label="ปลอดภัย" />
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded border-2 border-black" style={{ backgroundColor: 'transparent' }}></div>
@@ -769,19 +769,19 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                             floodData && floodData.summary && (
                                 <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <StatBox
-                                        label="น้ำท่วมสูง"
+                                        label="อุทกภัยน้ำท่วมสูง"
                                         value={floodData.summary.severeCount}
                                         color="bg-red-100 text-red-700"
                                         unit="หมู่บ้าน"
                                     />
                                     <StatBox
-                                        label="น้ำท่วมปานกลาง"
+                                        label="อุทกภัยน้ำท่วมปานกลาง"
                                         value={floodData.summary.moderateCount}
                                         color="bg-yellow-100 text-yellow-700"
                                         unit="หมู่บ้าน"
                                     />
                                     <StatBox
-                                        label="น้ำท่วมต่ำ"
+                                        label="อุทกภัยน้ำท่วมต่ำ"
                                         value={floodData.summary.mildCount}
                                         color="bg-green-100 text-green-700"
                                         unit="หมู่บ้าน"

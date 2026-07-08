@@ -15,7 +15,8 @@ const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { 
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 const DISASTER_TYPES = {
-    flood: 'น้ำท่วม',
+    assistance: 'ขอความช่วยเหลือ',
+    flood: 'อุทกภัยน้ำท่วม',
     drought: 'ภัยแล้ง',
     fire: 'อัคคีภัย',
     storm: 'พายุ',
@@ -39,6 +40,14 @@ const STATUS_LABELS = {
 
     rejected: 'ปฏิเสธ'
 };
+
+function getDisasterTypeLabel(report) {
+    if (!report) return '-';
+    if (report.disaster_type === 'assistance' && report.related_disease_name) {
+        return `โรคระบาด: ${report.related_disease_name}`;
+    }
+    return DISASTER_TYPES[report.disaster_type] || report.disaster_type || '-';
+}
 
 export default function IncidentReportsPage() {
     const { user } = useAuth();
@@ -368,7 +377,7 @@ export default function IncidentReportsPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {DISASTER_TYPES[report.disaster_type] || report.disaster_type}
+                                                {getDisasterTypeLabel(report)}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 <div className="max-w-xs truncate">
@@ -495,7 +504,7 @@ export default function IncidentReportsPage() {
                                         <div className="space-y-2">
                                             <div>
                                                 <span className="text-sm text-gray-600">ประเภทภัย:</span>
-                                                <p className="font-medium text-gray-600">{DISASTER_TYPES[selectedReport.disaster_type] || selectedReport.disaster_type}</p>
+                                                <p className="font-medium text-gray-600">{getDisasterTypeLabel(selectedReport)}</p>
                                             </div>
                                             {selectedReport.report_type && (
                                                 <div>
@@ -587,7 +596,7 @@ export default function IncidentReportsPage() {
                                                     <Marker position={[parseFloat(selectedReport.latitude), parseFloat(selectedReport.longitude)]}>
                                                         <Popup>
                                                             <div className="text-sm">
-                                                                <strong>{DISASTER_TYPES[selectedReport.disaster_type] || selectedReport.disaster_type}</strong>
+                                                                <strong>{getDisasterTypeLabel(selectedReport)}</strong>
                                                                 <br />
                                                                 {selectedReport.description}
                                                             </div>

@@ -1,15 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { RISK_META } from "@/lib/weatherWatch";
+import { getMapBaseLayer, getMapOverlayLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
-const Polygon = dynamic(() => import("react-leaflet").then((mod) => mod.Polygon), { ssr: false });
-const Polyline = dynamic(() => import("react-leaflet").then((mod) => mod.Polyline), { ssr: false });
+const GeoJSON = dynamic(() => import("react-leaflet").then((mod) => mod.GeoJSON), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
 const Circle = dynamic(() => import("react-leaflet").then((mod) => mod.Circle), { ssr: false });
 const CircleMarker = dynamic(() => import("react-leaflet").then((mod) => mod.CircleMarker), { ssr: false });
@@ -24,19 +24,11 @@ const LAYER_GROUPS = [
   ["rain_forecast_24h", "พยากรณ์ฝน 24 ชั่วโมง"],
   ["wind_speed", "ความเร็วลม"],
   ["wind_direction", "ทิศทางลม"],
-  ["sea_wave", "คลื่นทะเล"],
-  ["rain_gauge", "จุดวัดฝน"],
-  ["water_level", "จุดวัดระดับน้ำ"],
-  ["flood_risk_area", "พื้นที่เสี่ยงน้ำท่วม"],
-  ["landslide_risk_area", "พื้นที่เสี่ยงดินถล่ม"],
-  ["shelter", "ศูนย์พักพิง"],
-  ["health_facility", "หน่วยบริการสุขภาพ"],
-  ["safe_route", "เส้นทางปลอดภัย"],
-  ["radar_rain", "Radar Rain"],
-  ["satellite_cloud", "Satellite Cloud"]
+  ["hillshade", "เงาภูมิประเทศ/ความสูง"]
 ];
 
 const CENTER = [6.86, 99.98];
+const DISTRICT_BOUNDARY_STYLE = { color: "#111827", weight: 3, opacity: 0.95, fillOpacity: 0, interactive: true };
 
 function formatDateTime(value) {
   if (!value) return "-";
@@ -119,11 +111,9 @@ function PopupCard({ district }) {
         <Info label="ลม" value={`${district.wind_speed} กม./ชม.`} />
         <Info label="ทิศทางลม" value={district.wind_direction} />
         <Info label="โอกาสฝน 24 ชม." value={`${district.rain_probability_24h}%`} />
-        <Info label="คะแนนเสี่ยง" value={`${district.risk_score}/10`} />
       </div>
       <div className="rounded-lg bg-slate-50 p-2 text-xs leading-5 text-slate-700">
-        <div><b>ความเสี่ยง:</b> น้ำท่วมฉับพลัน / น้ำป่าไหลหลาก / ดินถล่ม</div>
-        <div><b>คำแนะนำ:</b> {district.advice}</div>
+       
         <div><b>อัปเดตล่าสุด:</b> {formatDateTime(district.updated_at)} น.</div>
       </div>
     </div>
@@ -140,43 +130,70 @@ function Info({ label, value }) {
 }
 
 export default function WeatherWatchMap({ data }) {
-  const [layers, setLayers] = useState(() => (
-    Object.fromEntries((data?.weather_map_layers || []).map((layer) => [layer.layer_id, Boolean(layer.is_visible)]))
-  ));
+  const [layers, setLayers] = useState({});
+  const [baseMap, setBaseMap] = useState("street");
+  const [showLayerPanel, setShowLayerPanel] = useState(true);
+  const [districtBoundaries, setDistrictBoundaries] = useState([]);
 
-  const districts = data?.district_weather || [];
+  const districts = useMemo(() => data?.district_weather || [], [data?.district_weather]);
   const points = data?.map_points || {};
-  const visible = (key) => Boolean(layers[key]);
-  const highRiskDistricts = districts.filter((district) => ["high", "critical"].includes(district.risk_level));
+  const defaultLayers = Object.fromEntries((data?.weather_map_layers || []).map((layer) => [layer.layer_id, Boolean(layer.is_visible)]));
+  const visible = (key) => Object.hasOwn(layers, key) ? Boolean(layers[key]) : Boolean(defaultLayers[key]);
+  const selectedBaseLayer = getMapBaseLayer(baseMap);
+  const hillshadeLayer = getMapOverlayLayer("hillshade");
 
-  const seaPolygon = useMemo(() => [[6.48, 99.45], [7.24, 99.45], [7.15, 99.72], [6.55, 99.76]], []);
-  const cloudCenter = useMemo(() => [6.95, 100.06], []);
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadDistrictBoundaries() {
+      try {
+        const response = await fetch("/stn-eoc/api/common/area-polygons?level=district");
+        if (!response.ok) {
+          console.error("Failed to fetch district boundaries:", response.status);
+          return;
+        }
+
+        const result = await response.json();
+        if (!ignore) {
+          setDistrictBoundaries(Array.isArray(result?.data) ? result.data : []);
+        }
+      } catch (error) {
+        console.error("Error fetching district boundaries:", error);
+      }
+    }
+
+    loadDistrictBoundaries();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   return (
     <div className="relative h-[620px] min-h-[520px] overflow-hidden rounded-lg border border-blue-100 bg-white shadow-sm">
       <MapContainer center={CENTER} zoom={10} minZoom={9} style={{ height: "100%", width: "100%" }} className="z-0">
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={selectedBaseLayer.attribution}
+          url={selectedBaseLayer.url}
         />
+        {visible("hillshade") && hillshadeLayer && (
+          <TileLayer
+            attribution={hillshadeLayer.attribution}
+            url={hillshadeLayer.url}
+            opacity={hillshadeLayer.opacity}
+          />
+        )}
 
-        {districts.map((district) => {
-          const risk = getRiskMeta(district.risk_level);
+        {visible("district_boundary") && districtBoundaries.map((item, index) => {
+          if (!item.geojson) return null;
           return (
-            <Polygon
-              key={district.district_id}
-              positions={district.polygon}
-              pathOptions={{
-                color: visible("district_boundary") ? "#0f172a" : "transparent",
-                weight: visible("district_boundary") ? 1.4 : 0,
-                fillColor: visible("rain_24h") ? risk.color : "#60a5fa",
-                fillOpacity: visible("rain_24h") ? 0.42 : 0.12
+            <GeoJSON
+              key={`district-boundary-${item.code || item.name || index}`}
+              data={item.geojson}
+              style={DISTRICT_BOUNDARY_STYLE}
+              onEachFeature={(feature, layer) => {
+                layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong class="text-lg">อ.${item.name}</strong></div>`);
               }}
-            >
-              <Popup>
-                <PopupCard district={district} />
-              </Popup>
-            </Polygon>
+            />
           );
         })}
 
@@ -200,7 +217,7 @@ export default function WeatherWatchMap({ data }) {
           </Marker>
         ))}
 
-        {(visible("current_rain") || visible("rain_gauge")) && (points.rain_gauges || []).map((gauge) => (
+        {visible("current_rain") && (points.rain_gauges || []).map((gauge) => (
           <CircleMarker
             key={gauge.id}
             center={[gauge.latitude, gauge.longitude]}
@@ -222,54 +239,6 @@ export default function WeatherWatchMap({ data }) {
           </CircleMarker>
         ))}
 
-        {visible("water_level") && (points.water_levels || []).map((point) => (
-          <Marker key={point.id} position={[point.latitude, point.longitude]} icon={createIcon("H", getRiskMeta(point.status).color)}>
-            <Popup>
-              <div className="space-y-1 p-1 text-sm">
-                <div className="font-black">{point.name}</div>
-                <div>ระดับน้ำ: <b>{point.level_m} ม.</b></div>
-                <div>สถานะ: <b>{getRiskMeta(point.status).label}</b></div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {visible("flood_risk_area") && highRiskDistricts.map((district) => (
-          <Circle
-            key={`flood-risk-${district.district_id}`}
-            center={[district.latitude, district.longitude]}
-            radius={district.risk_level === "critical" ? 15000 : 10500}
-            pathOptions={{ color: "#0284c7", fillColor: "#38bdf8", fillOpacity: 0.12, weight: 1.2 }}
-          />
-        ))}
-
-        {visible("landslide_risk_area") && districts.filter((district) => ["high", "critical"].includes(district.landslide_risk)).map((district) => (
-          <Circle
-            key={`landslide-risk-${district.district_id}`}
-            center={[district.latitude - 0.02, district.longitude + 0.02]}
-            radius={9000}
-            pathOptions={{ color: "#92400e", fillColor: "#f59e0b", fillOpacity: 0.14, weight: 1.2 }}
-          />
-        ))}
-
-        {visible("shelter") && (points.shelters || []).map((point) => (
-          <Marker key={point.id} position={[point.latitude, point.longitude]} icon={createIcon("S", "#2563eb")}>
-            <Popup><b>{point.name}</b></Popup>
-          </Marker>
-        ))}
-
-        {visible("health_facility") && (points.health_facilities || []).map((point) => (
-          <Marker key={point.id} position={[point.latitude, point.longitude]} icon={createIcon("+", "#16a34a")}>
-            <Popup><b>{point.name}</b></Popup>
-          </Marker>
-        ))}
-
-        {visible("safe_route") && (points.safe_routes || []).map((route) => (
-          <Polyline key={route.id} positions={route.coordinates} pathOptions={{ color: "#16a34a", weight: 5, opacity: 0.8, dashArray: "8 8" }}>
-            <Popup><b>{route.name}</b></Popup>
-          </Polyline>
-        ))}
-
         {visible("wind_speed") && districts.map((district) => (
           <CircleMarker key={`wind-${district.district_id}`} center={[district.latitude - 0.035, district.longitude + 0.028]} radius={7} pathOptions={{ color: "#7c3aed", fillColor: "#ddd6fe", fillOpacity: 0.8 }}>
             <Popup>{district.district_name}: ลม {district.wind_speed} กม./ชม.</Popup>
@@ -282,68 +251,78 @@ export default function WeatherWatchMap({ data }) {
           </Marker>
         ))}
 
-        {visible("sea_wave") && (
-          <Polygon positions={seaPolygon} pathOptions={{ color: "#0369a1", fillColor: "#0ea5e9", fillOpacity: 0.18, weight: 2 }}>
-            <Popup>เฝ้าระวังคลื่นลมแรงบริเวณทะเลอันดามัน</Popup>
-          </Polygon>
-        )}
-
-        {visible("rain_forecast_3h") && (
-          <Circle center={[6.82, 99.86]} radius={24000} pathOptions={{ color: "#f97316", fillColor: "#fb923c", fillOpacity: 0.16, weight: 1.5 }}>
-            <Popup>พยากรณ์ฝน 3 ชั่วโมง: ฝนปานกลางถึงหนัก</Popup>
+        {visible("rain_forecast_3h") && points.forecast_3h && (
+          <Circle center={points.forecast_3h.center} radius={points.forecast_3h.radius} pathOptions={{ color: "#f97316", fillColor: "#fb923c", fillOpacity: 0.16, weight: 1.5 }}>
+            <Popup>พยากรณ์ฝน 3 ชั่วโมง: {points.forecast_3h.district_name} {points.forecast_3h.rainfall} มม.</Popup>
           </Circle>
         )}
 
-        {visible("rain_forecast_24h") && (
-          <Circle center={[6.98, 100.04]} radius={36000} pathOptions={{ color: "#dc2626", fillColor: "#ef4444", fillOpacity: 0.12, weight: 1.5 }}>
-            <Popup>พยากรณ์ฝน 24 ชั่วโมง: พื้นที่เสี่ยงฝนหนัก</Popup>
-          </Circle>
-        )}
-
-        {visible("radar_rain") && (
-          <Circle center={[6.86, 99.9]} radius={48000} pathOptions={{ color: "#0891b2", fillColor: "#22d3ee", fillOpacity: 0.12, weight: 1.5 }}>
-            <Popup>Radar Rain mock overlay</Popup>
-          </Circle>
-        )}
-
-        {visible("satellite_cloud") && (
-          <Circle center={cloudCenter} radius={62000} pathOptions={{ color: "#64748b", fillColor: "#cbd5e1", fillOpacity: 0.22, weight: 1 }}>
-            <Popup>Satellite Cloud mock overlay</Popup>
+        {visible("rain_forecast_24h") && points.forecast_24h && (
+          <Circle center={points.forecast_24h.center} radius={points.forecast_24h.radius} pathOptions={{ color: "#dc2626", fillColor: "#ef4444", fillOpacity: 0.12, weight: 1.5 }}>
+            <Popup>พยากรณ์ฝน 24 ชั่วโมง: {points.forecast_24h.district_name} {points.forecast_24h.rainfall} มม.</Popup>
           </Circle>
         )}
       </MapContainer>
 
-      <div className="absolute left-3 top-3 z-[900] w-[250px] max-w-[calc(100%-1.5rem)] rounded-lg border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div>
-            <div className="text-sm font-black text-slate-900">ชั้นข้อมูลแผนที่</div>
-            <div className="text-[11px] font-semibold text-slate-500">เปิด/ปิดข้อมูลเฝ้าระวัง</div>
+      {showLayerPanel ? (
+        <div className="absolute left-3 top-3 z-[900] w-[255px] max-w-[calc(100%-1.5rem)] rounded-xl border border-blue-100 bg-white/95 p-3 shadow-lg backdrop-blur">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h3 className="text-sm font-black text-blue-900">ชั้นข้อมูลแผนที่</h3>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="text-xs font-bold text-blue-700"
+                onClick={() => setLayers({})}
+              >
+                ค่าเริ่มต้น
+              </button>
+              <button
+                type="button"
+                className="rounded-md px-2 py-1 text-[11px] font-black text-slate-500 hover:bg-slate-100"
+                onClick={() => setShowLayerPanel(false)}
+              >
+                ซ่อน
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            className="rounded-md border border-slate-200 px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-50"
-            onClick={() => setLayers(Object.fromEntries(LAYER_GROUPS.map(([key]) => [key, false])))}
-          >
-            ล้าง
-          </button>
+          <label className="mb-2 block">
+            <span className="mb-1 block text-xs font-black text-blue-800">แผนที่พื้นหลัง</span>
+            <select
+              value={baseMap}
+              onChange={(event) => setBaseMap(event.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-400"
+            >
+              {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
+                <option key={key} value={key}>{layer.label}</option>
+              ))}
+            </select>
+          </label>
+          <div className="grid max-h-[330px] gap-1 overflow-y-auto pr-1">
+            {LAYER_GROUPS.map(([key, label]) => (
+              <label key={key} className="flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50">
+                <input
+                  type="checkbox"
+                  checked={visible(key)}
+                  onChange={(event) => setLayers((current) => ({ ...current, [key]: event.target.checked }))}
+                  className="h-4 w-4 accent-blue-700"
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
         </div>
-        <div className="grid max-h-[310px] gap-1 overflow-y-auto pr-1">
-          {LAYER_GROUPS.map(([key, label]) => (
-            <label key={key} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
-              <input
-                type="checkbox"
-                checked={visible(key)}
-                onChange={(event) => setLayers((current) => ({ ...current, [key]: event.target.checked }))}
-                className="h-4 w-4 accent-blue-700"
-              />
-              <span>{label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowLayerPanel(true)}
+          className="absolute right-3 top-3 z-[900] rounded-lg border border-blue-100 bg-white/95 px-3 py-2 text-xs font-black text-blue-700 shadow-lg backdrop-blur hover:bg-blue-50"
+        >
+          แสดงชั้นข้อมูล
+        </button>
+      )}
 
-      <div className="absolute bottom-3 left-3 z-[900] rounded-lg border border-slate-200 bg-white/95 p-3 text-xs shadow-xl backdrop-blur">
-        <div className="mb-2 font-black text-slate-900">Legend</div>
+      <div className="absolute bottom-3 left-3 z-[900] rounded-xl border border-blue-100 bg-white/95 p-3 text-xs shadow-lg backdrop-blur">
+        <div className="mb-2 text-sm font-black text-blue-900">คำอธิบายสัญลักษณ์</div>
         <div className="grid gap-1.5">
           {Object.entries(RISK_META).map(([key, meta]) => (
             <div key={key} className="flex items-center gap-2">
@@ -351,9 +330,7 @@ export default function WeatherWatchMap({ data }) {
               <span className="font-bold text-slate-700">{meta.label}</span>
             </div>
           ))}
-          <div className="mt-1 flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-sky-400" /> จุดวัดฝน</div>
-          <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full border-2 border-blue-700" /> จุดวัดระดับน้ำ</div>
-          <div className="flex items-center gap-2"><span className="h-1 w-6 rounded bg-emerald-500" /> เส้นทางปลอดภัย</div>
+          <div className="mt-1 flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-sky-400" /> ข้อมูลฝนจาก Open-Meteo</div>
         </div>
       </div>
     </div>

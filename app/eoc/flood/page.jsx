@@ -155,12 +155,12 @@ export default function FloodMapPage() {
                         <div>
                             <h1 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                                 <span className="text-4xl">💧</span>
-                                {mode === "realtime" ? "สถานการณ์น้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์น้ำท่วมรายวัน"}
+                                {mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}
                             </h1>
                             <p className="text-gray-600">
                                 {mode === "realtime"
-                                    ? "ติดตามสถานการณ์น้ำท่วมแบบเรียลไทม์"
-                                    : "ดูข้อมูลสรุปและประวัติการเกิดน้ำท่วมย้อนหลัง"}
+                                    ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์"
+                                    : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}
                             </p>
                         </div>
                         {user && (
@@ -168,7 +168,7 @@ export default function FloodMapPage() {
                                 onClick={() => router.push('/eoc/flood/records')}
                                 className="self-start rounded-lg bg-green-600 px-5 py-3 font-medium text-white transition-colors hover:bg-green-700"
                             >
-                                💾 บันทึก/แก้ไขพื้นที่น้ำท่วม
+                                💾 บันทึก/แก้ไขพื้นที่อุทกภัยน้ำท่วม
                             </button>
                         )}
                     </div>
@@ -308,7 +308,7 @@ export default function FloodMapPage() {
                     <>
                         <FloodAreaStatus polygons={polygons} />
 
-                        {/* แผนที่สถานการณ์น้ำท่วมรายวัน (Realtime) */}
+                        {/* แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (Realtime) */}
                         {/* DailyVillageFloodTimeline ใช้ในโหมดข้อมูลย้อนหลังเท่านั้น 
                         {activeSessionData && (
                             <div className="mt-6">
@@ -332,7 +332,7 @@ export default function FloodMapPage() {
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
                                 <p className="text-gray-600 mb-4">
-                                    แสดงจุดที่มีการรายงานเหตุการณ์น้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
+                                    แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
                                 </p>
                                 <PublicIncidentMap
                                     disasterType="flood"
@@ -474,7 +474,7 @@ export default function FloodMapPage() {
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
                                 <p className="text-gray-600 mb-4">
-                                    แสดงจุดที่มีการรายงานเหตุการณ์น้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
+                                    แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
                                 </p>
                                 <PublicIncidentMap
                                     disasterType="flood"

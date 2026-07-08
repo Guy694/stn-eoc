@@ -10,6 +10,7 @@ import PDPAConsent from "@/components/PDPAConsent";
 import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import dynamic from "next/dynamic";
+import { Bell, Bot, Building2, CloudSun, Home as HomeIcon, LogIn, Map, Phone, Tent } from "lucide-react";
 
 const FestivalPublicDashboard = dynamic(() => import("@/components/festival/FestivalPublicDashboard"), { ssr: false });
 const DailyDiseaseChart = dynamic(() => import("@/components/DailyDiseaseChart"), {
@@ -184,6 +185,25 @@ function mapEocTypeToPublicDisasterType(eocType) {
   return "flood";
 }
 
+function openPublicAssistant() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("eoc-assistant:open"));
+  }
+}
+
+function buildPublicHomeMenu(showWeatherMenu) {
+  return [
+    { href: "/", label: "หน้าหลัก", icon: HomeIcon, key: "home" },
+    { href: "/public/disaster-map", label: "แผนที่", icon: Map, key: "map" },
+    ...(showWeatherMenu ? [{ href: "/public/weather-watch", label: "อากาศ/ฝน", icon: CloudSun, key: "weather" }] : []),
+    { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
+    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
+    { href: "/public/agencies", label: "หน่วยงาน", icon: Building2, key: "agencies" },
+    { href: "#", label: "EOC Assistant", icon: Bot, key: "assistant", action: openPublicAssistant },
+    { href: "/login", label: "เจ้าหน้าที่", icon: LogIn, key: "staff" }
+  ];
+}
+
 export default function Home() {
   const [showSplash, setShowSplash] = useState(false);
   const [activeEOCs, setActiveEOCs] = useState([]);
@@ -201,7 +221,7 @@ export default function Home() {
   });
 
   const [infographicsData, setInfographicsData] = useState({});
-  const [floodStats, setFloodStats] = useState(null); // สถิติน้ำท่วมจาก database
+  const [floodStats, setFloodStats] = useState(null); // สถิติอุทกภัยน้ำท่วมจาก database
   const [accidentStats, setAccidentStats] = useState(null); // สถิติอุบัติเหตุจาก database
   const [diseaseStats, setDiseaseStats] = useState(null); // สถิติโรคระบาดจาก database
   const [dashboardSummary, setDashboardSummary] = useState(null);
@@ -517,8 +537,8 @@ export default function Home() {
       flood: {
         infographics: infographicsData[eocType] || [],
         warnings: [
-          { icon: "⚠️", text: "หลีกเลี่ยงการเดินทางผ่านพื้นที่น้ำท่วม", level: "danger" },
-          { icon: "🏠", text: "ย้ายทรัพย์สินไปที่สูง ตัดไฟฟ้าก่อนน้ำท่วม", level: "warning" },
+          { icon: "⚠️", text: "หลีกเลี่ยงการเดินทางผ่านพื้นที่อุทกภัยน้ำท่วม", level: "danger" },
+          { icon: "🏠", text: "ย้ายทรัพย์สินไปที่สูง ตัดไฟฟ้าก่อนอุทกภัยน้ำท่วม", level: "warning" },
           { icon: "📱", text: "ติดตามข่าวสารและเตรียมพร้อมอพยพ", level: "info" }
         ],
         news: [
@@ -529,7 +549,7 @@ export default function Home() {
             date: "2025-12-17"
           },
           {
-            title: "แนวทางป้องกันตัวจากน้ำท่วม",
+            title: "แนวทางป้องกันตัวจากอุทกภัยน้ำท่วม",
             content: "เตรียมถุงทราย ตรวจสอบเส้นทางอพยพ และเตรียมเสบียงอาหาร 3 วัน",
             type: "info",
             date: "2025-12-16"
@@ -537,7 +557,7 @@ export default function Home() {
         ],
         quickActions: [
           { icon: "🗺️", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/flood-map", color: "blue" },
-          { icon: "🚨", title: "แจ้งเหตุน้ำท่วม", link: "/public/report-incident", color: "red" },
+          { icon: "🚨", title: "แจ้งเหตุอุทกภัยน้ำท่วม", link: "/public/report-incident", color: "red" },
           { icon: "🏘️", title: "ศูนย์พักพิงชั่วคราว", link: "/public/shelters", color: "green" }
         ],
         stats: floodStats ? {
@@ -680,7 +700,7 @@ export default function Home() {
 
   const selectedDisasterLabel = getEOCTypeName(selectedDisasterType);
   const selectedDisasterDescription = {
-    flood: "ติดตามจุดเสี่ยงน้ำท่วม พื้นที่เฝ้าระวัง และศูนย์ช่วยเหลือใกล้ประชาชน",
+    flood: "ติดตามจุดเสี่ยงอุทกภัยน้ำท่วม พื้นที่เฝ้าระวัง และศูนย์ช่วยเหลือใกล้ประชาชน",
     disease: "ดูแนวโน้มผู้ป่วย พื้นที่เฝ้าระวัง และระบบช่วยเหลือด้านสาธารณสุข",
     accident: "ติดตามอุบัติเหตุ จุดเสี่ยง และรายงานเส้นทางสัญจรที่กระทบประชาชน"
   }[selectedDisasterType] || "ติดตามสถานการณ์สาธารณะล่าสุดจากศูนย์ EOC";
@@ -703,8 +723,8 @@ export default function Home() {
       tone: "red"
     },
     {
-      href: getPublicMapHref(selectedDisasterType),
-      title: "เปิดแผนที่สาธารณะเต็มจอ",
+      href: "/public/weather-watch",
+      title: "ตรวจสอบสภาพอากาศ",
       description: "ดูตำแหน่งเหตุ รายงานจากประชาชน และพื้นที่เฝ้าระวังแบบละเอียด",
       icon: "แผนที่",
       tone: "blue"
@@ -815,8 +835,8 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 drop-shadow-lg">EOC จังหวัดสตูล</h1>
-                <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Satun Geo-EOC Intelligence Platform</p>
-                <p className="text-xs md:text-sm text-green-200">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
+                <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Satun Provincial Emergency Operations Centers (Satun Geo-EOC) Intelligence Platform</p>
+                <p className="text-xs md:text-sm text-green-200">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</p>
               </div>
             </div>
 
@@ -1069,7 +1089,7 @@ export default function Home() {
                     const labels = {
                       affected: { icon: "👥", title: "ผู้ได้รับผลกระทบ", unit: "คน" },
                       affectedHouseholds: { icon: "🏠", title: "ครัวเรือน", unit: "หลัง" },
-                      floodedVillages: { icon: "🏘️", title: "หมู่บ้านน้ำท่วม", unit: "แห่ง" },
+                      floodedVillages: { icon: "🏘️", title: "หมู่บ้านอุทกภัยน้ำท่วม", unit: "แห่ง" },
                       affectedAreas: { icon: "📍", title: "ตำบลประสบภัย", unit: "ตำบล" },
                       shelters: { icon: "🏘️", title: "จุดพักพิง", unit: "แห่ง" },
                       teams: { icon: "⚡", title: "ทีมปฏิบัติการ", unit: "ทีม" },
@@ -1192,8 +1212,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-800 text-gray-300 py-4 md:py-6 mt-8 md:mt-12">
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Satun Geo-EOC Intelligence Platform</p>
-          <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
+          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</p>
+          <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</p>
         </div>
       </footer>
 
@@ -1333,9 +1353,9 @@ function PublicOperationalDashboard({
       label: "ระดับเตือนภัย",
       value: criticalCount > 0 ? "สูง" : highCount > 0 ? "เฝ้าระวัง" : "ปกติ",
       unit: "",
-      sub: criticalCount > 0 ? `${criticalCount} จุดวิกฤต` : "",
-      tone: criticalCount > 0 ? "red" : "amber",
-      icon: "☁"
+      sub: criticalCount > 0 ? `${criticalCount} จุดวิกฤต` : highCount > 0 ? `${highCount} จุดเฝ้าระวัง` : "ปลอดภัย",
+      tone: criticalCount > 0 ? "red" : highCount > 0 ? "amber" : "safe",
+      icon: criticalCount > 0 ? "!" : highCount > 0 ? "☁" : "✓"
     }
   ];
 
@@ -1350,7 +1370,7 @@ function PublicOperationalDashboard({
             <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-10 w-10 rounded-full bg-white p-1 shadow-md sm:h-12 sm:w-12 lg:h-[62px] lg:w-[62px] lg:p-1.5" priority />
             <div className="min-w-0">
               <h1 className="truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
-              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun EOC Public Dashboard</p>
+              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</p>
             </div>
           </div>
 
@@ -1373,7 +1393,7 @@ function PublicOperationalDashboard({
       </header>
 
       <div className="grid min-h-[calc(100vh-87px)] grid-cols-[98px_minmax(0,1fr)] max-lg:grid-cols-1">
-        <OpsSidebar />
+        <OpsSidebar selectedDisasterType={selectedDisasterType} />
 
         <main className="min-w-0 p-2 pb-24 sm:p-3 lg:pb-3">
           <div className="mb-2 flex items-center justify-between gap-2 overflow-hidden rounded-lg bg-red-600 px-3 py-2 text-white shadow-sm sm:mb-3 sm:gap-3 sm:px-4 sm:py-2.5">
@@ -1512,7 +1532,7 @@ function PublicOperationalDashboard({
 
           <DiseaseChartSection chartSession={selectedSession?.isOverviewFallback ? null : selectedSession} />
         </main>
-        <OpsMobileNav />
+        <OpsMobileNav selectedDisasterType={selectedDisasterType} />
       </div>
 
       <FloatingReportButton />
@@ -1521,57 +1541,94 @@ function PublicOperationalDashboard({
   );
 }
 
-function OpsSidebar() {
-  const items = [
-    { href: "/", label: "หน้าหลัก", icon: "⌂", active: true },
-    { href: "/public/disaster-map", label: "แผนที่", icon: "⌖" },
-    { href: "/public/announcements", label: "ประกาศ", icon: "⚑" },
-    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂" },
-    { href: "/public/agencies", label: "หน่วยงาน", icon: "⚕" },
-    { href: "/public/help/citizen-guide", label: "คู่มือ", icon: "↓" },
-    { href: "/login", label: "เจ้าหน้าที่", icon: "ⓘ" }
-  ];
+function OpsSidebar({ selectedDisasterType }) {
+  const showWeatherMenu = selectedDisasterType === "flood";
+  const items = buildPublicHomeMenu(showWeatherMenu);
 
   return (
     <aside className="flex flex-col items-center gap-2 bg-[#0b4c86] px-2 py-6 text-white max-lg:hidden">
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`flex w-full flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-bold transition ${item.active ? "bg-white text-blue-800 shadow-md" : "text-blue-50 hover:bg-white/10"}`}
-        >
-          <span className="text-2xl leading-none">{item.icon}</span>
-          <span>{item.label}</span>
-        </Link>
-      ))}
+      {items.map((item) => {
+        const Icon = item.icon || Phone;
+        const isActive = item.key === "home";
+        const sharedClassName = `flex w-full flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-bold transition ${isActive ? "bg-white text-blue-800 shadow-md" : "text-blue-50 hover:bg-white/10"}`;
+
+        if (item.action) {
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={item.action}
+              className={sharedClassName}
+            >
+              <Icon className="h-6 w-6" aria-hidden="true" />
+              <span>{item.label}</span>
+            </button>
+          );
+        }
+
+        return (
+          <Link
+            key={item.key}
+            href={item.href}
+            className={sharedClassName}
+          >
+            <Icon className="h-6 w-6" aria-hidden="true" />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
       <div className="mt-auto rounded-xl bg-white/15 p-3 text-center text-xs font-semibold leading-5">
-        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 text-xl">□</div>
+        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/15">
+          <Building2 className="h-5 w-5" aria-hidden="true" />
+        </div>
         ข้อมูลสาธารณะ
       </div>
     </aside>
   );
 }
 
-function OpsMobileNav() {
-  const items = [
-    { href: "/", label: "หน้าหลัก", icon: "⌂", active: true },
-    { href: "/public/announcements", label: "ประกาศ", icon: "⚑" },
-    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: "⌂" },
-    { href: "/public/agencies", label: "หน่วยงาน", icon: "☎" }
-  ];
+function OpsMobileNav({ selectedDisasterType }) {
+  const showWeatherMenu = selectedDisasterType === "flood";
+  const items = buildPublicHomeMenu(showWeatherMenu).filter((item) => item.key !== "agencies").slice(0, 5);
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-4 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`flex flex-col items-center gap-1 px-1 py-2 text-[11px] font-bold ${item.active ? "text-blue-700" : "text-slate-500"}`}
-        >
-          <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${item.active ? "bg-blue-50" : "bg-transparent"}`}>{item.icon}</span>
-          <span className="truncate">{item.label}</span>
-        </Link>
-      ))}
+    <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
+      {items.map((item) => {
+        const Icon = item.icon || Phone;
+        const isActive = item.key === "home";
+        const sharedClassName = `flex flex-col items-center gap-1 px-1 py-2 text-[11px] font-bold ${isActive ? "text-blue-700" : "text-slate-500"}`;
+        const content = (
+          <>
+            <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${isActive ? "bg-blue-50" : "bg-transparent"}`}>
+              <Icon className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="truncate">{item.label}</span>
+          </>
+        );
+
+        if (item.action) {
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={item.action}
+              className={sharedClassName}
+            >
+              {content}
+            </button>
+          );
+        }
+
+        return (
+          <Link
+            key={item.key}
+            href={item.href}
+            className={sharedClassName}
+          >
+            {content}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
@@ -1584,20 +1641,25 @@ function OpsMetricCard({ label, value, unit, sub, tone, icon }) {
     teal: "border-cyan-300 bg-cyan-50 text-cyan-700",
     violet: "border-purple-300 bg-purple-50 text-purple-700",
     amber: "border-amber-300 bg-amber-50 text-amber-700",
-    red: "border-red-300 bg-red-50 text-red-700"
+    red: "border-red-300 bg-red-50 text-red-700",
+    safe: "border-emerald-300 bg-emerald-50 text-emerald-700"
   };
+  const labelClass = tone === "safe" ? "text-emerald-700" : "text-slate-600";
+  const subClass = tone === "safe" ? "text-emerald-700" : "text-slate-500";
+  const unitClass = tone === "safe" ? "text-emerald-700" : "text-slate-500";
+  const iconClass = tone === "safe" ? "bg-emerald-100 text-emerald-700" : "bg-white";
 
   return (
     <div className={`rounded-lg border bg-white p-2.5 shadow-sm sm:rounded-xl sm:p-3 ${tones[tone] || tones.blue}`}>
       <div className="flex items-start gap-2.5 sm:gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-xl shadow-sm sm:h-12 sm:w-12 sm:rounded-xl sm:text-2xl">{icon}</div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xl font-black shadow-sm sm:h-12 sm:w-12 sm:rounded-xl sm:text-2xl ${iconClass}`}>{icon}</div>
         <div className="min-w-0">
-          <div className="text-[11px] font-bold leading-4 text-slate-600 sm:text-xs">{label}</div>
+          <div className={`text-[11px] font-bold leading-4 sm:text-xs ${labelClass}`}>{label}</div>
           <div className="mt-0.5 flex items-end gap-1 sm:mt-1">
             <span className="text-2xl font-black leading-none sm:text-3xl">{typeof value === "number" || /^\d+$/.test(String(value)) ? formatNumber(value) : value}</span>
-            {unit && <span className="pb-0.5 text-[11px] font-bold text-slate-500 sm:pb-1 sm:text-xs">{unit}</span>}
+            {unit && <span className={`pb-0.5 text-[11px] font-bold sm:pb-1 sm:text-xs ${unitClass}`}>{unit}</span>}
           </div>
-          <div className="mt-0.5 truncate text-[11px] text-slate-500 sm:mt-1 sm:text-xs">{sub}</div>
+          <div className={`mt-0.5 truncate text-[11px] font-bold sm:mt-1 sm:text-xs ${subClass}`}>{sub}</div>
         </div>
       </div>
     </div>
@@ -1630,7 +1692,7 @@ function OpsFilterPanel({
   resetFilters
 }) {
   const disasterTypeLabels = {
-    flood: "น้ำท่วม",
+    flood: "อุทกภัยน้ำท่วม",
     disease: "โรคระบาด",
     accident: "อุบัติเหตุ"
   };
@@ -1796,7 +1858,7 @@ function MiniCalendar({ selectedDate }) {
 
 function LayerFloatingPanel({ mapLayers, setMapLayers, selectedDisasterType, onClose }) {
   const items = [
-    ...(selectedDisasterType === "flood" ? [["floodAreas", "พื้นที่น้ำท่วม"]] : []),
+    ...(selectedDisasterType === "flood" ? [["floodAreas", "พื้นที่อุทกภัยน้ำท่วม"]] : []),
     ...(selectedDisasterType === "disease" ? [["diseaseReports", "รายงานโรคระบาด"]] : []),
     ["district", "ขอบเขตอำเภอ"],
     ["tambon", "ขอบเขตตำบล"],
@@ -1843,11 +1905,11 @@ function HomeMapLegend({ disasterType, mapLayers, onClose }) {
 
   const domainLegend = {
     flood: {
-      title: "พื้นที่น้ำท่วม",
+      title: "พื้นที่อุทกภัยน้ำท่วม",
       items: [
-        ["bg-red-600", "น้ำท่วมสูง/สูงมาก"],
-        ["bg-amber-400", "น้ำท่วมปานกลาง"],
-        ["bg-sky-400", "น้ำท่วมต่ำ"]
+        ["bg-red-600", "อุทกภัยน้ำท่วมสูง/สูงมาก"],
+        ["bg-amber-400", "อุทกภัยน้ำท่วมปานกลาง"],
+        ["bg-sky-400", "อุทกภัยน้ำท่วมต่ำ"]
       ]
     },
     disease: {
@@ -1984,12 +2046,12 @@ function OpsRightPanel({ announcements, quickActionItems, helpRequestCount, traf
         </div>
       </Panel>
 
-      <Panel title="คำแนะนำสำหรับประชาชน" actionHref="/public/help/citizen-guide">
+      <Panel title="คำแนะนำสำหรับประชาชน" actionHref="">
         <div className="space-y-2 text-sm text-slate-700">
           {quickActionItems.map((item) => (
             <Link key={item.href} href={item.href} className="flex items-start gap-2 rounded-lg bg-slate-50 p-2 hover:bg-blue-50">
               <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500"></span>
-              <span>{item.title}</span>
+              <span>{item.title} <span className="text-red-600">คลิก</span></span>
             </Link>
           ))}
         </div>
@@ -2187,7 +2249,7 @@ function buildIncidentTimeline(incidents, selectedDate) {
   return incidents.slice(0, 5).map((incident) => ({
     date: formatThaiDateOnly((incident.occurred_at || incident.reported_at || selectedDate).slice?.(0, 10) || selectedDate),
     time: new Date(incident.occurred_at || incident.reported_at || `${selectedDate}T08:00:00`).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
-    type: incident.report_type === "traffic_report" ? "เส้นทางสัญจร" : incident.disaster_type === "disease" ? "โรคระบาด" : "น้ำท่วม",
+    type: incident.report_type === "traffic_report" ? "เส้นทางสัญจร" : incident.disaster_type === "disease" ? "โรคระบาด" : "อุทกภัยน้ำท่วม",
     area: [incident.district, incident.sub_district || incident.village].filter(Boolean).join(" ") || "-",
     detail: incident.description || "รายงานจากประชาชน",
     severity: incident.urgency || "low",
@@ -2252,7 +2314,7 @@ function HomeSituationDashboard({
     {
       show: !!floodStats,
       icon: "💧",
-      label: "หมู่บ้านน้ำท่วม",
+      label: "หมู่บ้านอุทกภัยน้ำท่วม",
       value: floodStats?.floodedVillages ?? 0,
       unit: "แห่ง"
     },

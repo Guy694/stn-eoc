@@ -14,6 +14,17 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+async function hasDiseaseSubtypeColumns(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'eoc_sessions'
+           AND COLUMN_NAME IN ('disease_id', 'disease_name')`
+    );
+    return columns.length === 2;
+}
+
 // GET - ดึงรายการรายงานเหตุการณ์ทั้งหมด
 export async function GET(request) {
     const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
@@ -46,6 +57,29 @@ export async function GET(request) {
             ? 'WHERE ' + whereConditions.join(' AND ')
             : '';
 
+        const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
+        const diseaseSessionSelect = hasDiseaseColumns
+            ? `(
+                SELECT es.id
+                FROM eoc_sessions es
+                WHERE es.eoc_type = 'disease'
+                  AND es.opened_at <= COALESCE(public_incident_reports.occurred_at, public_incident_reports.created_at)
+                  AND (es.closed_at IS NULL OR es.closed_at >= COALESCE(public_incident_reports.occurred_at, public_incident_reports.created_at))
+                ORDER BY es.opened_at DESC, es.id DESC
+                LIMIT 1
+            ) as related_disease_session_id,
+            (
+                SELECT es.disease_name
+                FROM eoc_sessions es
+                WHERE es.eoc_type = 'disease'
+                  AND es.opened_at <= COALESCE(public_incident_reports.occurred_at, public_incident_reports.created_at)
+                  AND (es.closed_at IS NULL OR es.closed_at >= COALESCE(public_incident_reports.occurred_at, public_incident_reports.created_at))
+                ORDER BY es.opened_at DESC, es.id DESC
+                LIMIT 1
+            ) as related_disease_name,`
+            : `NULL as related_disease_session_id,
+            NULL as related_disease_name,`;
+
         // Query รายการรายงาน
         const [reports] = await connection.execute(
             `SELECT 
@@ -71,6 +105,7 @@ export async function GET(request) {
                 reviewed_by,
                 reviewed_at,
                 admin_notes,
+                ${diseaseSessionSelect}
                 created_at,
                 updated_at
             FROM public_incident_reports

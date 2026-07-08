@@ -80,6 +80,8 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date');
+        const startDate = searchParams.get('start_date');
+        const endDate = searchParams.get('end_date');
         const sessionId = searchParams.get('session_id');
 
         connection = await pool.getConnection();
@@ -113,7 +115,7 @@ export async function GET(request) {
             return NextResponse.json({
                 success: false,
                 hasActiveSession: false,
-                message: sessionId ? 'ไม่พบ EOC Session น้ำท่วมที่เลือก' : 'ไม่มี EOC Session ที่เปิดอยู่',
+                message: sessionId ? 'ไม่พบ EOC Session อุทกภัยน้ำท่วมที่เลือก' : 'ไม่มี EOC Session ที่เปิดอยู่',
                 debug: { allFloodSessions }
             });
         }
@@ -125,7 +127,7 @@ export async function GET(request) {
         let whereClause = 'f.session_id = ?';
         let params = [targetSessionId];
 
-        // ถ้าไม่ระบุวันที่ ให้หาวันที่ล่าสุดที่มีข้อมูล
+        // ถ้าไม่ระบุวันที่หรือช่วงวันที่ ให้หาวันที่ล่าสุดที่มีข้อมูล
         let targetDate = date;
         const [latestDate] = await connection.execute(`
             SELECT
@@ -137,13 +139,22 @@ export async function GET(request) {
             WHERE session_id = ?
         `, [targetSessionId]);
         const latestRecordDate = toDateKey(latestDate[0]?.latest_date);
-        if (!targetDate) {
+        if (!targetDate && !startDate && !endDate) {
             targetDate = latestDate[0]?.latest_date;
         }
 
         if (targetDate) {
             whereClause += ' AND DATE(f.flood_start_date) = ?';
             params.push(toDateKey(targetDate));
+        } else {
+            if (startDate) {
+                whereClause += ' AND DATE(f.flood_start_date) >= ?';
+                params.push(toDateKey(startDate));
+            }
+            if (endDate) {
+                whereClause += ' AND DATE(f.flood_start_date) <= ?';
+                params.push(toDateKey(endDate));
+            }
         }
 
         // ดึงข้อมูล flood status จาก flood_records พร้อม village data
@@ -211,6 +222,10 @@ export async function GET(request) {
             hasActiveSession: true,
             activeSession: activeSession,
             targetDate: toDateKey(targetDate),
+            dateRange: {
+                startDate: startDate ? toDateKey(startDate) : null,
+                endDate: endDate ? toDateKey(endDate) : null
+            },
             latestRecordDate,
             data: processedData,
             stats: stats[0] || {},
@@ -221,7 +236,7 @@ export async function GET(request) {
         console.error('Database error:', error);
         return NextResponse.json({
             success: false,
-            error: 'เกิดข้อผิดพลาดในการดึงสถานะพื้นที่น้ำท่วม',
+            error: 'เกิดข้อผิดพลาดในการดึงสถานะพื้นที่อุทกภัยน้ำท่วม',
             hasActiveSession: false
         }, { status: 500 });
     } finally {

@@ -33,7 +33,7 @@ export async function GET(request) {
                         frequency: 5,
                         frequency_level: "สูง",
                         last_flood_year: 2024,
-                        description: "พื้นที่น้ำท่วมซ้ำซาก ประมาณ 5 ครั้งใน 10 ปี"
+                        description: "พื้นที่อุทกภัยน้ำท่วมซ้ำซาก ประมาณ 5 ครั้งใน 10 ปี"
                     }
                 },
                 {
@@ -55,7 +55,7 @@ export async function GET(request) {
                         frequency: 3,
                         frequency_level: "ปานกลาง",
                         last_flood_year: 2024,
-                        description: "พื้นที่น้ำท่วมซ้ำซาก ประมาณ 3 ครั้งใน 10 ปี"
+                        description: "พื้นที่อุทกภัยน้ำท่วมซ้ำซาก ประมาณ 3 ครั้งใน 10 ปี"
                     }
                 },
                 {
@@ -77,7 +77,7 @@ export async function GET(request) {
                         frequency: 7,
                         frequency_level: "สูงมาก",
                         last_flood_year: 2024,
-                        description: "พื้นที่น้ำท่วมซ้ำซาก ประมาณ 7 ครั้งใน 10 ปี"
+                        description: "พื้นที่อุทกภัยน้ำท่วมซ้ำซาก ประมาณ 7 ครั้งใน 10 ปี"
                     }
                 }
             ]
@@ -118,6 +118,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching flood frequency data:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่น้ำท่วมซ้ำซาก');
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่อุทกภัยน้ำท่วมซ้ำซาก');
     }
 }

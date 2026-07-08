@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// API Proxy สำหรับดึงข้อมูลน้ำท่วมจาก GISTDA
+// API Proxy สำหรับดึงข้อมูลอุทกภัยน้ำท่วมจาก GISTDA
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -103,7 +103,7 @@ function getMockFloodData() {
                     flood_level: 'moderate',
                     water_depth: 50,
                     affected_area: 1200,
-                    description: 'พื้นที่น้ำท่วมบริเวณตำบลควนสตอ',
+                    description: 'พื้นที่อุทกภัยน้ำท่วมบริเวณตำบลควนสตอ',
                     date: '2025-12-11'
                 },
                 geometry: {
@@ -120,7 +120,7 @@ function getMockFloodData() {
                     flood_level: 'mild',
                     water_depth: 30,
                     affected_area: 800,
-                    description: 'น้ำท่วมเล็กน้อยบริเวณตำบลคลองขุด',
+                    description: 'อุทกภัยน้ำท่วมเล็กน้อยบริเวณตำบลคลองขุด',
                     date: '2025-12-11'
                 },
                 geometry: {
@@ -137,7 +137,7 @@ function getMockFloodData() {
                     flood_level: 'severe',
                     water_depth: 80,
                     affected_area: 2000,
-                    description: 'น้ำท่วมหนักบริเวณตำบลควนโดน',
+                    description: 'อุทกภัยน้ำท่วมหนักบริเวณตำบลควนโดน',
                     date: '2025-12-11'
                 },
                 geometry: {

@@ -186,7 +186,7 @@ export default function ManageSheltersPage() {
             <EOCLayout>
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
                     <span className="text-5xl mb-4 block">⚠️</span>
-                    <h2 className="text-xl font-bold text-yellow-800 mb-2">ไม่มี EOC น้ำท่วมที่เปิดใช้งาน</h2>
+                    <h2 className="text-xl font-bold text-yellow-800 mb-2">ไม่มี EOC อุทกภัยน้ำท่วมที่เปิดใช้งาน</h2>
                     <p className="text-yellow-700">กรุณาเปิด EOC ก่อนจึงจะสามารถจัดการศูนย์พักพิงได้</p>
                     <Link href="/admin/eoc-management" className="mt-4 inline-block px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
                         ไปหน้าจัดการ EOC

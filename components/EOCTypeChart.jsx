@@ -23,7 +23,7 @@ ChartJS.register(
 
 // ชื่อ EOC Type แบบภาษาไทย
 const EOC_TYPE_LABELS = {
-    flood: "น้ำท่วม",
+    flood: "อุทกภัยน้ำท่วม",
     disease: "โรคระบาด",
     'festival-accidents': "อุบัติเหตุ"
 };

@@ -13,7 +13,7 @@ export default function Navbar() {
         { name: "หน้าหลัก", path: "/" },
         { name: "สภาพอากาศ", path: "/public/weather-watch" },
         // { name: "แผนที่ภัยพิบัติ", path: "/public/disaster-map" },
-        // { name: "แผนที่น้ำท่วม", path: "/eoc/flood" },
+        // { name: "แผนที่อุทกภัยน้ำท่วม", path: "/eoc/flood" },
         // { name: "แผนที่หมู่บ้าน", path: "/eoc/village-map" },
         //{ name: "โรคระบาด", path: "/eoc/disease" },
         //{ name: "อุบัติเหตุช่วงเทศกาล", path: "/eoc/festival-accidents" },
@@ -33,14 +33,14 @@ export default function Navbar() {
     });
 
     return (
-        <nav className="bg-green-700 text-white border-b border-green-600">
+        <nav className="bg-[#0b4c86] text-white border-b border-blue-950/20">
             <div className="container mx-auto px-4">
                 {/* Desktop & Mobile Header */}
                 <div className="flex items-center justify-between lg:hidden py-3">
                     <span className="font-semibold">เมนู</span>
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="p-2 rounded-lg hover:bg-green-600 transition-colors"
+                        className="p-2 rounded-lg hover:bg-[#083865] transition-colors"
                         aria-label="Toggle menu"
                     >
                         <svg
@@ -74,7 +74,7 @@ export default function Navbar() {
                         <li key={item.path} className="flex-shrink-0">
                             <Link
                                 href={item.path}
-                                className={`block px-4 xl:px-6 py-3 hover:bg-green-600 transition-colors whitespace-nowrap ${pathname === item.path ? "bg-green-600 border-b border-white" : ""
+                                className={`block px-4 xl:px-6 py-3 hover:bg-[#083865] transition-colors whitespace-nowrap ${pathname === item.path ? "bg-[#083865] border-b border-white" : ""
                                     }`}
                             >
                                 {item.name}
@@ -89,11 +89,11 @@ export default function Navbar() {
                         }`}
                 >
                     {navItems.map((item) => (
-                        <li key={item.path} className="border-t border-green-600">
+                        <li key={item.path} className="border-t border-blue-950/20">
                             <Link
                                 href={item.path}
                                 onClick={() => setIsOpen(false)}
-                                className={`block px-4 py-3 hover:bg-green-600 transition-colors ${pathname === item.path ? "bg-green-600 font-semibold" : ""
+                                className={`block px-4 py-3 hover:bg-[#083865] transition-colors ${pathname === item.path ? "bg-[#083865] font-semibold" : ""
                                     }`}
                             >
                                 {item.name}

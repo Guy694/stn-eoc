@@ -31,6 +31,8 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const date = searchParams.get('date');
+        const startDate = searchParams.get('start_date');
+        const endDate = searchParams.get('end_date');
 
         connection = await pool.getConnection();
         const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
@@ -84,9 +86,9 @@ export async function GET(request) {
                 dr.notes,
                 hf.name as facility_name,
                 hf.district_name as district,
-                hf.tambon_name as tambon,
+                hf.tambon as tambon,
                 hf.lat,
-                hf.lng
+                hf.lon as lng
             FROM disease_reports dr
             JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE dr.session_id = ?
@@ -96,6 +98,9 @@ export async function GET(request) {
         if (date) {
             query += ' AND DATE(dr.report_date) = ?';
             params.push(date);
+        } else if (startDate && endDate) {
+            query += ' AND DATE(dr.report_date) BETWEEN ? AND ?';
+            params.push(startDate, endDate);
         }
 
         query += ' ORDER BY dr.report_date DESC, hf.district_name, hf.name';

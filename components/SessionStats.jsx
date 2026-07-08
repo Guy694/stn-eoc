@@ -62,7 +62,7 @@ export default function SessionStats({ session, year }) {
 
         setLoading(true);
         try {
-            // ดึงข้อมูลน้ำท่วมในช่วง session
+            // ดึงข้อมูลอุทกภัยน้ำท่วมในช่วง session
             const startDate = new Date(session.opened_at).toISOString().split('T')[0];
             const endDate = session.closed_at
                 ? new Date(session.closed_at).toISOString().split('T')[0]

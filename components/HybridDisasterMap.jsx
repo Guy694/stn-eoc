@@ -44,7 +44,7 @@ export default function HybridDisasterMap({
     onPolygonClick,
     onEventClick,
     gistdaData = null,
-    floodFreqData = null, // ข้อมูลน้ำท่วมซ้ำซาก
+    floodFreqData = null, // ข้อมูลอุทกภัยน้ำท่วมซ้ำซาก
     startDate = '',
     endDate = ''
 }) {
@@ -57,7 +57,7 @@ export default function HybridDisasterMap({
     // ศูนย์กลางของจังหวัดสตูล
     const satunCenter = [6.6238, 100.0673];
 
-    // ฟังก์ชันเลือกสีตามระดับความเสี่ยงน้ำท่วม
+    // ฟังก์ชันเลือกสีตามระดับความเสี่ยงอุทกภัยน้ำท่วม
     const getFloodRiskColor = (riskLevel) => {
         const colors = {
             'สูงมาก': '#DC2626', // แดงเข้ม
@@ -271,7 +271,7 @@ export default function HybridDisasterMap({
         return colors[severity] || '#6B7280';
     };
 
-    // สีสำหรับความถี่ของน้ำท่วมซ้ำซาก
+    // สีสำหรับความถี่ของอุทกภัยน้ำท่วมซ้ำซาก
     const getFloodFreqColor = (frequency) => {
         if (frequency >= 7) return '#7C2D12'; // สูงมาก (น้ำตาลเข้ม)
         if (frequency >= 5) return '#DC2626'; // สูง (แดงเข้ม)
@@ -425,14 +425,14 @@ export default function HybridDisasterMap({
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-lg">🌊</span>
                                             <h3 className="font-bold text-lg text-gray-800">
-                                                {props.tambon || props.name || 'พื้นที่น้ำท่วม GISTDA'}
+                                                {props.tambon || props.name || 'พื้นที่อุทกภัยน้ำท่วม GISTDA'}
                                             </h3>
                                         </div>
                                         <div className="space-y-1 text-sm">
                                             {props.province && <p><strong>จังหวัด:</strong> {props.province}</p>}
                                             {props.district && <p><strong>อำเภอ:</strong> {props.district}</p>}
                                             <p>
-                                                <strong>ระดับน้ำท่วม:</strong>{' '}
+                                                <strong>ระดับอุทกภัยน้ำท่วม:</strong>{' '}
                                                 <span
                                                     className="px-2 py-1 rounded text-white text-xs"
                                                     style={{ backgroundColor: floodColor }}
@@ -506,7 +506,7 @@ export default function HybridDisasterMap({
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-lg">🔄</span>
                                             <h3 className="font-bold text-lg text-gray-800">
-                                                พื้นที่น้ำท่วมซ้ำซาก
+                                                พื้นที่อุทกภัยน้ำท่วมซ้ำซาก
                                             </h3>
                                         </div>
                                         <div className="space-y-1 text-sm">
@@ -526,7 +526,7 @@ export default function HybridDisasterMap({
                                                 <p><strong>ระดับ:</strong> {props.frequency_level}</p>
                                             )}
                                             {props.last_flood_year && (
-                                                <p><strong>น้ำท่วมครั้งล่าสุด:</strong> {parseInt(props.last_flood_year) + 543}</p>
+                                                <p><strong>อุทกภัยน้ำท่วมครั้งล่าสุด:</strong> {parseInt(props.last_flood_year) + 543}</p>
                                             )}
                                             {props.description && (
                                                 <p className="text-gray-600 mt-2">{props.description}</p>
@@ -637,9 +637,9 @@ export default function HybridDisasterMap({
             {/* Legend */}
             <div className="absolute bottom-6 right-6 bg-white p-4 rounded-lg shadow-lg z-[1000] max-w-xs">
                 <h4 className="font-bold mb-3 text-gray-800">
-                    {floodFreqData ? 'ความถี่น้ำท่วมซ้ำซาก' :
+                    {floodFreqData ? 'ความถี่อุทกภัยน้ำท่วมซ้ำซาก' :
                         colorMode === 'risk'
-                            ? (disasterType === 'flood' ? 'ระดับความเสี่ยงน้ำท่วม' : 'ระดับความเสี่ยงภัยแล้ง')
+                            ? (disasterType === 'flood' ? 'ระดับความเสี่ยงอุทกภัยน้ำท่วม' : 'ระดับความเสี่ยงภัยแล้ง')
                             : colorMode === 'tambon' ? 'ตำบล'
                                 : colorMode === 'district' ? 'อำเภอ'
                                     : 'จำนวนครัวเรือน'
@@ -703,7 +703,7 @@ export default function HybridDisasterMap({
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-3 border-2 border-blue-600" style={{ borderStyle: 'dashed' }}></div>
-                            <span className="text-xs text-gray-600">พื้นที่น้ำท่วม</span>
+                            <span className="text-xs text-gray-600">พื้นที่อุทกภัยน้ำท่วม</span>
                         </div>
                     </div>
                 )}

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// จำลองข้อมูลพื้นที่น้ำท่วมรายวัน
+// จำลองข้อมูลพื้นที่อุทกภัยน้ำท่วมรายวัน
 // ในการใช้งานจริงควรดึงจาก MySQL database
 export async function GET(request) {
     try {

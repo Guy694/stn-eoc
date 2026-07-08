@@ -93,7 +93,7 @@ export default function PublicIncidentMap({
         severe: { label: 'สูง/สูงมาก', color: '#DC2626', fillOpacity: 0.5 },
         moderate: { label: 'ปานกลาง', color: '#F59E0B', fillOpacity: 0.42 },
         mild: { label: 'ต่ำ', color: '#38BDF8', fillOpacity: 0.38 },
-        safe: { label: 'ไม่มีน้ำท่วม', color: '#22C55E', fillOpacity: 0.18 },
+        safe: { label: 'ไม่มีอุทกภัยน้ำท่วม', color: '#22C55E', fillOpacity: 0.18 },
         nodata: { label: 'ไม่มีข้อมูล', color: '#CBD5E1', fillOpacity: 0.08 }
     };
 
@@ -272,7 +272,12 @@ export default function PublicIncidentMap({
         try {
             const params = new URLSearchParams();
             params.append('session_id', sessionId);
-            if (startDate) params.append('date', startDate);
+            if (startDate && endDate && startDate !== endDate) {
+                params.append('start_date', startDate);
+                params.append('end_date', endDate);
+            } else if (startDate) {
+                params.append('date', startDate);
+            }
 
             const response = await fetch(`/stn-eoc/api/eoc/flood/area-status?${params}`);
             const data = await response.json();
@@ -285,7 +290,7 @@ export default function PublicIncidentMap({
             console.error('Error fetching flood area layer:', error);
             setFloodAreas([]);
         }
-    }, [disasterType, sessionId, showFloodAreaLayer, startDate]);
+    }, [disasterType, endDate, sessionId, showFloodAreaLayer, startDate]);
 
     useEffect(() => { fetchFloodAreas(); }, [fetchFloodAreas]);
 
@@ -661,7 +666,7 @@ export default function PublicIncidentMap({
                                 {disasterType === 'flood' && (
                                     <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
                                         <input type="checkbox" checked={showFloodAreaLayer} onChange={(e) => setLayer('floodAreas', e.target.checked)} className="w-4 h-4 accent-blue-600" />
-                                        <span>พื้นที่น้ำท่วม</span>
+                                        <span>พื้นที่อุทกภัยน้ำท่วม</span>
                                     </label>
                                 )}
                                 {disasterType === 'disease' && (
@@ -725,7 +730,7 @@ export default function PublicIncidentMap({
                             )}
                             {showFloodAreaLayer && (
                                 <div>
-                                    <p className="font-semibold text-gray-800 mb-2">ระดับพื้นที่น้ำท่วม</p>
+                                    <p className="font-semibold text-gray-800 mb-2">ระดับพื้นที่อุทกภัยน้ำท่วม</p>
                                     <div className="flex flex-wrap gap-2 text-xs">
                                         {['severe', 'moderate', 'mild', 'safe'].map((level) => {
                                             const meta = getFloodLevelMeta(level);
@@ -875,7 +880,7 @@ export default function PublicIncidentMap({
                                     onEachFeature={(feature, layer) => {
                                         layer.bindPopup(`
                                             <div style="font-family: var(--font-kanit); min-width: 180px">
-                                                <strong>พื้นที่น้ำท่วม</strong>
+                                                <strong>พื้นที่อุทกภัยน้ำท่วม</strong>
                                                 <p style="margin: 4px 0 0">อ.${area.district || '-'} ต.${area.tambon || '-'} ${area.villname || ''}</p>
                                                 <p style="margin: 4px 0 0"><strong>ระดับ:</strong> ${meta.label}</p>
                                                 <p style="margin: 4px 0 0"><strong>วันที่:</strong> ${area.recorded_day ? new Date(area.recorded_day).toLocaleDateString('th-TH') : '-'}</p>

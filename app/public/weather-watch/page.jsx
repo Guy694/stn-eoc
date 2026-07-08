@@ -59,17 +59,16 @@ function statusClasses(level) {
 }
 
 export default function WeatherWatchPage() {
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [forecastTab, setForecastTab] = useState("hourly");
 
-  const loadWeather = useCallback(async (date) => {
+  const loadWeather = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/stn-eoc/api/public/weather-watch?date=${encodeURIComponent(date)}`, {
+      const response = await fetch("/stn-eoc/api/public/weather-watch", {
         cache: "no-store"
       });
       const payload = await response.json();
@@ -86,8 +85,8 @@ export default function WeatherWatchPage() {
   }, []);
 
   useEffect(() => {
-    loadWeather(selectedDate);
-  }, [loadWeather, selectedDate]);
+    loadWeather();
+  }, [loadWeather]);
 
   const current = data?.weather_current || {};
   const districts = data?.district_weather || [];
@@ -98,16 +97,17 @@ export default function WeatherWatchPage() {
     return data.weather_forecast.filter((item) => item.period === forecastTab);
   }, [data, forecastTab]);
 
-  const timeline = data?.timeline || [];
   const ranking = [...districts].sort((a, b) => b.risk_score - a.risk_score || b.rainfall_24h - a.rainfall_24h);
+  const hasWeatherData = Boolean(data?.weather_current && districts.length > 0);
 
   return (
     <PublicOpsScaffold
       title="สภาพอากาศ / Weather Watch"
-      subtitle="แผนที่เฝ้าระวังสภาพอากาศ ฝนสะสม ความเสี่ยงน้ำท่วม วาตภัย ดินถล่ม และคำแนะนำประชาชน"
+      subtitle="แผนที่เฝ้าระวังสภาพอากาศ ฝนสะสม ความเสี่ยงอุทกภัยน้ำท่วม วาตภัย ดินถล่ม และคำแนะนำประชาชน"
       activeMenu="weather"
       eocStatus={current.risk_level === "critical" ? "open" : "watch"}
       eocLabel="Weather Watch"
+      showWeatherMenu
       showPageHeader={false}
       mainClassName="bg-[#edf5fc]"
     >
@@ -115,19 +115,16 @@ export default function WeatherWatchPage() {
         <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">Satun EOC Public Dashboard</div>
+              <div className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</div>
               <h2 className="mt-1 text-2xl font-black text-blue-950 lg:text-3xl">สภาพอากาศ / Weather Watch</h2>
               <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
                 ศูนย์ติดตามสภาพอากาศแบบแผนที่เป็นหลัก สำหรับฝนสะสม พยากรณ์ฝน คลื่นลมแรง และพื้นที่เสี่ยงของจังหวัดสตูล
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Link href="/public/report-incident" className="rounded-lg bg-red-600 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-red-700">
-                แจ้งขอความช่วยเหลือ
-              </Link>
               <button
                 type="button"
-                onClick={() => loadWeather(selectedDate)}
+                onClick={() => loadWeather()}
                 className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-black text-blue-800 hover:bg-blue-100"
               >
                 รีเฟรชข้อมูล
@@ -135,11 +132,10 @@ export default function WeatherWatchPage() {
             </div>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
-            <span>โหมดข้อมูล: {data?.data_mode === "mock" ? "Mock Data" : "Live"}</span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
             <span>อัปเดตล่าสุด: {formatDateTime(current.observed_at)} น.</span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <span>แหล่งข้อมูลอนาคต: TMD, GISTDA, OpenWeather, Windy</span>
+            <span>แหล่งข้อมูล: {current.source || "Open-Meteo"}</span>
           </div>
         </section>
 
@@ -149,99 +145,70 @@ export default function WeatherWatchPage() {
           </div>
         )}
 
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
-          {KPI_CONFIG.map((item) => {
-            const value = item.format ? item.format(current[item.key]) : formatValue(current[item.key], item.suffix);
-            const risk = item.key === "risk_level" ? getRiskMeta(current[item.key]) : getRiskMeta(current.risk_level);
-            return (
-              <div key={item.key} className={`min-h-[110px] rounded-lg border bg-white p-3 shadow-sm ${item.key === "risk_level" ? statusClasses(current[item.key]) : "border-slate-200"}`}>
-                <div className="text-[11px] font-black uppercase tracking-wide text-slate-500">{item.label}</div>
-                <div className="mt-3 text-2xl font-black text-slate-900">{loading ? "..." : value}</div>
-                <div className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-500">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: risk.color }} />
-                  จังหวัดสตูล
+        {!loading && !hasWeatherData ? (
+          <section className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm font-bold leading-6 text-amber-800 shadow-sm">
+            ยังไม่มีข้อมูลสภาพอากาศจริงจาก provider ในขณะนี้ ระบบจึงไม่แสดงข้อมูลจำลอง
+          </section>
+        ) : (
+          <>
+            <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+              {KPI_CONFIG.map((item) => {
+                const value = item.format ? item.format(current[item.key]) : formatValue(current[item.key], item.suffix);
+                const risk = item.key === "risk_level" ? getRiskMeta(current[item.key]) : getRiskMeta(current.risk_level);
+                return (
+                  <div key={item.key} className={`min-h-[110px] rounded-lg border bg-white p-3 shadow-sm ${item.key === "risk_level" ? statusClasses(current[item.key]) : "border-slate-200"}`}>
+                    <div className="text-[11px] font-black uppercase tracking-wide text-slate-500">{item.label}</div>
+                    <div className="mt-3 text-2xl font-black text-slate-900">{loading ? "..." : value}</div>
+                    <div className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-500">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: risk.color }} />
+                      จังหวัดสตูล
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+
+            <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_380px]">
+              <div className="space-y-3">
+                <WeatherWatchMap data={data || {}} />
+              </div>
+              <RightPanel warnings={warnings} ranking={ranking} advice={data?.safety_advice || []} />
+            </section>
+
+            {forecastItems.length > 0 && (
+              <ForecastSection
+                tab={forecastTab}
+                onTabChange={setForecastTab}
+                items={forecastItems}
+              />
+            )}
+
+            {data?.charts && <WeatherCharts charts={data.charts} />}
+
+            {districts.length > 0 && <DistrictWeatherTable districts={districts} />}
+
+            <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">แหล่งข้อมูลสภาพอากาศจริง</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    หน้านี้เรียกข้อมูลผ่าน Backend API Route เท่านั้น และไม่ใช้ข้อมูลจำลองเมื่อ provider ไม่มีข้อมูล
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-2 text-xs font-bold text-slate-600 sm:grid-cols-2">
+                  {(data?.integration_sources || []).map((source) => (
+                    <div key={source.name} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                      <div className="font-black text-slate-900">{source.name}</div>
+                      <div className="mt-1 line-clamp-2">{source.use}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </section>
-
-        <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="space-y-3">
-            <WeatherWatchMap data={data || {}} />
-            <DailyTimeline
-              timeline={timeline}
-              selectedDate={selectedDate}
-              onSelect={setSelectedDate}
-            />
-          </div>
-          <RightPanel warnings={warnings} ranking={ranking} advice={data?.safety_advice || []} />
-        </section>
-
-        <ForecastSection
-          tab={forecastTab}
-          onTabChange={setForecastTab}
-          items={forecastItems}
-        />
-
-        <WeatherCharts charts={data?.charts} />
-
-        <DistrictWeatherTable districts={districts} />
-
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h3 className="text-lg font-black text-slate-900">โครงสร้างพร้อมเชื่อม API จริง</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                หน้านี้เรียกข้อมูลผ่าน Backend API Route เท่านั้น ไม่มีการฝัง API Key ใน Frontend และสามารถเปลี่ยน provider ได้ในฝั่ง server-side proxy
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-600 sm:grid-cols-5">
-              {(data?.integration_sources || []).map((source) => (
-                <div key={source.name} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
-                  <div className="font-black text-slate-900">{source.name}</div>
-                  <div className="mt-1 line-clamp-2">{source.use}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+            </section>
+          </>
+        )}
       </div>
     </PublicOpsScaffold>
-  );
-}
-
-function DailyTimeline({ timeline, selectedDate, onSelect }) {
-  const shift = (amount) => {
-    const date = new Date(`${selectedDate}T00:00:00`);
-    date.setDate(date.getDate() + amount);
-    onSelect(date.toISOString().slice(0, 10));
-  };
-
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h3 className="text-base font-black text-slate-900">Daily Weather Timeline</h3>
-          <p className="text-xs font-semibold text-slate-500">เลือกวันเพื่อเปลี่ยน KPI, marker, ฝนสะสม, ประกาศ, กราฟ และตารางรายอำเภอ</p>
-        </div>
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <button type="button" onClick={() => shift(-1)} className="h-9 w-9 shrink-0 rounded-lg border border-slate-200 font-black text-slate-700 hover:bg-slate-50">{"<"}</button>
-          {timeline.map((item) => (
-            <button
-              key={item.date}
-              type="button"
-              onClick={() => onSelect(item.date)}
-              className={`min-w-[84px] rounded-lg border px-3 py-2 text-xs font-black transition ${item.date === selectedDate ? "border-blue-700 bg-blue-700 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
-            >
-              <span>{item.label}</span>
-              {item.is_today && <span className="ml-1 text-[10px] opacity-80">วันนี้</span>}
-            </button>
-          ))}
-          <button type="button" onClick={() => shift(1)} className="h-9 w-9 shrink-0 rounded-lg border border-slate-200 font-black text-slate-700 hover:bg-slate-50">{">"}</button>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -250,6 +217,11 @@ function RightPanel({ warnings, ranking, advice }) {
     <aside className="space-y-3">
       <Panel title="ประกาศเตือนภัยสภาพอากาศ">
         <div className="space-y-2">
+          {warnings.length === 0 && (
+            <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm font-semibold leading-5 text-slate-600">
+              ยังไม่มีประกาศเตือนภัยจริงจาก provider
+            </div>
+          )}
           {warnings.map((warning) => {
             const meta = getRiskMeta(warning.severity_level);
             return (
@@ -279,6 +251,11 @@ function RightPanel({ warnings, ranking, advice }) {
 
       <Panel title="พื้นที่เสี่ยงสูงวันนี้">
         <ol className="space-y-2">
+          {ranking.length === 0 && (
+            <li className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm font-semibold text-slate-600">
+              ยังไม่มีข้อมูลพื้นที่เสี่ยงจริง
+            </li>
+          )}
           {ranking.map((district, index) => {
             const meta = getRiskMeta(district.risk_level);
             return (
@@ -295,15 +272,7 @@ function RightPanel({ warnings, ranking, advice }) {
         </ol>
       </Panel>
 
-      <Panel title="คำแนะนำประชาชน">
-        <ul className="space-y-2">
-          {advice.map((item) => (
-            <li key={item} className="rounded-lg border border-slate-100 bg-slate-50 p-2 text-sm font-semibold leading-5 text-slate-700">
-              {item}
-            </li>
-          ))}
-        </ul>
-      </Panel>
+  
     </aside>
   );
 }
@@ -411,7 +380,7 @@ function DistrictWeatherTable({ districts }) {
               <th className="px-3 py-2 text-right">ฝน 24 ชม.</th>
               <th className="px-3 py-2 text-right">โอกาสฝน</th>
               <th className="px-3 py-2 text-right">ลม</th>
-              <th className="px-3 py-2">น้ำท่วม</th>
+              <th className="px-3 py-2">อุทกภัยน้ำท่วม</th>
               <th className="px-3 py-2">ดินถล่ม</th>
               <th className="px-3 py-2">คำแนะนำ</th>
               <th className="px-3 py-2">อัปเดตล่าสุด</th>

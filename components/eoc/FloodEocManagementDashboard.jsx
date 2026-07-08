@@ -172,7 +172,7 @@ function HeaderBlock({ session, summary, viewMeta }) {
           </div>
           <h1 className="mt-2 text-2xl font-black lg:text-3xl">{session.session_name}</h1>
           <p className="mt-1 max-w-5xl text-sm leading-6 text-slate-200">
-            Session-based Management + Daily Reporting Cycle สำหรับ Module น้ำท่วม โดยทุกทีมต้องส่งข้อมูลก่อน 15:00 น.
+            Session-based Management + Daily Reporting Cycle สำหรับ Module อุทกภัยน้ำท่วม โดยทุกทีมต้องส่งข้อมูลก่อน 15:00 น.
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
             <span className="rounded-full bg-white/12 px-3 py-1">{session.session_code}</span>
@@ -221,7 +221,7 @@ function OverviewView({ data }) {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Panel title="Module น้ำท่วม / Flood EOC Module" icon={Waves}>
+        <Panel title="Module อุทกภัยน้ำท่วม / Flood EOC Module" icon={Waves}>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {data.teams.map((team) => (
               <div key={team.team_code} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -257,7 +257,7 @@ function OverviewView({ data }) {
 function DailyDashboardView({ data, compact = false }) {
   const summary = data.selected_summary;
   const kpis = [
-    ["เหตุการณ์น้ำท่วมวันนี้", data.current_flood_reports.length, Waves],
+    ["เหตุการณ์อุทกภัยน้ำท่วมวันนี้", data.current_flood_reports.length, Waves],
     ["อำเภอได้รับผลกระทบ", summary.affected_districts, MapPin],
     ["ตำบลได้รับผลกระทบ", summary.affected_subdistricts, Map],
     ["หมู่บ้านได้รับผลกระทบ", summary.affected_villages, Home],
@@ -304,7 +304,7 @@ function CommandRoomView({ data }) {
         <div className="space-y-4">
           <Panel title="Executive Summary" icon={FileText}>
             <p className="text-sm font-semibold leading-7 text-slate-700">
-              ระบบพบว่าอำเภอละงูและมะนังมีระดับความเสี่ยงสูงจากฝนสะสมและจุดน้ำท่วมหลายจุด มีประชาชนได้รับผลกระทบรวม {formatNumber(data.selected_summary.affected_population)} คน ขณะที่ทีมที่ยังไม่ส่งหรือส่งหลังเวลา 15:00 น. ต้องถูกติดตามก่อนประชุม จึงควรพิจารณาเปิดศูนย์พักพิงเพิ่มเติม เร่งส่งทรัพยากร และออกประกาศเตือนภัยเพิ่มเติมในพื้นที่เสี่ยง
+              ระบบพบว่าอำเภอละงูและมะนังมีระดับความเสี่ยงสูงจากฝนสะสมและจุดอุทกภัยน้ำท่วมหลายจุด มีประชาชนได้รับผลกระทบรวม {formatNumber(data.selected_summary.affected_population)} คน ขณะที่ทีมที่ยังไม่ส่งหรือส่งหลังเวลา 15:00 น. ต้องถูกติดตามก่อนประชุม จึงควรพิจารณาเปิดศูนย์พักพิงเพิ่มเติม เร่งส่งทรัพยากร และออกประกาศเตือนภัยเพิ่มเติมในพื้นที่เสี่ยง
             </p>
           </Panel>
           <SituationMap reports={data.current_flood_reports} shelters={data.shelters} healthFacilities={data.health_facilities} />

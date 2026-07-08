@@ -19,7 +19,7 @@ export default function Header() {
     };
 
     return (
-        <header className="bg-green-800 text-white shadow-md">
+        <header className="bg-[#083865] text-white shadow-md">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex items-center justify-between">
                     {/* Logo and Title */}
@@ -29,7 +29,7 @@ export default function Header() {
                         </div>
                         <div>
                             <h1 className="text-lg sm:text-xl font-bold">EOC จังหวัดสตูล</h1>
-                            <p className="text-xs text-green-100 hidden sm:block">Satun Geo-EOC Intelligence Platform</p>
+                            <p className="text-xs text-blue-100 hidden sm:block">Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</p>
                         </div>
                     </div>
 
@@ -37,7 +37,7 @@ export default function Header() {
                     <div className="flex items-center gap-4">
                         {/* Province Name - Hidden on mobile if user logged in */}
                         <div className={`hidden ${user ? 'lg:flex' : 'md:flex'} items-center`}>
-                            <span className="text-xs sm:text-sm">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</span>
+                            <span className="text-xs sm:text-sm">ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</span>
                         </div>
 
                         {/* User Menu */}
@@ -45,10 +45,10 @@ export default function Header() {
                             <div className="relative">
                                 <button
                                     onClick={() => setShowMenu(!showMenu)}
-                                    className="flex items-center gap-2 bg-green-700 hover:bg-green-600 px-3 py-2 rounded-lg transition-colors"
+                                    className="flex items-center gap-2 bg-[#0b4c86] hover:bg-[#0f5c9f] px-3 py-2 rounded-lg transition-colors"
                                 >
                                     <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                                        <span className="text-green-800 font-bold text-sm">
+                                        <span className="text-[#083865] font-bold text-sm">
                                             {user.givenName ? user.givenName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
@@ -56,7 +56,7 @@ export default function Header() {
                                         <div className="text-sm font-semibold">
                                             {`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
                                         </div>
-                                        <div className="text-xs text-green-200">{user.roleDisplay}</div>
+                                        <div className="text-xs text-blue-100">{user.roleDisplay}</div>
                                     </div>
                                     <svg
                                         className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`}
@@ -80,12 +80,12 @@ export default function Header() {
                                         {/* Menu */}
                                         <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-20 overflow-hidden">
                                             {/* User Info */}
-                                            <div className="bg-green-50 px-4 py-3 border-b border-green-100">
+                                            <div className="bg-blue-50 px-4 py-3 border-b border-blue-100">
                                                 <p className="font-semibold text-gray-800">
                                                     {`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
                                                 </p>
                                                 <p className="text-sm text-gray-600">{user.email}</p>
-                                                <p className="text-xs text-green-600 mt-1">{user.roleDisplay}</p>
+                                                <p className="text-xs text-blue-700 mt-1">{user.roleDisplay}</p>
                                                 {user.department && (
                                                     <p className="text-xs text-gray-500">{user.department}</p>
                                                 )}
@@ -141,7 +141,7 @@ export default function Header() {
                         ) : (
                             <a
                                 href="/login"
-                                className="bg-green-700 hover:bg-green-600 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                                className="bg-[#0b4c86] hover:bg-[#0f5c9f] px-4 py-2 rounded-lg transition-colors text-sm font-medium"
                             >
                                 🔐 เข้าสู่ระบบ
                             </a>

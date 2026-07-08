@@ -86,7 +86,7 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('Error fetching flood area status:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลน้ำท่วมรายวัน');
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลอุทกภัยน้ำท่วมรายวัน');
     } finally {
         if (connection) connection.release();
     }
@@ -103,7 +103,7 @@ export async function POST(request) {
         const data = await request.json();
         connection = await pool.getConnection();
 
-        // แปลงระดับน้ำท่วมจากภาษาไทยเป็นภาษาอังกฤษ
+        // แปลงระดับอุทกภัยน้ำท่วมจากภาษาไทยเป็นภาษาอังกฤษ
         const levelMap = {
             'ไม่มี': 'safe',
             'ต่ำ': 'mild',
@@ -169,7 +169,7 @@ export async function POST(request) {
         }
     } catch (error) {
         console.error('Error saving flood area status:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูลน้ำท่วมรายวัน');
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกข้อมูลอุทกภัยน้ำท่วมรายวัน');
     } finally {
         if (connection) connection.release();
     }
@@ -205,7 +205,7 @@ export async function DELETE(request) {
         });
     } catch (error) {
         console.error('Error deleting flood area status:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลน้ำท่วมรายวัน');
+        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลอุทกภัยน้ำท่วมรายวัน');
     } finally {
         if (connection) connection.release();
     }

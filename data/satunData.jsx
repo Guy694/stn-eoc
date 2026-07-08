@@ -91,7 +91,7 @@ export const satunDistricts = [
 export const disasterEvents = [
     {
         id: 1,
-        type: "น้ำท่วม",
+        type: "อุทกภัยน้ำท่วม",
         severity: "สูง",
         district: "เมืองสตูล",
         tambon: "พิมาน",
@@ -99,7 +99,7 @@ export const disasterEvents = [
         lat: 6.6238,
         lng: 100.0673,
         date: "2025-12-05",
-        description: "น้ำท่วมขังบริเวณถนนสายหลัก ระดับน้ำ 50 ซม.",
+        description: "อุทกภัยน้ำท่วมขังบริเวณถนนสายหลัก ระดับน้ำ 50 ซม.",
         affected: 45,
         status: "กำลังดำเนินการ",
     },
@@ -133,7 +133,7 @@ export const disasterEvents = [
     },
     {
         id: 4,
-        type: "น้ำท่วม",
+        type: "อุทกภัยน้ำท่วม",
         severity: "ปานกลาง",
         district: "ท่าแพ",
         tambon: "ท่าแพ",
@@ -141,7 +141,7 @@ export const disasterEvents = [
         lat: 6.8123,
         lng: 100.0567,
         date: "2025-12-06",
-        description: "น้ำท่วมพื้นที่การเกษตร ประมาณ 200 ไร่",
+        description: "อุทกภัยน้ำท่วมพื้นที่การเกษตร ประมาณ 200 ไร่",
         affected: 23,
         status: "กำลังดำเนินการ",
     },
@@ -175,7 +175,7 @@ export const disasterEvents = [
     },
     {
         id: 7,
-        type: "น้ำท่วม",
+        type: "อุทกภัยน้ำท่วม",
         severity: "สูง",
         district: "มะนัง",
         tambon: "ปาล์มพัฒนา",
@@ -183,7 +183,7 @@ export const disasterEvents = [
         lat: 6.8567,
         lng: 100.2134,
         date: "2025-12-08",
-        description: "น้ำท่วมสวนปาล์มและพื้นที่เกษตรกรรม",
+        description: "อุทกภัยน้ำท่วมสวนปาล์มและพื้นที่เกษตรกรรม",
         affected: 67,
         status: "ฉุกเฉิน",
     },
@@ -205,7 +205,7 @@ export const filterEventsByDays = (events, days) => {
 
 // สีตามประเภทภัย
 export const disasterTypeColors = {
-    "น้ำท่วม": "#3B82F6", // blue
+    "อุทกภัยน้ำท่วม": "#3B82F6", // blue
     "ดินถ่ม": "#A855F7", // purple
     "พายุ": "#EF4444", // red
     "ไฟป่า": "#F59E0B", // orange

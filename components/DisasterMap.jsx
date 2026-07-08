@@ -72,7 +72,7 @@ export default function DisasterMap({ events, onEventClick }) {
 
         // Fallback to disaster type
         const icons = {
-            "น้ำท่วม": "💧",
+            "อุทกภัยน้ำท่วม": "💧",
             "ดินถ่ม": "⛰️",
             "พายุ": "🌪️",
             "ไฟป่า": "🔥",

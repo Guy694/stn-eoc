@@ -113,7 +113,7 @@ export default function GistdaFloodMapPage() {
                     <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">
-                                🌊 แผนที่น้ำท่วม GISTDA
+                                🌊 แผนที่อุทกภัยน้ำท่วม GISTDA
                             </h1>
                             <p className="text-sm text-gray-600">
                                 {floodData?.source === 'MOCK' ? (
@@ -150,7 +150,7 @@ export default function GistdaFloodMapPage() {
                     <div className="bg-gray-50 border-b p-4">
                         <div className="max-w-7xl mx-auto grid grid-cols-3 gap-4">
                             <div className="bg-white p-3 rounded-lg shadow">
-                                <div className="text-sm text-gray-600">พื้นที่น้ำท่วมทั้งหมด</div>
+                                <div className="text-sm text-gray-600">พื้นที่อุทกภัยน้ำท่วมทั้งหมด</div>
                                 <div className="text-2xl font-bold text-blue-600">
                                     {floodData.summary?.totalAreas || 0}
                                 </div>
@@ -199,7 +199,7 @@ export default function GistdaFloodMapPage() {
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                             />
 
-                            {/* แสดงข้อมูลน้ำท่วม */}
+                            {/* แสดงข้อมูลอุทกภัยน้ำท่วม */}
                             {floodData?.features?.map((feature, idx) => {
                                 const geom = feature.geometry;
                                 const props = feature.properties;
@@ -245,13 +245,13 @@ export default function GistdaFloodMapPage() {
                                                 <Popup>
                                                     <div className="min-w-[250px]">
                                                         <h3 className="font-bold text-lg mb-2 text-gray-800">
-                                                            {props.tambon || props.name || 'พื้นที่น้ำท่วม'}
+                                                            {props.tambon || props.name || 'พื้นที่อุทกภัยน้ำท่วม'}
                                                         </h3>
                                                         <div className="space-y-1 text-sm">
                                                             {props.province && <p><strong>จังหวัด:</strong> {props.province}</p>}
                                                             {props.district && <p><strong>อำเภอ:</strong> {props.district}</p>}
                                                             <p>
-                                                                <strong>ระดับน้ำท่วม:</strong>{' '}
+                                                                <strong>ระดับอุทกภัยน้ำท่วม:</strong>{' '}
                                                                 <span
                                                                     className="px-2 py-1 rounded text-white text-xs"
                                                                     style={{ backgroundColor: getFloodColor(props.flood_level || 'mild') }}
@@ -279,7 +279,7 @@ export default function GistdaFloodMapPage() {
                                             </Polygon>
                                         )}
 
-                                        {/* Circle แสดงขอบเขตพื้นที่น้ำท่วม (เฉพาะ Point) */}
+                                        {/* Circle แสดงขอบเขตพื้นที่อุทกภัยน้ำท่วม (เฉพาะ Point) */}
                                         {geometryType === 'Point' && centerPoint && (
                                             <Circle
                                                 center={centerPoint}
@@ -294,13 +294,13 @@ export default function GistdaFloodMapPage() {
                                                 <Popup>
                                                     <div className="min-w-[250px]">
                                                         <h3 className="font-bold text-lg mb-2 text-gray-800">
-                                                            {props.tambon || props.name || 'พื้นที่น้ำท่วม'}
+                                                            {props.tambon || props.name || 'พื้นที่อุทกภัยน้ำท่วม'}
                                                         </h3>
                                                         <div className="space-y-1 text-sm">
                                                             {props.province && <p><strong>จังหวัด:</strong> {props.province}</p>}
                                                             {props.district && <p><strong>อำเภอ:</strong> {props.district}</p>}
                                                             <p>
-                                                                <strong>ระดับน้ำท่วม:</strong>{' '}
+                                                                <strong>ระดับอุทกภัยน้ำท่วม:</strong>{' '}
                                                                 <span
                                                                     className="px-2 py-1 rounded text-white text-xs"
                                                                     style={{ backgroundColor: getFloodColor(props.flood_level || 'mild') }}

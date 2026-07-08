@@ -44,7 +44,7 @@ const mockVillages = [
     { villcode: '9101020201', name: 'บ้านทุ่งนุ้ย', district: 'เมืองสตูล', population: 280 },
 ];
 
-// API สำหรับดึงข้อมูลพื้นที่น้ำท่วมรายวัน (ระดับหมู่บ้าน)
+// API สำหรับดึงข้อมูลพื้นที่อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -64,7 +64,7 @@ export async function GET(request) {
             floodDataMap[f.villcode] = f.level;
         });
 
-        // รวมข้อมูลน้ำท่วม
+        // รวมข้อมูลอุทกภัยน้ำท่วม
         const result = mockVillages.map(v => ({
             villcode: v.villcode,
             name: v.name,
@@ -101,6 +101,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error fetching daily flood village data:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลน้ำท่วมรายหมู่บ้าน');
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลอุทกภัยน้ำท่วมรายหมู่บ้าน');
     }
 }

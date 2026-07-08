@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
+import { AlertTriangle, ArrowRight, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
 
 // Component แยกสำหรับจัดการ error จาก ThaiID callback
 function ThaiIDErrorHandler({ setError }) {
@@ -93,152 +94,154 @@ function LoginForm() {
     };
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                {/* Logo and Header */}
-                <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-green-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
-                        <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+        <main className="min-h-screen bg-[#edf5fc] p-4 text-slate-900 sm:p-6">
+            <div className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
+                <section className="relative flex min-h-[360px] flex-col justify-between overflow-hidden bg-[#083865] p-6 text-white sm:p-8 lg:p-10">
+                    <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, #ffffff 0, transparent 26%), radial-gradient(circle at 80% 10%, #7dd3fc 0, transparent 28%), radial-gradient(circle at 40% 90%, #bae6fd 0, transparent 24%)" }} />
+                    <div className="relative">
+                        <Link href="/" className="inline-flex items-center gap-3 rounded-full bg-white/10 px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/15">
+                            <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={40} height={40} className="h-10 w-10 rounded-full bg-white p-1" />
+                            Satun Provincial Emergency Operations Centers (Satun Geo-EOC)
+                        </Link>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ EOC</h1>
-                    <p className="text-gray-600">ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
-                    <p className="text-gray-600">(Satun Geo-EOC Inteligent platform) </p>
-                </div>
 
-                {/* Login Form */}
-                <div className="bg-white rounded-lg shadow-xl p-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Error Message */}
+                    <div className="relative my-10 max-w-xl">
+                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-100">Officer Command Access</p>
+                        <h1 className="text-4xl font-black leading-tight sm:text-5xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
+                        <p className="mt-4 text-base leading-7 text-blue-50">
+                            ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
+                        </p>
+                    </div>
+
+                    <div className="relative grid gap-3 text-sm text-blue-50 sm:grid-cols-3">
+                        <div className="rounded-xl border border-white/15 bg-white/10 p-4">
+                            <ShieldCheck className="mb-2 h-5 w-5" />
+                            <div className="font-black">Secure</div>
+                            <div className="mt-1 text-xs text-blue-100">ตรวจสอบสิทธิ์ตามบทบาท</div>
+                        </div>
+                        <div className="rounded-xl border border-white/15 bg-white/10 p-4">
+                            <MapPinned className="mb-2 h-5 w-5" />
+                            <div className="font-black">Situation</div>
+                            <div className="mt-1 text-xs text-blue-100">ข้อมูลเหตุการณ์แบบรวมศูนย์</div>
+                        </div>
+                        <div className="rounded-xl border border-white/15 bg-white/10 p-4">
+                            <IdCard className="mb-2 h-5 w-5" />
+                            <div className="font-black">ThaiID</div>
+                            <div className="mt-1 text-xs text-blue-100">รองรับการยืนยันตัวตน</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="flex items-center justify-center p-5 sm:p-8 lg:p-10">
+                    <div className="w-full max-w-md">
+                        <div className="mb-7">
+                            <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto h-20 w-20 rounded-full bg-white p-2" />
+                            <p className="text-lg font-black text-blue-700 text-center">ศูนย์ปฏิบัติการฉุกเฉิน</p>
+                            <h2 className="mt-1 text-3xl font-black text-slate-950">เข้าสู่ระบบ</h2>
+                            <p className="mt-2 text-sm leading-6 text-slate-500">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiID เพื่อเข้าสู่พื้นที่ปฏิบัติงาน</p>
+                        </div>
+
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                                 <div className="flex items-start gap-2">
-                                    <span className="text-lg">⚠️</span>
+                                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
                                     <div className="flex-1 whitespace-pre-line">{error}</div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Username */}
-                        <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                                ชื่อผู้ใช้
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <label htmlFor="username" className="block">
+                                <span className="mb-2 block text-sm font-bold text-slate-700">ชื่อผู้ใช้</span>
+                                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+                                    <UserRound className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+                                    <input
+                                        type="text"
+                                        id="username"
+                                        name="username"
+                                        value={formData.username}
+                                        onChange={handleChange}
+                                        className="w-full bg-transparent text-slate-800 outline-none placeholder:text-slate-400"
+                                        placeholder="กรอกชื่อผู้ใช้"
+                                        autoComplete="username"
+                                        required
+                                    />
+                                </div>
                             </label>
-                            <input
-                                type="text"
-                                id="username"
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
-                                className="text-gray-700 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                                placeholder="กรอกชื่อผู้ใช้"
-                                required
-                            />
+
+                            <label htmlFor="password" className="block">
+                                <span className="mb-2 block text-sm font-bold text-slate-700">รหัสผ่าน</span>
+                                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+                                    <Lock className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="w-full bg-transparent text-slate-800 outline-none placeholder:text-slate-400"
+                                        placeholder="กรอกรหัสผ่าน"
+                                        autoComplete="current-password"
+                                        required
+                                    />
+                                </div>
+                            </label>
+
+                            <div className="flex items-center justify-between gap-3 text-sm">
+                                <label className="flex items-center gap-2 text-slate-600">
+                                    <input type="checkbox" className="h-4 w-4 rounded border-slate-300 accent-blue-700" />
+                                    จดจำฉันไว้
+                                </label>
+                                <span className="font-semibold text-slate-400">ติดต่อผู้ดูแลหากลืมรหัสผ่าน</span>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0b4c86] px-4 py-3.5 text-sm font-black text-white shadow-lg shadow-blue-900/15 transition hover:bg-[#083865] disabled:cursor-not-allowed disabled:bg-slate-300"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/60 border-t-white" />
+                                        กำลังเข้าสู่ระบบ...
+                                    </>
+                                ) : (
+                                    <>
+                                        เข้าสู่ระบบ
+                                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+
+                        <div className="my-6 flex items-center gap-3 text-xs font-bold text-slate-400">
+                            <div className="h-px flex-1 bg-slate-200" />
+                            หรือ
+                            <div className="h-px flex-1 bg-slate-200" />
                         </div>
 
-                        {/* Password */}
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                                รหัสผ่าน
-                            </label>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                className="text-gray-700 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                                placeholder="กรอกรหัสผ่าน"
-                                required
-                            />
-                        </div>
-
-                        {/* Remember Me & Forgot Password */}
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                                />
-                                <span className="ml-2 text-sm text-gray-600">จดจำฉันไว้</span>
-                            </label>
-                            <a href="#" className="text-sm text-green-700 hover:text-green-800 font-medium">
-                                ลืมรหัสผ่าน?
-                            </a>
-                        </div>
-
-                        {/* Submit Button */}
                         <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                            type="button"
+                            onClick={() => window.location.href = '/stn-eoc/api/auth/thaiid/authorize/'}
+                            className="flex w-full items-center justify-center gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition hover:border-blue-200 hover:bg-blue-100"
                         >
-                            {isLoading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    กำลังเข้าสู่ระบบ...
-                                </span>
-                            ) : (
-                                "เข้าสู่ระบบ"
-                            )}
+                            <Image src="/stn-eoc/img/thaiid.png" alt="ThaiID" width={36} height={36} className="h-9 w-9" />
+                            เข้าสู่ระบบด้วย ThaiID
                         </button>
-                    </form>
 
-                    {/* Divider */}
-                    <div className="relative my-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300"></div>
+                        <div className="mt-7 flex flex-col gap-3 text-center text-sm sm:flex-row sm:items-center sm:justify-center sm:text-center">
+                            <Link href="/" className="font-bold text-blue-700 hover:text-blue-900">กลับหน้าสาธารณะ</Link>
                         </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-gray-500">หรือ</span>
-                        </div>
+
+                        <p className="mt-8 text-center text-xs text-slate-400">© 2025 EOC จังหวัดสตูล</p>
+
+                        <Suspense fallback={null}>
+                            <ThaiIDErrorHandler setError={setError} />
+                        </Suspense>
                     </div>
-
-                    {/* ThaiID Login Button */}
-                    <button
-                        type="button"
-                        onClick={() => window.location.href = '/stn-eoc/api/auth/thaiid/authorize/'}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-3"
-                    >
-                        <Image src="/stn-eoc/img/thaiid.png" alt="ThaiID" width={36} height={36} className="w-9 h-9" />
-                        <span>เข้าสู่ระบบด้วย ThaiID</span>
-                    </button>
-
-                    {process.env.NODE_ENV === 'development' && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
-                            <p className="text-xs text-green-800 font-semibold mb-1">โหมดทดสอบระบบ</p>
-                            <p className="text-xs text-green-700">
-                                ใช้บัญชีทดสอบจากผู้ดูแลระบบหรือไฟล์ environment ภายในเท่านั้น
-                            </p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Public Access Link */}
-                <div className="text-center mt-6">
-                    <p className="text-gray-600 text-sm mb-2">หรือ</p>
-                    <Link
-                        href="/public/disaster-map"
-                        className="text-green-700 hover:text-green-800 font-medium inline-flex items-center gap-2"
-                    >
-                        <span>🗺️</span>
-                        <span>ดูแผนที่ภัยพิบัติสาธารณะ</span>
-                    </Link>
-                </div>
-
-                {/* Footer */}
-                <div className="text-center mt-8 text-sm text-gray-500">
-                    <p>© 2025 EOC จังหวัดสตูล - ศูนย์บัญชาการเหตุการณ์ฉุกเฉิน จังหวัดสตูล</p>
-                </div>
-
-                {/* ThaiID Error Handler with Suspense */}
-                <Suspense fallback={null}>
-                    <ThaiIDErrorHandler setError={setError} />
-                </Suspense>
+                </section>
             </div>
-        </div>
+        </main>
     );
 }
 
@@ -246,9 +249,9 @@ function LoginForm() {
 export default function LoginPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+            <div className="min-h-screen bg-[#edf5fc] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-green-700 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <div className="w-16 h-16 border-4 border-[#0b4c86] border-t-transparent rounded-full animate-spin mx-auto"></div>
                     <p className="mt-4 text-gray-600">กำลังโหลด...</p>
                 </div>
             </div>

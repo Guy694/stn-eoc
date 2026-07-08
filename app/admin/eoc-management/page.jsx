@@ -897,7 +897,7 @@ export default function EOCManagementPage() {
                                                 type="text"
                                                 value={formData.name_th}
                                                 onChange={(e) => setFormData({ ...formData, name_th: e.target.value })}
-                                                placeholder="น้ำท่วม"
+                                                placeholder="อุทกภัยน้ำท่วม"
                                                 className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                                             />
                                         </div>

@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Bell,
-  BookOpen,
   Bot,
   Building2,
   Home,
@@ -48,6 +47,7 @@ export default function PublicOpsScaffold({
   eocStatus,
   eocLabel,
   children,
+  showWeatherMenu = false,
   showPageHeader = true,
   mainClassName = ""
 }) {
@@ -60,12 +60,11 @@ export default function PublicOpsScaffold({
   const items = [
     { href: "/", label: "หน้าหลัก", icon: Home, key: "home" },
     { href: "/public/disaster-map", label: "แผนที่", icon: Map, key: "map" },
-    { href: "/public/weather-watch", label: "อากาศ", icon: CloudSun, key: "weather" },
+    ...(showWeatherMenu || activeMenu === "weather" ? [{ href: "/public/weather-watch", label: "อากาศ/ฝน", icon: CloudSun, key: "weather" }] : []),
     { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
     { href: "/public/agencies", label: "หน่วยงาน", icon: Building2, key: "agencies" },
     { href: "#", label: "EOC Assistant", icon: Bot, key: "assistant", action: openAssistant },
-    { href: "/public/help/citizen-guide", label: "คู่มือ", icon: BookOpen, key: "guide" },
     { href: "/login", label: "เจ้าหน้าที่", icon: LogIn, key: "staff" }
   ];
   const mobileItems = items.filter((item) => item.key !== "agencies").slice(0, 5);
@@ -96,7 +95,7 @@ export default function PublicOpsScaffold({
             <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-10 w-10 rounded-full bg-white p-1 shadow-md sm:h-12 sm:w-12 lg:h-[62px] lg:w-[62px] lg:p-1.5" priority />
             <div className="min-w-0">
               <h1 className="truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
-              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun EOC Public Dashboard</p>
+              <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun Provincial Emergency Operations Centers (Satun Geo-EOC)</p>
             </div>
           </div>
 

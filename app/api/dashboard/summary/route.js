@@ -685,7 +685,7 @@ function getActivityTitle(actionType) {
         'login': 'เข้าสู่ระบบ',
         'logout': 'ออกจากระบบ',
         'report': 'รายงาน',
-        'flood_record': 'บันทึกน้ำท่วม',
+        'flood_record': 'บันทึกอุทกภัยน้ำท่วม',
         'disease_report': 'รายงานโรคระบาด'
     };
     return titles[actionType] || 'กิจกรรม';

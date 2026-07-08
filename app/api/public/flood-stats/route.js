@@ -15,7 +15,7 @@ export async function GET(request) {
 
         const connection = await mysql.createConnection(dbConfig);
 
-        // ดึงข้อมูลสถิติน้ำท่วมจาก flood_records
+        // ดึงข้อมูลสถิติอุทกภัยน้ำท่วมจาก flood_records
         let baseQuery = 'FROM flood_records WHERE 1=1';
         const params = [];
 
@@ -24,7 +24,7 @@ export async function GET(request) {
             params.push(sessionId);
         }
 
-        // นับจำนวนพื้นที่ที่ได้รับผลกระทบ (ตำบลที่มีน้ำท่วม)
+        // นับจำนวนพื้นที่ที่ได้รับผลกระทบ (ตำบลที่มีอุทกภัยน้ำท่วม)
         const [affectedAreas] = await connection.execute(
             `SELECT COUNT(DISTINCT CONCAT(district, '-', tambon)) as count ${baseQuery} AND flood_level != 'ไม่มี'`,
             params
@@ -42,13 +42,13 @@ export async function GET(request) {
             params
         );
 
-        // นับจำนวนหมู่บ้านที่มีน้ำท่วม
+        // นับจำนวนหมู่บ้านที่มีอุทกภัยน้ำท่วม
         const [floodedVillages] = await connection.execute(
             `SELECT COUNT(DISTINCT polygon_id) as count ${baseQuery} AND flood_level != 'ไม่มี'`,
             params
         );
 
-        // สรุปตามระดับน้ำท่วม
+        // สรุปตามระดับอุทกภัยน้ำท่วม
         const [floodLevelSummary] = await connection.execute(
             `SELECT flood_level, COUNT(*) as count ${baseQuery} GROUP BY flood_level`,
             params
@@ -87,7 +87,7 @@ export async function GET(request) {
         console.error('Error fetching flood stats:', error);
         return NextResponse.json({
             success: false,
-            error: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถิติน้ำท่วม',
+            error: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถิติอุทกภัยน้ำท่วม',
             data: {
                 affected: 0,
                 affectedHouseholds: 0,
