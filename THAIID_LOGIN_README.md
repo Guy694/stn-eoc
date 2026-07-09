@@ -327,4 +327,4 @@ curl http://localhost:3000/api/auth/session
 
 ## 📄 License
 
-Copyright © 2025 EOC จังหวัดสตูล - All Rights Reserved
+Copyright © 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข - All Rights Reserved

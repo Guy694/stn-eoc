@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { query } from '@/lib/db';
+import { getRouteAdvice, isRouteAdviceQuestion } from '@/lib/routeAdvice';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -29,11 +30,80 @@ const SENSITIVE_IDENTIFIER_PATTERNS = [
     /session/i,
     /hash/i,
     /consent/i,
-    /lat/i,
-    /lon/i,
-    /latitude/i,
-    /longitude/i,
     /exact_location/i
+];
+
+const FLOOD_KNOWLEDGE_PATTERNS = [
+    /น้ำท่วม/i,
+    /อุทกภัย/i,
+    /น้ำหลาก/i,
+    /น้ำป่า/i,
+    /น้ำขัง/i,
+    /ระดับน้ำ/i,
+    /ระบายน้ำ/i,
+    /เขื่อน/i,
+    /คลอง/i,
+    /แม่น้ำ/i,
+    /ฝนตกหนัก/i,
+    /พายุ/i,
+    /น้ำทะเลหนุน/i,
+    /flood/i,
+    /flooding/i,
+    /heavy rain/i,
+    /storm/i
+];
+
+const DISEASE_KNOWLEDGE_PATTERNS = [
+    /โรค/i,
+    /ระบาด/i,
+    /ผู้ป่วย/i,
+    /ติดเชื้อ/i,
+    /เชื้อ/i,
+    /วัคซีน/i,
+    /สุขภาพ/i,
+    /ไข้/i,
+    /ไอ/i,
+    /ท้องเสีย/i,
+    /อาหารเป็นพิษ/i,
+    /ไข้เลือดออก/i,
+    /ยุงลาย/i,
+    /โควิด/i,
+    /covid/i,
+    /ไข้หวัดใหญ่/i,
+    /มือเท้าปาก/i,
+    /ฉี่หนู/i,
+    /leptospirosis/i,
+    /อหิวา/i,
+    /disease/i,
+    /outbreak/i,
+    /infection/i,
+    /public health/i
+];
+
+const WEATHER_KNOWLEDGE_PATTERNS = [
+    /อากาศ/i,
+    /สภาพอากาศ/i,
+    /ฟ้าฝน/i,
+    /ฝน/i,
+    /ฝนตก/i,
+    /พยากรณ์/i,
+    /พยากรณ์อากาศ/i,
+    /อุณหภูมิ/i,
+    /ความชื้น/i,
+    /ลม/i,
+    /ลมแรง/i,
+    /มรสุม/i,
+    /หย่อมความกดอากาศ/i,
+    /กรมอุตุ/i,
+    /เรดาร์ฝน/i,
+    /weather/i,
+    /forecast/i,
+    /rain/i,
+    /rainfall/i,
+    /temperature/i,
+    /humidity/i,
+    /monsoon/i,
+    /radar/i
 ];
 
 function isSensitiveIdentifier(value) {
@@ -85,6 +155,97 @@ function redactSensitiveFields(rows) {
     });
 }
 
+function detectAllowedKnowledgeDomain(message) {
+    const text = String(message || '');
+    const isFlood = FLOOD_KNOWLEDGE_PATTERNS.some((pattern) => pattern.test(text));
+    const isDisease = DISEASE_KNOWLEDGE_PATTERNS.some((pattern) => pattern.test(text));
+    const isWeather = WEATHER_KNOWLEDGE_PATTERNS.some((pattern) => pattern.test(text));
+    const domains = [];
+
+    if (isFlood) domains.push('flood');
+    if (isDisease) domains.push('disease');
+    if (isWeather) domains.push('weather');
+
+    return domains.length > 0 ? domains.join('_and_') : null;
+}
+
+function getKnowledgeDomainLabel(domain) {
+    if (domain === 'flood') return 'อุทกภัยน้ำท่วม';
+    if (domain === 'disease') return 'โรคและการระบาด';
+    if (domain === 'weather') return 'สภาพฟ้าฝนและอากาศ';
+    return 'โรค/การระบาด อุทกภัยน้ำท่วม และสภาพฟ้าฝน/อากาศ';
+}
+
+function buildConversationContext(conversationHistory) {
+    if (!Array.isArray(conversationHistory) || conversationHistory.length === 0) {
+        return 'ไม่มีประวัติการสนทนาก่อนหน้า';
+    }
+
+    return conversationHistory
+        .slice(-5)
+        .map((item) => {
+            const role = item?.role === 'assistant' ? 'ผู้ช่วย' : 'ผู้ใช้';
+            const content = String(item?.content || '').slice(0, 1000);
+            return `${role}: ${content}`;
+        })
+        .join('\n');
+}
+
+function buildScopeAnswer() {
+    return 'ขออภัยครับ ตอนนี้ EOC Assistant ตอบข้อมูลนอกฐานข้อมูลเฉพาะเรื่องโรค/การระบาด อุทกภัยน้ำท่วม และสภาพฟ้าฝน/อากาศเท่านั้น หากต้องการถามข้อมูลในระบบ EOC กรุณาถามเป็นข้อมูลสถานการณ์ เหตุการณ์ หรือสถิติภาพรวมที่เกี่ยวข้องกับระบบครับ';
+}
+
+async function generateKnowledgeAnswer({ model, message, conversationHistory, domain }) {
+    const prompt = `คุณเป็น EOC Assistant สำหรับ Satun Geo-EOC จังหวัดสตูล
+
+ขอบเขตคำถามที่อนุญาต: ${getKnowledgeDomainLabel(domain)}
+
+ประวัติสนทนาล่าสุด:
+${buildConversationContext(conversationHistory)}
+
+คำถามผู้ใช้:
+${message}
+
+แนวทางการตอบ:
+1. ตอบเป็นภาษาไทย กระชับ ชัดเจน และใช้งานได้จริง ใช้คำลงท้าย "ครับ" ให้สม่ำเสมอ
+2. อนุญาตให้ตอบจากความรู้ทั่วไปนอกฐานข้อมูลได้ เฉพาะเรื่องโรค/การระบาด อุทกภัยน้ำท่วม หรือสภาพฟ้าฝน/อากาศเท่านั้น
+3. หากเป็นเรื่องโรค ให้ให้คำแนะนำเชิงสาธารณสุขทั่วไป ไม่วินิจฉัยโรค ไม่สั่งยา และแนะนำพบแพทย์/โทร 1669 เมื่อมีอาการรุนแรง
+4. หากเป็นเรื่องน้ำท่วม ให้ให้คำแนะนำด้านความปลอดภัย การเตรียมพร้อม การอพยพ และการเดินทางอย่างระมัดระวัง
+5. หากเป็นเรื่องสภาพฟ้าฝน/อากาศ ให้ตอบความหมายของสัญญาณเตือน การเตรียมตัว การอ่านพยากรณ์ และผลกระทบต่อความปลอดภัย
+6. ห้ามอ้างว่ารู้ข้อมูลสถานการณ์จริงแบบปัจจุบัน เช่น ถนนปิด จำนวนผู้ป่วย ระดับน้ำ ฝนกำลังตก อุณหภูมิล่าสุด หรือประกาศราชการ เว้นแต่มีข้อมูลจากฐานข้อมูลในคำถามนี้
+7. หากต้องใช้ข้อมูลปัจจุบัน ให้บอกว่าควรตรวจสอบจากศูนย์ EOC จังหวัด หน่วยงานท้องถิ่น กรมอุตุนิยมวิทยา หรือช่องทางราชการล่าสุด
+8. หากคำถามหลุดจากเรื่องโรค/การระบาด/น้ำท่วม/สภาพอากาศ ให้ปฏิเสธสั้น ๆ และชวนถามในขอบเขตที่รองรับ
+9. ไม่ขอหรือเปิดเผยข้อมูลส่วนบุคคล
+10. ไม่ใช้ Markdown เช่น **ตัวหนา** หรือตาราง เพราะหน้าจอแชทแสดงเป็นข้อความธรรมดา
+11. จำกัดคำตอบไม่เกิน 8 บรรทัดหรือ 8 ข้อ เว้นแต่ผู้ใช้ขอรายละเอียดเพิ่มเติม
+
+ตอบกลับเป็นภาษาไทยเท่านั้น:`;
+
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+}
+
+async function createKnowledgeResponse({ model, message, conversationHistory, domain }) {
+    const answer = await generateKnowledgeAnswer({
+        model,
+        message,
+        conversationHistory,
+        domain
+    });
+
+    return Response.json({
+        success: true,
+        data: {
+            answer,
+            sql: null,
+            results: null,
+            resultCount: 0,
+            source: 'general_knowledge',
+            domain
+        }
+    });
+}
+
 /**
  * API Route: Chatbot Query
  * Processes user questions and returns AI-generated responses based on database data
@@ -100,6 +261,24 @@ export async function POST(request) {
             );
         }
 
+        if (isRouteAdviceQuestion(message)) {
+            const advice = await getRouteAdvice({ message });
+
+            return Response.json({
+                success: true,
+                data: {
+                    answer: advice.success ? advice.answer : advice.message,
+                    sql: null,
+                    results: advice.success ? advice.routes : null,
+                    routeAdvice: advice.success ? advice : null,
+                    resultCount: advice.success ? advice.routes.length : 0,
+                    source: 'route_advice'
+                }
+            });
+        }
+
+        const allowedKnowledgeDomain = detectAllowedKnowledgeDomain(message);
+
         // Check if API key is configured
         if (!process.env.GEMINI_API_KEY) {
             return Response.json(
@@ -111,6 +290,14 @@ export async function POST(request) {
                 { status: 500 }
             );
         }
+
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-2.5-flash',
+            generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 2048,
+            }
+        });
 
         // Step 1: Get database schema directly from database
         let schema = {};
@@ -176,6 +363,16 @@ export async function POST(request) {
 
         } catch (schemaError) {
             console.error('Error fetching database schema:', schemaError);
+
+            if (allowedKnowledgeDomain) {
+                return createKnowledgeResponse({
+                    model,
+                    message,
+                    conversationHistory,
+                    domain: allowedKnowledgeDomain
+                });
+            }
+
             return Response.json({
                 success: false,
                 error: 'Failed to fetch database schema',
@@ -186,15 +383,6 @@ export async function POST(request) {
         const safeSchema = filterSchemaForPdpa(schema);
 
         // Step 2: Generate SQL query using Gemini
-        // Using gemini-2.5-flash - fast and cost-efficient model available in 2026
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            generationConfig: {
-                temperature: 0.1, // Low temperature for more consistent SQL generation
-                maxOutputTokens: 2048,
-            }
-        });
-
         const sqlPrompt = `คุณเป็น SQL Expert สำหรับระบบ EOC (Satun Provincial Emergency Operations Center (Satun Geo-EOC)) จังหวัดสตูล
 
 DATABASE SCHEMA (PDPA SAFE VIEW):
@@ -219,13 +407,30 @@ RULES:
 - ถ้าคำถามไม่เกี่ยวกับข้อมูลในระบบ ให้ตอบ { "sql": null, "explanation": "คำถามนี้ไม่เกี่ยวข้องกับข้อมูลในระบบ EOC" }
 - ใช้ LIMIT เพื่อจำกัดผลลัพธ์ (ไม่เกิน 100 rows)
 - ตรวจสอบว่า table และ column ที่ใช้มีอยู่จริงใน schema
-- ห้ามใช้หรือเปิดเผยข้อมูลที่เข้าข่าย PDPA เช่น ชื่อบุคคล, เลขบัตร, เบอร์โทร, อีเมล, ที่อยู่, พิกัดระบุตัวบุคคล
+- ห้ามใช้หรือเปิดเผยข้อมูลที่เข้าข่าย PDPA เช่น ชื่อบุคคล, เลขบัตร, เบอร์โทร, อีเมล, ที่อยู่ละเอียด หรือพิกัดบ้าน/ตำแหน่งส่วนบุคคล
+- อนุญาตให้ใช้ latitude/longitude ของเหตุการณ์ ถนน จุดบริการ หรือพื้นที่สาธารณะ เพื่อวิเคราะห์สถานการณ์และเส้นทาง
 - ถ้าผู้ใช้ถามข้อมูลส่วนบุคคล ให้ตอบรวมเชิงสถิติเท่านั้น
 
 ตอบกลับเป็น JSON เท่านั้น:`;
 
-        const sqlResult = await model.generateContent(sqlPrompt);
-        const sqlResponse = sqlResult.response.text();
+        let sqlResponse;
+        try {
+            const sqlResult = await model.generateContent(sqlPrompt);
+            sqlResponse = sqlResult.response.text();
+        } catch (sqlGenerationError) {
+            console.error('Failed to generate SQL response:', sqlGenerationError);
+
+            if (allowedKnowledgeDomain) {
+                return createKnowledgeResponse({
+                    model,
+                    message,
+                    conversationHistory,
+                    domain: allowedKnowledgeDomain
+                });
+            }
+
+            throw sqlGenerationError;
+        }
 
         // Parse JSON response
         let sqlData;
@@ -235,17 +440,38 @@ RULES:
             sqlData = JSON.parse(cleanedResponse);
         } catch (parseError) {
             console.error('Failed to parse SQL response:', sqlResponse);
+
+            if (allowedKnowledgeDomain) {
+                return createKnowledgeResponse({
+                    model,
+                    message,
+                    conversationHistory,
+                    domain: allowedKnowledgeDomain
+                });
+            }
+
             throw new Error('AI ไม่สามารถสร้าง SQL query ได้');
         }
 
         // If no SQL query (question not relevant)
         if (!sqlData.sql) {
+            if (allowedKnowledgeDomain) {
+                return createKnowledgeResponse({
+                    model,
+                    message,
+                    conversationHistory,
+                    domain: allowedKnowledgeDomain
+                });
+            }
+
             return Response.json({
                 success: true,
                 data: {
-                    answer: sqlData.explanation || 'ขออภัยครับ คำถามนี้ไม่เกี่ยวข้องกับข้อมูลในระบบ EOC',
+                    answer: buildScopeAnswer(),
                     sql: null,
-                    results: null
+                    results: null,
+                    resultCount: 0,
+                    source: 'out_of_scope'
                 }
             });
         }
@@ -314,7 +540,8 @@ INSTRUCTIONS:
                 answer: answer.trim(),
                 sql: sqlData.sql,
                 results: safeResults,
-                resultCount: safeResults.length
+                resultCount: safeResults.length,
+                source: 'database'
             }
         });
 

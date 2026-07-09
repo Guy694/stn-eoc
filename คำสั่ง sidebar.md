@@ -1,5 +1,5 @@
 Prompt สำหรับจัดกลุ่มเมนู Sidebar ใหม่
-คุณคือ Senior UX/UI Designer และ Information Architect สำหรับระบบศูนย์ปฏิบัติการฉุกเฉิน EOC จังหวัด
+คุณคือ Senior UX/UI Designer และ Information Architect สำหรับระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข EOC จังหวัด
 
 จากโครงสร้าง Sidebar เดิมของระบบ มีเมนูดังนี้:
 - ภาพรวมระบบ

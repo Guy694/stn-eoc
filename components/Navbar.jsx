@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import AppIcon from "./icons/AppIcon";
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -43,28 +44,7 @@ export default function Navbar() {
                         className="p-2 rounded-lg hover:bg-[#083865] transition-colors"
                         aria-label="Toggle menu"
                     >
-                        <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            {isOpen ? (
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            ) : (
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 6h16M4 12h16M4 18h16"
-                                />
-                            )}
-                        </svg>
+                        <AppIcon icon={isOpen ? "x" : "menu"} className="h-6 w-6" />
                     </button>
                 </div>
 

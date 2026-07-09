@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function PendingApprovalPage() {
     const router = useRouter();
@@ -26,9 +27,7 @@ export default function PendingApprovalPage() {
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
                 <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="h-10 w-10 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <AppIcon icon="clock" className="h-10 w-10 text-yellow-600" />
                 </div>
 
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">รอการอนุมัติ</h2>
@@ -50,7 +49,10 @@ export default function PendingApprovalPage() {
 
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                     <p className="text-yellow-800 text-sm">
-                        ⏳ คำขอของคุณอยู่ระหว่างการพิจารณาจากผู้ดูแลระบบ
+                        <span className="inline-flex items-center gap-2">
+                            <AppIcon icon="clock" className="h-4 w-4" />
+                            คำขอของคุณอยู่ระหว่างการพิจารณาจากผู้ดูแลระบบ
+                        </span>
                     </p>
                     <p className="text-yellow-700 text-sm mt-2">
                         คุณจะได้รับการแจ้งเตือนทางอีเมลเมื่อได้รับการอนุมัติ

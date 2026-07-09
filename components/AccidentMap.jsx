@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { useFullscreenMap } from '@/components/FullscreenMapWrapper';
+import AppIcon from './icons/AppIcon';
 
 // Dynamic import Leaflet components (client-side only)
 const MapContainer = dynamic(
@@ -55,7 +57,7 @@ export default function AccidentMap({
     const icons = useMemo(() => {
         if (!L) return {};
 
-        const createIcon = (color, emoji) => {
+        const createIcon = (color, icon) => {
             return L.divIcon({
                 className: 'custom-marker',
                 html: `<div style="
@@ -69,7 +71,8 @@ export default function AccidentMap({
                     font-size: 16px;
                     border: 2px solid white;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                ">${emoji}</div>`,
+                    color: white;
+                ">${renderToStaticMarkup(<AppIcon icon={icon} className="h-4 w-4 text-white" strokeWidth={2.5} />)}</div>`,
                 iconSize: [32, 32],
                 iconAnchor: [16, 32],
                 popupAnchor: [0, -32]
@@ -77,10 +80,10 @@ export default function AccidentMap({
         };
 
         return {
-            accident: createIcon('#dc2626', '🚗'), // แดง
-            accidentDeath: createIcon('#7c2d12', '💀'), // น้ำตาลเข้ม
-            servicePoint: createIcon('#f97316', '🚧'), // ส้ม
-            healthFacility: createIcon('#2563eb', '🏥'), // น้ำเงิน
+            accident: createIcon('#dc2626', 'car'),
+            accidentDeath: createIcon('#7c2d12', 'skull'),
+            servicePoint: createIcon('#f97316', 'route'),
+            healthFacility: createIcon('#2563eb', 'hospital'),
         };
     }, [L]);
 
@@ -109,7 +112,10 @@ export default function AccidentMap({
         <div ref={containerRef} className={`bg-white rounded-lg shadow-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-[99999] flex flex-col' : ''}`}>
             {/* Stats Summary */}
             <div className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white">
-                <h3 className="text-xl font-bold mb-3">🗺️ แผนที่สถานการณ์อุบัติเหตุ</h3>
+                <h3 className="mb-3 flex items-center gap-2 text-xl font-bold">
+                    <AppIcon icon="map" className="h-6 w-6" />
+                    แผนที่สถานการณ์อุบัติเหตุ
+                </h3>
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                     <div className="bg-white/20 rounded-lg p-2 text-center">
                         <div className="text-2xl font-bold">{stats.totalAccidents}</div>
@@ -147,7 +153,7 @@ export default function AccidentMap({
                         onChange={(e) => setShowAccidents(e.target.checked)}
                         className="w-4 h-4 accent-red-500"
                     />
-                    <span className="text-sm">🚗 อุบัติเหตุ ({accidents.length})</span>
+                    <span className="inline-flex items-center gap-1.5 text-sm"><AppIcon icon="car" className="h-4 w-4" /> อุบัติเหตุ ({accidents.length})</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -156,7 +162,7 @@ export default function AccidentMap({
                         onChange={(e) => setShowServicePoints(e.target.checked)}
                         className="w-4 h-4 accent-orange-500"
                     />
-                    <span className="text-sm">🚧 จุดบริการ ({servicePoints.length})</span>
+                    <span className="inline-flex items-center gap-1.5 text-sm"><AppIcon icon="route" className="h-4 w-4" /> จุดบริการ ({servicePoints.length})</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -165,7 +171,7 @@ export default function AccidentMap({
                         onChange={(e) => setShowHealthFacilities(e.target.checked)}
                         className="w-4 h-4 accent-blue-500"
                     />
-                    <span className="text-sm">🏥 หน่วยบริการสุขภาพ ({healthFacilities.length})</span>
+                    <span className="inline-flex items-center gap-1.5 text-sm"><AppIcon icon="hospital" className="h-4 w-4" /> หน่วยบริการสุขภาพ ({healthFacilities.length})</span>
                 </label>
             </div>
 
@@ -197,11 +203,13 @@ export default function AccidentMap({
                                     >
                                         <Popup>
                                             <div className="min-w-[200px]">
-                                                <h4 className="font-bold text-red-600 mb-2">
-                                                    🚗 {accident.accident_type || 'อุบัติเหตุ'}
+                                                <h4 className="mb-2 flex items-center gap-1.5 font-bold text-red-600">
+                                                    <AppIcon icon="car" className="h-4 w-4" />
+                                                    {accident.accident_type || 'อุบัติเหตุ'}
                                                 </h4>
-                                                <p className="text-sm text-gray-700 mb-1">
-                                                    📍 {accident.location_name || 'ไม่ระบุสถานที่'}
+                                                <p className="mb-1 flex items-center gap-1.5 text-sm text-gray-700">
+                                                    <AppIcon icon="mapPin" className="h-4 w-4" />
+                                                    {accident.location_name || 'ไม่ระบุสถานที่'}
                                                 </p>
                                                 {accident.district && (
                                                     <p className="text-xs text-gray-500">
@@ -220,7 +228,7 @@ export default function AccidentMap({
                                                 </div>
                                                 {accident.drunk_driving && (
                                                     <span className="inline-block mt-2 px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-full">
-                                                        🍺 เมาแล้วขับ
+                                                        เมาแล้วขับ
                                                     </span>
                                                 )}
                                             </div>
@@ -244,22 +252,23 @@ export default function AccidentMap({
                                     >
                                         <Popup>
                                             <div className="min-w-[180px]">
-                                                <h4 className="font-bold text-orange-600 mb-2">
-                                                    🚧 {point.name}
+                                                <h4 className="mb-2 flex items-center gap-1.5 font-bold text-orange-600">
+                                                    <AppIcon icon="route" className="h-4 w-4" />
+                                                    {point.name}
                                                 </h4>
                                                 <p className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded inline-block mb-2">
                                                     {point.point_type}
                                                 </p>
                                                 {point.address && (
-                                                    <p className="text-sm text-gray-600 mb-1">📍 {point.address}</p>
+                                                    <p className="mb-1 flex items-center gap-1.5 text-sm text-gray-600"><AppIcon icon="mapPin" className="h-4 w-4" /> {point.address}</p>
                                                 )}
                                                 <div className="text-sm text-gray-700">
-                                                    <p>👮 เจ้าหน้าที่: {point.officer_count || 0} คน</p>
-                                                    <p>🚔 รถตรวจ: {point.vehicle_count || 0} คัน</p>
+                                                    <p className="flex items-center gap-1.5"><AppIcon icon="users" className="h-4 w-4" /> เจ้าหน้าที่: {point.officer_count || 0} คน</p>
+                                                    <p className="flex items-center gap-1.5"><AppIcon icon="car" className="h-4 w-4" /> รถตรวจ: {point.vehicle_count || 0} คัน</p>
                                                 </div>
                                                 {point.operating_hours && (
                                                     <p className="text-xs text-gray-500 mt-1">
-                                                        🕐 {point.operating_hours}
+                                                        <span className="inline-flex items-center gap-1.5"><AppIcon icon="clock" className="h-3.5 w-3.5" /> {point.operating_hours}</span>
                                                     </p>
                                                 )}
                                             </div>
@@ -280,17 +289,18 @@ export default function AccidentMap({
                                     >
                                         <Popup>
                                             <div className="min-w-[180px]">
-                                                <h4 className="font-bold text-blue-600 mb-2">
-                                                    🏥 {facility.name}
+                                                <h4 className="mb-2 flex items-center gap-1.5 font-bold text-blue-600">
+                                                    <AppIcon icon="hospital" className="h-4 w-4" />
+                                                    {facility.name}
                                                 </h4>
                                                 <p className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded inline-block mb-2">
                                                     {facility.facility_type || 'หน่วยบริการ'}
                                                 </p>
                                                 {facility.address && (
-                                                    <p className="text-sm text-gray-600 mb-1">📍 {facility.address}</p>
+                                                    <p className="mb-1 flex items-center gap-1.5 text-sm text-gray-600"><AppIcon icon="mapPin" className="h-4 w-4" /> {facility.address}</p>
                                                 )}
                                                 {facility.phone && (
-                                                    <p className="text-sm text-gray-700">📞 {facility.phone}</p>
+                                                    <p className="flex items-center gap-1.5 text-sm text-gray-700"><AppIcon icon="phone" className="h-4 w-4" /> {facility.phone}</p>
                                                 )}
                                             </div>
                                         </Popup>

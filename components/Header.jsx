@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { showLogoutConfirm } from "@/lib/sweetAlert";
 import Image from "next/image";
+import AppIcon from "./icons/AppIcon";
 
 export default function Header() {
     const { user, logout } = useAuth();
@@ -28,7 +29,7 @@ export default function Header() {
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={64} height={64} className="w-10 h-10 md:w-16 md:h-16 object-contain" />
                         </div>
                         <div>
-                            <h1 className="text-lg sm:text-xl font-bold">EOC จังหวัดสตูล</h1>
+                            <h1 className="text-lg sm:text-xl font-bold">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</h1>
                             <p className="text-xs text-blue-100 hidden sm:block">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
                         </div>
                     </div>
@@ -37,7 +38,7 @@ export default function Header() {
                     <div className="flex items-center gap-4">
                         {/* Province Name - Hidden on mobile if user logged in */}
                         <div className={`hidden ${user ? 'lg:flex' : 'md:flex'} items-center`}>
-                            <span className="text-xs sm:text-sm">ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</span>
+                            <span className="text-xs sm:text-sm">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</span>
                         </div>
 
                         {/* User Menu */}
@@ -58,14 +59,7 @@ export default function Header() {
                                         </div>
                                         <div className="text-xs text-blue-100">{user.roleDisplay}</div>
                                     </div>
-                                    <svg
-                                        className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <AppIcon icon="chevronDown" className={`h-4 w-4 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
                                 </button>
 
                                 {/* Dropdown Menu */}
@@ -91,7 +85,7 @@ export default function Header() {
                                                 )}
                                                 {user.thaiIdData && (
                                                     <p className="text-xs text-gray-500 mt-1">
-                                                        เข้าสู่ระบบด้วย ThaiID
+                                                        เข้าสู่ระบบด้วย ThaID
                                                     </p>
                                                 )}
                                             </div>
@@ -103,7 +97,7 @@ export default function Header() {
                                                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >
-                                                    <span className="mr-2">🏠</span>
+                                                    <AppIcon icon="home" className="mr-2 inline h-4 w-4" />
                                                     หน้าหลัก
                                                 </a>
                                                 <a
@@ -111,7 +105,7 @@ export default function Header() {
                                                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >
-                                                    <span className="mr-2">👤</span>
+                                                    <AppIcon icon="user" className="mr-2 inline h-4 w-4" />
                                                     โปรไฟล์
                                                 </a>
                                                 <a
@@ -119,7 +113,7 @@ export default function Header() {
                                                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >
-                                                    <span className="mr-2">⚙️</span>
+                                                    <AppIcon icon="settings" className="mr-2 inline h-4 w-4" />
                                                     ตั้งค่า
                                                 </a>
                                             </div>
@@ -130,7 +124,7 @@ export default function Header() {
                                                     onClick={handleLogout}
                                                     className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-medium"
                                                 >
-                                                    <span className="mr-2">🚪</span>
+                                                    <AppIcon icon="logout" className="mr-2 inline h-4 w-4" />
                                                     ออกจากระบบ
                                                 </button>
                                             </div>
@@ -143,7 +137,10 @@ export default function Header() {
                                 href="/login"
                                 className="bg-[#0b4c86] hover:bg-[#0f5c9f] px-4 py-2 rounded-lg transition-colors text-sm font-medium"
                             >
-                                🔐 เข้าสู่ระบบ
+                                <span className="inline-flex items-center gap-2">
+                                    <AppIcon icon="lock" className="h-4 w-4" />
+                                    เข้าสู่ระบบ
+                                </span>
                             </a>
                         )}
                     </div>

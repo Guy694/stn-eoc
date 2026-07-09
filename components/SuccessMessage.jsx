@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
+import AppIcon from './icons/AppIcon';
 
 export default function SuccessMessage({
     title = "สำเร็จ!",
@@ -41,19 +42,7 @@ export default function SuccessMessage({
                 {/* Animated Checkmark */}
                 <div className="bg-gradient-to-br from-green-500 to-green-600 p-8 text-center">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 animate-float-soft">
-                        <svg
-                            className="w-12 h-12 text-green-600 animate-draw-check"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                            />
-                        </svg>
+                        <AppIcon icon="checkCircle" className="h-12 w-12 animate-draw-check text-green-600" strokeWidth={3} />
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
                 </div>
@@ -77,7 +66,7 @@ export default function SuccessMessage({
                             <p className="text-sm font-semibold text-gray-700 mb-2">ขั้นตอนถัดไป:</p>
                             {nextActions.map((action, index) => (
                                 <div key={index} className="flex items-start gap-2">
-                                    <span className="text-green-600 mt-0.5">✓</span>
+                                    <AppIcon icon="check" className="mt-0.5 h-4 w-4 text-green-600" />
                                     <p className="text-sm text-gray-600">{action}</p>
                                 </div>
                             ))}

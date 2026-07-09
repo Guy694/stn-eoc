@@ -72,7 +72,7 @@ export async function POST(req) {
             id,
             name_th,
             name_en,
-            icon = '⚠️',
+            icon = 'alert',
             color_primary = 'gray',
             color_gradient = 'from-gray-500 to-gray-600',
             description = '',

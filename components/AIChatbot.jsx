@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import AppIcon from './icons/AppIcon';
 
 const CHATBOT_HISTORY_KEY = 'chatbot_history';
 const CHATBOT_LAUNCHER_HIDDEN_KEY = 'chatbot_launcher_hidden';
@@ -15,9 +16,9 @@ export default function AIChatbot() {
 
     // Sample questions
     const sampleQuestions = [
-        "สตูลประกาศเป็นพื้นที่ภัยพิบัติหรือยัง?",
-        "แสดงข้อมูล EOC ตอนนี้",
-        "มีกี่ตำบลในจังหวัดสตูล?"
+        "น้ำท่วมควรเตรียมตัวอย่างไร?",
+        "ช่วงฝนตกหนักควรเฝ้าระวังอะไรบ้าง?",
+        "ตอนนี้อยู่อำเภอเมือง จะไปอำเภอละงูได้หรือไม่?"
     ];
     const emergencyNumbers = [
         { number: '1669', label: 'แพทย์ฉุกเฉิน' },
@@ -107,7 +108,7 @@ export default function AIChatbot() {
             } else {
                 const errorMessage = {
                     role: 'assistant',
-                    content: `❌ เกิดข้อผิดพลาด: ${data.message || data.error}`,
+                    content: `เกิดข้อผิดพลาด: ${data.message || data.error}`,
                     timestamp: new Date().toISOString(),
                     isError: true
                 };
@@ -117,7 +118,7 @@ export default function AIChatbot() {
             console.error('Chatbot error:', error);
             const errorMessage = {
                 role: 'assistant',
-                content: '❌ ไม่สามารถเชื่อมต่อกับ AI ได้ กรุณาลองใหม่อีกครั้ง',
+                content: 'ไม่สามารถเชื่อมต่อกับ AI ได้ กรุณาลองใหม่อีกครั้ง',
                 timestamp: new Date().toISOString(),
                 isError: true
             };
@@ -146,11 +147,9 @@ export default function AIChatbot() {
                 <div className="fixed bottom-20 right-24 z-[1100] animate-float-subtle">
                     <div className="relative bg-white rounded-2xl shadow-xl px-4 py-3 border-2 border-green-500">
                         <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5 text-green-600 animate-wiggle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
+                            <AppIcon icon="message" className="h-5 w-5 text-green-600 animate-wiggle" />
                             <p className="text-green-700 font-semibold text-sm whitespace-nowrap">
-                                ถามฉันสิ! 💬
+                                ถามฉันสิ!
                             </p>
                         </div>
                         {/* Speech bubble arrow */}
@@ -170,7 +169,7 @@ export default function AIChatbot() {
                             aria-label="ซ่อน EOC Assistant"
                             title="ซ่อน EOC Assistant"
                         >
-                            ×
+                            <AppIcon icon="x" className="h-4 w-4" />
                         </button>
                     )}
                     <button
@@ -182,41 +181,10 @@ export default function AIChatbot() {
                         aria-label={isOpen ? 'ปิด chatbot' : 'เปิด chatbot'}
                     >
                         {isOpen ? (
-                            <svg className="w-8 h-8 text-white transition-transform duration-300 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <AppIcon icon="x" className="h-8 w-8 text-white transition-transform duration-300 rotate-90" />
                         ) : (
                             <div className="relative">
-                                {/* Robot Head */}
-                                <svg className="w-9 h-9 text-white transition-transform duration-300 group-hover:scale-110" viewBox="0 0 64 64" fill="none">
-                                    {/* Antenna */}
-                                    <line x1="32" y1="8" x2="32" y2="16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                    <circle cx="32" cy="6" r="3" fill="currentColor" className="animate-pulse-glow" />
-
-                                    {/* Head */}
-                                    <rect x="16" y="16" width="32" height="28" rx="6" fill="currentColor" stroke="currentColor" strokeWidth="2" />
-
-                                    {/* Eyes */}
-                                    <circle cx="24" cy="28" r="4" fill="#10b981" className="animate-blink-eye" />
-                                    <circle cx="40" cy="28" r="4" fill="#10b981" className="animate-blink-eye" />
-
-                                    {/* Eye highlights */}
-                                    <circle cx="25" cy="27" r="1.5" fill="white" className="animate-blink-eye" />
-                                    <circle cx="41" cy="27" r="1.5" fill="white" className="animate-blink-eye" />
-
-                                    {/* Mouth */}
-                                    <path d="M 24 36 Q 32 40 40 36" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-
-                                    {/* Ears/Side panels */}
-                                    <rect x="12" y="24" width="4" height="12" rx="2" fill="currentColor" />
-                                    <rect x="48" y="24" width="4" height="12" rx="2" fill="currentColor" />
-
-                                    {/* Ear details */}
-                                    <circle cx="14" cy="30" r="1" fill="#10b981" />
-                                    <circle cx="50" cy="30" r="1" fill="#10b981" />
-                                </svg>
-
-                                {/* Pulse ring animation */}
+                                <AppIcon icon="bot" className="h-9 w-9 text-white transition-transform duration-300 group-hover:scale-110" />
                                 <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping-slow"></div>
                             </div>
                         )}
@@ -231,33 +199,7 @@ export default function AIChatbot() {
                     <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                                <svg className="w-6 h-6 text-white" viewBox="0 0 64 64" fill="none">
-                                    {/* Antenna */}
-                                    <line x1="32" y1="8" x2="32" y2="16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                    <circle cx="32" cy="6" r="3" fill="currentColor" />
-
-                                    {/* Head */}
-                                    <rect x="16" y="16" width="32" height="28" rx="6" fill="currentColor" stroke="currentColor" strokeWidth="2" />
-
-                                    {/* Eyes */}
-                                    <circle cx="24" cy="28" r="4" fill="#10b981" />
-                                    <circle cx="40" cy="28" r="4" fill="#10b981" />
-
-                                    {/* Eye highlights */}
-                                    <circle cx="25" cy="27" r="1.5" fill="white" />
-                                    <circle cx="41" cy="27" r="1.5" fill="white" />
-
-                                    {/* Mouth */}
-                                    <path d="M 24 36 Q 32 40 40 36" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-
-                                    {/* Ears/Side panels */}
-                                    <rect x="12" y="24" width="4" height="12" rx="2" fill="currentColor" />
-                                    <rect x="48" y="24" width="4" height="12" rx="2" fill="currentColor" />
-
-                                    {/* Ear details */}
-                                    <circle cx="14" cy="30" r="1" fill="#10b981" />
-                                    <circle cx="50" cy="30" r="1" fill="#10b981" />
-                                </svg>
+                                <AppIcon icon="bot" className="h-6 w-6 text-white" />
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">EOC Assistant</h3>
@@ -269,7 +211,7 @@ export default function AIChatbot() {
                             className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10 transition-colors"
                             title="ล้างประวัติการสนทนา"
                         >
-                            🗑️
+                            <AppIcon icon="trash" className="h-5 w-5" />
                         </button>
                     </div>
 
@@ -277,8 +219,8 @@ export default function AIChatbot() {
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
                         {messages.length === 0 && (
                             <div className="text-center py-8">
-                                <div className="text-6xl mb-4">👋</div>
-                                <p className="text-gray-600 mb-4">สวัสดีครับ! ผมสามารถช่วยตอบคำถามเกี่ยวกับข้อมูลในระบบ EOC ได้</p>
+                                <AppIcon icon="message" className="mx-auto mb-4 h-14 w-14 text-emerald-600" />
+                                <p className="text-gray-600 mb-4">สวัสดีครับ! ผมช่วยตอบข้อมูล EOC โรค น้ำท่วม และสภาพฟ้าฝนได้</p>
                                 <div className="mb-4 grid gap-2">
                                     <Link
                                         href="/public/report-incident"
@@ -310,7 +252,10 @@ export default function AIChatbot() {
                                             onClick={() => sendMessage(q)}
                                             className="block w-full text-left text-sm bg-white hover:bg-emerald-50 text-emerald-900 px-3 py-2 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors"
                                         >
-                                            💬 {q}
+                                            <span className="inline-flex items-center gap-2">
+                                                <AppIcon icon="message" className="h-4 w-4" />
+                                                {q}
+                                            </span>
                                         </button>
                                     ))}
                                 </div>
@@ -377,11 +322,12 @@ export default function AIChatbot() {
                                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors disabled:bg-green-100 disabled:text-green-900 disabled:cursor-not-allowed flex items-center gap-2"
                             >
                                 <span>ส่ง</span>
-                                <span>📤</span>
+                                <AppIcon icon="send" className="h-4 w-4" />
                             </button>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2 text-center">
-                            💡 ลองถามเกี่ยวกับข้อมูล EOC, ผู้ป่วย, อุทกภัยน้ำท่วม, หรืออุบัติเหตุ
+                        <p className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-500">
+                            <AppIcon icon="lightbulb" className="h-3.5 w-3.5" />
+                            <span>ลองถามเกี่ยวกับข้อมูล EOC, โรค/การระบาด, อุทกภัยน้ำท่วม, ฟ้าฝน หรือเส้นทาง</span>
                         </p>
                     </div>
                 </div>

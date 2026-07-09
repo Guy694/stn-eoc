@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import AppIcon from './icons/AppIcon';
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -134,19 +135,24 @@ const MapSelector = ({ position, onPositionChange }) => {
                             กำลังหาตำแหน่ง...
                         </>
                     ) : (
-                        <>📍 ใช้ GPS อุปกรณ์</>
+                        <>
+                            <AppIcon icon="mapPin" className="h-4 w-4" />
+                            ใช้ GPS อุปกรณ์
+                        </>
                     )}
                 </button>
                 <span className="text-xs text-gray-500">หรือคลิกบนแผนที่ / ลากหมุดเพื่อเลือกตำแหน่ง</span>
             </div>
             {gpsError && (
                 <div className="mb-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">
-                    ⚠️ {gpsError}
+                    <AppIcon icon="alert" className="h-4 w-4" />
+                    {gpsError}
                 </div>
             )}
             {position && (
                 <div className="mb-2 text-xs text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                    ✅ ตำแหน่งที่เลือก: {position.lat.toFixed(6)}, {position.lng.toFixed(6)}
+                    <AppIcon icon="checkCircle" className="h-4 w-4" />
+                    ตำแหน่งที่เลือก: {position.lat.toFixed(6)}, {position.lng.toFixed(6)}
                 </div>
             )}
             <div

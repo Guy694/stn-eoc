@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function Breadcrumb() {
     const pathname = usePathname();
@@ -66,19 +67,7 @@ export default function Breadcrumb() {
                 {breadcrumbs.map((crumb, index) => (
                     <li key={crumb.href} className="flex items-center">
                         {index > 0 && (
-                            <svg
-                                className="w-4 h-4 text-gray-400 mx-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 5l7 7-7 7"
-                                />
-                            </svg>
+                            <AppIcon icon="chevronRight" className="mx-2 h-4 w-4 text-gray-400" />
                         )}
                         {crumb.isLast ? (
                             <span className="font-semibold text-green-600">

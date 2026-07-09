@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
+import AppIcon from "./icons/AppIcon";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -150,7 +151,10 @@ export default function EOCTypeChart() {
         return (
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="text-center py-8">
-                    <p className="text-red-600">❌ เกิดข้อผิดพลาด: {error}</p>
+                    <p className="inline-flex items-center gap-2 text-red-600">
+                        <AppIcon icon="xCircle" className="h-5 w-5" />
+                        เกิดข้อผิดพลาด: {error}
+                    </p>
                 </div>
             </div>
         );
@@ -160,7 +164,10 @@ export default function EOCTypeChart() {
         <div className="bg-white rounded-lg shadow-md p-6">
             {/* Header with Year Filter */}
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">📊 สถิติการเกิด EOC แยกตามประเภท</h2>
+                <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-800">
+                    <AppIcon icon="barChart" className="h-6 w-6 text-blue-600" />
+                    สถิติการเกิด EOC แยกตามประเภท
+                </h2>
                 <div className="flex items-center gap-2">
                     <label htmlFor="year-filter" className="text-gray-700 font-medium">
                         เลือกปี:
@@ -192,11 +199,10 @@ export default function EOCTypeChart() {
                     const count = chartData?.datasets[0]?.data[Object.keys(EOC_TYPE_LABELS).indexOf(type)] || 0;
                     return (
                         <div key={type} className="text-center p-4 bg-gray-50 rounded-lg border">
-                            <div className="text-3xl mb-2">
-                                {type === 'flood' && '🌊'}
-                                {type === 'festival-accidents' && '🚗'}
-                                {type === 'disease' && '🦠'}
-                            </div>
+                            <AppIcon
+                                icon={type === 'flood' ? 'waves' : type === 'festival-accidents' ? 'car' : 'disease'}
+                                className="mx-auto mb-2 h-8 w-8 text-blue-600"
+                            />
                             <div className="text-2xl font-bold text-gray-800">{count}</div>
                             <div className="text-sm text-gray-600">{label}</div>
                         </div>

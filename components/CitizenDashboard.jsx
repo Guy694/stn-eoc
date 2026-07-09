@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { formatEocDisplayName } from '@/lib/eocDisplay';
+import AppIcon from './icons/AppIcon';
 
 export default function CitizenDashboard() {
     const { user } = useAuth();
@@ -90,14 +91,14 @@ export default function CitizenDashboard() {
 
     const getEOCTypeIcon = (type) => {
         const icons = {
-            flood: '💧',
-            disease: '🦠',
-            accident: '🚗',
-            drought: '🌵',
-            tsunami: '🌊',
-            earthquake: '🏚️'
+            flood: 'droplets',
+            disease: 'disease',
+            accident: 'car',
+            drought: 'alert',
+            tsunami: 'waves',
+            earthquake: 'alert'
         };
-        return icons[type] || '⚠️';
+        return icons[type] || 'alert';
     };
 
     const getEOCTypeColor = (type) => {
@@ -140,12 +141,15 @@ export default function CitizenDashboard() {
                 <h2 className="text-2xl font-bold mb-2">
                     สวัสดี, {user?.title} {user?.givenName} {user?.familyName}
                 </h2>
-                <p className="text-green-100">ยินดีต้อนรับสู่ระบบ EOC จังหวัดสตูล</p>
+                <p className="text-green-100">ยินดีต้อนรับสู่ระบบ ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
             </div>
 
             {/* EOC Status Section */}
             <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">🚨 สถานะ EOC</h3>
+                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-800">
+                    <AppIcon icon="siren" className="h-6 w-6 text-red-600" />
+                    สถานะ EOC
+                </h3>
 
                 {loading ? (
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">
@@ -171,7 +175,7 @@ export default function CitizenDashboard() {
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-4 mb-4">
                                             <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center shadow-lg animate-pulse">
-                                                <span className="text-4xl">{getEOCTypeIcon(eoc.eoc_type)}</span>
+                                                <AppIcon icon={getEOCTypeIcon(eoc.eoc_type)} className="h-10 w-10" />
                                             </div>
                                             <div>
                                                 <h4 className="text-2xl font-bold mb-1">
@@ -206,7 +210,10 @@ export default function CitizenDashboard() {
                                             className="block w-full bg-white text-center font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
                                             style={{ color: `rgb(var(--color-${color}-600))` }}
                                         >
-                                            ⚡ แจ้งเหตุ{getEOCTypeName(eoc)}
+                                            <span className="inline-flex items-center justify-center gap-2">
+                                                <AppIcon icon="siren" className="h-5 w-5" />
+                                                แจ้งเหตุ{getEOCTypeName(eoc)}
+                                            </span>
                                         </Link>
                                     </div>
                                 </div>
@@ -215,7 +222,7 @@ export default function CitizenDashboard() {
                     </div>
                 ) : (
                     <div className="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl shadow-md p-8 text-center">
-                        <div className="text-6xl mb-4">✅</div>
+                        <AppIcon icon="checkCircle" className="mx-auto mb-4 h-16 w-16" />
                         <h4 className="text-2xl font-bold mb-2">ไม่มี EOC ที่เปิดอยู่</h4>
                         <p className="opacity-90">ขณะนี้ไม่มีสถานการณ์ฉุกเฉิน</p>
                     </div>
@@ -224,13 +231,16 @@ export default function CitizenDashboard() {
 
             {/* Quick Actions */}
             <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">🚀 เมนูด่วน</h3>
+                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-800">
+                    <AppIcon icon="activity" className="h-6 w-6 text-blue-600" />
+                    เมนูด่วน
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Link
                         href="/public/report-incident"
                         className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200 hover:border-red-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
                     >
-                        <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">🚨</div>
+                        <AppIcon icon="siren" className="mx-auto mb-4 h-12 w-12 text-red-600 transition-transform group-hover:scale-110" />
                         <h4 className="font-bold text-lg text-gray-800">แจ้งเหตุภัยพิบัติ</h4>
                         <p className="text-sm text-gray-600 mt-2">รายงานเหตุการณ์ที่พบเจอ</p>
                     </Link>
@@ -239,7 +249,7 @@ export default function CitizenDashboard() {
                         href="/public/disaster-map"
                         className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
                     >
-                        <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">🗺️</div>
+                        <AppIcon icon="map" className="mx-auto mb-4 h-12 w-12 text-blue-600 transition-transform group-hover:scale-110" />
                         <h4 className="font-bold text-lg text-gray-800">แผนที่ภัยพิบัติ</h4>
                         <p className="text-sm text-gray-600 mt-2">ดูสถานการณ์ทั้งหมด</p>
                     </Link>
@@ -248,7 +258,7 @@ export default function CitizenDashboard() {
                         href="/"
                         className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 hover:border-green-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
                     >
-                        <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">ℹ️</div>
+                        <AppIcon icon="info" className="mx-auto mb-4 h-12 w-12 text-green-600 transition-transform group-hover:scale-110" />
                         <h4 className="font-bold text-lg text-gray-800">ข้อมูลและคำแนะนำ</h4>
                         <p className="text-sm text-gray-600 mt-2">คำแนะนำป้องกันภัย</p>
                     </Link>
@@ -257,7 +267,10 @@ export default function CitizenDashboard() {
 
             {/* My Reports History */}
             <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">📋 ประวัติการแจ้งเหตุของคุณ</h3>
+                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-800">
+                    <AppIcon icon="clipboard" className="h-6 w-6 text-blue-600" />
+                    ประวัติการแจ้งเหตุของคุณ
+                </h3>
 
                 {reportsLoading ? (
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">

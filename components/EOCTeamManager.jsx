@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import AppIcon from './icons/AppIcon';
 
 export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     const { user } = useAuth();
@@ -200,7 +201,10 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
                         className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
                         disabled={session.status !== 'active'}
                     >
-                        ➕ เพิ่มทีม
+                        <span className="inline-flex items-center gap-2">
+                            <AppIcon icon="plus" className="h-4 w-4" />
+                            เพิ่มทีม
+                        </span>
                     </button>
                 </div>
             </div>
@@ -267,7 +271,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
             <div className="p-4 border-b">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-3">
-                        <span className="text-3xl">{team.icon}</span>
+                        <AppIcon icon={team.icon || 'users'} className="h-8 w-8 text-blue-600" />
                         <div>
                             <h3 className="text-lg font-bold text-gray-800">
                                 {team.team_name_th}
@@ -282,7 +286,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                             onClick={() => setExpanded(!expanded)}
                             className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded"
                         >
-                            {expanded ? '🔽' : '▶️'}
+                            <AppIcon icon="chevronDown" className={`h-4 w-4 transition-transform ${expanded ? '' : '-rotate-90'}`} />
                         </button>
                         {sessionStatus === 'active' && (
                             <>
@@ -290,13 +294,19 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                                     onClick={onAddMember}
                                     className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                                 >
-                                    ➕ เพิ่มสมาชิก
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <AppIcon icon="plus" className="h-4 w-4" />
+                                        เพิ่มสมาชิก
+                                    </span>
                                 </button>
                                 <button
                                     onClick={() => onRemoveTeam(team.team_id)}
                                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                                 >
-                                    ❌ ถอดทีม
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <AppIcon icon="xCircle" className="h-4 w-4" />
+                                        ถอดทีม
+                                    </span>
                                 </button>
                             </>
                         )}

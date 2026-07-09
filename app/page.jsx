@@ -11,6 +11,7 @@ import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import dynamic from "next/dynamic";
 import { Bell, Bot, Building2, CloudSun, Home as HomeIcon, LogIn, Map, Phone, Tent } from "lucide-react";
+import AppIcon from "@/components/icons/AppIcon";
 
 const FestivalPublicDashboard = dynamic(() => import("@/components/festival/FestivalPublicDashboard"), { ssr: false });
 const DailyDiseaseChart = dynamic(() => import("@/components/DailyDiseaseChart"), {
@@ -28,10 +29,7 @@ const PublicIncidentMap = dynamic(() => import("@/components/PublicIncidentMap")
   loading: () => (
     <div className="flex h-full min-h-[520px] items-center justify-center bg-slate-950">
       <div className="text-center">
-        <svg className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-3" viewBox="0 0 24 24" aria-hidden="true">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-        </svg>
+        <AppIcon icon="loader" className="mx-auto mb-3 h-12 w-12 animate-spin text-emerald-600" />
         <p className="text-slate-300">กำลังโหลดแผนที่สถานการณ์...</p>
       </div>
     </div>
@@ -169,7 +167,7 @@ function normalizeAnnouncement(announcement) {
 
 function buildHomepageAlertText(announcement, dateRange) {
   if (!announcement) {
-    return `ประกาศเตือนภัย: ติดตามประกาศล่าสุดจากศูนย์ EOC จังหวัดสตูล${dateRange ? ` ช่วง ${dateRange}` : ""}`;
+    return `ประกาศเตือนภัย: ติดตามประกาศล่าสุดจากศูนย์ ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข${dateRange ? ` ช่วง ${dateRange}` : ""}`;
   }
 
   const title = String(announcement.title || "").trim();
@@ -492,12 +490,12 @@ export default function Home() {
 
   const getEOCTypeIcon = (type) => {
     const icons = {
-      flood: '💧',
-      disease: '🦠',
-      accident: '🚗',
-      'festival-accidents': '🚗'
+      flood: 'droplets',
+      disease: 'disease',
+      accident: 'car',
+      'festival-accidents': 'car'
     };
-    return icons[type] || '⚠️';
+    return icons[type] || 'alert';
   };
 
   const getEOCTypeColor = (type) => {
@@ -834,9 +832,9 @@ export default function Home() {
                 <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="w-14 h-14 md:w-20 md:h-20" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 drop-shadow-lg">EOC จังหวัดสตูล</h1>
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 drop-shadow-lg">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</h1>
                 <p className="text-sm md:text-xl text-green-100 mb-0.5 md:mb-1">Satun Provincial Emergency Operations Center (Satun Geo-EOC) Intelligence Platform</p>
-                <p className="text-xs md:text-sm text-green-200">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</p>
+                <p className="text-xs md:text-sm text-green-200">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
               </div>
             </div>
 
@@ -847,7 +845,7 @@ export default function Home() {
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg font-bold shadow-xl transition-colors text-center text-sm md:text-base ring-1 ring-white/20"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-sm md:text-xl">⚡</span>
+                  <AppIcon icon="siren" className="h-4 w-4 md:h-5 md:w-5" />
                   <span>แจ้งเหตุ</span>
                 </div>
               </Link>
@@ -856,7 +854,7 @@ export default function Home() {
                 className="bg-white hover:bg-gray-100 text-green-800 px-4 py-3 md:px-6 md:py-4 rounded-lg font-bold shadow-xl transition-colors text-center text-sm md:text-base"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-sm md:text-xl">🔐</span>
+                  <AppIcon icon="lock" className="h-4 w-4 md:h-5 md:w-5" />
                   <span>เข้าสู่ระบบ</span>
                 </div>
               </Link>
@@ -865,7 +863,7 @@ export default function Home() {
                 className="bg-green-600 hover:bg-green-500 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg font-bold shadow-xl transition-colors text-center text-sm md:text-base"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-sm md:text-xl">🗺️</span>
+                  <AppIcon icon="map" className="h-4 w-4 md:h-5 md:w-5" />
                   <span>แผนที่ภัยพิบัติ</span>
                 </div>
               </Link>
@@ -879,10 +877,7 @@ export default function Home() {
         <section className="mb-8">
           {loading ? (
             <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
-              <svg className="animate-spin h-12 w-12 text-green-600 mx-auto mb-4" viewBox="0 0 24 24" aria-hidden="true">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-              </svg>
+              <AppIcon icon="loader" className="mx-auto mb-4 h-12 w-12 animate-spin text-green-600" />
               <p className="text-gray-600">กำลังโหลดข้อมูล EOC...</p>
             </div>
           ) : (
@@ -905,7 +900,7 @@ export default function Home() {
                       <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
                         <div className={`w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center ${eocStatus.isOpen ? 'bg-white/20 animate-pulse' : 'bg-emerald-50'
                           } shadow-lg`}>
-                          <span className="text-3xl md:text-4xl">{eocStatus.isOpen ? '🚨' : '✅'}</span>
+                          <AppIcon icon={eocStatus.isOpen ? 'siren' : 'checkCircle'} className={`h-9 w-9 md:h-11 md:w-11 ${eocStatus.isOpen ? '' : 'text-emerald-700'}`} />
                         </div>
                         <div>
                           <h2 className="text-xl md:text-3xl lg:text-4xl font-bold mb-0.5 md:mb-1">
@@ -948,13 +943,19 @@ export default function Home() {
                         href="/public/report-incident"
                         className={`${eocStatus.isOpen ? "bg-white text-red-700 hover:bg-red-50" : "bg-red-600 text-white hover:bg-red-700"} px-4 py-2 md:px-6 md:py-3 rounded-lg font-bold shadow-lg transition-colors text-center text-sm md:text-base flex-1 md:flex-none`}
                       >
-                        ⚡ แบบฟอร์มแจ้งเหตุ
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <AppIcon icon="siren" className="h-4 w-4" />
+                          แบบฟอร์มแจ้งเหตุ
+                        </span>
                       </Link>
                       <Link
                         href="/public/disaster-map"
                         className={`${eocStatus.isOpen ? "bg-white/20 hover:bg-white/30 text-white border-white/30" : "bg-white hover:bg-gray-50 text-gray-800 border-gray-200"} px-4 py-2 md:px-6 md:py-3 rounded-lg font-semibold transition-colors text-center border text-sm md:text-base flex-1 md:flex-none`}
                       >
-                        🗺️ แผนที่สถานการณ์
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <AppIcon icon="map" className="h-4 w-4" />
+                          แผนที่สถานการณ์
+                        </span>
                       </Link>
                     </div>
                   </div>
@@ -964,7 +965,10 @@ export default function Home() {
               {/* Active EOCs List */}
               {activeEOCs.length > 0 && (
                 <div className="mb-4 md:mb-6">
-                  <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚨 EOC ที่เปิดใช้งานอยู่ ({activeEOCs.length})</h2>
+                  <h2 className="mb-3 flex items-center gap-2 px-1 text-lg font-bold text-gray-800 md:mb-4 md:text-2xl">
+                    <AppIcon icon="siren" className="h-5 w-5 text-red-600" />
+                    EOC ที่เปิดใช้งานอยู่ ({activeEOCs.length})
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     {activeEOCs.map((eoc) => {
                       const style = getEOCStyle(eoc.eoc_type);
@@ -976,8 +980,8 @@ export default function Home() {
                           {/* Header */}
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                              <div className={`w-12 h-12 rounded-full ${style.bg} flex items-center justify-center text-3xl shadow-sm`}>
-                                {getEOCTypeIcon(eoc.eoc_type)}
+                              <div className={`flex h-12 w-12 items-center justify-center rounded-full ${style.bg} shadow-sm`}>
+                                <AppIcon icon={getEOCTypeIcon(eoc.eoc_type)} className="h-7 w-7" />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
@@ -1001,7 +1005,7 @@ export default function Home() {
                           {/* Info */}
                           <div className="space-y-3 mb-4">
                             <div className="flex items-start gap-2 text-sm text-gray-600 border-t border-gray-100 pt-3">
-                              <span className="flex-shrink-0 mt-0.5">ℹ️</span>
+                              <AppIcon icon="info" className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
                               <span className="line-clamp-2">{eoc.description || 'ไม่มีรายละเอียดเพิ่มเติม'}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs text-gray-500 px-1">
@@ -1083,7 +1087,10 @@ export default function Home() {
 
               {/* สถิติเฉพาะ EOC */}
               <section className="mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">📊 สถิติ{getEOCTypeName(eoc)}</h2>
+                <h2 className="mb-3 flex items-center gap-2 px-1 text-lg font-bold text-gray-800 md:mb-4 md:text-2xl">
+                  <AppIcon icon="barChart" className="h-5 w-5 text-blue-600" />
+                  สถิติ{getEOCTypeName(eoc)}
+                </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                   {Object.entries(content.stats).map(([key, value]) => {
                     const labels = {
@@ -1113,7 +1120,7 @@ export default function Home() {
 
                     return (
                       <div key={key} className="bg-white rounded-lg shadow-md p-3 md:p-4 text-center">
-                        <div className="text-2xl md:text-3xl mb-1 md:mb-2">{label.icon}</div>
+                        <AppIcon icon={label.icon} className="mx-auto mb-1 h-7 w-7 text-blue-600 md:mb-2 md:h-8 md:w-8" />
                         <div className="text-lg md:text-2xl font-bold text-gray-800 mb-0.5 md:mb-1">
                           {value} <span className="text-xs md:text-sm font-normal text-gray-600">{label.unit}</span>
                         </div>
@@ -1126,7 +1133,10 @@ export default function Home() {
 
               {/* Quick Access เฉพาะ EOC */}
               <section className="mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 px-1">🚀 เข้าถึงด่วน - {getEOCTypeName(eoc)}</h2>
+                <h2 className="mb-3 flex items-center gap-2 px-1 text-lg font-bold text-gray-800 md:mb-4 md:text-2xl">
+                  <AppIcon icon="activity" className="h-5 w-5 text-blue-600" />
+                  เข้าถึงด่วน - {getEOCTypeName(eoc)}
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                   {content.quickActions.map((action, idx) => (
                     <QuickActionLink key={idx} action={action} />
@@ -1144,9 +1154,12 @@ export default function Home() {
             <>
               {/* Quick Access ทั่วไป - แสดงเฉพาะแผนที่ภัยพิบัติ */}
               <section className="mb-6 md:mb-8">
-                <h2 className="text-xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6 px-1">🚀 เข้าถึงด่วน</h2>
+                <h2 className="mb-4 flex items-center gap-2 px-1 text-xl font-bold text-gray-800 md:mb-6 md:text-3xl">
+                  <AppIcon icon="activity" className="h-6 w-6 text-blue-600" />
+                  เข้าถึงด่วน
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-                  <QuickLinkCard icon="🗺️" title="แผนที่ภัยพิบัติ" description="ดูสถานการณ์ภัยพิบัติทั้งหมด" link="/public/disaster-map" color="blue" />
+                  <QuickLinkCard icon="map" title="แผนที่ภัยพิบัติ" description="ดูสถานการณ์ภัยพิบัติทั้งหมด" link="/public/disaster-map" color="blue" />
                   {/* EOC-specific items are hidden when no EOC is active */}
                 </div>
               </section>
@@ -1158,7 +1171,10 @@ export default function Home() {
         {/* Emergency Contact - แสดงเสมอ */}
         <section className="mb-6 md:mb-8">
           <div className="eoc-bg-red-800 text-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-8 text-center">
-            <h2 className="text-xl md:text-3xl font-bold mb-3 md:mb-4">☎️ หมายเลขฉุกเฉิน</h2>
+            <h2 className="mb-3 flex items-center justify-center gap-2 text-xl font-bold md:mb-4 md:text-3xl">
+              <AppIcon icon="phone" className="h-6 w-6 md:h-8 md:w-8" />
+              หมายเลขฉุกเฉิน
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
               <div>
                 <div className="text-3xl md:text-5xl font-bold mb-1 md:mb-2">191</div>
@@ -1181,24 +1197,27 @@ export default function Home() {
 
           {/* ช่องทางติดต่อจังหวัดสตูล */}
           <div className="p-4 md:p-6 mt-3 md:mt-4">
-            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-3 text-center">📞 ช่องทางติดต่อ สนง.ปภ.จังหวัดสตูล</h3>
+            <h3 className="mb-3 flex items-center justify-center gap-2 text-lg font-bold text-gray-800 md:text-xl">
+              <AppIcon icon="phone" className="h-5 w-5 text-blue-700" />
+              ช่องทางติดต่อ สนง.ปภ.จังหวัดสตูล
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
               <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-3">
-                <span className="text-2xl">📱</span>
+                <AppIcon icon="phone" className="h-6 w-6 text-blue-700" />
                 <div>
                   <div className="text-sm font-semibold text-gray-700">โทรศัพท์</div>
                   <div className="text-blue-700 font-bold">074-711-067</div>
                 </div>
               </div>
               <a href="https://www.facebook.com/profile.php?id=100064630498498" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-blue-50 rounded-lg p-3 hover:bg-blue-100 transition-colors">
-                <span className="text-2xl">📘</span>
+                <AppIcon icon="message" className="h-6 w-6 text-blue-700" />
                 <div>
                   <div className="text-sm font-semibold text-gray-700">Facebook</div>
                   <div className="text-blue-700 font-bold text-sm">ปภ.จังหวัดสตูล</div>
                 </div>
               </a>
               <a href="https://lin.ee/satunddpm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-green-50 rounded-lg p-3 hover:bg-green-100 transition-colors">
-                <span className="text-2xl">💬</span>
+                <AppIcon icon="message" className="h-6 w-6 text-green-700" />
                 <div>
                   <div className="text-sm font-semibold text-gray-700">LINE Official</div>
                   <div className="text-green-700 font-bold text-sm">@satunddpm</div>
@@ -1212,8 +1231,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-800 text-gray-300 py-4 md:py-6 mt-8 md:mt-12">
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <p className="text-sm md:text-base">&copy; 2025 EOC จังหวัดสตูล - Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
-          <p className="text-xs md:text-sm mt-1 md:mt-2">ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</p>
+          <p className="text-sm md:text-base">&copy; 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข - Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
+          <p className="text-xs md:text-sm mt-1 md:mt-2">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
         </div>
       </footer>
 
@@ -1369,7 +1388,7 @@ function PublicOperationalDashboard({
           <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-4">
             <Image src="/stn-eoc/img/logo.png" alt="Satun EOC" width={62} height={62} className="h-10 w-10 rounded-full bg-white p-1 shadow-md sm:h-12 sm:w-12 lg:h-[62px] lg:w-[62px] lg:p-1.5" priority />
             <div className="min-w-0">
-              <h1 className="truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h1>
+              <h1 className="truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</h1>
               <p className="truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
             </div>
           </div>
@@ -1652,7 +1671,9 @@ function OpsMetricCard({ label, value, unit, sub, tone, icon }) {
   return (
     <div className={`rounded-lg border bg-white p-2.5 shadow-sm sm:rounded-xl sm:p-3 ${tones[tone] || tones.blue}`}>
       <div className="flex items-start gap-2.5 sm:gap-3">
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xl font-black shadow-sm sm:h-12 sm:w-12 sm:rounded-xl sm:text-2xl ${iconClass}`}>{icon}</div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm sm:h-12 sm:w-12 sm:rounded-xl ${iconClass}`}>
+          <AppIcon icon={icon} className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
         <div className="min-w-0">
           <div className={`text-[11px] font-bold leading-4 sm:text-xs ${labelClass}`}>{label}</div>
           <div className="mt-0.5 flex items-end gap-1 sm:mt-1">
@@ -2352,14 +2373,14 @@ function HomeSituationDashboard({
             href="/public/report-incident"
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-sm font-bold shadow-sm transition-colors"
           >
-            <span>⚡</span>
+            <AppIcon icon="siren" className="h-4 w-4" />
             <span>แจ้งเหตุ</span>
           </Link>
           <Link
             href={getPublicMapHref(primaryDisasterType)}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-4 py-2.5 text-sm font-bold shadow-sm transition-colors"
           >
-            <span>🗺️</span>
+            <AppIcon icon="map" className="h-4 w-4" />
             <span>เปิดแผนที่เต็ม</span>
           </Link>
         </div>
@@ -2392,7 +2413,7 @@ function HomeSituationDashboard({
                 {activeTypeStats.map((item) => (
                   <div key={item.label} className="flex items-center justify-between border-t border-gray-100 first:border-t-0 py-2.5">
                     <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <span className="text-xl">{item.icon}</span>
+                      <AppIcon icon={item.icon} className="h-5 w-5 text-blue-600" />
                       <span>{item.label}</span>
                     </div>
                     <div className="font-bold text-gray-900">
@@ -2435,7 +2456,7 @@ function HomeSituationDashboard({
               </div>
             ) : (
               <div className="py-3 text-center rounded-lg bg-emerald-50 border border-emerald-100">
-                <div className="text-3xl mb-2">✅</div>
+                <AppIcon icon="checkCircle" className="mx-auto mb-2 h-8 w-8 text-emerald-700" />
                 <p className="font-semibold text-emerald-800">ไม่มี EOC ที่เปิดอยู่</p>
                 <p className="text-sm text-emerald-700 mt-1">ระบบยังแสดงแผนที่รายงานที่ยืนยันแล้วเพื่อการติดตาม</p>
               </div>
@@ -2600,7 +2621,9 @@ function PublicActionCard({ item }) {
           <div className="text-sm font-black text-slate-900">{item.title}</div>
           <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
         </div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">{item.icon}</span>
+        <span className="rounded-full bg-white p-2 text-slate-700 shadow-sm">
+          <AppIcon icon={item.icon} className="h-4 w-4" />
+        </span>
       </div>
     </Link>
   );
@@ -2619,7 +2642,7 @@ function DashboardMetricCard({ icon, label, value, unit }) {
   return (
     <div className="p-3">
       <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-        <span className="text-xl">{icon}</span>
+        <AppIcon icon={icon} className="h-5 w-5 text-blue-600" />
         <span>{label}</span>
       </div>
       <div className="text-2xl font-bold text-gray-900 leading-none">
@@ -2638,7 +2661,7 @@ function QuickActionLink({ action }) {
       href={action.link}
       className={`bg-gradient-to-br ${style.quick} border-2 rounded-lg md:rounded-xl shadow-md p-4 md:p-6 text-center transition-all hover:shadow-xl hover:scale-105 group`}
     >
-      <div className="text-4xl md:text-5xl mb-3 md:mb-4 group-hover:scale-110 transition-transform">{action.icon}</div>
+      <AppIcon icon={action.icon} className="mx-auto mb-3 h-10 w-10 transition-transform group-hover:scale-110 md:mb-4 md:h-12 md:w-12" />
       <h3 className="font-bold text-base md:text-lg text-gray-800">{action.title}</h3>
     </Link>
   );
@@ -2698,7 +2721,7 @@ function InfographicCarousel({ infographics, eocType, lightMode = false }) {
     return (
       <div className={`rounded-lg ${lightMode ? 'bg-gray-50 border border-gray-200' : 'bg-white/10'} backdrop-blur-sm`}>
         <div className="flex aspect-video flex-col items-center justify-center p-8 text-center">
-          <div className="text-6xl md:text-8xl mb-4 opacity-50">📊</div>
+          <AppIcon icon="barChart" className="mb-4 h-16 w-16 opacity-50 md:h-24 md:w-24" />
           <p className={`${lightMode ? 'text-gray-700' : 'text-white'} text-lg md:text-2xl font-bold mb-2`}>ยังไม่มี Infographic</p>
           <p className={`${lightMode ? 'text-gray-600' : 'text-white/85'} text-sm md:text-base`}>
             รอดำเนินการโดยฝ่าย Risk Communication
@@ -2733,7 +2756,6 @@ function InfographicCarousel({ infographics, eocType, lightMode = false }) {
                     e.target.style.display = 'none';
                     e.target.parentElement.innerHTML = `
                       <div class="flex h-full w-full flex-col items-center justify-center p-8 text-center">
-                        <div class="text-6xl md:text-8xl mb-4 opacity-50">📊</div>
                         <p class="${lightMode ? 'text-gray-700' : 'text-white'} text-lg md:text-2xl font-bold mb-2">${infographic.alt}</p>
                         <p class="${lightMode ? 'text-gray-600' : 'text-white/85'} text-sm md:text-base mb-4">ไม่สามารถโหลดรูปภาพได้</p>
                       </div>
@@ -2753,9 +2775,7 @@ function InfographicCarousel({ infographics, eocType, lightMode = false }) {
         className={`absolute left-2 md:left-4 top-1/2 -translate-y-1/2 ${lightMode ? 'bg-white hover:bg-gray-50 text-gray-800 shadow-sm border border-gray-200' : 'bg-black/30 hover:bg-black/40 text-white'} backdrop-blur-sm rounded-full p-2 md:p-3 transition-colors z-10`}
         aria-label="Previous slide"
       >
-        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
+        <AppIcon icon="arrowLeft" className="h-5 w-5 md:h-6 md:w-6" />
       </button>
 
       <button
@@ -2763,9 +2783,7 @@ function InfographicCarousel({ infographics, eocType, lightMode = false }) {
         className={`absolute right-2 md:right-4 top-1/2 -translate-y-1/2 ${lightMode ? 'bg-white hover:bg-gray-50 text-gray-800 shadow-sm border border-gray-200' : 'bg-black/30 hover:bg-black/40 text-white'} backdrop-blur-sm rounded-full p-2 md:p-3 transition-colors z-10`}
         aria-label="Next slide"
       >
-        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
+        <AppIcon icon="arrowRight" className="h-5 w-5 md:h-6 md:w-6" />
       </button>
 
       {/* Controls and Indicators */}
@@ -2792,16 +2810,12 @@ function InfographicCarousel({ infographics, eocType, lightMode = false }) {
         >
           {isAutoPlaying ? (
             <>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-              </svg>
+              <AppIcon icon="pause" className="h-4 w-4" />
               <span className="hidden md:inline">หยุดอัตโนมัติ</span>
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <AppIcon icon="play" className="h-4 w-4" />
               <span className="hidden md:inline">เล่นอัตโนมัติ</span>
             </>
           )}
@@ -2820,7 +2834,7 @@ function InfographicCarousel({ infographics, eocType, lightMode = false }) {
 function StatCard({ icon, title, value, unit = "", color }) {
   return (
     <div className={`bg-gradient-to-br ${color} text-white rounded-lg shadow-lg p-4 md:p-6 hover:scale-105 transition-transform`}>
-      <div className="text-3xl md:text-4xl mb-1 md:mb-2">{icon}</div>
+      <AppIcon icon={icon} className="mb-1 h-8 w-8 md:mb-2 md:h-10 md:w-10" />
       <div className="text-2xl md:text-3xl font-bold mb-1">
         {value} {unit && <span className="text-base md:text-xl">{unit}</span>}
       </div>
@@ -2844,7 +2858,7 @@ function QuickLinkCard({ icon, title, description, link, color = "gray" }) {
       href={link}
       className={`bg-gradient-to-br ${colorClasses[color]} border-2 rounded-lg md:rounded-xl shadow-md p-4 md:p-6 text-center transition-all hover:shadow-xl hover:scale-105 group`}
     >
-      <div className="text-4xl md:text-5xl mb-3 md:mb-4 group-hover:scale-110 transition-transform">{icon}</div>
+      <AppIcon icon={icon} className="mx-auto mb-3 h-10 w-10 transition-transform group-hover:scale-110 md:mb-4 md:h-12 md:w-12" />
       <h3 className="font-bold text-base md:text-lg text-gray-800 mb-1 md:mb-2">{title}</h3>
       {description && <p className="text-xs md:text-sm text-gray-600">{description}</p>}
     </Link>

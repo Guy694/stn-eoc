@@ -197,7 +197,7 @@ GET /api/auth/session
 - [ ] 3. ตรวจสอบ .env.local มีค่าครบถ้วน
 - [ ] 4. รัน `npm run dev`
 - [ ] 5. เปิด http://localhost:3000/login
-- [ ] 6. ดูปุ่ม "เข้าสู่ระบบด้วย ThaiID"
+- [ ] 6. ดูปุ่ม "เข้าสู่ระบบด้วย ThaID"
 - [ ] 7. คลิกปุ่มและทดสอบ OAuth flow
 - [ ] 8. ตรวจสอบว่า login สำเร็จและไปที่ dashboard
 - [ ] 9. ตรวจสอบ activity_logs ในฐานข้อมูล

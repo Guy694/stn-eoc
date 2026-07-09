@@ -4,7 +4,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { disasterTypeColors, severityColors } from "@/data/satunData";
 import { useState, useRef, useEffect } from "react";
+import { renderToStaticMarkup } from 'react-dom/server';
 import { useFullscreenMap } from "@/components/FullscreenMapWrapper";
+import AppIcon from "./icons/AppIcon";
 
 // แก้ไข icon default ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -51,9 +53,9 @@ export default function DisasterMap({ events, onEventClick }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 16px;
+          color: white;
         ">
-          ${getDisasterIcon(event)}
+          ${renderToStaticMarkup(<AppIcon icon={getDisasterIcon(event)} className="h-4 w-4 text-white" strokeWidth={2.5} />)}
         </div>
       `,
             iconSize: [30, 30],
@@ -64,21 +66,21 @@ export default function DisasterMap({ events, onEventClick }) {
     const getDisasterIcon = (event) => {
         // Check reportType first for citizen reports
         if (event.reportType === 'traffic_report') {
-            return "🚦"; // Traffic light for traffic reports
+            return "route";
         }
         if (event.reportType === 'help_request') {
-            return "💧"; // Water drop for flood/help requests
+            return "droplet";
         }
 
         // Fallback to disaster type
         const icons = {
-            "อุทกภัยน้ำท่วม": "💧",
-            "ดินถ่ม": "⛰️",
-            "พายุ": "🌪️",
-            "ไฟป่า": "🔥",
-            "แผ่นดินไหว": "📍",
+            "อุทกภัยน้ำท่วม": "droplet",
+            "ดินถ่ม": "alert",
+            "พายุ": "waves",
+            "ไฟป่า": "fire",
+            "แผ่นดินไหว": "mapPin",
         };
-        return icons[event.type] || "⚠️";
+        return icons[event.type] || "alert";
     };
 
     // สร้าง label icon

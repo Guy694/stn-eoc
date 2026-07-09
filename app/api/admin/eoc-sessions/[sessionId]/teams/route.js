@@ -192,6 +192,96 @@ export async function POST(request, { params }) {
     }
 }
 
+// PUT: แก้ไขข้อมูลทีมใน Session
+export async function PUT(request, { params }) {
+    const auth = await requireAuth(request, ['admin', 'commander']);
+    if (!auth.success) return auth.response;
+
+    const pool = await getConnection();
+    const conn = await pool.getConnection();
+
+    try {
+        const { sessionId } = await params;
+        const body = await request.json();
+        const { sessionTeamId, teamLeadOfficerId, notes } = body;
+
+        if (!sessionTeamId) {
+            return NextResponse.json({
+                success: false,
+                message: 'กรุณาระบุ sessionTeamId'
+            }, { status: 400 });
+        }
+
+        const [sessionTeams] = await conn.query(`
+            SELECT st.id, st.eoc_session_id, s.status
+            FROM eoc_session_teams st
+            JOIN eoc_sessions s ON st.eoc_session_id = s.id
+            WHERE st.id = ? AND st.eoc_session_id = ? AND st.is_active = TRUE
+        `, [sessionTeamId, sessionId]);
+
+        if (sessionTeams.length === 0) {
+            return NextResponse.json({
+                success: false,
+                message: 'ไม่พบทีมใน Session นี้'
+            }, { status: 404 });
+        }
+
+        if (sessionTeams[0].status !== 'active') {
+            return NextResponse.json({
+                success: false,
+                message: 'ไม่สามารถแก้ไขทีมในเซสชันที่ปิดแล้วได้'
+            }, { status: 400 });
+        }
+
+        await conn.beginTransaction();
+
+        await conn.query(`
+            UPDATE eoc_session_teams
+            SET team_lead_officer_id = ?,
+                notes = ?
+            WHERE id = ? AND eoc_session_id = ?
+        `, [teamLeadOfficerId || null, notes || null, sessionTeamId, sessionId]);
+
+        if (teamLeadOfficerId) {
+            const [existingLeadMember] = await conn.query(`
+                SELECT id
+                FROM eoc_team_members
+                WHERE session_team_id = ?
+                  AND officer_id = ?
+                  AND is_active = TRUE
+                LIMIT 1
+            `, [sessionTeamId, teamLeadOfficerId]);
+
+            if (existingLeadMember.length === 0) {
+                await conn.query(`
+                    INSERT INTO eoc_team_members
+                    (session_team_id, officer_id, role_in_team, assigned_by)
+                    VALUES (?, ?, 'หัวหน้าทีม', ?)
+                `, [sessionTeamId, teamLeadOfficerId, auth.user.id]);
+            } else {
+                await conn.query(`
+                    UPDATE eoc_team_members
+                    SET role_in_team = 'หัวหน้าทีม'
+                    WHERE id = ?
+                `, [existingLeadMember[0].id]);
+            }
+        }
+
+        await conn.commit();
+
+        return NextResponse.json({
+            success: true,
+            message: 'แก้ไขทีมใน Session สำเร็จ'
+        });
+    } catch (error) {
+        await conn.rollback();
+        console.error('Error updating session team:', error);
+        return publicInternalError('เกิดข้อผิดพลาดในการแก้ไขทีม');
+    } finally {
+        conn.release();
+    }
+}
+
 // DELETE: ถอดทีมออกจาก Session
 export async function DELETE(request, { params }) {
     const auth = await requireAuth(request, ['admin', 'commander']);

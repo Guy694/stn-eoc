@@ -13,6 +13,12 @@ const nextConfig = {
         permanent: false,
         basePath: false,
       },
+      {
+        source: '/api/auth/:path*',
+        destination: '/stn-eoc/api/auth/:path*',
+        permanent: false,
+        basePath: false,
+      },
     ];
   },
 };

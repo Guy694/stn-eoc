@@ -1,5 +1,6 @@
 "use client";
 import AnimatedCounter from './AnimatedCounter';
+import AppIcon from './icons/AppIcon';
 
 export default function StatCard({ icon, label, value, color = 'blue', animate = true }) {
     const colorClasses = {
@@ -14,9 +15,9 @@ export default function StatCard({ icon, label, value, color = 'blue', animate =
     return (
         <div className={`bg-gradient-to-br ${colorClasses[color]} text-white rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all hover:scale-105 border`}>
             <div className="flex items-center justify-between mb-3">
-                <span className="text-4xl">{icon}</span>
+                <AppIcon icon={icon} className="h-10 w-10" />
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">📊</span>
+                    <AppIcon icon="barChart" className="h-6 w-6" />
                 </div>
             </div>
             <div className="text-3xl font-bold mb-1">

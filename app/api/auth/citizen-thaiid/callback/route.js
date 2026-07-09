@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { setCitizenSessionCookie } from '@/lib/citizenAuth';
+import { applyNoStoreHeaders, getThaiIdAppBaseUrl, getThaiIdConfigError, getThaiIdOAuthConfig } from '@/lib/thaiIdConfig';
 
-const THAIID_CONFIG = {
-    tokenUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/token/',
-    userInfoUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/',
-    clientId: process.env.THAIID_CLIENT_ID,
-    apiKey: process.env.THAIID_API_KEY,
-    redirectUri: process.env.NEXT_PUBLIC_BASE_URL + '/stn-eoc/api/auth/citizen-thaiid/callback',
-};
+const CITIZEN_CALLBACK_PATH = '/api/auth/citizen-thaiid/callback';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+function reportIncidentUrl(request, queryString = '') {
+    return `${getThaiIdAppBaseUrl(request)}/public/report-incident${queryString}`;
+}
 
 export async function GET(request) {
     try {
@@ -15,42 +17,54 @@ export async function GET(request) {
         const code = searchParams.get('code');
         const state = searchParams.get('state');
         const error = searchParams.get('error');
+        const config = getThaiIdOAuthConfig(request, CITIZEN_CALLBACK_PATH);
+        const configError = getThaiIdConfigError(config);
+
+        if (configError) {
+            throw new Error(configError);
+        }
 
         // Check for errors from ThaiID
         if (error) {
             console.error('ThaiID error:', error);
-            return NextResponse.redirect(
-                new URL('/public/report-incident?error=thaiid_denied', request.url)
-            );
+            return applyNoStoreHeaders(NextResponse.redirect(
+                reportIncidentUrl(request, '?error=thaiid_denied')
+            ));
         }
 
         // Verify state
         const storedState = request.cookies.get('thaiid_state')?.value;
         if (!state || state !== storedState) {
-            return NextResponse.redirect(
-                new URL('/public/report-incident?error=invalid_state', request.url)
-            );
+            return applyNoStoreHeaders(NextResponse.redirect(
+                reportIncidentUrl(request, '?error=invalid_state')
+            ));
         }
 
         if (!code) {
-            return NextResponse.redirect(
-                new URL('/public/report-incident?error=no_code', request.url)
-            );
+            return applyNoStoreHeaders(NextResponse.redirect(
+                reportIncidentUrl(request, '?error=no_code')
+            ));
         }
 
         // Exchange code for token
-        const tokenResponse = await fetch(THAIID_CONFIG.tokenUrl, {
+        const tokenBody = new URLSearchParams({
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: config.redirectUri,
+            client_id: config.clientId,
+        });
+
+        if (config.clientSecret) {
+            tokenBody.set('client_secret', config.clientSecret);
+        }
+
+        const tokenResponse = await fetch(config.tokenUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'API_KEY': THAIID_CONFIG.apiKey,
+                'API_KEY': config.apiKey,
             },
-            body: new URLSearchParams({
-                grant_type: 'authorization_code',
-                code: code,
-                redirect_uri: THAIID_CONFIG.redirectUri,
-                client_id: THAIID_CONFIG.clientId,
-            }),
+            body: tokenBody,
         });
 
         if (!tokenResponse.ok) {
@@ -61,10 +75,10 @@ export async function GET(request) {
         const accessToken = tokenData.access_token;
 
         // Get user info
-        const userInfoResponse = await fetch(THAIID_CONFIG.userInfoUrl, {
+        const userInfoResponse = await fetch(config.userInfoUrl, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
-                'API_KEY': THAIID_CONFIG.apiKey,
+                'API_KEY': config.apiKey,
             },
         });
 
@@ -76,12 +90,12 @@ export async function GET(request) {
 
         // Redirect back to report form
         const response = NextResponse.redirect(
-            new URL('/public/report-incident?thaiid=success', request.url)
+            reportIncidentUrl(request, '?thaiid=success')
         );
 
         // Create citizen session
         setCitizenSessionCookie(response, {
-            pid: userInfo.sub, // National ID
+            pid: userInfo.pid || userInfo.sub, // National ID
             given_name: userInfo.given_name,
             family_name: userInfo.family_name,
         });
@@ -89,11 +103,11 @@ export async function GET(request) {
         // Clear state cookie
         response.cookies.delete('thaiid_state');
 
-        return response;
+        return applyNoStoreHeaders(response);
     } catch (error) {
         console.error('ThaiID callback error:', error);
-        return NextResponse.redirect(
-            new URL('/public/report-incident?error=thaiid_callback_failed', request.url)
-        );
+        return applyNoStoreHeaders(NextResponse.redirect(
+            reportIncidentUrl(request, '?error=thaiid_callback_failed')
+        ));
     }
 }

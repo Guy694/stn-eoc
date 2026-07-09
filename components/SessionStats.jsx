@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
+import AppIcon from './icons/AppIcon';
 
 export default function SessionStats({ session, year }) {
     const [floodData, setFloodData] = useState(null);
@@ -114,7 +115,7 @@ export default function SessionStats({ session, year }) {
     return (
         <div className="bg-linear-to-r from-teal-50 to-blue-50 shadow-md rounded-lg p-6 mb-6 border border-teal-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span>📈</span>
+                <AppIcon icon="barChart" className="h-5 w-5 text-teal-700" />
                 สถิติสรุป - EOC Session #{session.session_number} (พ.ศ. {year + 543})
             </h3>
 
@@ -122,25 +123,25 @@ export default function SessionStats({ session, year }) {
                 <StatsCard
                     label="หมู่บ้าน"
                     value={floodData?.totalVillages || 0}
-                    icon="🏘️"
+                    icon="home"
                     color="blue"
                 />
                 <StatsCard
                     label="ตำบล"
                     value={floodData?.totalTambons || 0}
-                    icon="📍"
+                    icon="mapPin"
                     color="green"
                 />
                 <StatsCard
                     label="อำเภอ"
                     value={floodData?.totalDistricts || 0}
-                    icon="🗺️"
+                    icon="map"
                     color="purple"
                 />
                 <StatsCard
                     label="ประชากร"
                     value={floodData?.totalPopulation?.toLocaleString() || 0}
-                    icon="👥"
+                    icon="users"
                     color="orange"
                     subLabel="คน"
                 />
@@ -181,7 +182,10 @@ export default function SessionStats({ session, year }) {
                             ? 'bg-green-100 text-green-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}>
-                        {session.status === 'active' ? '🟢 กำลังดำเนินการ' : '⚫ ปิดแล้ว'}
+                        <span className="inline-flex items-center gap-1.5">
+                            <AppIcon icon={session.status === 'active' ? '🟢' : '⚫'} className="h-3 w-3" />
+                            {session.status === 'active' ? 'กำลังดำเนินการ' : 'ปิดแล้ว'}
+                        </span>
                     </span>
                 </div>
             </div>
@@ -202,7 +206,7 @@ function StatsCard({ label, value, icon, color, subLabel = '' }) {
     return (
         <div className={`${colorClasses[color]} rounded-lg p-3 border-2 transition-transform hover:scale-105`}>
             <div className="text-center">
-                <div className="text-2xl mb-1">{icon}</div>
+                <AppIcon icon={icon} className="mx-auto mb-1 h-6 w-6" />
                 <p className="text-lg font-bold">{value}</p>
                 <p className="text-xs opacity-80">{label}</p>
                 {subLabel && <p className="text-xs opacity-60">{subLabel}</p>}

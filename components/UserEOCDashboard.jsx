@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { formatEocDisplayName } from '@/lib/eocDisplay';
+import AppIcon from './icons/AppIcon';
 
 export default function UserEOCDashboard() {
     const { user } = useAuth();
@@ -52,7 +53,7 @@ export default function UserEOCDashboard() {
     if (assignments.length === 0) {
         return (
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                <div className="text-4xl mb-3">⚠️</div>
+                <AppIcon icon="alert" className="mx-auto mb-3 h-10 w-10 text-yellow-700" />
                 <h3 className="text-lg font-semibold text-yellow-800 mb-2">
                     ยังไม่มีการมอบหมายงาน
                 </h3>
@@ -88,13 +89,19 @@ export default function UserEOCDashboard() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-800">
-                    📌 EOC ที่คุณรับผิดชอบ
+                    <span className="inline-flex items-center gap-2">
+                        <AppIcon icon="mapPin" className="h-6 w-6 text-blue-600" />
+                        EOC ที่คุณรับผิดชอบ
+                    </span>
                 </h2>
                 <button
                     onClick={loadAssignments}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm"
                 >
-                    🔄 รีเฟรช
+                    <span className="inline-flex items-center gap-2">
+                        <AppIcon icon="refresh" className="h-4 w-4" />
+                        รีเฟรช
+                    </span>
                 </button>
             </div>
 
@@ -105,8 +112,9 @@ export default function UserEOCDashboard() {
                 >
                     {/* Session Header */}
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
-                        <h3 className="text-xl font-bold">
-                            {getEOCIcon(session.eoc_type)} {session.eoc_name} #{session.session_number}
+                        <h3 className="flex items-center gap-2 text-xl font-bold">
+                            <AppIcon icon={getEOCIcon(session.eoc_type)} className="h-6 w-6" />
+                            {session.eoc_name} #{session.session_number}
                         </h3>
                         <p className="text-blue-100 text-sm mt-1">
                             Session ID: {session.session_id} • Status: Active
@@ -119,7 +127,7 @@ export default function UserEOCDashboard() {
                             <div key={idx} className="space-y-3">
                                 {/* Team Info */}
                                 <div className="flex items-center space-x-3 pb-2 border-b">
-                                    <span className="text-2xl">{getTeamIcon(team.team_code)}</span>
+                                    <AppIcon icon={getTeamIcon(team.team_code)} className="h-7 w-7 text-blue-600" />
                                     <div>
                                         <h4 className="font-semibold text-gray-800">
                                             {team.team_name_th}
@@ -139,9 +147,7 @@ export default function UserEOCDashboard() {
                                                 href={module.route_path}
                                                 className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition group"
                                             >
-                                                <span className="text-3xl group-hover:scale-110 transition">
-                                                    {module.icon || '📄'}
-                                                </span>
+                                                <AppIcon icon={module.icon || 'file'} className="h-8 w-8 text-blue-600 transition group-hover:scale-110" />
                                                 <div className="flex-1">
                                                     <div className="font-medium text-gray-800 group-hover:text-blue-600">
                                                         {module.module_name_th}
@@ -150,9 +156,7 @@ export default function UserEOCDashboard() {
                                                         {getPermissionBadges(module)}
                                                     </div>
                                                 </div>
-                                                <span className="text-gray-400 group-hover:text-blue-600">
-                                                    →
-                                                </span>
+                                                <AppIcon icon="arrowRight" className="h-5 w-5 text-gray-400 group-hover:text-blue-600" />
                                             </Link>
                                         ))}
                                     </div>
@@ -172,39 +176,39 @@ export default function UserEOCDashboard() {
 
 function getEOCIcon(eocType) {
     const icons = {
-        flood: '💧',
-        drought: '🌵',
-        disease: '🦠',
-        tsunami: '🌊',
-        earthquake: '🏚️'
+        flood: 'droplets',
+        drought: 'alert',
+        disease: 'disease',
+        tsunami: 'waves',
+        earthquake: 'alert'
     };
-    return icons[eocType] || '⚠️';
+    return icons[eocType] || 'alert';
 }
 
 function getTeamIcon(teamCode) {
     const icons = {
-        RISKCOM: '📢',
-        MCAT: '📊',
-        SAT: '🚑',
-        SeRHT: '🚁',
-        MEDICAL: '⚕️',
-        LOGISTICS: '📦',
-        SHELTER: '🏕️'
+        RISKCOM: 'megaphone',
+        MCAT: 'barChart',
+        SAT: 'ambulance',
+        SeRHT: 'ambulance',
+        MEDICAL: 'stethoscope',
+        LOGISTICS: 'package',
+        SHELTER: 'shelter'
     };
-    return icons[teamCode] || '👥';
+    return icons[teamCode] || 'users';
 }
 
 function getPermissionBadges(module) {
     const badges = [];
 
-    if (module.can_create) badges.push('✏️ สร้าง');
-    if (module.can_edit) badges.push('📝 แก้ไข');
-    if (module.can_delete) badges.push('🗑️ ลบ');
-    if (module.can_approve) badges.push('✅ อนุมัติ');
+    if (module.can_create) badges.push('สร้าง');
+    if (module.can_edit) badges.push('แก้ไข');
+    if (module.can_delete) badges.push('ลบ');
+    if (module.can_approve) badges.push('อนุมัติ');
 
     if (badges.length === 0) {
         if (module.can_view) {
-            return '👁️ ดูอย่างเดียว';
+            return 'ดูอย่างเดียว';
         }
         return 'ไม่มีสิทธิ์';
     }

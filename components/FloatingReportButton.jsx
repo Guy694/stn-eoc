@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import AppIcon from './icons/AppIcon';
 
 export default function FloatingReportButton() {
     const [isVisible, setIsVisible] = useState(false);
@@ -30,14 +31,14 @@ export default function FloatingReportButton() {
                 aria-label="ซ่อนปุ่มแจ้งขอความช่วยเหลือ"
                 title="ซ่อนปุ่มแจ้งขอความช่วยเหลือ"
             >
-                ×
+                <AppIcon icon="x" className="h-4 w-4" />
             </button>
             <Link
                 href="/public/report-incident"
                 className="block rounded-full bg-red-600 px-4 py-3 text-white shadow-2xl transition hover:scale-105 hover:bg-red-700 md:px-5 md:py-4"
             >
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl md:text-3xl">🆘</span>
+                    <AppIcon icon="siren" className="h-7 w-7 md:h-8 md:w-8" />
                     <div>
                         <p className="text-sm font-black md:text-base">ขอความช่วยเหลือ</p>
                         <p className="hidden text-xs text-white/90 md:block">แจ้งตำแหน่งให้เจ้าหน้าที่</p>

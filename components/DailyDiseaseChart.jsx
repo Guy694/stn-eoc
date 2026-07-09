@@ -12,6 +12,7 @@ import {
     Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import AppIcon from './icons/AppIcon';
 
 // Register ChartJS components
 ChartJS.register(
@@ -222,7 +223,7 @@ export default function DailyDiseaseChart({ sessionId }) {
         return (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div className="text-center py-12">
-                    <span className="text-6xl">⚠️</span>
+                    <AppIcon icon="alert" className="mx-auto h-16 w-16 text-yellow-600" />
                     <p className="text-gray-600 mt-4">{error}</p>
                 </div>
             </div>
@@ -233,7 +234,7 @@ export default function DailyDiseaseChart({ sessionId }) {
         return (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div className="text-center py-12">
-                    <span className="text-6xl">📊</span>
+                    <AppIcon icon="barChart" className="mx-auto h-16 w-16 text-blue-600" />
                     <p className="text-gray-600 mt-4">ไม่มีข้อมูลสำหรับแสดงกราฟ</p>
                 </div>
             </div>
@@ -244,7 +245,7 @@ export default function DailyDiseaseChart({ sessionId }) {
         return (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div className="text-center py-12">
-                    <span className="text-6xl">📋</span>
+                    <AppIcon icon="clipboard" className="mx-auto h-16 w-16 text-slate-500" />
                     <h3 className="text-xl font-bold text-gray-700 mt-4">
                         ยังไม่มีรายงานโรคในช่วงนี้
                     </h3>

@@ -45,7 +45,7 @@ export default function PDPAConsent() {
                     {/* Content */}
                     <div className="space-y-4 text-gray-700 text-sm md:text-base mb-6">
                         <p className="font-semibold text-blue-900">
-                            ระบบศูนย์ปฏิบัติการฉุกเฉิน (EOC) จังหวัดสตูล ให้ความสำคัญกับการคุ้มครองข้อมูลส่วนบุคคลของท่าน
+                            ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข (EOC) จังหวัดสตูล ให้ความสำคัญกับการคุ้มครองข้อมูลส่วนบุคคลของท่าน
                         </p>
 
                         <div className="border-t border-gray-200 pt-4">
@@ -92,7 +92,7 @@ export default function PDPAConsent() {
                             <h3 className="font-bold text-gray-800 mb-2">📞 ติดต่อเรา</h3>
                             <p className="text-sm max-w-prose">
                                 หากมีข้อสงสัยเกี่ยวกับนโยบายนี้ กรุณาติดต่อ:<br />
-                                <strong>ศูนย์ปฏิบัติการฉุกเฉิน (EOC) จังหวัดสตูล</strong><br />
+                                <strong>ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข (EOC) จังหวัดสตูล</strong><br />
                                 โทร: 074-711-501<br />
                                 อีเมล: eoc@satun.go.th
                             </p>

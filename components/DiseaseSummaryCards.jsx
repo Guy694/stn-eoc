@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import AppIcon from './icons/AppIcon';
 
 export default function DiseaseSummaryCards({ sessionId }) {
     const [stats, setStats] = useState(null);
@@ -49,7 +50,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
 
     const cards = [
         {
-            icon: '🤒',
+            icon: 'thermometer',
             title: 'ผู้ป่วยทั้งหมด',
             value: stats.total_patients.toLocaleString(),
             suffix: 'คน',
@@ -58,7 +59,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
             textColor: 'text-red-700'
         },
         {
-            icon: '📋',
+            icon: 'clipboard',
             title: 'รายงานทั้งหมด',
             value: stats.total_reports.toLocaleString(),
             suffix: 'รายงาน',
@@ -67,7 +68,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
             textColor: 'text-blue-700'
         },
         {
-            icon: '🦠',
+            icon: 'disease',
             title: 'โรคที่พบ',
             value: stats.diseases_count.toLocaleString(),
             suffix: 'โรค',
@@ -76,7 +77,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
             textColor: 'text-teal-700'
         },
         {
-            icon: '🏥',
+            icon: 'hospital',
             title: 'หน่วยบริการ',
             value: stats.facilities_count.toLocaleString(),
             suffix: 'แห่ง',
@@ -95,7 +96,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
                         className={`${card.bgColor} rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow`}
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <span className={`text-3xl ${card.iconColor}`}>{card.icon}</span>
+                            <AppIcon icon={card.icon} className={`h-8 w-8 ${card.iconColor}`} />
                         </div>
                         <h3 className="text-sm font-medium text-gray-600 mb-1">
                             {card.title}
@@ -114,7 +115,7 @@ export default function DiseaseSummaryCards({ sessionId }) {
             {stats.date_range && (
                 <div className="bg-amber-50 border border-amber-500 rounded-lg p-4">
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl">📅</span>
+                        <AppIcon icon="calendar" className="h-6 w-6 text-amber-700" />
                         <div>
                             <p className="font-medium text-amber-900">ช่วงเวลารายงาน</p>
                             <p className="text-sm text-amber-700">

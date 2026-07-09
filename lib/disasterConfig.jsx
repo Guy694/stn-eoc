@@ -30,7 +30,7 @@ export const DISASTER_CONFIG = {
         id: 'flood',
         name: 'อุทกภัยน้ำท่วม',
         nameEn: 'Flood',
-        icon: '💧',
+        icon: 'droplets',
         color: {
             primary: 'blue',
             gradient: 'from-blue-500 to-blue-600',
@@ -58,13 +58,13 @@ export const DISASTER_CONFIG = {
         riskLevels: [
             { value: 'severe', label: 'รุนแรงมาก', icon: '🔴', color: 'red' },
             { value: 'moderate', label: 'ปานกลาง', icon: '🟡', color: 'yellow' },
-            { value: 'mild', label: 'เล็กน้อย', icon: '🔵', color: 'blue' },
+            { value: 'mild', label: 'เล็กน้อย', icon: 'circleDot', color: 'blue' },
             { value: 'safe', label: 'ปลอดภัย', icon: '🟢', color: 'green' }
         ],
         metrics: [
-            { key: 'water_level_cm', label: 'ระดับน้ำ', unit: 'ซม.', icon: '📏' },
-            { key: 'affected_area', label: 'พื้นที่ท่วม', unit: 'ตร.ก.ม.', icon: '📐' },
-            { key: 'duration_days', label: 'ระยะเวลา', unit: 'วัน', icon: '⏱️' }
+            { key: 'water_level_cm', label: 'ระดับน้ำ', unit: 'ซม.', icon: 'ruler' },
+            { key: 'affected_area', label: 'พื้นที่ท่วม', unit: 'ตร.ก.ม.', icon: 'map' },
+            { key: 'duration_days', label: 'ระยะเวลา', unit: 'วัน', icon: 'clock' }
         ]
     },
 
@@ -72,7 +72,7 @@ export const DISASTER_CONFIG = {
         id: 'disease',
         name: 'โรคระบาด',
         nameEn: 'Disease Outbreak',
-        icon: '🦠',
+        icon: 'disease',
         color: {
             primary: 'red',
             gradient: 'from-red-500 to-pink-600',
@@ -99,15 +99,15 @@ export const DISASTER_CONFIG = {
         },
         riskLevels: [
             { value: 'pandemic', label: 'ระบาดใหญ่', icon: '🔴', color: 'red' },
-            { value: 'epidemic', label: 'ระบาด', icon: '🟠', color: 'orange' },
+            { value: 'epidemic', label: 'ระบาด', icon: 'alertCircle', color: 'orange' },
             { value: 'outbreak', label: 'เฝ้าระวัง', icon: '🟡', color: 'yellow' },
             { value: 'controlled', label: 'ควบคุมได้', icon: '🟢', color: 'green' }
         ],
         metrics: [
-            { key: 'confirmed_cases', label: 'ผู้ป่วยยืนยัน', unit: 'ราย', icon: '🤒' },
-            { key: 'deaths', label: 'เสียชีวิต', unit: 'ราย', icon: '💀' },
-            { key: 'recovered', label: 'หายแล้ว', unit: 'ราย', icon: '😊' },
-            { key: 'infection_rate', label: 'อัตราการติดเชื้อ', unit: '%', icon: '📈' }
+            { key: 'confirmed_cases', label: 'ผู้ป่วยยืนยัน', unit: 'ราย', icon: 'thermometer' },
+            { key: 'deaths', label: 'เสียชีวิต', unit: 'ราย', icon: 'skull' },
+            { key: 'recovered', label: 'หายแล้ว', unit: 'ราย', icon: 'smile' },
+            { key: 'infection_rate', label: 'อัตราการติดเชื้อ', unit: '%', icon: 'barChart' }
         ]
     }
 };
@@ -146,7 +146,7 @@ export const getDisasterName = (disasterType, lang = 'th') => {
 
 export const getDisasterIcon = (disasterType) => {
     const config = getDisasterConfig(disasterType);
-    return config ? config.icon : '⚠️';
+    return config ? config.icon : 'alert';
 };
 
 export const getDisasterColor = (disasterType) => {
@@ -173,7 +173,7 @@ export const getRiskLevelColor = (disasterType, riskValue) => {
 
 export const getRiskLevelIcon = (disasterType, riskValue) => {
     const levelConfig = getRiskLevelConfig(disasterType, riskValue);
-    return levelConfig ? levelConfig.icon : '⚪';
+    return levelConfig ? levelConfig.icon : '⚫';
 };
 
 export const getRiskLevelLabel = (disasterType, riskValue) => {

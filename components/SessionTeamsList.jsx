@@ -7,6 +7,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import AppIcon from './icons/AppIcon';
 
 export default function SessionTeamsList({ sessionId, showTitle = true }) {
     const [loading, setLoading] = useState(true);
@@ -56,7 +57,10 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
         return (
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="text-center text-red-500 py-4">
-                    ❌ {error}
+                    <span className="inline-flex items-center gap-2">
+                        <AppIcon icon="xCircle" className="h-5 w-5" />
+                        {error}
+                    </span>
                 </div>
             </div>
         );
@@ -66,7 +70,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
         return (
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="text-center text-gray-500 py-8">
-                    <div className="text-4xl mb-2">👥</div>
+                    <AppIcon icon="users" className="mx-auto mb-2 h-10 w-10" />
                     <p>ไม่มีข้อมูลทีมงานในเซสชันนี้</p>
                 </div>
             </div>
@@ -116,7 +120,7 @@ function TeamCard({ team }) {
             <div className="p-4">
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1">
-                        <span className="text-3xl">{team.icon}</span>
+                        <AppIcon icon={team.icon || 'users'} className="h-8 w-8 text-blue-600" />
                         <div className="flex-1">
                             <h4 className="font-semibold text-gray-800 text-sm">
                                 {team.team_name_th}

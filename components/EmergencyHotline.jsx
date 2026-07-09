@@ -1,5 +1,5 @@
 "use client";
-import Link from 'next/link';
+import AppIcon from './icons/AppIcon';
 
 export default function EmergencyHotline() {
     return (
@@ -7,7 +7,7 @@ export default function EmergencyHotline() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-                        <span className="text-4xl">📞</span>
+                        <AppIcon icon="phone" className="h-9 w-9" />
                     </div>
                     <div>
                         <p className="font-bold text-xl mb-1">สายด่วนฉุกเฉิน EOC</p>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { getPublicAssetPath } from '@/lib/publicAssetPath';
+import AppIcon from './icons/AppIcon';
 
 export default function AnnouncementPopup() {
     const [announcement, setAnnouncement] = useState(null);
@@ -53,16 +54,15 @@ export default function AnnouncementPopup() {
                 {/* Header */}
                 <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 flex justify-between items-center">
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <span className="text-2xl">📢</span>
+                        <AppIcon icon="megaphone" className="h-6 w-6" />
                         ประกาศ/ข่าวสาร
                     </h3>
                     <button
                         onClick={handleClose}
                         className="text-white hover:text-gray-200 transition-colors"
+                        aria-label="ปิดประกาศ"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <AppIcon icon="x" className="h-6 w-6" />
                     </button>
                 </div>
 

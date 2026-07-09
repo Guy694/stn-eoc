@@ -18,13 +18,17 @@ function ThaiIDErrorHandler({ setError }) {
 
         // ตรวจสอบ session timeout
         if (timeout === 'true') {
-            setError('⏱️ Session หมดอายุเนื่องจากไม่มีการใช้งานเกิน 10 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+            setError('Session หมดอายุเนื่องจากไม่มีการใช้งานเกิน 10 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
             return;
         }
 
         if (errorType) {
             switch (errorType) {
                 case 'thaiid_auth_failed':
+                    if (errorMessage && decodeURIComponent(errorMessage).includes('unauthorized_client')) {
+                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI คือ /stn-eoc/api/auth/thaiid/callback\n✓ รีสตาร์ต server หลังแก้ .env');
+                        break;
+                    }
                     setError(`การยืนยันตัวตนผ่าน ThaiID ล้มเหลว: ${errorMessage || 'ไม่ทราบสาเหตุ'}`);
                     break;
                 case 'no_code':
@@ -39,9 +43,14 @@ function ThaiIDErrorHandler({ setError }) {
                 case 'callback_failed':
                     const decodedMessage = errorMessage ? decodeURIComponent(errorMessage) : 'การเข้าสู่ระบบผ่าน ThaiID ล้มเหลว';
 
+                    if (decodedMessage.includes('unauthorized_client')) {
+                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI คือ /stn-eoc/api/auth/thaiid/callback\n✓ รีสตาร์ต server หลังแก้ .env');
+                        break;
+                    }
+
                     // ตรวจสอบว่าเป็น timeout error หรือไม่
                     if (decodedMessage.includes('timeout') || decodedMessage.includes('ETIMEDOUT')) {
-                        setError('⏱️ การเชื่อมต่อ ThaiID หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiID ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiID API\n\nคำแนะนำ:\n✓ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n✓ ลองใหม่อีกครั้งในอีกสักครู่\n✓ หรือใช้ username/password แทน');
+                        setError('การเชื่อมต่อ ThaiID หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiID ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiID API\n\nคำแนะนำ:\n✓ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n✓ ลองใหม่อีกครั้งในอีกสักครู่\n✓ หรือใช้ username/password แทน');
                     } else {
                         setError(`เกิดข้อผิดพลาด: ${decodedMessage}`);
                     }
@@ -93,6 +102,10 @@ function LoginForm() {
         }
     };
 
+    const refreshThaiIdLink = (event) => {
+        event.currentTarget.href = `/stn-eoc/api/auth/thaiid/authorize/?ts=${Date.now()}`;
+    };
+
     return (
         <main className="min-h-screen bg-[#edf5fc] p-4 text-slate-900 sm:p-6">
             <div className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
@@ -109,7 +122,7 @@ function LoginForm() {
                         <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-100">Officer Command Access</p>
                         <h1 className="text-4xl font-black leading-tight sm:text-5xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
                         <p className="mt-4 text-base leading-7 text-blue-50">
-                            ระบบศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
+                            ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
                         </p>
                     </div>
 
@@ -136,7 +149,7 @@ function LoginForm() {
                     <div className="w-full max-w-md">
                         <div className="mb-7">
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto h-20 w-20 rounded-full bg-white p-2" />
-                            <p className="text-lg font-black text-blue-700 text-center">ศูนย์ปฏิบัติการฉุกเฉิน</p>
+                            <p className="text-lg font-black text-[#0b4c86] text-center">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
                             <h2 className="mt-1 text-3xl font-black text-slate-950">เข้าสู่ระบบ</h2>
                             <p className="mt-2 text-sm leading-6 text-slate-500">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiID เพื่อเข้าสู่พื้นที่ปฏิบัติงาน</p>
                         </div>
@@ -220,20 +233,20 @@ function LoginForm() {
                             <div className="h-px flex-1 bg-slate-200" />
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => window.location.href = '/stn-eoc/api/auth/thaiid/authorize/'}
+                        <a
+                            href="/stn-eoc/api/auth/thaiid/authorize/?from=login"
+                            onClick={refreshThaiIdLink}
                             className="flex w-full items-center justify-center gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition hover:border-blue-200 hover:bg-blue-100"
                         >
                             <Image src="/stn-eoc/img/thaiid.png" alt="ThaiID" width={36} height={36} className="h-9 w-9" />
                             เข้าสู่ระบบด้วย ThaiID
-                        </button>
+                        </a>
 
                         <div className="mt-7 flex flex-col gap-3 text-center text-sm sm:flex-row sm:items-center sm:justify-center sm:text-center">
                             <Link href="/" className="font-bold text-blue-700 hover:text-blue-900">กลับหน้าสาธารณะ</Link>
                         </div>
 
-                        <p className="mt-8 text-center text-xs text-slate-400">© 2025 EOC จังหวัดสตูล</p>
+                        <p className="mt-8 text-center text-xs text-slate-400">© 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
 
                         <Suspense fallback={null}>
                             <ThaiIDErrorHandler setError={setError} />

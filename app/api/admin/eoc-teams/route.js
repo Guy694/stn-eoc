@@ -55,7 +55,7 @@ export async function POST(request) {
             INSERT INTO eoc_teams 
             (team_code, team_name_th, team_name_en, description, icon, color, sort_order)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [team_code, team_name_th, team_name_en, description || null, icon || '👥', color || 'blue', sort_order || 0]);
+        `, [team_code, team_name_th, team_name_en, description || null, icon || 'users', color || 'blue', sort_order || 0]);
 
         return NextResponse.json({
             success: true,

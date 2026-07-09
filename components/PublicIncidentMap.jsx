@@ -2,7 +2,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { getMapBaseLayer, getMapOverlayLayer, MAP_BASE_LAYERS } from '@/lib/mapBaseLayers';
+import AppIcon from './icons/AppIcon';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -10,7 +12,7 @@ const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { 
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
 
-const SHELTER_ICON_SRC = '/stn-eoc/img/shelter.png';
+const renderMapIcon = (icon, className = "h-5 w-5 text-white") => renderToStaticMarkup(<AppIcon icon={icon} className={className} strokeWidth={2.5} />);
 
 export default function PublicIncidentMap({
     disasterType = 'flood',
@@ -167,15 +169,15 @@ export default function PublicIncidentMap({
 
         if (travelStatus === 'passable') {
             bgColor = '#10B981'; // green
-            icon = '✅';
+            icon = 'checkCircle';
             borderColor = '#059669';
         } else if (travelStatus === 'difficult') {
             bgColor = '#F59E0B'; // orange
-            icon = '⚠️';
+            icon = 'alert';
             borderColor = '#D97706';
         } else {
             bgColor = '#EF4444'; // red
-            icon = '🚫';
+            icon = 'xCircle';
             borderColor = '#DC2626';
         }
 
@@ -192,10 +194,10 @@ export default function PublicIncidentMap({
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 20px;
                     position: relative;
+                    color: white;
                 ">
-                    ${icon}
+                    ${renderMapIcon(icon, "h-5 w-5 text-white")}
                     <div style="
                         position: absolute;
                         bottom: -8px;
@@ -411,7 +413,7 @@ export default function PublicIncidentMap({
     const getUrgencyLabel = (urgency) => ({ low: 'ไม่เร่งด่วน', medium: 'ปานกลาง', high: 'เร่งด่วน', critical: 'เร่งด่วนมาก' }[urgency] || urgency);
     const getUrgencyColor = (urgency) => ({ low: 'text-blue-600', medium: 'text-yellow-600', high: 'text-orange-600', critical: 'text-red-600' }[urgency] || 'text-gray-600');
     const getReportTypeLabel = (reportType) => ({ help_request: 'แจ้งความช่วยเหลือ', traffic_report: 'แจ้งเส้นทางการจราจร' }[reportType] || reportType);
-    const getReportTypeIcon = (reportType) => ({ help_request: '🆘', traffic_report: '🚧' }[reportType] || '📍');
+    const getReportTypeIcon = (reportType) => ({ help_request: 'siren', traffic_report: 'route' }[reportType] || 'mapPin');
 
     const createShelterIcon = () => {
         if (typeof window === 'undefined') return null;
@@ -429,9 +431,7 @@ export default function PublicIncidentMap({
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                ">
-                    <img src="${SHELTER_ICON_SRC}" alt="" style="width: 23px; height: 23px; object-fit: contain; display: block;" />
-                </div>
+                ">${renderMapIcon("shelter", "h-5 w-5 text-white")}</div>
             `,
             iconSize: [38, 38],
             iconAnchor: [19, 19],
@@ -456,9 +456,7 @@ export default function PublicIncidentMap({
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 22px;
-                    font-weight: 900;
-                ">+</div>
+                ">${renderMapIcon("hospital", "h-5 w-5 text-white")}</div>
             `,
             iconSize: [34, 34],
             iconAnchor: [17, 17],
@@ -489,10 +487,9 @@ export default function PublicIncidentMap({
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    font-weight: 900;
                     line-height: 1;
                 ">
-                    <span style="font-size: 13px;">+</span>
+                    ${renderMapIcon("biohazard", "h-4 w-4")}
                     <span style="font-size: 10px;">${displayCount}</span>
                 </div>
             `,
@@ -584,10 +581,7 @@ export default function PublicIncidentMap({
         return (
             <div className={`${chrome === 'full' ? 'h-full bg-slate-950/90' : 'min-h-[420px] rounded-xl border border-gray-200 bg-white'} flex items-center justify-center`}>
                 <div className="text-center">
-                    <svg className="animate-spin h-12 w-12 text-blue-500" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                    </svg>
+                    <AppIcon icon="loader" className="mx-auto h-12 w-12 animate-spin text-blue-500" />
                     <p className="mt-3 text-sm font-medium text-gray-600">กำลังโหลดแผนที่</p>
                 </div>
             </div>
@@ -617,7 +611,10 @@ export default function PublicIncidentMap({
             <div className="relative rounded-t-xl border border-b-0 border-gray-200 bg-white p-4 md:p-5">
                 <div className="pr-12">
                     <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Verified Public Reports</p>
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900">📍 รายงานจากประชาชนที่ยืนยันแล้ว</h3>
+                    <h3 className="flex items-center gap-2 text-xl md:text-2xl font-bold text-gray-900">
+                        <AppIcon icon="mapPin" className="h-6 w-6 text-blue-700" />
+                        รายงานจากประชาชนที่ยืนยันแล้ว
+                    </h3>
                     <p className="text-sm text-gray-600 mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงานทั้งหมด {filteredIncidents.length} จุด</p>
                 </div>
 
@@ -629,13 +626,9 @@ export default function PublicIncidentMap({
                     aria-label={isFullscreen ? "ออกจากโหมดเต็มจอ" : "เปิดแผนที่แบบเต็มจอ"}
                 >
                     {isFullscreen ? (
-                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <AppIcon icon="minimize" className="h-5 w-5 md:h-6 md:w-6" />
                     ) : (
-                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                        </svg>
+                        <AppIcon icon="fullscreen" className="h-5 w-5 md:h-6 md:w-6" />
                     )}
                 </button>
             </div>
@@ -645,7 +638,10 @@ export default function PublicIncidentMap({
                 {chrome !== 'full' && (
                 <details className="mb-3" open>
                     <summary className="cursor-pointer select-none py-2 text-sm font-bold text-gray-800">
-                        🗺️ ตัวกรองชั้นข้อมูลและคำอธิบายสัญลักษณ์
+                        <span className="inline-flex items-center gap-2">
+                            <AppIcon icon="map" className="h-4 w-4" />
+                            ตัวกรองชั้นข้อมูลและคำอธิบายสัญลักษณ์
+                        </span>
                     </summary>
                     <div className="grid gap-3 border-t border-gray-200 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
                         <div>
@@ -677,15 +673,15 @@ export default function PublicIncidentMap({
                                 )}
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
                                     <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setLayer('district', e.target.checked)} className="w-4 h-4 accent-blue-600" />
-                                    <span>🏛️ อำเภอ</span>
+                                    <span className="inline-flex items-center gap-1.5"><AppIcon icon="landmark" className="h-4 w-4" /> อำเภอ</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 cursor-pointer">
                                     <input type="checkbox" checked={showTambonLayer} onChange={(e) => setLayer('tambon', e.target.checked)} className="w-4 h-4 accent-emerald-600" />
-                                    <span>📍 ตำบล</span>
+                                    <span className="inline-flex items-center gap-1.5"><AppIcon icon="mapPin" className="h-4 w-4" /> ตำบล</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 cursor-pointer">
                                     <input type="checkbox" checked={showVillageLayer} onChange={(e) => setLayer('village', e.target.checked)} className="w-4 h-4 accent-gray-700" />
-                                    <span>🏘️ ขอบเขตหมู่บ้าน</span>
+                                    <span className="inline-flex items-center gap-1.5"><AppIcon icon="home" className="h-4 w-4" /> ขอบเขตหมู่บ้าน</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900 cursor-pointer">
                                     <input type="checkbox" checked={showWaterwayLayer} onChange={(e) => setLayer('waterways', e.target.checked)} className="w-4 h-4 accent-sky-600" />
@@ -697,15 +693,15 @@ export default function PublicIncidentMap({
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-900 cursor-pointer">
                                     <input type="checkbox" checked={showLabels} onChange={(e) => setLayer('labels', e.target.checked)} className="w-4 h-4 accent-teal-600" />
-                                    <span>🏷️ แสดงชื่อ</span>
+                                    <span className="inline-flex items-center gap-1.5"><AppIcon icon="info" className="h-4 w-4" /> แสดงชื่อ</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-900 cursor-pointer">
                                     <input type="checkbox" checked={showIncidentLayer} onChange={(e) => setLayer('incidents', e.target.checked)} className="w-4 h-4 accent-orange-600" />
-                                    <span>⚠️ เหตุการณ์</span>
+                                    <span className="inline-flex items-center gap-1.5"><AppIcon icon="alert" className="h-4 w-4" /> เหตุการณ์</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 cursor-pointer">
                                     <input type="checkbox" checked={showTrafficLayer} onChange={(e) => setLayer('traffic', e.target.checked)} className="w-4 h-4 accent-red-600" />
-                                    <span>🚧 เส้นทาง</span>
+                                    <span className="inline-flex items-center gap-1.5"><AppIcon icon="route" className="h-4 w-4" /> เส้นทาง</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900 cursor-pointer">
                                     <input type="checkbox" checked={showShelterLayer} onChange={(e) => setLayer('shelters', e.target.checked)} className="w-4 h-4 accent-violet-600" />
@@ -780,12 +776,12 @@ export default function PublicIncidentMap({
                                 <div className="grid gap-1.5">
                                     <div className="flex items-center gap-2">
                                         <span className="h-3 w-3 rounded-full bg-red-500" aria-hidden="true"></span>
-                                        <span>🆘 แจ้งความช่วยเหลือ</span>
+                                        <span className="inline-flex items-center gap-1.5"><AppIcon icon="siren" className="h-4 w-4" /> แจ้งความช่วยเหลือ</span>
                                     </div>
                                     <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
-                                        <span>✅ สัญจรได้</span>
-                                        <span>⚠️ สัญจรลำบาก</span>
-                                        <span>🚫 สัญจรไม่ได้</span>
+                                        <span className="inline-flex items-center gap-1"><AppIcon icon="checkCircle" className="h-3.5 w-3.5 text-green-600" /> สัญจรได้</span>
+                                        <span className="inline-flex items-center gap-1"><AppIcon icon="alert" className="h-3.5 w-3.5 text-yellow-600" /> สัญจรลำบาก</span>
+                                        <span className="inline-flex items-center gap-1"><AppIcon icon="xCircle" className="h-3.5 w-3.5 text-red-600" /> สัญจรไม่ได้</span>
                                     </div>
                                 </div>
                             </div>
@@ -945,7 +941,7 @@ export default function PublicIncidentMap({
                                 <Popup maxWidth={200} maxHeight={200}>
                                     <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-2xl">{getReportTypeIcon(incident.report_type)}</span>
+                                            <AppIcon icon={getReportTypeIcon(incident.report_type)} className="h-6 w-6 text-red-600" />
                                             <h4 className="font-bold text-gray-800">{getReportTypeLabel(incident.report_type)}</h4>
                                         </div>
                                         <h5 className="font-semibold text-gray-700 mb-2">รายงานที่ยืนยันแล้วจากเจ้าหน้าที่</h5>
@@ -954,7 +950,16 @@ export default function PublicIncidentMap({
                                             <p className={getUrgencyColor(incident.urgency)}><strong>ความเร่งด่วน:</strong> {getUrgencyLabel(incident.urgency)}</p>
                                             {incident.water_level && <p><strong>ระดับน้ำ:</strong> {incident.water_level} ซม.</p>}
                                             {incident.affected_people > 0 && <p><strong>ผู้ได้รับผลกระทบ:</strong> {incident.affected_people} คน</p>}
-                                            {incident.travel_status && <p><strong>สถานะการสัญจร:</strong> {incident.travel_status === 'passable' ? '✅ สัญจรได้ปกติ' : incident.travel_status === 'difficult' ? '⚠️ สัญจรได้ยากลำบาก' : '🚫 ไม่สามารถสัญจรได้'}</p>}
+                                            {incident.travel_status && (
+                                                <p className="inline-flex items-center gap-1">
+                                                    <strong>สถานะการสัญจร:</strong>
+                                                    <AppIcon
+                                                        icon={incident.travel_status === 'passable' ? 'checkCircle' : incident.travel_status === 'difficult' ? 'alert' : 'xCircle'}
+                                                        className={`h-4 w-4 ${incident.travel_status === 'passable' ? 'text-green-600' : incident.travel_status === 'difficult' ? 'text-yellow-600' : 'text-red-600'}`}
+                                                    />
+                                                    {incident.travel_status === 'passable' ? 'สัญจรได้ปกติ' : incident.travel_status === 'difficult' ? 'สัญจรได้ยากลำบาก' : 'ไม่สามารถสัญจรได้'}
+                                                </p>
+                                            )}
                                             <p><strong>เวลาเกิดเหตุ:</strong> {formatDate(incident.occurred_at)}</p>
                                             <p className="pt-2 border-t"><strong>รายละเอียด:</strong><br />{incident.description}</p>
                                             {incident.photo_path && (

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import AppIcon from './icons/AppIcon';
 
 export default function ErrorMessage({
     title = "เกิดข้อผิดพลาด",
@@ -22,19 +23,7 @@ export default function ErrorMessage({
                 {/* Error Icon */}
                 <div className="flex-shrink-0">
                     <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <svg
-                            className="w-6 h-6 text-red-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
+                        <AppIcon icon="alertCircle" className="h-6 w-6 text-red-600" />
                     </div>
                 </div>
 
@@ -50,9 +39,7 @@ export default function ErrorMessage({
                                 onClick={onRetry}
                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
+                                <AppIcon icon="refresh" className="h-4 w-4" />
                                 ลองอีกครั้ง
                             </button>
                         )}
@@ -76,7 +63,7 @@ export default function ErrorMessage({
                                     href={`tel:${supportContact.phone}`}
                                     className="text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
                                 >
-                                    <span>📞</span>
+                                    <AppIcon icon="phone" className="h-4 w-4" />
                                     {supportContact.phone}
                                 </a>
                                 <a
@@ -85,7 +72,7 @@ export default function ErrorMessage({
                                     rel="noopener noreferrer"
                                     className="text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
                                 >
-                                    <span>💬</span>
+                                    <AppIcon icon="message" className="h-4 w-4" />
                                     LINE: {supportContact.line}
                                 </a>
                             </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
+import AppIcon from './icons/AppIcon';
 
 export default function HelpButton() {
     const [isOpen, setIsOpen] = useState(false);
@@ -8,19 +9,19 @@ export default function HelpButton() {
     const helpLinks = [
         {
             title: "คู่มือประชาชน",
-            icon: "👥",
+            icon: "users",
             href: "/public/help/citizen-guide",
             description: "วิธีแจ้งเหตุ"
         },
         {
             title: "คำถามที่พบบ่อย",
-            icon: "❓",
+            icon: "help",
             href: "/public/help/faq",
             description: "FAQ"
         },
         {
             title: "ศูนย์ช่วยเหลือ",
-            icon: "📚",
+            icon: "book",
             href: "/public/help",
             description: "คู่มือทั้งหมด"
         }
@@ -40,7 +41,7 @@ export default function HelpButton() {
                                 onClick={() => setIsOpen(false)}
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">{link.icon}</span>
+                                    <AppIcon icon={link.icon} className="h-6 w-6 text-blue-600" />
                                     <div>
                                         <div className="font-semibold text-gray-800 text-sm">
                                             {link.title}
@@ -60,7 +61,7 @@ export default function HelpButton() {
                                 className="block p-3 hover:bg-gray-50 rounded-lg transition-colors"
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">📞</span>
+                                    <AppIcon icon="phone" className="h-6 w-6 text-red-600" />
                                     <div>
                                         <div className="font-semibold text-gray-800 text-sm">
                                             ติดต่อฉุกเฉิน
@@ -86,9 +87,9 @@ export default function HelpButton() {
                 aria-label={isOpen ? 'ปิดความช่วยเหลือ' : 'เปิดความช่วยเหลือ'}
             >
                 {isOpen ? (
-                    <span className="text-3xl text-white">✕</span>
+                    <AppIcon icon="x" className="h-8 w-8 text-white" />
                 ) : (
-                    <span className="text-3xl">❓</span>
+                    <AppIcon icon="help" className="h-8 w-8 text-white" />
                 )}
             </button>
 

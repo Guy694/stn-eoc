@@ -74,7 +74,7 @@ export async function POST(req) {
             module_name_en,
             module_type,
             route_path,
-            icon = '📄',
+            icon = 'file',
             description = '',
             form_config = null,
             map_config = null,

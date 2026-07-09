@@ -4,7 +4,7 @@ export default function Footer() {
             <div className="container mx-auto px-4 py-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</h4>
+                        <h4 className="font-bold text-white mb-2 text-sm sm:text-base">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</h4>
                         <p className="text-xs sm:text-sm">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
                         {/* <p className="text-xs sm:text-sm mt-2">ระบบบริหารจัดการภัยพิบัติและเหตุฉุกเฉิน จังหวัดสตูล</p> */}
                     </div>

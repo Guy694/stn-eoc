@@ -9,6 +9,7 @@ import {
     BriefcaseMedical,
     CalendarClock,
     Car,
+    ChevronDown,
     CloudSun,
     ClipboardList,
     FileChartColumn,
@@ -21,6 +22,7 @@ import {
     LifeBuoy,
     Map,
     MapPinned,
+    Menu,
     MonitorCog,
     Package,
     Settings,
@@ -30,17 +32,19 @@ import {
     UserCog,
     UserRoundCog,
     UserRoundPlus,
-    Waves
+    Waves,
+    X
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
+import AppIcon from "./icons/AppIcon";
 
 const iconClassName = "h-4 w-4 shrink-0";
 
 function MenuIcon({ icon: Icon, className = iconClassName }) {
     if (!Icon) return null;
     if (typeof Icon === "string") {
-        return <span className="text-base">{Icon}</span>;
+        return <AppIcon icon={Icon} className={className} />;
     }
     return <Icon className={className} aria-hidden="true" strokeWidth={2.2} />;
 }
@@ -151,6 +155,7 @@ export default function Sidebar() {
                 { name: "ภาพรวม EOC", path: "/eoc/flood/overview", icon: BarChart3, description: "Dashboard ภาพรวมสถานการณ์ทั้งหมด" },
                 { name: "จัดการ EOC อุทกภัยน้ำท่วม", path: "/eoc/flood/management", icon: MonitorCog, description: "Officer EOC Management Dashboard" },
                 { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: Map, description: "ภาพรวมสถานการณ์อุทกภัยน้ำท่วม" },
+                { name: "ทีมปฏิบัติการ", path: "/eoc/flood/operations-team", icon: Users, description: "ผังทีมปฏิบัติการและบทบาท Incident Commander" },
                 { name: "บันทึกพื้นที่อุทกภัยน้ำท่วม", path: "/eoc/flood/records", icon: Waves, description: "บันทึกข้อมูลพื้นที่อุทกภัยน้ำท่วม" },
                 { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: Tent, description: "แผนที่ศูนย์พักพิง" },
                 { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: HeartPulse, description: "บันทึกโรคในศูนย์พักพิง" },
@@ -389,28 +394,7 @@ export default function Sidebar() {
                 className="sidebar-toggle lg:hidden fixed bottom-6 right-6 z-50 bg-[#0b4c86] text-white p-4 rounded-full shadow-lg hover:bg-[#083865] transition-colors"
                 aria-label="Toggle sidebar"
             >
-                <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    {isOpen ? (
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    ) : (
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 6h16M4 12h16M4 18h16"
-                        />
-                    )}
-                </svg>
+                {isOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
             </button>
 
             {/* Overlay for mobile */}
@@ -443,19 +427,7 @@ export default function Sidebar() {
                             onClick={() => setIsOpen(false)}
                             className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
                         >
-                            <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
+                            <X className="h-5 w-5" aria-hidden="true" />
                         </button>
                     </div>
 
@@ -498,20 +470,10 @@ export default function Sidebar() {
                                                 </span>
                                             )}
                                         </span>
-                                        <svg
-                                            className={`w-4 h-4 transition-transform ${expandedSections[section.key || section.section] ? "rotate-180" : ""
-                                                }`}
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M19 9l-7 7-7-7"
-                                            />
-                                        </svg>
+                                        <ChevronDown
+                                            className={`h-4 w-4 transition-transform ${expandedSections[section.key || section.section] ? "rotate-180" : ""}`}
+                                            aria-hidden="true"
+                                        />
                                     </button>
                                         );
                                     })()}

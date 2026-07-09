@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
-import { getDisasterConfig, getDisasterIcon, getRiskLevelIcon } from '@/lib/disasterConfig';
+import { getDisasterConfig, getDisasterIcon } from '@/lib/disasterConfig';
 import SessionTeamsList from './SessionTeamsList';
+import AppIcon from './icons/AppIcon';
 
 export default function DisasterSessionSelector({
     disasterType = 'flood',
@@ -113,17 +114,21 @@ export default function DisasterSessionSelector({
                 <div className="flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-semibold mb-1">
-                            🚨 สถานการณ์ปัจจุบัน - {config?.name || disasterType}
+                            <span className="inline-flex items-center gap-2">
+                                <AppIcon icon="siren" className="h-5 w-5" />
+                                สถานการณ์ปัจจุบัน - {config?.name || disasterType}
+                            </span>
                         </h3>
                         {activeSessions.length > 0 ? (
                             <div className="space-y-2">
                                 {activeSessions.map(session => (
                                     <div key={session.id} className="bg-white/10 rounded p-3 backdrop-blur-sm">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-2xl animate-pulse">🔴</span>
+                                            <AppIcon icon="🔴" className="h-6 w-6 animate-pulse" />
                                             <div>
-                                                <p className="font-medium">
-                                                    {disasterIcon} EOC Session #{session.session_number} - {new Date().getFullYear()}
+                                                <p className="flex items-center gap-2 font-medium">
+                                                    <AppIcon icon={disasterIcon} className="h-4 w-4" />
+                                                    EOC Session #{session.session_number} - {new Date().getFullYear()}
                                                 </p>
                                                 <p className="text-sm opacity-90">
                                                     เปิดเมื่อ: {formatDate(session.opened_at)}
@@ -144,7 +149,7 @@ export default function DisasterSessionSelector({
                         ) : (
                             <div className="bg-white/10 rounded p-3 backdrop-blur-sm">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">✅</span>
+                                    <AppIcon icon="checkCircle" className="h-6 w-6" />
                                     <div>
                                         <p className="font-medium">ไม่มี EOC ที่เปิดอยู่ในขณะนี้</p>
                                         <p className="text-sm opacity-90">สถานการณ์ปกติ</p>
@@ -178,8 +183,9 @@ export default function DisasterSessionSelector({
     return (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span>{disasterIcon}</span>
-                📊 ข้อมูลย้อนหลัง - {config?.name || disasterType}
+                <AppIcon icon={disasterIcon} className="h-5 w-5" />
+                <AppIcon icon="barChart" className="h-5 w-5" />
+                ข้อมูลย้อนหลัง - {config?.name || disasterType}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -237,10 +243,10 @@ export default function DisasterSessionSelector({
                         สรุปข้อมูลปี {selectedYear + 543}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        <SummaryItem label="EOC Sessions" value={yearSummary.total_sessions || 0} icon="🔢" />
-                        <SummaryItem label="รวมเวลา" value={formatDuration(yearSummary.total_hours)} icon="⏱️" />
-                        <SummaryItem label="กิจกรรม" value={yearSummary.total_activities || 0} icon="📋" />
-                        <SummaryItem label="บันทึกข้อมูล" value={yearSummary.total_data_entries || 0} icon="📝" />
+                        <SummaryItem label="EOC Sessions" value={yearSummary.total_sessions || 0} icon="circleDot" />
+                        <SummaryItem label="รวมเวลา" value={formatDuration(yearSummary.total_hours)} icon="clock" />
+                        <SummaryItem label="กิจกรรม" value={yearSummary.total_activities || 0} icon="clipboard" />
+                        <SummaryItem label="บันทึกข้อมูล" value={yearSummary.total_data_entries || 0} icon="file" />
                         <SummaryItem label="เปิดอยู่" value={yearSummary.active_sessions || 0} icon="🟢" />
                         <SummaryItem label="ปิดแล้ว" value={yearSummary.closed_sessions || 0} icon="⚫" />
                     </div>
@@ -252,10 +258,9 @@ export default function DisasterSessionSelector({
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                                <span className={selectedSession.status === 'active' ? 'text-green-500' : 'text-gray-500'}>
-                                    {selectedSession.status === 'active' ? '🟢' : '⚫'}
-                                </span>
-                                {disasterIcon} EOC Session #{selectedSession.session_number}
+                                <AppIcon icon={selectedSession.status === 'active' ? '🟢' : '⚫'} className="h-4 w-4" />
+                                <AppIcon icon={disasterIcon} className="h-4 w-4" />
+                                EOC Session #{selectedSession.session_number}
                             </h4>
                             <div className="space-y-1 text-sm text-gray-600">
                                 <p><strong>เปิด:</strong> {formatDate(selectedSession.opened_at)} โดย {selectedSession.opened_by_name}</p>
@@ -299,7 +304,7 @@ function SummaryItem({ label, value, icon }) {
     return (
         <div className="bg-white rounded p-3 border border-teal-200">
             <div className="flex items-center gap-2 mb-1">
-                <span>{icon}</span>
+                <AppIcon icon={icon} className="h-4 w-4 text-teal-700" />
                 <span className="text-xs text-gray-600">{label}</span>
             </div>
             <p className="text-lg font-bold text-teal-700">{value}</p>

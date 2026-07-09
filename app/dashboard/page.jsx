@@ -114,7 +114,7 @@ export default function DashboardPage() {
                             <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                                     <div>
-                                        <p className="mb-2 text-sm font-semibold text-slate-500">ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล</p>
+                                        <p className="mb-2 text-sm font-semibold text-slate-500">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
                                         <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
                                             เหตุการณ์ต่างๆ
                                         </h1>

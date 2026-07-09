@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import AppIcon from './icons/AppIcon';
 
 export default function LiveUpdatesFeed() {
     const [reports, setReports] = useState([]);
@@ -29,10 +30,10 @@ export default function LiveUpdatesFeed() {
 
     const getIcon = (type) => {
         const icons = {
-            help_request: '💧',
-            traffic_report: '🚧',
-            flood: '🌊',
-            default: '📍'
+            help_request: 'droplet',
+            traffic_report: 'route',
+            flood: 'waves',
+            default: 'mapPin'
         };
         return icons[type] || icons.default;
     };
@@ -65,7 +66,10 @@ export default function LiveUpdatesFeed() {
                     รายงานล่าสุด
                 </h3>
                 <Link href="/public/disaster-map" className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-                    ดูทั้งหมด →
+                    <span className="inline-flex items-center gap-1">
+                        ดูทั้งหมด
+                        <AppIcon icon="arrowRight" className="h-4 w-4" />
+                    </span>
                 </Link>
             </div>
 
@@ -90,7 +94,7 @@ export default function LiveUpdatesFeed() {
                             key={report.id}
                             className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100"
                         >
-                            <span className="text-3xl flex-shrink-0">{getIcon(report.reportType)}</span>
+                            <AppIcon icon={getIcon(report.reportType)} className="h-8 w-8 flex-shrink-0 text-blue-600" />
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-gray-800 truncate">
                                     {report.description || 'รายงานเหตุการณ์'}

@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
                         </div>
                     </div>
                     <p className="text-blue-100">
-                        ระบบศูนย์ปฏิบัติการฉุกเฉิน (EOC) จังหวัดสตูล
+                        ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข (EOC) จังหวัดสตูล
                     </p>
                 </div>
 
@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
                             <span>📌</span> บทนำ
                         </h2>
                         <p className="text-gray-700 leading-relaxed">
-                            ศูนย์ปฏิบัติการฉุกเฉิน จังหวัดสตูล (Satun Provincial Emergency Operations Center (Satun Geo-EOC))
+                            ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล (Satun Provincial Emergency Operations Center (Satun Geo-EOC))
                             ให้ความสำคัญกับการคุ้มครองข้อมูลส่วนบุคคลของท่านตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562
                             นโยบายนี้อธิบายวิธีการที่เราเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลของท่าน
                         </p>
@@ -195,7 +195,7 @@ export default function PrivacyPolicyPage() {
                             หากท่านมีคำถามหรือต้องการใช้สิทธิของท่าน กรุณาติดต่อ:
                         </p>
                         <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
-                            <p className="font-bold text-gray-800 mb-2">ศูนย์ปฏิบัติการฉุกเฉิน (EOC) จังหวัดสตูล</p>
+                            <p className="font-bold text-gray-800 mb-2">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข (EOC) จังหวัดสตูล</p>
                             <p className="text-gray-700">📍 ศาลากลางจังหวัดสตูล</p>
                             <p className="text-gray-700">📞 โทรศัพท์: 074-711-501</p>
                             <p className="text-gray-700">📧 อีเมล: eoc@satun.go.th</p>

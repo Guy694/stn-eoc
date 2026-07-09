@@ -52,13 +52,13 @@ export default function SplashScreen({ onComplete }) {
 
                 {/* Title */}
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg animate-fade-in">
-                    EOC จังหวัดสตูล
+                    ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข
                 </h1>
                 <p className="text-lg md:text-xl text-green-50 mb-2 animate-fade-in-delay">
                     Satun Provincial Emergency Operations Center (Satun Geo-EOC)
                 </p>
                 <p className="text-sm md:text-base text-green-100 animate-fade-in-delay-2">
-                    ศูนย์ปฏิบัติการฉุกเฉิน
+                    ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข
                 </p>
 
                 {/* Loading Indicator */}

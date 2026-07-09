@@ -205,7 +205,7 @@ export default function PublicAnnouncementsPage() {
                 ประกาศข่าวสารและข้อมูลประชาสัมพันธ์สำหรับประชาชน
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                รวมประกาศล่าสุดจากระบบ EOC จังหวัดสตูล พร้อมข่าวย้อนหลังที่ยังเปิดให้ประชาชนตรวจสอบได้
+                รวมประกาศล่าสุดจากระบบ ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข พร้อมข่าวย้อนหลังที่ยังเปิดให้ประชาชนตรวจสอบได้
               </p>
 
               <div className="mt-4 grid gap-2 text-sm font-semibold sm:grid-cols-3">

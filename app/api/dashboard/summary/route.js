@@ -597,7 +597,7 @@ export async function GET(request) {
                 eoc_type: 'population',
                 name_th: 'ข้อมูลประชาชน/กลุ่มเปราะบาง',
                 name_en: 'Population Data',
-                icon: '👥',
+                icon: 'users',
                 color_primary: 'emerald',
                 is_active: false,
                 description: 'ฐานข้อมูลกลางสำหรับสนับสนุนทุก EOC',
@@ -661,18 +661,18 @@ export async function GET(request) {
 
 function getActivityIcon(actionType) {
     const icons = {
-        'eoc_activate': '🚨',
-        'eoc_deactivate': '✅',
-        'create': '➕',
-        'update': '✏️',
-        'delete': '🗑️',
-        'login': '🔐',
-        'logout': '🚪',
-        'report': '📝',
-        'flood_record': '💧',
-        'disease_report': '🦠'
+        'eoc_activate': 'siren',
+        'eoc_deactivate': 'checkCircle',
+        'create': 'plus',
+        'update': 'edit',
+        'delete': 'trash',
+        'login': 'lock',
+        'logout': 'logout',
+        'report': 'file',
+        'flood_record': 'droplets',
+        'disease_report': 'disease'
     };
-    return icons[actionType] || '📋';
+    return icons[actionType] || 'clipboard';
 }
 
 function getActivityTitle(actionType) {

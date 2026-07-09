@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import crypto from "crypto";
 import { clearCitizenSessionCookie, setCitizenSessionCookie } from "@/lib/citizenAuth";
+import { applyNoStoreHeaders, getThaiIdConfigError, getThaiIdOAuthConfig } from "@/lib/thaiIdConfig";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // Database Pool
 const pool = mysql.createPool({
@@ -24,15 +28,7 @@ function hashPID(pid) {
     return crypto.createHmac('sha256', secretKey).update(pid).digest('hex');
 }
 
-// ThaiID Configuration ตามคู่มือ DOPA
-const THAIID_CONFIG = {
-    tokenUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/token/',
-    userInfoUrl: 'https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/',
-    clientId: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
-    apiKey: process.env.APIKEY,
-    redirectUri: process.env.CALLBACK,
-};
+const OFFICER_CALLBACK_PATH = '/api/auth/thaiid/callback';
 
 function normalizeAppBaseUrl(value) {
     const url = new URL(value);
@@ -116,13 +112,13 @@ const roleDisplayNames = {
 /**
  * แลกเปลี่ยน Authorization Code กับ Access Token
  */
-async function exchangeCodeForToken(code) {
+async function exchangeCodeForToken(code, thaiIdConfig) {
     const tokenParams = new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: THAIID_CONFIG.redirectUri,
-        client_id: THAIID_CONFIG.clientId,
-        client_secret: THAIID_CONFIG.clientSecret,
+        redirect_uri: thaiIdConfig.redirectUri,
+        client_id: thaiIdConfig.clientId,
+        client_secret: thaiIdConfig.clientSecret,
     });
 
     // สร้าง AbortController สำหรับ timeout
@@ -130,11 +126,11 @@ async function exchangeCodeForToken(code) {
     const timeout = setTimeout(() => controller.abort(), 30000); // 30 วินาที
 
     try {
-        const response = await fetch(THAIID_CONFIG.tokenUrl, {
+        const response = await fetch(thaiIdConfig.tokenUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'API_KEY': THAIID_CONFIG.apiKey,
+                'API_KEY': thaiIdConfig.apiKey,
             },
             body: tokenParams.toString(),
             signal: controller.signal
@@ -160,6 +156,48 @@ async function exchangeCodeForToken(code) {
     }
 }
 
+async function fetchThaiIdUserInfo(accessToken, thaiIdConfig) {
+    if (!accessToken) return null;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    try {
+        const response = await fetch(thaiIdConfig.userInfoUrl, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'API_KEY': thaiIdConfig.apiKey,
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            const responseText = await response.text();
+            throw new Error(`UserInfo request failed: ${response.status} - ${responseText}`);
+        }
+
+        return response.json();
+    } catch (error) {
+        clearTimeout(timeout);
+        if (error.name === 'AbortError') {
+            throw new Error('การเชื่อมต่อ ThaiID UserInfo หมดเวลา (timeout) กรุณาลองใหม่อีกครั้ง');
+        }
+        throw error;
+    }
+}
+
+function mergeThaiIdProfile(tokenData, userInfo) {
+    const data = { ...(userInfo || {}), ...(tokenData || {}) };
+    return {
+        ...data,
+        pid: data.pid || data.sub || data.citizen_id || data.citizenId || data.personal_id,
+        given_name: data.given_name || data.givenName || data.first_name || data.firstName,
+        family_name: data.family_name || data.familyName || data.last_name || data.lastName
+    };
+}
+
 /**
  * Callback Handler สำหรับ ThaiID OAuth
  */
@@ -169,33 +207,49 @@ export async function GET(request) {
         const code = searchParams.get('code');
         const state = searchParams.get('state');
         const error = searchParams.get('error');
+        const thaiIdConfig = getThaiIdOAuthConfig(request, OFFICER_CALLBACK_PATH);
+        const configError = getThaiIdConfigError(thaiIdConfig, { requireClientSecret: true });
+
+        if (configError) {
+            throw new Error(configError);
+        }
 
         // ตรวจสอบว่ามี error จาก ThaiID หรือไม่
         if (error) {
             const baseUrl = getAppBaseUrl(request);
-            return NextResponse.redirect(
+            return applyNoStoreHeaders(NextResponse.redirect(
                 `${baseUrl}/login?error=thaiid_auth_failed&message=${error}`
-            );
+            ));
         }
 
         // ตรวจสอบว่ามี code หรือไม่
         if (!code) {
             const baseUrl = getAppBaseUrl(request);
-            return NextResponse.redirect(
+            return applyNoStoreHeaders(NextResponse.redirect(
                 `${baseUrl}/login?error=no_code`
-            );
+            ));
+        }
+
+        const storedState = request.cookies.get('thaiid_state')?.value;
+        if (!state || !storedState || state !== storedState) {
+            const baseUrl = getAppBaseUrl(request);
+            return applyNoStoreHeaders(NextResponse.redirect(
+                `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ThaiID state ไม่ถูกต้อง กรุณาเริ่มเข้าสู่ระบบใหม่')}`
+            ));
         }
 
         // 1. แลกเปลี่ยน Authorization Code กับ Access Token
-        const tokenData = await exchangeCodeForToken(code);
+        const tokenData = await exchangeCodeForToken(code, thaiIdConfig);
         const accessToken = tokenData.access_token;
-        const pid = tokenData.pid; // ThaiID ส่ง PID มาพร้อมกับ token response แล้ว
+        const userInfo = tokenData.pid ? null : await fetchThaiIdUserInfo(accessToken, thaiIdConfig);
+        const thaiIdProfile = mergeThaiIdProfile(tokenData, userInfo);
+        const pid = thaiIdProfile.pid;
 
         if (!pid) {
             const baseUrl = getAppBaseUrl(request);
-            return NextResponse.redirect(
+            return applyNoStoreHeaders(NextResponse.redirect(
                 `${baseUrl}/login?error=no_pid`
-            );
+            ));
         }
 
         const pidHash = hashPID(pid);
@@ -220,9 +274,9 @@ export async function GET(request) {
                 userType = 'officer';
 
                 // Update Officer Data
-                const title = tokenData.title || userRecord.title;
-                const givenName = tokenData.given_name || userRecord.given_name;
-                const familyName = tokenData.family_name || userRecord.family_name;
+                const title = thaiIdProfile.title || userRecord.title;
+                const givenName = thaiIdProfile.given_name || userRecord.given_name;
+                const familyName = thaiIdProfile.family_name || userRecord.family_name;
 
                 await connection.execute(
                     `UPDATE officer 
@@ -254,31 +308,31 @@ export async function GET(request) {
                         SET title = ?, given_name = ?, family_name = ?, address = ?, updated_at = NOW() 
                         WHERE id = ?`,
                         [
-                            tokenData.title || userRecord.title,
-                            tokenData.given_name || userRecord.given_name,
-                            tokenData.family_name || userRecord.family_name,
-                            tokenData.address || userRecord.address,
+                            thaiIdProfile.title || userRecord.title,
+                            thaiIdProfile.given_name || userRecord.given_name,
+                            thaiIdProfile.family_name || userRecord.family_name,
+                            thaiIdProfile.address || userRecord.address,
                             userRecord.id
                         ]
                     );
 
                     // Update object locally
-                    userRecord.title = tokenData.title || userRecord.title;
-                    userRecord.given_name = tokenData.given_name || userRecord.given_name;
-                    userRecord.family_name = tokenData.family_name || userRecord.family_name;
-                    userRecord.address = tokenData.address || userRecord.address;
+                    userRecord.title = thaiIdProfile.title || userRecord.title;
+                    userRecord.given_name = thaiIdProfile.given_name || userRecord.given_name;
+                    userRecord.family_name = thaiIdProfile.family_name || userRecord.family_name;
+                    userRecord.address = thaiIdProfile.address || userRecord.address;
 
                 } else {
                     // NOT FOUND IN EITHER -> Create New Citizen
                     userType = 'citizen';
                     isNewUser = true;
 
-                    const title = tokenData.title || null;
-                    const givenName = tokenData.given_name || '';
-                    const familyName = tokenData.family_name || '';
-                    const birthdate = tokenData.birthdate || null;
-                    const gender = tokenData.gender || null;
-                    const address = tokenData.address || null;
+                    const title = thaiIdProfile.title || null;
+                    const givenName = thaiIdProfile.given_name || '';
+                    const familyName = thaiIdProfile.family_name || '';
+                    const birthdate = thaiIdProfile.birthdate || null;
+                    const gender = thaiIdProfile.gender || null;
+                    const address = thaiIdProfile.address || null;
 
                     const [result] = await connection.execute(
                         `INSERT INTO citizens 
@@ -438,8 +492,16 @@ export async function GET(request) {
                 });
             }
 
+            response.cookies.set('thaiid_state', '', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 0,
+                path: '/'
+            });
+
             connection.release();
-            return response;
+            return applyNoStoreHeaders(response);
 
         } catch (dbError) {
             connection.release();
@@ -449,8 +511,8 @@ export async function GET(request) {
     } catch (error) {
         console.error('ThaiID Callback Error:', error);
         const baseUrl = getAppBaseUrl(request);
-        return NextResponse.redirect(
+        return applyNoStoreHeaders(NextResponse.redirect(
             `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent(error.message)}`
-        );
+        ));
     }
 }
