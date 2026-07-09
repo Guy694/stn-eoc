@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Footer from "@/components/Footer";
 import { satunDistricts } from "@/data/satunData";
 import { showWarning } from "@/lib/sweetAlert";
 import { useAuth } from "@/context/AuthContext";
@@ -154,7 +155,7 @@ export default function CitizenFestivalReportPage() {
     const c = colors[themeColor];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-red-50">
+        <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 via-white to-red-50">
             {/* Header */}
             <header className={`bg-gradient-to-r ${c.header} text-white py-4 md:py-6 shadow-lg`}>
                 <div className="container mx-auto px-4 flex items-center justify-between">
@@ -171,7 +172,7 @@ export default function CitizenFestivalReportPage() {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-6 max-w-2xl">
+            <main className="container mx-auto max-w-2xl flex-1 px-4 py-6">
                 {/* Loading session */}
                 {sessionLoading && (
                     <div className="flex items-center justify-center py-16">
@@ -425,6 +426,8 @@ export default function CitizenFestivalReportPage() {
                     </>
                 )}
             </main>
+
+            <Footer />
         </div>
     );
 }

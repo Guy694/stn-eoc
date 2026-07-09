@@ -1,7 +1,10 @@
-import { Kanit } from "next/font/google";
+import { Kanit, Geist } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { EOCProvider } from "@/context/EOCContext";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const kanit = Kanit({
   variable: "--font-kanit",
@@ -22,7 +25,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th" suppressHydrationWarning>
+    <html lang="th" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body
         className={`${kanit.variable} antialiased`}
         suppressHydrationWarning

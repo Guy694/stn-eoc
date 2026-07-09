@@ -209,10 +209,15 @@ export default function Sidebar() {
             collapsible: true,
             requiresPermission: null,
             items: [
-                { name: "ภาพรวมโรคระบาด", path: "/eoc/disease", icon: Activity, description: "Dashboard ภาพรวมการระบาด" },
+                { name: "ภาพรวม EOC", path: "/eoc/disease/overview", icon: BarChart3, description: "Dashboard ภาพรวมสถานการณ์ทั้งหมด" },
+                { name: "จัดการ EOC โรคระบาด", path: "/eoc/disease/management", icon: MonitorCog, description: "Officer EOC Management Dashboard" },
+                { name: "แผนที่และสถานการณ์", path: "/eoc/disease/map", icon: Map, description: "ภาพรวมพื้นที่และรายงานโรคระบาด" },
                 { name: "สรุปสถานการณ์รายวัน", path: "/eoc/disease/daily-risk", icon: FileChartColumn, description: "สรุปรายงานโรครายวัน" },
                 { name: "บันทึกรายงานผู้ป่วย", path: "/eoc/disease/records", icon: ClipboardList, description: "บันทึกข้อมูลผู้ป่วยจากหน่วยบริการ" },
+                { name: "ข้อมูลกลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", icon: Users, description: "ฐานข้อมูลกลุ่มเปราะบางสำหรับสนับสนุนการเฝ้าระวัง" },
+                { name: "ข้อมูลหน่วยบริการ", path: "/admin/health-facilities", icon: BriefcaseMedical, description: "โรงพยาบาล/สถานีอนามัย" },
                 { name: "ประกาศข่าวสาร", path: "/admin/announcements", icon: Bell, description: "ข่าวประชาสัมพันธ์" },
+                { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: Activity, description: "ติดตามโรคระบาดจากหน่วยบริการ" },
             ],
         },
 

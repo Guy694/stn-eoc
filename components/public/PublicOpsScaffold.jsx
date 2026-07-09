@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import AIChatbot from "@/components/AIChatbot";
 import FloatingReportButton from "@/components/FloatingReportButton";
+import Footer from "@/components/Footer";
 
 function formatThaiDate() {
   try {
@@ -198,6 +199,10 @@ export default function PublicOpsScaffold({
             );
           })}
         </nav>
+      </div>
+
+      <div className="pb-16 lg:pb-0">
+        <Footer />
       </div>
 
       <FloatingReportButton />

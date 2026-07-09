@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Footer from "@/components/Footer";
 import { showWarning } from "@/lib/sweetAlert";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
@@ -252,7 +253,7 @@ export default function ReportIncidentPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-slate-50">
             <header className="border-b border-red-100 bg-white">
                 <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4">
                     <div>
@@ -265,7 +266,7 @@ export default function ReportIncidentPage() {
                 </div>
             </header>
 
-            <main className="mx-auto max-w-6xl px-4 py-5 md:py-8">
+            <main className="mx-auto max-w-6xl flex-1 px-4 py-5 md:py-8">
                 {submitSuccess && (
                     <section className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-sm">
                         <h2 className="text-lg font-black">ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว</h2>
@@ -420,6 +421,8 @@ export default function ReportIncidentPage() {
                     </aside>
                 </form>
             </main>
+
+            <Footer />
         </div>
     );
 }
