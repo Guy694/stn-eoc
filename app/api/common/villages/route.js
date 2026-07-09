@@ -11,11 +11,12 @@ export async function GET() {
             SELECT 
                 id,
                 villcode,
+                moo,
                 villname as name,
                 subdistnam as subDistrict,
                 distname as district
             FROM satun_village_polygon
-            ORDER BY distname, subdistnam, villname
+            ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname
         `;
 
         const results = await query(sql);
@@ -24,6 +25,7 @@ export async function GET() {
         const data = results.map(row => ({
             id: row.id,
             code: row.villcode,
+            moo: row.moo,
             name: row.name,
             subDistrict: row.subDistrict, // Tambon
             district: row.district      // District (Amphoe)

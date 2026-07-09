@@ -17,6 +17,7 @@ export default function VillagePolygonsPage() {
     const [editingPolygon, setEditingPolygon] = useState(null);
     const [formData, setFormData] = useState({
         villname: '',
+        moo: '',
         distname: '',
         subdistnam: '',
         coordinates: ''
@@ -88,6 +89,7 @@ export default function VillagePolygonsPage() {
         setEditingPolygon(polygon);
         setFormData({
             villname: polygon.villname,
+            moo: polygon.moo || '',
             distname: polygon.distname,
             subdistnam: polygon.subdistnam,
             coordinates: polygon.coordinates || ''
@@ -120,6 +122,7 @@ export default function VillagePolygonsPage() {
     const resetForm = () => {
         setFormData({
             villname: '',
+            moo: '',
             distname: '',
             subdistnam: '',
             coordinates: ''
@@ -245,6 +248,7 @@ export default function VillagePolygonsPage() {
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อหมู่บ้าน</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">หมู่</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ตำบล</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พิกัด Polygon</th>
@@ -259,6 +263,9 @@ export default function VillagePolygonsPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-gray-900">{polygon.villname}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {polygon.moo || '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {polygon.distname}
@@ -362,7 +369,19 @@ export default function VillagePolygonsPage() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        หมู่
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.moo}
+                                        onChange={(e) => setFormData({ ...formData, moo: e.target.value })}
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         อำเภอ *

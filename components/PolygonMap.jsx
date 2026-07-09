@@ -190,6 +190,7 @@ export default function PolygonMap({
                                     {polygon.villname}
                                 </h3>
                                 <div className="space-y-1 text-sm">
+                                    {polygon.moo && <p><span className="font-semibold">หมู่:</span> {polygon.moo}</p>}
                                     <p><span className="font-semibold">ตำบล:</span> {polygon.subdistnam}</p>
                                     <p><span className="font-semibold">อำเภอ:</span> {polygon.distname}</p>
                                     <p><span className="font-semibold">จังหวัด:</span> {polygon.provname}</p>
@@ -340,6 +341,7 @@ export default function PolygonMap({
                         </button>
                     </div>
                     <div className="space-y-1 text-sm text-gray-600">
+                        {selectedPolygon.moo && <p>หมู่ {selectedPolygon.moo}</p>}
                         <p>{selectedPolygon.subdistnam}, {selectedPolygon.distname}</p>
                         <p className="font-semibold text-blue-600">
                             {selectedPolygon.num_hh.toLocaleString()} ครัวเรือน

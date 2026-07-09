@@ -311,6 +311,7 @@ export default function HybridDisasterMap({
                                     {polygon.villname}
                                 </h3>
                                 <div className="space-y-1 text-sm">
+                                    {polygon.moo && <p><span className="font-semibold">หมู่:</span> {polygon.moo}</p>}
                                     <p><span className="font-semibold">ตำบล:</span> {polygon.subdistnam}</p>
                                     <p><span className="font-semibold">อำเภอ:</span> {polygon.distname}</p>
                                     <hr className="my-2" />

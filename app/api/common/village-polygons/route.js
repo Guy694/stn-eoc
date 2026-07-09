@@ -24,6 +24,7 @@ export async function GET() {
             SELECT 
                 id,
                 villcode,
+                moo,
                 villname,
                 subdistnam,
                 distname,
@@ -33,7 +34,7 @@ export async function GET() {
                 mun_tao_na,
                 ST_AsGeoJSON(geom) as geojson
             FROM satun_village_polygon
-            ORDER BY distname, subdistnam, villname
+            ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname
         `;
 
         const results = await query(sql);
@@ -55,6 +56,7 @@ export async function GET() {
             return {
                 id: row.id, // ใช้ id จริงจาก database
                 villcode: row.villcode,
+                moo: row.moo,
                 villname: row.villname,
                 subdistnam: row.subdistnam,
                 distname: row.distname,

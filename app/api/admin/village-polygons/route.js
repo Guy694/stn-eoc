@@ -21,6 +21,7 @@ export async function GET(request) {
             SELECT 
                 id, 
                 villname, 
+                moo,
                 distname, 
                 subdistnam, 
                 geom
@@ -67,7 +68,7 @@ export async function GET(request) {
         const totalRecords = countResult.total;
         const totalPages = Math.ceil(totalRecords / limit);
 
-        sql += ' ORDER BY distname, subdistnam, villname LIMIT ? OFFSET ?';
+        sql += ' ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname LIMIT ? OFFSET ?';
         params.push(limit, offset);
 
         const polygons = await query(sql, params);
@@ -105,7 +106,7 @@ export async function POST(request) {
         if (!auth.success) return auth.response;
 
         const body = await request.json();
-        const { villname, distname, subdistnam, coordinates } = body;
+        const { villname, moo, distname, subdistnam, coordinates } = body;
 
         // Validate required fields
         if (!villname || !distname || !subdistnam) {
@@ -117,9 +118,9 @@ export async function POST(request) {
 
         // Insert new polygon
         const result = await query(`
-            INSERT INTO satun_village_polygon (villname, distname, subdistnam, coordinates)
-            VALUES (?, ?, ?, ?)
-        `, [villname, distname, subdistnam, coordinates || null]);
+            INSERT INTO satun_village_polygon (villname, moo, distname, subdistnam, coordinates)
+            VALUES (?, ?, ?, ?, ?)
+        `, [villname, moo || null, distname, subdistnam, coordinates || null]);
 
         // ดึงข้อมูลที่เพิ่งสร้าง
         const newPolygon = await query(

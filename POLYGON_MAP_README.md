@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS satun_village_polygon (
     mun_tao_na VARCHAR(255),
     provcode VARCHAR(10),
     villname VARCHAR(100),
+    moo VARCHAR(10),
     regcode INT,
     ea_no VARCHAR(50),
     muntaocode VARCHAR(50),
@@ -117,6 +118,13 @@ CREATE TABLE IF NOT EXISTS satun_village_polygon (
     geom GEOMETRY NOT NULL,
     SPATIAL INDEX(geom)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### 1.1 เพิ่มเลขหมู่จาก villages.sql
+หลัง import `villages.sql` แล้ว ให้รัน migration:
+
+```bash
+mysql -u root -p stneoc < migrations/add_moo_to_satun_village_polygon.sql
 ```
 
 ### 2. Import ข้อมูลด้วย Python
@@ -148,6 +156,7 @@ python import.py
     "id": 1,
     "fid": 4,
     "villname": "ชื่อหมู่บ้าน",
+    "moo": "1",
     "subdistnam": "ชื่อตำบล",
     "distname": "ชื่ออำเภอ",
     "provname": "สตูล",

@@ -12,11 +12,12 @@ export async function GET(request) {
         const [villages] = await pool.execute(
             `SELECT DISTINCT 
                 villname as name,
+                moo,
                 subdistnam as subDistrict,
                 distname as district
             FROM satun_village_polygon 
             WHERE villname LIKE ? 
-            ORDER BY villname 
+            ORDER BY villname, CAST(moo AS UNSIGNED)
             LIMIT 20`,
             [`%${search}%`]
         );

@@ -98,12 +98,13 @@ export async function GET(request) {
                 SELECT 
                     id,
                     villname as name,
+                    moo,
                     subdistnam as tambon_name,
                     distname as district_name,
                     villcode as code,
                     ST_AsGeoJSON(geom) as geojson
                 FROM satun_village_polygon
-                ORDER BY distname, subdistnam, villname
+                ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname
             `;
             const results = await query(sql);
             data = results.map(row => {
@@ -119,6 +120,7 @@ export async function GET(request) {
                 return {
                     id: row.id,
                     name: row.name,
+                    moo: row.moo,
                     tambon_name: row.tambon_name,
                     district_name: row.district_name,
                     code: row.code,

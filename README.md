@@ -235,6 +235,43 @@ vercel --prod
 - ThaiID credentials (CALLBACK, APIKEY, CLIENT_ID, CLIENT_SECRET)
 - GISTDA API key
 
+### Docker / Server
+
+ถ้ารันบน Docker หรือ server หลัง nginx ให้แน่ใจว่า:
+
+- แอป Next.js ถูก proxy ผ่าน base path `/stn-eoc`
+- โฟลเดอร์ uploads ถูก mount ออกมาจาก container แบบถาวร
+- nginx ส่ง request ของ `/stn-eoc/uploads/...` ไปยัง container ของแอป ไม่ใช่ตัด base path ทิ้ง
+
+ตัวอย่าง nginx:
+
+```nginx
+location /stn-eoc/ {
+    proxy_pass http://stn-eoc-app:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+ตัวอย่าง Docker volume สำหรับ uploads:
+
+```yaml
+services:
+  stn-eoc-app:
+    environment:
+      - UPLOAD_DIR=/app/public/uploads
+    volumes:
+      - uploads_data:/app/public/uploads
+
+volumes:
+  uploads_data:
+```
+
+หากไฟล์รูปเก่าถูกอัปโหลดไว้ก่อนมี volume ให้ copy ไฟล์เดิมเข้า volume ใหม่ด้วย ไม่เช่นนั้นฐานข้อมูลจะมี `image_path` แต่ server จะหาไฟล์ไม่เจอ
+
 ---
 
 ## 🔒 Security

@@ -42,7 +42,7 @@ export async function PUT(request, { params }) {
 
         const { id } = params;
         const body = await request.json();
-        const { villname, distname, subdistnam, coordinates } = body;
+        const { villname, moo, distname, subdistnam, coordinates } = body;
 
         // Validate required fields
         if (!villname || !distname || !subdistnam) {
@@ -56,11 +56,12 @@ export async function PUT(request, { params }) {
         await query(`
             UPDATE satun_village_polygon 
             SET villname = ?, 
+                moo = ?,
                 distname = ?, 
                 subdistnam = ?, 
                 coordinates = ?
             WHERE id = ?
-        `, [villname, distname, subdistnam, coordinates || null, id]);
+        `, [villname, moo || null, distname, subdistnam, coordinates || null, id]);
 
         // ดึงข้อมูลที่อัปเดต
         const updatedPolygon = await query(

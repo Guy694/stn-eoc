@@ -20,6 +20,22 @@ function isSafeUploadPath(filePath) {
         && filePath.every((segment) => isSafeFilename(segment));
 }
 
+function normalizeUploadPath(filePath) {
+    if (!Array.isArray(filePath)) return filePath;
+
+    const normalized = [...filePath].filter(Boolean);
+
+    if (normalized[0] === 'stn-eoc') {
+        normalized.shift();
+    }
+
+    if (normalized[0] === 'uploads') {
+        normalized.shift();
+    }
+
+    return normalized;
+}
+
 function getContentType(filePath) {
     const extension = path.extname(filePath).toLowerCase();
     return CONTENT_TYPES[extension] || 'application/octet-stream';
@@ -37,12 +53,14 @@ function buildFileResponse(body, absolutePath, extraHeaders = {}) {
 
 async function resolveUploadPath(params) {
     const { filePath } = params;
-    if (!isSafeUploadPath(filePath)) {
+    const normalizedPath = normalizeUploadPath(filePath);
+
+    if (!isSafeUploadPath(normalizedPath)) {
         return { error: NextResponse.json({ success: false, message: 'Invalid upload path' }, { status: 400 }) };
     }
 
     const uploadBaseDir = getUploadBaseDir();
-    return { absolutePath: resolveInside(uploadBaseDir, ...filePath) };
+    return { absolutePath: resolveInside(uploadBaseDir, ...normalizedPath) };
 }
 
 export async function GET(request, { params }) {
