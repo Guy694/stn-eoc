@@ -1,0 +1,25 @@
+{
+  "apply": true,
+  "replace": true,
+  "csvSource": "/Users/skyline/dev/stn-eoc/Raw_Dengue.csv",
+  "session": {
+    "id": 57,
+    "session_number": 2,
+    "disease_name": "ไข้เลือดออก",
+    "status": "active"
+  },
+  "sourceRows": 361,
+  "patientRows": 361,
+  "skippedRows": 0,
+  "rowsUsingFallbackDate": 5,
+  "deletedRows": 338,
+  "deletedPatients": 348,
+  "inserted": 361,
+  "updated": 0,
+  "wouldInsert": 0,
+  "wouldUpdate": 0,
+  "matchedVillage": 210,
+  "unmatchedVillage": 151,
+  "matchedPatients": 210,
+  "unmatchedPatients": 151
+}

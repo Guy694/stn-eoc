@@ -113,12 +113,13 @@ const roleDisplayNames = {
  * แลกเปลี่ยน Authorization Code กับ Access Token
  */
 async function exchangeCodeForToken(code, thaiIdConfig) {
+    const basicAuthorization = Buffer
+        .from(`${thaiIdConfig.clientId}:${thaiIdConfig.clientSecret}`)
+        .toString('base64');
     const tokenParams = new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: thaiIdConfig.redirectUri,
-        client_id: thaiIdConfig.clientId,
-        client_secret: thaiIdConfig.clientSecret,
+        redirect_uri: thaiIdConfig.redirectUri
     });
 
     // สร้าง AbortController สำหรับ timeout
@@ -130,7 +131,7 @@ async function exchangeCodeForToken(code, thaiIdConfig) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'API_KEY': thaiIdConfig.apiKey,
+                'Authorization': `Basic ${basicAuthorization}`,
             },
             body: tokenParams.toString(),
             signal: controller.signal
@@ -166,7 +167,6 @@ async function fetchThaiIdUserInfo(accessToken, thaiIdConfig) {
         const response = await fetch(thaiIdConfig.userInfoUrl, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
-                'API_KEY': thaiIdConfig.apiKey,
             },
             signal: controller.signal
         });

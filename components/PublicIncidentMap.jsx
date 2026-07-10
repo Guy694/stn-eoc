@@ -919,7 +919,11 @@ export default function PublicIncidentMap({
                                     <Popup maxWidth={260}>
                                         <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
                                             <h4 className="font-bold text-gray-800">{report.disease_name || 'รายงานโรคระบาด'}</h4>
-                                            <p className="mt-1 text-sm text-gray-600">{report.facility_name || 'หน่วยบริการสุขภาพ'}</p>
+                                            <p className="mt-1 text-sm text-gray-600">
+                                                {report.village_name
+                                                    ? `หมู่ ${report.moo || '-'} ${report.village_name}`
+                                                    : report.facility_name || (report.moo ? `หมู่ ${report.moo}` : 'พื้นที่รายงานโรค')}
+                                            </p>
                                             <p className="mt-1 text-sm">ต.{report.tambon || '-'} อ.{report.district || '-'}</p>
                                             <p className="mt-1 text-sm"><strong>ผู้ป่วย:</strong> {Number(report.patient_count || 0).toLocaleString('th-TH')} ราย</p>
                                             <p className="text-sm" style={{ color: meta.color }}><strong>ระดับ:</strong> {meta.label}</p>

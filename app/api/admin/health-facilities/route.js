@@ -20,7 +20,8 @@ export async function GET(request) {
                 typecode, 
                 address, 
                 district_name, 
-                tambon, 
+                tambon,
+                tambon as tambon_name,
                 lat, 
                 lon
                

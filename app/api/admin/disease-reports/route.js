@@ -3,6 +3,25 @@ import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 
+async function getVillageLocation(pool, villagePolygonId) {
+    if (!villagePolygonId) return null;
+
+    const [rows] = await pool.query(
+        `SELECT id, distname, subdistnam, moo, villname
+         FROM satun_village_polygon
+         WHERE id = ?
+         LIMIT 1`,
+        [villagePolygonId]
+    );
+
+    return rows[0] || null;
+}
+
+function buildManualVillageSourceKey({ sessionId, reportDate, diseaseName, villagePolygonId, districtName, tambonName, moo }) {
+    const locationKey = villagePolygonId || [districtName, tambonName, moo].filter(Boolean).join('|');
+    return `manual-village:${sessionId}:${reportDate}:${diseaseName}:${locationKey}`;
+}
+
 // GET - ดึงรายงานโรครายวัน
 export async function GET(request) {
     try {
@@ -15,6 +34,8 @@ export async function GET(request) {
         const sessionId = searchParams.get('session_id');
         const facilityId = searchParams.get('facility_id');
         const disease = searchParams.get('disease');
+        const district = searchParams.get('district');
+        const tambon = searchParams.get('tambon');
         const startDate = searchParams.get('start_date');
         const endDate = searchParams.get('end_date');
 
@@ -22,11 +43,12 @@ export async function GET(request) {
             SELECT 
                 dr.*,
                 hf.name as facility_name,
-                hf.district_name,
+                COALESCE(dr.district_name, hf.district_name) as district_name,
+                COALESCE(dr.tambon_name, hf.tambon) as tambon_name,
                 hf.tambon,
                 CONCAT(o.given_name, ' ', o.family_name) as reported_by_name
             FROM disease_reports dr
-            JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
             LEFT JOIN officer o ON dr.reported_by = o.id
             WHERE 1=1
         `;
@@ -52,12 +74,22 @@ export async function GET(request) {
             params.push(`%${disease}%`);
         }
 
+        if (district && district !== 'all') {
+            query += ` AND COALESCE(dr.district_name, hf.district_name) = ?`;
+            params.push(district);
+        }
+
+        if (tambon && tambon !== 'all') {
+            query += ` AND COALESCE(dr.tambon_name, hf.tambon) = ?`;
+            params.push(tambon);
+        }
+
         if (startDate && endDate) {
             query += ` AND dr.report_date BETWEEN ? AND ?`;
             params.push(startDate, endDate);
         }
 
-        query += ` ORDER BY dr.report_date DESC, hf.district_name, hf.name`;
+        query += ` ORDER BY dr.report_date DESC, district_name, tambon_name, CAST(dr.moo AS UNSIGNED), dr.village_name, hf.name`;
 
         const [reports] = await pool.query(query, params);
 
@@ -65,12 +97,16 @@ export async function GET(request) {
         const today = new Date().toISOString().split('T')[0];
         let todaySummaryQuery = `
             SELECT 
-                hf.district_name,
+                COALESCE(dr.district_name, hf.district_name) as district_name,
                 dr.disease_name,
                 SUM(dr.patient_count) as today_patients,
-                COUNT(DISTINCT dr.health_facility_id) as facilities_count
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', dr.health_facility_id),
+                    CONCAT('v:', dr.village_polygon_id),
+                    CONCAT('area:', dr.district_name, '|', dr.tambon_name, '|', dr.moo)
+                )) as facilities_count
             FROM disease_reports dr
-            JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE dr.report_date = ?
         `;
         const todayParams = [today];
@@ -81,8 +117,8 @@ export async function GET(request) {
         }
 
         todaySummaryQuery += `
-            GROUP BY hf.district_name, dr.disease_name
-            ORDER BY hf.district_name, today_patients DESC
+            GROUP BY COALESCE(dr.district_name, hf.district_name), dr.disease_name
+            ORDER BY district_name, today_patients DESC
         `;
 
         const [todaySummary] = await pool.query(todaySummaryQuery, todayParams);
@@ -90,13 +126,13 @@ export async function GET(request) {
         // สรุปข้อมูลสะสม - กรอง session_id ถ้ามี
         let cumulativeQuery = `
             SELECT 
-                hf.district_name,
+                COALESCE(dr.district_name, hf.district_name) as district_name,
                 dr.disease_name,
                 SUM(dr.patient_count) as cumulative_patients,
                 COUNT(DISTINCT dr.report_date) as report_days,
                 MAX(dr.report_date) as last_report_date
             FROM disease_reports dr
-            JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE 1=1
         `;
         const cumulativeParams = [];
@@ -107,8 +143,8 @@ export async function GET(request) {
         }
 
         cumulativeQuery += `
-            GROUP BY hf.district_name, dr.disease_name
-            ORDER BY hf.district_name, cumulative_patients DESC
+            GROUP BY COALESCE(dr.district_name, hf.district_name), dr.disease_name
+            ORDER BY district_name, cumulative_patients DESC
         `;
 
         const [cumulativeSummary] = await pool.query(cumulativeQuery, cumulativeParams);
@@ -119,7 +155,11 @@ export async function GET(request) {
                 dr.disease_name,
                 SUM(CASE WHEN dr.report_date = ? THEN dr.patient_count ELSE 0 END) as today_total,
                 SUM(dr.patient_count) as cumulative_total,
-                COUNT(DISTINCT dr.health_facility_id) as facilities_count
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', dr.health_facility_id),
+                    CONCAT('v:', dr.village_polygon_id),
+                    CONCAT('area:', dr.district_name, '|', dr.tambon_name, '|', dr.moo)
+                )) as facilities_count
             FROM disease_reports dr
             WHERE 1=1
         `;
@@ -189,16 +229,47 @@ export async function POST(request) {
             session_id,
             report_date,
             health_facility_id,
+            village_polygon_id,
+            district_name,
+            tambon_name,
+            moo,
+            village_name,
             disease_name,
             patient_count,
             notes,
         } = body;
 
+        const village = await getVillageLocation(pool, village_polygon_id);
+        const finalDistrictName = village?.distname || district_name || null;
+        const finalTambonName = village?.subdistnam || tambon_name || null;
+        const finalMoo = village?.moo || moo || null;
+        const finalVillageName = village?.villname || village_name || null;
+        const finalVillagePolygonId = village?.id || village_polygon_id || null;
+        const finalHealthFacilityId = health_facility_id || null;
+        const sourceKey = finalHealthFacilityId
+            ? null
+            : buildManualVillageSourceKey({
+                sessionId: session_id,
+                reportDate: report_date,
+                diseaseName: disease_name,
+                villagePolygonId: finalVillagePolygonId,
+                districtName: finalDistrictName,
+                tambonName: finalTambonName,
+                moo: finalMoo
+            });
+
         // Validation
-        if (!session_id || !report_date || !health_facility_id || !disease_name || patient_count === undefined || patient_count === null) {
-            console.error('Validation failed:', { session_id, report_date, health_facility_id, disease_name, patient_count });
+        if (!session_id || !report_date || !disease_name || patient_count === undefined || patient_count === null) {
+            console.error('Validation failed:', { session_id, report_date, disease_name, patient_count });
             return NextResponse.json(
                 { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง session_id)' },
+                { status: 400 }
+            );
+        }
+
+        if (!finalHealthFacilityId && (!finalDistrictName || !finalTambonName || !finalMoo)) {
+            return NextResponse.json(
+                { success: false, message: 'กรุณาเลือกพื้นที่ระดับหมู่บ้าน หรือเลือกหน่วยบริการ' },
                 { status: 400 }
             );
         }
@@ -207,14 +278,36 @@ export async function POST(request) {
 
         const [result] = await pool.query(
             `INSERT INTO disease_reports 
-            (session_id, report_date, health_facility_id, disease_name, patient_count, notes, reported_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (session_id, report_date, health_facility_id, village_polygon_id, disease_name,
+             district_name, tambon_name, moo, village_name, patient_count, notes, reported_by, source_key, import_source) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
+                village_polygon_id = VALUES(village_polygon_id),
+                district_name = VALUES(district_name),
+                tambon_name = VALUES(tambon_name),
+                moo = VALUES(moo),
+                village_name = VALUES(village_name),
                 patient_count = VALUES(patient_count),
                 notes = VALUES(notes),
                 reported_by = VALUES(reported_by),
+                import_source = VALUES(import_source),
                 updated_at = CURRENT_TIMESTAMP`,
-            [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, auth.user.id]
+            [
+                session_id,
+                report_date,
+                finalHealthFacilityId,
+                finalVillagePolygonId,
+                disease_name,
+                finalDistrictName,
+                finalTambonName,
+                finalMoo,
+                finalVillageName,
+                patient_count,
+                notes || null,
+                auth.user.id,
+                sourceKey,
+                finalHealthFacilityId ? null : 'Manual village-level entry'
+            ]
         );
 
         return NextResponse.json({
@@ -266,24 +359,58 @@ export async function PUT(request) {
             session_id,
             report_date,
             health_facility_id,
+            village_polygon_id,
+            district_name,
+            tambon_name,
+            moo,
+            village_name,
             disease_name,
             patient_count,
             notes
         } = body;
 
-        if (!session_id || !report_date || !health_facility_id || !disease_name || patient_count === undefined) {
+        const village = await getVillageLocation(pool, village_polygon_id);
+        const finalDistrictName = village?.distname || district_name || null;
+        const finalTambonName = village?.subdistnam || tambon_name || null;
+        const finalMoo = village?.moo || moo || null;
+        const finalVillageName = village?.villname || village_name || null;
+        const finalVillagePolygonId = village?.id || village_polygon_id || null;
+        const finalHealthFacilityId = health_facility_id || null;
+
+        if (!session_id || !report_date || !disease_name || patient_count === undefined) {
             return NextResponse.json(
                 { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง session_id)' },
                 { status: 400 }
             );
         }
 
+        if (!finalHealthFacilityId && (!finalDistrictName || !finalTambonName || !finalMoo)) {
+            return NextResponse.json(
+                { success: false, message: 'กรุณาเลือกพื้นที่ระดับหมู่บ้าน หรือเลือกหน่วยบริการ' },
+                { status: 400 }
+            );
+        }
+
         await pool.query(
             `UPDATE disease_reports 
-            SET session_id = ?, report_date = ?, health_facility_id = ?, disease_name = ?, 
+            SET session_id = ?, report_date = ?, health_facility_id = ?, village_polygon_id = ?,
+                disease_name = ?, district_name = ?, tambon_name = ?, moo = ?, village_name = ?,
                 patient_count = ?, notes = ?
             WHERE id = ?`,
-            [session_id, report_date, health_facility_id, disease_name, patient_count, notes || null, id]
+            [
+                session_id,
+                report_date,
+                finalHealthFacilityId,
+                finalVillagePolygonId,
+                disease_name,
+                finalDistrictName,
+                finalTambonName,
+                finalMoo,
+                finalVillageName,
+                patient_count,
+                notes || null,
+                id
+            ]
         );
 
         return NextResponse.json({

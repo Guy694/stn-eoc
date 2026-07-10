@@ -79,7 +79,11 @@ export async function GET(request) {
                 dr.disease_name,
                 COUNT(*) as report_count,
                 SUM(dr.patient_count) as total_patients,
-                COUNT(DISTINCT dr.health_facility_id) as facilities_count,
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', dr.health_facility_id),
+                    CONCAT('v:', dr.village_polygon_id),
+                    CONCAT('area:', dr.district_name, '|', dr.tambon_name, '|', dr.moo)
+                )) as facilities_count,
                 MAX(dr.report_date) as last_report
             FROM disease_reports dr
             WHERE dr.session_id = ? AND DATE(dr.report_date) = ?
@@ -90,15 +94,19 @@ export async function GET(request) {
         // สรุปตามอำเภอ
         const [districtSummary] = await connection.execute(`
             SELECT 
-                hf.district_name as district,
+                COALESCE(dr.district_name, hf.district_name) as district,
                 COUNT(DISTINCT dr.disease_name) as diseases_count,
-                COUNT(DISTINCT dr.health_facility_id) as facilities_count,
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', dr.health_facility_id),
+                    CONCAT('v:', dr.village_polygon_id),
+                    CONCAT('area:', dr.district_name, '|', dr.tambon_name, '|', dr.moo)
+                )) as facilities_count,
                 SUM(dr.patient_count) as total_patients,
                 COUNT(*) as report_count
             FROM disease_reports dr
-            JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE dr.session_id = ? AND DATE(dr.report_date) = ?
-            GROUP BY hf.district_name
+            GROUP BY COALESCE(dr.district_name, hf.district_name)
             ORDER BY SUM(dr.patient_count) DESC
         `, [sessionId, date]);
 
@@ -110,25 +118,32 @@ export async function GET(request) {
                 dr.patient_count,
                 dr.notes,
                 dr.report_date,
-                hf.name as facility_name,
-                hf.district_name,
+                COALESCE(hf.name, dr.village_name, 'พื้นที่ระดับหมู่บ้าน') as facility_name,
+                COALESCE(dr.district_name, hf.district_name) as district_name,
+                dr.tambon_name,
+                dr.moo,
+                dr.village_name,
                 ${facilityTypeSelect}
             FROM disease_reports dr
-            JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE dr.session_id = ? AND DATE(dr.report_date) = ?
-            ORDER BY dr.patient_count DESC, hf.district_name, hf.name
+            ORDER BY dr.patient_count DESC, district_name, dr.tambon_name, CAST(dr.moo AS UNSIGNED), facility_name
         `, [sessionId, date]);
 
         // สถิติรวม
         const [totalStats] = await connection.execute(`
             SELECT 
-                COUNT(DISTINCT hf.district_name) as affected_districts,
-                COUNT(DISTINCT dr.health_facility_id) as affected_facilities,
+                COUNT(DISTINCT COALESCE(dr.district_name, hf.district_name)) as affected_districts,
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', dr.health_facility_id),
+                    CONCAT('v:', dr.village_polygon_id),
+                    CONCAT('area:', dr.district_name, '|', dr.tambon_name, '|', dr.moo)
+                )) as affected_facilities,
                 COUNT(DISTINCT dr.disease_name) as diseases_count,
                 SUM(dr.patient_count) as total_patients,
                 COUNT(*) as total_reports
             FROM disease_reports dr
-            JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
             WHERE dr.session_id = ? AND DATE(dr.report_date) = ?
         `, [sessionId, date]);
 

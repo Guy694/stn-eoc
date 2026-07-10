@@ -18,7 +18,7 @@ export async function GET(request) {
         const state = searchParams.get('state');
         const error = searchParams.get('error');
         const config = getThaiIdOAuthConfig(request, CITIZEN_CALLBACK_PATH);
-        const configError = getThaiIdConfigError(config);
+        const configError = getThaiIdConfigError(config, { requireClientSecret: true });
 
         if (configError) {
             throw new Error(configError);
@@ -47,22 +47,20 @@ export async function GET(request) {
         }
 
         // Exchange code for token
+        const basicAuthorization = Buffer
+            .from(`${config.clientId}:${config.clientSecret}`)
+            .toString('base64');
         const tokenBody = new URLSearchParams({
             grant_type: 'authorization_code',
             code: code,
             redirect_uri: config.redirectUri,
-            client_id: config.clientId,
         });
-
-        if (config.clientSecret) {
-            tokenBody.set('client_secret', config.clientSecret);
-        }
 
         const tokenResponse = await fetch(config.tokenUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'API_KEY': config.apiKey,
+                'Authorization': `Basic ${basicAuthorization}`,
             },
             body: tokenBody,
         });
@@ -74,19 +72,21 @@ export async function GET(request) {
         const tokenData = await tokenResponse.json();
         const accessToken = tokenData.access_token;
 
-        // Get user info
-        const userInfoResponse = await fetch(config.userInfoUrl, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'API_KEY': config.apiKey,
-            },
-        });
+        let userInfo = tokenData;
 
-        if (!userInfoResponse.ok) {
-            throw new Error('Failed to get user info from ThaiID');
+        if (!userInfo.pid && !userInfo.sub && accessToken) {
+            const userInfoResponse = await fetch(config.userInfoUrl, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+
+            if (!userInfoResponse.ok) {
+                throw new Error('Failed to get user info from ThaiID');
+            }
+
+            userInfo = await userInfoResponse.json();
         }
-
-        const userInfo = await userInfoResponse.json();
 
         // Redirect back to report form
         const response = NextResponse.redirect(

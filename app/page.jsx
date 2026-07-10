@@ -7,6 +7,7 @@ import SplashScreen from "@/components/SplashScreen";
 import AIChatbot from "@/components/AIChatbot";
 import FloatingReportButton from "@/components/FloatingReportButton";
 import PDPAConsent from "@/components/PDPAConsent";
+import FloodDiseaseSummaryPanel from "@/components/FloodDiseaseSummaryPanel";
 import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import dynamic from "next/dynamic";
@@ -20,6 +21,16 @@ const DailyDiseaseChart = dynamic(() => import("@/components/DailyDiseaseChart")
     <div className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
       <div className="flex h-72 items-center justify-center text-sm font-semibold text-slate-500">
         กำลังโหลดกราฟข้อมูลโรค...
+      </div>
+    </div>
+  )
+});
+const DiseaseOutbreakDashboard = dynamic(() => import("@/components/DiseaseOutbreakDashboard"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-xl border border-rose-100 bg-white p-6 shadow-sm">
+      <div className="flex h-72 items-center justify-center text-sm font-semibold text-slate-500">
+        กำลังโหลด Dashboard โรคระบาด...
       </div>
     </div>
   )
@@ -1313,6 +1324,13 @@ function PublicOperationalDashboard({
   const activeShelters = getOverviewMetric(selectedOverview, "shelters");
   const selectedDiseasePatients = getOverviewMetric(selectedOverview, "patients");
   const selectedDiseaseCount = getOverviewMetric(selectedOverview, "diseases");
+  const forecastAlertStatus = buildForecastAlertStatus({
+    selectedDisasterType,
+    selectedOverview,
+    selectedSession,
+    criticalCount,
+    highCount
+  });
   const selectedDate = selectedMapDate || dateOptions[0]?.date || floodOverview?.period?.first_date || diseaseOverview?.period?.first_date || getTodayDateKey();
   const selectedSessionPeriod = formatSessionPeriod(selectedSession);
   const dateRange = selectedSessionPeriod || formatOverviewDateRange(floodOverview?.period || diseaseOverview?.period);
@@ -1370,11 +1388,11 @@ function PublicOperationalDashboard({
     },
     {
       label: "ระดับเตือนภัย",
-      value: criticalCount > 0 ? "สูง" : highCount > 0 ? "เฝ้าระวัง" : "ปกติ",
+      value: forecastAlertStatus.value,
       unit: "",
-      sub: criticalCount > 0 ? `${criticalCount} จุดวิกฤต` : highCount > 0 ? `${highCount} จุดเฝ้าระวัง` : "ปลอดภัย",
-      tone: criticalCount > 0 ? "red" : highCount > 0 ? "amber" : "safe",
-      icon: criticalCount > 0 ? "!" : highCount > 0 ? "☁" : "✓"
+      sub: forecastAlertStatus.sub,
+      tone: forecastAlertStatus.tone,
+      icon: forecastAlertStatus.icon
     }
   ];
 
@@ -1537,6 +1555,12 @@ function PublicOperationalDashboard({
               </div>
 
               <OpsTimeline rows={latestRows} selectedDate={selectedDate} />
+              {selectedDisasterType === "flood" && (
+                <FloodDiseaseSummaryPanel
+                  sessionId={selectedSession?.isOverviewFallback ? null : selectedSession?.id}
+                  reportDate={selectedDate}
+                />
+              )}
             </div>
 
             <OpsRightPanel
@@ -1549,7 +1573,9 @@ function PublicOperationalDashboard({
             />
           </section>
 
-          <DiseaseChartSection chartSession={selectedSession?.isOverviewFallback ? null : selectedSession} />
+          {selectedDisasterType === "disease" && (
+            <DiseaseChartSection chartSession={selectedSession?.isOverviewFallback ? null : selectedSession} />
+          )}
         </main>
         <OpsMobileNav selectedDisasterType={selectedDisasterType} />
       </div>
@@ -2125,6 +2151,8 @@ function SmallInfo({ label, value }) {
 }
 
 function DiseaseChartSection({ chartSession }) {
+  if (chartSession && chartSession.eoc_type !== "disease") return null;
+
   return (
     <section className="mt-3 rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
@@ -2144,6 +2172,9 @@ function DiseaseChartSection({ chartSession }) {
       </div>
 
       <DailyDiseaseChart sessionId={chartSession?.id} />
+      <div className="mt-4">
+        <DiseaseOutbreakDashboard session={chartSession} />
+      </div>
     </section>
   );
 }
@@ -2167,6 +2198,65 @@ function SeverityBadge({ level }) {
 function getOverviewMetric(overview, key) {
   const metric = overview?.summary?.find((item) => item.key === key);
   return Number(metric?.value) || 0;
+}
+
+function buildForecastAlertStatus({
+  selectedDisasterType,
+  selectedOverview,
+  selectedSession,
+  criticalCount,
+  highCount
+}) {
+  if (selectedDisasterType === "disease") {
+    const patients = getOverviewMetric(selectedOverview, "patients");
+    const diseases = getOverviewMetric(selectedOverview, "diseases");
+    const districts = getOverviewMetric(selectedOverview, "districts");
+    const isActiveDiseaseSession = selectedOverview?.session_status === "active" || selectedSession?.status === "active";
+
+    if (patients >= 300) {
+      return {
+        value: "สูง",
+        sub: `${formatNumber(patients)} ราย / ${districts || "-"} อำเภอ`,
+        tone: "red",
+        icon: "!"
+      };
+    }
+
+    if (patients >= 100) {
+      return {
+        value: "เฝ้าระวังสูง",
+        sub: `${formatNumber(patients)} ราย / ${districts || "-"} อำเภอ`,
+        tone: "amber",
+        icon: "☁"
+      };
+    }
+
+    if (patients > 0) {
+      return {
+        value: "เฝ้าระวัง",
+        sub: `${formatNumber(patients)} ราย${diseases ? ` / ${diseases} โรค` : ""}`,
+        tone: "teal",
+        icon: "disease"
+      };
+    }
+
+    if (isActiveDiseaseSession) {
+      return {
+        value: "เฝ้าระวัง",
+        sub: "เปิด EOC โรคระบาด",
+        tone: "teal",
+        icon: "disease"
+      };
+    }
+  }
+
+  if (criticalCount > 0) {
+    return { value: "สูง", sub: `${criticalCount} จุดวิกฤต`, tone: "red", icon: "!" };
+  }
+  if (highCount > 0) {
+    return { value: "เฝ้าระวัง", sub: `${highCount} จุดเฝ้าระวัง`, tone: "amber", icon: "☁" };
+  }
+  return { value: "ปกติ", sub: "ปลอดภัย", tone: "safe", icon: "✓" };
 }
 
 function buildSessionOptions(eocType, sessions, overviewItems) {
@@ -2479,7 +2569,9 @@ function HomeSituationDashboard({
         </aside>
       </div>
 
-      <DiseaseChartSection chartSession={diseaseChartSession} />
+      {activeEOCs.some((eoc) => eoc.eoc_type === "disease") && (
+        <DiseaseChartSection chartSession={diseaseChartSession} />
+      )}
     </section>
   );
 }

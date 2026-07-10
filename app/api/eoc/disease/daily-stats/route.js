@@ -94,7 +94,11 @@ export async function GET(request) {
                 DATE(dr.report_date) as date,
                 dr.disease_name,
                 SUM(dr.patient_count) as patient_count,
-                COUNT(DISTINCT dr.health_facility_id) as facilities_count
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', dr.health_facility_id),
+                    CONCAT('v:', dr.village_polygon_id),
+                    CONCAT('area:', dr.district_name, '|', dr.tambon_name, '|', dr.moo)
+                )) as facilities_count
             FROM disease_reports dr
             WHERE dr.session_id = ?
                 AND DATE(dr.report_date) BETWEEN ? AND ?
@@ -160,7 +164,11 @@ export async function GET(request) {
                 COUNT(*) as total_reports,
                 SUM(patient_count) as total_patients,
                 COUNT(DISTINCT disease_name) as diseases_count,
-                COUNT(DISTINCT health_facility_id) as facilities_count,
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', health_facility_id),
+                    CONCAT('v:', village_polygon_id),
+                    CONCAT('area:', district_name, '|', tambon_name, '|', moo)
+                )) as facilities_count,
                 MIN(report_date) as first_report_date,
                 MAX(report_date) as last_report_date
             FROM disease_reports
@@ -174,7 +182,11 @@ export async function GET(request) {
                 disease_name,
                 SUM(patient_count) as total_patients,
                 COUNT(*) as report_count,
-                COUNT(DISTINCT health_facility_id) as facilities_count,
+                COUNT(DISTINCT COALESCE(
+                    CONCAT('hf:', health_facility_id),
+                    CONCAT('v:', village_polygon_id),
+                    CONCAT('area:', district_name, '|', tambon_name, '|', moo)
+                )) as facilities_count,
                 MIN(report_date) as first_report,
                 MAX(report_date) as last_report
             FROM disease_reports

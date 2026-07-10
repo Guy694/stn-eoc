@@ -76,21 +76,30 @@ export async function GET(request) {
             });
         }
 
-        // ดึงข้อมูลรายงานโรครายวัน
+        // ดึงข้อมูลรายงานโรค โดยรวมเป็นจุดตามพื้นที่ เพื่อรองรับข้อมูลนำเข้าระดับหมู่บ้าน
         let query = `
             SELECT 
-                dr.id,
-                dr.report_date,
+                MIN(dr.id) as id,
+                MAX(dr.report_date) as report_date,
                 dr.disease_name,
-                dr.patient_count,
-                dr.notes,
+                SUM(dr.patient_count) as patient_count,
+                COUNT(*) as report_count,
+                CASE
+                    WHEN SUM(CASE WHEN dr.import_source IS NOT NULL THEN 1 ELSE 0 END) > 0
+                    THEN CONCAT('นำเข้าจาก Google Sheet ', SUM(CASE WHEN dr.import_source IS NOT NULL THEN dr.patient_count ELSE 0 END), ' ราย')
+                    ELSE GROUP_CONCAT(DISTINCT dr.notes SEPARATOR '\\n')
+                END as notes,
                 hf.name as facility_name,
-                hf.district_name as district,
-                hf.tambon as tambon,
-                hf.lat,
-                hf.lon as lng
+                COALESCE(dr.district_name, hf.district_name) as district,
+                COALESCE(dr.tambon_name, hf.tambon) as tambon,
+                dr.moo,
+                COALESCE(dr.village_name, v.villname) as village_name,
+                dr.village_polygon_id,
+                COALESCE(dr.home_lat, ST_Y(ST_Centroid(ST_SRID(v.geom, 0))), hf.lat) as lat,
+                COALESCE(dr.home_lng, ST_X(ST_Centroid(ST_SRID(v.geom, 0))), hf.lon) as lng
             FROM disease_reports dr
-            JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
+            LEFT JOIN satun_village_polygon v ON dr.village_polygon_id = v.id
             WHERE dr.session_id = ?
         `;
         const params = [activeSessionId];
@@ -103,7 +112,19 @@ export async function GET(request) {
             params.push(startDate, endDate);
         }
 
-        query += ' ORDER BY dr.report_date DESC, hf.district_name, hf.name';
+        query += `
+            GROUP BY
+                dr.disease_name,
+                COALESCE(dr.district_name, hf.district_name),
+                COALESCE(dr.tambon_name, hf.tambon),
+                dr.moo,
+                COALESCE(dr.village_name, v.villname),
+                dr.village_polygon_id,
+                hf.name,
+                COALESCE(dr.home_lat, ST_Y(ST_Centroid(ST_SRID(v.geom, 0))), hf.lat),
+                COALESCE(dr.home_lng, ST_X(ST_Centroid(ST_SRID(v.geom, 0))), hf.lon)
+            ORDER BY MAX(dr.report_date) DESC, district, tambon, CAST(dr.moo AS UNSIGNED), village_name
+        `;
 
         const [reports] = await connection.execute(query, params);
 
@@ -120,7 +141,7 @@ export async function GET(request) {
                     facilities: new Set()
                 };
             }
-            tambonSummary[key].total_patients += report.patient_count || 0;
+            tambonSummary[key].total_patients += Number(report.patient_count || 0);
             tambonSummary[key].diseases.add(report.disease_name);
             tambonSummary[key].facilities.add(report.facility_name);
         });
@@ -136,7 +157,7 @@ export async function GET(request) {
         // สถิติรวม
         const stats = {
             total_reports: reports.length,
-            total_patients: reports.reduce((sum, r) => sum + (r.patient_count || 0), 0),
+            total_patients: reports.reduce((sum, r) => sum + Number(r.patient_count || 0), 0),
             affected_districts: [...new Set(reports.map(r => r.district))].length,
             affected_tambons: Object.keys(tambonSummary).length,
             diseases: [...new Set(reports.map(r => r.disease_name))]

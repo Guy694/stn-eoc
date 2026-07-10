@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { applyNoStoreHeaders, getThaiIdConfigError, getThaiIdOAuthConfig, getThaiIdScope, resolveThaiIdCallbackUrl } from "@/lib/thaiIdConfig";
+import { applyNoStoreHeaders, getThaiIdConfigError, getThaiIdOAuthConfig, getThaiIdScope, getThaiIdVerifyType, resolveThaiIdCallbackUrl } from "@/lib/thaiIdConfig";
 
 const OFFICER_CALLBACK_PATH = '/api/auth/thaiid/callback';
 
@@ -23,6 +23,7 @@ export async function GET(request) {
         authUrl.searchParams.append('client_id', config.clientId);
         authUrl.searchParams.append('redirect_uri', config.redirectUri);
         authUrl.searchParams.append('scope', getThaiIdScope('officer'));
+        authUrl.searchParams.append('verify_type', getThaiIdVerifyType());
         authUrl.searchParams.append('response_type', 'code');
         authUrl.searchParams.append('state', state);
 

@@ -3,6 +3,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
+import VulnerableGroupsVillageMap from "@/components/VulnerableGroupsVillageMap";
 import FloodSessionSelector from "@/components/FloodSessionSelector";
 import FloodAreaStatus from "@/components/FloodAreaStatus";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
@@ -456,6 +457,13 @@ export default function FloodMapPage() {
                         {/* Daily Village Flood Timeline */}
                         <div className="mt-6">
                             <DailyVillageFloodTimeline
+                                session={selectedSession}
+                                polygons={polygons}
+                            />
+                        </div>
+
+                        <div className="mt-6">
+                            <VulnerableGroupsVillageMap
                                 session={selectedSession}
                                 polygons={polygons}
                             />

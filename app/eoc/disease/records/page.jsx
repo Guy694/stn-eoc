@@ -262,15 +262,18 @@ export default function DiseaseRecordsPage() {
             }
 
             // โหมดปกติ - บันทึกหน่วยบริการเดียว
-            // หา health facility จากตำบลที่เลือก
+            // บันทึกระดับหมู่บ้านให้สอดคล้องกับข้อมูลจาก Google Sheet
+            const selectedVillage = polygons.find(p => String(p.id) === String(formData.village));
+
+            if (!selectedVillage && !editingRecord) {
+                showError('กรุณาเลือกหมู่บ้าน/หมู่ที่ต้องการบันทึก');
+                return;
+            }
+
+            // fallback สำหรับการแก้ไขข้อมูลเก่าที่ยังเป็นระดับหน่วยบริการ
             const selectedFacility = healthFacilities.find(
                 hf => hf.district_name === formData.district && hf.tambon_name === formData.tambon
             );
-
-            if (!selectedFacility && !editingRecord) {
-                showError('ไม่พบหน่วยบริการในพื้นที่นี้');
-                return;
-            }
 
             const url = editingRecord
                 ? `/stn-eoc/api/admin/disease-reports?id=${editingRecord.id}`
@@ -279,7 +282,12 @@ export default function DiseaseRecordsPage() {
 
             const body = {
                 report_date: formData.report_date || today,
-                health_facility_id: editingRecord?.health_facility_id || selectedFacility?.id,
+                health_facility_id: selectedVillage ? null : editingRecord?.health_facility_id || selectedFacility?.id || null,
+                village_polygon_id: selectedVillage?.id || editingRecord?.village_polygon_id || null,
+                district_name: selectedVillage?.distname || formData.district,
+                tambon_name: selectedVillage?.subdistnam || formData.tambon,
+                moo: selectedVillage?.moo || editingRecord?.moo || null,
+                village_name: selectedVillage?.villname || editingRecord?.village_name || null,
                 disease_name: diseaseName,
                 patient_count: parseInt(formData.patient_count) || 0,
                 notes: formData.notes,
@@ -316,7 +324,7 @@ export default function DiseaseRecordsPage() {
         setFormData({
             district: record.district_name || '',
             tambon: record.tambon_name || '',
-            village: '',
+            village: record.village_polygon_id ? String(record.village_polygon_id) : '',
             disease_name: record.disease_name || 'ไข้เลือดออก',
             report_date: record.report_date?.split('T')[0] || '',
             patient_count: record.patient_count || 0,
@@ -663,7 +671,9 @@ export default function DiseaseRecordsPage() {
                                                 {index + 1}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-gray-900">{record.facility_name || '-'}</div>
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {record.facility_name || (record.moo || record.village_name ? `หมู่ ${record.moo || '-'} ${record.village_name || ''}` : '-')}
+                                                </div>
                                                 <div className="text-sm text-gray-500">ต.{record.tambon_name} อ.{record.district_name}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -739,7 +749,7 @@ export default function DiseaseRecordsPage() {
                                             </label>
                                             <select
                                                 value={formData.district}
-                                                onChange={(e) => setFormData({ ...formData, district: e.target.value, tambon: '' })}
+                                                onChange={(e) => setFormData({ ...formData, district: e.target.value, tambon: '', village: '' })}
                                                 required
                                                 className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                             >
@@ -755,7 +765,7 @@ export default function DiseaseRecordsPage() {
                                             </label>
                                             <select
                                                 value={formData.tambon}
-                                                onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
+                                                onChange={(e) => setFormData({ ...formData, tambon: e.target.value, village: '' })}
                                                 required
                                                 disabled={!formData.district}
                                                 className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
@@ -766,6 +776,30 @@ export default function DiseaseRecordsPage() {
                                                 ))}
                                             </select>
                                         </div>
+                                        {!isTambonMode && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    หมู่บ้าน / หมู่ <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    value={formData.village}
+                                                    onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                                                    required={!isTambonMode}
+                                                    disabled={!formData.district || !formData.tambon}
+                                                    className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                                                >
+                                                    <option value="">เลือกหมู่บ้าน/หมู่</option>
+                                                    {villageOptions.map(village => (
+                                                        <option key={village.id} value={String(village.id)}>
+                                                            หมู่ {village.moo || '-'} {village.villname || 'ไม่ระบุชื่อหมู่บ้าน'}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <p className="mt-1 text-xs text-gray-500">
+                                                    ใช้บันทึกข้อมูลระดับหมู่ให้ตรงกับช่อง “หมู่ขณะป่วย” ใน Google Sheet
+                                                </p>
+                                            </div>
+                                        )}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 โรค <span className="text-red-500">*</span>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import DiseaseOutbreakDashboard from "@/components/DiseaseOutbreakDashboard";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 function formatDateTime(value) {
@@ -109,6 +110,10 @@ export default function DiseasePage() {
                                 </div>
                             </section>
                         )}
+
+                        <section className="mb-6">
+                            <DiseaseOutbreakDashboard session={activeSession} />
+                        </section>
 
                         <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
                             <StatCard label="อำเภอที่พบรายงาน" value={stats.affected_districts || 0} />

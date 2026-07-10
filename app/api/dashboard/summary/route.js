@@ -34,6 +34,38 @@ async function hasAnnouncementEocTypeColumn(connection) {
     return columns.length > 0;
 }
 
+async function getDiseaseReportLocationExpressions(connection) {
+    const [columns] = await connection.execute(
+        `SELECT COLUMN_NAME
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'disease_reports'
+           AND COLUMN_NAME IN ('district_name', 'tambon_name', 'moo', 'village_polygon_id')`
+    );
+    const columnSet = new Set(columns.map((column) => column.COLUMN_NAME));
+
+    if (!columnSet.has('district_name')) {
+        return {
+            district: 'hf.district_name',
+            facility: `CONCAT('hf:', dr.health_facility_id)`
+        };
+    }
+
+    const facilityParts = [`CONCAT('hf:', dr.health_facility_id)`];
+    if (columnSet.has('village_polygon_id')) {
+        facilityParts.push(`CONCAT('v:', dr.village_polygon_id)`);
+    }
+    const districtPart = `COALESCE(dr.district_name, '')`;
+    const tambonPart = columnSet.has('tambon_name') ? `COALESCE(dr.tambon_name, '')` : `''`;
+    const mooPart = columnSet.has('moo') ? `COALESCE(dr.moo, '')` : `''`;
+    facilityParts.push(`CONCAT('area:', ${districtPart}, '|', ${tambonPart}, '|', ${mooPart})`);
+
+    return {
+        district: 'COALESCE(dr.district_name, hf.district_name)',
+        facility: `COALESCE(${facilityParts.join(', ')})`
+    };
+}
+
 // GET - ดึงข้อมูลสรุปสำหรับ Dashboard
 export async function GET(request) {
     let connection;
@@ -411,13 +443,18 @@ export async function GET(request) {
                 FROM flood_records
             `);
 
+            const diseaseLocation = await getDiseaseReportLocationExpressions(connection).catch(() => ({
+                district: 'hf.district_name',
+                facility: `CONCAT('hf:', dr.health_facility_id)`
+            }));
+
             const [diseaseBySessionRows] = await connection.execute(`
                 SELECT
                     dr.session_id,
                     COUNT(*) as rows_count,
                     COUNT(DISTINCT dr.disease_name) as disease_count,
-                    COUNT(DISTINCT dr.health_facility_id) as facilities,
-                    COUNT(DISTINCT hf.district_name) as districts,
+                    COUNT(DISTINCT ${diseaseLocation.facility}) as facilities,
+                    COUNT(DISTINCT ${diseaseLocation.district}) as districts,
                     COALESCE(SUM(dr.patient_count), 0) as patients,
                     DATE_FORMAT(MIN(dr.report_date), '%Y-%m-%d') as first_date,
                     DATE_FORMAT(MAX(dr.report_date), '%Y-%m-%d') as last_date
