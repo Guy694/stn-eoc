@@ -51,7 +51,8 @@ function buildFileResponse(body, absolutePath, extraHeaders = {}) {
     });
 }
 
-async function resolveUploadPath(params) {
+async function resolveUploadPath(paramsInput) {
+    const params = await paramsInput;
     const { filePath } = params;
     const normalizedPath = normalizeUploadPath(filePath);
 
