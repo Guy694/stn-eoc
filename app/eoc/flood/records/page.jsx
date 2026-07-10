@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function FloodRecordsPage() {
     const [records, setRecords] = useState([]); // ข้อมูลที่แสดงในตาราง (กรองตามวันที่)
@@ -19,6 +20,8 @@ export default function FloodRecordsPage() {
     const [villageOptions, setVillageOptions] = useState([]);
     const [recordedTambons, setRecordedTambons] = useState(new Set());
     const [isTambonMode, setIsTambonMode] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     // วันที่ที่เลือกดู/บันทึก (default วันนี้)
     const getTodayDate = () => {
@@ -52,6 +55,14 @@ export default function FloodRecordsPage() {
     });
 
     const [tambonOptions, setTambonOptions] = useState([]);
+    const paginatedRecords = useMemo(
+        () => paginateRows(records, currentPage, pageSize),
+        [records, currentPage, pageSize]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeSession, filters, selectedDate]);
 
     const formatDateKey = (value) => {
         if (!value) return '';
@@ -1038,10 +1049,10 @@ export default function FloodRecordsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {records.map((record, index) => (
+                                    {paginatedRecords.map((record, index) => (
                                         <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {index + 1}
+                                                {((currentPage - 1) * pageSize) + index + 1}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-900">{record.village || record.villname || '-'}</div>
@@ -1085,6 +1096,13 @@ export default function FloodRecordsPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={records.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
 
                 {/* Modal */}

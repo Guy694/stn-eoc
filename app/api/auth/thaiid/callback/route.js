@@ -198,6 +198,67 @@ function mergeThaiIdProfile(tokenData, userInfo) {
     };
 }
 
+function normalizeName(value) {
+    return String(value || '')
+        .normalize('NFC')
+        .replace(/\s+/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+function isSameThaiIdName(profile, record) {
+    return normalizeName(profile.given_name) === normalizeName(record.given_name)
+        && normalizeName(profile.family_name) === normalizeName(record.family_name);
+}
+
+async function ensureRegistrationSchema(connection) {
+    await connection.execute(`
+        CREATE TABLE IF NOT EXISTS registration_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_type ENUM('citizen', 'officer') NOT NULL,
+            officer_id INT NULL,
+            pid_hash VARCHAR(64) NULL,
+            title VARCHAR(50) NULL,
+            given_name VARCHAR(100) NOT NULL,
+            family_name VARCHAR(100) NOT NULL,
+            normalized_given_name VARCHAR(120) NOT NULL,
+            normalized_family_name VARCHAR(120) NOT NULL,
+            agency VARCHAR(255) NOT NULL,
+            username VARCHAR(50) NULL,
+            email VARCHAR(100) NULL,
+            phone VARCHAR(20) NULL,
+            status ENUM('pending', 'verified', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+            request_ip VARCHAR(45) NULL,
+            user_agent TEXT NULL,
+            verified_at TIMESTAMP NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_registration_requests_lookup (user_type, normalized_given_name, normalized_family_name, status),
+            INDEX idx_registration_requests_ip (request_ip, created_at),
+            INDEX idx_registration_requests_pid_hash (pid_hash),
+            UNIQUE KEY unique_registration_username (username),
+            CONSTRAINT fk_registration_requests_officer
+                FOREIGN KEY (officer_id) REFERENCES officer(id)
+                ON DELETE SET NULL
+        )
+    `);
+}
+
+async function findRegistrationByThaiIdName(connection, thaiIdProfile) {
+    const [rows] = await connection.execute(
+        `SELECT *
+         FROM registration_requests
+         WHERE normalized_given_name = ?
+           AND normalized_family_name = ?
+           AND status IN ('pending', 'verified', 'approved')
+         ORDER BY FIELD(user_type, 'officer', 'citizen'), created_at DESC
+         LIMIT 1`,
+        [normalizeName(thaiIdProfile.given_name), normalizeName(thaiIdProfile.family_name)]
+    );
+
+    return rows[0] || null;
+}
+
 /**
  * Callback Handler สำหรับ ThaiID OAuth
  */
@@ -258,9 +319,11 @@ export async function GET(request) {
         const connection = await pool.getConnection();
 
         try {
+            await ensureRegistrationSchema(connection);
+
             // STEP 2.1: Check Officer Table First
             const [officers] = await connection.execute(
-                'SELECT id, username, title, given_name, family_name, email, phone, role, pid_hash, is_approved, position, department FROM officer WHERE pid_hash = ?',
+                'SELECT id, username, title, given_name, family_name, email, phone, role, pid_hash, is_approved, position, department, requested_role FROM officer WHERE pid_hash = ?',
                 [pidHash]
             );
 
@@ -272,6 +335,14 @@ export async function GET(request) {
                 // FOUND IN OFFICERS -> Login as Officer
                 userRecord = officers[0];
                 userType = 'officer';
+
+                if (!isSameThaiIdName(thaiIdProfile, userRecord)) {
+                    const baseUrl = getAppBaseUrl(request);
+                    connection.release();
+                    return applyNoStoreHeaders(NextResponse.redirect(
+                        `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ชื่อ-นามสกุลจาก ThaiID ไม่ตรงกับข้อมูลเจ้าหน้าที่ที่ลงทะเบียนไว้')}`
+                    ));
+                }
 
                 // Update Officer Data
                 const title = thaiIdProfile.title || userRecord.title;
@@ -302,6 +373,14 @@ export async function GET(request) {
                     userRecord = citizens[0];
                     userType = 'citizen';
 
+                    if (!isSameThaiIdName(thaiIdProfile, userRecord)) {
+                        const baseUrl = getAppBaseUrl(request);
+                        connection.release();
+                        return applyNoStoreHeaders(NextResponse.redirect(
+                            `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ชื่อ-นามสกุลจาก ThaiID ไม่ตรงกับข้อมูลประชาชนที่ลงทะเบียนไว้')}`
+                        ));
+                    }
+
                     // Update Citizen Data
                     await connection.execute(
                         `UPDATE citizens 
@@ -323,34 +402,88 @@ export async function GET(request) {
                     userRecord.address = thaiIdProfile.address || userRecord.address;
 
                 } else {
-                    // NOT FOUND IN EITHER -> Create New Citizen
-                    userType = 'citizen';
-                    isNewUser = true;
+                    const registration = await findRegistrationByThaiIdName(connection, thaiIdProfile);
 
-                    const title = thaiIdProfile.title || null;
-                    const givenName = thaiIdProfile.given_name || '';
-                    const familyName = thaiIdProfile.family_name || '';
-                    const birthdate = thaiIdProfile.birthdate || null;
-                    const gender = thaiIdProfile.gender || null;
-                    const address = thaiIdProfile.address || null;
+                    if (!registration) {
+                        const baseUrl = getAppBaseUrl(request);
+                        connection.release();
+                        return applyNoStoreHeaders(NextResponse.redirect(
+                            `${baseUrl}/login?error=user_not_found&message=${encodeURIComponent('ไม่มีข้อมูลผู้ใช้งานที่ลงทะเบียนไว้ตรงกับชื่อ-นามสกุลจาก ThaiID')}`
+                        ));
+                    }
 
-                    const [result] = await connection.execute(
-                        `INSERT INTO citizens 
-                        (pid_hash, title, given_name, family_name, birthdate, gender, address, created_at) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-                        [pidHash, title, givenName, familyName, birthdate, gender, address]
-                    );
+                    if (registration.user_type === 'officer') {
+                        userType = 'officer';
+                        isNewUser = false;
 
-                    userRecord = {
-                        id: result.insertId,
-                        pid_hash: pidHash,
-                        title,
-                        given_name: givenName,
-                        family_name: familyName,
-                        birthdate,
-                        gender,
-                        address
-                    };
+                        if (!registration.officer_id) {
+                            const baseUrl = getAppBaseUrl(request);
+                            connection.release();
+                            return applyNoStoreHeaders(NextResponse.redirect(
+                                `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ข้อมูลลงทะเบียนเจ้าหน้าที่ไม่สมบูรณ์ กรุณาลงทะเบียนใหม่หรือติดต่อผู้ดูแลระบบ')}`
+                            ));
+                        }
+
+                        await connection.execute(
+                            `UPDATE officer
+                             SET pid_hash = ?, title = COALESCE(?, title), given_name = ?, family_name = ?, last_login = NOW()
+                             WHERE id = ?`,
+                            [pidHash, thaiIdProfile.title || registration.title || null, thaiIdProfile.given_name, thaiIdProfile.family_name, registration.officer_id]
+                        );
+
+                        await connection.execute(
+                            `UPDATE registration_requests
+                             SET pid_hash = ?, status = 'verified', verified_at = NOW()
+                             WHERE id = ?`,
+                            [pidHash, registration.id]
+                        );
+
+                        const [registeredOfficers] = await connection.execute(
+                            'SELECT id, username, title, given_name, family_name, email, phone, role, pid_hash, is_approved, position, department, requested_role FROM officer WHERE id = ?',
+                            [registration.officer_id]
+                        );
+                        userRecord = registeredOfficers[0];
+                    } else {
+                        userType = 'citizen';
+                        isNewUser = true;
+
+                        const title = thaiIdProfile.title || registration.title || null;
+                        const givenName = thaiIdProfile.given_name || registration.given_name;
+                        const familyName = thaiIdProfile.family_name || registration.family_name;
+                        const birthdate = thaiIdProfile.birthdate || null;
+                        const gender = thaiIdProfile.gender || null;
+                        const address = thaiIdProfile.address || null;
+
+                        const [result] = await connection.execute(
+                            `INSERT INTO citizens
+                                (pid_hash, title, given_name, family_name, birthdate, gender, address, phone, created_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                             ON DUPLICATE KEY UPDATE
+                                title = VALUES(title),
+                                given_name = VALUES(given_name),
+                                family_name = VALUES(family_name),
+                                birthdate = VALUES(birthdate),
+                                gender = VALUES(gender),
+                                address = VALUES(address),
+                                phone = VALUES(phone),
+                                updated_at = NOW()`,
+                            [pidHash, title, givenName, familyName, birthdate, gender, address, registration.phone || null]
+                        );
+
+                        await connection.execute(
+                            `UPDATE registration_requests
+                             SET pid_hash = ?, status = 'verified', verified_at = NOW()
+                             WHERE id = ?`,
+                            [pidHash, registration.id]
+                        );
+
+                        const citizenId = result.insertId;
+                        const [registeredCitizens] = await connection.execute(
+                            'SELECT id, pid_hash, title, given_name, family_name, birthdate, gender, address, phone FROM citizens WHERE id = ? OR pid_hash = ? LIMIT 1',
+                            [citizenId, pidHash]
+                        );
+                        userRecord = registeredCitizens[0];
+                    }
 
                 }
             }
@@ -402,10 +535,11 @@ export async function GET(request) {
                     roleDisplayName: roleDisplayNames[userRecord.role] || userRecord.role,
                     permissions: userRecord.is_approved ? (rolePermissions[userRecord.role] || rolePermissions.staff) : {},
                     loginMethod: 'thaiid',
-                    isApproved: userRecord.is_approved,
+                    isApproved: Number(userRecord.is_approved) === 1,
                     isNewUser: isNewUser,
                     position: userRecord.position,
                     department: userRecord.department,
+                    requested_role: userRecord.requested_role,
                     userType: 'officer'
                 };
             } else {
@@ -429,7 +563,9 @@ export async function GET(request) {
 
             // 7. Redirect ไปหน้าที่เหมาะสม
             const baseUrl = getAppBaseUrl(request);
-            let redirectPath = '/dashboard';
+            let redirectPath = userType === 'officer' && Number(userRecord.is_approved) !== 1
+                ? '/auth/thaiid/pending'
+                : '/dashboard';
 
             const response = NextResponse.redirect(`${baseUrl}${redirectPath}`);
 

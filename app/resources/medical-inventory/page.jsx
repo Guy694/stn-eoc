@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 import {
     BriefcaseMedical,
     ClipboardList,
@@ -35,6 +36,8 @@ export default function MedicalInventoryPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [filters, setFilters] = useState({ agency_id: "", item_code: "", status: "" });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [inventoryForm, setInventoryForm] = useState({
         health_facility_id: "",
         item_mode: "existing",
@@ -79,6 +82,10 @@ export default function MedicalInventoryPage() {
     }, []);
 
     const rows = useMemo(() => payload?.data || [], [payload?.data]);
+    const paginatedRows = useMemo(
+        () => paginateRows(rows, currentPage, pageSize),
+        [rows, currentPage, pageSize]
+    );
     const stockRows = useMemo(() => payload?.stock || rows, [payload?.stock, rows]);
     const agencies = useMemo(() => payload?.filters?.agencies || [], [payload?.filters?.agencies]);
     const healthFacilities = useMemo(() => payload?.filters?.health_facilities || [], [payload?.filters?.health_facilities]);
@@ -108,6 +115,7 @@ export default function MedicalInventoryPage() {
     const handleFilterChange = (key, value) => {
         const next = { ...filters, [key]: value };
         setFilters(next);
+        setCurrentPage(1);
         fetchInventory(next);
     };
 
@@ -305,7 +313,7 @@ export default function MedicalInventoryPage() {
                                         <tr>
                                             <td className="px-3 py-8 text-center font-bold text-slate-500" colSpan={9}>ไม่พบข้อมูลตามเงื่อนไข</td>
                                         </tr>
-                                    ) : rows.map((row) => (
+                                    ) : paginatedRows.map((row) => (
                                         <tr key={row.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                                             <td className="px-3 py-3">
                                                 <div className="font-black text-slate-900">{row.agency_name}</div>
@@ -337,6 +345,13 @@ export default function MedicalInventoryPage() {
                                 </tbody>
                             </table>
                         </div>
+                        <PaginationControls
+                            page={currentPage}
+                            pageSize={pageSize}
+                            totalItems={rows.length}
+                            onPageChange={setCurrentPage}
+                            onPageSizeChange={setPageSize}
+                        />
                     </div>
 
                     <aside className="space-y-4">

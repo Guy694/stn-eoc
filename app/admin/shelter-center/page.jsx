@@ -1,11 +1,12 @@
 "use client";
-import React, { useCallback, useEffect, Suspense, useState } from 'react';
+import React, { useCallback, useEffect, Suspense, useMemo, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import ExportExcelButton from '@/components/ExportExcelButton';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 // Dynamic import for Map component
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
@@ -31,6 +32,8 @@ function ShelterCenterContent() {
     const [shelterCenters, setShelterCenters] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterEocType, setFilterEocType] = useState(eocParam || '');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [showModal, setShowModal] = useState(false);
     const [editingCenter, setEditingCenter] = useState(null);
     const [markerPosition, setMarkerPosition] = useState(null);
@@ -363,15 +366,26 @@ function ShelterCenterContent() {
     };
 
     // Filter centers with safety check
-    const filteredCenters = Array.isArray(shelterCenters)
-        ? shelterCenters.filter(center => {
+    const filteredCenters = useMemo(() => (
+        Array.isArray(shelterCenters)
+            ? shelterCenters.filter(center => {
             const matchSearch = center.sheltername?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 center.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 center.tambon?.toLowerCase().includes(searchTerm.toLowerCase());
             const matchType = filterEocType === '' || center.eoc_type === filterEocType;
             return matchSearch && matchType;
         })
-        : [];
+            : []
+    ), [filterEocType, searchTerm, shelterCenters]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterEocType, searchTerm]);
+
+    const paginatedCenters = useMemo(
+        () => paginateRows(filteredCenters, currentPage, pageSize),
+        [filteredCenters, currentPage, pageSize]
+    );
 
     const getEocTypeLabel = (eocType) => {
         const type = eocTypes.find(t => t.value === eocType);
@@ -513,7 +527,7 @@ function ShelterCenterContent() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {filteredCenters.map((center) => (
+                                    {paginatedCenters.map((center) => (
                                         <tr key={center.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {center.id}
@@ -575,6 +589,14 @@ function ShelterCenterContent() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={filteredCenters.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        itemLabel="แห่ง"
+                    />
                 </div>
             </div>
 

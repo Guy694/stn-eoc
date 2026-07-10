@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function VulnerableGroupsPage() {
     const [records, setRecords] = useState([]);
@@ -14,6 +15,8 @@ export default function VulnerableGroupsPage() {
     const [selectedDistrict, setSelectedDistrict] = useState('all');
     const [selectedTambon, setSelectedTambon] = useState('all');
     const [tambonOptions, setTambonOptions] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     const [formData, setFormData] = useState({
         district: '',
@@ -109,6 +112,15 @@ export default function VulnerableGroupsPage() {
             fetchStats();
         }
     }, [activeSession, fetchRecords, fetchStats]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedDistrict, selectedTambon]);
+
+    const paginatedRecords = useMemo(
+        () => paginateRows(records, currentPage, pageSize),
+        [records, currentPage, pageSize]
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -457,9 +469,9 @@ export default function VulnerableGroupsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {records.map((record, index) => (
+                                    {paginatedRecords.map((record, index) => (
                                         <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{((currentPage - 1) * pageSize) + index + 1}</td>
                                             <td className="px-4 py-4">
                                                 <div className="text-sm font-medium text-gray-900">{record.village || 'ทั้งตำบล'}</div>
                                                 <div className="text-sm text-gray-500">ต.{record.tambon} อ.{record.district}</div>
@@ -493,6 +505,13 @@ export default function VulnerableGroupsPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={records.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
 
                 {/* Modal */}

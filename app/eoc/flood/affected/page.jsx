@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -41,6 +42,8 @@ export default function AffectedPersonsPage() {
     const [filterStartDate, setFilterStartDate] = useState('2025-11-20');
     const [filterEndDate, setFilterEndDate] = useState('2025-11-30');
     const [filterDistrict, setFilterDistrict] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const impactGroups = [
         {
             title: 'ประชาชน',
@@ -280,6 +283,14 @@ export default function AffectedPersonsPage() {
     const filteredReports = filterDistrict
         ? reports.filter(r => r.district_name === filterDistrict)
         : reports;
+    const paginatedReports = useMemo(
+        () => paginateRows(filteredReports, currentPage, pageSize),
+        [filteredReports, currentPage, pageSize]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterDate, filterDistrict, filterEndDate, filterStartDate, selectedSession, viewMode]);
 
     const summaryPrefix = viewMode === 'daily' ? 'today' : 'cumulative';
     const summaryRows = viewMode === 'daily' ? summary.today : summary.cumulative;
@@ -670,7 +681,7 @@ export default function AffectedPersonsPage() {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {filteredReports.map((report) => (
+                                            {paginatedReports.map((report) => (
                                                 <tr key={report.id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4 text-sm text-gray-900">
                                                         {new Date(report.report_date).toLocaleDateString('th-TH')}
@@ -730,6 +741,13 @@ export default function AffectedPersonsPage() {
                                     </table>
                                 </div>
                             )}
+                            <PaginationControls
+                                page={currentPage}
+                                pageSize={pageSize}
+                                totalItems={filteredReports.length}
+                                onPageChange={setCurrentPage}
+                                onPageSizeChange={setPageSize}
+                            />
                         </div>
 
                         {/* Modal */}

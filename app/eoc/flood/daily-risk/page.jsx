@@ -1,6 +1,7 @@
 "use client";
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from "@/components/layouts/EOCLayout";
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function FloodDailyRiskPage() {
     const [data, setData] = useState(null);
@@ -8,6 +9,8 @@ export default function FloodDailyRiskPage() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [availableDates, setAvailableDates] = useState([]);
     const [showAllDates, setShowAllDates] = useState(false);
+    const [detailsPage, setDetailsPage] = useState(1);
+    const [detailsPageSize, setDetailsPageSize] = useState(20);
 
     const fetchAvailableDates = useCallback(async () => {
         try {
@@ -45,6 +48,16 @@ export default function FloodDailyRiskPage() {
         fetchRiskData();
         fetchAvailableDates();
     }, [fetchAvailableDates, fetchRiskData]);
+
+    useEffect(() => {
+        setDetailsPage(1);
+    }, [selectedDate]);
+
+    const detailRows = useMemo(() => data?.details || [], [data?.details]);
+    const paginatedDetails = useMemo(
+        () => paginateRows(detailRows, detailsPage, detailsPageSize),
+        [detailRows, detailsPage, detailsPageSize]
+    );
 
     const getRiskColor = (level) => {
         const colors = {
@@ -358,7 +371,7 @@ export default function FloodDailyRiskPage() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">รายละเอียดแต่ละพื้นที่</h2>
                     <div className="space-y-3">
-                        {data.details?.map((item, index) => (
+                        {paginatedDetails.map((item, index) => (
                             <div
                                 key={index}
                                 className={`${getRiskColor(item.flood_level)} border p-4 rounded-r-lg`}
@@ -395,6 +408,13 @@ export default function FloodDailyRiskPage() {
                             </div>
                         ))}
                     </div>
+                    <PaginationControls
+                        page={detailsPage}
+                        pageSize={detailsPageSize}
+                        totalItems={detailRows.length}
+                        onPageChange={setDetailsPage}
+                        onPageSizeChange={setDetailsPageSize}
+                    />
                 </div>
             </div>
         </EOCLayout>

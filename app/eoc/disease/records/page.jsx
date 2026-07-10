@@ -1,9 +1,10 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import { formatEocDisplayName } from "@/lib/eocDisplay";
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function DiseaseRecordsPage() {
     const [records, setRecords] = useState([]);
@@ -19,6 +20,8 @@ export default function DiseaseRecordsPage() {
     const [commonDiseases, setCommonDiseases] = useState([]); // รายการโรคจาก database
     const [showOtherInput, setShowOtherInput] = useState(false); // แสดง input โรคอื่นๆ
     const [customDisease, setCustomDisease] = useState(''); // ชื่อโรคที่กรอกเอง
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [filters, setFilters] = useState({
         district: 'all',
         tambon: 'all',
@@ -172,6 +175,15 @@ export default function DiseaseRecordsPage() {
             fetchRecords();
         }
     }, [activeSession, fetchRecords]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    const paginatedRecords = useMemo(
+        () => paginateRows(records, currentPage, pageSize),
+        [records, currentPage, pageSize]
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -665,10 +677,10 @@ export default function DiseaseRecordsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {records.map((record, index) => (
+                                    {paginatedRecords.map((record, index) => (
                                         <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {index + 1}
+                                                {((currentPage - 1) * pageSize) + index + 1}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-900">
@@ -715,6 +727,13 @@ export default function DiseaseRecordsPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={records.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
 
                 {/* Modal */}

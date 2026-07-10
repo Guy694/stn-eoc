@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { formatEocDisplayName } from '@/lib/eocDisplay';
 import AppIcon from './icons/AppIcon';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function CitizenDashboard() {
     const { user } = useAuth();
@@ -11,8 +12,14 @@ export default function CitizenDashboard() {
     const [loading, setLoading] = useState(true);
     const [myReports, setMyReports] = useState([]);
     const [reportsLoading, setReportsLoading] = useState(true);
+    const [reportsPage, setReportsPage] = useState(1);
+    const [reportsPageSize, setReportsPageSize] = useState(20);
 
     const [timeElapsed, setTimeElapsed] = useState({});
+    const paginatedReports = useMemo(
+        () => paginateRows(myReports, reportsPage, reportsPageSize),
+        [myReports, reportsPage, reportsPageSize]
+    );
 
     // Fetch active EOCs
     useEffect(() => {
@@ -298,7 +305,7 @@ export default function CitizenDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {myReports.map((report) => {
+                                    {paginatedReports.map((report) => {
                                         const badge = getStatusBadge(report.status);
                                         return (
                                             <tr key={report.id} className="hover:bg-gray-50">
@@ -324,6 +331,13 @@ export default function CitizenDashboard() {
                                 </tbody>
                             </table>
                         </div>
+                        <PaginationControls
+                            page={reportsPage}
+                            pageSize={reportsPageSize}
+                            totalItems={myReports.length}
+                            onPageChange={setReportsPage}
+                            onPageSizeChange={setReportsPageSize}
+                        />
                     </div>
                 ) : (
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">

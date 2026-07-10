@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from "@/lib/sweetAlert";
+import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 
 const GROUPS = [
     { key: "elderly", label: "ผู้สูงอายุ" },
@@ -48,6 +49,8 @@ export default function VulnerableGroupBaselinePage() {
     const [showModal, setShowModal] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
     const [formData, setFormData] = useState(emptyForm);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     const tambonOptions = useMemo(() => {
         const district = satunDistricts.find(item => item.name === (formData.district || selectedDistrict));
@@ -86,6 +89,15 @@ export default function VulnerableGroupBaselinePage() {
     useEffect(() => {
         fetchRecords();
     }, [fetchRecords]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedDistrict, selectedTambon]);
+
+    const paginatedRecords = useMemo(
+        () => paginateRows(records, currentPage, pageSize),
+        [records, currentPage, pageSize]
+    );
 
     const resetForm = () => {
         setFormData(emptyForm);
@@ -289,7 +301,7 @@ export default function VulnerableGroupBaselinePage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {records.map(record => (
+                                    {paginatedRecords.map(record => (
                                         <tr key={record.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-4 align-top">
                                                 <div className="font-medium text-gray-900">{record.village || "ทั้งตำบล"}</div>
@@ -341,6 +353,13 @@ export default function VulnerableGroupBaselinePage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={records.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
 
                 {showModal && (

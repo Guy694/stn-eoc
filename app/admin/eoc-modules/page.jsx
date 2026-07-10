@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useEffect, Suspense, useState } from "react";
+import { useCallback, useEffect, Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 import Swal from "sweetalert2";
 
 function EOCModulesContent() {
@@ -16,6 +17,8 @@ function EOCModulesContent() {
     const [showModal, setShowModal] = useState(false);
     const [editingModule, setEditingModule] = useState(null);
     const [eocInfo, setEocInfo] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     const [formData, setFormData] = useState({
         module_code: '',
@@ -86,6 +89,15 @@ function EOCModulesContent() {
             loadEOCInfo();
         }
     }, [eocType, loadEOCInfo, loadModules]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [eocType]);
+
+    const paginatedModules = useMemo(
+        () => paginateRows(modules, currentPage, pageSize),
+        [modules, currentPage, pageSize]
+    );
 
     const handleOpenAddModal = () => {
         setEditingModule(null);
@@ -281,7 +293,7 @@ function EOCModulesContent() {
                                     </td>
                                 </tr>
                             ) : (
-                                modules.map((module) => (
+                                paginatedModules.map((module) => (
                                     <tr key={module.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-2xl">{module.icon}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -329,6 +341,13 @@ function EOCModulesContent() {
                             )}
                         </tbody>
                     </table>
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={modules.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
 
                 {/* Modal */}

@@ -25,6 +25,9 @@ export async function GET(request) {
                 email, 
                 phone, 
                 role,
+                department,
+                requested_role,
+                is_approved,
                 created_at,
                 updated_at
             FROM officer
@@ -108,13 +111,13 @@ export async function POST(request) {
 
         // Insert new officer
         const result = await query(`
-            INSERT INTO officer (username, password_hash, title, given_name, family_name, email, phone, role)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [username, password_hash, title, given_name, family_name, email, phone, role]);
+            INSERT INTO officer (username, password_hash, title, given_name, family_name, email, phone, role, requested_role, is_approved)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        `, [username, password_hash, title, given_name, family_name, email, phone, role, role]);
 
         // ดึงข้อมูลที่เพิ่งสร้าง
         const newOfficer = await query(
-            'SELECT id, username, title, given_name, family_name, email, phone, role, created_at FROM officer WHERE id = ?',
+            'SELECT id, username, title, given_name, family_name, email, phone, role, requested_role, is_approved, created_at FROM officer WHERE id = ?',
             [result.insertId]
         );
 

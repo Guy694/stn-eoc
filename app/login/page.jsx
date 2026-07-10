@@ -26,7 +26,7 @@ function ThaiIDErrorHandler({ setError }) {
             switch (errorType) {
                 case 'thaiid_auth_failed':
                     if (errorMessage && decodeURIComponent(errorMessage).includes('unauthorized_client')) {
-                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI คือ /stn-eoc/api/auth/thaiid/callback\n✓ รีสตาร์ต server หลังแก้ .env');
+                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
                         break;
                     }
                     setError(`การยืนยันตัวตนผ่าน ThaiID ล้มเหลว: ${errorMessage || 'ไม่ทราบสาเหตุ'}`);
@@ -38,13 +38,13 @@ function ThaiIDErrorHandler({ setError }) {
                     setError('ไม่สามารถดึงเลขบัตรประชาชนจาก ThaiID ได้');
                     break;
                 case 'user_not_found':
-                    setError(`ไม่พบผู้ใช้งานที่มีเลขบัตรประชาชน: ${pid || 'ไม่ระบุ'}\nกรุณาติดต่อผู้ดูแลระบบเพื่อลงทะเบียน`);
+                    setError(`${errorMessage ? decodeURIComponent(errorMessage) : `ไม่พบผู้ใช้งานที่มีเลขบัตรประชาชน: ${pid || 'ไม่ระบุ'}`}\nกรุณาลงทะเบียนผู้ใช้งานก่อน หรือใช้ชื่อ-นามสกุลให้ตรงกับข้อมูลใน ThaiID`);
                     break;
                 case 'callback_failed':
                     const decodedMessage = errorMessage ? decodeURIComponent(errorMessage) : 'การเข้าสู่ระบบผ่าน ThaiID ล้มเหลว';
 
                     if (decodedMessage.includes('unauthorized_client')) {
-                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI คือ /stn-eoc/api/auth/thaiid/callback\n✓ รีสตาร์ต server หลังแก้ .env');
+                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
                         break;
                     }
 
@@ -243,6 +243,7 @@ function LoginForm() {
                         </a>
 
                         <div className="mt-7 flex flex-col gap-3 text-center text-sm sm:flex-row sm:items-center sm:justify-center sm:text-center">
+                            <Link href="/register" className="font-bold text-blue-700 hover:text-blue-900">ลงทะเบียนผู้ใช้งาน</Link>
                             <Link href="/" className="font-bold text-blue-700 hover:text-blue-900">กลับหน้าสาธารณะ</Link>
                         </div>
 

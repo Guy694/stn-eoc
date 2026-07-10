@@ -54,6 +54,7 @@ export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [pendingReportsCount, setPendingReportsCount] = useState(0);
+    const [pendingRegistrationsCount, setPendingRegistrationsCount] = useState(0);
     const [expandedSections, setExpandedSections] = useState({});
     const { user, canAccessResources } = useAuth();
     const { eocStatus, getEOCDisplayName } = useEOC();
@@ -67,7 +68,13 @@ export default function Sidebar() {
     };
 
     const hasPendingReportsBadge = (item) => item.badge === "pendingReports" && pendingReportsCount > 0;
-    const sectionHasPendingReports = (section) => section.items?.some(hasPendingReportsBadge);
+    const hasPendingRegistrationsBadge = (item) => item.badge === "pendingRegistrations" && pendingRegistrationsCount > 0;
+    const sectionHasAlertBadge = (section) => section.items?.some((item) => hasPendingReportsBadge(item) || hasPendingRegistrationsBadge(item));
+    const getBadgeCount = (item) => {
+        if (item.badge === "pendingReports") return pendingReportsCount;
+        if (item.badge === "pendingRegistrations") return pendingRegistrationsCount;
+        return 0;
+    };
 
     useEffect(() => {
         const checkMobile = () => {
@@ -83,15 +90,28 @@ export default function Sidebar() {
     useEffect(() => {
         const fetchPendingCount = async () => {
             try {
-                const response = await fetch('/stn-eoc/api/admin/incident-reports?status=pending&limit=1');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.stats) {
-                        setPendingReportsCount(data.stats.pending || 0);
+                const [reportsResponse, registrationsResponse] = await Promise.all([
+                    fetch('/stn-eoc/api/admin/incident-reports?status=pending&limit=1'),
+                    user?.role === 'admin'
+                        ? fetch('/stn-eoc/api/admin/registrations?limit=1')
+                        : Promise.resolve(null)
+                ]);
+
+                if (reportsResponse.ok) {
+                    const reportsData = await reportsResponse.json();
+                    if (reportsData.success && reportsData.stats) {
+                        setPendingReportsCount(reportsData.stats.pending || 0);
+                    }
+                }
+
+                if (registrationsResponse?.ok) {
+                    const registrationsData = await registrationsResponse.json();
+                    if (registrationsData.success && registrationsData.stats) {
+                        setPendingRegistrationsCount(registrationsData.stats.actionable || 0);
                     }
                 }
             } catch (error) {
-                console.error('Error fetching pending reports count:', error);
+                console.error('Error fetching pending menu counts:', error);
             }
         };
 
@@ -292,7 +312,7 @@ export default function Sidebar() {
             requiresPermission: "admin",
             collapsible: true,
             items: [
-                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: UserRoundCog, description: "บัญชีเจ้าหน้าที่ บทบาท และสิทธิ์ใช้งาน" },
+                { name: "จัดการเจ้าหน้าที่", path: "/admin/officers", icon: UserRoundCog, badge: "pendingRegistrations", description: "บัญชีเจ้าหน้าที่ บทบาท และสิทธิ์ใช้งาน" },
             ],
         },
         {
@@ -441,11 +461,12 @@ export default function Sidebar() {
                                 <>
                                     {/* Collapsible Section Header */}
                                     {(() => {
-                                        const hasPendingReports = sectionHasPendingReports(section);
+                                        const hasAlertBadge = sectionHasAlertBadge(section);
+                                        const sectionBadgeCount = section.items?.reduce((total, item) => total + getBadgeCount(item), 0) || 0;
                                         return (
                                     <button
                                         onClick={() => toggleSection(section.key || section.section)}
-                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${hasPendingReports
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${hasAlertBadge
                                             ? "bg-red-50 text-red-700 ring-1 ring-red-200 hover:bg-red-100"
                                             : section.items.some(item => pathname.startsWith(item.path))
                                             ? "bg-blue-50 text-blue-800"
@@ -464,9 +485,9 @@ export default function Sidebar() {
                                                     {eocStatus[section.eocType].is_active ? "เปิด" : "ปิด"}
                                                 </span>
                                             )}
-                                            {hasPendingReports && (
+                                            {hasAlertBadge && (
                                                 <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-black text-white">
-                                                    {pendingReportsCount}
+                                                    {sectionBadgeCount}
                                                 </span>
                                             )}
                                         </span>
@@ -482,26 +503,27 @@ export default function Sidebar() {
                                     {expandedSections[section.key || section.section] && (
                                         <ul className="mt-1 ml-4 space-y-1">
                                             {section.items.map((item) => {
-                                                const hasPendingReports = hasPendingReportsBadge(item);
+                                                const badgeCount = getBadgeCount(item);
+                                                const hasBadge = badgeCount > 0;
                                                 return (
                                                     <li key={item.path}>
                                                         <Link
                                                             href={item.path}
                                                             onClick={() => isMobile && setIsOpen(false)}
-                                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${hasPendingReports
+                                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${hasBadge
                                                                 ? "bg-red-50 text-red-700 font-semibold hover:bg-red-100"
                                                                 : pathname === item.path
                                                                 ? "bg-blue-100 text-blue-800 font-medium"
                                                                 : "text-gray-600 hover:bg-gray-100"
-                                                                }`}
+                                                            }`}
                                                             title={item.description || item.name}
                                                         >
-                                                            <MenuIcon icon={item.icon} className={hasPendingReports ? "h-4 w-4 shrink-0 text-red-600" : iconClassName} />
+                                                            <MenuIcon icon={item.icon} className={hasBadge ? "h-4 w-4 shrink-0 text-red-600" : iconClassName} />
                                                             <span className="flex-1">{item.name}</span>
 
-                                                            {hasPendingReports && (
+                                                            {hasBadge && (
                                                                 <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-black text-white">
-                                                                    {pendingReportsCount}
+                                                                    {badgeCount}
                                                                 </span>
                                                             )}
                                                         </Link>
@@ -522,27 +544,28 @@ export default function Sidebar() {
                                     </h3>
                                     <ul className="space-y-1">
                                         {section.items.map((item) => {
-                                            const hasPendingReports = hasPendingReportsBadge(item);
+                                            const badgeCount = getBadgeCount(item);
+                                            const hasBadge = badgeCount > 0;
                                             return (
                                             <li key={item.path}>
                                                 <Link
                                                     href={item.path}
                                                     onClick={() => isMobile && setIsOpen(false)}
-                                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${hasPendingReports
+                                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${hasBadge
                                                         ? "bg-red-50 text-red-700 font-semibold hover:bg-red-100"
                                                         : pathname === item.path
                                                         ? "bg-blue-100 text-blue-800 font-medium"
                                                         : "text-gray-700 hover:bg-gray-100"
-                                                        }`}
+                                                    }`}
                                                     title={item.description || item.name}
                                                 >
-                                                    <MenuIcon icon={item.icon} className={hasPendingReports ? "h-4 w-4 shrink-0 text-red-600" : iconClassName} />
+                                                    <MenuIcon icon={item.icon} className={hasBadge ? "h-4 w-4 shrink-0 text-red-600" : iconClassName} />
                                                     <span className="flex-1">{item.name}</span>
 
                                                     {/* Badge สำหรับแจ้งเตือน (เช่น รายงานค้าง) */}
-                                                    {hasPendingReports && (
+                                                    {hasBadge && (
                                                         <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                            {pendingReportsCount}
+                                                            {badgeCount}
                                                         </span>
                                                     )}
 

@@ -1,15 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function OfficersManagementPage() {
     const [officers, setOfficers] = useState([]);
+    const [registrations, setRegistrations] = useState([]);
+    const [registrationStats, setRegistrationStats] = useState({ actionable: 0, pending: 0, verified: 0 });
     const [stats, setStats] = useState({});
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [showModal, setShowModal] = useState(false);
     const [editingOfficer, setEditingOfficer] = useState(null);
     const [formData, setFormData] = useState({
@@ -20,7 +25,10 @@ export default function OfficersManagementPage() {
         family_name: '',
         email: '',
         phone: '',
-        role: 'staff'
+        role: 'staff',
+        department: '',
+        requested_role: 'staff',
+        is_approved: 1
     });
 
     const roles = [
@@ -30,6 +38,20 @@ export default function OfficersManagementPage() {
         { value: 'SeRHT', label: 'SeRHT', color: 'bg-green-100 text-green-700' },
         { value: 'staff', label: 'เจ้าหน้าที่ทั่วไป', color: 'bg-gray-100 text-gray-700' }
     ];
+
+    const registrationStatusLabels = {
+        pending: 'รอ ThaiID',
+        verified: 'ยืนยัน ThaiID แล้ว',
+        approved: 'อนุมัติแล้ว',
+        rejected: 'ปฏิเสธ'
+    };
+
+    const registrationStatusColors = {
+        pending: 'bg-amber-100 text-amber-800 border-amber-200',
+        verified: 'bg-blue-100 text-blue-800 border-blue-200',
+        approved: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        rejected: 'bg-red-100 text-red-800 border-red-200'
+    };
 
     const fetchOfficers = useCallback(async () => {
         try {
@@ -53,9 +75,33 @@ export default function OfficersManagementPage() {
         }
     }, [filterRole, searchTerm]);
 
+    const fetchRegistrations = useCallback(async () => {
+        try {
+            const response = await fetch('/stn-eoc/api/admin/registrations?limit=8');
+            const data = await response.json();
+
+            if (data.success) {
+                setRegistrations(data.data || []);
+                setRegistrationStats(data.stats || { actionable: 0, pending: 0, verified: 0 });
+            }
+        } catch (error) {
+            console.error('Error fetching registrations:', error);
+        }
+    }, []);
+
     useEffect(() => {
         fetchOfficers();
-    }, [fetchOfficers]);
+        fetchRegistrations();
+    }, [fetchOfficers, fetchRegistrations]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterRole, searchTerm]);
+
+    const paginatedOfficers = useMemo(
+        () => paginateRows(officers, currentPage, pageSize),
+        [officers, currentPage, pageSize]
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -104,9 +150,40 @@ export default function OfficersManagementPage() {
             family_name: officer.family_name,
             email: officer.email || '',
             phone: officer.phone || '',
-            role: officer.role
+            role: officer.role,
+            department: officer.department || '',
+            requested_role: officer.requested_role || officer.role || 'staff',
+            is_approved: officer.is_approved ?? 1
         });
         setShowModal(true);
+    };
+
+    const handleApprove = async (officer) => {
+        const roleToApprove = officer.requested_role || officer.role || 'staff';
+
+        try {
+            const response = await fetch(`/stn-eoc/api/admin/officers/${officer.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    role: roleToApprove,
+                    requested_role: roleToApprove,
+                    is_approved: 1
+                })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccess('อนุมัติเจ้าหน้าที่เรียบร้อยแล้ว');
+                fetchOfficers();
+                fetchRegistrations();
+            } else {
+                showError(data.error || 'ไม่สามารถอนุมัติได้');
+            }
+        } catch (error) {
+            console.error('Error approving officer:', error);
+            showError('ไม่สามารถอนุมัติได้');
+        }
     };
 
     const handleDelete = async (officer) => {
@@ -144,7 +221,10 @@ export default function OfficersManagementPage() {
             family_name: '',
             email: '',
             phone: '',
-            role: 'staff'
+            role: 'staff',
+            department: '',
+            requested_role: 'staff',
+            is_approved: 1
         });
     };
 
@@ -168,7 +248,13 @@ export default function OfficersManagementPage() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-6">
+                    <div className="bg-white rounded-lg shadow p-4 border border-amber-200">
+                        <div className="text-sm text-gray-600 mb-1">ผู้ลงทะเบียนใหม่</div>
+                        <div className="text-2xl font-bold text-amber-700">
+                            {registrationStats.actionable || 0}
+                        </div>
+                    </div>
                     {roles.map(role => (
                         <div key={role.value} className={`bg-white rounded-lg shadow p-4 border ${getRoleColor(role.value)}`}>
                             <div className="text-sm text-gray-600 mb-1">{role.label}</div>
@@ -177,6 +263,76 @@ export default function OfficersManagementPage() {
                             </div>
                         </div>
                     ))}
+                </div>
+
+                <div className="mb-6 rounded-lg border border-amber-200 bg-white shadow">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-100 bg-amber-50 px-5 py-4">
+                        <div>
+                            <h2 className="text-lg font-bold text-amber-950">ผู้ลงทะเบียนใหม่</h2>
+                            <p className="text-sm text-amber-800">
+                                {registrationStats.pending || 0} รายรอ ThaiID • {registrationStats.verified || 0} รายยืนยันแล้วรออนุมัติ
+                            </p>
+                        </div>
+                        <span className="rounded-full bg-amber-600 px-3 py-1 text-sm font-black text-white">
+                            {registrationStats.actionable || 0}
+                        </span>
+                    </div>
+
+                    {registrations.length === 0 ? (
+                        <div className="px-5 py-6 text-center text-sm text-gray-500">
+                            ยังไม่มีผู้ลงทะเบียนใหม่
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-100">
+                            {registrations.map((registration) => {
+                                const isPendingOfficer = registration.user_type === 'officer' && Number(registration.is_approved) !== 1;
+                                const roleToApprove = registration.requested_role || registration.role || 'staff';
+
+                                return (
+                                    <div key={registration.id} className="grid gap-3 px-5 py-4 md:grid-cols-[1.5fr_1fr_auto] md:items-center">
+                                        <div>
+                                            <div className="font-bold text-gray-900">
+                                                {`${registration.title || ''} ${registration.given_name || ''} ${registration.family_name || ''}`.trim()}
+                                            </div>
+                                            <div className="mt-1 text-sm text-gray-600">
+                                                {registration.user_type === 'officer' ? 'เจ้าหน้าที่' : 'ประชาชน'}
+                                                {registration.username ? ` • ${registration.username}` : ''}
+                                                {registration.agency ? ` • ${registration.agency}` : ''}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className={`rounded-full border px-3 py-1 text-xs font-bold ${registrationStatusColors[registration.status] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                                                {registrationStatusLabels[registration.status] || registration.status}
+                                            </span>
+                                            {registration.user_type === 'officer' && (
+                                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                                                    ขอสิทธิ์ {getRoleLabel(roleToApprove)}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex justify-start gap-2 md:justify-end">
+                                            {isPendingOfficer && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleApprove({
+                                                        id: registration.officer_id,
+                                                        requested_role: roleToApprove,
+                                                        role: registration.role || 'staff'
+                                                    })}
+                                                    className="rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:bg-gray-300"
+                                                    disabled={!registration.officer_id}
+                                                >
+                                                    อนุมัติ
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
 
                 {/* Search and Filter */}
@@ -234,12 +390,13 @@ export default function OfficersManagementPage() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">เบอร์โทร</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">บทบาท</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานะ</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">วันที่สร้าง</th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {officers.map((officer) => (
+                                    {paginatedOfficers.map((officer) => (
                                         <tr key={officer.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {officer.id}
@@ -263,11 +420,31 @@ export default function OfficersManagementPage() {
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(officer.role)}`}>
                                                     {getRoleLabel(officer.role)}
                                                 </span>
+                                                {officer.requested_role && officer.requested_role !== officer.role && (
+                                                    <div className="mt-1 text-xs text-amber-700">
+                                                        ขอสิทธิ์: {getRoleLabel(officer.requested_role)}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {Number(officer.is_approved) === 1 ? (
+                                                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">อนุมัติแล้ว</span>
+                                                ) : (
+                                                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">รออนุมัติ</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {new Date(officer.created_at).toLocaleDateString('th-TH')}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                {Number(officer.is_approved) !== 1 && (
+                                                    <button
+                                                        onClick={() => handleApprove(officer)}
+                                                        className="mr-3 text-green-600 hover:text-green-800"
+                                                    >
+                                                        ✅ อนุมัติ
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleEdit(officer)}
                                                     className="text-blue-600 hover:text-blue-800 mr-3"
@@ -287,6 +464,14 @@ export default function OfficersManagementPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={officers.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        itemLabel="คน"
+                    />
                 </div>
             </div>
 

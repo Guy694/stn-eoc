@@ -1,14 +1,17 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function FloodRecordsPage() {
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [filters, setFilters] = useState({
         year: new Date().getFullYear(),
         district: 'all',
@@ -75,6 +78,15 @@ export default function FloodRecordsPage() {
     useEffect(() => {
         fetchRecords();
     }, [fetchRecords]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    const paginatedRecords = useMemo(
+        () => paginateRows(records, currentPage, pageSize),
+        [records, currentPage, pageSize]
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -348,7 +360,7 @@ export default function FloodRecordsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {records.map((record) => (
+                                    {paginatedRecords.map((record) => (
                                         <tr key={record.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 {parseInt(record.year) + 543}
@@ -399,6 +411,13 @@ export default function FloodRecordsPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={records.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
             </div>
 

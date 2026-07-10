@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import DailyDiseaseChart from '@/components/DailyDiseaseChart';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -44,6 +45,8 @@ export default function DiseaseReportsPage() {
     const [filterDistrict, setFilterDistrict] = useState('');
     const [showOtherInput, setShowOtherInput] = useState(false); // แสดง input โรคอื่นๆ
     const [customDisease, setCustomDisease] = useState(''); // ชื่อโรคที่กรอกเอง
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     const [formData, setFormData] = useState({
         report_date: new Date().toISOString().split('T')[0],
@@ -375,6 +378,14 @@ export default function DiseaseReportsPage() {
     const filteredReports = filterDistrict
         ? reports.filter(r => r.district_name === filterDistrict)
         : reports;
+    const paginatedReports = useMemo(
+        () => paginateRows(filteredReports, currentPage, pageSize),
+        [filteredReports, currentPage, pageSize]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterDate, filterDistrict, selectedSession]);
 
     const districts = [...new Set(facilities.map(f => f.district_name))].sort();
 
@@ -804,7 +815,7 @@ export default function DiseaseReportsPage() {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {filteredReports.map((report) => (
+                                            {paginatedReports.map((report) => (
                                                 <tr key={report.id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4 text-sm text-gray-900">
                                                         {new Date(report.report_date).toLocaleDateString('th-TH')}
@@ -840,6 +851,13 @@ export default function DiseaseReportsPage() {
                                     </table>
                                 </div>
                             )}
+                            <PaginationControls
+                                page={currentPage}
+                                pageSize={pageSize}
+                                totalItems={filteredReports.length}
+                                onPageChange={setCurrentPage}
+                                onPageSizeChange={setPageSize}
+                            />
                         </div>
 
                         {/* Modal */}

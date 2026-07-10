@@ -1,6 +1,7 @@
 "use client";
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import Swal from 'sweetalert2';
 import {
     Chart as ChartJS,
@@ -31,6 +32,8 @@ export default function ITResourcesPage() {
     const [editingResource, setEditingResource] = useState(null);
     const [filterType, setFilterType] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [stats, setStats] = useState({ total: 0, online: 0, offline: 0, maintenance: 0, unknown: 0, byType: [], byIsp: [] });
     const [healthFacilities, setHealthFacilities] = useState([]);
 
@@ -98,6 +101,15 @@ export default function ITResourcesPage() {
         fetchResources();
         fetchHealthFacilities();
     }, [fetchHealthFacilities, fetchResources]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterStatus, filterType]);
+
+    const paginatedResources = useMemo(
+        () => paginateRows(resources, currentPage, pageSize),
+        [resources, currentPage, pageSize]
+    );
 
     const resetForm = () => {
         setFormData({
@@ -437,7 +449,7 @@ export default function ITResourcesPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {resources.map((resource) => (
+                                    {paginatedResources.map((resource) => (
                                         <tr key={resource.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-3">
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(resource.resource_type)}`}>
@@ -504,6 +516,13 @@ export default function ITResourcesPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={resources.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
 
                 {/* Modal */}

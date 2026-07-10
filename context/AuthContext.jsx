@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
     const isPublicPath = useCallback(() => {
         if (typeof window === 'undefined') return false;
         const normalizedPath = window.location.pathname.replace(/^\/stn-eoc/, '') || '/';
-        const publicPages = ['/', '/login', '/privacy-policy', '/auth/thaiid'];
+        const publicPages = ['/', '/login', '/register', '/privacy-policy', '/auth/thaiid/callback'];
         return normalizedPath.startsWith('/public/')
             || publicPages.some(page => normalizedPath === page || normalizedPath.startsWith(`${page}/`));
     }, []);

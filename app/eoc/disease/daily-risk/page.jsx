@@ -1,7 +1,8 @@
 "use client";
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function DiseaseDailyRiskPage() {
     const [data, setData] = useState(null);
@@ -9,6 +10,8 @@ export default function DiseaseDailyRiskPage() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [availableDates, setAvailableDates] = useState([]);
     const [showAllDates, setShowAllDates] = useState(false);
+    const [detailsPage, setDetailsPage] = useState(1);
+    const [detailsPageSize, setDetailsPageSize] = useState(20);
     const activeDiseaseEocName = data?.activeSession
         ? formatEocDisplayName({ eoc_type: 'disease', ...data.activeSession })
         : 'โรคระบาด';
@@ -49,6 +52,16 @@ export default function DiseaseDailyRiskPage() {
         fetchRiskData();
         fetchAvailableDates();
     }, [fetchAvailableDates, fetchRiskData]);
+
+    useEffect(() => {
+        setDetailsPage(1);
+    }, [selectedDate]);
+
+    const detailRows = useMemo(() => data?.details || [], [data?.details]);
+    const paginatedDetails = useMemo(
+        () => paginateRows(detailRows, detailsPage, detailsPageSize),
+        [detailRows, detailsPage, detailsPageSize]
+    );
 
     const getSeverityColor = (severity) => {
         const colors = {
@@ -329,7 +342,7 @@ export default function DiseaseDailyRiskPage() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">รายละเอียดรายงาน</h2>
                     <div className="space-y-3">
-                        {data.details?.map((item, index) => (
+                        {paginatedDetails.map((item, index) => (
                             <div
                                 key={index}
                                 className="bg-gray-50 border border-teal-500 p-4 rounded-r-lg"
@@ -367,6 +380,13 @@ export default function DiseaseDailyRiskPage() {
                             </div>
                         )}
                     </div>
+                    <PaginationControls
+                        page={detailsPage}
+                        pageSize={detailsPageSize}
+                        totalItems={detailRows.length}
+                        onPageChange={setDetailsPage}
+                        onPageSizeChange={setDetailsPageSize}
+                    />
                 </div>
             </div>
         </EOCLayout>

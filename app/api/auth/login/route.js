@@ -114,8 +114,8 @@ export async function POST(request) {
 
             // ดึงข้อมูลจาก officer table
             const [officers] = await connection.execute(
-                `SELECT id, username, password_hash, title, given_name, family_name, email, phone, role, 
-                failed_login_attempts, account_locked_until, must_change_password 
+                `SELECT id, username, password_hash, title, given_name, family_name, email, phone, role,
+                is_approved, failed_login_attempts, account_locked_until, must_change_password
                 FROM officer WHERE username = ?`,
                 [username]
             );
@@ -197,6 +197,24 @@ export async function POST(request) {
                 return NextResponse.json(
                     { success: false, message },
                     { status: 401 }
+                );
+            }
+
+            if (Number(officer.is_approved) !== 1) {
+                await connection.execute(
+                    'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 0)',
+                    [username, ip_address]
+                );
+
+                await connection.execute(
+                    `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    ['login_failed', officer.id, username, ip_address, user_agent, 'Account pending approval', 'medium']
+                );
+
+                return NextResponse.json(
+                    { success: false, message: 'บัญชีนี้ยังรอผู้ดูแลระบบอนุมัติ กรุณายืนยันตัวตนด้วย ThaiID และรอการอนุมัติ' },
+                    { status: 403 }
                 );
             }
 

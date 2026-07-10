@@ -1,13 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showWarning } from '@/lib/sweetAlert';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function CitizensManagementPage() {
     const [citizens, setCitizens] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [showPromoteModal, setShowPromoteModal] = useState(false);
     const [selectedCitizen, setSelectedCitizen] = useState(null);
     const [promoteFormData, setPromoteFormData] = useState({
@@ -55,6 +58,15 @@ export default function CitizensManagementPage() {
     useEffect(() => {
         fetchCitizens();
     }, [fetchCitizens]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    const paginatedCitizens = useMemo(
+        () => paginateRows(citizens, currentPage, pageSize),
+        [citizens, currentPage, pageSize]
+    );
 
     const handlePromoteClick = (citizen) => {
         setSelectedCitizen(citizen);
@@ -177,7 +189,7 @@ export default function CitizensManagementPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {citizens.map((citizen) => (
+                                    {paginatedCitizens.map((citizen) => (
                                         <tr key={citizen.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {citizen.id}
@@ -214,6 +226,14 @@ export default function CitizensManagementPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={citizens.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        itemLabel="คน"
+                    />
                 </div>
             </div>
 

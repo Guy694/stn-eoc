@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function HealthFacilitiesPage() {
     const [facilities, setFacilities] = useState([]);
@@ -10,6 +11,8 @@ export default function HealthFacilitiesPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [showModal, setShowModal] = useState(false);
     const [editingFacility, setEditingFacility] = useState(null);
     const [formData, setFormData] = useState({
@@ -58,6 +61,15 @@ export default function HealthFacilitiesPage() {
     useEffect(() => {
         fetchFacilities();
     }, [fetchFacilities]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterType, searchTerm]);
+
+    const paginatedFacilities = useMemo(
+        () => paginateRows(facilities, currentPage, pageSize),
+        [facilities, currentPage, pageSize]
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -232,7 +244,7 @@ export default function HealthFacilitiesPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {facilities.map((facility) => (
+                                    {paginatedFacilities.map((facility) => (
                                         <tr key={facility.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {facility.id}
@@ -280,6 +292,14 @@ export default function HealthFacilitiesPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={facilities.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        itemLabel="แห่ง"
+                    />
                 </div>
             </div>
 

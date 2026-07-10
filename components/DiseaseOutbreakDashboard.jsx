@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import AppIcon from "@/components/icons/AppIcon";
 import { diseaseOutbreakMockData, enrichDistrictOutbreakData } from "@/lib/diseaseOutbreakMockData";
+import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 
 const yearColors = {
     "2566": "#64748b",
@@ -79,6 +80,8 @@ export default function DiseaseOutbreakDashboard({
     const [liveData, setLiveData] = useState(null);
     const [loadingLiveData, setLoadingLiveData] = useState(Boolean(session));
     const [loadError, setLoadError] = useState("");
+    const [codePage, setCodePage] = useState(1);
+    const [codePageSize, setCodePageSize] = useState(20);
 
     useEffect(() => {
         let ignore = false;
@@ -144,10 +147,21 @@ export default function DiseaseOutbreakDashboard({
         ...item,
         total: Number(item.male || 0) + Number(item.female || 0) + Number(item.unknown || 0)
     }));
-    const codeRows = (dashboardData?.diseaseCodes || []).map((item) => ({
-        ...item,
-        percent: totalCases > 0 ? (Number(item.cases || 0) / totalCases) * 100 : 0
-    }));
+    const codeRows = useMemo(
+        () => (dashboardData?.diseaseCodes || []).map((item) => ({
+            ...item,
+            percent: totalCases > 0 ? (Number(item.cases || 0) / totalCases) * 100 : 0
+        })),
+        [dashboardData?.diseaseCodes, totalCases]
+    );
+    const paginatedCodeRows = useMemo(
+        () => paginateRows(codeRows, codePage, codePageSize),
+        [codeRows, codePage, codePageSize]
+    );
+
+    useEffect(() => {
+        setCodePage(1);
+    }, [dashboardData, districtFilter]);
 
     if (loadingLiveData && !dashboardData) {
         return (
@@ -361,7 +375,7 @@ export default function DiseaseOutbreakDashboard({
                                 </tr>
                             </thead>
                             <tbody>
-                                {codeRows.map((row) => (
+                                {paginatedCodeRows.map((row) => (
                                     <tr key={row.disease_code} className="border-t border-slate-100">
                                         <td className="px-3 py-2 font-black text-rose-700">{row.disease_code}</td>
                                         <td className="px-3 py-2 font-bold text-slate-800">{row.disease_name_th}</td>
@@ -374,6 +388,13 @@ export default function DiseaseOutbreakDashboard({
                             </tbody>
                         </table>
                     </div>
+                    <PaginationControls
+                        page={codePage}
+                        pageSize={codePageSize}
+                        totalItems={codeRows.length}
+                        onPageChange={setCodePage}
+                        onPageSizeChange={setCodePageSize}
+                    />
                     <div className="mt-3 rounded-lg bg-cyan-50 p-3 text-xs font-semibold leading-5 text-cyan-800">
                         กลุ่มโรค: {dashboardData.disease_group} • แหล่งข้อมูล: {dashboardData.source || "ฐานข้อมูล EOC"} • หน่วยรายงาน: สถานพยาบาล / ระบบเฝ้าระวังโรค / งานควบคุมโรค
                     </div>

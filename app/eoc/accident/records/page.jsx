@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import dynamic from 'next/dynamic';
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
@@ -19,6 +20,8 @@ export default function AccidentRecordsPage() {
     const [editingRecord, setEditingRecord] = useState(null);
     const [activeSession, setActiveSession] = useState(null);
     const [filters, setFilters] = useState({ district: 'all', date: '' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     const [formData, setFormData] = useState({
         report_date: new Date().toISOString().split('T')[0],
@@ -91,6 +94,15 @@ export default function AccidentRecordsPage() {
             setLoading(false);
         }
     }, [activeSession, fetchRecords]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    const paginatedRecords = useMemo(
+        () => paginateRows(records, currentPage, pageSize),
+        [records, currentPage, pageSize]
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -309,9 +321,9 @@ export default function AccidentRecordsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {records.map((r, idx) => (
+                                    {paginatedRecords.map((r, idx) => (
                                         <tr key={r.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-sm text-gray-500">{idx + 1}</td>
+                                            <td className="px-4 py-3 text-sm text-gray-500">{((currentPage - 1) * pageSize) + idx + 1}</td>
                                             <td className="px-4 py-3 text-sm">
                                                 <div className="font-medium text-gray-900">
                                                     {r.report_date ? new Date(r.report_date).toLocaleDateString('th-TH') : '-'}
@@ -350,6 +362,13 @@ export default function AccidentRecordsPage() {
                             </table>
                         </div>
                     )}
+                    <PaginationControls
+                        page={currentPage}
+                        pageSize={pageSize}
+                        totalItems={records.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                    />
                 </div>
 
                 {/* Modal */}

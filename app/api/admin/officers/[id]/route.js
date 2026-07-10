@@ -13,7 +13,7 @@ export async function GET(request, { params }) {
         const { id } = await params;
 
         const officers = await query(
-            `SELECT id, username, title, given_name, family_name, email, phone, role, created_at, updated_at 
+            `SELECT id, username, title, given_name, family_name, email, phone, role, department, requested_role, is_approved, created_at, updated_at
              FROM officer WHERE id = ?`,
             [id]
         );
@@ -44,7 +44,7 @@ export async function PUT(request, { params }) {
 
         const { id } = await params;
         const body = await request.json();
-        const { username, password, title, given_name, family_name, email, phone, role } = body;
+        const { username, password, title, given_name, family_name, email, phone, role, department, requested_role, is_approved } = body;
 
         // ตรวจสอบว่ามีเจ้าหน้าที่นี้อยู่หรือไม่
         const existing = await query('SELECT id FROM officer WHERE id = ?', [id]);
@@ -101,6 +101,23 @@ export async function PUT(request, { params }) {
             updates.push('role = ?');
             values.push(role);
         }
+        if (department !== undefined) {
+            updates.push('department = ?');
+            values.push(department);
+        }
+        if (requested_role !== undefined) {
+            updates.push('requested_role = ?');
+            values.push(requested_role);
+        }
+        if (is_approved !== undefined) {
+            updates.push('is_approved = ?');
+            updates.push('approved_time = CASE WHEN ? = 1 THEN NOW() ELSE approved_time END');
+            updates.push('approved_by = CASE WHEN ? = 1 THEN ? ELSE approved_by END');
+            values.push(Number(is_approved) === 1 ? 1 : 0);
+            values.push(Number(is_approved) === 1 ? 1 : 0);
+            values.push(Number(is_approved) === 1 ? 1 : 0);
+            values.push(auth.user?.id || null);
+        }
         if (password) {
             const password_hash = await bcrypt.hash(password, 10);
             updates.push('password_hash = ?');
@@ -121,9 +138,18 @@ export async function PUT(request, { params }) {
             values
         );
 
+        if (Number(is_approved) === 1) {
+            await query(
+                `UPDATE registration_requests
+                 SET status = 'approved', updated_at = NOW()
+                 WHERE officer_id = ?`,
+                [id]
+            );
+        }
+
         // ดึงข้อมูลที่อัปเดตแล้ว
         const updated = await query(
-            'SELECT id, username, title, given_name, family_name, email, phone, role, created_at, updated_at FROM officer WHERE id = ?',
+            'SELECT id, username, title, given_name, family_name, email, phone, role, department, requested_role, is_approved, created_at, updated_at FROM officer WHERE id = ?',
             [id]
         );
 
