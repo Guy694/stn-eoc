@@ -3,6 +3,11 @@ const nextConfig = {
   basePath: '/stn-eoc',
   assetPrefix: '/stn-eoc',
   output: 'standalone',
+  // These files are read at runtime by /api/common/area-polygons.
+  // Include them in the standalone server bundle used by Docker deployments.
+  outputFileTracingIncludes: {
+    '/*': ['./ampure.geojson', './tambonnn.geojson'],
+  },
   trailingSlash: true,
   reactCompiler: true,
   async redirects() {
