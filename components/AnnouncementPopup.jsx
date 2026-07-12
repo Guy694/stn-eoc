@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useCallback, useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { getPublicAssetPath } from '@/lib/publicAssetPath';
-import AppIcon from './icons/AppIcon';
 
 export default function AnnouncementPopup() {
     const [announcement, setAnnouncement] = useState(null);
@@ -35,79 +34,62 @@ export default function AnnouncementPopup() {
         fetchPopupAnnouncement();
     }, []);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         if (announcement) {
             // Save that user has seen this announcement today
             const seenKey = `announcement_seen_${announcement.id}`;
             localStorage.setItem(seenKey, new Date().toDateString());
         }
         setShowPopup(false);
-    };
+    }, [announcement]);
+
+    useEffect(() => {
+        if (!showPopup) return undefined;
+
+        const previousOverflow = document.body.style.overflow;
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') handleClose();
+        };
+
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleClose, showPopup]);
 
     if (!showPopup || !announcement) {
         return null;
     }
 
     return (
-        <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-[9999] p-4 animate-fadeIn">
-            <div className=" bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-scaleIn">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <AppIcon icon="megaphone" className="h-6 w-6" />
-                        ประกาศ/ข่าวสาร
-                    </h3>
-                    <button
-                        onClick={handleClose}
-                        className="text-white hover:text-gray-200 transition-colors"
-                        aria-label="ปิดประกาศ"
-                    >
-                        <AppIcon icon="x" className="h-6 w-6" />
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
-                    {/* Title */}
-                    {announcement.title && (
-                        <div className="px-6 pt-4 pb-2">
-                            <h4 className="text-xl font-bold text-gray-800">
-                                {announcement.title}
-                            </h4>
-                        </div>
-                    )}
-
-                    {/* Description */}
-                    {announcement.description && (
-                        <div className="px-6 pb-4">
-                            <p className="text-gray-600 whitespace-pre-wrap">
-                                {announcement.description}
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Image */}
-                    <div className="px-6 pb-6">
-                        <Image
-                            src={getPublicAssetPath(announcement.image_path)}
-                            alt={announcement.title}
-                            width={1200}
-                            height={675}
-                            className="w-full h-auto rounded-lg shadow-lg"
-                            unoptimized
-                        />
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="bg-gray-50 px-8 py-2 border-t flex justify-end">
-                    <button
-                        onClick={handleClose}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    >
-                        รับทราบ
-                    </button>
-                </div>
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm animate-fadeIn sm:p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-label="ภาพประกาศข่าวสาร"
+            onMouseDown={(event) => {
+                if (event.target === event.currentTarget) handleClose();
+            }}
+        >
+            <div className="relative inline-flex max-h-[85vh] max-w-[90vw] animate-scaleIn">
+                {/* ใช้ขนาดธรรมชาติของภาพเพื่อให้พื้นที่นอกภาพคลิกปิดได้จริง */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src={getPublicAssetPath(announcement.image_path)}
+                    alt={announcement.title || 'ภาพประกาศข่าวสาร'}
+                    className="h-auto max-h-[85vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
+                />
+                <button
+                    type="button"
+                    onClick={handleClose}
+                    className="absolute right-0 top-0 z-10 flex h-11 w-11 -translate-y-1/3 translate-x-1/3 items-center justify-center rounded-full border border-white/30 bg-black/75 text-white shadow-xl transition hover:scale-105 hover:bg-black focus:outline-none focus:ring-2 focus:ring-white sm:h-12 sm:w-12"
+                    aria-label="ปิดประกาศ"
+                >
+                    <X className="h-6 w-6" strokeWidth={2.5} />
+                </button>
             </div>
 
             <style jsx>{`
@@ -122,7 +104,7 @@ export default function AnnouncementPopup() {
 
                 @keyframes scaleIn {
                     from {
-                        transform: scale(0.9);
+                        transform: scale(0.96);
                         opacity: 0;
                     }
                     to {
@@ -136,7 +118,7 @@ export default function AnnouncementPopup() {
                 }
 
                 .animate-scaleIn {
-                    animation: scaleIn 0.3s ease-out;
+                    animation: scaleIn 0.22s ease-out;
                 }
             `}</style>
         </div>

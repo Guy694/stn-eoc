@@ -66,7 +66,7 @@ export default function PublicOpsScaffold({
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
     { href: "/public/agencies", label: "หน่วยงาน", icon: Building2, key: "agencies" },
     { href: "#", label: "EOC Assistant", icon: Bot, key: "assistant", action: openAssistant },
-    { href: "/login", label: "เจ้าหน้าที่", icon: LogIn, key: "staff" }
+    { href: "/login", label: "เข้าสู่ระบบ", icon: LogIn, key: "staff" }
   ];
   const mobileItems = items.filter((item) => item.key !== "agencies").slice(0, 5);
   const statusKey = eocStatus || (eocIsOpen ? "open" : "watch");

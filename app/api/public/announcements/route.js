@@ -19,6 +19,7 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const eocType = searchParams.get('eocType');
+        const announcementId = Number.parseInt(searchParams.get('id') || '', 10);
         const includeOld = searchParams.get('include_old') === '1' || searchParams.get('includeArchived') === '1';
         const limit = Math.min(parseInt(searchParams.get('limit') || '12', 10), includeOld ? 200 : 50);
 
@@ -26,6 +27,14 @@ export async function GET(request) {
             `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`
         );
         const hasEocType = columns.length > 0;
+        const [optionalColumns] = await connection.execute(
+            `SELECT COLUMN_NAME
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'announcements'
+               AND COLUMN_NAME IN ('content_type', 'category', 'attachment_path', 'attachment_name')`
+        );
+        const availableColumns = new Set(optionalColumns.map((column) => column.COLUMN_NAME));
 
         const params = [];
         const activeWindowWhereClause = `
@@ -42,8 +51,18 @@ export async function GET(request) {
             whereClause += ' AND a.eoc_type = ?';
             params.push(eocType);
         }
+        if (Number.isInteger(announcementId) && announcementId > 0) {
+            whereClause += ' AND a.id = ?';
+            params.push(announcementId);
+        }
 
         const selectEocType = hasEocType ? 'a.eoc_type,' : `'flood' as eoc_type,`;
+        const selectContentFields = [
+            availableColumns.has('content_type') ? 'a.content_type' : `'news' as content_type`,
+            availableColumns.has('category') ? 'a.category' : 'NULL as category',
+            availableColumns.has('attachment_path') ? 'a.attachment_path' : 'NULL as attachment_path',
+            availableColumns.has('attachment_name') ? 'a.attachment_name' : 'NULL as attachment_name'
+        ].join(',\n                ');
 
         const selectSql = `SELECT
                 a.id,
@@ -55,6 +74,7 @@ export async function GET(request) {
                 a.start_date,
                 a.end_date,
                 a.created_at,
+                ${selectContentFields},
                 CASE
                     WHEN (a.start_date IS NULL OR a.start_date <= NOW())
                         AND (a.end_date IS NULL OR a.end_date >= NOW()) THEN 'current'
@@ -94,6 +114,10 @@ export async function GET(request) {
             if (hasEocType && eocType) {
                 fallbackWhereClause += ' AND a.eoc_type = ?';
                 fallbackParams.push(eocType);
+            }
+            if (Number.isInteger(announcementId) && announcementId > 0) {
+                fallbackWhereClause += ' AND a.id = ?';
+                fallbackParams.push(announcementId);
             }
 
             const [fallbackRows] = await connection.execute(

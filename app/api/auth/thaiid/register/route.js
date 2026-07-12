@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import mysql from "mysql2/promise";
+import { REGISTRATION_SESSION_COOKIE, setRegistrationSessionCookie, unsealRegistrationSession } from "@/lib/registrationSession";
+import { notifySecurityEvent } from "@/lib/telegram";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -15,8 +16,7 @@ const pool = mysql.createPool({
 export async function POST(request) {
     try {
         // ดึงข้อมูล session
-        const cookieStore = await cookies();
-        const userSession = cookieStore.get('user_session');
+        const userSession = request.cookies.get(REGISTRATION_SESSION_COOKIE)?.value;
 
         if (!userSession) {
             return NextResponse.json(
@@ -25,7 +25,16 @@ export async function POST(request) {
             );
         }
 
-        const userData = JSON.parse(userSession.value);
+        let userData;
+        try {
+            userData = unsealRegistrationSession(userSession);
+        } catch {
+            void notifySecurityEvent('tampered_registration_session', {
+                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                path: '/api/auth/thaiid/register'
+            });
+            return NextResponse.json({ success: false, message: 'Session ไม่ถูกต้อง กรุณายืนยันตัวตนใหม่' }, { status: 401 });
+        }
         const { position, department, requested_role, phone, email } = await request.json();
 
         // Validate
@@ -65,12 +74,7 @@ export async function POST(request) {
                 message: 'ส่งคำขอเข้าใช้งานเรียบร้อยแล้ว'
             });
 
-            response.cookies.set('user_session', JSON.stringify(updatedUserData), {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 60 * 60 * 24
-            });
+            setRegistrationSessionCookie(response, updatedUserData);
 
             return response;
 

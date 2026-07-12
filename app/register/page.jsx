@@ -116,18 +116,7 @@ export default function RegisterPage() {
                         </p>
                     </div>
 
-                    <div className="relative grid gap-3 text-sm text-cyan-50">
-                        <div className="rounded-xl border border-white/15 bg-white/10 p-4">
-                            <IdCard className="mb-2 h-5 w-5" />
-                            <div className="font-black">ThaiID Verification</div>
-                            <div className="mt-1 text-xs text-cyan-100">ตรวจชื่อและนามสกุลจาก ThaID ก่อนผูกบัญชี</div>
-                        </div>
-                        <div className="rounded-xl border border-white/15 bg-white/10 p-4">
-                            <Lock className="mb-2 h-5 w-5" />
-                            <div className="font-black">Rate Limited</div>
-                            <div className="mt-1 text-xs text-cyan-100">จำกัดการลงทะเบียนซ้ำจาก IP เดียวกัน</div>
-                        </div>
-                    </div>
+               
                 </section>
 
                 <section className="p-5 sm:p-8 lg:p-10">

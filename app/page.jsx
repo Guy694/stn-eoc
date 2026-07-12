@@ -209,7 +209,7 @@ function buildPublicHomeMenu(showWeatherMenu) {
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
     { href: "/public/agencies", label: "หน่วยงาน", icon: Building2, key: "agencies" },
     { href: "#", label: "EOC Assistant", icon: Bot, key: "assistant", action: openPublicAssistant },
-    { href: "/login", label: "เจ้าหน้าที่", icon: LogIn, key: "staff" }
+    { href: "/login", label: "เข้าสู่ระบบ", icon: LogIn, key: "staff" }
   ];
 }
 

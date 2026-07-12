@@ -3,6 +3,8 @@ import mysql from "mysql2/promise";
 import crypto from "crypto";
 import { clearCitizenSessionCookie, setCitizenSessionCookie } from "@/lib/citizenAuth";
 import { applyNoStoreHeaders, getThaiIdConfigError, getThaiIdOAuthConfig } from "@/lib/thaiIdConfig";
+import { clearRegistrationSessionCookie, setRegistrationSessionCookie } from "@/lib/registrationSession";
+import { notifySecurityEvent } from "@/lib/telegram";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -293,6 +295,11 @@ export async function GET(request) {
 
         const storedState = request.cookies.get('thaiid_state')?.value;
         if (!state || !storedState || state !== storedState) {
+            void notifySecurityEvent('thaiid_oauth_state_mismatch', {
+                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                hasState: Boolean(state),
+                hasStoredState: Boolean(storedState)
+            });
             const baseUrl = getAppBaseUrl(request);
             return applyNoStoreHeaders(NextResponse.redirect(
                 `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ThaiID state ไม่ถูกต้อง กรุณาเริ่มเข้าสู่ระบบใหม่')}`
@@ -605,22 +612,10 @@ export async function GET(request) {
                     path: '/'
                 });
 
-                response.cookies.set('user_session', '', {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'lax',
-                    maxAge: 0,
-                    path: '/'
-                });
+                clearRegistrationSessionCookie(response);
                 clearCitizenSessionCookie(response);
             } else {
-                response.cookies.set('user_session', JSON.stringify(userData), {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'lax',
-                    maxAge: 60 * 60 * 24,
-                    path: '/'
-                });
+                setRegistrationSessionCookie(response, userData);
                 setCitizenSessionCookie(response, {
                     pid,
                     given_name: userRecord.given_name,

@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { query } from '@/lib/db';
 import { getRouteAdvice, isRouteAdviceQuestion } from '@/lib/routeAdvice';
+import { notifySecurityEvent } from '@/lib/telegram';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -678,6 +679,20 @@ export async function POST(request) {
                 { status: 400 }
             );
         }
+        if (message.length > 2000) {
+            void notifySecurityEvent('chatbot_oversized_prompt', {
+                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                length: message.length
+            });
+            return Response.json({ success: false, error: 'Message is too long' }, { status: 413 });
+        }
+        if (/\b(select|union|insert|update|delete|drop|alter|information_schema|sleep|benchmark)\b/i.test(message)) {
+            void notifySecurityEvent('chatbot_sql_probe_blocked', {
+                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                sample: message.slice(0, 200)
+            });
+            return Response.json({ success: false, error: 'Unsupported request' }, { status: 400 });
+        }
 
         const allowedKnowledgeDomain = detectAllowedKnowledgeDomain(message);
 
@@ -701,6 +716,38 @@ export async function POST(request) {
         if (deterministicDataResponse) {
             return deterministicDataResponse;
         }
+
+        // Database access is deliberately limited to the deterministic query
+        // templates above. Free-form AI-generated SQL must never be executed.
+        if (allowedKnowledgeDomain) {
+            if (!process.env.GEMINI_API_KEY) {
+                return createAssistantUnavailableResponse({
+                    domain: allowedKnowledgeDomain,
+                    reason: 'ai_not_configured'
+                });
+            }
+            const knowledgeModel = genAI.getGenerativeModel({
+                model: 'gemini-2.5-flash',
+                generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+            });
+            return createKnowledgeResponse({
+                model: knowledgeModel,
+                message,
+                conversationHistory,
+                domain: allowedKnowledgeDomain
+            });
+        }
+
+        return Response.json({
+            success: true,
+            data: {
+                answer: buildScopeAnswer(),
+                sql: null,
+                results: null,
+                resultCount: 0,
+                source: 'out_of_scope'
+            }
+        });
 
         // Check if API key is configured
         if (!process.env.GEMINI_API_KEY) {
@@ -931,7 +978,9 @@ RULES:
         // Step 3: Execute SQL query
         let queryResults;
         try {
-            queryResults = await query(sqlData.sql);
+            // Defense in depth: free-form SQL execution is permanently disabled.
+            // Database answers must be added as deterministic templates above.
+            throw new Error('Free-form SQL execution is disabled');
         } catch (dbError) {
             console.error('Database query error:', dbError);
             return Response.json({

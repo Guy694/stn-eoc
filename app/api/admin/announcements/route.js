@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 import { requireAuth } from "@/lib/auth";
 import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from "@/lib/fileUpload";
 import { publicInternalError } from "@/lib/apiResponse";
 
 const MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const VALID_EOC_TYPES = ['flood', 'drought', 'tsunami', 'earthquake', 'disease', 'accident', 'festival-accidents'];
+const MAX_ATTACHMENT_SIZE_BYTES = 20 * 1024 * 1024;
+const ALLOWED_ATTACHMENT_TYPES = new Map([
+    ['application/pdf', 'pdf'],
+    ['application/msword', 'doc'],
+    ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'docx'],
+    ['application/vnd.ms-excel', 'xls'],
+    ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xlsx']
+]);
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -74,6 +83,18 @@ async function saveAnnouncementImage(image) {
     };
 }
 
+async function saveAnnouncementAttachment(file) {
+    if (!file || typeof file.arrayBuffer !== 'function' || !file.size) return { ok: true, attachmentPath: null, attachmentName: null };
+    if (file.size > MAX_ATTACHMENT_SIZE_BYTES) return { ok: false, error: 'เอกสารแนบต้องมีขนาดไม่เกิน 20MB' };
+    const extension = ALLOWED_ATTACHMENT_TYPES.get(file.type);
+    if (!extension) return { ok: false, error: 'รองรับเอกสาร PDF, Word และ Excel เท่านั้น' };
+    const uploadDir = getUploadDir('announcements');
+    await mkdir(uploadDir, { recursive: true });
+    const fileName = createRandomFilename(extension, 'document');
+    await writeFile(resolveInside(uploadDir, fileName), Buffer.from(await file.arrayBuffer()));
+    return { ok: true, attachmentPath: `/uploads/announcements/${fileName}`, attachmentName: path.basename(file.name || `document.${extension}`) };
+}
+
 // GET - ดึงรายการแบนเนอร์
 export async function GET(request) {
     const connection = await pool.getConnection();
@@ -94,6 +115,8 @@ export async function GET(request) {
         const offset = (page - 1) * limit;
         const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
         const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
+        const hasCategory = await hasAnnouncementColumn(connection, 'category');
+        const hasAttachment = await hasAnnouncementColumn(connection, 'attachment_path');
 
         let whereConditions = [];
         let params = [];
@@ -137,9 +160,10 @@ export async function GET(request) {
                 NULL as session_status,
                 NULL as session_opened_at,
                 NULL as session_closed_at,`;
+        const optionalSelect = `${hasCategory ? 'a.category' : 'NULL as category'}, ${hasAttachment ? 'a.attachment_path, a.attachment_name' : 'NULL as attachment_path, NULL as attachment_name'}`;
         const selectFields = hasEocType
-            ? `a.id, a.title, a.eoc_type, ${sessionSelect} a.description, a.image_path, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, ' ', o.family_name) as created_by_name`
-            : `a.id, a.title, 'flood' as eoc_type, ${sessionSelect} a.description, a.image_path, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, ' ', o.family_name) as created_by_name`;
+            ? `a.id, a.title, a.eoc_type, ${sessionSelect} a.description, a.image_path, ${optionalSelect}, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, ' ', o.family_name) as created_by_name`
+            : `a.id, a.title, 'flood' as eoc_type, ${sessionSelect} a.description, a.image_path, ${optionalSelect}, a.show_popup, a.priority, a.is_active, a.start_date, a.end_date, a.created_by, a.created_at, a.updated_at, CONCAT(o.given_name, ' ', o.family_name) as created_by_name`;
 
         const [announcements] = await connection.execute(
             `SELECT ${selectFields}
@@ -228,6 +252,7 @@ export async function POST(request) {
         const sessionEocType = await resolveSessionEocType(connection, sessionId);
         const eocType = sessionEocType;
         const description = formData.get('description');
+        const category = String(formData.get('category') || '').trim() || null;
         const showPopup = formData.get('show_popup') === 'true';
         const priority = parseInt(formData.get('priority') || '0');
         const isActive = formData.get('is_active') === 'true';
@@ -235,6 +260,7 @@ export async function POST(request) {
         const endDate = formData.get('end_date');
         const createdBy = auth.user.id;
         const image = formData.get('image');
+        const attachment = formData.get('attachment');
 
         // Validate
         if (!title || !image) {
@@ -267,34 +293,25 @@ export async function POST(request) {
         }
 
         const imagePath = savedImage.imagePath;
+        const savedAttachment = await saveAnnouncementAttachment(attachment);
+        if (!savedAttachment.ok) {
+            return NextResponse.json({ success: false, message: savedAttachment.error }, { status: 400 });
+        }
 
         const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
         const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
+        const hasCategory = await hasAnnouncementColumn(connection, 'category');
+        const hasAttachment = await hasAnnouncementColumn(connection, 'attachment_path');
 
         // บันทึกลงฐานข้อมูล
-        let result;
-        if (hasEocType && hasSessionId) {
-            [result] = await connection.execute(
-                `INSERT INTO announcements
-                (title, eoc_type, session_id, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [title, eocType, sessionId, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy]
-            );
-        } else if (hasEocType) {
-            [result] = await connection.execute(
-                `INSERT INTO announcements 
-                (title, eoc_type, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [title, eocType, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy]
-            );
-        } else {
-            [result] = await connection.execute(
-                `INSERT INTO announcements 
-                (title, description, image_path, show_popup, priority, is_active, start_date, end_date, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [title, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy]
-            );
-        }
+        const fields = ['title', 'description', 'image_path', 'show_popup', 'priority', 'is_active', 'start_date', 'end_date', 'created_by'];
+        const values = [title, description, imagePath, showPopup, priority, isActive, startDate || null, endDate || null, createdBy];
+        if (hasEocType) { fields.push('eoc_type'); values.push(eocType); }
+        if (hasSessionId) { fields.push('session_id'); values.push(sessionId); }
+        if (hasCategory) { fields.push('category'); values.push(category); }
+        if (hasAttachment) { fields.push('attachment_path', 'attachment_name'); values.push(savedAttachment.attachmentPath, savedAttachment.attachmentName); }
+        const placeholders = fields.map(() => '?').join(', ');
+        const [result] = await connection.execute(`INSERT INTO announcements (${fields.join(', ')}) VALUES (${placeholders})`, values);
 
         return NextResponse.json({
             success: true,
@@ -329,12 +346,15 @@ export async function PUT(request) {
         let end_date;
         let sessionId;
         let image = null;
+        let attachment = null;
+        let category = null;
 
         if (contentType.includes('multipart/form-data')) {
             const formData = await request.formData();
             id = formData.get('id');
             title = formData.get('title');
             description = formData.get('description');
+            category = String(formData.get('category') || '').trim() || null;
             show_popup = formData.get('show_popup') === 'true';
             priority = parseInt(formData.get('priority') || '0', 10);
             is_active = formData.get('is_active') === 'true';
@@ -342,9 +362,11 @@ export async function PUT(request) {
             end_date = formData.get('end_date');
             sessionId = normalizeOptionalId(formData.get('session_id'));
             image = formData.get('image');
+            attachment = formData.get('attachment');
         } else {
             const body = await request.json();
             ({ id, title, description, show_popup, priority, is_active, start_date, end_date } = body);
+            category = String(body.category || '').trim() || null;
             sessionId = normalizeOptionalId(body.session_id);
         }
         const sessionEocType = await resolveSessionEocType(connection, sessionId);
@@ -373,6 +395,8 @@ export async function PUT(request) {
 
         const hasEocType = await hasAnnouncementColumn(connection, 'eoc_type');
         const hasSessionId = await hasAnnouncementColumn(connection, 'session_id');
+        const hasCategory = await hasAnnouncementColumn(connection, 'category');
+        const hasAttachment = await hasAnnouncementColumn(connection, 'attachment_path');
         let updatedImagePath = null;
         if (image && image.size > 0) {
             const savedImage = await saveAnnouncementImage(image);
@@ -385,63 +409,20 @@ export async function PUT(request) {
             updatedImagePath = savedImage.imagePath;
         }
 
-        const imageSetSql = updatedImagePath ? ', image_path = ?' : '';
-
-        if (hasEocType && hasSessionId && resolvedEocType) {
-            const values = [title, resolvedEocType, sessionId, description, show_popup, priority, is_active, start_date || null, end_date || null];
-            if (updatedImagePath) values.push(updatedImagePath);
-            values.push(id);
-            await connection.execute(
-                `UPDATE announcements
-                SET title = ?,
-                    eoc_type = ?,
-                    session_id = ?,
-                    description = ?,
-                    show_popup = ?,
-                    priority = ?,
-                    is_active = ?,
-                    start_date = ?,
-                    end_date = ?
-                    ${imageSetSql}
-                WHERE id = ?`,
-                values
-            );
-        } else if (hasEocType && resolvedEocType) {
-            const values = [title, resolvedEocType, description, show_popup, priority, is_active, start_date || null, end_date || null];
-            if (updatedImagePath) values.push(updatedImagePath);
-            values.push(id);
-            await connection.execute(
-                `UPDATE announcements 
-                SET title = ?, 
-                    eoc_type = ?,
-                    description = ?, 
-                    show_popup = ?, 
-                    priority = ?, 
-                    is_active = ?, 
-                    start_date = ?, 
-                    end_date = ?
-                    ${imageSetSql}
-                WHERE id = ?`,
-                values
-            );
-        } else {
-            const values = [title, description, show_popup, priority, is_active, start_date || null, end_date || null];
-            if (updatedImagePath) values.push(updatedImagePath);
-            values.push(id);
-            await connection.execute(
-                `UPDATE announcements 
-                SET title = ?, 
-                    description = ?, 
-                    show_popup = ?, 
-                    priority = ?, 
-                    is_active = ?, 
-                    start_date = ?, 
-                    end_date = ?
-                    ${imageSetSql}
-                WHERE id = ?`,
-                values
-            );
+        const savedAttachment = await saveAnnouncementAttachment(attachment);
+        if (!savedAttachment.ok) return NextResponse.json({ success: false, message: savedAttachment.error }, { status: 400 });
+        const sets = ['title = ?', 'description = ?', 'show_popup = ?', 'priority = ?', 'is_active = ?', 'start_date = ?', 'end_date = ?'];
+        const values = [title, description, show_popup, priority, is_active, start_date || null, end_date || null];
+        if (hasEocType) { sets.push('eoc_type = ?'); values.push(resolvedEocType); }
+        if (hasSessionId) { sets.push('session_id = ?'); values.push(sessionId); }
+        if (hasCategory) { sets.push('category = ?'); values.push(category); }
+        if (updatedImagePath) { sets.push('image_path = ?'); values.push(updatedImagePath); }
+        if (hasAttachment && savedAttachment.attachmentPath) {
+            sets.push('attachment_path = ?', 'attachment_name = ?');
+            values.push(savedAttachment.attachmentPath, savedAttachment.attachmentName);
         }
+        values.push(id);
+        await connection.execute(`UPDATE announcements SET ${sets.join(', ')} WHERE id = ?`, values);
 
         return NextResponse.json({
             success: true,

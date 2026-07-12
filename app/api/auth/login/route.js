@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import { publicInternalError } from "@/lib/apiResponse";
+import { notifySecurityEvent } from "@/lib/telegram";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -105,6 +106,11 @@ export async function POST(request) {
                     VALUES (?, ?, ?, ?, ?, ?)`,
                     ['suspicious_activity', username, ip_address, user_agent, 'Too many failed login attempts', 'high']
                 );
+                void notifySecurityEvent('login_rate_limit_triggered', {
+                    username,
+                    ip: ip_address,
+                    userAgent: user_agent
+                });
 
                 return NextResponse.json(
                     { success: false, message: 'บัญชีถูกล็อคชั่วคราว กรุณาลองใหม่ในอีก 15 นาที' },
@@ -172,6 +178,12 @@ export async function POST(request) {
                         VALUES (?, ?, ?, ?, ?, ?, ?)`,
                         ['account_locked', officer.id, username, ip_address, user_agent, `Account locked after ${failedAttempts} failed attempts`, 'critical']
                     );
+                    void notifySecurityEvent('account_locked_after_failed_logins', {
+                        userId: officer.id,
+                        username,
+                        ip: ip_address,
+                        failedAttempts
+                    });
                 }
 
                 await connection.execute(

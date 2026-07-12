@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 /**
  * API Route: Get Database Schema
@@ -6,6 +7,9 @@ import { query } from '@/lib/db';
  */
 export async function GET(request) {
     try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+
         // Get all tables in the database
         const tables = await query(`
       SELECT TABLE_NAME, TABLE_COMMENT

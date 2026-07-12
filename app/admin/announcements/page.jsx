@@ -9,6 +9,7 @@ import Image from 'next/image';
 
 const MAX_UPLOAD_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const SUPPORTED_ATTACHMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
 
 const EOC_TYPES = [
     { value: 'flood', label: '💧 อุทกภัยน้ำท่วม', color: 'blue' },
@@ -73,6 +74,7 @@ function AnnouncementsContent() {
         eoc_type: eocParam || 'flood',
         session_id: '',
         description: '',
+        category: '',
         show_popup: false,
         priority: 0,
         is_active: true,
@@ -81,6 +83,7 @@ function AnnouncementsContent() {
     });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [attachmentFile, setAttachmentFile] = useState(null);
 
     // Update filter when URL parameter changes
     useEffect(() => {
@@ -190,6 +193,16 @@ function AnnouncementsContent() {
         }
     };
 
+    const handleAttachmentChange = (e) => {
+        const file = e.target.files[0] || null;
+        if (file && (!SUPPORTED_ATTACHMENT_TYPES.includes(file.type) || file.size > 20 * 1024 * 1024)) {
+            showWarning('รองรับ PDF, Word, Excel ขนาดไม่เกิน 20MB');
+            e.target.value = '';
+            return;
+        }
+        setAttachmentFile(file);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -207,18 +220,20 @@ function AnnouncementsContent() {
             if (editMode) {
                 // Update
                 let requestOptions;
-                if (imageFile) {
+                if (imageFile || attachmentFile) {
                     const formDataToSend = new FormData();
                     formDataToSend.append('id', selectedAnnouncement.id);
                     formDataToSend.append('title', formData.title);
                     formDataToSend.append('session_id', formData.session_id);
                     formDataToSend.append('description', formData.description);
+                    formDataToSend.append('category', formData.category);
                     formDataToSend.append('show_popup', formData.show_popup);
                     formDataToSend.append('priority', formData.priority);
                     formDataToSend.append('is_active', formData.is_active);
                     formDataToSend.append('start_date', formData.start_date);
                     formDataToSend.append('end_date', formData.end_date);
-                    formDataToSend.append('image', imageFile);
+                    if (imageFile) formDataToSend.append('image', imageFile);
+                    if (attachmentFile) formDataToSend.append('attachment', attachmentFile);
                     requestOptions = {
                         method: 'PUT',
                         body: formDataToSend
@@ -254,6 +269,7 @@ function AnnouncementsContent() {
                 formDataToSend.append('title', formData.title);
                 formDataToSend.append('session_id', formData.session_id);
                 formDataToSend.append('description', formData.description);
+                formDataToSend.append('category', formData.category);
                 formDataToSend.append('show_popup', formData.show_popup);
                 formDataToSend.append('priority', formData.priority);
                 formDataToSend.append('is_active', formData.is_active);
@@ -261,6 +277,7 @@ function AnnouncementsContent() {
                 formDataToSend.append('end_date', formData.end_date);
                 formDataToSend.append('created_by', user?.id || 1);
                 formDataToSend.append('image', imageFile);
+                if (attachmentFile) formDataToSend.append('attachment', attachmentFile);
 
                 const response = await fetch('/stn-eoc/api/admin/announcements', {
                     method: 'POST',
@@ -295,6 +312,7 @@ function AnnouncementsContent() {
             eoc_type: announcement.eoc_type || 'flood',
             session_id: announcement.session_id ? String(announcement.session_id) : '',
             description: announcement.description || '',
+            category: announcement.category || '',
             show_popup: announcement.show_popup === 1,
             priority: announcement.priority,
             is_active: announcement.is_active === 1,
@@ -302,6 +320,7 @@ function AnnouncementsContent() {
             end_date: announcement.end_date ? announcement.end_date.slice(0, 16) : ''
         });
         setImagePreview(getAnnouncementImageSrc(announcement.image_path));
+        setAttachmentFile(null);
         setShowModal(true);
     };
 
@@ -331,6 +350,7 @@ function AnnouncementsContent() {
             eoc_type: filters.eoc_type || 'flood',
             session_id: filters.session_id || '',
             description: '',
+            category: '',
             show_popup: false,
             priority: 0,
             is_active: true,
@@ -339,6 +359,7 @@ function AnnouncementsContent() {
         });
         setImageFile(null);
         setImagePreview(null);
+        setAttachmentFile(null);
         setEditMode(false);
         setSelectedAnnouncement(null);
     };
@@ -760,6 +781,18 @@ function AnnouncementsContent() {
                                         />
                                     </div>
 
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-700">หมวดหมู่ข่าว</label>
+                                        <input
+                                            type="text"
+                                            value={formData.category}
+                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                            placeholder="เช่น ข่าวประชาสัมพันธ์, เตือนภัย, เอกสารเผยแพร่"
+                                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            maxLength={100}
+                                        />
+                                    </div>
+
                                     {/* Image */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -786,6 +819,21 @@ function AnnouncementsContent() {
                                         )}
                                         <p className="mt-1 text-xs text-gray-500">
                                             อัปโหลดได้ 1 ภาพ รองรับ JPG, PNG, WebP ขนาดไม่เกิน 10MB
+                                        </p>
+                                    </div>
+
+                                    {/* Checkboxes */}
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-700">เอกสารแนบ</label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                            onChange={handleAttachmentChange}
+                                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            รองรับ PDF, Word และ Excel ขนาดไม่เกิน 20MB
+                                            {editMode && selectedAnnouncement?.attachment_name ? ` • ไฟล์ปัจจุบัน: ${selectedAnnouncement.attachment_name}` : ''}
                                         </p>
                                     </div>
 

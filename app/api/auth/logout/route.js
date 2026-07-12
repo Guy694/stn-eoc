@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import { publicInternalError } from "@/lib/apiResponse";
 import { clearCitizenSessionCookie } from "@/lib/citizenAuth";
+import { clearRegistrationSessionCookie } from "@/lib/registrationSession";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -34,13 +35,7 @@ export async function POST(request) {
                 message: 'ออกจากระบบสำเร็จ'
             });
             clearCitizenSessionCookie(response);
-            response.cookies.set('user_session', '', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 0,
-                path: '/'
-            });
+            clearRegistrationSessionCookie(response);
             return response;
         }
 
@@ -74,13 +69,7 @@ export async function POST(request) {
             });
 
             // ลบ cookie สำหรับ ThaiID session และ session_token
-            response.cookies.set('user_session', '', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 0,
-                path: '/'
-            });
+            clearRegistrationSessionCookie(response);
 
             response.cookies.set('session_token', '', {
                 httpOnly: true,
