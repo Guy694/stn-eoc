@@ -186,10 +186,10 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex justify-between items-center">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">
+                        <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
                             จัดการทีมงาน EOC {session.eoc_name}
                         </h2>
                         <p className="text-gray-600">
@@ -269,10 +269,10 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
         <div className={`bg-white rounded-lg shadow-md border border-${team.color}-500`}>
             {/* Team Header */}
             <div className="p-4 border-b">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex min-w-0 items-center space-x-3">
                         <AppIcon icon={team.icon || 'users'} className="h-8 w-8 text-blue-600" />
-                        <div>
+                        <div className="min-w-0">
                             <h3 className="text-lg font-bold text-gray-800">
                                 {team.team_name_th}
                             </h3>
@@ -281,7 +281,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <button
                             onClick={() => setExpanded(!expanded)}
                             className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded"
@@ -318,56 +318,98 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
             {expanded && (
                 <div className="p-4">
                     {team.members && team.members.length > 0 ? (
-                        <table className="text-gray-600 w-full">
-                            <thead>
-                                <tr className="border-b">
-                                    <th className="text-left py-2">ชื่อ-สกุล</th>
-                                    <th className="text-left py-2">Username</th>
-                                    <th className="text-left py-2">บทบาทในทีม</th>
-                                    <th className="text-left py-2">สถานะ</th>
-                                    <th className="text-left py-2">เข้าร่วมเมื่อ</th>
-                                    {sessionStatus === 'active' && <th className="text-center py-2">จัดการ</th>}
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <>
+                            <div className="grid gap-3 md:hidden">
                                 {team.members.map((member) => (
-                                    <tr key={member.id} className={`border-b ${!member.is_active ? 'opacity-50' : ''}`}>
-                                        <td className="py-2">{member.full_name}</td>
-                                        <td className="py-2">{member.username}</td>
-                                        <td className="py-2">
-                                            <span className={`px-2 py-1 rounded text-sm ${member.role_in_team === 'หัวหน้าทีม'
+                                    <div key={member.id} className={`rounded-lg border border-gray-200 bg-gray-50 p-3 ${!member.is_active ? 'opacity-50' : ''}`}>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="truncate font-bold text-gray-900">{member.full_name}</div>
+                                                <div className="mt-0.5 truncate text-sm text-gray-500">{member.username}</div>
+                                            </div>
+                                            <span className={`shrink-0 rounded px-2 py-1 text-xs font-bold ${member.role_in_team === 'หัวหน้าทีม'
                                                 ? 'bg-yellow-100 text-yellow-800'
                                                 : 'bg-gray-100 text-gray-800'
                                                 }`}>
                                                 {member.role_in_team}
                                             </span>
-                                        </td>
-                                        <td className="py-2">
-                                            {member.is_active ? (
-                                                <span className="text-green-600">✓ ปฏิบัติงาน</span>
-                                            ) : (
-                                                <span className="text-red-600">✗ ถอดออก</span>
-                                            )}
-                                        </td>
-                                        <td className="py-2 text-sm text-gray-600">
-                                            {new Date(member.assigned_at).toLocaleDateString('th-TH')}
-                                        </td>
-                                        {sessionStatus === 'active' && (
-                                            <td className="py-2 text-center">
-                                                {member.is_active && (
-                                                    <button
-                                                        onClick={() => onRemoveMember(team.session_team_id, member.id)}
-                                                        className="px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm"
-                                                    >
-                                                        ถอดออก
-                                                    </button>
-                                                )}
-                                            </td>
+                                        </div>
+                                        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                                            <div className="rounded bg-white px-2 py-1.5">
+                                                <div className="text-xs text-gray-500">สถานะ</div>
+                                                <div className={member.is_active ? 'font-bold text-green-600' : 'font-bold text-red-600'}>
+                                                    {member.is_active ? 'ปฏิบัติงาน' : 'ถอดออก'}
+                                                </div>
+                                            </div>
+                                            <div className="rounded bg-white px-2 py-1.5">
+                                                <div className="text-xs text-gray-500">เข้าร่วมเมื่อ</div>
+                                                <div className="font-bold text-gray-700">{new Date(member.assigned_at).toLocaleDateString('th-TH')}</div>
+                                            </div>
+                                        </div>
+                                        {sessionStatus === 'active' && member.is_active && (
+                                            <button
+                                                onClick={() => onRemoveMember(team.session_team_id, member.id)}
+                                                className="mt-3 w-full rounded-lg bg-red-100 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-200"
+                                            >
+                                                ถอดออก
+                                            </button>
                                         )}
-                                    </tr>
+                                    </div>
                                 ))}
-                            </tbody>
-                        </table>
+                            </div>
+                            <div className="hidden overflow-x-auto md:block">
+                                <table className="w-full min-w-[760px] text-gray-600">
+                                    <thead>
+                                        <tr className="border-b">
+                                            <th className="text-left py-2">ชื่อ-สกุล</th>
+                                            <th className="text-left py-2">Username</th>
+                                            <th className="text-left py-2">บทบาทในทีม</th>
+                                            <th className="text-left py-2">สถานะ</th>
+                                            <th className="text-left py-2">เข้าร่วมเมื่อ</th>
+                                            {sessionStatus === 'active' && <th className="text-center py-2">จัดการ</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {team.members.map((member) => (
+                                            <tr key={member.id} className={`border-b ${!member.is_active ? 'opacity-50' : ''}`}>
+                                                <td className="py-2">{member.full_name}</td>
+                                                <td className="py-2">{member.username}</td>
+                                                <td className="py-2">
+                                                    <span className={`px-2 py-1 rounded text-sm ${member.role_in_team === 'หัวหน้าทีม'
+                                                        ? 'bg-yellow-100 text-yellow-800'
+                                                        : 'bg-gray-100 text-gray-800'
+                                                        }`}>
+                                                        {member.role_in_team}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2">
+                                                    {member.is_active ? (
+                                                        <span className="text-green-600">✓ ปฏิบัติงาน</span>
+                                                    ) : (
+                                                        <span className="text-red-600">✗ ถอดออก</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-2 text-sm text-gray-600">
+                                                    {new Date(member.assigned_at).toLocaleDateString('th-TH')}
+                                                </td>
+                                                {sessionStatus === 'active' && (
+                                                    <td className="py-2 text-center">
+                                                        {member.is_active && (
+                                                            <button
+                                                                onClick={() => onRemoveMember(team.session_team_id, member.id)}
+                                                                className="px-2 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm"
+                                                            >
+                                                                ถอดออก
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     ) : (
                         <div className="text-center text-gray-500 py-4">
                             ยังไม่มีสมาชิกในทีมนี้
@@ -396,8 +438,8 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md sm:p-6">
                 <h3 className="text-gray-600 text-xl font-bold mb-4">เพิ่มทีมเข้า Session</h3>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
@@ -439,7 +481,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                         </div>
                     </div>
 
-                    <div className="flex justify-end space-x-3 mt-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                         <button
                             type="button"
                             onClick={onClose}
@@ -480,8 +522,8 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md sm:p-6">
                 <h3 className="text-xl text-gray-600 font-bold mb-4">
                     เพิ่มสมาชิกเข้าทีม {team.team_name_th}
                 </h3>
@@ -522,7 +564,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                         </div>
                     </div>
 
-                    <div className="flex justify-end space-x-3 mt-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                         <button
                             type="button"
                             onClick={onClose}

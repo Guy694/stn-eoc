@@ -239,7 +239,7 @@ function EOCModulesContent() {
 
     return (
         <EOCLayout>
-            <div className="max-w-6xl mx-auto">
+            <div className="mx-auto max-w-6xl">
                 {/* Header */}
                 <div className="mb-6">
                     <button
@@ -252,9 +252,9 @@ function EOCModulesContent() {
                         กลับไปหน้าจัดการ EOC
                     </button>
 
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                            <h1 className="text-2xl font-bold text-gray-800 mb-2 sm:text-3xl">
                                 จัดการเมนู Sidebar - EOC {eocInfo?.name_th || eocType}
                             </h1>
                             <p className="text-gray-600">กำหนดเมนูที่จะแสดงใน Sidebar สำหรับ EOC นี้</p>
@@ -273,74 +273,76 @@ function EOCModulesContent() {
 
                 {/* Modules List */}
                 <div className="bg-white rounded-lg shadow">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ไอคอน</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อเมนู</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ประเภท</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เส้นทาง</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ลำดับ</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {!Array.isArray(modules) || modules.length === 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-[920px] divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                                        ยังไม่มีเมนูสำหรับ EOC นี้
-                                    </td>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ไอคอน</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อเมนู</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ประเภท</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เส้นทาง</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ลำดับ</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
                                 </tr>
-                            ) : (
-                                paginatedModules.map((module) => (
-                                    <tr key={module.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-2xl">{module.icon}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{module.module_name_th}</div>
-                                            <div className="text-sm text-gray-500">{module.module_name_en}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {getModuleTypeIcon(module.module_type)} {getModuleTypeLabel(module.module_type)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {module.route_path}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            {module.is_active ? (
-                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    เปิดใช้งาน
-                                                </span>
-                                            ) : (
-                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    ปิดใช้งาน
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {module.sort_order}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
-                                                onClick={() => handleOpenEditModal(module)}
-                                                className="text-blue-600 hover:text-blue-900 mr-3"
-                                            >
-                                                แก้ไข
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteModule(module.id)}
-                                                className="text-red-600 hover:text-red-900"
-                                            >
-                                                ลบ
-                                            </button>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {!Array.isArray(modules) || modules.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                            ยังไม่มีเมนูสำหรับ EOC นี้
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    paginatedModules.map((module) => (
+                                        <tr key={module.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-2xl">{module.icon}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">{module.module_name_th}</div>
+                                                <div className="text-sm text-gray-500">{module.module_name_en}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    {getModuleTypeIcon(module.module_type)} {getModuleTypeLabel(module.module_type)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {module.route_path}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {module.is_active ? (
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                        เปิดใช้งาน
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                        ปิดใช้งาน
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {module.sort_order}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    onClick={() => handleOpenEditModal(module)}
+                                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                                >
+                                                    แก้ไข
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteModule(module.id)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    ลบ
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                     <PaginationControls
                         page={currentPage}
                         pageSize={pageSize}
@@ -353,13 +355,13 @@ function EOCModulesContent() {
                 {/* Modal */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-lg p-4 max-w-2xl w-full max-h-[90vh] overflow-y-auto sm:p-6">
                             <h2 className="text-2xl font-bold mb-4">
                                 {editingModule ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่'}
                             </h2>
 
                             <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             รหัสเมนู <span className="text-red-500">*</span>
@@ -392,7 +394,7 @@ function EOCModulesContent() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             ชื่อเมนู (ไทย) <span className="text-red-500">*</span>
@@ -433,7 +435,7 @@ function EOCModulesContent() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             ไอคอน
@@ -488,7 +490,7 @@ function EOCModulesContent() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-2 mt-6">
+                            <div className="flex flex-col gap-2 mt-6 sm:flex-row">
                                 <button
                                     onClick={handleSaveModule}
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"

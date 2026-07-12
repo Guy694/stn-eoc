@@ -123,7 +123,7 @@ export default function FloodDailyRiskPage() {
     if (!data) {
         return (
             <EOCLayout>
-                <div className="container mx-auto p-6">
+                <div className="container mx-auto p-4 md:p-6">
                     <div className="text-center py-12">
                         <p className="text-gray-600">ไม่พบข้อมูล</p>
                     </div>
@@ -142,11 +142,11 @@ export default function FloodDailyRiskPage() {
 
     return (
         <EOCLayout>
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-4 md:p-6">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                        <span className="text-4xl">📊</span>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3 md:text-3xl">
+                        <span className="text-3xl md:text-4xl">📊</span>
                         สรุปความเสี่ยงอุทกภัยน้ำท่วมรายวัน
                     </h1>
                     <p className="text-gray-600">แสดงข้อมูลวันที่: {formatDate}</p>
@@ -154,7 +154,7 @@ export default function FloodDailyRiskPage() {
 
                 {/* Date Selector */}
                 <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
                         <label className="block text-sm font-medium text-gray-700">
                             เลือกวันที่ต้องการดู:
                         </label>
@@ -211,10 +211,10 @@ export default function FloodDailyRiskPage() {
 
                 {/* Active EOC Session Info */}
                 {data.activeSession && (
-                    <div className="bg-linear-to-r from-red-500 to-orange-500 text-white rounded-lg shadow-lg p-6 mb-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-xl font-bold mb-2">
+                    <div className="bg-linear-to-r from-red-500 to-orange-500 text-white rounded-lg shadow-lg p-4 mb-6 md:p-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                                <h3 className="text-lg font-bold mb-2 md:text-xl">
                                     🚨 EOC Session #{data.activeSession.session_number}/2025 - กำลังดำเนินการ
                                 </h3>
                                 <p className="opacity-90 mb-1">
@@ -230,9 +230,9 @@ export default function FloodDailyRiskPage() {
                                     เหตุผล: {data.activeSession.open_reason}
                                 </p>
                             </div>
-                            <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="grid w-full grid-cols-3 gap-2 text-center sm:w-auto sm:gap-3">
                                 <div className="bg-white/20 rounded p-3 backdrop-blur-sm">
-                                    <p className="text-2xl font-bold">{data.activeSession.days_open}</p>
+                                    <p className="text-xl font-bold md:text-2xl">{data.activeSession.days_open}</p>
                                     <p className="text-sm">วัน</p>
                                 </div>
                                 <div className="bg-white/20 rounded p-3 backdrop-blur-sm">
@@ -249,7 +249,7 @@ export default function FloodDailyRiskPage() {
                 )}
 
                 {/* Total Statistics */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-3 mb-6 md:grid-cols-5 md:gap-4">
                     <StatCard
                         icon="🗺️"
                         label="อำเภอ"
@@ -283,7 +283,7 @@ export default function FloodDailyRiskPage() {
                 </div>
 
                 {/* Risk Level Summary */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-md p-4 mb-6 md:p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">สรุปตามระดับความเสี่ยง</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {data.riskSummary?.map((item, index) => (
@@ -307,9 +307,30 @@ export default function FloodDailyRiskPage() {
                 </div>
 
                 {/* District Summary */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-md p-4 mb-6 md:p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">สรุปตามอำเภอ</h2>
-                    <div className="overflow-x-auto">
+                    <div className="grid gap-2 md:hidden">
+                        {data.districtSummary?.map((district, index) => (
+                            <div key={index} className="rounded-lg border border-gray-200 bg-white p-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="font-bold text-gray-900">{district.district}</div>
+                                    {district.has_severe ? (
+                                        <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-bold text-red-800">รุนแรง</span>
+                                    ) : district.has_moderate ? (
+                                        <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-bold text-yellow-800">ปานกลาง</span>
+                                    ) : (
+                                        <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-800">เล็กน้อย</span>
+                                    )}
+                                </div>
+                                <div className="mt-2 grid grid-cols-3 gap-2 text-sm">
+                                    <div className="rounded bg-gray-50 p-2"><div className="text-xs text-gray-500">หมู่บ้าน</div><div className="font-bold text-gray-800">{district.village_count}</div></div>
+                                    <div className="rounded bg-gray-50 p-2"><div className="text-xs text-gray-500">ครัวเรือน</div><div className="font-bold text-gray-800">{(district.total_households || 0).toLocaleString()}</div></div>
+                                    <div className="rounded bg-gray-50 p-2"><div className="text-xs text-gray-500">ประชากร</div><div className="font-bold text-gray-800">{(district.total_population || 0).toLocaleString()}</div></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="hidden overflow-x-auto md:block">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
@@ -368,7 +389,7 @@ export default function FloodDailyRiskPage() {
                 </div>
 
                 {/* Detailed List */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">รายละเอียดแต่ละพื้นที่</h2>
                     <div className="space-y-3">
                         {paginatedDetails.map((item, index) => (

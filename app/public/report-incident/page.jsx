@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
@@ -58,6 +59,8 @@ export default function ReportIncidentPage() {
     const [villages, setVillages] = useState([]);
     const [showVillageDropdown, setShowVillageDropdown] = useState(false);
     const [searchingVillage, setSearchingVillage] = useState(false);
+    const [photoFile, setPhotoFile] = useState(null);
+    const [photoPreviewUrl, setPhotoPreviewUrl] = useState("");
     const villageInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
@@ -99,6 +102,14 @@ export default function ReportIncidentPage() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        return () => {
+            if (photoPreviewUrl) {
+                URL.revokeObjectURL(photoPreviewUrl);
+            }
+        };
+    }, [photoPreviewUrl]);
 
     const requestGpsLocation = () => {
         if (!navigator.geolocation) {
@@ -169,6 +180,36 @@ export default function ReportIncidentPage() {
         setVillages([]);
     };
 
+    const handlePhotoChange = (event) => {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            setPhotoFile(null);
+            setPhotoPreviewUrl("");
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            showWarning("กรุณาแนบไฟล์รูปภาพเท่านั้น");
+            event.target.value = "";
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            showWarning("ไฟล์รูปภาพต้องมีขนาดไม่เกิน 10MB");
+            event.target.value = "";
+            return;
+        }
+
+        setPhotoFile(file);
+        setPhotoPreviewUrl(URL.createObjectURL(file));
+    };
+
+    const clearPhoto = () => {
+        setPhotoFile(null);
+        setPhotoPreviewUrl("");
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitSuccess(false);
@@ -218,6 +259,9 @@ export default function ReportIncidentPage() {
             payload.append("reportType", "help_request");
             payload.append("disasterType", "assistance");
             payload.append("urgency", "high");
+            if (photoFile) {
+                payload.append("photo", photoFile);
+            }
 
             const response = await fetch("/stn-eoc/api/public/report-incident", {
                 method: "POST",
@@ -243,6 +287,7 @@ export default function ReportIncidentPage() {
                 occurredAt: getLocalDateTimeValue()
             });
             setMarkerPosition(null);
+            clearPhoto();
             window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (error) {
             console.error("Submit help request error:", error);
@@ -360,6 +405,41 @@ export default function ReportIncidentPage() {
                                 <TextField label="ตำบล" name="subDistrict" value={formData.subDistrict} onChange={handleInputChange} />
                                 <TextField label="อำเภอ" name="district" value={formData.district} onChange={handleInputChange} />
                             </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+                            <h2 className="mb-4 text-xl font-black text-slate-900">รูปประกอบ</h2>
+                            <label className="block">
+                                <span className="mb-2 block text-sm font-bold text-slate-700">แนบรูปภาพสถานการณ์ (ถ้ามี)</span>
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={handlePhotoChange}
+                                    className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-red-50 file:px-3 file:py-2 file:font-bold file:text-red-700 hover:file:bg-red-100"
+                                />
+                            </label>
+                            {photoPreviewUrl && (
+                                <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                    <Image
+                                        src={photoPreviewUrl}
+                                        alt="ตัวอย่างรูปที่แนบ"
+                                        width={900}
+                                        height={500}
+                                        unoptimized
+                                        className="max-h-72 w-full object-contain"
+                                    />
+                                    <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-3 py-2 text-sm">
+                                        <span className="min-w-0 truncate font-semibold text-slate-600">{photoFile?.name}</span>
+                                        <button
+                                            type="button"
+                                            onClick={clearPhoto}
+                                            className="shrink-0 rounded-lg bg-slate-200 px-3 py-1.5 font-bold text-slate-700 hover:bg-slate-300"
+                                        >
+                                            ลบรูป
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </section>
 

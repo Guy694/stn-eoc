@@ -144,7 +144,7 @@ export default function AIChatbot() {
         <>
             {/* Speech Bubble Tooltip - "Ask Me" */}
             {!isOpen && !isLauncherHidden && (
-                <div className="fixed bottom-20 right-24 z-[1100] animate-float-subtle">
+                <div className="fixed bottom-20 right-24 z-[1100] hidden animate-float-subtle sm:block">
                     <div className="relative bg-white rounded-2xl shadow-xl px-4 py-3 border-2 border-green-500">
                         <div className="flex items-center gap-2">
                             <AppIcon icon="message" className="h-5 w-5 text-green-600 animate-wiggle" />
@@ -160,7 +160,7 @@ export default function AIChatbot() {
 
             {/* Floating Bubble Button */}
             {!isLauncherHidden && (
-                <div className="fixed bottom-24 right-6 lg:bottom-6 z-[1100]">
+                <div className="fixed bottom-5 right-5 z-[1100] lg:bottom-6">
                     {!isOpen && (
                         <button
                             type="button"
@@ -174,7 +174,7 @@ export default function AIChatbot() {
                     )}
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className={`w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 group ${isOpen
+                        className={`h-14 w-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 group sm:h-16 sm:w-16 ${isOpen
                             ? 'bg-red-600 hover:bg-red-700'
                             : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 hover:scale-110'
                             }`}
@@ -194,25 +194,34 @@ export default function AIChatbot() {
 
             {/* Chat Interface */}
             {isOpen && (
-                <div className="fixed bottom-40 right-6 lg:bottom-24 w-96 max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl flex flex-col z-[1100] border border-gray-200">
+                <div className="fixed inset-x-3 bottom-3 top-16 z-[1100] flex flex-col rounded-2xl border border-gray-200 bg-white shadow-2xl sm:inset-auto sm:bottom-24 sm:right-6 sm:h-[600px] sm:max-h-[calc(100vh-8rem)] sm:w-96 sm:max-w-[calc(100vw-3rem)]">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                                 <AppIcon icon="bot" className="h-6 w-6 text-white" />
                             </div>
-                            <div>
-                                <h3 className="font-bold text-lg">EOC Assistant</h3>
-                                <p className="text-xs text-green-100">ผู้ช่วยตอบคำถามข้อมูล EOC</p>
+                            <div className="min-w-0">
+                                <h3 className="truncate font-bold text-lg">EOC Assistant</h3>
+                                <p className="truncate text-xs text-green-100">ผู้ช่วยตอบคำถามข้อมูล EOC</p>
                             </div>
                         </div>
-                        <button
-                            onClick={clearHistory}
-                            className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10 transition-colors"
-                            title="ล้างประวัติการสนทนา"
-                        >
-                            <AppIcon icon="trash" className="h-5 w-5" />
-                        </button>
+                        <div className="flex shrink-0 items-center gap-1">
+                            <button
+                                onClick={clearHistory}
+                                className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10 transition-colors"
+                                title="ล้างประวัติการสนทนา"
+                            >
+                                <AppIcon icon="trash" className="h-5 w-5" />
+                            </button>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10 transition-colors"
+                                title="ปิด"
+                            >
+                                <AppIcon icon="x" className="h-5 w-5" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Messages Area */}
@@ -268,7 +277,7 @@ export default function AIChatbot() {
                                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div
-                                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
+                                    className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[80%] ${msg.role === 'user'
                                         ? 'bg-green-600 text-white rounded-br-none'
                                         : msg.isError
                                             ? 'bg-red-50 text-red-800 border border-red-200 rounded-bl-none'
@@ -314,14 +323,14 @@ export default function AIChatbot() {
                                 onKeyPress={handleKeyPress}
                                 placeholder="พิมพ์คำถามของคุณ..."
                                 disabled={isLoading}
-                                className="text-gray-600 flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                className="min-w-0 flex-1 px-3 py-3 text-gray-600 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed sm:px-4"
                             />
                             <button
                                 onClick={() => sendMessage()}
                                 disabled={!inputMessage.trim() || isLoading}
-                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors disabled:bg-green-100 disabled:text-green-900 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="flex shrink-0 items-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-100 disabled:text-green-900 sm:px-6"
                             >
-                                <span>ส่ง</span>
+                                <span className="hidden sm:inline">ส่ง</span>
                                 <AppIcon icon="send" className="h-4 w-4" />
                             </button>
                         </div>

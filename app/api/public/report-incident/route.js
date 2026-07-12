@@ -3,7 +3,7 @@ import { getConnection } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
 import { publicInternalError } from '@/lib/apiResponse';
-import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage } from '@/lib/telegram';
+import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage, sendTelegramPhoto } from '@/lib/telegram';
 
 const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const HELP_CATEGORY_LABELS = {
@@ -22,6 +22,29 @@ function buildHelpDescription({ helpCategory, helpReason, description }) {
         lines.push(`รายละเอียดเพิ่มเติม: ${description}`);
     }
     return lines.join('\n');
+}
+
+function truncateForTelegram(value, maxLength = 350) {
+    const text = String(value || '-').trim();
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, maxLength - 1)}…`;
+}
+
+function buildTelegramHelpMessage(report, { compact = false } = {}) {
+    const mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`;
+    const reason = compact ? truncateForTelegram(report.helpReason, 280) : (report.helpReason || '-');
+
+    return [
+        '<b>คำขอความช่วยเหลือใหม่</b>',
+        `เลขที่: #${escapeTelegramHtml(report.id)}`,
+        `ประเภท: ${escapeTelegramHtml(report.helpCategoryLabel)}`,
+        `ผู้แจ้ง: ${escapeTelegramHtml(`${report.firstName} ${report.lastName}`)}`,
+        `โทร: ${escapeTelegramHtml(report.phone)}`,
+        `พื้นที่: ${escapeTelegramHtml([report.village, report.subDistrict, report.district].filter(Boolean).join(' ') || '-')}`,
+        `เหตุผล: ${escapeTelegramHtml(reason)}`,
+        `พิกัด: ${escapeTelegramHtml(`${report.latitude}, ${report.longitude}`)}`,
+        `<a href="${mapsUrl}">เปิดแผนที่</a>`
+    ].join('\n');
 }
 
 async function notifyTelegramOfficers(pool, report) {
@@ -51,21 +74,18 @@ async function notifyTelegramOfficers(pool, report) {
         const recipients = [...new Set(chatIds.map((chatId) => String(chatId || '').trim()).filter(Boolean))];
         if (!recipients.length) return;
 
-        const mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`;
-        const text = [
-            '<b>คำขอความช่วยเหลือใหม่</b>',
-            `เลขที่: #${escapeTelegramHtml(report.id)}`,
-            `ประเภท: ${escapeTelegramHtml(report.helpCategoryLabel)}`,
-            `ผู้แจ้ง: ${escapeTelegramHtml(`${report.firstName} ${report.lastName}`)}`,
-            `โทร: ${escapeTelegramHtml(report.phone)}`,
-            `พื้นที่: ${escapeTelegramHtml([report.village, report.subDistrict, report.district].filter(Boolean).join(' ') || '-')}`,
-            `เหตุผล: ${escapeTelegramHtml(report.helpReason)}`,
-            `พิกัด: ${escapeTelegramHtml(`${report.latitude}, ${report.longitude}`)}`,
-            `<a href="${mapsUrl}">เปิดแผนที่</a>`
-        ].join('\n');
+        const text = buildTelegramHelpMessage(report);
+        const photoCaption = buildTelegramHelpMessage(report, { compact: true });
 
         await Promise.allSettled(
-            recipients.map((chatId) => sendTelegramMessage(chatId, text))
+            recipients.map(async (chatId) => {
+                if (report.telegramPhoto) {
+                    const photoResult = await sendTelegramPhoto(chatId, report.telegramPhoto, photoCaption);
+                    if (photoResult.ok) return photoResult;
+                }
+
+                return sendTelegramMessage(chatId, text);
+            })
         );
     } catch (error) {
         console.error('Telegram notification error:', error);
@@ -144,6 +164,7 @@ export async function POST(request) {
 
         // Handle photo upload
         let photoPath = null;
+        let telegramPhoto = null;
         if (photo && photo.size > 0) {
             try {
                 const validation = await validateImageFile(photo, {
@@ -167,6 +188,11 @@ export async function POST(request) {
                 // Write file
                 await writeFile(filepath, validation.buffer);
                 photoPath = `/uploads/incidents/${filename}`;
+                telegramPhoto = {
+                    buffer: validation.buffer,
+                    filename,
+                    contentType: photo.type
+                };
             } catch (uploadError) {
                 console.error('Photo upload error:', uploadError);
                 return NextResponse.json({
@@ -225,7 +251,8 @@ export async function POST(request) {
                 latitude,
                 longitude,
                 helpCategoryLabel: HELP_CATEGORY_LABELS[helpCategory] || helpCategory || '-',
-                helpReason: helpReason || description || '-'
+                helpReason: helpReason || description || '-',
+                telegramPhoto
             });
         }
 

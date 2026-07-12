@@ -242,9 +242,9 @@ export default function DiseaseOutbreakDashboard({
                 {summaryCards.map((card) => <SummaryCard key={card.label} {...card} />)}
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
+            <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
                 <ChartPanel title="แนวโน้มผู้ป่วยโรคไข้เลือดออก รายสัปดาห์ เปรียบเทียบรายปี">
-                    <div className="h-[340px]">
+                    <div className="h-[260px] sm:h-[340px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={dashboardData.weeklyTrend} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -273,12 +273,12 @@ export default function DiseaseOutbreakDashboard({
                         </div>
                     }
                 >
-                    <div className="h-[340px]">
+                    <div className="h-[280px] sm:h-[340px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={districtChartRows} layout="vertical" margin={{ top: 6, right: 28, left: 18, bottom: 0 }}>
+                            <BarChart data={districtChartRows} layout="vertical" margin={{ top: 6, right: 12, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                 <XAxis type="number" tick={{ fontSize: 12 }} />
-                                <YAxis type="category" dataKey="district_name" width={80} tick={{ fontSize: 12 }} />
+                                <YAxis type="category" dataKey="district_name" width={72} tick={{ fontSize: 11 }} />
                                 <Tooltip formatter={(value, name, item) => [
                                     districtMetric === "rate" ? `${formatNumber(value, 1)} ต่อแสน` : `${formatNumber(value)} ราย`,
                                     item.payload.risk_level
@@ -292,15 +292,15 @@ export default function DiseaseOutbreakDashboard({
                 </ChartPanel>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <ChartPanel title="Heatmap การระบาดรายสัปดาห์ แยกรายอำเภอ">
-                    <div className="overflow-x-auto">
-                        <div className="min-w-[720px]">
+                    <div className="-mx-3 overflow-x-auto px-3 pb-2 sm:mx-0 sm:px-0">
+                        <div className="min-w-[640px] sm:min-w-[720px]">
                             <div
                                 className="mb-2 grid gap-2 text-xs font-black text-slate-500"
-                                style={{ gridTemplateColumns: `120px repeat(${weekLabels.length}, minmax(46px, 1fr))` }}
+                                style={{ gridTemplateColumns: `96px repeat(${weekLabels.length}, minmax(42px, 1fr))` }}
                             >
-                                <div>อำเภอ</div>
+                                <div className="sticky left-0 z-20 bg-white pr-2">อำเภอ</div>
                                 {weekLabels.map((week) => <div key={week} className="text-center">{week}</div>)}
                             </div>
                             <div className="space-y-2">
@@ -308,15 +308,15 @@ export default function DiseaseOutbreakDashboard({
                                     <div
                                         key={row.district_name}
                                         className="grid gap-2"
-                                        style={{ gridTemplateColumns: `120px repeat(${weekLabels.length}, minmax(46px, 1fr))` }}
+                                        style={{ gridTemplateColumns: `96px repeat(${weekLabels.length}, minmax(42px, 1fr))` }}
                                     >
-                                        <div className="truncate rounded-md bg-slate-50 px-2 py-2 text-sm font-bold text-slate-700">{row.district_name}</div>
+                                        <div className="sticky left-0 z-10 truncate rounded-md bg-slate-50 px-2 py-2 text-xs font-bold text-slate-700 shadow-sm sm:text-sm">{row.district_name}</div>
                                         {row.weeks.map((value, index) => {
                                             const intensity = value / heatmapMax;
                                             return (
                                                 <div
                                                     key={`${row.district_name}-${index}`}
-                                                    className="rounded-md px-2 py-2 text-center text-xs font-black text-white"
+                                                    className="rounded-md px-1.5 py-2 text-center text-[11px] font-black text-white sm:text-xs"
                                                     title={`${row.district_name} ${weekLabels[index]}: ${value} ราย`}
                                                     style={{ backgroundColor: `rgba(225, 29, 72, ${0.22 + intensity * 0.78})` }}
                                                 >
@@ -329,13 +329,14 @@ export default function DiseaseOutbreakDashboard({
                             </div>
                         </div>
                     </div>
+                    <div className="mt-2 text-xs font-semibold text-slate-500 sm:hidden">เลื่อนซ้าย-ขวาเพื่อดูทุกสัปดาห์</div>
                 </ChartPanel>
 
                 <ChartPanel title="ประเภทผู้ป่วยตามนิยามการเฝ้าระวัง">
-                    <div className="h-[260px]">
+                    <div className="h-[220px] sm:h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                                <Pie data={dashboardData.patientTypes} dataKey="value" nameKey="name" innerRadius={58} outerRadius={92} paddingAngle={2}>
+                                <Pie data={dashboardData.patientTypes} dataKey="value" nameKey="name" innerRadius={48} outerRadius={82} paddingAngle={2}>
                                     {dashboardData.patientTypes.map((entry, index) => <Cell key={entry.name} fill={patientColors[index % patientColors.length]} />)}
                                 </Pie>
                                 <Tooltip formatter={(value) => `${formatNumber(value)} ราย`} />
@@ -343,29 +344,64 @@ export default function DiseaseOutbreakDashboard({
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                        {dashboardData.patientTypes.map((entry, index) => (
+                            <div key={entry.name} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm">
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: patientColors[index % patientColors.length] }} />
+                                    <span className="truncate font-bold text-slate-700">{entry.name}</span>
+                                </div>
+                                <span className="ml-3 shrink-0 font-black text-slate-900">{formatNumber(entry.value)} ราย</span>
+                            </div>
+                        ))}
+                    </div>
                     <p className="text-xs font-semibold text-slate-500">ข้อมูลนี้เป็นภาพรวมตามนิยามเฝ้าระวัง ไม่ใช่ข้อมูลรายบุคคล</p>
                 </ChartPanel>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
+            <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
                 <ChartPanel title="การกระจายผู้ป่วยตามกลุ่มอายุและเพศ">
-                    <div className="h-[330px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={ageSexRows} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="age_group" tick={{ fontSize: 11 }} interval={0} />
-                                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                                <Tooltip formatter={(value) => `${formatNumber(value)} ราย`} />
-                                <Legend />
-                                <Bar dataKey="male" name="ชาย" stackId="age" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
-                                <Bar dataKey="female" name="หญิง" stackId="age" fill="#f97316" radius={[6, 6, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div className="-mx-3 overflow-x-auto px-3 pb-2 sm:mx-0 sm:px-0">
+                        <div className="h-[300px] min-w-[560px] sm:h-[330px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={ageSexRows} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                    <XAxis dataKey="age_group" tick={{ fontSize: 11 }} interval={0} />
+                                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                                    <Tooltip formatter={(value) => `${formatNumber(value)} ราย`} />
+                                    <Legend />
+                                    <Bar dataKey="male" name="ชาย" stackId="age" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+                                    <Bar dataKey="female" name="หญิง" stackId="age" fill="#f97316" radius={[6, 6, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
+                    <div className="mt-2 text-xs font-semibold text-slate-500 sm:hidden">เลื่อนซ้าย-ขวาเพื่อดูทุกกลุ่มอายุ</div>
                 </ChartPanel>
 
                 <ChartPanel title="รหัสโรคและกลุ่มโรคที่ใช้ในการเฝ้าระวัง">
-                    <div className="overflow-x-auto">
+                    <div className="grid gap-2 md:hidden">
+                        {paginatedCodeRows.map((row) => (
+                            <div key={row.disease_code} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="font-black text-rose-700">{row.disease_code}</div>
+                                        <div className="mt-1 font-bold leading-5 text-slate-900">{row.disease_name_th}</div>
+                                        <div className="mt-0.5 text-xs text-slate-500">{row.disease_name_en}</div>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <div className="text-lg font-black text-slate-900">{formatNumber(row.cases)}</div>
+                                        <div className="text-xs font-bold text-slate-500">ราย</div>
+                                    </div>
+                                </div>
+                                <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-bold text-slate-600">
+                                    <div className="rounded-md bg-slate-50 px-2 py-1.5">สัดส่วน {formatNumber(row.percent, 1)}%</div>
+                                    <div className="rounded-md bg-orange-50 px-2 py-1.5 text-orange-700">แนวโน้ม +{formatNumber(row.previous_week_change)}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="hidden overflow-x-auto md:block">
                         <table className="w-full min-w-[520px] text-sm">
                             <thead className="bg-slate-50 text-xs text-slate-500">
                                 <tr>
@@ -401,7 +437,7 @@ export default function DiseaseOutbreakDashboard({
                 </ChartPanel>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <DistrictPublicTable rows={selectedDistrictRows} />
                 <PublicAdvicePanel topDistrict={topDistrict} lastUpdated={dashboardData.last_updated} />
             </div>
@@ -439,9 +475,9 @@ function SummaryCard({ label, value, unit, icon, risk, signed, digits = 0, textV
 
 function ChartPanel({ title, action, children }) {
     return (
-        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-base font-black text-slate-900 md:text-lg">{title}</h3>
+        <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:rounded-xl sm:p-4">
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="text-sm font-black leading-6 text-slate-900 sm:text-base md:text-lg">{title}</h3>
                 {action}
             </div>
             {children}
@@ -487,16 +523,38 @@ function WeeklyTooltip({ active, payload, label }) {
 
 function DistrictPublicTable({ rows }) {
     return (
-        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-lg font-black text-slate-900">ตารางสรุปข้อมูลสาธารณะรายอำเภอ</h3>
+        <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:rounded-xl sm:p-4">
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="text-sm font-black leading-6 text-slate-900 sm:text-lg">ตารางสรุปข้อมูลสาธารณะรายอำเภอ</h3>
                 <input
                     readOnly
                     value="ค้นหา/เรียงลำดับจากข้อมูลรวม"
-                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500"
+                    className="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 sm:block"
                 />
             </div>
-            <div className="overflow-x-auto">
+            <div className="grid gap-2 md:hidden">
+                {rows.map((row) => (
+                    <div key={row.district_name} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <div className="font-black text-slate-900">{row.district_name}</div>
+                                <div className="mt-1 text-xs font-semibold text-slate-500">กลุ่มอายุสูงสุด: {row.top_age_group}</div>
+                            </div>
+                            <span className={`shrink-0 rounded-full border px-2 py-1 text-xs font-black ${getRiskClass(row.risk_level)}`}>{row.risk_level}</span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                            <MobileMetric label="สะสม" value={`${formatNumber(row.total_cases)} ราย`} />
+                            <MobileMetric label="สัปดาห์ล่าสุด" value={`${formatNumber(row.new_cases)} ราย`} />
+                            <MobileMetric label="ต่อแสน" value={formatNumber(row.morbidity_rate, 1)} />
+                            <MobileMetric label="เสียชีวิต" value={`${formatNumber(row.deaths)} ราย`} />
+                        </div>
+                        <div className="mt-2 rounded-md bg-slate-50 px-2 py-1.5 text-xs font-bold text-slate-600">
+                            อัตราป่วยตาย {formatNumber(row.case_fatality_rate, 2)}% • แนวโน้ม {row.trend_status}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[860px] text-sm">
                     <thead className="bg-slate-50 text-xs text-slate-500">
                         <tr>
@@ -528,12 +586,21 @@ function DistrictPublicTable({ rows }) {
     );
 }
 
+function MobileMetric({ label, value }) {
+    return (
+        <div className="rounded-md bg-slate-50 px-2 py-2">
+            <div className="text-[11px] font-bold text-slate-500">{label}</div>
+            <div className="mt-1 font-black text-slate-900">{value}</div>
+        </div>
+    );
+}
+
 function PublicAdvicePanel({ topDistrict, lastUpdated }) {
     return (
-        <aside className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 shadow-sm">
+        <aside className="min-w-0 rounded-lg border border-cyan-200 bg-cyan-50 p-3 shadow-sm sm:rounded-xl sm:p-4">
             <div className="mb-3 flex items-center gap-2">
                 <AppIcon icon="megaphone" className="h-5 w-5 text-cyan-700" />
-                <h3 className="text-lg font-black text-cyan-950">คำแนะนำประชาชน</h3>
+                <h3 className="text-sm font-black text-cyan-950 sm:text-lg">คำแนะนำประชาชน</h3>
             </div>
             <div className="space-y-3 text-sm leading-6 text-cyan-950">
                 <p>
@@ -544,10 +611,10 @@ function PublicAdvicePanel({ topDistrict, lastUpdated }) {
                     <div className="mt-1 font-black">{topDistrict?.district_name || "ทุกอำเภอ"} ({formatNumber(topDistrict?.total_cases)} ราย)</div>
                 </div>
                 <ul className="space-y-2 font-semibold">
-                    <li>สำรวจและทำลายแหล่งน้ำขังทุก 7 วัน</li>
-                    <li>ใช้ยากันยุงหรือสวมเสื้อแขนยาวเมื่อต้องอยู่ในพื้นที่เสี่ยง</li>
-                    <li>หลีกเลี่ยงการซื้อยากลุ่ม NSAIDs รับประทานเองเมื่อสงสัยไข้เลือดออก</li>
-                    <li>ติดต่อหน่วยบริการใกล้บ้านหรือสายด่วน 1669 เมื่อมีอาการรุนแรง</li>
+                    <li className="rounded-lg bg-white/60 px-3 py-2">สำรวจและทำลายแหล่งน้ำขังทุก 7 วัน</li>
+                    <li className="rounded-lg bg-white/60 px-3 py-2">ใช้ยากันยุงหรือสวมเสื้อแขนยาวเมื่อต้องอยู่ในพื้นที่เสี่ยง</li>
+                    <li className="rounded-lg bg-white/60 px-3 py-2">หลีกเลี่ยงการซื้อยากลุ่ม NSAIDs รับประทานเองเมื่อสงสัยไข้เลือดออก</li>
+                    <li className="rounded-lg bg-white/60 px-3 py-2">ติดต่อหน่วยบริการใกล้บ้านหรือสายด่วน 1669 เมื่อมีอาการรุนแรง</li>
                 </ul>
                 <div className="rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-bold text-cyan-800">
                     อัปเดตประกาศล่าสุด {formatDateTime(lastUpdated)}

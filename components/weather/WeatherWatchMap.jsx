@@ -169,7 +169,7 @@ export default function WeatherWatchMap({ data }) {
   }, []);
 
   return (
-    <div className="relative h-[620px] min-h-[520px] overflow-hidden rounded-lg border border-blue-100 bg-white shadow-sm">
+    <div className="relative h-[430px] min-h-[360px] overflow-hidden rounded-lg border border-blue-100 bg-white shadow-sm sm:h-[620px] sm:min-h-[520px]">
       <MapContainer center={CENTER} zoom={10} minZoom={9} style={{ height: "100%", width: "100%" }} className="z-0">
         <TileLayer
           attribution={selectedBaseLayer.attribution}
@@ -265,7 +265,7 @@ export default function WeatherWatchMap({ data }) {
       </MapContainer>
 
       {showLayerPanel ? (
-        <div className="absolute left-3 top-3 z-[900] w-[255px] max-w-[calc(100%-1.5rem)] rounded-xl border border-blue-100 bg-white/95 p-3 shadow-lg backdrop-blur">
+        <div className="absolute inset-x-3 top-3 z-[900] max-h-[58%] overflow-y-auto rounded-xl border border-blue-100 bg-white/95 p-3 shadow-lg backdrop-blur sm:inset-x-auto sm:left-3 sm:w-[255px] sm:max-w-[calc(100%-1.5rem)]">
           <div className="mb-2 flex items-center justify-between gap-2">
             <h3 className="text-sm font-black text-blue-900">ชั้นข้อมูลแผนที่</h3>
             <div className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export default function WeatherWatchMap({ data }) {
               ))}
             </select>
           </label>
-          <div className="grid max-h-[330px] gap-1 overflow-y-auto pr-1">
+          <div className="grid max-h-[210px] gap-1 overflow-y-auto pr-1 sm:max-h-[330px]">
             {LAYER_GROUPS.map(([key, label]) => (
               <label key={key} className="flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50">
                 <input
@@ -321,9 +321,9 @@ export default function WeatherWatchMap({ data }) {
         </button>
       )}
 
-      <div className="absolute bottom-3 left-3 z-[900] rounded-xl border border-blue-100 bg-white/95 p-3 text-xs shadow-lg backdrop-blur">
+      <div className="absolute inset-x-3 bottom-3 z-[900] rounded-xl border border-blue-100 bg-white/95 p-2 text-xs shadow-lg backdrop-blur sm:inset-x-auto sm:left-3 sm:p-3">
         <div className="mb-2 text-sm font-black text-blue-900">คำอธิบายสัญลักษณ์</div>
-        <div className="grid gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-1">
           {Object.entries(RISK_META).map(([key, meta]) => (
             <div key={key} className="flex items-center gap-2">
               <span className="h-3 w-6 rounded" style={{ backgroundColor: meta.color }} />

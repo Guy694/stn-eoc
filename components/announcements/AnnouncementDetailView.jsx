@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { CalendarDays, Download, FileText, UserRound } from 'lucide-react';
+import AnnouncementImageViewer from './AnnouncementImageViewer';
 import { formatAnnouncementDate, getAnnouncementAsset, getAnnouncementCategory, getAnnouncementStatus } from './announcementUtils';
 
 export default function AnnouncementDetailView({ item }) {
@@ -8,7 +8,7 @@ export default function AnnouncementDetailView({ item }) {
   const status = getAnnouncementStatus(item);
 
   return <article className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg">
-    {image && <div className="relative aspect-[16/8] bg-slate-100"><Image src={image} alt={item.title} fill priority className="object-contain" sizes="(max-width: 1024px) 100vw, 960px" unoptimized /></div>}
+    {image && <AnnouncementImageViewer src={image} alt={item.title} priority />}
     <div className="p-6 md:p-10">
       <div className="flex flex-wrap gap-2 text-xs font-bold"><span className="rounded-full bg-blue-50 px-3 py-1.5 text-blue-700">{getAnnouncementCategory(item)}</span><span className={`rounded-full px-3 py-1.5 ${status.className}`}>{status.label}</span></div>
       <h1 className="mt-5 text-3xl font-black leading-tight text-slate-950 md:text-5xl">{item.title}</h1>
