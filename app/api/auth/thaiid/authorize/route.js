@@ -18,16 +18,19 @@ export async function GET(request) {
             throw new Error(configError);
         }
 
+        // ดึงประเภทผู้ใช้จาก query string (?type=officer หรือ ?type=citizen)
+        const { searchParams } = new URL(request.url);
+        const userType = searchParams.get('type') === 'citizen' ? 'citizen' : 'officer';
+
         // สร้าง Authorization URL สำหรับ ThaiID
         const authUrl = new URL(config.authorizeUrl);
         authUrl.searchParams.append('client_id', config.clientId);
         authUrl.searchParams.append('redirect_uri', config.redirectUri);
-        authUrl.searchParams.append('scope', getThaiIdScope('officer'));
+        authUrl.searchParams.append('scope', getThaiIdScope(userType)); // ✅ ใช้ type ที่ถูกต้อง
         authUrl.searchParams.append('verify_type', getThaiIdVerifyType());
         authUrl.searchParams.append('response_type', 'code');
         authUrl.searchParams.append('state', state);
-
-        // Redirect ไป ThaiID Login Page
+        
         const response = NextResponse.redirect(authUrl.toString());
         response.cookies.set('thaiid_state', state, {
             httpOnly: true,
