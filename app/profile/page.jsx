@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -150,7 +151,7 @@ export default function ProfilePage() {
             <div className="p-6 max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">👤 โปรไฟล์ผู้ใช้</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โปรไฟล์ผู้ใช้</h1>
                     <p className="text-gray-600">จัดการข้อมูลส่วนตัวของคุณ</p>
                 </div>
 
@@ -194,17 +195,17 @@ export default function ProfilePage() {
                             // View Mode
                             <div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                    <InfoField label="ชื่อ-นามสกุล" value={`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim()} icon="👤" />
-                                    <InfoField label="อีเมล" value={user.email} icon="📧" />
-                                    <InfoField label="เบอร์โทรศัพท์" value={user.phone} icon="📱" />
-                                    <InfoField label="ตำแหน่ง" value={user.position} icon="💼" />
-                                    <InfoField label="หน่วยงาน" value={user.department} icon="🏢" />
-                                    <InfoField label="บทบาท" value={user.roleDisplay} icon="🎭" />
+                                    <InfoField label="ชื่อ-นามสกุล" value={`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim()} icon="user" />
+                                    <InfoField label="อีเมล" value={user.email} icon="mail" />
+                                    <InfoField label="เบอร์โทรศัพท์" value={user.phone} icon="phone" />
+                                    <InfoField label="ตำแหน่ง" value={user.position} icon="briefcase" />
+                                    <InfoField label="หน่วยงาน" value={user.department} icon="building" />
+                                    <InfoField label="บทบาท" value={user.roleDisplay} icon="userCog" />
                                 </div>
 
                                 {/* Permissions */}
                                 <div className="mt-8 pt-8 border-t border-gray-200">
-                                    <h3 className="text-xl font-bold text-gray-800 mb-4">🔐 สิทธิ์การเข้าถึง</h3>
+                                    <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สิทธิ์การเข้าถึง</h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         {user.permissions?.dashboard && (
                                             <PermissionBadge label="Dashboard" />
@@ -295,13 +296,13 @@ export default function ProfilePage() {
                                         onClick={() => setIsEditing(true)}
                                         className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                                     >
-                                        ✏️ แก้ไขข้อมูล
+                                        <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไขข้อมูล
                                     </button>
                                     <a
                                         href="/settings"
                                         className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
                                     >
-                                        ⚙️ ตั้งค่า
+                                        <AppIcon icon="settings" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตั้งค่า
                                     </a>
                                 </div>
                             </div>
@@ -374,7 +375,7 @@ export default function ProfilePage() {
                                         type="submit"
                                         className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                                     >
-                                        💾 บันทึก
+                                        <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก
                                     </button>
                                     <button
                                         type="button"
@@ -384,7 +385,7 @@ export default function ProfilePage() {
                                         }}
                                         className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
                                     >
-                                        ❌ ยกเลิก
+                                        <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
                                     </button>
                                 </div>
                             </form>
@@ -401,7 +402,7 @@ function InfoField({ label, value, icon }) {
     return (
         <div>
             <label className="text-sm font-semibold text-gray-600 mb-1 block">
-                {icon && <span className="mr-2">{icon}</span>}
+                {icon && <AppIcon icon={icon} className="mr-2 h-5 w-5" />}
                 {label}
             </label>
             <p className="text-lg text-gray-800">{value || "-"}</p>

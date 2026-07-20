@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showWarning } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function CitizensManagementPage() {
     const [citizens, setCitizens] = useState([]);
@@ -133,10 +134,10 @@ export default function CitizensManagementPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        👥 จัดการผู้ใช้ประชาชน
+                        <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการผู้ใช้ประชาชน
                     </h1>
                     <p className="text-gray-600">
-                        รายชื่อประชาชนที่ลงทะเบียนผ่าน ThaiID และสามารถเลื่อนตำแหน่งเป็นเจ้าหน้าที่
+                        รายชื่อประชาชนที่ลงทะเบียนผ่าน ThaiD และสามารถเลื่อนตำแหน่งเป็นเจ้าหน้าที่
                     </p>
                 </div>
 
@@ -157,7 +158,7 @@ export default function CitizensManagementPage() {
                 <div className="bg-white p-4 rounded-lg shadow mb-6">
                     <input
                         type="text"
-                        placeholder="🔍 ค้นหาชื่อ-นามสกุล..."
+                        placeholder="ค้นหาชื่อ-นามสกุล..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -217,7 +218,7 @@ export default function CitizensManagementPage() {
                                                     onClick={() => handlePromoteClick(citizen)}
                                                     className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-md hover:shadow-lg"
                                                 >
-                                                    ⬆️ เลื่อนเป็นเจ้าหน้าที่
+                                                    <AppIcon icon="arrowUp" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลื่อนเป็นเจ้าหน้าที่
                                                 </button>
                                             </td>
                                         </tr>
@@ -242,7 +243,7 @@ export default function CitizensManagementPage() {
                 <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl">
                         <h2 className="text-xl font-bold mb-4 text-gray-800">
-                            ⬆️ เลื่อนตำแหน่งเป็นเจ้าหน้าที่
+                            <AppIcon icon="arrowUp" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลื่อนตำแหน่งเป็นเจ้าหน้าที่
                         </h2>
 
                         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
@@ -319,7 +320,7 @@ export default function CitizensManagementPage() {
                                     type="submit"
                                     className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
                                 >
-                                    ✅ ยืนยันเลื่อนตำแหน่ง
+                                    <AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยืนยันเลื่อนตำแหน่ง
                                 </button>
                                 <button
                                     type="button"
@@ -329,7 +330,7 @@ export default function CitizensManagementPage() {
                                     }}
                                     className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors"
                                 >
-                                    ❌ ยกเลิก
+                                    <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
                                 </button>
                             </div>
                         </form>

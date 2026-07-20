@@ -5,6 +5,7 @@ import html2canvas from "html2canvas";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
+import AppIcon from "@/components/icons/AppIcon";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -291,9 +292,9 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 const result = await response.json();
 
                 if (result.success) {
-                    showSuccess('✅ บันทึกภาพแผนที่สำเร็จ');
+                    showSuccess("บันทึกภาพแผนที่สำเร็จ");
                 } else {
-                    showError('❌ เกิดข้อผิดพลาด: ' + result.error);
+                    showError("เกิดข้อผิดพลาด:" + result.error);
                 }
             }, 'image/png');
 
@@ -361,13 +362,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     if (!session) {
         return (
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 text-center">
-                <div className="text-6xl mb-4">📊</div>
+                <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือก EOC Session</h3>
                 <p className="text-gray-600">
                     เลือกปีและ EOC Session จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
-                    💡 ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
+                    <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
                 </p>
             </div>
         );
@@ -377,7 +378,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    📅 แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
+                    <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
                 </h2>
                 <p className="text-gray-600">
                     Session #{session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
@@ -561,7 +562,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                                 ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('safe')}<br />
                                                 {poly.floodInfo?.notes && (
-                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                    <><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {poly.floodInfo.notes}<br /></>
                                                 )}
                                             </div>
                                         </Popup>
@@ -586,13 +587,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                                 ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('mild')}<br />
                                                 {poly.floodInfo?.water_level > 0 && (
-                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
+                                                    <><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
                                                 )}
                                                 {poly.floodInfo?.affected_population > 0 && (
-                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
+                                                    <><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประชากร: {poly.floodInfo.affected_population} คน<br /></>
                                                 )}
                                                 {poly.floodInfo?.notes && (
-                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                    <><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {poly.floodInfo.notes}<br /></>
                                                 )}
                                             </div>
                                         </Popup>
@@ -617,13 +618,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                                 ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('moderate')}<br />
                                                 {poly.floodInfo?.water_level > 0 && (
-                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
+                                                    <><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
                                                 )}
                                                 {poly.floodInfo?.affected_population > 0 && (
-                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
+                                                    <><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประชากร: {poly.floodInfo.affected_population} คน<br /></>
                                                 )}
                                                 {poly.floodInfo?.notes && (
-                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                    <><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {poly.floodInfo.notes}<br /></>
                                                 )}
                                             </div>
                                         </Popup>
@@ -649,13 +650,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                                 ตำบล: {poly.subdistnam}<br />
                                                 สถานะ: {getFloodLabel('severe')}<br />
                                                 {poly.floodInfo?.water_level > 0 && (
-                                                    <>💧 ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
+                                                    <><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระดับน้ำ: {poly.floodInfo.water_level.toFixed(2)} ม.<br /></>
                                                 )}
                                                 {poly.floodInfo?.affected_population > 0 && (
-                                                    <>👥 ประชากร: {poly.floodInfo.affected_population} คน<br /></>
+                                                    <><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประชากร: {poly.floodInfo.affected_population} คน<br /></>
                                                 )}
                                                 {poly.floodInfo?.notes && (
-                                                    <>📝 {poly.floodInfo.notes}<br /></>
+                                                    <><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {poly.floodInfo.notes}<br /></>
                                                 )}
                                             </div>
                                         </Popup>
@@ -830,7 +831,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                                         }`}>
                                                         {getFloodLabel(village.level)}
                                                     </span>
-                                                    <span>👥 {village.population?.toLocaleString() || '0'} คน</span>
+                                                    <span><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {village.population?.toLocaleString() || '0'} คน</span>
                                                 </div>
                                             </div>
                                         </div>

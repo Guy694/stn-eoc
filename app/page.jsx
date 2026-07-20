@@ -546,9 +546,9 @@ export default function Home() {
       flood: {
         infographics: infographicsData[eocType] || [],
         warnings: [
-          { icon: "⚠️", text: "หลีกเลี่ยงการเดินทางผ่านพื้นที่อุทกภัยน้ำท่วม", level: "danger" },
-          { icon: "🏠", text: "ย้ายทรัพย์สินไปที่สูง ตัดไฟฟ้าก่อนอุทกภัยน้ำท่วม", level: "warning" },
-          { icon: "📱", text: "ติดตามข่าวสารและเตรียมพร้อมอพยพ", level: "info" }
+          { icon: "alert", text: "หลีกเลี่ยงการเดินทางผ่านพื้นที่อุทกภัยน้ำท่วม", level: "danger" },
+          { icon: "home", text: "ย้ายทรัพย์สินไปที่สูง ตัดไฟฟ้าก่อนอุทกภัยน้ำท่วม", level: "warning" },
+          { icon: "phone", text: "ติดตามข่าวสารและเตรียมพร้อมอพยพ", level: "info" }
         ],
         news: [
           {
@@ -565,9 +565,9 @@ export default function Home() {
           }
         ],
         quickActions: [
-          { icon: "🗺️", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/flood-map", color: "blue" },
-          { icon: "🚨", title: "แจ้งเหตุอุทกภัยน้ำท่วม", link: "/public/report-incident", color: "red" },
-          { icon: "🏘️", title: "ศูนย์พักพิงชั่วคราว", link: "/public/shelters", color: "green" }
+          { icon: "map", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/flood-map", color: "blue" },
+          { icon: "siren", title: "แจ้งเหตุอุทกภัยน้ำท่วม", link: "/public/report-incident", color: "red" },
+          { icon: "home", title: "ศูนย์พักพิงชั่วคราว", link: "/public/shelters", color: "green" }
         ],
         stats: floodStats ? {
           affected: floodStats.affected || 0,
@@ -584,15 +584,15 @@ export default function Home() {
       accident: {
         infographics: infographicsData[eocType] || [],
         warnings: [
-          { icon: "🍺", text: "เมาไม่ขับ ปฏิบัติตามกฎจราจร", level: "danger" },
-          { icon: "⛑️", text: "สวมหมวกกันน็อคและคาดเข็มขัดนิรภัย", level: "warning" },
-          { icon: "😴", text: "ง่วงไม่ขับ พักผ่อนให้เพียงพอ", level: "info" }
+          { icon: "beer", text: "เมาไม่ขับ ปฏิบัติตามกฎจราจร", level: "danger" },
+          { icon: "shield", text: "สวมหมวกกันน็อคและคาดเข็มขัดนิรภัย", level: "warning" },
+          { icon: "clock", text: "ง่วงไม่ขับ พักผ่อนให้เพียงพอ", level: "info" }
         ],
         news: [],
         quickActions: [
-          { icon: "🗺️", title: "แผนที่อุบัติเหตุ", link: "/public/disaster-map", color: "orange" },
-          { icon: "📝", title: "แจ้งเหตุอุบัติเหตุ", link: "/public/festival-accidents/report", color: "red" },
-          { icon: "🏥", title: "หน่วยงานและจุดช่วยเหลือ", link: "/public/agencies", color: "blue" }
+          { icon: "map", title: "แผนที่อุบัติเหตุ", link: "/public/disaster-map", color: "orange" },
+          { icon: "file", title: "แจ้งเหตุอุบัติเหตุ", link: "/public/festival-accidents/report", color: "red" },
+          { icon: "hospital", title: "หน่วยงานและจุดช่วยเหลือ", link: "/public/agencies", color: "blue" }
         ],
         stats: accidentStats ? {
           accidents: accidentStats.accidents || 0,
@@ -609,15 +609,15 @@ export default function Home() {
       disease: {
         infographics: infographicsData[eocType] || [],
         warnings: [
-          { icon: "😷", text: "สวมหน้ากากอนามัย ล้างมือบ่อยๆ", level: "warning" },
-          { icon: "🏥", text: "พบแพทย์ทันทีหากมีอาการป่วย", level: "danger" },
-          { icon: "🚫", text: "หลีกเลี่ยงสถานที่แออัด รักษาระยะห่าง", level: "warning" }
+          { icon: "stethoscope", text: "สวมหน้ากากอนามัย ล้างมือบ่อยๆ", level: "warning" },
+          { icon: "hospital", text: "พบแพทย์ทันทีหากมีอาการป่วย", level: "danger" },
+          { icon: "ban", text: "หลีกเลี่ยงสถานที่แออัด รักษาระยะห่าง", level: "warning" }
         ],
         news: [],
         quickActions: [
-          { icon: "🦠", title: "แผนที่โรคระบาด", link: "/public/disease-map", color: "teal" },
-          { icon: "💉", title: "หน่วยบริการสุขภาพ", link: "/public/agencies", color: "green" },
-          { icon: "🏥", title: "โรงพยาบาล", link: "/public/disease-map", color: "blue" }
+          { icon: "biohazard", title: "แผนที่โรคระบาด", link: "/public/disease-map", color: "teal" },
+          { icon: "syringe", title: "หน่วยบริการสุขภาพ", link: "/public/agencies", color: "green" },
+          { icon: "hospital", title: "โรงพยาบาล", link: "/public/disease-map", color: "blue" }
         ],
         stats: diseaseStats ? {
           patients: diseaseStats.patients || 0,
@@ -1083,7 +1083,7 @@ export default function Home() {
               <section className="mb-4 md:mb-6">
                 <div className={`bg-white rounded-lg md:rounded-xl p-4 md:p-6 shadow-md border ${style.softBorder || "border-gray-100"}`}>
                   <div className="flex items-center gap-2 md:gap-3 mb-4 pb-3 border-b border-gray-100">
-                    <span className="text-3xl md:text-3xl">{getEOCTypeIcon(eoc.eoc_type)}</span>
+                    <AppIcon icon={getEOCTypeIcon(eoc.eoc_type)} className="h-8 w-8" />
                     <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-800">
                       คำแนะนำสำหรับประชาชน - <span className={style.label}>{getEOCTypeName(eoc)}</span>
                     </h2>
@@ -1105,29 +1105,29 @@ export default function Home() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                   {Object.entries(content.stats).map(([key, value]) => {
                     const labels = {
-                      affected: { icon: "👥", title: "ผู้ได้รับผลกระทบ", unit: "คน" },
-                      affectedHouseholds: { icon: "🏠", title: "ครัวเรือน", unit: "หลัง" },
-                      floodedVillages: { icon: "🏘️", title: "หมู่บ้านอุทกภัยน้ำท่วม", unit: "แห่ง" },
-                      affectedAreas: { icon: "📍", title: "ตำบลประสบภัย", unit: "ตำบล" },
-                      shelters: { icon: "🏘️", title: "จุดพักพิง", unit: "แห่ง" },
-                      teams: { icon: "⚡", title: "ทีมปฏิบัติการ", unit: "ทีม" },
-                      supplies: { icon: "📦", title: "เสบียงและอุปกรณ์", unit: "หน่วย" },
-                      waterPoints: { icon: "💧", title: "จุดแจกน้ำ", unit: "จุด" },
-                      waterTanks: { icon: "🚰", title: "รถน้ำ", unit: "คัน" },
-                      evacuationPoints: { icon: "🏃", title: "จุดอพยพ", unit: "จุด" },
-                      safeZones: { icon: "✅", title: "พื้นที่ปลอดภัย", unit: "พื้นที่" },
-                      alerts: { icon: "📡", title: "ระบบเตือนภัย", unit: "จุด" },
-                      safeBuildings: { icon: "🏗️", title: "อาคารปลอดภัย", unit: "แห่ง" },
-                      patients: { icon: "😷", title: "ผู้ป่วย", unit: "คน" },
-                      affectedFacilities: { icon: "🏥", title: "สถานพยาบาลที่รายงาน", unit: "แห่ง" },
-                      affectedDistricts: { icon: "📍", title: "อำเภอที่ได้รับผลกระทบ", unit: "อำเภอ" },
-                      hospitals: { icon: "🏥", title: "สถานพยาบาลในระบบ", unit: "แห่ง" },
-                      accidents: { icon: "💥", title: "อุบัติเหตุสะสม", unit: "ครั้ง" },
-                      injuries: { icon: "🤕", title: "ผู้บาดเจ็บ", unit: "ราย" },
-                      deaths: { icon: "💀", title: "ผู้เสียชีวิต", unit: "ราย" },
-                      checkpoints: { icon: "🚧", title: "จุดตรวจ/จุดบริการ", unit: "จุด" }
+                      affected: { icon: "users", title: "ผู้ได้รับผลกระทบ", unit: "คน" },
+                      affectedHouseholds: { icon: "home", title: "ครัวเรือน", unit: "หลัง" },
+                      floodedVillages: { icon: "home", title: "หมู่บ้านอุทกภัยน้ำท่วม", unit: "แห่ง" },
+                      affectedAreas: { icon: "mapPin", title: "ตำบลประสบภัย", unit: "ตำบล" },
+                      shelters: { icon: "home", title: "จุดพักพิง", unit: "แห่ง" },
+                      teams: { icon: "siren", title: "ทีมปฏิบัติการ", unit: "ทีม" },
+                      supplies: { icon: "package", title: "เสบียงและอุปกรณ์", unit: "หน่วย" },
+                      waterPoints: { icon: "droplet", title: "จุดแจกน้ำ", unit: "จุด" },
+                      waterTanks: { icon: "droplets", title: "รถน้ำ", unit: "คัน" },
+                      evacuationPoints: { icon: "users", title: "จุดอพยพ", unit: "จุด" },
+                      safeZones: { icon: "checkCircle", title: "พื้นที่ปลอดภัย", unit: "พื้นที่" },
+                      alerts: { icon: "wifi", title: "ระบบเตือนภัย", unit: "จุด" },
+                      safeBuildings: { icon: "construction", title: "อาคารปลอดภัย", unit: "แห่ง" },
+                      patients: { icon: "stethoscope", title: "ผู้ป่วย", unit: "คน" },
+                      affectedFacilities: { icon: "hospital", title: "สถานพยาบาลที่รายงาน", unit: "แห่ง" },
+                      affectedDistricts: { icon: "mapPin", title: "อำเภอที่ได้รับผลกระทบ", unit: "อำเภอ" },
+                      hospitals: { icon: "hospital", title: "สถานพยาบาลในระบบ", unit: "แห่ง" },
+                      accidents: { icon: "alert", title: "อุบัติเหตุสะสม", unit: "ครั้ง" },
+                      injuries: { icon: "stethoscope", title: "ผู้บาดเจ็บ", unit: "ราย" },
+                      deaths: { icon: "skull", title: "ผู้เสียชีวิต", unit: "ราย" },
+                      checkpoints: { icon: "route", title: "จุดตรวจ/จุดบริการ", unit: "จุด" }
                     };
-                    const label = labels[key] || { icon: "📊", title: key, unit: "" };
+                    const label = labels[key] || { icon: "barChart", title: key, unit: "" };
 
                     return (
                       <div key={key} className="bg-white rounded-lg shadow-md p-3 md:p-4 text-center">
@@ -1376,7 +1376,7 @@ function PublicOperationalDashboard({
       unit: "ราย",
       sub: `${selectedDiseaseCount} โรคที่รายงาน`,
       tone: "teal",
-      icon: "✚"
+      icon: "stethoscope"
     },
     {
       label: "ศูนย์พักพิง",
@@ -2227,7 +2227,7 @@ function buildForecastAlertStatus({
         value: "เฝ้าระวังสูง",
         sub: `${formatNumber(patients)} ราย / ${districts || "-"} อำเภอ`,
         tone: "amber",
-        icon: "☁"
+        icon: "cloud"
       };
     }
 
@@ -2254,9 +2254,9 @@ function buildForecastAlertStatus({
     return { value: "สูง", sub: `${criticalCount} จุดวิกฤต`, tone: "red", icon: "!" };
   }
   if (highCount > 0) {
-    return { value: "เฝ้าระวัง", sub: `${highCount} จุดเฝ้าระวัง`, tone: "amber", icon: "☁" };
+    return { value: "เฝ้าระวัง", sub: `${highCount} จุดเฝ้าระวัง`, tone: "amber", icon: "cloud" };
   }
-  return { value: "ปกติ", sub: "ปลอดภัย", tone: "safe", icon: "✓" };
+  return { value: "ปกติ", sub: "ปลอดภัย", tone: "safe", icon: "checkCircle" };
 }
 
 function buildSessionOptions(eocType, sessions, overviewItems) {
@@ -2390,31 +2390,31 @@ function HomeSituationDashboard({
 
   const summaryCards = [
     {
-      icon: "🚨",
+      icon: "siren",
       label: "EOC เปิดอยู่",
       value: dashboardSummary?.activeEOCs ?? activeEOCs.length,
       unit: "ศูนย์"
     },
     {
-      icon: "📝",
+      icon: "file",
       label: "รายงานประชาชน",
       value: dashboardSummary?.publicReports ?? 0,
       unit: "รายการ"
     },
     {
-      icon: "👥",
+      icon: "users",
       label: "ผู้ได้รับผลกระทบ",
       value: floodStats?.affected ?? dashboardSummary?.totalAffected ?? 0,
       unit: "คน"
     },
     {
-      icon: "🦠",
+      icon: "biohazard",
       label: "ผู้ป่วย/อาการ",
       value: dashboardSummary?.diseasePatients ?? diseaseStats?.patients ?? 0,
       unit: "ราย"
     },
     {
-      icon: "🏠",
+      icon: "home",
       label: "ศูนย์พักพิง",
       value: dashboardSummary?.activeShelters ?? 0,
       unit: "แห่ง"
@@ -2424,21 +2424,21 @@ function HomeSituationDashboard({
   const activeTypeStats = [
     {
       show: !!floodStats,
-      icon: "💧",
+      icon: "droplet",
       label: "หมู่บ้านอุทกภัยน้ำท่วม",
       value: floodStats?.floodedVillages ?? 0,
       unit: "แห่ง"
     },
     {
       show: !!diseaseStats,
-      icon: "😷",
+      icon: "stethoscope",
       label: "ผู้ป่วยในระบบ",
       value: diseaseStats?.patients ?? 0,
       unit: "คน"
     },
     {
       show: !!accidentStats,
-      icon: "🚗",
+      icon: "car",
       label: "อุบัติเหตุสะสม",
       value: accidentStats?.accidents ?? 0,
       unit: "ครั้ง"
@@ -2529,7 +2529,7 @@ function HomeSituationDashboard({
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-10 h-10 rounded-lg ${style.bg} flex items-center justify-center text-2xl`}>
-                          {getEOCTypeIcon(eoc.eoc_type)}
+                          <AppIcon icon={getEOCTypeIcon(eoc.eoc_type)} className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 font-bold text-gray-900">

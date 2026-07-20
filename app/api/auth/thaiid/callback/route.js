@@ -153,7 +153,7 @@ async function exchangeCodeForToken(code, thaiIdConfig) {
     } catch (error) {
         clearTimeout(timeout);
         if (error.name === 'AbortError') {
-            throw new Error('การเชื่อมต่อ ThaiID หมดเวลา (timeout) กรุณาลองใหม่อีกครั้ง');
+            throw new Error('การเชื่อมต่อ ThaiD หมดเวลา (timeout) กรุณาลองใหม่อีกครั้ง');
         }
         throw error;
     }
@@ -184,7 +184,7 @@ async function fetchThaiIdUserInfo(accessToken, thaiIdConfig) {
     } catch (error) {
         clearTimeout(timeout);
         if (error.name === 'AbortError') {
-            throw new Error('การเชื่อมต่อ ThaiID UserInfo หมดเวลา (timeout) กรุณาลองใหม่อีกครั้ง');
+            throw new Error('การเชื่อมต่อ ThaiD UserInfo หมดเวลา (timeout) กรุณาลองใหม่อีกครั้ง');
         }
         throw error;
     }
@@ -262,7 +262,7 @@ async function findRegistrationByThaiIdName(connection, thaiIdProfile) {
 }
 
 /**
- * Callback Handler สำหรับ ThaiID OAuth
+ * Callback Handler สำหรับ ThaiD OAuth
  */
 export async function GET(request) {
     try {
@@ -277,7 +277,7 @@ export async function GET(request) {
             throw new Error(configError);
         }
 
-        // ตรวจสอบว่ามี error จาก ThaiID หรือไม่
+        // ตรวจสอบว่ามี error จาก ThaiD หรือไม่
         if (error) {
             const baseUrl = getAppBaseUrl(request);
             return applyNoStoreHeaders(NextResponse.redirect(
@@ -302,7 +302,7 @@ export async function GET(request) {
             });
             const baseUrl = getAppBaseUrl(request);
             return applyNoStoreHeaders(NextResponse.redirect(
-                `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ThaiID state ไม่ถูกต้อง กรุณาเริ่มเข้าสู่ระบบใหม่')}`
+                `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ThaiD state ไม่ถูกต้อง กรุณาเริ่มเข้าสู่ระบบใหม่')}`
             ));
         }
 
@@ -347,7 +347,7 @@ export async function GET(request) {
                     const baseUrl = getAppBaseUrl(request);
                     connection.release();
                     return applyNoStoreHeaders(NextResponse.redirect(
-                        `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ชื่อ-นามสกุลจาก ThaiID ไม่ตรงกับข้อมูลเจ้าหน้าที่ที่ลงทะเบียนไว้')}`
+                        `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ชื่อ-นามสกุลจาก ThaiD ไม่ตรงกับข้อมูลเจ้าหน้าที่ที่ลงทะเบียนไว้')}`
                     ));
                 }
 
@@ -384,7 +384,7 @@ export async function GET(request) {
                         const baseUrl = getAppBaseUrl(request);
                         connection.release();
                         return applyNoStoreHeaders(NextResponse.redirect(
-                            `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ชื่อ-นามสกุลจาก ThaiID ไม่ตรงกับข้อมูลประชาชนที่ลงทะเบียนไว้')}`
+                            `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ชื่อ-นามสกุลจาก ThaiD ไม่ตรงกับข้อมูลประชาชนที่ลงทะเบียนไว้')}`
                         ));
                     }
 
@@ -415,7 +415,7 @@ export async function GET(request) {
                         const baseUrl = getAppBaseUrl(request);
                         connection.release();
                         return applyNoStoreHeaders(NextResponse.redirect(
-                            `${baseUrl}/login?error=user_not_found&message=${encodeURIComponent('ไม่มีข้อมูลผู้ใช้งานที่ลงทะเบียนไว้ตรงกับชื่อ-นามสกุลจาก ThaiID')}`
+                            `${baseUrl}/login?error=user_not_found&message=${encodeURIComponent('ไม่มีข้อมูลผู้ใช้งานที่ลงทะเบียนไว้ตรงกับชื่อ-นามสกุลจาก ThaiD')}`
                         ));
                     }
 
@@ -511,7 +511,7 @@ export async function GET(request) {
                         [
                             userRecord.id,
                             'LOGIN',
-                            `เข้าสู่ระบบด้วย ThaiID สำเร็จ (Officer) - User: ${userRecord.username}`,
+                            `เข้าสู่ระบบด้วย ThaiD สำเร็จ (Officer) - User: ${userRecord.username}`,
                             request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
                             request.headers.get('user-agent') || 'unknown'
                         ]
@@ -640,7 +640,7 @@ export async function GET(request) {
         }
 
     } catch (error) {
-        console.error('ThaiID Callback Error:', error);
+        console.error('ThaiD Callback Error:', error);
         const baseUrl = getAppBaseUrl(request);
         return applyNoStoreHeaders(NextResponse.redirect(
             `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent(error.message)}`

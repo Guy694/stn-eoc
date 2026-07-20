@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polygon, Popup, Marker, LayerGroup, useMap } f
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect } from "react";
+import AppIcon from "./icons/AppIcon";
 
 // แก้ไข icon default ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -337,7 +338,7 @@ export default function PolygonMap({
                             onClick={() => setSelectedPolygon(null)}
                             className="text-gray-500 hover:text-gray-700"
                         >
-                            ✕
+                            <AppIcon icon="x" className="h-5 w-5" />
                         </button>
                     </div>
                     <div className="space-y-1 text-sm text-gray-600">

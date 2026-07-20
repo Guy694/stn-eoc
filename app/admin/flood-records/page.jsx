@@ -4,6 +4,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodRecordsPage() {
     const [records, setRecords] = useState([]);
@@ -209,7 +210,7 @@ export default function FloodRecordsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">💧</span>
+                            <span className="text-4xl"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกพื้นที่อุทกภัยน้ำท่วมรายปี
                         </h1>
                         <p className="text-gray-600">
@@ -224,14 +225,14 @@ export default function FloodRecordsPage() {
                         }}
                         className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2"
                     >
-                        <span className="text-xl">➕</span>
+                        <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มข้อมูล
                     </button>
                 </div>
 
                 {/* Filters */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">🔍 ฟิลเตอร์ข้อมูล</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4"><AppIcon icon="search" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ฟิลเตอร์ข้อมูล</h2>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">ปี</label>
@@ -309,25 +310,25 @@ export default function FloodRecordsPage() {
                     <StatCard
                         label="ทั้งหมด"
                         value={records.length}
-                        icon="📊"
+                        icon="barChart"
                         color="blue"
                     />
                     <StatCard
                         label="อุทกภัยน้ำท่วมสูง"
                         value={records.filter(r => r.flood_level === 'สูง' || r.flood_level === 'สูงมาก').length}
-                        icon="⚠️"
+                        icon="alert"
                         color="red"
                     />
                     <StatCard
                         label="ครัวเรือนได้รับผลกระทบ"
                         value={records.reduce((sum, r) => sum + (r.affected_households || 0), 0)}
-                        icon="🏠"
+                        icon="home"
                         color="orange"
                     />
                     <StatCard
                         label="กำลังดำเนินการ"
                         value={records.filter(r => r.status === 'กำลังดำเนินการ').length}
-                        icon="🔄"
+                        icon="refresh"
                         color="green"
                     />
                 </div>
@@ -428,7 +429,7 @@ export default function FloodRecordsPage() {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold text-gray-800">
-                                    {editingRecord ? '✏️ แก้ไขข้อมูล' : '➕ เพิ่มข้อมูลใหม่'}
+                                    {editingRecord ? "แก้ไขข้อมูล" : "เพิ่มข้อมูลใหม่"}
                                 </h2>
                                 <button
                                     onClick={() => {
@@ -438,14 +439,14 @@ export default function FloodRecordsPage() {
                                     }}
                                     className="text-gray-500 hover:text-gray-700 text-2xl"
                                 >
-                                    ✕
+                                    <AppIcon icon="x" className="h-5 w-5" />
                                 </button>
                             </div>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* ข้อมูลพื้นที่ */}
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4">📍 ข้อมูลพื้นที่</h3>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลพื้นที่</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -512,7 +513,7 @@ export default function FloodRecordsPage() {
 
                                 {/* ข้อมูลอุทกภัยน้ำท่วม */}
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4">💧 ข้อมูลอุทกภัยน้ำท่วม</h3>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลอุทกภัยน้ำท่วม</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -560,7 +561,7 @@ export default function FloodRecordsPage() {
 
                                 {/* ผลกระทบ */}
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4">👥 ผลกระทบ</h3>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผลกระทบ</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -616,7 +617,7 @@ export default function FloodRecordsPage() {
 
                                 {/* รายละเอียด */}
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-4">📝 รายละเอียดเพิ่มเติม</h3>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายละเอียดเพิ่มเติม</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -701,7 +702,7 @@ function StatCard({ label, value, icon, color }) {
                     <p className="text-sm font-medium opacity-80">{label}</p>
                     <p className="text-2xl font-bold mt-1">{value.toLocaleString()}</p>
                 </div>
-                <div className="text-3xl">{icon}</div>
+                <AppIcon icon={icon} className="h-8 w-8" />
             </div>
         </div>
     );

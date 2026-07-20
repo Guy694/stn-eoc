@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 import Swal from "sweetalert2";
+import AppIcon from "@/components/icons/AppIcon";
 
 function EOCModulesContent() {
     const router = useRouter();
@@ -26,18 +27,18 @@ function EOCModulesContent() {
         module_name_en: '',
         module_type: 'report',
         route_path: '',
-        icon: '📄',
+        icon: "file",
         description: '',
         is_active: 1,
         sort_order: 0
     });
 
     const moduleTypeOptions = [
-        { value: 'map', label: 'แผนที่', icon: '🗺️' },
-        { value: 'report', label: 'รายงาน', icon: '📊' },
-        { value: 'data_entry', label: 'บันทึกข้อมูล', icon: '✏️' },
-        { value: 'dashboard', label: 'แดชบอร์ด', icon: '📈' },
-        { value: 'analytics', label: 'วิเคราะห์ข้อมูล', icon: '📉' }
+        { value: 'map', label: 'แผนที่', icon: "map" },
+        { value: 'report', label: 'รายงาน', icon: "barChart" },
+        { value: 'data_entry', label: 'บันทึกข้อมูล', icon: "edit" },
+        { value: 'dashboard', label: 'แดชบอร์ด', icon: "barChart" },
+        { value: 'analytics', label: 'วิเคราะห์ข้อมูล', icon: "trendingDown" }
     ];
 
     useEffect(() => {
@@ -107,7 +108,7 @@ function EOCModulesContent() {
             module_name_en: '',
             module_type: 'report',
             route_path: '',
-            icon: '📄',
+            icon: "file",
             description: '',
             is_active: 1,
             sort_order: (Array.isArray(modules) ? modules.length : 0) + 1
@@ -209,7 +210,7 @@ function EOCModulesContent() {
 
     const getModuleTypeIcon = (type) => {
         const option = moduleTypeOptions.find(opt => opt.value === type);
-        return option ? option.icon : '📄';
+        return option ? option.icon : "file";
     };
 
     if (authLoading || loading) {
@@ -296,14 +297,14 @@ function EOCModulesContent() {
                                 ) : (
                                     paginatedModules.map((module) => (
                                         <tr key={module.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-2xl">{module.icon}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap"><AppIcon icon={module.icon} className="h-7 w-7" /></td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">{module.module_name_th}</div>
                                                 <div className="text-sm text-gray-500">{module.module_name_en}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                    {getModuleTypeIcon(module.module_type)} {getModuleTypeLabel(module.module_type)}
+                                                    <AppIcon icon={getModuleTypeIcon(module.module_type)} className="inline-block h-4 w-4" /> {getModuleTypeLabel(module.module_type)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -387,7 +388,7 @@ function EOCModulesContent() {
                                         >
                                             {moduleTypeOptions.map(opt => (
                                                 <option key={opt.value} value={opt.value}>
-                                                    {opt.icon} {opt.label}
+                                                    <AppIcon icon={opt.icon} className="inline-block h-5 w-5" /> {opt.label}
                                                 </option>
                                             ))}
                                         </select>
@@ -445,7 +446,7 @@ function EOCModulesContent() {
                                             value={formData.icon}
                                             onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="📢"
+                                            placeholder="megaphone"
                                         />
                                     </div>
 

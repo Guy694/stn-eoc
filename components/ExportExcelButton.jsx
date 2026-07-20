@@ -1,5 +1,6 @@
 "use client";
 import { downloadCsv, objectsToCsvRows } from '@/lib/exportCsv';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function ExportExcelButton({
     data,
@@ -30,7 +31,7 @@ export default function ExportExcelButton({
             className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 ${className}`}
             title="Export CSV"
         >
-            <span className="text-xl">📊</span>
+            <span className="text-xl"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
             <span className="hidden md:inline">Export CSV</span>
         </button>
     );

@@ -22,7 +22,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const userType = searchParams.get('type') === 'citizen' ? 'citizen' : 'officer';
 
-        // สร้าง Authorization URL สำหรับ ThaiID
+        // สร้าง Authorization URL สำหรับ ThaiD
         const authUrl = new URL(config.authorizeUrl);
         authUrl.searchParams.append('client_id', config.clientId);
         authUrl.searchParams.append('redirect_uri', config.redirectUri);
@@ -43,10 +43,10 @@ export async function GET(request) {
         return applyNoStoreHeaders(response);
 
     } catch (error) {
-        console.error('ThaiID Authorization Error:', error);
+        console.error('ThaiD Authorization Error:', error);
         const loginUrl = new URL(resolveThaiIdCallbackUrl(request, OFFICER_CALLBACK_PATH));
         loginUrl.pathname = loginUrl.pathname.replace(OFFICER_CALLBACK_PATH, '/login');
-        loginUrl.search = `?error=callback_failed&message=${encodeURIComponent(error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับ ThaiID')}`;
+        loginUrl.search = `?error=callback_failed&message=${encodeURIComponent(error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับ ThaiD')}`;
         return applyNoStoreHeaders(NextResponse.redirect(loginUrl.toString()));
     }
 }

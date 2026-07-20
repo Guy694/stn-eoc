@@ -14,6 +14,7 @@ import {
     ArcElement
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import AppIcon from "@/components/icons/AppIcon";
 
 const PublicIncidentMap = dynamic(() => import('@/components/PublicIncidentMap'), {
     ssr: false,
@@ -114,10 +115,10 @@ export default function EOCOverview() {
         return (
             <EOCLayout>
                 <div className="max-w-7xl mx-auto p-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-6">📊 ภาพรวม EOC</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-6"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ภาพรวม EOC</h1>
                     <div className="bg-yellow-50 border border-yellow-400 p-6 rounded-lg">
                         <div className="flex items-center">
-                            <div className="text-4xl mr-4">⚠️</div>
+                            <div className="text-4xl mr-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <div>
                                 <h3 className="text-lg font-semibold text-yellow-800">ไม่มี EOC Session</h3>
                                 <p className="text-yellow-700">ยังไม่มีข้อมูล session สำหรับแสดงผลย้อนหลัง</p>
@@ -166,7 +167,7 @@ export default function EOCOverview() {
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">📊 ภาพรวม EOC</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ภาพรวม EOC</h1>
                     <p className="text-gray-600">ภาพรวมสถานการณ์ EOC ตามข้อมูลที่บันทึกและกรอกย้อนหลัง</p>
                 </div>
 
@@ -257,7 +258,7 @@ export default function EOCOverview() {
                                 <p className="text-sm opacity-75">ปิดเมื่อ: {new Date(session.close_time).toLocaleString('th-TH')}</p>
                             )}
                         </div>
-                        <div className="text-5xl">🚨</div>
+                        <div className="text-5xl"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                     </div>
                 </div>
 
@@ -321,7 +322,7 @@ export default function EOCOverview() {
 
                 {/* Casualties Statistics */}
                 <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">📋 สถิติผู้ประสบภัย ({impactScopeLabel})</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติผู้ประสบภัย ({impactScopeLabel})</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="bg-white rounded-lg shadow p-6 border border-red-500">
                             <div className="flex items-center justify-between">
@@ -329,7 +330,7 @@ export default function EOCOverview() {
                                     <p className="text-sm text-gray-600 mb-1">ผู้เสียชีวิต</p>
                                     <p className="text-3xl font-bold text-red-600">{casualties.death}</p>
                                 </div>
-                                <div className="text-4xl">🪦</div>
+                                <div className="text-4xl"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                         </div>
 
@@ -339,7 +340,7 @@ export default function EOCOverview() {
                                     <p className="text-sm text-gray-600 mb-1">ผู้สูญหาย</p>
                                     <p className="text-3xl font-bold text-orange-600">{casualties.missing}</p>
                                 </div>
-                                <div className="text-4xl">🔍</div>
+                                <div className="text-4xl"><AppIcon icon="search" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                         </div>
 
@@ -349,7 +350,7 @@ export default function EOCOverview() {
                                     <p className="text-sm text-gray-600 mb-1">ผู้บาดเจ็บ</p>
                                     <p className="text-3xl font-bold text-yellow-600">{casualties.injured}</p>
                                 </div>
-                                <div className="text-4xl">🏥</div>
+                                <div className="text-4xl"><AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                         </div>
 
@@ -359,7 +360,7 @@ export default function EOCOverview() {
                                     <p className="text-sm text-gray-600 mb-1">รวมทั้งหมด</p>
                                     <p className="text-3xl font-bold text-teal-600">{casualties.total}</p>
                                 </div>
-                                <div className="text-4xl">👥</div>
+                                <div className="text-4xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                         </div>
                     </div>
@@ -367,7 +368,7 @@ export default function EOCOverview() {
 
                 {/* Affected Areas */}
                 <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">📍 พื้นที่ได้รับผลกระทบ ({impactScopeLabel})</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> พื้นที่ได้รับผลกระทบ ({impactScopeLabel})</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between">
@@ -375,7 +376,7 @@ export default function EOCOverview() {
                                     <p className="text-sm text-gray-600 mb-1">จำนวนอำเภอ</p>
                                     <p className="text-3xl font-bold text-blue-600">{affected_areas.districts}</p>
                                 </div>
-                                <div className="text-4xl">🏛️</div>
+                                <div className="text-4xl"><AppIcon icon="landmark" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                         </div>
 
@@ -385,7 +386,7 @@ export default function EOCOverview() {
                                     <p className="text-sm text-gray-600 mb-1">จำนวนตำบล</p>
                                     <p className="text-3xl font-bold text-green-600">{affected_areas.tambons}</p>
                                 </div>
-                                <div className="text-4xl">🏘️</div>
+                                <div className="text-4xl"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                         </div>
                     </div>
@@ -497,7 +498,7 @@ export default function EOCOverview() {
 
                 {isDailyMode && (
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">🗓️ เหตุการณ์ประจำวันที่ {effectiveDateLabel}</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="calendarDays" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เหตุการณ์ประจำวันที่ {effectiveDateLabel}</h3>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             <div className="bg-white rounded-lg shadow p-5">
                                 <h4 className="font-semibold text-gray-800 mb-3">ผู้ได้รับผลกระทบ</h4>
@@ -556,12 +557,12 @@ export default function EOCOverview() {
 
                 {/* IT Resources */}
                 <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">💻 ทรัพยากร IT Support</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ทรัพยากร IT Support</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="font-semibold text-gray-700">Server</h4>
-                                <div className="text-2xl">🖥️</div>
+                                <div className="text-2xl"><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
                                 <div className="flex justify-between">
@@ -582,7 +583,7 @@ export default function EOCOverview() {
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="font-semibold text-gray-700">Internet</h4>
-                                <div className="text-2xl">🌐</div>
+                                <div className="text-2xl"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
                                 <div className="flex justify-between">
@@ -603,7 +604,7 @@ export default function EOCOverview() {
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="font-semibold text-gray-700">Network</h4>
-                                <div className="text-2xl">📡</div>
+                                <div className="text-2xl"><AppIcon icon="wifi" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
                                 <div className="flex justify-between">
@@ -624,7 +625,7 @@ export default function EOCOverview() {
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="font-semibold text-gray-700">Hardware</h4>
-                                <div className="text-2xl">🔧</div>
+                                <div className="text-2xl"><AppIcon icon="wrench" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
                                 <div className="flex justify-between">
@@ -675,13 +676,13 @@ export default function EOCOverview() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     {/* Teams */}
                     <div className="bg-white rounded-lg shadow p-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">👥 ทีมปฏิบัติการ</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ทีมปฏิบัติการ</h3>
                         {teams && teams.length > 0 ? (
                             <div className="space-y-3">
                                 {teams.map((team, index) => (
                                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-2xl">{team.icon}</span>
+                                            <AppIcon icon={team.icon || "users"} className="h-7 w-7" />
                                             <div>
                                                 <p className="font-semibold text-gray-800">{team.team_name_th}</p>
                                                 <p className="text-sm text-gray-600">หัวหน้าทีม: {team.team_lead_name || '-'}</p>
@@ -701,21 +702,21 @@ export default function EOCOverview() {
 
                     {/* Shelters */}
                     <div className="bg-white rounded-lg shadow p-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">🏥 ศูนย์พักพิง</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์พักพิง</h3>
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">ศูนย์พักพิงทั้งหมด</p>
                                     <p className="text-3xl font-bold text-blue-600">{shelters.total_shelters || 0}</p>
                                 </div>
-                                <div className="text-4xl">🏢</div>
+                                <div className="text-4xl"><AppIcon icon="building" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">เปิดใน session นี้</p>
                                     <p className="text-3xl font-bold text-green-600">{formatNumber(shelters.session?.active_session_shelters || shelters.active_shelters)}</p>
                                 </div>
-                                <div className="text-4xl">✅</div>
+                                <div className="text-4xl"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="flex items-center justify-between p-4 bg-violet-50 rounded-lg">
                                 <div>
@@ -723,7 +724,7 @@ export default function EOCOverview() {
                                     <p className="text-3xl font-bold text-violet-600">{formatNumber(shelters.session?.session_occupancy || shelters.current_occupancy_total)}</p>
                                     <p className="text-xs text-gray-500">คน</p>
                                 </div>
-                                <div className="text-4xl">🧍</div>
+                                <div className="text-4xl"><AppIcon icon="personStanding" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="flex items-center justify-between p-4 bg-teal-50 rounded-lg">
                                 <div>
@@ -731,7 +732,7 @@ export default function EOCOverview() {
                                     <p className="text-3xl font-bold text-teal-600">{formatNumber(shelters.total_capacity)}</p>
                                     <p className="text-xs text-gray-500">คน</p>
                                 </div>
-                                <div className="text-4xl">👥</div>
+                                <div className="text-4xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                         </div>
                     </div>
@@ -741,7 +742,7 @@ export default function EOCOverview() {
                 {diseases && (
                     <>
                         <div className="mb-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">🦠 สถิติโรคจากข้อมูลย้อนหลัง</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติโรคจากข้อมูลย้อนหลัง</h3>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                                 <div className="bg-white rounded-lg shadow p-6 border border-blue-500">
                                     <div className="flex items-center justify-between">
@@ -753,7 +754,7 @@ export default function EOCOverview() {
                                                 {diseases.today?.reduce((sum, d) => sum + parseInt(d.today_patients || 0), 0) || 0} คน
                                             </p>
                                         </div>
-                                        <div className="text-4xl">📊</div>
+                                        <div className="text-4xl"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     </div>
                                 </div>
                                 <div className="bg-white rounded-lg shadow p-6 border border-red-500">
@@ -764,7 +765,7 @@ export default function EOCOverview() {
                                                 {diseases.cumulative?.reduce((sum, d) => sum + parseInt(d.cumulative_patients || 0), 0) || 0} คน
                                             </p>
                                         </div>
-                                        <div className="text-4xl">📈</div>
+                                        <div className="text-4xl"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     </div>
                                 </div>
                                 <div className="bg-white rounded-lg shadow p-6 border border-green-500">
@@ -773,7 +774,7 @@ export default function EOCOverview() {
                                             <p className="text-sm text-gray-600 mb-1">{isDailyMode ? 'โรคที่รายงานในวันนั้น' : 'โรคที่รายงาน'}</p>
                                             <p className="text-3xl font-bold text-green-600">{diseases.by_disease?.length || 0} โรค</p>
                                         </div>
-                                        <div className="text-4xl">🦠</div>
+                                        <div className="text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     </div>
                                 </div>
                                 <div className="bg-white rounded-lg shadow p-6 border border-teal-500">
@@ -782,7 +783,7 @@ export default function EOCOverview() {
                                             <p className="text-sm text-gray-600 mb-1">หน่วยบริการ</p>
                                             <p className="text-3xl font-bold text-teal-600">{diseases.health_facilities || 0} แห่ง</p>
                                         </div>
-                                        <div className="text-4xl">🏥</div>
+                                        <div className="text-4xl"><AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     </div>
                                 </div>
                             </div>
@@ -791,7 +792,7 @@ export default function EOCOverview() {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Bar Chart by District */}
                                 <div className="bg-white rounded-lg shadow p-6">
-                                    <h4 className="text-lg font-bold text-gray-800 mb-4">📊 สถานการณ์แยกตามอำเภอ ({diseaseLatestDateLabel})</h4>
+                                    <h4 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์แยกตามอำเภอ ({diseaseLatestDateLabel})</h4>
                                     {diseases.today && diseases.today.length > 0 ? (
                                         <Bar
                                             data={(() => {
@@ -834,7 +835,7 @@ export default function EOCOverview() {
 
                                 {/* Pie Chart by Disease */}
                                 <div className="bg-white rounded-lg shadow p-6">
-                                    <h4 className="text-lg font-bold text-gray-800 mb-4">🥧 สัดส่วนผู้ป่วยรายโรค ({isDailyMode ? effectiveDateLabel : 'สะสม'})</h4>
+                                    <h4 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="pieChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สัดส่วนผู้ป่วยรายโรค ({isDailyMode ? effectiveDateLabel : 'สะสม'})</h4>
                                     {diseases.by_disease && diseases.by_disease.length > 0 ? (
                                         <Pie
                                             data={(() => {
@@ -954,11 +955,11 @@ export default function EOCOverview() {
                 {/* Vulnerable Groups Section */}
                 {vulnerable_groups && (
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">🧑‍🦽 กลุ่มเปราะบาง</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กลุ่มเปราะบาง</h3>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                             <div className="bg-white rounded-lg shadow p-6 border border-red-500">
                                 <div className="text-center">
-                                    <div className="text-3xl mb-2">👴</div>
+                                    <div className="text-3xl mb-2"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     <p className="text-sm text-gray-600 mb-1">ผู้สูงอายุ</p>
                                     <p className="text-2xl font-bold text-red-600">
                                         {parseInt(vulnerable_groups.summary?.total_elderly) || 0}
@@ -967,7 +968,7 @@ export default function EOCOverview() {
                             </div>
                             <div className="bg-white rounded-lg shadow p-6 border border-blue-500">
                                 <div className="text-center">
-                                    <div className="text-3xl mb-2">👶</div>
+                                    <div className="text-3xl mb-2"><AppIcon icon="baby" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     <p className="text-sm text-gray-600 mb-1">เด็ก</p>
                                     <p className="text-2xl font-bold text-blue-600">
                                         {parseInt(vulnerable_groups.summary?.total_children) || 0}
@@ -976,7 +977,7 @@ export default function EOCOverview() {
                             </div>
                             <div className="bg-white rounded-lg shadow p-6 border border-yellow-500">
                                 <div className="text-center">
-                                    <div className="text-3xl mb-2">♿</div>
+                                    <div className="text-3xl mb-2"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     <p className="text-sm text-gray-600 mb-1">คนพิการ</p>
                                     <p className="text-2xl font-bold text-yellow-600">
                                         {parseInt(vulnerable_groups.summary?.total_disabled) || 0}
@@ -985,7 +986,7 @@ export default function EOCOverview() {
                             </div>
                             <div className="bg-white rounded-lg shadow p-6 border border-pink-500">
                                 <div className="text-center">
-                                    <div className="text-3xl mb-2">🤰</div>
+                                    <div className="text-3xl mb-2"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     <p className="text-sm text-gray-600 mb-1">หญิงตั้งครรภ์</p>
                                     <p className="text-2xl font-bold text-pink-600">
                                         {parseInt(vulnerable_groups.summary?.total_pregnant) || 0}
@@ -994,7 +995,7 @@ export default function EOCOverview() {
                             </div>
                             <div className="bg-white rounded-lg shadow p-6 border border-teal-500">
                                 <div className="text-center">
-                                    <div className="text-3xl mb-2">🛏️</div>
+                                    <div className="text-3xl mb-2"><AppIcon icon="bed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     <p className="text-sm text-gray-600 mb-1">ผู้ป่วยติดเตียง</p>
                                     <p className="text-2xl font-bold text-teal-600">
                                         {parseInt(vulnerable_groups.summary?.total_bedridden) || 0}
@@ -1005,7 +1006,7 @@ export default function EOCOverview() {
 
                         {/* Vulnerable Groups Pie Chart */}
                         <div className="bg-white rounded-lg shadow p-6">
-                            <h4 className="text-lg font-bold text-gray-800 mb-4">📊 สัดส่วนกลุ่มเปราะบาง</h4>
+                            <h4 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สัดส่วนกลุ่มเปราะบาง</h4>
                             {vulnerable_groups.summary && (
                                 <div className="max-w-md mx-auto">
                                     <Pie
@@ -1141,7 +1142,7 @@ export default function EOCOverview() {
                 {/* Info Box */}
                 <div className="bg-blue-50 border border-blue-400 p-4 rounded-lg">
                     <div className="flex items-start">
-                        <div className="text-2xl mr-3">ℹ️</div>
+                        <div className="text-2xl mr-3"><AppIcon icon="info" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <div>
                             <h4 className="font-semibold text-blue-800 mb-1">หมายเหตุ</h4>
                             <p className="text-sm text-blue-700">

@@ -225,7 +225,7 @@ export async function POST(request) {
                 );
 
                 return NextResponse.json(
-                    { success: false, message: 'บัญชีนี้ยังรอผู้ดูแลระบบอนุมัติ กรุณายืนยันตัวตนด้วย ThaiID และรอการอนุมัติ' },
+                    { success: false, message: 'บัญชีนี้ยังรอผู้ดูแลระบบอนุมัติ กรุณายืนยันตัวตนด้วย ThaiD และรอการอนุมัติ' },
                     { status: 403 }
                 );
             }

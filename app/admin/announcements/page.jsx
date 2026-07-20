@@ -6,16 +6,17 @@ import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showWarning, showDeleteConfirm } from '@/lib/sweetAlert';
 import Image from 'next/image';
+import AppIcon from "@/components/icons/AppIcon";
 
 const MAX_UPLOAD_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const SUPPORTED_ATTACHMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
 
 const EOC_TYPES = [
-    { value: 'flood', label: '💧 อุทกภัยน้ำท่วม', color: 'blue' },
-    { value: 'accident', label: '🚨 อุบัติเหตุ', color: 'orange' },
-    { value: 'festival-accidents', label: '🎉 อุบัติเหตุช่วงเทศกาล', color: 'yellow' },
-    { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
+    { value: 'flood', label: "อุทกภัยน้ำท่วม", color: 'blue' },
+    { value: 'accident', label: "อุบัติเหตุ", color: 'orange' },
+    { value: 'festival-accidents', label: "อุบัติเหตุช่วงเทศกาล", color: 'yellow' },
+    { value: 'disease', label: "โรคระบาด", color: 'red' }
 ];
 
 function formatDateTime(value) {
@@ -376,7 +377,7 @@ function AnnouncementsContent() {
                 <div className="mb-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">📢</span>
+                            <span className="text-4xl"><AppIcon icon="megaphone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             จัดการประชาสัมพันธ์/แบนเนอร์
                             {filters.eoc_type && (
                                 <span className="text-xl text-gray-600">
@@ -390,7 +391,7 @@ function AnnouncementsContent() {
                         onClick={openCreateModal}
                         className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
-                        <span className="text-xl">➕</span>
+                        <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มแบนเนอร์ใหม่
                     </button>
                 </div>
@@ -614,7 +615,8 @@ function AnnouncementsContent() {
                                                     ? 'bg-blue-100 text-blue-800'
                                                     : 'bg-gray-100 text-gray-800'
                                                     }`}>
-                                                    {announcement.show_popup ? '✓ แสดง' : '✗ ไม่แสดง'}
+                                                    <AppIcon icon={announcement.show_popup ? 'check' : 'x'} className="mr-1 h-3.5 w-3.5" />
+                                                    {announcement.show_popup ? 'แสดง' : 'ไม่แสดง'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

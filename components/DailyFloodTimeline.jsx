@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import html2canvas from "html2canvas";
 import { showError, showSuccess } from "@/lib/sweetAlert";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function DailyFloodTimeline({ startDate, polygons }) {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -118,9 +119,9 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
                 const result = await response.json();
 
                 if (result.success) {
-                    showSuccess('✅ บันทึกภาพแผนที่สำเร็จ');
+                    showSuccess("บันทึกภาพแผนที่สำเร็จ");
                 } else {
-                    showError('❌ เกิดข้อผิดพลาด: ' + result.error);
+                    showError("เกิดข้อผิดพลาด:" + result.error);
                 }
             }, 'image/png');
 
@@ -151,7 +152,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
         <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    📅 แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
+                    <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                 </h2>
                 <p className="text-gray-600">
                     ติดตามสถานการณ์อุทกภัยน้ำท่วมตั้งแต่เปิด EOC - {dates.length} วัน

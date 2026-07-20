@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import EOCLayout from '@/components/layouts/EOCLayout';
+import AppIcon from "@/components/icons/AppIcon";
+import { renderToStaticMarkup } from 'react-dom/server';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -73,19 +75,19 @@ export default function GistdaFloodMapPage() {
         const iconHtml = `
             <div style="
                 background-color: ${color};
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                border: 3px solid white;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 16px;
-            ">
-                💧
-            </div>
-        `;
+ width: 30px;
+ height: 30px;
+ border-radius: 50%;
+ border: 3px solid white;
+ box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 16px;
+ ">
+ ${renderToStaticMarkup(<AppIcon icon="droplet" className="h-4 w-4 text-white" />)}
+ </div>
+ `;
 
         return L.divIcon({
             html: iconHtml,
@@ -113,11 +115,11 @@ export default function GistdaFloodMapPage() {
                     <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">
-                                🌊 แผนที่อุทกภัยน้ำท่วม GISTDA
+                                <AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่อุทกภัยน้ำท่วม GISTDA
                             </h1>
                             <p className="text-sm text-gray-600">
                                 {floodData?.source === 'MOCK' ? (
-                                    <span className="text-orange-600">⚠️ กำลังใช้ข้อมูลจำลอง (ยังไม่มี API Key)</span>
+                                    <span className="text-orange-600"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กำลังใช้ข้อมูลจำลอง (ยังไม่มี API Key)</span>
                                 ) : (
                                     `ข้อมูลจาก GISTDA - อัปเดตล่าสุด: ${floodData?.summary?.lastUpdate ? new Date(floodData.summary.lastUpdate).toLocaleString('th-TH') : '-'}`
                                 )}
@@ -139,7 +141,7 @@ export default function GistdaFloodMapPage() {
                                 onClick={fetchFloodData}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                             >
-                                🔄 รีเฟรช
+                                <AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รีเฟรช
                             </button>
                         </div>
                     </div>
@@ -183,7 +185,7 @@ export default function GistdaFloodMapPage() {
                     ) : error ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                             <div className="text-center text-red-600">
-                                <div className="text-4xl mb-4">⚠️</div>
+                                <div className="text-4xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                 <div className="text-xl font-semibold mb-2">เกิดข้อผิดพลาด</div>
                                 <div>{error}</div>
                             </div>

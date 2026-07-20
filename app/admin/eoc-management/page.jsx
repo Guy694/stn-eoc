@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import Swal from "sweetalert2";
+import AppIcon from "@/components/icons/AppIcon";
 
 function getDefaultDateTimeLocal() {
     const date = new Date();
@@ -65,7 +66,7 @@ export default function EOCManagementPage() {
         id: '',
         name_th: '',
         name_en: '',
-        icon: '⚠️',
+        icon: "alert",
         color_primary: 'gray',
         color_gradient: 'from-gray-500 to-gray-600',
         description: ''
@@ -287,7 +288,7 @@ export default function EOCManagementPage() {
                 await Swal.fire('สำเร็จ', 'เพิ่ม EOC Type สำเร็จ', 'success');
                 setShowAddModal(false);
                 setFormData({
-                    id: '', name_th: '', name_en: '', icon: '⚠️',
+                    id: '', name_th: '', name_en: '', icon: "alert",
                     color_primary: 'gray', color_gradient: 'from-gray-500 to-gray-600',
                     description: ''
                 });
@@ -588,7 +589,7 @@ export default function EOCManagementPage() {
                                             href={`/admin/eoc-sessions/${status.session_id}/teams`}
                                             className="w-full block py-2 px-4 text-center rounded-md font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                                         >
-                                            👥 จัดการทีมงาน
+                                            <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการทีมงาน
                                         </Link>
                                     )}
 
@@ -607,7 +608,7 @@ export default function EOCManagementPage() {
                                                 กำลังดำเนินการ...
                                             </span>
                                         ) : (
-                                            isActive ? '🔴 ปิด EOC' : '🟢 เปิด EOC'
+                                            isActive ? "ปิด EOC" : "เปิด EOC"
                                         )}
                                     </button>
                                 </div>
@@ -619,7 +620,7 @@ export default function EOCManagementPage() {
                 {/* Active EOCs Summary */}
                 <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
                     <h3 className="text-lg font-semibold text-blue-900 mb-3">
-                        📊 สรุป EOC ที่เปิดใช้งาน
+                        <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สรุป EOC ที่เปิดใช้งาน
                     </h3>
                     <div className="space-y-2">
                         {eocTypes.filter(type => eocStatus[type]?.is_active).length > 0 ? (
@@ -882,7 +883,7 @@ export default function EOCManagementPage() {
                                                 type="text"
                                                 value={formData.icon}
                                                 onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                                                placeholder="⚠️"
+                                                placeholder="alert"
                                                 className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                                             />
                                         </div>
@@ -974,7 +975,7 @@ export default function EOCManagementPage() {
                                         onClick={() => {
                                             setShowAddModal(false);
                                             setFormData({
-                                                id: '', name_th: '', name_en: '', icon: '⚠️',
+                                                id: '', name_th: '', name_en: '', icon: "alert",
                                                 color_primary: 'gray', color_gradient: 'from-gray-500 to-gray-600',
                                                 description: ''
                                             });

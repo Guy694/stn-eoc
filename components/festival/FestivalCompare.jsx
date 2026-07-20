@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import AppIcon from "@/components/icons/AppIcon";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -104,7 +105,7 @@ export default function FestivalCompare() {
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-500 rounded-2xl p-6 text-white shadow-xl">
                 <h1 className="text-3xl font-bold flex items-center gap-3">
-                    📊 เปรียบเทียบสถิติอุบัติเหตุช่วงเทศกาล
+                    <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปรียบเทียบสถิติอุบัติเหตุช่วงเทศกาล
                 </h1>
                 <p className="text-blue-100 mt-1">เปรียบเทียบข้อมูลระหว่างเทศกาล ปีใหม่ vs สงกรานต์ หรือข้ามปี</p>
             </div>
@@ -112,7 +113,7 @@ export default function FestivalCompare() {
             {/* Session Selector */}
             <div className="bg-white rounded-xl shadow-md p-6">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    📋 เลือก Session ที่ต้องการเปรียบเทียบ
+                    <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลือก Session ที่ต้องการเปรียบเทียบ
                 </h3>
                 {sessions.length === 0 ? (
                     <p className="text-gray-500">ไม่พบ session สำหรับเปรียบเทียบ</p>
@@ -132,9 +133,9 @@ export default function FestivalCompare() {
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-400'
                                 }`}
                             >
-                                {s.festival_type === 'newyear' ? '🎄' : s.festival_type === 'songkran' ? '💦' : '📊'}
+                                <AppIcon icon={s.festival_type === 'newyear' ? "treePalm" : s.festival_type === 'songkran' ? "droplets" : "barChart"} className="inline-block h-5 w-5" />
                                 {' '}{s.open_reason || `Session #${s.session_number}`}
-                                {' '}({s.status === 'active' ? '🟢' : '🔴'})
+                                {' '}(<AppIcon icon={s.status === 'active' ? "statusGreen" : "statusRed"} className="inline-block h-3 w-3" />)
                             </button>
                         ))}
                     </div>
@@ -161,7 +162,7 @@ export default function FestivalCompare() {
                                     <div className="p-5">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="font-bold text-gray-800 text-sm">
-                                                {c.session.festivalType === 'newyear' ? '🎄' : '💦'}
+                                                <AppIcon icon={c.session.festivalType === 'newyear' ? "treePalm" : "droplets"} className="inline-block h-5 w-5" />
                                                 {' '}{c.session.openReason || c.session.festivalName}
                                             </h3>
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
@@ -174,31 +175,31 @@ export default function FestivalCompare() {
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="bg-red-50 rounded-lg p-3 text-center">
                                                 <div className="text-2xl font-bold text-red-600">{c.stats.totalAccidents}</div>
-                                                <div className="text-xs text-red-500">🚗 อุบัติเหตุ</div>
+                                                <div className="text-xs text-red-500"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อุบัติเหตุ</div>
                                             </div>
                                             <div className="bg-gray-100 rounded-lg p-3 text-center">
                                                 <div className="text-2xl font-bold text-gray-800">{c.stats.totalDeaths}</div>
-                                                <div className="text-xs text-gray-500">💀 เสียชีวิต</div>
+                                                <div className="text-xs text-gray-500"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เสียชีวิต</div>
                                             </div>
                                             <div className="bg-amber-50 rounded-lg p-3 text-center">
                                                 <div className="text-2xl font-bold text-amber-600">{c.stats.totalInjuries}</div>
-                                                <div className="text-xs text-amber-500">🤕 บาดเจ็บ</div>
+                                                <div className="text-xs text-amber-500"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บาดเจ็บ</div>
                                             </div>
                                             <div className="bg-teal-50 rounded-lg p-3 text-center">
                                                 <div className="text-2xl font-bold text-teal-600">{c.stats.drunkCases}</div>
-                                                <div className="text-xs text-teal-500">🍺 เมาแล้วขับ</div>
+                                                <div className="text-xs text-teal-500"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</div>
                                             </div>
                                         </div>
 
                                         {/* Additional causes */}
                                         <div className="flex gap-2 mt-3 text-xs">
-                                            <span className="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg">⛑ ไม่สวมหมวก: {c.stats.noHelmetCases}</span>
-                                            <span className="px-2 py-1 bg-red-50 text-red-600 rounded-lg">🚀 ขับเร็ว: {c.stats.speedingCases}</span>
+                                            <span className="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก: {c.stats.noHelmetCases}</span>
+                                            <span className="px-2 py-1 bg-red-50 text-red-600 rounded-lg"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ขับเร็ว: {c.stats.speedingCases}</span>
                                         </div>
 
                                         {c.stats.checkpoints > 0 && (
                                             <div className="mt-3 text-xs text-gray-500">
-                                                🚧 จุดตรวจ: {c.stats.checkpoints} จุด
+                                                <AppIcon icon="route" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จุดตรวจ: {c.stats.checkpoints} จุด
                                             </div>
                                         )}
                                     </div>
@@ -210,7 +211,7 @@ export default function FestivalCompare() {
                     {/* Comparison Bar Chart */}
                     <div className="bg-white rounded-xl shadow-md p-6">
                         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            📊 กราฟเปรียบเทียบ
+                            <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กราฟเปรียบเทียบ
                         </h3>
                         <div className="h-80">
                             <Bar
@@ -236,7 +237,7 @@ export default function FestivalCompare() {
 
             {comparisons.length === 0 && !comparing && (
                 <div className="bg-gray-50 rounded-xl p-12 text-center">
-                    <div className="text-6xl mb-4">📊</div>
+                    <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                     <h3 className="text-xl font-bold text-gray-700 mb-2">เลือก Session เพื่อเปรียบเทียบ</h3>
                     <p className="text-gray-500">คลิกที่ Session ด้านบนเพื่อเริ่มเปรียบเทียบข้อมูล</p>
                 </div>

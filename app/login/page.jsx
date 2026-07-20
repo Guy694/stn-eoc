@@ -6,8 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { AlertTriangle, ArrowRight, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
 
-// Component แยกสำหรับจัดการ error จาก ThaiID callback
-function ThaiIDErrorHandler({ setError }) {
+// Component แยกสำหรับจัดการ error จาก ThaiD callback
+function ThaiDErrorHandler({ setError }) {
     const searchParams = useSearchParams();
 
     useEffect(() => {
@@ -26,37 +26,37 @@ function ThaiIDErrorHandler({ setError }) {
             switch (errorType) {
                 case 'thaiid_auth_failed':
                     if (errorMessage && decodeURIComponent(errorMessage).includes('unauthorized_client')) {
-                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
+                        setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n• ยืนยันว่า ThaiD console อนุญาต client_id นี้\n• ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n• รีสตาร์ต server หลังแก้ .env');
                         break;
                     }
-                    setError(`การยืนยันตัวตนผ่าน ThaiID ล้มเหลว: ${errorMessage || 'ไม่ทราบสาเหตุ'}`);
+                    setError(`การยืนยันตัวตนผ่าน ThaiD ล้มเหลว: ${errorMessage || 'ไม่ทราบสาเหตุ'}`);
                     break;
                 case 'no_code':
-                    setError('ไม่ได้รับ authorization code จาก ThaiID');
+                    setError('ไม่ได้รับ authorization code จาก ThaiD');
                     break;
                 case 'no_pid':
-                    setError('ไม่สามารถดึงเลขบัตรประชาชนจาก ThaiID ได้');
+                    setError('ไม่สามารถดึงเลขบัตรประชาชนจาก ThaiD ได้');
                     break;
                 case 'user_not_found':
-                    setError(`${errorMessage ? decodeURIComponent(errorMessage) : `ไม่พบผู้ใช้งานที่มีเลขบัตรประชาชน: ${pid || 'ไม่ระบุ'}`}\nกรุณาลงทะเบียนผู้ใช้งานก่อน หรือใช้ชื่อ-นามสกุลให้ตรงกับข้อมูลใน ThaiID`);
+                    setError(`${errorMessage ? decodeURIComponent(errorMessage) : `ไม่พบผู้ใช้งานที่มีเลขบัตรประชาชน: ${pid || 'ไม่ระบุ'}`}\nกรุณาลงทะเบียนผู้ใช้งานก่อน หรือใช้ชื่อ-นามสกุลให้ตรงกับข้อมูลใน ThaiD`);
                     break;
                 case 'callback_failed':
-                    const decodedMessage = errorMessage ? decodeURIComponent(errorMessage) : 'การเข้าสู่ระบบผ่าน ThaiID ล้มเหลว';
+                    const decodedMessage = errorMessage ? decodeURIComponent(errorMessage) : 'การเข้าสู่ระบบผ่าน ThaiD ล้มเหลว';
 
                     if (decodedMessage.includes('unauthorized_client')) {
-                        setError('ThaiID ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiID ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiID console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
+                        setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n• ยืนยันว่า ThaiD console อนุญาต client_id นี้\n• ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n• รีสตาร์ต server หลังแก้ .env');
                         break;
                     }
 
                     // ตรวจสอบว่าเป็น timeout error หรือไม่
                     if (decodedMessage.includes('timeout') || decodedMessage.includes('ETIMEDOUT')) {
-                        setError('การเชื่อมต่อ ThaiID หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiID ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiID API\n\nคำแนะนำ:\n✓ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n✓ ลองใหม่อีกครั้งในอีกสักครู่\n✓ หรือใช้ username/password แทน');
+                        setError('การเชื่อมต่อ ThaiD หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiD ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiD API\n\nคำแนะนำ:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ลองใหม่อีกครั้งในอีกสักครู่\n• หรือใช้ username/password แทน');
                     } else {
                         setError(`เกิดข้อผิดพลาด: ${decodedMessage}`);
                     }
                     break;
                 default:
-                    setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบผ่าน ThaiID');
+                    setError('เกิดข้อผิดพลาดในการเข้าสู่ระบบผ่าน ThaiD');
             }
         }
     }, [searchParams, setError]);
@@ -139,7 +139,7 @@ function LoginForm() {
                         </div>
                         <div className="rounded-xl border border-white/15 bg-white/10 p-4">
                             <IdCard className="mb-2 h-5 w-5" />
-                            <div className="font-black">ThaiID</div>
+                            <div className="font-black">ThaiD</div>
                             <div className="mt-1 text-xs text-blue-100">รองรับการยืนยันตัวตน</div>
                         </div>
                     </div>
@@ -151,7 +151,7 @@ function LoginForm() {
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto h-20 w-20 rounded-full bg-white p-2" />
                             <p className="text-lg font-black text-[#0b4c86] text-center">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
                             <h2 className="mt-1 text-3xl font-black text-slate-950">เข้าสู่ระบบ</h2>
-                            <p className="mt-2 text-sm leading-6 text-slate-500">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiID เพื่อเข้าสู่พื้นที่ปฏิบัติงาน</p>
+                            <p className="mt-2 text-sm leading-6 text-slate-500">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiD เพื่อเข้าสู่พื้นที่ปฏิบัติงาน</p>
                         </div>
 
                         {error && (
@@ -238,8 +238,8 @@ function LoginForm() {
                             onClick={refreshThaiIdLink}
                             className="flex w-full items-center justify-center gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition hover:border-blue-200 hover:bg-blue-100"
                         >
-                            <Image src="/stn-eoc/img/thaiid.png" alt="ThaiID" width={36} height={36} className="h-9 w-9" />
-                            เข้าสู่ระบบด้วย ThaiID
+                            <Image src="/stn-eoc/img/thaiid.png" alt="ThaiD" width={36} height={36} className="h-9 w-9" />
+                            เข้าสู่ระบบด้วย ThaiD
                         </a>
 
                         <div className="mt-7 flex flex-col gap-3 text-center text-sm sm:flex-row sm:items-center sm:justify-center sm:text-center">
@@ -250,7 +250,7 @@ function LoginForm() {
                         <p className="mt-8 text-center text-xs text-slate-400">© 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
 
                         <Suspense fallback={null}>
-                            <ThaiIDErrorHandler setError={setError} />
+                            <ThaiDErrorHandler setError={setError} />
                         </Suspense>
                     </div>
                 </section>

@@ -4,6 +4,7 @@ import { useEOC } from "@/context/EOCContext";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { showSuccess, showError } from "@/lib/sweetAlert";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function ManageSheltersPage() {
     const { eocStatus } = useEOC();
@@ -185,7 +186,7 @@ export default function ManageSheltersPage() {
         return (
             <EOCLayout>
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
-                    <span className="text-5xl mb-4 block">⚠️</span>
+                    <span className="text-5xl mb-4 block"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                     <h2 className="text-xl font-bold text-yellow-800 mb-2">ไม่มี EOC อุทกภัยน้ำท่วมที่เปิดใช้งาน</h2>
                     <p className="text-yellow-700">กรุณาเปิด EOC ก่อนจึงจะสามารถจัดการศูนย์พักพิงได้</p>
                     <Link href="/admin/eoc-management" className="mt-4 inline-block px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
@@ -204,7 +205,7 @@ export default function ManageSheltersPage() {
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">
-                                <span className="text-3xl">⚙️</span>
+                                <span className="text-3xl"><AppIcon icon="settings" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800">จัดการศูนย์พักพิงสำหรับ Session นี้</h1>
@@ -224,7 +225,7 @@ export default function ManageSheltersPage() {
                                 disabled={loading}
                                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                             >
-                                <span>✅</span>
+                                <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 <span>เปิดทั้งหมด</span>
                             </button>
                         </div>
@@ -263,7 +264,7 @@ export default function ManageSheltersPage() {
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <input
                         type="text"
-                        placeholder="🔍 ค้นหาศูนย์พักพิง..."
+                        placeholder="ค้นหาศูนย์พักพิง..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -278,7 +279,7 @@ export default function ManageSheltersPage() {
                         </div>
                     ) : filteredShelters.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
-                            <span className="text-4xl block mb-2">🏠</span>
+                            <span className="text-4xl block mb-2"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <p>ไม่พบศูนย์พักพิง</p>
                             <Link href="/admin/shelter-center" className="text-blue-600 hover:underline">
                                 เพิ่มศูนย์พักพิงใหม่
@@ -298,7 +299,7 @@ export default function ManageSheltersPage() {
                                                 ? 'bg-green-100 text-green-600'
                                                 : 'bg-gray-100 text-gray-400'
                                                 }`}>
-                                                <span className="text-2xl">🏠</span>
+                                                <span className="text-2xl"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="font-semibold text-gray-800 truncate">{shelter.sheltername}</h3>
@@ -309,14 +310,14 @@ export default function ManageSheltersPage() {
                                                     <div className="mt-2">
                                                         <div className="flex flex-wrap items-center gap-4 text-sm mt-1">
                                                             <span className="text-orange-600 font-medium">
-                                                                👥 ผู้อพยพ: {shelter.session_occupancy || 0}/{shelter.shelter_capacity} คน
+                                                                <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้อพยพ: {shelter.session_occupancy || 0}/{shelter.shelter_capacity} คน
                                                             </span>
                                                             <span className="text-teal-600">
                                                                 (คงเหลือ {(shelter.shelter_capacity || 0) - (shelter.session_occupancy || 0)} คน)
                                                             </span>
                                                             {shelter.contact_phone && (
                                                                 <a href={`tel:${shelter.contact_phone}`} className="flex items-center gap-1 text-blue-600 hover:underline">
-                                                                    <span>📞</span>
+                                                                    <span><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                                                     <span>{shelter.contact_phone}</span>
                                                                 </a>
                                                             )}
@@ -327,7 +328,7 @@ export default function ManageSheltersPage() {
                                                                     rel="noopener noreferrer"
                                                                     className="flex items-center gap-1 text-green-600 hover:underline"
                                                                 >
-                                                                    <span>🗺️</span>
+                                                                    <span><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                                                     <span>นำทาง</span>
                                                                 </a>
                                                             )}
@@ -351,7 +352,7 @@ export default function ManageSheltersPage() {
                                                         <span>ความจุ {shelter.shelter_capacity} คน</span>
                                                         {shelter.contact_phone && (
                                                             <span className="flex items-center gap-1">
-                                                                <span>📞</span>
+                                                                <span><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                                                 <span>{shelter.contact_phone}</span>
                                                             </span>
                                                         )}
@@ -362,7 +363,7 @@ export default function ManageSheltersPage() {
                                                                 rel="noopener noreferrer"
                                                                 className="flex items-center gap-1 hover:text-green-600"
                                                             >
-                                                                <span>🗺️</span>
+                                                                <span><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                                                 <span>นำทาง</span>
                                                             </a>
                                                         )}
@@ -377,7 +378,7 @@ export default function ManageSheltersPage() {
                                                     onClick={() => openEditModal(shelter)}
                                                     className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition-colors flex items-center gap-1"
                                                 >
-                                                    <span>✏️</span>
+                                                    <span><AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                                     <span className="hidden sm:inline">แก้ไขจำนวน</span>
                                                 </button>
                                             )}
@@ -393,13 +394,13 @@ export default function ManageSheltersPage() {
                                             >
                                                 {updating === shelter.id ? (
                                                     <span className="flex items-center gap-2">
-                                                        <span className="animate-spin">⏳</span>
+                                                        <span className="animate-spin"><AppIcon icon="timer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                                         <span className="hidden sm:inline">กำลังดำเนินการ...</span>
                                                     </span>
                                                 ) : shelter.is_activated_for_session ? (
-                                                    <span>❌ ปิดใช้งาน</span>
+                                                    <span><AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ปิดใช้งาน</span>
                                                 ) : (
-                                                    <span>✅ เปิดใช้งาน</span>
+                                                    <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปิดใช้งาน</span>
                                                 )}
                                             </button>
                                         </div>
@@ -417,7 +418,7 @@ export default function ManageSheltersPage() {
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                <span>✏️</span>
+                                <span><AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 <span>แก้ไขจำนวนผู้อพยพ</span>
                             </h3>
                             <button
@@ -459,7 +460,7 @@ export default function ManageSheltersPage() {
                                         คงเหลือ: <span className="font-bold text-teal-600">{(editingShelter.shelter_capacity || 0) - (editOccupancy || 0)} คน</span>
                                     </span>
                                     {editOccupancy > editingShelter.shelter_capacity && (
-                                        <span className="text-red-600 font-medium">⚠️ เกินความจุ!</span>
+                                        <span className="text-red-600 font-medium"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เกินความจุ!</span>
                                     )}
                                 </div>
                                 {/* Quick buttons */}
@@ -525,11 +526,11 @@ export default function ManageSheltersPage() {
                             >
                                 {updating === editingShelter.id ? (
                                     <span className="flex items-center justify-center gap-2">
-                                        <span className="animate-spin">⏳</span>
+                                        <span className="animate-spin"><AppIcon icon="timer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                         <span>กำลังบันทึก...</span>
                                     </span>
                                 ) : (
-                                    <span>💾 บันทึก</span>
+                                    <span><AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก</span>
                                 )}
                             </button>
                         </div>

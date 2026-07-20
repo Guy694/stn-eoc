@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polygon, Popup, CircleMarker, Marker, LayerGro
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect, Fragment } from "react";
+import AppIcon from "@/components/icons/AppIcon";
 
 // แก้ไข icon default ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -424,7 +425,7 @@ export default function HybridDisasterMap({
                                 <Popup>
                                     <div className="min-w-[250px]" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-lg">🌊</span>
+                                            <span className="text-lg"><AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             <h3 className="font-bold text-lg text-gray-800">
                                                 {props.tambon || props.name || 'พื้นที่อุทกภัยน้ำท่วม GISTDA'}
                                             </h3>
@@ -505,7 +506,7 @@ export default function HybridDisasterMap({
                                 <Popup>
                                     <div className="min-w-[250px]" style={{ fontFamily: 'var(--font-kanit)' }}>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-lg">🔄</span>
+                                            <span className="text-lg"><AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             <h3 className="font-bold text-lg text-gray-800">
                                                 พื้นที่อุทกภัยน้ำท่วมซ้ำซาก
                                             </h3>
@@ -715,7 +716,7 @@ export default function HybridDisasterMap({
                 <div className="absolute top-6 right-6 bg-white p-4 rounded-lg shadow-lg z-[1000] max-w-sm">
                     <div className="flex justify-between items-start mb-2">
                         <h4 className="font-bold text-lg text-gray-800">
-                            {selectedEvent ? `🚨 ${selectedEvent.type}` : selectedPolygon?.villname}
+                            {selectedEvent ? ` ${selectedEvent.type}` : selectedPolygon?.villname}
                         </h4>
                         <button
                             onClick={() => {
@@ -724,7 +725,7 @@ export default function HybridDisasterMap({
                             }}
                             className="text-gray-500 hover:text-gray-700"
                         >
-                            ✕
+                            <AppIcon icon="x" className="h-5 w-5" />
                         </button>
                     </div>
                     <div className="space-y-1 text-sm text-gray-600">

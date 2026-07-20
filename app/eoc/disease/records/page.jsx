@@ -5,6 +5,7 @@ import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function DiseaseRecordsPage() {
     const [records, setRecords] = useState([]);
@@ -456,7 +457,7 @@ export default function DiseaseRecordsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
                         <p className="text-gray-600">
                             กรุณาเปิด EOC Session ก่อนบันทึกข้อมูลโรคระบาด
@@ -474,7 +475,7 @@ export default function DiseaseRecordsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">🦠</span>
+                            <span className="text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกพื้นที่ {activeDiseaseEocName}
                         </h1>
                         <p className="text-gray-600">
@@ -494,7 +495,7 @@ export default function DiseaseRecordsPage() {
                         }}
                         className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2"
                     >
-                        <span>➕</span>
+                        <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มข้อมูลใหม่
                     </button>
                 </div>
@@ -502,7 +503,7 @@ export default function DiseaseRecordsPage() {
                 {/* สถานะการบันทึกตำบลวันนี้ */}
                 <div className="mb-6">
                     <div className="flex items-center gap-4 mb-4">
-                        <h3 className="font-bold text-gray-800">📊 สถานะการบันทึกวันนี้</h3>
+                        <h3 className="font-bold text-gray-800"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะการบันทึกวันนี้</h3>
                         <div className="flex gap-2 text-sm">
                             <span className="text-gray-600 flex items-center gap-1">
                                 <span className="w-3 h-3 bg-green-500 rounded-full"></span>
@@ -523,7 +524,7 @@ export default function DiseaseRecordsPage() {
                     {getCompletedTambons().length > 0 && (
                         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
                             <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
-                                <span>✅</span>
+                                <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 ตำบลที่บันทึกครบแล้ว ({getCompletedTambons().length} ตำบล)
                             </h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -535,7 +536,7 @@ export default function DiseaseRecordsPage() {
                                         <div className="font-medium text-green-800">{item.tambon}</div>
                                         <div className="text-xs text-green-600">อ.{item.district}</div>
                                         <div className="text-xs text-green-700 font-medium mt-1">
-                                            ✓ {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
+                                            <AppIcon icon="check" className="inline-block h-4 w-4" /> {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
                                         </div>
                                     </div>
                                 ))}
@@ -547,7 +548,7 @@ export default function DiseaseRecordsPage() {
                     {getUnrecordedTambons().length > 0 && (
                         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
                             <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                                <span>⚠️</span>
+                                <span><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 ตำบลที่ยังบันทึกไม่ครบ ({getUnrecordedTambons().length} ตำบล) - คลิกเพื่อบันทึก
                             </h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -636,7 +637,7 @@ export default function DiseaseRecordsPage() {
                 {/* Table */}
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     <div className="p-4 bg-gray-50 border-b border-gray-200">
-                        <h3 className="font-bold text-gray-800">📋 ตารางข้อมูลที่บันทึกแล้ว</h3>
+                        <h3 className="font-bold text-gray-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางข้อมูลที่บันทึกแล้ว</h3>
                         <p className="text-sm text-gray-600 mt-1">แสดงข้อมูลทั้งหมด {records.length} รายการ</p>
                     </div>
 
@@ -647,7 +648,7 @@ export default function DiseaseRecordsPage() {
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4">📭</div>
+                            <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
                             <p className="text-gray-500 text-sm">คลิกปุ่ม &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มบันทึกข้อมูล</p>
                         </div>
@@ -690,7 +691,7 @@ export default function DiseaseRecordsPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="px-3 py-1 text-xs font-medium rounded-full bg-teal-100 text-teal-800">
-                                                    🦠 {record.disease_name}
+                                                    <AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {record.disease_name}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -711,14 +712,14 @@ export default function DiseaseRecordsPage() {
                                                     className="text-blue-600 hover:text-blue-800 mr-3 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
                                                     title="แก้ไขข้อมูล"
                                                 >
-                                                    ✏️ แก้ไข
+                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(record.id)}
                                                     className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
                                                     title="ลบข้อมูล"
                                                 >
-                                                    🗑️ ลบ
+                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
                                                 </button>
                                             </td>
                                         </tr>
@@ -748,7 +749,7 @@ export default function DiseaseRecordsPage() {
                                 {isTambonMode && !editingRecord && (
                                     <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-4">
                                         <p className="text-sm text-teal-800">
-                                            🟣 โหมดบันทึกทั้งตำบล - ข้อมูลจะถูกบันทึกให้กับทุกหน่วยบริการในตำบล{formData.tambon} พร้อมกัน
+                                            <AppIcon icon="statusPurple" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โหมดบันทึกทั้งตำบล - ข้อมูลจะถูกบันทึกให้กับทุกหน่วยบริการในตำบล{formData.tambon} พร้อมกัน
                                         </p>
                                         <button
                                             type="button"

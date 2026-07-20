@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -82,7 +83,7 @@ export default function SettingsPage() {
             <div className="p-6 max-w-5xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">⚙️ ตั้งค่า</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="settings" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตั้งค่า</h1>
                     <p className="text-gray-600">จัดการการตั้งค่าบัญชีและความปลอดภัย</p>
                 </div>
 
@@ -95,7 +96,7 @@ export default function SettingsPage() {
                                 className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "password" ? "bg-green-50 text-green-700 border border-green-600" : "text-green-900 hover:bg-green-50"}`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">🔒</span>
+                                    <span className="text-2xl"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <div>
                                         <div className="font-semibold">รหัสผ่าน</div>
                                         <div className="text-xs opacity-75">เปลี่ยนรหัสผ่าน</div>
@@ -107,7 +108,7 @@ export default function SettingsPage() {
                                 className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "notifications" ? "bg-green-50 text-green-700 border border-green-600" : "text-green-900 hover:bg-green-50"}`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">🔔</span>
+                                    <span className="text-2xl"><AppIcon icon="bell" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <div>
                                         <div className="font-semibold">การแจ้งเตือน</div>
                                         <div className="text-xs opacity-75">ตั้งค่าการแจ้งเตือน</div>
@@ -119,7 +120,7 @@ export default function SettingsPage() {
                                 className={`w-full text-left px-6 py-4 transition-colors ${activeTab === "preferences" ? "bg-green-50 text-green-700 border border-green-600" : "text-green-900 hover:bg-green-50"}`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">🎨</span>
+                                    <span className="text-2xl"><AppIcon icon="layers" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <div>
                                         <div className="font-semibold">การแสดงผล</div>
                                         <div className="text-xs opacity-75">ธีม และภาษา</div>
@@ -142,7 +143,7 @@ export default function SettingsPage() {
                             {/* Password Tab */}
                             {activeTab === "password" && (
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-800 mb-6">🔒 เปลี่ยนรหัสผ่าน</h2>
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปลี่ยนรหัสผ่าน</h2>
                                     <form onSubmit={handlePasswordChange} className="space-y-6">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -193,7 +194,7 @@ export default function SettingsPage() {
                                             disabled={isSubmitting}
                                             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            {isSubmitting ? "กำลังบันทึก..." : "💾 บันทึก"}
+                                            {isSubmitting ? "กำลังบันทึก..." : "บันทึก"}
                                         </button>
                                     </form>
                                 </div>
@@ -202,7 +203,7 @@ export default function SettingsPage() {
                             {/* Notifications Tab */}
                             {activeTab === "notifications" && (
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-800 mb-6">🔔 การแจ้งเตือน</h2>
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6"><AppIcon icon="bell" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> การแจ้งเตือน</h2>
                                     <div className="space-y-4">
                                         <NotificationToggle
                                             label="แจ้งเตือนเหตุการณ์ใหม่"
@@ -226,7 +227,7 @@ export default function SettingsPage() {
                             {/* Preferences Tab */}
                             {activeTab === "preferences" && (
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-800 mb-6">🎨 การแสดงผล</h2>
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6"><AppIcon icon="layers" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> การแสดงผล</h2>
                                     <div className="space-y-6">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">

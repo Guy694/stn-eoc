@@ -4,6 +4,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import dynamic from 'next/dynamic';
+import AppIcon from "@/components/icons/AppIcon";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
@@ -208,7 +209,7 @@ export default function ServicePointsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
                         <p className="text-gray-600">กรุณาเปิด EOC Session ก่อนจัดการจุดบริการ</p>
                     </div>
@@ -224,7 +225,7 @@ export default function ServicePointsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">🚧</span>
+                            <span className="text-4xl"><AppIcon icon="route" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             จุดบริการชั่วคราว
                         </h1>
                         <p className="text-gray-600">
@@ -235,7 +236,7 @@ export default function ServicePointsPage() {
                         onClick={() => { setEditingPoint(null); resetForm(); setShowModal(true); }}
                         className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 flex items-center gap-2"
                     >
-                        ➕ เพิ่มจุดบริการ
+                        <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มจุดบริการ
                     </button>
                 </div>
 
@@ -247,15 +248,15 @@ export default function ServicePointsPage() {
                     </div>
                     <div className="bg-white rounded-lg p-4 shadow border border-green-500">
                         <div className="text-3xl font-bold text-green-600">{stats.active}</div>
-                        <div className="text-sm text-gray-600">🟢 เปิดให้บริการ</div>
+                        <div className="text-sm text-gray-600"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปิดให้บริการ</div>
                     </div>
                     <div className="bg-white rounded-lg p-4 shadow border border-blue-500">
                         <div className="text-3xl font-bold text-blue-600">{stats.officers}</div>
-                        <div className="text-sm text-gray-600">👮 เจ้าหน้าที่</div>
+                        <div className="text-sm text-gray-600"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
                     </div>
                     <div className="bg-white rounded-lg p-4 shadow border border-teal-500">
                         <div className="text-3xl font-bold text-teal-600">{stats.vehicles}</div>
-                        <div className="text-sm text-gray-600">🚔 รถตรวจ</div>
+                        <div className="text-sm text-gray-600"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
                     </div>
                 </div>
 
@@ -267,7 +268,7 @@ export default function ServicePointsPage() {
                     </div>
                 ) : points.length === 0 ? (
                     <div className="bg-white rounded-lg shadow p-12 text-center">
-                        <div className="text-6xl mb-4">📭</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-700 mb-2">ยังไม่มีจุดบริการ</h3>
                         <p className="text-gray-500 mb-4">คลิกปุ่ม &quot;เพิ่มจุดบริการ&quot; เพื่อเริ่มต้น</p>
                     </div>
@@ -287,7 +288,7 @@ export default function ServicePointsPage() {
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-gray-100 text-gray-600'
                                                 }`}>
-                                                {point.is_active ? '🟢 เปิดให้บริการ' : '⚪ ปิดบริการ'}
+                                                {point.is_active ? "เปิดให้บริการ" : "ปิดบริการ"}
                                             </span>
                                         </div>
                                         <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
@@ -296,23 +297,23 @@ export default function ServicePointsPage() {
                                     </div>
 
                                     <div className="text-sm text-gray-600 mb-3">
-                                        {point.address && <p className="mb-1">📍 {point.address}</p>}
+                                        {point.address && <p className="mb-1"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.address}</p>}
                                         {point.district && <p className="text-xs text-gray-500">อ.{point.district} ต.{point.tambon}</p>}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                                         <div className="bg-blue-50 rounded p-2 text-center">
                                             <div className="font-bold text-blue-700">{point.officer_count || 0}</div>
-                                            <div className="text-xs text-blue-600">👮 เจ้าหน้าที่</div>
+                                            <div className="text-xs text-blue-600"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
                                         </div>
                                         <div className="bg-teal-50 rounded p-2 text-center">
                                             <div className="font-bold text-teal-700">{point.vehicle_count || 0}</div>
-                                            <div className="text-xs text-teal-600">🚔 รถตรวจ</div>
+                                            <div className="text-xs text-teal-600"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
                                         </div>
                                     </div>
 
                                     {point.operating_hours && (
-                                        <p className="text-xs text-gray-500 mb-3">🕐 {point.operating_hours}</p>
+                                        <p className="text-xs text-gray-500 mb-3"><AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.operating_hours}</p>
                                     )}
 
                                     <div className="flex gap-2 pt-2 border-t">
@@ -323,19 +324,19 @@ export default function ServicePointsPage() {
                                                 : 'bg-green-100 text-green-700 hover:bg-green-200'
                                                 }`}
                                         >
-                                            {point.is_active ? '⏸️ ปิดชั่วคราว' : '▶️ เปิดบริการ'}
+                                            {point.is_active ? "ปิดชั่วคราว" : "เปิดบริการ"}
                                         </button>
                                         <button
                                             onClick={() => handleEdit(point)}
                                             className="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
                                         >
-                                            ✏️
+                                            <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(point.id)}
                                             className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
                                         >
-                                            🗑️
+                                            <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                         </button>
                                     </div>
                                 </div>
@@ -350,7 +351,7 @@ export default function ServicePointsPage() {
                         <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4">
-                                    {editingPoint ? 'แก้ไขจุดบริการ' : '🚧 เพิ่มจุดบริการ'}
+                                    {editingPoint ? 'แก้ไขจุดบริการ' : "เพิ่มจุดบริการ"}
                                 </h2>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -454,7 +455,7 @@ export default function ServicePointsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">👮 จำนวนเจ้าหน้าที่</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเจ้าหน้าที่</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -464,7 +465,7 @@ export default function ServicePointsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">🚔 จำนวนรถตรวจ</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนรถตรวจ</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -507,7 +508,7 @@ export default function ServicePointsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">📞 เบอร์ติดต่อ</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เบอร์ติดต่อ</label>
                                         <input
                                             type="text"
                                             value={formData.contact_phone}

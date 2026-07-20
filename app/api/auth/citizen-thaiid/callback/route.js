@@ -24,9 +24,9 @@ export async function GET(request) {
             throw new Error(configError);
         }
 
-        // Check for errors from ThaiID
+        // Check for errors from ThaiD
         if (error) {
-            console.error('ThaiID error:', error);
+            console.error('ThaiD error:', error);
             return applyNoStoreHeaders(NextResponse.redirect(
                 reportIncidentUrl(request, '?error=thaiid_denied')
             ));
@@ -66,7 +66,7 @@ export async function GET(request) {
         });
 
         if (!tokenResponse.ok) {
-            throw new Error('Failed to get token from ThaiID');
+            throw new Error('Failed to get token from ThaiD');
         }
 
         const tokenData = await tokenResponse.json();
@@ -82,7 +82,7 @@ export async function GET(request) {
             });
 
             if (!userInfoResponse.ok) {
-                throw new Error('Failed to get user info from ThaiID');
+                throw new Error('Failed to get user info from ThaiD');
             }
 
             userInfo = await userInfoResponse.json();
@@ -105,7 +105,7 @@ export async function GET(request) {
 
         return applyNoStoreHeaders(response);
     } catch (error) {
-        console.error('ThaiID callback error:', error);
+        console.error('ThaiD callback error:', error);
         return applyNoStoreHeaders(NextResponse.redirect(
             reportIncidentUrl(request, '?error=thaiid_callback_failed')
         ));

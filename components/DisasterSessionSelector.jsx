@@ -124,7 +124,7 @@ export default function DisasterSessionSelector({
                                 {activeSessions.map(session => (
                                     <div key={session.id} className="bg-white/10 rounded p-3 backdrop-blur-sm">
                                         <div className="flex items-center gap-3">
-                                            <AppIcon icon="🔴" className="h-6 w-6 animate-pulse" />
+                                            <AppIcon icon="statusRed" className="h-6 w-6 animate-pulse" />
                                             <div>
                                                 <p className="flex items-center gap-2 font-medium">
                                                     <AppIcon icon={disasterIcon} className="h-4 w-4" />
@@ -247,8 +247,8 @@ export default function DisasterSessionSelector({
                         <SummaryItem label="รวมเวลา" value={formatDuration(yearSummary.total_hours)} icon="clock" />
                         <SummaryItem label="กิจกรรม" value={yearSummary.total_activities || 0} icon="clipboard" />
                         <SummaryItem label="บันทึกข้อมูล" value={yearSummary.total_data_entries || 0} icon="file" />
-                        <SummaryItem label="เปิดอยู่" value={yearSummary.active_sessions || 0} icon="🟢" />
-                        <SummaryItem label="ปิดแล้ว" value={yearSummary.closed_sessions || 0} icon="⚫" />
+                        <SummaryItem label="เปิดอยู่" value={yearSummary.active_sessions || 0} icon="statusGreen" />
+                        <SummaryItem label="ปิดแล้ว" value={yearSummary.closed_sessions || 0} icon="statusBlack" />
                     </div>
                 </div>
             )}
@@ -258,7 +258,7 @@ export default function DisasterSessionSelector({
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                                <AppIcon icon={selectedSession.status === 'active' ? '🟢' : '⚫'} className="h-4 w-4" />
+                                <AppIcon icon={selectedSession.status === 'active' ? "statusGreen" : "statusBlack"} className="h-4 w-4" />
                                 <AppIcon icon={disasterIcon} className="h-4 w-4" />
                                 EOC Session #{selectedSession.session_number}
                             </h4>

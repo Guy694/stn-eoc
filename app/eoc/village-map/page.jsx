@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import AppIcon from "@/components/icons/AppIcon";
 
 // Import PolygonMap แบบ dynamic เพื่อหลีกเลี่ยง SSR
 const PolygonMap = dynamic(() => import("@/components/PolygonMap"), {
@@ -87,25 +88,25 @@ export default function VillageMapPage() {
                         <StatCard
                             label="จำนวนหมู่บ้าน"
                             value={stats.totalVillages.toLocaleString()}
-                            icon="🏘️"
+                            icon="home"
                             color="blue"
                         />
                         <StatCard
                             label="จำนวนครัวเรือน"
                             value={stats.totalHouseholds.toLocaleString()}
-                            icon="👨‍👩‍👧‍👦"
+                            icon="users"
                             color="green"
                         />
                         <StatCard
                             label="จำนวนอาคาร"
                             value={stats.totalBuildings.toLocaleString()}
-                            icon="🏠"
+                            icon="home"
                             color="orange"
                         />
                         <StatCard
                             label="จำนวนอำเภอ"
                             value={stats.districts.length}
-                            icon="📍"
+                            icon="mapPin"
                             color="purple"
                         />
                     </div>
@@ -175,7 +176,7 @@ function StatCard({ label, value, icon, color }) {
                     <p className="text-sm font-medium opacity-80">{label}</p>
                     <p className="text-2xl font-bold mt-1">{value}</p>
                 </div>
-                <div className="text-3xl">{icon}</div>
+                <AppIcon icon={icon} className="h-8 w-8" />
             </div>
         </div>
     );

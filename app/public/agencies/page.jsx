@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
+import AppIcon from "@/components/icons/AppIcon";
 
 const CATEGORY_META = {
   all: { label: "ทั้งหมด", color: "bg-blue-700 text-white border-blue-700" },
@@ -156,7 +157,7 @@ export default function PublicAgenciesPage() {
                       <p className="text-3xl font-black leading-none">{item.phone}</p>
                       <p className="mt-1 text-sm font-bold">{item.name}</p>
                     </div>
-                    <span className="text-2xl">☎</span>
+                    <span className="text-2xl"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                   </div>
                 </a>
               ))}

@@ -7,6 +7,7 @@ import {
     BarChart3,
     Bell,
     BriefcaseMedical,
+    BrainCircuit,
     CalendarClock,
     Car,
     ChevronDown,
@@ -162,6 +163,7 @@ export default function Sidebar() {
             requiresPermission: null,
             items: [
                 { name: "ภาพรวมระบบ", path: "/dashboard", icon: LayoutDashboard, description: "ภาพรวมข้อมูลทั้งหมด" },
+                { name: "วิเคราะห์ (Analytics)", path: "/analytics", icon: BrainCircuit, description: "วิเคราะห์สถานการณ์ ทีม เวชภัณฑ์ และโรคระบาด" },
             ],
         },
         {
@@ -201,28 +203,28 @@ export default function Sidebar() {
         },
 
         // {
-        //     title: "🌊 EOC สึนามิ",
+        //     title: "EOC สึนามิ",
         //     section: "eoc-tsunami",
         //     key: "tsunami",
         //     eocType: "tsunami",
         //     collapsible: true,
         //     requiresPermission: null,
         //     items: [
-        //         { name: "แผนที่และสถานการณ์", path: "/eoc/tsunami", icon: "📊", description: "ภาพรวมสถานการณ์สึนามิ" },
-        //         { name: "จุดอพยพ", path: "/eoc/tsunami/evacuation", icon: "🏃", description: "จุดอพยพและเส้นทาง" },
+        //         { name: "แผนที่และสถานการณ์", path: "/eoc/tsunami", icon: BarChart3, description: "ภาพรวมสถานการณ์สึนามิ" },
+        //         { name: "จุดอพยพ", path: "/eoc/tsunami/evacuation", icon: Users, description: "จุดอพยพและเส้นทาง" },
         //     ],
         // },
 
         // {
-        //     title: "🏚️ EOC แผ่นดินไหว",
+        //     title: "EOC แผ่นดินไหว",
         //     section: "eoc-earthquake",
         //     key: "earthquake",
         //     eocType: "earthquake",
         //     collapsible: true,
         //     requiresPermission: null,
         //     items: [
-        //         { name: "แผนที่และสถานการณ์", path: "/eoc/earthquake", icon: "📊", description: "ภาพรวมสถานการณ์แผ่นดินไหว" },
-        //         { name: "อาคารเสียหาย", path: "/eoc/earthquake/damages", icon: "🏚️", description: "รายงานความเสียหาย" },
+        //         { name: "แผนที่และสถานการณ์", path: "/eoc/earthquake", icon: BarChart3, description: "ภาพรวมสถานการณ์แผ่นดินไหว" },
+        //         { name: "อาคารเสียหาย", path: "/eoc/earthquake/damages", icon: Home, description: "รายงานความเสียหาย" },
         //     ],
         // },
 
@@ -279,7 +281,7 @@ export default function Sidebar() {
             collapsible: true,
             items: [
                 { name: "กลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", icon: LifeBuoy, description: "ฐานข้อมูลกลาง เพิ่ม/ลดจำนวนรายกลุ่ม" },
-                { name: "จัดการผู้ใช้ประชาชน", path: "/admin/citizens", icon: UserRoundPlus, description: "ประชาชนที่ลงทะเบียน ThaiID", requiresPermission: "admin" },
+                { name: "จัดการผู้ใช้ประชาชน", path: "/admin/citizens", icon: UserRoundPlus, description: "ประชาชนที่ลงทะเบียน ThaiD", requiresPermission: "admin" },
             ],
         },
         {

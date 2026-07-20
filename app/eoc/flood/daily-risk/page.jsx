@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from "@/components/layouts/EOCLayout";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodDailyRiskPage() {
     const [data, setData] = useState(null);
@@ -77,18 +78,18 @@ export default function FloodDailyRiskPage() {
 
     const getRiskIcon = (level) => {
         const icons = {
-            'สูงมาก': '🔴',
-            'สูง': '🔴',
-            'ปานกลาง': '🟡',
-            'ต่ำ': '🔵',
-            'ไม่มี': '🟢',
+            'สูงมาก': "statusRed",
+            'สูง': "statusRed",
+            'ปานกลาง': "statusYellow",
+            'ต่ำ': "statusBlue",
+            'ไม่มี': "statusGreen",
             // รองรับภาษาอังกฤษ
-            'severe': '🔴',
-            'moderate': '🟡',
-            'mild': '🔵',
-            'safe': '🟢'
+            'severe': "statusRed",
+            'moderate': "statusYellow",
+            'mild': "statusBlue",
+            'safe': "statusGreen"
         };
-        return icons[level] || '⚪';
+        return icons[level] || "statusGray";
     };
 
     const getRiskLabel = (level) => {
@@ -146,7 +147,7 @@ export default function FloodDailyRiskPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3 md:text-3xl">
-                        <span className="text-3xl md:text-4xl">📊</span>
+                        <span className="text-3xl md:text-4xl"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         สรุปความเสี่ยงอุทกภัยน้ำท่วมรายวัน
                     </h1>
                     <p className="text-gray-600">แสดงข้อมูลวันที่: {formatDate}</p>
@@ -162,7 +163,7 @@ export default function FloodDailyRiskPage() {
                             onClick={() => setShowAllDates(!showAllDates)}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                         >
-                            {showAllDates ? '🔼 ซ่อนลิสวันที่' : '📅 แสดงลิสวันที่ทั้งหมด'}
+                            {showAllDates ? "ซ่อนลิสวันที่" : "แสดงลิสวันที่ทั้งหมด"}
                         </button>
                     </div>
                     <input
@@ -176,7 +177,7 @@ export default function FloodDailyRiskPage() {
                     {/* Available Dates List */}
                     {showAllDates && availableDates.length > 0 && (
                         <div className="mt-4 border-t pt-4">
-                            <h3 className="font-semibold text-gray-700 mb-3">📋 วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
+                            <h3 className="font-semibold text-gray-700 mb-3"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 max-h-96 overflow-y-auto">
                                 {availableDates.map((date, index) => {
                                     const dateObj = new Date(date);
@@ -215,7 +216,7 @@ export default function FloodDailyRiskPage() {
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
                                 <h3 className="text-lg font-bold mb-2 md:text-xl">
-                                    🚨 EOC Session #{data.activeSession.session_number}/2025 - กำลังดำเนินการ
+                                    <AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> EOC Session #{data.activeSession.session_number}/2025 - กำลังดำเนินการ
                                 </h3>
                                 <p className="opacity-90 mb-1">
                                     เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {
@@ -251,31 +252,31 @@ export default function FloodDailyRiskPage() {
                 {/* Total Statistics */}
                 <div className="grid grid-cols-2 gap-3 mb-6 md:grid-cols-5 md:gap-4">
                     <StatCard
-                        icon="🗺️"
+                        icon="map"
                         label="อำเภอ"
                         value={stats.affected_districts || 0}
                         color="purple"
                     />
                     <StatCard
-                        icon="📍"
+                        icon="mapPin"
                         label="ตำบล"
                         value={stats.affected_tambons || 0}
                         color="blue"
                     />
                     <StatCard
-                        icon="🏘️"
+                        icon="home"
                         label="หมู่บ้าน"
                         value={stats.affected_villages || 0}
                         color="green"
                     />
                     <StatCard
-                        icon="🏠"
+                        icon="home"
                         label="ครัวเรือน"
                         value={(stats.total_households || 0).toLocaleString()}
                         color="orange"
                     />
                     <StatCard
-                        icon="👥"
+                        icon="users"
                         label="ประชากร"
                         value={(stats.total_population || 0).toLocaleString()}
                         color="red"
@@ -292,7 +293,7 @@ export default function FloodDailyRiskPage() {
                                 className={`${getRiskColor(item.flood_level)} border-2 rounded-lg p-4`}
                             >
                                 <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-3xl">{getRiskIcon(item.flood_level)}</span>
+                                    <AppIcon icon={getRiskIcon(item.flood_level)} className="h-8 w-8" />
                                     <h3 className="font-bold text-lg">{getRiskLabel(item.flood_level)}</h3>
                                 </div>
                                 <div className="space-y-1 text-sm">
@@ -369,15 +370,15 @@ export default function FloodDailyRiskPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                             {district.has_severe ? (
                                                 <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                    🔴 รุนแรง
+                                                    <AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รุนแรง
                                                 </span>
                                             ) : district.has_moderate ? (
                                                 <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                    🟡 ปานกลาง
+                                                    <AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ปานกลาง
                                                 </span>
                                             ) : (
                                                 <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                    🔵 เล็กน้อย
+                                                    <AppIcon icon="statusBlue" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เล็กน้อย
                                                 </span>
                                             )}
                                         </td>
@@ -400,10 +401,10 @@ export default function FloodDailyRiskPage() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <h3 className="font-bold text-lg mb-1">
-                                            {getRiskIcon(item.flood_level)} {item.village}
+                                            <AppIcon icon={getRiskIcon(item.flood_level)} className="inline-block h-4 w-4" /> {item.village}
                                         </h3>
                                         <p className="text-sm opacity-90 mb-2">
-                                            📍 {item.district} › {item.tambon}
+                                            <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.district} › {item.tambon}
                                         </p>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                                             <div>
@@ -421,7 +422,7 @@ export default function FloodDailyRiskPage() {
                                         </div>
                                         {item.notes && (
                                             <p className="text-sm mt-2 opacity-80">
-                                                💬 {item.notes}
+                                                <AppIcon icon="message" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.notes}
                                             </p>
                                         )}
                                     </div>
@@ -453,7 +454,7 @@ function StatCard({ icon, label, value, color }) {
 
     return (
         <div className={`${colorClasses[color]} border-2 rounded-lg p-4 text-center`}>
-            <div className="text-3xl mb-2">{icon}</div>
+            <AppIcon icon={icon} className="mx-auto mb-2 h-8 w-8" />
             <p className="text-2xl font-bold mb-1">{value}</p>
             <p className="text-sm opacity-80">{label}</p>
         </div>

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
 
-export default function ThaiIDCallbackPage() {
+export default function ThaiDCallbackPage() {
     const router = useRouter();
     const { setUser } = useAuth();
     const [status, setStatus] = useState('processing'); // processing, success, error

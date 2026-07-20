@@ -82,7 +82,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
             {/* {showTitle && (
                 <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg shadow-md p-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <span className="text-2xl">👥</span>
+                        <AppIcon icon="users" className="h-7 w-7" />
                         ทีมงานที่เปิดใช้งาน
                         <span className="ml-2 px-3 py-1 bg-white/20 rounded-full text-sm">
                             {teams.length} ทีม
@@ -137,7 +137,7 @@ function TeamCard({ team }) {
                     <div className="mb-3 bg-gray-50 rounded p-2">
                         <p className="text-xs text-gray-600 mb-1">หัวหน้าทีม:</p>
                         <div className="flex items-center gap-2">
-                            <span className="text-lg">👨‍💼</span>
+                            <span className="text-lg"><AppIcon icon="userCog" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-800 truncate">
                                     {team.team_lead_name} {team.team_lead_family_name}
@@ -160,7 +160,7 @@ function TeamCard({ team }) {
                             onClick={() => setExpanded(!expanded)}
                             className="text-xs text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
                         >
-                            {expanded ? '▼ ซ่อน' : '▶ ดูรายชื่อ'}
+                            {expanded ? '▼ ซ่อน' : "ดูรายชื่อ"}
                         </button>
                     )}
                 </div>

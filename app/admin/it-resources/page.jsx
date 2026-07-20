@@ -14,6 +14,7 @@ import {
     ArcElement
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import AppIcon from "@/components/icons/AppIcon";
 
 ChartJS.register(
     CategoryScale,
@@ -38,17 +39,17 @@ export default function ITResourcesPage() {
     const [healthFacilities, setHealthFacilities] = useState([]);
 
     const resourceTypes = [
-        { value: 'server', label: '🖥️ Server', color: 'bg-blue-100 text-blue-800' },
-        { value: 'internet', label: '🌐 Internet', color: 'bg-green-100 text-green-800' },
-        { value: 'network', label: '🔌 Network', color: 'bg-teal-100 text-teal-800' },
-        { value: 'hardware', label: '💻 Hardware', color: 'bg-orange-100 text-orange-800' }
+        { value: 'server', label: "Server", color: 'bg-blue-100 text-blue-800' },
+        { value: 'internet', label: "Internet", color: 'bg-green-100 text-green-800' },
+        { value: 'network', label: "Network", color: 'bg-teal-100 text-teal-800' },
+        { value: 'hardware', label: "Hardware", color: 'bg-orange-100 text-orange-800' }
     ];
 
     const statusTypes = [
-        { value: 'online', label: '🟢 Online', color: 'bg-green-100 text-green-800' },
-        { value: 'offline', label: '🔴 Offline', color: 'bg-red-100 text-red-800' },
-        { value: 'maintenance', label: '🟡 Maintenance', color: 'bg-yellow-100 text-yellow-800' },
-        { value: 'unknown', label: '⚪ Unknown', color: 'bg-gray-100 text-gray-800' }
+        { value: 'online', label: "Online", color: 'bg-green-100 text-green-800' },
+        { value: 'offline', label: "Offline", color: 'bg-red-100 text-red-800' },
+        { value: 'maintenance', label: "Maintenance", color: 'bg-yellow-100 text-yellow-800' },
+        { value: 'unknown', label: "Unknown", color: 'bg-gray-100 text-gray-800' }
     ];
 
     const ispProviders = ['AIS', 'TRUE', 'DTAC', 'TOT', '3BB', 'CAT', 'NT', 'อื่นๆ'];
@@ -220,7 +221,7 @@ export default function ITResourcesPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-                        🖥️ จัดการทรัพยากร IT Support
+                        <AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการทรัพยากร IT Support
                     </h1>
                     <p className="text-gray-600 mt-1">ข้อมูล Server, Internet และอุปกรณ์ IT ของหน่วยบริการ</p>
                 </div>
@@ -233,19 +234,19 @@ export default function ITResourcesPage() {
                     </div>
                     <div className="bg-green-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-green-600">{stats.online}</div>
-                        <div className="text-sm text-green-700">🟢 Online</div>
+                        <div className="text-sm text-green-700"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Online</div>
                     </div>
                     <div className="bg-red-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-red-600">{stats.offline}</div>
-                        <div className="text-sm text-red-700">🔴 Offline</div>
+                        <div className="text-sm text-red-700"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Offline</div>
                     </div>
                     <div className="bg-yellow-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-yellow-600">{stats.maintenance}</div>
-                        <div className="text-sm text-yellow-700">🟡 Maintenance</div>
+                        <div className="text-sm text-yellow-700"><AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Maintenance</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-gray-600">{stats.unknown}</div>
-                        <div className="text-sm text-gray-700">⚪ Unknown</div>
+                        <div className="text-sm text-gray-700"><AppIcon icon="statusGray" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Unknown</div>
                     </div>
                 </div>
 
@@ -253,11 +254,11 @@ export default function ITResourcesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {/* Status Pie Chart */}
                     <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">📊 สถานะทั้งหมด</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะทั้งหมด</h3>
                         <div className="h-64">
                             <Pie
                                 data={{
-                                    labels: ['🟢 Online', '🔴 Offline', '🟡 Maintenance', '⚪ Unknown'],
+                                    labels: ["Online", "Offline", "Maintenance", "Unknown"],
                                     datasets: [{
                                         data: [
                                             stats.online || 0,
@@ -293,7 +294,7 @@ export default function ITResourcesPage() {
 
                     {/* ISP Providers Bar Chart */}
                     <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">🌐 ผู้ให้บริการ Internet (ISP)</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการ Internet (ISP)</h3>
                         <div className="h-64">
                             {stats.byIsp && stats.byIsp.length > 0 ? (
                                 <Bar
@@ -337,17 +338,17 @@ export default function ITResourcesPage() {
 
                     {/* Resource Types Bar Chart */}
                     <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">📦 แยกตามประเภททรัพยากร</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="package" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แยกตามประเภททรัพยากร</h3>
                         <div className="h-64">
                             {stats.byType && stats.byType.length > 0 ? (
                                 <Bar
                                     data={{
                                         labels: stats.byType.map(item => {
                                             const typeLabels = {
-                                                server: '🖥️ Server',
-                                                internet: '🌐 Internet',
-                                                network: '🔌 Network',
-                                                hardware: '💻 Hardware'
+                                                server: "Server",
+                                                internet: "Internet",
+                                                network: "Network",
+                                                hardware: "Hardware"
                                             };
                                             return typeLabels[item.resource_type] || item.resource_type;
                                         }),
@@ -418,7 +419,7 @@ export default function ITResourcesPage() {
                             onClick={() => { resetForm(); setShowModal(true); }}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
                         >
-                            ➕ เพิ่มทรัพยากร
+                            <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มทรัพยากร
                         </button>
                     </div>
                 </div>
@@ -431,7 +432,7 @@ export default function ITResourcesPage() {
                         </div>
                     ) : resources.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
-                            <div className="text-5xl mb-4">📭</div>
+                            <div className="text-5xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <p>ยังไม่มีข้อมูลทรัพยากร IT</p>
                         </div>
                     ) : (
@@ -462,19 +463,19 @@ export default function ITResourcesPage() {
                                                     <div className="text-xs text-gray-500">{resource.unit_code}</div>
                                                 )}
                                                 {resource.location && (
-                                                    <div className="text-xs text-gray-400">📍 {resource.location}</div>
+                                                    <div className="text-xs text-gray-400"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.location}</div>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-700">
                                                 {resource.resource_type === 'server' ? (
                                                     <div>
-                                                        {resource.server_name && <div>🖥️ {resource.server_name}</div>}
+                                                        {resource.server_name && <div><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.server_name}</div>}
                                                         {resource.server_ip && <div className="text-xs text-gray-500">IP: {resource.server_ip}</div>}
                                                         {resource.server_os && <div className="text-xs text-gray-400">{resource.server_os}</div>}
                                                     </div>
                                                 ) : resource.resource_type === 'internet' ? (
                                                     <div>
-                                                        {resource.isp_provider && <div>🌐 {resource.isp_provider}</div>}
+                                                        {resource.isp_provider && <div><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.isp_provider}</div>}
                                                         {resource.connection_type && <div className="text-xs text-gray-500">{resource.connection_type}</div>}
                                                         {resource.bandwidth && <div className="text-xs text-gray-400">{resource.bandwidth}</div>}
                                                     </div>
@@ -492,7 +493,7 @@ export default function ITResourcesPage() {
                                             </td>
                                             <td className="px-4 py-3 text-sm">
                                                 {resource.contact_person && <div>{resource.contact_person}</div>}
-                                                {resource.contact_phone && <div className="text-xs text-gray-500">📞 {resource.contact_phone}</div>}
+                                                {resource.contact_phone && <div className="text-xs text-gray-500"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.contact_phone}</div>}
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex justify-center gap-2">
@@ -531,7 +532,7 @@ export default function ITResourcesPage() {
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">
-                                    {editingResource ? '✏️ แก้ไขทรัพยากร IT' : '➕ เพิ่มทรัพยากร IT'}
+                                    {editingResource ? "แก้ไขทรัพยากร IT" : "เพิ่มทรัพยากร IT"}
                                 </h2>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -586,7 +587,7 @@ export default function ITResourcesPage() {
                                     {/* Internet Fields */}
                                     {formData.resource_type === 'internet' && (
                                         <div className="bg-green-50 p-4 rounded-lg space-y-4">
-                                            <h3 className="font-medium text-green-800">🌐 ข้อมูล Internet</h3>
+                                            <h3 className="font-medium text-green-800"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูล Internet</h3>
                                             <div className="grid grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">ผู้ให้บริการ (ISP)</label>
@@ -654,7 +655,7 @@ export default function ITResourcesPage() {
                                             type="submit"
                                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                                         >
-                                            {editingResource ? '💾 บันทึกการแก้ไข' : '➕ เพิ่มข้อมูล'}
+                                            {editingResource ? "บันทึกการแก้ไข" : "เพิ่มข้อมูล"}
                                         </button>
                                     </div>
                                 </form>

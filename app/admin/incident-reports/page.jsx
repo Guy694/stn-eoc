@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showSuccess, showError, showConfirm, showDeleteConfirm } from '@/lib/sweetAlert';
 import 'leaflet/dist/leaflet.css';
+import AppIcon from "@/components/icons/AppIcon";
 
 // Import Leaflet dynamically (client-side only)
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -253,7 +254,7 @@ export default function IncidentReportsPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                        <span className="text-4xl">📋</span>
+                        <span className="text-4xl"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
 
                     </h1>
                     <p className="text-gray-600">จัดการและตรวจสอบรายงานเหตุการณ์ที่ส่งมาจากประชาชน</p>
@@ -510,7 +511,7 @@ export default function IncidentReportsPage() {
                                                 <div>
                                                     <span className="text-sm text-gray-600">ประเภทรายงาน:</span>
                                                     <p className="font-medium text-gray-600">
-                                                        {selectedReport.report_type === 'help_request' ? '🆘 แจ้งความช่วยเหลือ' : '🚧 แจ้งเส้นทางการจราจร'}
+                                                        {selectedReport.report_type === 'help_request' ? "แจ้งความช่วยเหลือ" : "แจ้งเส้นทางการจราจร"}
                                                     </p>
                                                 </div>
                                             )}
@@ -549,9 +550,9 @@ export default function IncidentReportsPage() {
                                                 <div>
                                                     <span className="text-sm text-gray-600">สถานะการสัญจร:</span>
                                                     <p className="font-medium text-gray-600">
-                                                        {selectedReport.travel_status === 'passable' ? '✅ สัญจรได้ปกติ' :
-                                                            selectedReport.travel_status === 'difficult' ? '⚠️ สัญจรได้ยากลำบาก' :
-                                                                '🚫 ไม่สามารถสัญจรได้'}
+                                                        {selectedReport.travel_status === 'passable' ? "สัญจรได้ปกติ" :
+                                                            selectedReport.travel_status === 'difficult' ? "สัญจรได้ยากลำบาก" :
+                                                                "ไม่สามารถสัญจรได้"}
                                                     </p>
                                                 </div>
                                             )}
@@ -605,7 +606,7 @@ export default function IncidentReportsPage() {
                                                 </MapContainer>
                                             </div>
                                             <p className="text-sm text-gray-600 mt-2">
-                                                📍 พิกัด: {selectedReport.latitude}, {selectedReport.longitude}
+                                                <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> พิกัด: {selectedReport.latitude}, {selectedReport.longitude}
                                             </p>
                                         </div>
                                     )}

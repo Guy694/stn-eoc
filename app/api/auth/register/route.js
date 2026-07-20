@@ -227,7 +227,7 @@ export async function POST(request) {
 
         if (duplicateProfiles.length > 0) {
             return NextResponse.json(
-                { success: false, message: 'มีข้อมูลลงทะเบียนชื่อนี้ในระบบแล้ว กรุณาใช้ ThaiID เพื่อยืนยันตัวตนหรือติดต่อผู้ดูแลระบบ' },
+                { success: false, message: 'มีข้อมูลลงทะเบียนชื่อนี้ในระบบแล้ว กรุณาใช้ ThaiD เพื่อยืนยันตัวตนหรือติดต่อผู้ดูแลระบบ' },
                 { status: 409 }
             );
         }
@@ -283,7 +283,7 @@ export async function POST(request) {
 
             return NextResponse.json({
                 success: true,
-                message: 'ลงทะเบียนเจ้าหน้าที่เรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วย ThaiID เพื่อยืนยันชื่อ-นามสกุล และรอผู้ดูแลอนุมัติสิทธิ์',
+                message: 'ลงทะเบียนเจ้าหน้าที่เรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วย ThaiD เพื่อยืนยันชื่อ-นามสกุล และรอผู้ดูแลอนุมัติสิทธิ์',
                 next: 'thaiid',
                 thaiid_url: '/stn-eoc/api/auth/thaiid/authorize/?from=registration&type=officer'
             }, { status: 201 });
@@ -309,7 +309,7 @@ export async function POST(request) {
 
         return NextResponse.json({
             success: true,
-            message: 'บันทึกข้อมูลประชาชนเรียบร้อยแล้ว กรุณายืนยันตัวตนด้วย ThaiID เพื่อเข้าใช้งาน',
+            message: 'บันทึกข้อมูลประชาชนเรียบร้อยแล้ว กรุณายืนยันตัวตนด้วย ThaiD เพื่อเข้าใช้งาน',
             next: 'thaiid',
             thaiid_url: '/stn-eoc/api/auth/thaiid/authorize/?from=registration&type=citizen'
         }, { status: 201 });

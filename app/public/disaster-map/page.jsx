@@ -6,6 +6,7 @@ import PublicIncidentMap from "@/components/PublicIncidentMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
+import AppIcon from "@/components/icons/AppIcon";
 
 const EOC_TYPE_LABELS = {
   flood: "อุทกภัยน้ำท่วม",
@@ -889,7 +890,7 @@ export function PublicDisasterMapContent({ initialDisasterType = "flood", lockDi
         <section className="sticky bottom-3 z-[510] rounded-xl border border-blue-100 bg-white/95 p-3 shadow-lg backdrop-blur">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex items-center gap-3">
-              <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-700 text-white">▶</button>
+              <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-700 text-white"><AppIcon icon="circlePlay" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></button>
               <span className="text-sm font-black text-blue-900">ไทม์ไลน์เหตุการณ์</span>
             </div>
             <div className="flex flex-1 gap-2 overflow-x-auto pb-1">
@@ -945,7 +946,7 @@ function MapStatCard({ icon, label, value, unit, subText, tone }) {
   return (
     <div className={`grid min-h-[96px] grid-cols-[42px_minmax(0,1fr)] gap-3 rounded-xl border p-3 shadow-sm ${tones[tone] || tones.blue}`}>
       <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-2xl font-black shadow-sm">
-        {icon}
+        <AppIcon icon={icon} className="h-7 w-7" />
       </div>
       <div className="min-w-0">
         <p className="truncate text-xs font-bold">{label}</p>

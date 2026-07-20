@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import AppIcon from "@/components/icons/AppIcon";
 
 // Fix for default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -86,7 +87,8 @@ export default function FestivalMap({ accidents = [], servicePoints = [] }) {
         title={isFullscreen ? 'ออกจากเต็มจอ' : 'ดูแบบเต็มจอ'}
         className="absolute top-3 right-3 z-[9999] bg-white hover:bg-gray-100 border border-gray-300 shadow-md rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 flex items-center gap-1.5 transition"
       >
-        {isFullscreen ? '✕ ออกจากเต็มจอ' : '⛶ เต็มจอ'}
+        <AppIcon icon={isFullscreen ? 'x' : 'fullscreen'} className="h-4 w-4" />
+        {isFullscreen ? 'ออกจากเต็มจอ' : 'เต็มจอ'}
       </button>
 
       <MapContainer
@@ -110,7 +112,7 @@ export default function FestivalMap({ accidents = [], servicePoints = [] }) {
             >
               <Popup>
                 <div className="font-sans">
-                  <h3 className="font-bold text-green-700 mb-1">🏕️ {point.name}</h3>
+                  <h3 className="font-bold text-green-700 mb-1"><AppIcon icon="tentTree" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.name}</h3>
                   <p className="text-sm">ประเภท: {point.point_type}</p>
                   <p className="text-sm">อ.{point.district} ต.{point.tambon}</p>
                   <p className="text-xs text-gray-500 mt-1">เจ้าหน้าที่: {point.officer_count} นาย</p>
@@ -130,7 +132,7 @@ export default function FestivalMap({ accidents = [], servicePoints = [] }) {
             >
               <Popup>
                 <div className="font-sans">
-                  <h3 className="font-bold text-red-600 mb-1">💥 {accident.accident_type || 'อุบัติเหตุ'}</h3>
+                  <h3 className="font-bold text-red-600 mb-1"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {accident.accident_type || 'อุบัติเหตุ'}</h3>
                   <p className="text-sm">วันที่: {accident.report_date ? new Date(accident.report_date).toLocaleDateString('th-TH') : ''} {accident.report_time || ''}</p>
                   <p className="text-sm">สถานที่: {accident.location_name || 'ไม่ระบุ'}</p>
                   <div className="flex gap-2 mt-1">

@@ -86,7 +86,7 @@ export default function ErrorMessage({
                                 onClick={() => setShowDetails(!showDetails)}
                                 className="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
                             >
-                                {showDetails ? '▼' : '▶'} รายละเอียดทางเทคนิค
+                                {showDetails ? '▼' : "circlePlay"} รายละเอียดทางเทคนิค
                             </button>
                             {showDetails && (
                                 <div className="mt-2 bg-red-100 rounded p-3">

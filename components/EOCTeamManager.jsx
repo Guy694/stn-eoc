@@ -384,9 +384,9 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                                                 </td>
                                                 <td className="py-2">
                                                     {member.is_active ? (
-                                                        <span className="text-green-600">✓ ปฏิบัติงาน</span>
+                                                        <span className="inline-flex items-center gap-1 text-green-600"><AppIcon icon="check" className="h-4 w-4" /> ปฏิบัติงาน</span>
                                                     ) : (
-                                                        <span className="text-red-600">✗ ถอดออก</span>
+                                                        <span className="inline-flex items-center gap-1 text-red-600"><AppIcon icon="x" className="h-4 w-4" /> ถอดออก</span>
                                                     )}
                                                 </td>
                                                 <td className="py-2 text-sm text-gray-600">
@@ -456,7 +456,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                                 <option value="">-- เลือกทีม --</option>
                                 {availableTeams.map((team) => (
                                     <option key={team.id} value={team.id}>
-                                        {team.icon} {team.team_name_th} ({team.team_code})
+                                        <AppIcon icon={team.icon || 'users'} className="inline-block h-5 w-5" /> {team.team_name_th} ({team.team_code})
                                     </option>
                                 ))}
                             </select>

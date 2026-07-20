@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
 
-export default function ThaiIDRegistrationPage() {
+export default function ThaiDRegistrationPage() {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(false);

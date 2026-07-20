@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function VillagePolygonsPage() {
     const [polygons, setPolygons] = useState([]);
@@ -146,7 +147,7 @@ export default function VillagePolygonsPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        🗺️ จัดการข้อมูลหมู่บ้าน
+                        <AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการข้อมูลหมู่บ้าน
                     </h1>
                     <p className="text-gray-600">ระบบจัดการข้อมูล Polygon และพิกัดหมู่บ้าน</p>
                 </div>
@@ -179,7 +180,7 @@ export default function VillagePolygonsPage() {
                     <div className="flex flex-wrap gap-4">
                         <input
                             type="text"
-                            placeholder="🔍 ค้นหาชื่อหมู่บ้าน..."
+                            placeholder="ค้นหาชื่อหมู่บ้าน..."
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
@@ -226,7 +227,7 @@ export default function VillagePolygonsPage() {
                             }}
                             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
-                            ➕ เพิ่มหมู่บ้าน
+                            <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มหมู่บ้าน
                         </button>
                     </div>
                 </div>
@@ -286,13 +287,13 @@ export default function VillagePolygonsPage() {
                                                     onClick={() => handleEdit(polygon)}
                                                     className="text-blue-600 hover:text-blue-800 mr-3"
                                                 >
-                                                    ✏️
+                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(polygon)}
                                                     className="text-red-600 hover:text-red-800"
                                                 >
-                                                    🗑️
+                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -352,7 +353,7 @@ export default function VillagePolygonsPage() {
                 <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4 shadow-lg">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-700">
-                            {editingPolygon ? '✏️ แก้ไขข้อมูลหมู่บ้าน' : '➕ เพิ่มข้อมูลหมู่บ้านใหม่'}
+                            {editingPolygon ? "แก้ไขข้อมูลหมู่บ้าน" : "เพิ่มข้อมูลหมู่บ้านใหม่"}
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -430,7 +431,7 @@ export default function VillagePolygonsPage() {
                                     type="submit"
                                     className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
                                 >
-                                    💾 บันทึก
+                                    <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก
                                 </button>
                                 <button
                                     type="button"
@@ -440,7 +441,7 @@ export default function VillagePolygonsPage() {
                                     }}
                                     className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
                                 >
-                                    ❌ ยกเลิก
+                                    <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
                                 </button>
                             </div>
                         </form>

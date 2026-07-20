@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useMap } from "react-leaflet";
+import AppIcon from "./icons/AppIcon";
 
 /** Drop this inside <MapContainer> to auto-invalidate size after fullscreen transitions */
 export function MapResizer({ trigger }) {
@@ -58,7 +59,8 @@ export function useFullscreenMap() {
       title={isFullscreen ? "ออกจากเต็มจอ (Esc)" : "ดูแบบเต็มจอ"}
       className="absolute top-3 right-3 z-[9999] bg-white hover:bg-gray-100 border border-gray-300 shadow-md rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-700 flex items-center gap-1.5 transition"
     >
-      {isFullscreen ? "✕ ออกจากเต็มจอ" : "⛶ เต็มจอ"}
+      <AppIcon icon={isFullscreen ? "x" : "fullscreen"} className="h-4 w-4" />
+      {isFullscreen ? "ออกจากเต็มจอ" : "เต็มจอ"}
     </button>
   );
 

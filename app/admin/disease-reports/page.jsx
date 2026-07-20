@@ -16,6 +16,7 @@ import {
     ArcElement
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import AppIcon from "@/components/icons/AppIcon";
 
 ChartJS.register(
     CategoryScale,
@@ -437,7 +438,7 @@ export default function DiseaseReportsPage() {
                 <div className="mb-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">🦠</span>
+                            <span className="text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             สถานการณ์โรครายวัน
                         </h1>
                         <p className="text-gray-600">บันทึกและติดตามสถานการณ์โรคจากหน่วยบริการ</p>
@@ -449,7 +450,7 @@ export default function DiseaseReportsPage() {
                         }}
                         className="px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
-                        <span className="text-xl">➕</span>
+                        <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มรายงานโรค
                     </button>
                 </div>
@@ -458,7 +459,7 @@ export default function DiseaseReportsPage() {
                 <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg shadow-md p-4 mb-6 border border-blue-200">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <span className="text-2xl">📋</span>
+                            <span className="text-2xl"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <label className="text-sm font-medium text-gray-700">เลือก EOC Session:</label>
                         </div>
                         <select
@@ -490,7 +491,7 @@ export default function DiseaseReportsPage() {
 
                 {!selectedSession ? (
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-8 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือก EOC Session</h3>
                         <p className="text-gray-600">
                             เลือก EOC Session ที่ต้องการดูรายงานโรค
@@ -532,7 +533,7 @@ export default function DiseaseReportsPage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             {/* กราฟแท่งตามอำเภอ */}
                             <div className="bg-white rounded-lg shadow p-6">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">📊 สถานการณ์แยกตามอำเภอ (วันนี้)</h3>
+                                <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์แยกตามอำเภอ (วันนี้)</h3>
                                 {summary.today.length > 0 ? (
                                     <Bar
                                         data={getDistrictChartData()}
@@ -605,7 +606,7 @@ export default function DiseaseReportsPage() {
 
                             {/* กราฟวงกลมรายโรค */}
                             <div className="bg-white rounded-lg shadow p-6">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">🥧 สัดส่วนผู้ป่วยรายโรค (สะสม)</h3>
+                                <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="pieChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สัดส่วนผู้ป่วยรายโรค (สะสม)</h3>
                                 {summary.byDisease.length > 0 ? (
                                     <Pie
                                         data={getDiseaseChartData()}
@@ -630,7 +631,7 @@ export default function DiseaseReportsPage() {
 
                         {/* ตารางสรุปรายโรคแบบ 7 อำเภอ */}
                         <div className="bg-white rounded-lg shadow p-6 mb-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">📋 ตารางสรุปรายโรคตามอำเภอ</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางสรุปรายโรคตามอำเภอ</h3>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full border-collapse border border-gray-300 text-sm">
                                     <thead>
@@ -743,7 +744,7 @@ export default function DiseaseReportsPage() {
                                 </table>
                             </div>
                             <div className="mt-4 text-sm text-gray-600">
-                                <p>📝 หมายเหตุ: ข้อมูลจากโรงพยาบาลชุมชนและสถานีอนามัยจะถูกรวมไปยังโรงพยาบาลประจำอำเภอ</p>
+                                <p><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> หมายเหตุ: ข้อมูลจากโรงพยาบาลชุมชนและสถานีอนามัยจะถูกรวมไปยังโรงพยาบาลประจำอำเภอ</p>
                             </div>
                         </div>
 
@@ -836,13 +837,13 @@ export default function DiseaseReportsPage() {
                                                             onClick={() => handleEdit(report)}
                                                             className="text-blue-600 hover:text-blue-900 mr-3"
                                                         >
-                                                            ✏️ แก้ไข
+                                                            <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(report)}
                                                             className="text-red-600 hover:text-red-900"
                                                         >
-                                                            🗑️ ลบ
+                                                            <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -974,7 +975,7 @@ export default function DiseaseReportsPage() {
                                                     type="submit"
                                                     className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold"
                                                 >
-                                                    {editingReport ? '💾 บันทึกการแก้ไข' : '➕ บันทึก'}
+                                                    {editingReport ? "บันทึกการแก้ไข" : "บันทึก"}
                                                 </button>
                                                 <button
                                                     type="button"

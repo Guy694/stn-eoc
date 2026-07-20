@@ -1,6 +1,7 @@
 'use client';
 
 import EOCLayout from '@/components/layouts/EOCLayout';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function PrivacyPolicyPage() {
     return (
@@ -9,7 +10,7 @@ export default function PrivacyPolicyPage() {
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl p-8 mb-8 shadow-xl">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="text-6xl">🔒</div>
+                        <div className="text-6xl"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <div>
                             <h1 className="text-3xl md:text-4xl font-bold">นโยบายความเป็นส่วนตัว</h1>
                             <p className="text-blue-100 mt-2">Personal Data Protection Act (PDPA)</p>
@@ -25,7 +26,7 @@ export default function PrivacyPolicyPage() {
                     {/* Introduction */}
                     <section>
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>📌</span> บทนำ
+                            <span><AppIcon icon="pin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> บทนำ
                         </h2>
                         <p className="text-gray-700 leading-relaxed">
                             ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล (Satun Provincial Emergency Operations Center (Satun Geo-EOC))
@@ -37,7 +38,7 @@ export default function PrivacyPolicyPage() {
                     {/* Data Collection */}
                     <section className="bg-blue-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>📋</span> ข้อมูลที่เราเก็บรวบรวม
+                            <span><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> ข้อมูลที่เราเก็บรวบรวม
                         </h2>
                         <div className="space-y-4">
                             <div>
@@ -73,7 +74,7 @@ export default function PrivacyPolicyPage() {
                     {/* Purpose */}
                     <section className="bg-green-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>✅</span> วัตถุประสงค์การใช้ข้อมูล
+                            <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> วัตถุประสงค์การใช้ข้อมูล
                         </h2>
                         <ul className="list-decimal list-inside space-y-2 text-gray-700">
                             <li>เพื่อติดต่อและให้ความช่วยเหลือในกรณีฉุกเฉิน</li>
@@ -88,7 +89,7 @@ export default function PrivacyPolicyPage() {
                     {/* Data Sharing */}
                     <section className="bg-orange-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>🔄</span> การเปิดเผยข้อมูล
+                            <span><AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> การเปิดเผยข้อมูล
                         </h2>
                         <p className="text-gray-700 mb-4">
                             เราอาจเปิดเผยข้อมูลส่วนบุคคลของท่านให้แก่:
@@ -107,7 +108,7 @@ export default function PrivacyPolicyPage() {
                     {/* Security */}
                     <section className="bg-teal-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>🔐</span> การรักษาความปลอดภัย
+                            <span><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> การรักษาความปลอดภัย
                         </h2>
                         <p className="text-gray-700 mb-4">
                             เราใช้มาตรการรักษาความปลอดภัยที่เหมาะสม ได้แก่:
@@ -124,7 +125,7 @@ export default function PrivacyPolicyPage() {
                     {/* Data Retention */}
                     <section className="bg-yellow-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>⏱️</span> ระยะเวลาเก็บรักษาข้อมูล
+                            <span><AppIcon icon="timer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> ระยะเวลาเก็บรักษาข้อมูล
                         </h2>
                         <p className="text-gray-700">
                             เราจะเก็บรักษาข้อมูลส่วนบุคคลของท่านไว้เป็นระยะเวลา <strong>5 ปี</strong> นับจากวันที่เก็บรวบรวม
@@ -135,7 +136,7 @@ export default function PrivacyPolicyPage() {
                     {/* User Rights */}
                     <section className="bg-sky-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>👤</span> สิทธิของเจ้าของข้อมูล
+                            <span><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> สิทธิของเจ้าของข้อมูล
                         </h2>
                         <p className="text-gray-700 mb-4">
                             ท่านมีสิทธิตามกฎหมายดังต่อไปนี้:
@@ -189,24 +190,24 @@ export default function PrivacyPolicyPage() {
                     {/* Contact */}
                     <section className="bg-gray-50 rounded-lg p-6">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>📞</span> ติดต่อเรา
+                            <span><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> ติดต่อเรา
                         </h2>
                         <p className="text-gray-700 mb-4">
                             หากท่านมีคำถามหรือต้องการใช้สิทธิของท่าน กรุณาติดต่อ:
                         </p>
                         <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
                             <p className="font-bold text-gray-800 mb-2">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข (EOC) จังหวัดสตูล</p>
-                            <p className="text-gray-700">📍 ศาลากลางจังหวัดสตูล</p>
-                            <p className="text-gray-700">📞 โทรศัพท์: 074-711-501</p>
-                            <p className="text-gray-700">📧 อีเมล: eoc@satun.go.th</p>
-                            <p className="text-gray-700">🕐 เวลาทำการ: จันทร์-ศุกร์ 08:30-16:30 น.</p>
+                            <p className="text-gray-700"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศาลากลางจังหวัดสตูล</p>
+                            <p className="text-gray-700"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โทรศัพท์: 074-711-501</p>
+                            <p className="text-gray-700"><AppIcon icon="mail" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อีเมล: eoc@satun.go.th</p>
+                            <p className="text-gray-700"><AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เวลาทำการ: จันทร์-ศุกร์ 08:30-16:30 น.</p>
                         </div>
                     </section>
 
                     {/* Updates */}
                     <section>
                         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>🔄</span> การปรับปรุงนโยบาย
+                            <span><AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span> การปรับปรุงนโยบาย
                         </h2>
                         <p className="text-gray-700">
                             เราอาจปรับปรุงนโยบายความเป็นส่วนตัวนี้เป็นครั้งคราว

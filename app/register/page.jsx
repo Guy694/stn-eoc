@@ -112,7 +112,7 @@ export default function RegisterPage() {
                         <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-100">Account Registration</p>
                         <h1 className="text-4xl font-black leading-tight sm:text-5xl">ลงทะเบียนเข้าใช้งานระบบ</h1>
                         <p className="mt-4 text-base leading-7 text-cyan-50">
-                            เลือกประเภทผู้ใช้งาน กรอกข้อมูลตามจริง และยืนยันตัวตนผ่าน ThaiID เพื่อป้องกันการลงทะเบียนด้วยข้อมูลไม่ถูกต้อง
+                            เลือกประเภทผู้ใช้งาน กรอกข้อมูลตามจริง และยืนยันตัวตนผ่าน ThaiD เพื่อป้องกันการลงทะเบียนด้วยข้อมูลไม่ถูกต้อง
                         </p>
                     </div>
 
@@ -124,7 +124,7 @@ export default function RegisterPage() {
                         <div className="mb-7">
                             <h2 className="text-3xl font-black text-slate-950">สร้างบัญชีผู้ใช้งาน</h2>
                             <p className="mt-2 text-sm leading-6 text-slate-500">
-                                ประชาชนเข้าใช้งานด้วย ThaiID เท่านั้น ส่วนเจ้าหน้าที่สามารถตั้ง username/password และยืนยัน ThaiID เพิ่มเติมได้
+                                ประชาชนเข้าใช้งานด้วย ThaiD เท่านั้น ส่วนเจ้าหน้าที่สามารถตั้ง username/password และยืนยัน ThaiD เพิ่มเติมได้
                             </p>
                         </div>
 
@@ -148,7 +148,7 @@ export default function RegisterPage() {
                                                 href={success.thaiid_url}
                                                 className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-black text-white hover:bg-emerald-800"
                                             >
-                                                ยืนยันตัวตนด้วย ThaiID
+                                                ยืนยันตัวตนด้วย ThaiD
                                                 <ArrowRight className="h-4 w-4" />
                                             </a>
                                         )}
@@ -166,7 +166,7 @@ export default function RegisterPage() {
                                 >
                                     <UserRound className="mb-2 h-5 w-5" />
                                     <div className="font-black">ประชาชน</div>
-                                    <div className="mt-1 text-xs text-slate-500">ไม่มี username/password ใช้ ThaiID เท่านั้น</div>
+                                    <div className="mt-1 text-xs text-slate-500">ไม่มี username/password ใช้ ThaiD เท่านั้น</div>
                                 </button>
                                 <button
                                     type="button"

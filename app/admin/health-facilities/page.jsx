@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function HealthFacilitiesPage() {
     const [facilities, setFacilities] = useState([]);
@@ -165,7 +166,7 @@ export default function HealthFacilitiesPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        🏥 จัดการหน่วยบริการ
+                        <AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการหน่วยบริการ
                     </h1>
                     <p className="text-gray-600">ระบบจัดการข้อมูลสถานพยาบาลและสถานีอนามัย</p>
                 </div>
@@ -189,7 +190,7 @@ export default function HealthFacilitiesPage() {
                     <div className="flex flex-wrap gap-4 ">
                         <input
                             type="text"
-                            placeholder="🔍 ค้นหาชื่อสถานพยาบาล, ที่อยู่..."
+                            placeholder="ค้นหาชื่อสถานพยาบาล, ที่อยู่..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -213,7 +214,7 @@ export default function HealthFacilitiesPage() {
                             }}
                             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
-                            ➕ เพิ่มสถานพยาบาล
+                            <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มสถานพยาบาล
                         </button>
                     </div>
                 </div>
@@ -277,13 +278,13 @@ export default function HealthFacilitiesPage() {
                                                     onClick={() => handleEdit(facility)}
                                                     className="text-blue-600 hover:text-blue-800 mr-3"
                                                 >
-                                                    ✏️
+                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(facility)}
                                                     className="text-red-600 hover:text-red-800"
                                                 >
-                                                    🗑️
+                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -308,7 +309,7 @@ export default function HealthFacilitiesPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-700">
-                            {editingFacility ? '✏️ แก้ไขสถานพยาบาล' : '➕ เพิ่มสถานพยาบาลใหม่'}
+                            {editingFacility ? "แก้ไขสถานพยาบาล" : "เพิ่มสถานพยาบาลใหม่"}
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -417,7 +418,7 @@ export default function HealthFacilitiesPage() {
                                     type="submit"
                                     className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
                                 >
-                                    💾 บันทึก
+                                    <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก
                                 </button>
                                 <button
                                     type="button"
@@ -427,7 +428,7 @@ export default function HealthFacilitiesPage() {
                                     }}
                                     className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
                                 >
-                                    ❌ ยกเลิก
+                                    <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
                                 </button>
                             </div>
                         </form>

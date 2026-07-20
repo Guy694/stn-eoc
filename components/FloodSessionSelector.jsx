@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SessionTeamsList from './SessionTeamsList';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodSessionSelector({
     onSessionChange,
@@ -114,13 +115,13 @@ export default function FloodSessionSelector({
             <div className="bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-6 mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold mb-1">🚨 สถานการณ์ปัจจุบัน (Real-time)</h3>
+                        <h3 className="text-lg font-semibold mb-1"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์ปัจจุบัน (Real-time)</h3>
                         {activeSessions.length > 0 ? (
                             <div className="space-y-2">
                                 {activeSessions.map(session => (
                                     <div key={session.id} className="bg-white/10 rounded p-3 backdrop-blur-sm">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-2xl animate-pulse">🔴</span>
+                                            <span className="text-2xl animate-pulse"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             <div>
                                                 <p className="font-medium">
                                                     EOC Session #{session.session_number} - {new Date().getFullYear()}
@@ -144,7 +145,7 @@ export default function FloodSessionSelector({
                         ) : (
                             <div className="bg-white/10 rounded p-3 backdrop-blur-sm">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">✅</span>
+                                    <span className="text-2xl"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <div>
                                         <p className="font-medium">ไม่มี EOC ที่เปิดอยู่ในขณะนี้</p>
                                         <p className="text-sm opacity-90">สถานการณ์ปกติ</p>
@@ -178,7 +179,7 @@ export default function FloodSessionSelector({
     return (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                📊 ข้อมูลย้อนหลัง (Historical Data)
+                <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลย้อนหลัง (Historical Data)
             </h3>
 
             {/* เลือกปี */}
@@ -219,7 +220,7 @@ export default function FloodSessionSelector({
                             {sessions.map(session => (
                                 <option key={session.id} value={session.id}>
                                     Session #{session.session_number} - {formatDate(session.opened_at)}
-                                    {session.status === 'active' ? ' ✅ (กำลังดำเนินการ)' : ` ถึง ${formatDate(session.closed_at)} ✓ (ปิดแล้ว)`}
+                                    {session.status === 'active' ? "(กำลังดำเนินการ)" : ` ถึง ${formatDate(session.closed_at)} (ปิดแล้ว)`}
                                 </option>
                             ))}
                         </select>
@@ -227,7 +228,7 @@ export default function FloodSessionSelector({
                 ) : selectedYear && !loading && (
                     <div className="md:col-span-2">
                         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                            <p className="text-gray-600">📭 ไม่พบ EOC Session ในปี {selectedYear + 543}</p>
+                            <p className="text-gray-600"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่พบ EOC Session ในปี {selectedYear + 543}</p>
                             <p className="text-sm text-gray-500 mt-1">ลองเลือกปีอื่น</p>
                         </div>
                     </div>
@@ -249,33 +250,33 @@ export default function FloodSessionSelector({
                         <SummaryItem
                             label="EOC Sessions"
                             value={yearSummary.total_sessions || 0}
-                            icon="🔢"
+                            icon="circleDot"
                             subtext={`ปิดแล้ว: ${yearSummary.closed_sessions || 0}, ดำเนินการ: ${yearSummary.active_sessions || 0}`}
                         />
                         <SummaryItem
                             label="รวมเวลา"
                             value={formatDuration(yearSummary.total_hours)}
-                            icon="⏱️"
+                            icon="timer"
                         />
                         <SummaryItem
                             label="กิจกรรม"
                             value={yearSummary.total_activities || 0}
-                            icon="📋"
+                            icon="clipboard"
                         />
                         <SummaryItem
                             label="บันทึกข้อมูล"
                             value={yearSummary.total_data_entries || 0}
-                            icon="📝"
+                            icon="file"
                         />
                         <SummaryItem
                             label="หมู่บ้าน"
                             value={yearSummary.total_villages || 0}
-                            icon="🏘️"
+                            icon="home"
                         />
                         <SummaryItem
                             label="อำเภอ"
                             value={yearSummary.total_districts || 0}
-                            icon="📍"
+                            icon="mapPin"
                         />
                     </div>
                 </div>
@@ -289,11 +290,11 @@ export default function FloodSessionSelector({
                             <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
                                 {selectedSession.status === 'active' ? (
                                     <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                                        ✅ กำลังดำเนินการ
+                                        <AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กำลังดำเนินการ
                                     </span>
                                 ) : (
                                     <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
-                                        ✓ ปิดแล้ว
+                                        <AppIcon icon="check" className="inline-block h-4 w-4" /> ปิดแล้ว
                                     </span>
                                 )}
                                 <span className="text-gray-700">EOC Session #{selectedSession.session_number}</span>
@@ -341,7 +342,7 @@ function SummaryItem({ label, value, icon, subtext }) {
     return (
         <div className="bg-white rounded p-3 border border-teal-200">
             <div className="flex items-center gap-2 mb-1">
-                <span>{icon}</span>
+                <AppIcon icon={icon} className="h-5 w-5" />
                 <span className="text-xs text-gray-600">{label}</span>
             </div>
             <p className="text-lg font-bold text-teal-700">{value}</p>

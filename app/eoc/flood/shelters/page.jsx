@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { useAuth } from "@/context/AuthContext";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodSheltersPage() {
     const { eocStatus } = useEOC();
@@ -40,7 +41,7 @@ export default function FloodSheltersPage() {
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">
-                                <span className="text-3xl">🏠</span>
+                                <span className="text-3xl"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800">ศูนย์พักพิงชั่วคราว</h1>
@@ -53,7 +54,7 @@ export default function FloodSheltersPage() {
                                     href="/eoc/flood/shelters/manage"
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                                 >
-                                    <span>✅</span>
+                                    <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <span>เลือกศูนย์สำหรับ Session นี้</span>
                                 </Link>
                             )}
@@ -62,7 +63,7 @@ export default function FloodSheltersPage() {
                                     href="/admin/shelter-center"
                                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                                 >
-                                    <span>⚙️</span>
+                                    <span><AppIcon icon="settings" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <span>จัดการข้อมูลหลัก</span>
                                 </Link>
                             )}
@@ -74,7 +75,7 @@ export default function FloodSheltersPage() {
                 {!isActive && (
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
                         <div className="flex items-center gap-3">
-                            <span className="text-2xl">⚠️</span>
+                            <span className="text-2xl"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div>
                                 <h3 className="font-bold text-yellow-800">EOC อุทกภัยน้ำท่วมยังไม่ได้เปิด</h3>
                                 <p className="text-yellow-700 text-sm">
@@ -96,7 +97,7 @@ export default function FloodSheltersPage() {
                                 </p>
                             </div>
                             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                <span className="text-2xl">{isActive ? '🟢' : '⚪'}</span>
+                                <AppIcon icon={isActive ? "statusGreen" : "statusGray"} className="h-7 w-7" />
                             </div>
                         </div>
                     </div>
@@ -108,7 +109,7 @@ export default function FloodSheltersPage() {
                                 <p className="text-2xl font-bold mt-1">อุทกภัยน้ำท่วม</p>
                             </div>
                             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                <span className="text-2xl">🌊</span>
+                                <span className="text-2xl"><AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             </div>
                         </div>
                     </div>
@@ -120,7 +121,7 @@ export default function FloodSheltersPage() {
                                 <p className="text-lg font-bold mt-1">คลิกจุดบนแผนที่</p>
                             </div>
                             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                <span className="text-2xl">📍</span>
+                                <span className="text-2xl"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             </div>
                         </div>
                     </div>

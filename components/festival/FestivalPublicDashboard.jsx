@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import AppIcon from "@/components/icons/AppIcon";
 
 const FestivalMap = dynamic(() => import("./FestivalMap"), {
     ssr: false,
@@ -48,7 +49,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
 
     const ft = festivalSession?.festival_type || data?.activeSession?.festival_type;
     const festivalLabel = ft === 'newyear' ? 'ปีใหม่' : ft === 'songkran' ? 'สงกรานต์' : 'เทศกาล';
-    const festivalIcon = ft === 'newyear' ? '🎄' : ft === 'songkran' ? '💦' : '🚗';
+    const festivalIcon = ft === 'newyear' ? "treePalm" : ft === 'songkran' ? "droplets" : "car";
     const accentColor = ft === 'newyear' ? 'blue' : ft === 'songkran' ? 'orange' : 'red';
     const accentMap = {
         blue: { bar: 'bg-blue-500', gradient: 'from-blue-600 to-blue-700', text: 'text-blue-600', badge: 'bg-blue-100 text-blue-700' },
@@ -63,7 +64,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
             <div className="flex items-center gap-3 mb-3">
                 <div className={`w-1.5 h-6 ${ac.bar} rounded-full`}></div>
                 <h2 className="text-lg md:text-xl font-bold text-gray-800">
-                    {festivalIcon} สถิติอุบัติเหตุ{festivalLabel}
+                    <AppIcon icon={festivalIcon} className="inline-block h-8 w-8" /> สถิติอุบัติเหตุ{festivalLabel}
                 </h2>
                 <Link
                     href="/public/festival-accidents"
@@ -80,7 +81,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                 </div>
             ) : !data?.hasActiveSession ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center text-yellow-900 text-sm">
-                    <div className="text-3xl mb-2">📭</div>
+                    <div className="text-3xl mb-2"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                     <p>ยังไม่มีข้อมูลในช่วงเทศกาล</p>
                 </div>
             ) : (
@@ -88,17 +89,17 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                     {/* Stat Cards */}
                     <div className="grid grid-cols-3 gap-3">
                         <div className="eoc-bg-red-700 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
-                            <div className="text-xl mb-0.5">🚗</div>
+                            <div className="text-xl mb-0.5"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalAccidents || 0).toLocaleString()}</div>
                             <div className="text-red-100 text-xs">อุบัติเหตุ (ครั้ง)</div>
                         </div>
                         <div className="eoc-bg-gray-900 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
-                            <div className="text-xl mb-0.5">💀</div>
+                            <div className="text-xl mb-0.5"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalDeaths || 0).toLocaleString()}</div>
                             <div className="text-gray-300 text-xs">เสียชีวิต (ราย)</div>
                         </div>
                         <div className="eoc-bg-amber-700 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
-                            <div className="text-xl mb-0.5">🤕</div>
+                            <div className="text-xl mb-0.5"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalInjuries || 0).toLocaleString()}</div>
                             <div className="text-amber-100 text-xs">บาดเจ็บ (ราย)</div>
                         </div>
@@ -108,7 +109,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                     <div className="bg-white rounded-xl shadow-md p-4">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                                📍 แผนที่จุดเกิดเหตุ &amp; จุดบริการ
+                                <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่จุดเกิดเหตุ & จุดบริการ
                             </h3>
                             <div className="flex items-center gap-3 text-xs text-gray-600">
                                 <span className="flex items-center gap-1">

@@ -1,12 +1,13 @@
 "use client";
 import Link from 'next/link';
 import PublicLayout from '@/components/layouts/PublicLayout';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function EOCGuidePage() {
     const modules = [
         {
             title: "Dashboard & สถิติ",
-            icon: "📊",
+            icon: "barChart",
             features: [
                 "ดูภาพรวมรายงานทั้งหมด",
                 "สถิติรายวัน/รายสัปดาห์/รายเดือน",
@@ -16,7 +17,7 @@ export default function EOCGuidePage() {
         },
         {
             title: "จัดการรายงาน",
-            icon: "📝",
+            icon: "file",
             features: [
                 "ตรวจสอบและยืนยันรายงาน",
                 "อัพเดทสถานะการดำเนินการ",
@@ -26,7 +27,7 @@ export default function EOCGuidePage() {
         },
         {
             title: "แผนที่และพื้นที่",
-            icon: "🗺️",
+            icon: "map",
             features: [
                 "ดูรายงานบนแผนที่",
                 "กรองตามพื้นที่",
@@ -36,7 +37,7 @@ export default function EOCGuidePage() {
         },
         {
             title: "ศูนย์พักพิง",
-            icon: "🏠",
+            icon: "home",
             features: [
                 "จัดการข้อมูลศูนย์พักพิง",
                 "บันทึกจำนวนผู้อพยพ",
@@ -105,22 +106,22 @@ export default function EOCGuidePage() {
 
     const tips = [
         {
-            icon: "⚡",
+            icon: "siren",
             title: "ตรวจสอบรายงานทันที",
             description: "ตรวจสอบรายงานใหม่ภายใน 30 นาที เพื่อให้ประชาชนได้รับความช่วยเหลือรวดเร็ว"
         },
         {
-            icon: "✅",
+            icon: "checkCircle",
             title: "ยืนยันข้อมูลให้ถูกต้อง",
             description: "ตรวจสอบพิกัด รูปภาพ และรายละเอียดก่อนอนุมัติเพื่อความแม่นยำ"
         },
         {
-            icon: "📝",
+            icon: "file",
             title: "เพิ่มหมายเหตุ",
             description: "เพิ่มหมายเหตุเจ้าหน้าที่เพื่อให้ทีมอื่นเข้าใจบริบทได้ดีขึ้น"
         },
         {
-            icon: "🔄",
+            icon: "refresh",
             title: "อัพเดทสถานะสม่ำเสมอ",
             description: "อัพเดทสถานะการดำเนินการเพื่อให้ประชาชนทราบความคืบหน้า"
         }
@@ -138,7 +139,7 @@ export default function EOCGuidePage() {
                         ← กลับไปศูนย์ช่วยเหลือ
                     </Link>
                     <h1 className="text-4xl font-bold text-gray-800 mb-4">
-                        👨‍💼 คู่มือสำหรับเจ้าหน้าที่ EOC
+                        <AppIcon icon="userCog" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> คู่มือสำหรับเจ้าหน้าที่ EOC
                     </h1>
                     <p className="text-xl text-gray-600">
                         คู่มือการใช้งานระบบสำหรับเจ้าหน้าที่ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข
@@ -148,19 +149,19 @@ export default function EOCGuidePage() {
                 {/* Modules Overview */}
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        📦 โมดูลหลักของระบบ
+                        <AppIcon icon="package" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โมดูลหลักของระบบ
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {modules.map((module, index) => (
                             <div key={index} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <span className="text-4xl">{module.icon}</span>
+                                    <AppIcon icon={module.icon} className="h-10 w-10" />
                                     <h3 className="text-xl font-bold text-gray-800">{module.title}</h3>
                                 </div>
                                 <ul className="space-y-2">
                                     {module.features.map((feature, idx) => (
                                         <li key={idx} className="flex items-start gap-2">
-                                            <span className="text-green-600 mt-1">✓</span>
+                                            <AppIcon icon="check" className="mt-1 h-4 w-4 text-green-600" />
                                             <span className="text-gray-700">{feature}</span>
                                         </li>
                                     ))}
@@ -173,7 +174,7 @@ export default function EOCGuidePage() {
                 {/* Workflows */}
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        🔄 ขั้นตอนการทำงาน
+                        <AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ขั้นตอนการทำงาน
                     </h2>
                     <div className="space-y-4">
                         {workflows.map((workflow, index) => (
@@ -199,12 +200,12 @@ export default function EOCGuidePage() {
                 {/* Best Practices */}
                 <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-8 mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                        💡 แนวทางปฏิบัติที่ดี
+                        <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แนวทางปฏิบัติที่ดี
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {tips.map((tip, index) => (
                             <div key={index} className="bg-white rounded-lg p-4 flex items-start gap-3">
-                                <span className="text-3xl flex-shrink-0">{tip.icon}</span>
+                                <AppIcon icon={tip.icon} className="h-8 w-8 flex-shrink-0" />
                                 <div>
                                     <h3 className="font-semibold text-gray-800 mb-1">{tip.title}</h3>
                                     <p className="text-sm text-gray-600">{tip.description}</p>
@@ -223,7 +224,7 @@ export default function EOCGuidePage() {
                         href="/login"
                         className="inline-block bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105"
                     >
-                        <span className="text-2xl mr-2">🔐</span>
+                        <span className="text-2xl mr-2"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เข้าสู่ระบบ
                     </Link>
                 </div>

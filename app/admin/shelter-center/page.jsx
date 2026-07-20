@@ -7,6 +7,7 @@ import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAle
 import EOCLayout from '@/components/layouts/EOCLayout';
 import ExportExcelButton from '@/components/ExportExcelButton';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 // Dynamic import for Map component
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
@@ -15,11 +16,11 @@ const MapSelector = dynamic(() => import('@/components/MapSelector'), {
 });
 
 const EOC_TYPES = [
-    { value: 'flood', label: '💧 อุทกภัยน้ำท่วม', color: 'blue' },
-    { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow' },
-    { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan' },
-    { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange' },
-    { value: 'disease', label: '🦠 โรคระบาด', color: 'red' }
+    { value: 'flood', label: "อุทกภัยน้ำท่วม", color: 'blue' },
+    { value: 'drought', label: "ภัยแล้ง", color: 'yellow' },
+    { value: 'tsunami', label: "สึนามิ", color: 'cyan' },
+    { value: 'earthquake', label: "แผ่นดินไหว", color: 'orange' },
+    { value: 'disease', label: "โรคระบาด", color: 'red' }
 ];
 
 function ShelterCenterContent() {
@@ -281,7 +282,7 @@ function ShelterCenterContent() {
             } else if (result.needsConfirmation) {
                 // ถ้ามีข้อมูลที่เกี่ยวข้อง ให้ถามว่าต้องการลบพร้อมข้อมูลที่เกี่ยวข้องหรือไม่
                 const confirmResult = await showConfirm(
-                    '⚠️ พบข้อมูลที่เกี่ยวข้อง',
+                    "พบข้อมูลที่เกี่ยวข้อง",
                     result.message,
                     'warning'
                 );
@@ -411,7 +412,7 @@ function ShelterCenterContent() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        🏥 จัดการศูนย์พักพิงชั่วคราว
+                        <AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการศูนย์พักพิงชั่วคราว
                     </h1>
                     <p className="text-gray-600">ระบบจัดการข้อมูลศูนย์พักพิงชั่วคราว</p>
                 </div>
@@ -452,7 +453,7 @@ function ShelterCenterContent() {
                     <div className="flex flex-wrap gap-4 ">
                         <input
                             type="text"
-                            placeholder="🔍 ค้นหาชื่อศูนย์พักพิง, ที่อยู่, ตำบล..."
+                            placeholder="ค้นหาชื่อศูนย์พักพิง, ที่อยู่, ตำบล..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -494,7 +495,7 @@ function ShelterCenterContent() {
                             }}
                             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
-                            ➕ เพิ่มศูนย์พักพิงชั่วคราว
+                            <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มศูนย์พักพิงชั่วคราว
                         </button>
                     </div>
                 </div>
@@ -573,14 +574,14 @@ function ShelterCenterContent() {
                                                     className="text-blue-600 hover:text-blue-800 mr-3"
                                                     title="แก้ไข"
                                                 >
-                                                    ✏️
+                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(center)}
                                                     className="text-red-600 hover:text-red-800"
                                                     title="ลบ"
                                                 >
-                                                    🗑️
+                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -606,7 +607,7 @@ function ShelterCenterContent() {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                             <h2 className="text-xl font-bold mb-4 text-gray-700">
-                                {editingCenter ? '✏️ แก้ไขศูนย์พักพิงชั่วคราว' : '➕ เพิ่มศูนย์พักพิงชั่วคราวใหม่'}
+                                {editingCenter ? "แก้ไขศูนย์พักพิงชั่วคราว" : "เพิ่มศูนย์พักพิงชั่วคราวใหม่"}
                             </h2>
 
                             <form onSubmit={handleSubmit} className="space-y-4">
@@ -776,7 +777,7 @@ function ShelterCenterContent() {
                                         disabled={isSubmitting}
                                         className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
                                     >
-                                        {isSubmitting ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
+                                        {isSubmitting ? "กำลังบันทึก..." : "บันทึก"}
                                     </button>
                                     <button
                                         type="button"
@@ -787,7 +788,7 @@ function ShelterCenterContent() {
                                         disabled={isSubmitting}
                                         className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors disabled:bg-gray-400"
                                     >
-                                        ❌ ยกเลิก
+                                        <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
                                     </button>
                                 </div>
                             </form>

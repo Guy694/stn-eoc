@@ -14,6 +14,7 @@ import {
     ArcElement
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import AppIcon from "@/components/icons/AppIcon";
 
 ChartJS.register(
     CategoryScale,
@@ -346,7 +347,7 @@ export default function AffectedPersonsPage() {
                 <div className="mb-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">👥</span>
+                            <span className="text-4xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             ข้อมูลผู้ได้รับผลกระทบย้อนหลัง
                         </h1>
                         <p className="text-gray-600">บันทึกและติดตามข้อมูลย้อนหลังตามช่วงวันที่รายงาน</p>
@@ -358,7 +359,7 @@ export default function AffectedPersonsPage() {
                         }}
                         className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
-                        <span className="text-xl">➕</span>
+                        <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มรายงาน
                     </button>
                 </div>
@@ -367,7 +368,7 @@ export default function AffectedPersonsPage() {
                 <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg shadow-md p-4 mb-6 border border-blue-200">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <span className="text-2xl">📋</span>
+                            <span className="text-2xl"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <label className="text-sm font-medium text-gray-700">เลือก EOC Session:</label>
                         </div>
                         <select
@@ -399,7 +400,7 @@ export default function AffectedPersonsPage() {
 
                 {!selectedSession ? (
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-8 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือก EOC Session</h3>
                         <p className="text-gray-600">
                             เลือก EOC Session ที่ต้องการดูรายงานผู้ได้รับผลกระทบ
@@ -437,7 +438,7 @@ export default function AffectedPersonsPage() {
 
                         {/* Chart */}
                         <div className="bg-white rounded-lg shadow p-6 mb-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">📊 สถานการณ์แยกตามอำเภอ</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์แยกตามอำเภอ</h3>
                             {summaryRows.length > 0 ? (
                                 <Bar
                                     data={getDistrictChartData()}
@@ -489,7 +490,7 @@ export default function AffectedPersonsPage() {
                                 { title: summaryTitle, rows: summaryRows, prefix: summaryPrefix },
                             ].map(section => (
                                 <div key={section.prefix} className="bg-white rounded-lg shadow p-6">
-                                    <h3 className="text-xl font-bold text-gray-800 mb-4">📋 ตารางสรุปรายอำเภอ - {section.title}</h3>
+                                    <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางสรุปรายอำเภอ - {section.title}</h3>
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full border-collapse border border-gray-300 text-sm">
                                             <thead>
@@ -726,13 +727,13 @@ export default function AffectedPersonsPage() {
                                                             onClick={() => handleEdit(report)}
                                                             className="text-blue-600 hover:text-blue-900 mr-3"
                                                         >
-                                                            ✏️ แก้ไข
+                                                            <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(report)}
                                                             className="text-red-600 hover:text-red-900"
                                                         >
-                                                            🗑️ ลบ
+                                                            <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
                                                         </button>
                                                     </td>
                                                 </tr>

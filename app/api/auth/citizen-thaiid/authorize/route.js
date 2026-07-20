@@ -42,7 +42,7 @@ export async function GET(request) {
 
         return applyNoStoreHeaders(response);
     } catch (error) {
-        console.error('ThaiID authorize error:', error);
+        console.error('ThaiD authorize error:', error);
         return applyNoStoreHeaders(NextResponse.redirect(
             `${getThaiIdAppBaseUrl(request)}/public/report-incident?error=thaiid_auth_failed`
         ));

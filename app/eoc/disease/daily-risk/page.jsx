@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function DiseaseDailyRiskPage() {
     const [data, setData] = useState(null);
@@ -74,11 +75,11 @@ export default function DiseaseDailyRiskPage() {
 
     const getSeverityIcon = (severity) => {
         const icons = {
-            'high': '🔴',
-            'medium': '🟡',
-            'low': '🟢'
+            'high': "statusRed",
+            'medium': "statusYellow",
+            'low': "statusGreen"
         };
-        return icons[severity] || '⚪';
+        return icons[severity] || "statusGray";
     };
 
     const getSeverityLabel = (severity) => {
@@ -129,7 +130,7 @@ export default function DiseaseDailyRiskPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3 md:text-3xl">
-                        <span className="text-3xl md:text-4xl">🦠</span>
+                        <span className="text-3xl md:text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         สรุปสถานการณ์โรครายวัน
                     </h1>
                     <p className="text-gray-600">แสดงข้อมูลวันที่: {formatDate}</p>
@@ -145,7 +146,7 @@ export default function DiseaseDailyRiskPage() {
                             onClick={() => setShowAllDates(!showAllDates)}
                             className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
                         >
-                            {showAllDates ? '🔼 ซ่อนลิสวันที่' : '📅 แสดงลิสวันที่ทั้งหมด'}
+                            {showAllDates ? "ซ่อนลิสวันที่" : "แสดงลิสวันที่ทั้งหมด"}
                         </button>
                     </div>
                     <input
@@ -159,7 +160,7 @@ export default function DiseaseDailyRiskPage() {
                     {/* Available Dates List */}
                     {showAllDates && availableDates.length > 0 && (
                         <div className="mt-4 border-t pt-4">
-                            <h3 className="font-semibold text-gray-700 mb-3">📋 วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
+                            <h3 className="font-semibold text-gray-700 mb-3"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 max-h-96 overflow-y-auto">
                                 {availableDates.map((date, index) => {
                                     const dateObj = new Date(date);
@@ -198,7 +199,7 @@ export default function DiseaseDailyRiskPage() {
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div className="min-w-0">
                                 <h3 className="text-lg font-bold mb-2 md:text-xl">
-                                    🚨 {activeDiseaseEocName} Session #{data.activeSession.session_number}/2026 - กำลังดำเนินการ
+                                    <AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {activeDiseaseEocName} Session #{data.activeSession.session_number}/2026 - กำลังดำเนินการ
                                 </h3>
                                 <p className="opacity-90 mb-1">
                                     เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {
@@ -234,31 +235,31 @@ export default function DiseaseDailyRiskPage() {
                 {/* Total Statistics */}
                 <div className="grid grid-cols-2 gap-3 mb-6 md:grid-cols-5 md:gap-4">
                     <StatCard
-                        icon="🗺️"
+                        icon="map"
                         label="อำเภอ"
                         value={stats.affected_districts || 0}
                         color="purple"
                     />
                     <StatCard
-                        icon="🏥"
+                        icon="hospital"
                         label="หน่วยบริการ"
                         value={stats.affected_facilities || 0}
                         color="blue"
                     />
                     <StatCard
-                        icon="🦠"
+                        icon="biohazard"
                         label="ประเภทโรค"
                         value={stats.diseases_count || 0}
                         color="green"
                     />
                     <StatCard
-                        icon="📋"
+                        icon="clipboard"
                         label="รายงาน"
                         value={stats.total_reports || 0}
                         color="orange"
                     />
                     <StatCard
-                        icon="👥"
+                        icon="users"
                         label="ผู้ป่วย"
                         value={(stats.total_patients || 0).toLocaleString()}
                         color="red"
@@ -275,7 +276,7 @@ export default function DiseaseDailyRiskPage() {
                                 className={`${getSeverityColor(item.severity)} border-2 rounded-lg p-4`}
                             >
                                 <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-3xl">{getSeverityIcon(item.severity)}</span>
+                                    <AppIcon icon={getSeverityIcon(item.severity)} className="h-8 w-8" />
                                     <h3 className="font-bold text-lg">{item.disease_name}</h3>
                                 </div>
                                 <div className="space-y-1 text-sm">
@@ -363,10 +364,10 @@ export default function DiseaseDailyRiskPage() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <h3 className="font-bold text-lg mb-1">
-                                            🦠 {item.disease_name}
+                                            <AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.disease_name}
                                         </h3>
                                         <p className="text-sm text-gray-600 mb-2">
-                                            🏥 {item.facility_name} | 📍 {item.district_name}
+                                            <AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.facility_name} | <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.district_name}
                                         </p>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
                                             <div>
@@ -388,7 +389,7 @@ export default function DiseaseDailyRiskPage() {
 
                         {(!data.details || data.details.length === 0) && (
                             <div className="text-center py-8 text-gray-500">
-                                <p className="text-4xl mb-2">📭</p>
+                                <p className="text-4xl mb-2"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></p>
                                 <p>ไม่มีรายงานในวันนี้</p>
                             </div>
                         )}
@@ -417,7 +418,7 @@ function StatCard({ icon, label, value, color }) {
 
     return (
         <div className={`${colorClasses[color]} border-2 rounded-lg p-4 text-center`}>
-            <div className="text-3xl mb-2">{icon}</div>
+            <AppIcon icon={icon} className="mx-auto mb-2 h-8 w-8" />
             <p className="text-2xl font-bold mb-1">{value}</p>
             <p className="text-sm opacity-80">{label}</p>
         </div>

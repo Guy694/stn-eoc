@@ -5,6 +5,7 @@ import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import dynamic from 'next/dynamic';
+import AppIcon from "@/components/icons/AppIcon";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
@@ -211,7 +212,7 @@ export default function AccidentRecordsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
                         <p className="text-gray-600">กรุณาเปิด EOC Session ก่อนบันทึกข้อมูล</p>
                     </div>
@@ -227,7 +228,7 @@ export default function AccidentRecordsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">🚗</span>
+                            <span className="text-4xl"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกอุบัติเหตุ
                         </h1>
                         <p className="text-gray-600">
@@ -238,7 +239,7 @@ export default function AccidentRecordsPage() {
                         onClick={() => { setEditingRecord(null); resetForm(); setShowModal(true); }}
                         className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 flex items-center gap-2"
                     >
-                        ➕ บันทึกอุบัติเหตุ
+                        <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึกอุบัติเหตุ
                     </button>
                 </div>
 
@@ -250,15 +251,15 @@ export default function AccidentRecordsPage() {
                     </div>
                     <div className="bg-white rounded-lg p-4 shadow border border-gray-800">
                         <div className="text-3xl font-bold text-gray-800">{stats.deaths}</div>
-                        <div className="text-sm text-gray-600">💀 เสียชีวิต</div>
+                        <div className="text-sm text-gray-600"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เสียชีวิต</div>
                     </div>
                     <div className="bg-white rounded-lg p-4 shadow border border-yellow-500">
                         <div className="text-3xl font-bold text-yellow-600">{stats.injuries}</div>
-                        <div className="text-sm text-gray-600">🤕 บาดเจ็บ</div>
+                        <div className="text-sm text-gray-600"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บาดเจ็บ</div>
                     </div>
                     <div className="bg-white rounded-lg p-4 shadow border border-teal-500">
                         <div className="text-3xl font-bold text-teal-600">{stats.drunk}</div>
-                        <div className="text-sm text-gray-600">🍺 เมาแล้วขับ</div>
+                        <div className="text-sm text-gray-600"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</div>
                     </div>
                 </div>
 
@@ -293,7 +294,7 @@ export default function AccidentRecordsPage() {
                 {/* Table */}
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     <div className="p-4 bg-gray-50 border-b">
-                        <h3 className="font-bold text-gray-800">📋 รายการอุบัติเหตุ ({records.length} รายการ)</h3>
+                        <h3 className="font-bold text-gray-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายการอุบัติเหตุ ({records.length} รายการ)</h3>
                     </div>
 
                     {loading ? (
@@ -303,7 +304,7 @@ export default function AccidentRecordsPage() {
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4">📭</div>
+                            <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <p className="text-gray-500">ยังไม่มีรายงานอุบัติเหตุ</p>
                         </div>
                     ) : (
@@ -341,20 +342,20 @@ export default function AccidentRecordsPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
-                                                    <span className="px-2 py-1 text-xs rounded bg-gray-100">💀 {r.deaths}</span>
-                                                    <span className="px-2 py-1 text-xs rounded bg-yellow-100">🤕 {r.injuries}</span>
+                                                    <span className="px-2 py-1 text-xs rounded bg-gray-100"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {r.deaths}</span>
+                                                    <span className="px-2 py-1 text-xs rounded bg-yellow-100"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {r.injuries}</span>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-xs">
                                                 <div className="flex flex-wrap gap-1">
-                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-teal-100 text-teal-700 rounded">🍺 เมา</span>}
-                                                    {r.no_helmet && <span className="px-1 py-0.5 bg-orange-100 text-orange-700 rounded">⛑ ไม่สวมหมวก</span>}
-                                                    {r.speeding && <span className="px-1 py-0.5 bg-red-100 text-red-700 rounded">🚀 เร็ว</span>}
+                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-teal-100 text-teal-700 rounded"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมา</span>}
+                                                    {r.no_helmet && <span className="px-1 py-0.5 bg-orange-100 text-orange-700 rounded"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก</span>}
+                                                    {r.speeding && <span className="px-1 py-0.5 bg-red-100 text-red-700 rounded"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เร็ว</span>}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-center">
-                                                <button onClick={() => handleEdit(r)} className="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
-                                                <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:text-red-800">🗑️</button>
+                                                <button onClick={() => handleEdit(r)} className="text-blue-600 hover:text-blue-800 mr-2"><AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></button>
+                                                <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:text-red-800"><AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></button>
                                             </td>
                                         </tr>
                                     ))}
@@ -377,7 +378,7 @@ export default function AccidentRecordsPage() {
                         <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4">
-                                    {editingRecord ? 'แก้ไขข้อมูล' : '🚗 บันทึกอุบัติเหตุ'}
+                                    {editingRecord ? 'แก้ไขข้อมูล' : "บันทึกอุบัติเหตุ"}
                                 </h2>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -489,7 +490,7 @@ export default function AccidentRecordsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">💀 จำนวนเสียชีวิต</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเสียชีวิต</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -499,7 +500,7 @@ export default function AccidentRecordsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">🤕 จำนวนบาดเจ็บ</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนบาดเจ็บ</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -520,7 +521,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, drunk_driving: e.target.checked })}
                                                     className="w-4 h-4 accent-purple-500"
                                                 />
-                                                <span className="text-sm">🍺 เมาแล้วขับ</span>
+                                                <span className="text-sm"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -529,7 +530,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, no_helmet: e.target.checked })}
                                                     className="w-4 h-4 accent-orange-500"
                                                 />
-                                                <span className="text-sm">⛑ ไม่สวมหมวก</span>
+                                                <span className="text-sm"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -538,7 +539,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, no_seatbelt: e.target.checked })}
                                                     className="w-4 h-4 accent-yellow-500"
                                                 />
-                                                <span className="text-sm">🪢 ไม่คาดเข็มขัด</span>
+                                                <span className="text-sm"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่คาดเข็มขัด</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -547,7 +548,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, speeding: e.target.checked })}
                                                     className="w-4 h-4 accent-red-500"
                                                 />
-                                                <span className="text-sm">🚀 ขับเร็ว</span>
+                                                <span className="text-sm"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ขับเร็ว</span>
                                             </label>
                                         </div>
                                     </div>

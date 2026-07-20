@@ -3,6 +3,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { useEOC } from "@/context/EOCContext";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function ShelterDiseaseReportsPage() {
     const { eocStatus } = useEOC();
@@ -193,7 +194,7 @@ export default function ShelterDiseaseReportsPage() {
         return (
             <EOCLayout>
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
-                    <span className="text-5xl mb-4 block">⚠️</span>
+                    <span className="text-5xl mb-4 block"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                     <h2 className="text-xl font-bold text-yellow-800 mb-2">ไม่มี EOC อุทกภัยน้ำท่วมที่เปิดใช้งาน</h2>
                     <p className="text-yellow-700">กรุณาเปิด EOC ก่อนจึงจะสามารถบันทึกรายงานโรคได้</p>
                 </div>
@@ -209,7 +210,7 @@ export default function ShelterDiseaseReportsPage() {
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center">
-                                <span className="text-3xl">🦠</span>
+                                <span className="text-3xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800">รายงานโรคในศูนย์พักพิง</h1>
@@ -227,7 +228,7 @@ export default function ShelterDiseaseReportsPage() {
                                 onClick={() => setShowForm(!showForm)}
                                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                             >
-                                <span>➕</span>
+                                <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 <span>เพิ่มรายงาน</span>
                             </button>
                         </div>
@@ -352,7 +353,7 @@ export default function ShelterDiseaseReportsPage() {
                                     disabled={saving}
                                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                                 >
-                                    {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
+                                    {saving ? "กำลังบันทึก..." : "บันทึก"}
                                 </button>
                                 <button
                                     type="button"
@@ -378,7 +379,7 @@ export default function ShelterDiseaseReportsPage() {
                         </div>
                     ) : reports.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
-                            <span className="text-4xl block mb-2">📋</span>
+                            <span className="text-4xl block mb-2"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <p>ยังไม่มีรายงานโรคในวันนี้</p>
                         </div>
                     ) : (
@@ -388,11 +389,11 @@ export default function ShelterDiseaseReportsPage() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                                <span className="text-xl">🦠</span>
+                                                <span className="text-xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             </div>
                                             <div>
                                                 <h4 className="font-semibold text-gray-800">{report.disease_type}</h4>
-                                                <p className="text-sm text-gray-500">🏠 {report.sheltername}</p>
+                                                <p className="text-sm text-gray-500"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.sheltername}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
@@ -410,12 +411,12 @@ export default function ShelterDiseaseReportsPage() {
                                                 onClick={() => handleDelete(report.id)}
                                                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
                                             >
-                                                🗑️
+                                                <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                             </button>
                                         </div>
                                     </div>
                                     {report.notes && (
-                                        <p className="mt-2 text-sm text-gray-600 ml-16">📝 {report.notes}</p>
+                                        <p className="mt-2 text-sm text-gray-600 ml-16"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.notes}</p>
                                     )}
                                 </div>
                             ))}

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function UploadInfographics() {
     const router = useRouter();
@@ -18,11 +19,11 @@ export default function UploadInfographics() {
     const [existingFiles, setExistingFiles] = useState({});
 
     const eocTypes = [
-        { value: 'flood', label: 'อุทกภัยน้ำท่วม', icon: '💧' },
-        { value: 'drought', label: 'ภัยแล้ง', icon: '☀️' },
-        { value: 'tsunami', label: 'คลื่นสึนามิ', icon: '🌊' },
-        { value: 'earthquake', label: 'แผ่นดินไหว', icon: '🌍' },
-        { value: 'disease', label: 'โรคระบาด', icon: '🦠' }
+        { value: 'flood', label: 'อุทกภัยน้ำท่วม', icon: "droplet" },
+        { value: 'drought', label: 'ภัยแล้ง', icon: "sun" },
+        { value: 'tsunami', label: 'คลื่นสึนามิ', icon: "waves" },
+        { value: 'earthquake', label: 'แผ่นดินไหว', icon: "earth" },
+        { value: 'disease', label: 'โรคระบาด', icon: "biohazard" }
     ];
 
     useEffect(() => {
@@ -152,7 +153,7 @@ export default function UploadInfographics() {
                 <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">📊 อัปโหลด Infographics</h1>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อัปโหลด Infographics</h1>
                             <p className="text-gray-600">สำหรับฝ่าย Risk Communication</p>
                         </div>
                         <button
@@ -194,7 +195,7 @@ export default function UploadInfographics() {
                                             : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
-                                        <div className="text-3xl mb-2">{type.icon}</div>
+                                        <AppIcon icon={type.icon} className="mx-auto mb-2 h-8 w-8" />
                                         <div className="text-sm font-medium">{type.label}</div>
                                     </button>
                                 ))}
@@ -250,7 +251,7 @@ export default function UploadInfographics() {
                                 return (
                                     <div key={type.value} className="border-b pb-6 last:border-b-0">
                                         <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <span className="text-2xl">{type.icon}</span>
+                                            <AppIcon icon={type.icon} className="h-7 w-7" />
                                             {type.label} ({files.length} ไฟล์)
                                         </h3>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -270,7 +271,7 @@ export default function UploadInfographics() {
                                                         className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                                         title="ลบ"
                                                     >
-                                                        🗑️
+                                                        <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                     </button>
                                                 </div>
                                             ))}

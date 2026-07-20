@@ -68,7 +68,7 @@ export async function POST(request) {
                 message: 'ออกจากระบบสำเร็จ'
             });
 
-            // ลบ cookie สำหรับ ThaiID session และ session_token
+            // ลบ cookie สำหรับ ThaiD session และ session_token
             clearRegistrationSessionCookie(response);
 
             response.cookies.set('session_token', '', {

@@ -1,26 +1,27 @@
 "use client";
 import Link from 'next/link';
 import PublicLayout from '@/components/layouts/PublicLayout';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function HelpCenterPage() {
     const helpCategories = [
         {
             title: "สำหรับประชาชน",
-            icon: "👥",
+            icon: "users",
             description: "คู่มือการใช้งานสำหรับประชาชนทั่วไป",
             link: "/public/help/citizen-guide",
             color: "from-blue-500 to-blue-600"
         },
         {
             title: "สำหรับเจ้าหน้าที่ EOC",
-            icon: "👨‍💼",
+            icon: "userCog",
             description: "คู่มือการใช้งานสำหรับเจ้าหน้าที่",
             link: "/public/help/eoc-guide",
             color: "from-green-500 to-green-600"
         },
         {
             title: "คำถามที่พบบ่อย (FAQ)",
-            icon: "❓",
+            icon: "help",
             description: "คำตอบสำหรับคำถามที่พบบ่อย",
             link: "/public/help/faq",
             color: "from-teal-500 to-teal-600"
@@ -33,7 +34,7 @@ export default function HelpCenterPage() {
                 {/* Header */}
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold text-gray-800 mb-4">
-                        📚 ศูนย์ช่วยเหลือ
+                        <AppIcon icon="book" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์ช่วยเหลือ
                     </h1>
                     <p className="text-xl text-gray-600">
                         คู่มือการใช้งานระบบ ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข
@@ -50,7 +51,7 @@ export default function HelpCenterPage() {
                         >
                             <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full hover:scale-105">
                                 <div className={`bg-gradient-to-r ${category.color} p-6 text-center`}>
-                                    <div className="text-6xl mb-3">{category.icon}</div>
+                                    <AppIcon icon={category.icon} className="mx-auto mb-3 h-14 w-14" />
                                     <h3 className="text-xl font-bold text-white">
                                         {category.title}
                                     </h3>
@@ -73,14 +74,14 @@ export default function HelpCenterPage() {
                 {/* Quick Links */}
                 <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                        🔗 ลิงก์ด่วน
+                        <AppIcon icon="link" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลิงก์ด่วน
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Link
                             href="/public/report-incident"
                             className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow flex items-center gap-3"
                         >
-                            <span className="text-3xl">🚨</span>
+                            <span className="text-3xl"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div>
                                 <h3 className="font-semibold text-gray-800">แจ้งเหตุภัยพิบัติ</h3>
                                 <p className="text-sm text-gray-600">รายงานเหตุการณ์ฉุกเฉิน</p>
@@ -91,7 +92,7 @@ export default function HelpCenterPage() {
                             href="/public/disaster-map"
                             className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow flex items-center gap-3"
                         >
-                            <span className="text-3xl">🗺️</span>
+                            <span className="text-3xl"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div>
                                 <h3 className="font-semibold text-gray-800">แผนที่รายงาน</h3>
                                 <p className="text-sm text-gray-600">ดูรายงานจากประชาชน</p>
@@ -102,7 +103,7 @@ export default function HelpCenterPage() {
                             href="/login"
                             className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow flex items-center gap-3"
                         >
-                            <span className="text-3xl">🔐</span>
+                            <span className="text-3xl"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div>
                                 <h3 className="font-semibold text-gray-800">เข้าสู่ระบบ</h3>
                                 <p className="text-sm text-gray-600">สำหรับเจ้าหน้าที่</p>
@@ -110,7 +111,7 @@ export default function HelpCenterPage() {
                         </Link>
 
                         <div className="bg-white rounded-lg p-4 flex items-center gap-3">
-                            <span className="text-3xl">📞</span>
+                            <span className="text-3xl"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div>
                                 <h3 className="font-semibold text-gray-800">ติดต่อฉุกเฉิน</h3>
                                 <p className="text-sm text-gray-600">074-711-555</p>
@@ -122,7 +123,7 @@ export default function HelpCenterPage() {
                 {/* Contact Support */}
                 <div className="mt-12 text-center bg-white rounded-xl shadow-md p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                        💬 ต้องการความช่วยเหลือเพิ่มเติม?
+                        <AppIcon icon="message" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ต้องการความช่วยเหลือเพิ่มเติม?
                     </h2>
                     <p className="text-gray-600 mb-6">
                         หากคุณไม่พบคำตอบที่ต้องการ กรุณาติดต่อเรา
@@ -132,7 +133,7 @@ export default function HelpCenterPage() {
                             href="tel:074-711-555"
                             className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
                         >
-                            <span>📞</span>
+                            <span><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <span>โทร 074-711-555</span>
                         </a>
                         <a
@@ -141,7 +142,7 @@ export default function HelpCenterPage() {
                             rel="noopener noreferrer"
                             className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
                         >
-                            <span>💬</span>
+                            <span><AppIcon icon="message" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <span>LINE: @satun-eoc</span>
                         </a>
                     </div>

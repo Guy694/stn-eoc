@@ -9,6 +9,7 @@ import FloodAreaStatus from "@/components/FloodAreaStatus";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
 import ShelterCenterMap from "@/components/ShelterCenterMap";
 import { useAuth } from "@/context/AuthContext";
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodMapPage() {
     const [mode, setMode] = useState("historical"); // "realtime" หรือ "historical"
@@ -155,7 +156,7 @@ export default function FloodMapPage() {
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
-                                <span className="text-4xl">💧</span>
+                                <span className="text-4xl"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 {mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}
                             </h1>
                             <p className="text-gray-600">
@@ -169,7 +170,7 @@ export default function FloodMapPage() {
                                 onClick={() => router.push('/eoc/flood/records')}
                                 className="self-start rounded-lg bg-green-600 px-5 py-3 font-medium text-white transition-colors hover:bg-green-700"
                             >
-                                💾 บันทึก/แก้ไขพื้นที่อุทกภัยน้ำท่วม
+                                <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก/แก้ไขพื้นที่อุทกภัยน้ำท่วม
                             </button>
                         )}
                     </div>
@@ -180,7 +181,7 @@ export default function FloodMapPage() {
                 {mode === "realtime" && hasActiveSession && activeSessionData && sessionTeams.length > 0 && (
                     <div className="mb-6 bg-blue-50 border border-blue-500 rounded-lg p-6 shadow-sm">
                         <h2 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
-                            <span className="text-2xl">👥</span>
+                            <span className="text-2xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             ทีมงาน EOC ที่ปฏิบัติงาน
                             <span className="text-sm font-normal text-blue-700 ml-2">
                                 (Session #{activeSessionData.session_number})
@@ -289,7 +290,7 @@ export default function FloodMapPage() {
                                 : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                                 }`}
                         >
-                            🔴 โหมด Realtime
+                            <AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โหมด Realtime
                         </button>
                         <button
                             onClick={() => setMode("historical")}
@@ -298,7 +299,7 @@ export default function FloodMapPage() {
                                 : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                                 }`}
                         >
-                            📅 โหมดข้อมูลย้อนหลัง
+                            <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โหมดข้อมูลย้อนหลัง
                         </button>
                     </div>
                 )}
@@ -329,7 +330,7 @@ export default function FloodMapPage() {
                         <div className="mt-6">
                             <div className="bg-white rounded-lg shadow-md p-6">
                                 <h2 className=" text-center text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <span className="text-3xl">📍</span>
+                                    <span className="text-3xl"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
                                 <p className="text-gray-600 mb-4">
@@ -357,7 +358,7 @@ export default function FloodMapPage() {
                         {selectedSession && sessionTeams.length > 0 && (
                             <div className="mt-6 mb-6 bg-amber-50 border border-amber-500 rounded-lg p-6 shadow-sm">
                                 <h2 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2">
-                                    <span className="text-2xl">👥</span>
+                                    <span className="text-2xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     ทีมงาน EOC ในช่วงเวลานี้
                                     <span className="text-sm font-normal text-amber-700 ml-2">
                                         (Session #{selectedSession.session_number})
@@ -478,7 +479,7 @@ export default function FloodMapPage() {
                         <div className="mt-6">
                             <div className="bg-white rounded-lg shadow-md p-6">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <span className="text-3xl">📍</span>
+                                    <span className="text-3xl"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
                                 <p className="text-gray-600 mb-4">

@@ -148,19 +148,19 @@ export default function SessionStats({ session, year }) {
                 <StatsCard
                     label="รุนแรง"
                     value={floodData?.severeCount || 0}
-                    icon="🔴"
+                    icon="statusRed"
                     color="red"
                 />
                 <StatsCard
                     label="ปานกลาง"
                     value={floodData?.moderateCount || 0}
-                    icon="🟡"
+                    icon="statusYellow"
                     color="yellow"
                 />
                 <StatsCard
                     label="เล็กน้อย"
                     value={floodData?.mildCount || 0}
-                    icon="🟢"
+                    icon="statusGreen"
                     color="green"
                 />
             </div>
@@ -183,7 +183,7 @@ export default function SessionStats({ session, year }) {
                             : 'bg-gray-100 text-gray-700'
                         }`}>
                         <span className="inline-flex items-center gap-1.5">
-                            <AppIcon icon={session.status === 'active' ? '🟢' : '⚫'} className="h-3 w-3" />
+                            <AppIcon icon={session.status === 'active' ? "statusGreen" : "statusBlack"} className="h-3 w-3" />
                             {session.status === 'active' ? 'กำลังดำเนินการ' : 'ปิดแล้ว'}
                         </span>
                     </span>

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import AppIcon from "@/components/icons/AppIcon";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -9,11 +10,11 @@ const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ss
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
 
 const EOC_TYPES = [
-    { value: 'flood', label: '💧 อุทกภัยน้ำท่วม', color: 'blue', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
-    { value: 'drought', label: '🌵 ภัยแล้ง', color: 'yellow', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png' },
-    { value: 'tsunami', label: '🌊 สึนามิ', color: 'cyan', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
-    { value: 'earthquake', label: '🏚️ แผ่นดินไหว', color: 'orange', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png' },
-    { value: 'disease', label: '🦠 โรคระบาด', color: 'red', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png' }
+    { value: 'flood', label: "อุทกภัยน้ำท่วม", color: 'blue', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
+    { value: 'drought', label: "ภัยแล้ง", color: 'yellow', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png' },
+    { value: 'tsunami', label: "สึนามิ", color: 'cyan', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png' },
+    { value: 'earthquake', label: "แผ่นดินไหว", color: 'orange', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png' },
+    { value: 'disease', label: "โรคระบาด", color: 'red', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png' }
 ];
 
 const SHELTER_ICON_SRC = '/stn-eoc/img/shelter.png';
@@ -216,7 +217,7 @@ export default function ShelterCenterMap({
         <div className={`text-gray-800 overflow-hidden ${embedded ? 'bg-transparent' : 'bg-white rounded-lg shadow-md'}`}>
             {!embedded && (
                 <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
-                    <h3 className="text-2xl font-bold text-gray-800">🏥 ศูนย์พักพิงชั่วคราว</h3>
+                    <h3 className="text-2xl font-bold text-gray-800"><AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์พักพิงชั่วคราว</h3>
                     <p className="text-lg mt-1">
                         แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
                     </p>
@@ -247,19 +248,19 @@ export default function ShelterCenterMap({
                 {/* Layer Controls */}
                 {showLayerControls && (
                 <div className={`${embedded ? 'mb-3 rounded-lg border border-slate-100 bg-white p-3' : 'mb-4 bg-white p-4 rounded-lg shadow'}`}>
-                    <label className="text-sm font-medium block mb-3">🗺️ แสดง Layer พื้นที่:</label>
+                    <label className="text-sm font-medium block mb-3"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดง Layer พื้นที่:</label>
                     <div className="flex flex-wrap gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setShowDistrictLayer(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
-                            <span className="text-sm">🏛️ อำเภอ</span>
+                            <span className="text-sm"><AppIcon icon="landmark" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อำเภอ</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={showTambonLayer} onChange={(e) => setShowTambonLayer(e.target.checked)} className="w-4 h-4 text-green-600 rounded" />
-                            <span className="text-sm">📍 ตำบล</span>
+                            <span className="text-sm"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตำบล</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} className="w-4 h-4 text-teal-600 rounded" />
-                            <span className="text-sm">🏷️ แสดงชื่อ</span>
+                            <span className="text-sm"><AppIcon icon="tag" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดงชื่อ</span>
                         </label>
                     </div>
                 </div>

@@ -1,12 +1,13 @@
 "use client";
 import Link from 'next/link';
 import PublicLayout from '@/components/layouts/PublicLayout';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function FAQPage() {
     const faqs = [
         {
             category: "การแจ้งเหตุ",
-            icon: "🚨",
+            icon: "siren",
             questions: [
                 {
                     q: "ฉันต้องลงทะเบียนก่อนแจ้งเหตุหรือไม่?",
@@ -28,7 +29,7 @@ export default function FAQPage() {
         },
         {
             category: "การติดตามสถานะ",
-            icon: "🔍",
+            icon: "search",
             questions: [
                 {
                     q: "จะรู้ได้อย่างไรว่ารายงานของฉันถูกรับแล้ว?",
@@ -46,7 +47,7 @@ export default function FAQPage() {
         },
         {
             category: "ความปลอดภัยและความเป็นส่วนตัว",
-            icon: "🔒",
+            icon: "lock",
             questions: [
                 {
                     q: "ข้อมูลของฉันปลอดภัยหรือไม่?",
@@ -64,7 +65,7 @@ export default function FAQPage() {
         },
         {
             category: "ปัญหาทางเทคนิค",
-            icon: "⚙️",
+            icon: "settings",
             questions: [
                 {
                     q: "ทำไมแผนที่ไม่แสดงตำแหน่งของฉัน?",
@@ -98,7 +99,7 @@ export default function FAQPage() {
                         ← กลับไปศูนย์ช่วยเหลือ
                     </Link>
                     <h1 className="text-4xl font-bold text-gray-800 mb-4">
-                        ❓ คำถามที่พบบ่อย (FAQ)
+                        <AppIcon icon="help" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> คำถามที่พบบ่อย (FAQ)
                     </h1>
                     <p className="text-xl text-gray-600">
                         คำตอบสำหรับคำถามที่ผู้ใช้งานถามบ่อยที่สุด
@@ -110,7 +111,7 @@ export default function FAQPage() {
                     {faqs.map((category, catIndex) => (
                         <div key={catIndex} className="bg-white rounded-xl shadow-md p-6">
                             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                                <span className="text-4xl">{category.icon}</span>
+                                <AppIcon icon={category.icon} className="h-10 w-10" />
                                 <h2 className="text-2xl font-bold text-gray-800">
                                     {category.category}
                                 </h2>
@@ -145,7 +146,7 @@ export default function FAQPage() {
                             href="tel:074-711-555"
                             className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
                         >
-                            <span>📞</span>
+                            <span><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <span>โทร 074-711-555</span>
                         </a>
                         <a
@@ -154,7 +155,7 @@ export default function FAQPage() {
                             rel="noopener noreferrer"
                             className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
                         >
-                            <span>💬</span>
+                            <span><AppIcon icon="message" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <span>LINE: @satun-eoc</span>
                         </a>
                     </div>

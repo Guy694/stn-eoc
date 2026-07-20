@@ -4,6 +4,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodRecordsPage() {
     const [records, setRecords] = useState([]); // ข้อมูลที่แสดงในตาราง (กรองตามวันที่)
@@ -662,7 +663,7 @@ export default function FloodRecordsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มี EOC Session อุทกภัยน้ำท่วม</h3>
                         <p className="text-gray-600">
                             กรุณาสร้างหรือเปิด EOC Session อุทกภัยน้ำท่วมก่อนบันทึกข้อมูลพื้นที่อุทกภัยน้ำท่วม
@@ -680,7 +681,7 @@ export default function FloodRecordsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">💧</span>
+                            <span className="text-4xl"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกพื้นที่อุทกภัยน้ำท่วม
                         </h1>
                         <p className="text-gray-600">
@@ -703,7 +704,7 @@ export default function FloodRecordsPage() {
                         }}
                         className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
-                        <span>➕</span>
+                        <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มข้อมูลใหม่
                     </button>
                 </div>
@@ -763,7 +764,7 @@ export default function FloodRecordsPage() {
                 <div className="bg-gradient-to-r from-teal-50 to-sky-50 border-2 border-teal-200 rounded-lg p-4 mb-6">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <span className="text-2xl">📅</span>
+                            <span className="text-2xl"><AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div>
                                 <h3 className="font-bold text-gray-800">เลือกวันที่บันทึก</h3>
                                 <p className="text-sm text-gray-600">
@@ -787,7 +788,7 @@ export default function FloodRecordsPage() {
                                 className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="วันก่อนหน้า"
                             >
-                                ◀️
+                                <AppIcon icon="chevronLeft" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                             </button>
 
                             {/* Date Input */}
@@ -815,7 +816,7 @@ export default function FloodRecordsPage() {
                                 className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="วันถัดไป"
                             >
-                                ▶️
+                                <AppIcon icon="circlePlay" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                             </button>
 
                             {/* Today Button */}
@@ -826,7 +827,7 @@ export default function FloodRecordsPage() {
                                     : 'bg-white border border-teal-300 text-teal-700 hover:bg-teal-50'
                                     }`}
                             >
-                                📆 {activeSession.status === 'active' ? 'วันนี้' : 'วันปิด EOC'}
+                                <AppIcon icon="calendarDays" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {activeSession.status === 'active' ? 'วันนี้' : 'วันปิด EOC'}
                             </button>
 
                             {/* Copy Data Button */}
@@ -838,7 +839,7 @@ export default function FloodRecordsPage() {
                                 className="px-4 py-2 bg-sky-600 text-white rounded-lg font-medium hover:bg-sky-700 transition-colors flex items-center gap-2"
                                 title="คัดลอกข้อมูลจากวันอื่น"
                             >
-                                📋 คัดลอกข้อมูล
+                                <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> คัดลอกข้อมูล
                             </button>
                         </div>
 
@@ -865,7 +866,7 @@ export default function FloodRecordsPage() {
                 <div className="mb-6">
                     <div className="flex items-center gap-4 mb-4">
                         <h3 className="font-bold text-gray-800">
-                            📊 สถานะการบันทึก{selectedDate === getTodayDate() ? 'วันนี้' : ` (${new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH')})`}
+                            <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะการบันทึก{selectedDate === getTodayDate() ? 'วันนี้' : ` (${new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH')})`}
                         </h3>
                         <div className="flex gap-2 text-sm">
                             <span className="text-gray-600 flex items-center gap-1">
@@ -896,7 +897,7 @@ export default function FloodRecordsPage() {
                     {getCompletedTambons().length > 0 && (
                         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
                             <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
-                                <span>✅</span>
+                                <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 ตำบลที่บันทึกครบแล้ว ({getCompletedTambons().length} ตำบล)
                             </h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -908,7 +909,7 @@ export default function FloodRecordsPage() {
                                         <div className="font-medium text-green-800">{item.tambon}</div>
                                         <div className="text-xs text-green-600">อ.{item.district}</div>
                                         <div className="text-xs text-green-700 font-medium mt-1">
-                                            ✓ {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
+                                            <AppIcon icon="check" className="inline-block h-4 w-4" /> {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
                                         </div>
                                     </div>
                                 ))}
@@ -920,7 +921,7 @@ export default function FloodRecordsPage() {
                     {getUnrecordedTambons().length > 0 && (
                         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
                             <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                                <span>⚠️</span>
+                                <span><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 ตำบลที่ยังบันทึกไม่ครบ ({getUnrecordedTambons().length} ตำบล) - คลิกเพื่อบันทึก
                             </h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -1008,7 +1009,7 @@ export default function FloodRecordsPage() {
                 {/* Table */}
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     <div className="p-4 bg-gray-50 border-b border-gray-200">
-                        <h3 className="font-bold text-gray-800">📋 ตารางข้อมูลที่บันทึกแล้ว</h3>
+                        <h3 className="font-bold text-gray-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางข้อมูลที่บันทึกแล้ว</h3>
                         <p className="text-sm text-gray-600 mt-1">แสดงข้อมูลทั้งหมด {records.length} รายการ</p>
                     </div>
 
@@ -1019,7 +1020,7 @@ export default function FloodRecordsPage() {
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4">📭</div>
+                            <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
                             <p className="text-gray-500 text-sm">คลิกปุ่ม &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มบันทึกข้อมูล</p>
                         </div>
@@ -1080,14 +1081,14 @@ export default function FloodRecordsPage() {
                                                     className="text-blue-600 hover:text-blue-800 mr-3 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
                                                     title="แก้ไขข้อมูล"
                                                 >
-                                                    ✏️ แก้ไข
+                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(record.id)}
                                                     className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
                                                     title="ลบข้อมูล"
                                                 >
-                                                    🗑️ ลบ
+                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
                                                 </button>
                                             </td>
                                         </tr>
@@ -1117,7 +1118,7 @@ export default function FloodRecordsPage() {
                                 {isTambonMode && !editingRecord && (
                                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                                         <p className="text-sm text-blue-800">
-                                            🔵 โหมดบันทึกทั้งตำบล - ข้อมูลจะถูกบันทึกให้กับทุกหมู่บ้านในตำบล{formData.tambon} พร้อมกัน
+                                            <AppIcon icon="statusBlue" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โหมดบันทึกทั้งตำบล - ข้อมูลจะถูกบันทึกให้กับทุกหมู่บ้านในตำบล{formData.tambon} พร้อมกัน
                                         </p>
                                         <button
                                             type="button"
@@ -1296,7 +1297,7 @@ export default function FloodRecordsPage() {
                         <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-sky-200">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4 flex items-center gap-2">
-                                    📋 คัดลอกข้อมูลอุทกภัยน้ำท่วม
+                                    <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> คัดลอกข้อมูลอุทกภัยน้ำท่วม
                                 </h2>
 
                                 <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">

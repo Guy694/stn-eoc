@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function OfficersManagementPage() {
     const [officers, setOfficers] = useState([]);
@@ -40,8 +41,8 @@ export default function OfficersManagementPage() {
     ];
 
     const registrationStatusLabels = {
-        pending: 'รอ ThaiID',
-        verified: 'ยืนยัน ThaiID แล้ว',
+        pending: 'รอ ThaiD',
+        verified: 'ยืนยัน ThaiD แล้ว',
         approved: 'อนุมัติแล้ว',
         rejected: 'ปฏิเสธ'
     };
@@ -242,7 +243,7 @@ export default function OfficersManagementPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        👥 จัดการเจ้าหน้าที่
+                        <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการเจ้าหน้าที่
                     </h1>
                     <p className="text-gray-600">ระบบจัดการข้อมูลเจ้าหน้าที่และสิทธิ์การเข้าถึง</p>
                 </div>
@@ -270,7 +271,7 @@ export default function OfficersManagementPage() {
                         <div>
                             <h2 className="text-lg font-bold text-amber-950">ผู้ลงทะเบียนใหม่</h2>
                             <p className="text-sm text-amber-800">
-                                {registrationStats.pending || 0} รายรอ ThaiID • {registrationStats.verified || 0} รายยืนยันแล้วรออนุมัติ
+                                {registrationStats.pending || 0} รายรอ ThaiD • {registrationStats.verified || 0} รายยืนยันแล้วรออนุมัติ
                             </p>
                         </div>
                         <span className="rounded-full bg-amber-600 px-3 py-1 text-sm font-black text-white">
@@ -340,7 +341,7 @@ export default function OfficersManagementPage() {
                     <div className="flex flex-wrap gap-4">
                         <input
                             type="text"
-                            placeholder="🔍 ค้นหาชื่อ, username, email..."
+                            placeholder="ค้นหาชื่อ, username, email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className=" text-gray-700 flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -364,7 +365,7 @@ export default function OfficersManagementPage() {
                             }}
                             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
-                            ➕ เพิ่มเจ้าหน้าที่
+                            <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มเจ้าหน้าที่
                         </button>
                     </div>
                 </div>
@@ -442,20 +443,20 @@ export default function OfficersManagementPage() {
                                                         onClick={() => handleApprove(officer)}
                                                         className="mr-3 text-green-600 hover:text-green-800"
                                                     >
-                                                        ✅ อนุมัติ
+                                                        <AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อนุมัติ
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleEdit(officer)}
                                                     className="text-blue-600 hover:text-blue-800 mr-3"
                                                 >
-                                                    ✏️ แก้ไข
+                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(officer)}
                                                     className="text-red-600 hover:text-red-800"
                                                 >
-                                                    🗑️ ลบ
+                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
                                                 </button>
                                             </td>
                                         </tr>
@@ -480,7 +481,7 @@ export default function OfficersManagementPage() {
                 <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4 shadow-lg">
                     <div className="bg-white rounded-lg max-w-md w-full p-6">
                         <h2 className="text-xl font-bold mb-4 text-gray-800">
-                            {editingOfficer ? '✏️ แก้ไขเจ้าหน้าที่' : '➕ เพิ่มเจ้าหน้าที่ใหม่'}
+                            {editingOfficer ? "แก้ไขเจ้าหน้าที่" : "เพิ่มเจ้าหน้าที่ใหม่"}
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -605,7 +606,7 @@ export default function OfficersManagementPage() {
                                     type="submit"
                                     className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
                                 >
-                                    💾 บันทึก
+                                    <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก
                                 </button>
                                 <button
                                     type="button"
@@ -615,7 +616,7 @@ export default function OfficersManagementPage() {
                                     }}
                                     className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
                                 >
-                                    ❌ ยกเลิก
+                                    <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
                                 </button>
                             </div>
                         </form>

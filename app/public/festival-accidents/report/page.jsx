@@ -6,18 +6,19 @@ import Footer from "@/components/Footer";
 import { satunDistricts } from "@/data/satunData";
 import { showWarning } from "@/lib/sweetAlert";
 import { useAuth } from "@/context/AuthContext";
+import AppIcon from "@/components/icons/AppIcon";
 
 const MapSelector = dynamic(() => import("@/components/MapSelector"), {
     ssr: false,
     loading: () => (
         <div className="h-80 bg-gray-100 rounded-xl animate-pulse flex items-center justify-center text-gray-500 text-sm">
-            📍 กำลังโหลดแผนที่...
+            <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กำลังโหลดแผนที่...
         </div>
     ),
 });
 
 const ACCIDENT_TYPES = ["จักรยานยนต์", "รถยนต์", "รถจักรยาน", "คนเดินเท้า", "อื่นๆ"];
-const FESTIVAL_LABEL = { newyear: "เทศกาลปีใหม่ 🎄", songkran: "เทศกาลสงกรานต์ 💦" };
+const FESTIVAL_LABEL = { newyear: "เทศกาลปีใหม่", songkran: "เทศกาลสงกรานต์" };
 
 export default function CitizenFestivalReportPage() {
     const { user } = useAuth();
@@ -160,7 +161,7 @@ export default function CitizenFestivalReportPage() {
             <header className={`bg-gradient-to-r ${c.header} text-white py-4 md:py-6 shadow-lg`}>
                 <div className="container mx-auto px-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-2xl">🚗</div>
+                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-2xl"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <div>
                             <h1 className="text-xl md:text-2xl font-bold">แจ้งเหตุอุบัติเหตุ</h1>
                             <p className="text-xs opacity-80">{festivalLabel}</p>
@@ -183,7 +184,7 @@ export default function CitizenFestivalReportPage() {
                 {/* No active session */}
                 {!sessionLoading && !festivalSession && (
                     <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-8 text-center">
-                        <div className="text-6xl mb-4">📭</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h2 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มี EOC เทศกาลเปิดอยู่</h2>
                         <p className="text-gray-600 mb-4">ไม่สามารถส่งรายงานได้ในขณะนี้ เนื่องจากยังไม่มีการเปิดศูนย์ EOC สำหรับช่วงเทศกาล</p>
                         <Link href="/stn-eoc" className="text-blue-600 hover:underline font-medium">← กลับหน้าหลัก</Link>
@@ -193,7 +194,7 @@ export default function CitizenFestivalReportPage() {
                 {/* Success */}
                 {submitted && (
                     <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-8 text-center">
-                        <div className="text-6xl mb-4">✅</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h2 className="text-2xl font-bold text-green-800 mb-2">ส่งรายงานสำเร็จ!</h2>
                         <p className="text-green-700 mb-6">ขอบคุณที่แจ้งข้อมูล เจ้าหน้าที่จะดำเนินการโดยเร็วที่สุด</p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -216,19 +217,19 @@ export default function CitizenFestivalReportPage() {
                         {/* Session Badge */}
                         <div className={`${c.bg} border ${c.border} rounded-xl p-3 mb-4 flex items-center gap-2 text-sm`}>
                             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block"></span>
-                            <span className={`font-medium ${c.text}`}>🟢 EOC เปิดอยู่: {festivalLabel} — {festivalSession.open_reason || `Session #${festivalSession.session_number}`}</span>
+                            <span className={`font-medium ${c.text}`}><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> EOC เปิดอยู่: {festivalLabel} — {festivalSession.open_reason || `Session #${festivalSession.session_number}`}</span>
                         </div>
 
                         {submitError && (
                             <div className="bg-red-50 border-2 border-red-400 rounded-xl p-4 mb-4 text-red-700 flex items-center gap-2">
-                                ❌ {submitError}
+                                <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {submitError}
                             </div>
                         )}
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Reporter Info */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">👤 ข้อมูลผู้แจ้ง</h2>
+                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลผู้แจ้ง</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">ชื่อ-นามสกุล <span className="text-red-500">*</span></label>
@@ -257,7 +258,7 @@ export default function CitizenFestivalReportPage() {
 
                             {/* Incident Details */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">🚗 รายละเอียดอุบัติเหตุ</h2>
+                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายละเอียดอุบัติเหตุ</h2>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                                     <div>
@@ -330,7 +331,7 @@ export default function CitizenFestivalReportPage() {
 
                             {/* Map Pin */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                                <h2 className="font-bold text-lg text-gray-800 mb-1 flex items-center gap-2">📍 ตำแหน่งที่เกิดเหตุ <span className="text-red-500">*</span></h2>
+                                <h2 className="font-bold text-lg text-gray-800 mb-1 flex items-center gap-2"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตำแหน่งที่เกิดเหตุ <span className="text-red-500">*</span></h2>
                                 <p className="text-sm text-gray-500 mb-4">ระบบจะดึง GPS อัตโนมัติ หรือคลิก/ลากหมุดเพื่อเลือกตำแหน่ง</p>
                                 {mounted && (
                                     <MapSelector
@@ -342,10 +343,10 @@ export default function CitizenFestivalReportPage() {
 
                             {/* Casualties */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">📊 ผู้ได้รับผลกระทบ</h2>
+                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ได้รับผลกระทบ</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">💀 จำนวนเสียชีวิต (คน)</label>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเสียชีวิต (คน)</label>
                                         <input
                                             type="number"
                                             min="0"
@@ -355,7 +356,7 @@ export default function CitizenFestivalReportPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">🤕 จำนวนบาดเจ็บ (คน)</label>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนบาดเจ็บ (คน)</label>
                                         <input
                                             type="number"
                                             min="0"
@@ -369,13 +370,13 @@ export default function CitizenFestivalReportPage() {
 
                             {/* Risk Factors */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">⚠️ สาเหตุที่เห็นได้ (เลือกที่เกี่ยวข้อง)</h2>
+                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สาเหตุที่เห็นได้ (เลือกที่เกี่ยวข้อง)</h2>
                                 <div className="grid grid-cols-2 gap-3">
                                     {[
-                                        { key: "drunk_driving", label: "🍺 เมาแล้วขับ", color: "purple" },
-                                        { key: "no_helmet", label: "⛑ ไม่สวมหมวกกันน็อค", color: "orange" },
-                                        { key: "no_seatbelt", label: "🪢 ไม่คาดเข็มขัดนิรภัย", color: "yellow" },
-                                        { key: "speeding", label: "🚀 ขับรถเร็ว/ประมาท", color: "red" },
+                                        { key: "drunk_driving", label: "เมาแล้วขับ", color: "purple" },
+                                        { key: "no_helmet", label: "ไม่สวมหมวกกันน็อค", color: "orange" },
+                                        { key: "no_seatbelt", label: "ไม่คาดเข็มขัดนิรภัย", color: "yellow" },
+                                        { key: "speeding", label: "ขับรถเร็ว/ประมาท", color: "red" },
                                     ].map(({ key, label, color }) => (
                                         <label
                                             key={key}
@@ -395,7 +396,7 @@ export default function CitizenFestivalReportPage() {
 
                             {/* Notes */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">📝 รายละเอียดเพิ่มเติม</h2>
+                                <h2 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายละเอียดเพิ่มเติม</h2>
                                 <textarea
                                     value={form.notes}
                                     onChange={e => set("notes", e.target.value)}
@@ -418,7 +419,7 @@ export default function CitizenFestivalReportPage() {
                                     {submitting ? (
                                         <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>กำลังส่ง...</>
                                     ) : (
-                                        "🚨 ส่งรายงาน"
+                                        "ส่งรายงาน"
                                     )}
                                 </button>
                             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
+import AppIcon from "@/components/icons/AppIcon";
 
 const MapContainer = dynamic(
     () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -231,7 +232,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
             <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                     <h2 className="mb-2 flex items-center gap-2 text-2xl font-bold text-gray-800">
-                        <span className="text-3xl">🧑‍🦽</span>
+                        <span className="text-3xl"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         แผนที่ข้อมูลกลุ่มเปราะบาง (ระดับหมู่บ้าน)
                     </h2>
                     <p className="text-gray-600">

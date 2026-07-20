@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
+import AppIcon from "@/components/icons/AppIcon";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -227,7 +228,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     if (!hasActiveSession) {
         return (
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                <div className="text-6xl mb-4">⚠️</div>
+                <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
                 <p className="text-gray-600">
                     ไม่พบ EOC Session อุทกภัยน้ำท่วมที่กำลังดำเนินการอยู่ในขณะนี้
@@ -578,7 +579,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 <div className="bg-white rounded-lg shadow p-6">
                     <div className="mb-4">
                         <h3 className="text-lg font-bold text-gray-800 mb-2">
-                            📅 แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
+                            <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                         </h3>
                         <p className="text-sm text-gray-600">
                             Session #{activeSession.session_number} - ตั้งแต่ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
@@ -625,7 +626,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
                         {selectedDate && (
                             <div className="text-sm text-blue-900 bg-blue-50 p-3 rounded-lg">
-                                💡 แสดงข้อมูลวันที่: <strong>{selectedDate.toLocaleDateString('th-TH', {
+                                <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดงข้อมูลวันที่: <strong>{selectedDate.toLocaleDateString('th-TH', {
                                     weekday: 'long',
                                     day: 'numeric',
                                     month: 'long',
@@ -640,7 +641,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             {/* แสดงข้อความเมื่อไม่มีข้อมูล flood */}
             {hasNoFloodData && (
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-center">
-                    <div className="text-2xl mb-2">📋</div>
+                    <div className="text-2xl mb-2"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                     <p className="text-blue-700 font-medium">ยังไม่มีข้อมูลอุทกภัยน้ำท่วมในช่วงเวลาที่เลือก</p>
                     <p className="text-blue-600 text-sm mt-1">
                         {latestRecordDate
@@ -656,7 +657,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             <div className="bg-white text-gray-700 rounded-lg shadow p-4">
                 <div className="flex items-center justify-between mb-3">
                     <label className="font-semibold text-gray-700 flex items-center gap-2">
-                        <span>🔍</span>ฟิลเตอร์ข้อมูล
+                        <span><AppIcon icon="search" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>ฟิลเตอร์ข้อมูล
                     </label>
                     <button
                         onClick={() => {
@@ -913,7 +914,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                     <div className="text-sm " style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🔴 <strong>ตำบลมีอุทกภัยน้ำท่วมสูง</strong>
+                                                        <br /><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>ตำบลมีอุทกภัยน้ำท่วมสูง</strong>
                                                         {poly.tambonInfo && (
                                                             <>
                                                                 <br />หมู่บ้านอุทกภัยน้ำท่วมสูง: {poly.tambonInfo.severeCount}
@@ -949,7 +950,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                     <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🟠 <strong>ตำบลมีอุทกภัยน้ำท่วมปานกลาง</strong>
+                                                        <br /><AppIcon icon="statusOrange" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>ตำบลมีอุทกภัยน้ำท่วมปานกลาง</strong>
                                                         {poly.tambonInfo && (
                                                             <>
                                                                 <br />หมู่บ้านอุทกภัยน้ำท่วมปานกลาง: {poly.tambonInfo.moderateCount}
@@ -985,7 +986,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                     <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🟡 <strong>ตำบลมีอุทกภัยน้ำท่วมเล็กน้อย</strong>
+                                                        <br /><AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>ตำบลมีอุทกภัยน้ำท่วมเล็กน้อย</strong>
                                                         {poly.tambonInfo && (
                                                             <>
                                                                 <br />หมู่บ้านอุทกภัยน้ำท่วมเล็กน้อย: {poly.tambonInfo.mildCount}
@@ -1021,7 +1022,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                     <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                         <strong>{poly.villname}</strong>
                                                         <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                        <br />🟢 <strong>ตำบลปกติ</strong>
+                                                        <br /><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>ตำบลปกติ</strong>
                                                     </div>
                                                 </Popup>
                                             </Polygon>
@@ -1056,7 +1057,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                                     <br />ที่อยู่: {facility.address}
                                                                     {facility.phone && (
                                                                         <>
-                                                                            <br />📞 {facility.phone}
+                                                                            <br /><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {facility.phone}
                                                                         </>
                                                                     )}
                                                                 </div>
@@ -1170,7 +1171,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                             <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                                <br />🔴 <strong>อำเภอมีอุทกภัยน้ำท่วมสูง</strong>
+                                                                <br /><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>อำเภอมีอุทกภัยน้ำท่วมสูง</strong>
                                                                 {poly.districtInfo && (
                                                                     <>
                                                                         <br />หมู่บ้านอุทกภัยน้ำท่วมสูง: {poly.districtInfo.severeCount}
@@ -1208,7 +1209,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                             <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                                <br />🟠 <strong>อำเภอมีอุทกภัยน้ำท่วมปานกลาง</strong>
+                                                                <br /><AppIcon icon="statusOrange" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>อำเภอมีอุทกภัยน้ำท่วมปานกลาง</strong>
                                                                 {poly.districtInfo && (
                                                                     <>
                                                                         <br />หมู่บ้านอุทกภัยน้ำท่วมสูง: {poly.districtInfo.severeCount}
@@ -1246,7 +1247,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                             <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                                <br />🟡 <strong>อำเภอมีอุทกภัยน้ำท่วมเล็กน้อย</strong>
+                                                                <br /><AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>อำเภอมีอุทกภัยน้ำท่วมเล็กน้อย</strong>
                                                                 {poly.districtInfo && (
                                                                     <>
                                                                         <br />หมู่บ้านอุทกภัยน้ำท่วมสูง: {poly.districtInfo.severeCount}
@@ -1284,7 +1285,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                             <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                                <br />🟢 <strong>อำเภอปกติ</strong>
+                                                                <br /><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>อำเภอปกติ</strong>
                                                                 {poly.districtInfo && (
                                                                     <>
                                                                         <br />หมู่บ้านปกติ: {poly.districtInfo.safeCount}
@@ -1321,7 +1322,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                             <div className="text-sm" style={{ fontFamily: 'var(--font-kanit)' }}>
                                                                 <strong>{poly.villname}</strong>
                                                                 <br />ต.{poly.subdistnam} อ.{poly.distname}
-                                                                <br />⚪ <strong>ไม่มีข้อมูล</strong>
+                                                                <br /><AppIcon icon="statusGray" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> <strong>ไม่มีข้อมูล</strong>
                                                             </div>
                                                         </Popup>
                                                     </Polygon>
@@ -1413,25 +1414,25 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 <StatCard
                     label="อำเภอที่ได้รับผลกระทบ"
                     value={stats.affected_districts || 0}
-                    icon="🏘️"
+                    icon="home"
                     color="blue"
                 />
                 <StatCard
                     label="ตำบลที่ได้รับผลกระทบ"
                     value={stats.affected_tambons || 0}
-                    icon="📍"
+                    icon="mapPin"
                     color="indigo"
                 />
                 <StatCard
                     label="หมู่บ้านที่ได้รับผลกระทบ"
                     value={stats.affected_villages || 0}
-                    icon="🏠"
+                    icon="home"
                     color="purple"
                 />
                 <StatCard
                     label="ประชากรที่ได้รับผลกระทบ"
                     value={stats.total_population || 0}
-                    icon="👥"
+                    icon="users"
                     color="pink"
                 />
             </div>
@@ -1461,18 +1462,18 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             </div>
                             {area.water_level && Number(area.water_level) > 0 && (
                                 <div className="text-sm text-gray-700 mb-1">
-                                    💧 ระดับน้ำ: <span className="font-medium">{Number(area.water_level).toFixed(2)} เมตร</span>
+                                    <AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระดับน้ำ: <span className="font-medium">{Number(area.water_level).toFixed(2)} เมตร</span>
                                 </div>
                             )}
                             {area.affected_population > 0 && (
                                 <div className="text-sm text-gray-700 mb-1">
-                                    👥 ประชากรได้รับผลกระทบ: <span className="font-medium">{area.affected_population.toLocaleString()} คน</span>
+                                    <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประชากรได้รับผลกระทบ: <span className="font-medium">{area.affected_population.toLocaleString()} คน</span>
                                     {' '}({area.affected_households} ครัวเรือน)
                                 </div>
                             )}
                             {area.notes && (
                                 <div className="text-sm text-gray-600 mt-2 p-2 bg-gray-50 rounded">
-                                    📝 {area.notes}
+                                    <AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {area.notes}
                                 </div>
                             )}
                             <div className="text-xs text-gray-400 mt-2">
@@ -1496,7 +1497,7 @@ function StatCard({ label, value, icon, color }) {
 
     return (
         <div className={`bg-gradient-to-br ${colors[color]} text-white rounded-lg p-4 shadow`}>
-            <div className="text-3xl mb-2">{icon}</div>
+            <AppIcon icon={icon} className="mx-auto mb-2 h-8 w-8" />
             <div className="text-2xl font-bold">{value.toLocaleString()}</div>
             <div className="text-sm opacity-90">{label}</div>
         </div>
@@ -1513,7 +1514,7 @@ function LevelCard({ label, count, color, icon }) {
 
     return (
         <div className={`${colors[color]} border-2 rounded-lg p-4 text-center`}>
-            <div className="text-2xl mb-1">{icon}</div>
+            <AppIcon icon={icon} className="mx-auto mb-1 h-7 w-7" />
             <div className="text-3xl font-bold mb-1">{count}</div>
             <div className="text-sm font-medium">{label}</div>
         </div>

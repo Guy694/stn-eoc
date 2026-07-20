@@ -4,6 +4,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { satunDistricts } from "@/data/satunData";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function VulnerableGroupsPage() {
     const [records, setRecords] = useState([]);
@@ -228,7 +229,7 @@ export default function VulnerableGroupsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
                         <p className="text-gray-600">
                             กรุณาเปิด EOC Session ก่อนบันทึกข้อมูลกลุ่มเปราะบาง
@@ -246,7 +247,7 @@ export default function VulnerableGroupsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl">👥</span>
+                            <span className="text-4xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกข้อมูลกลุ่มเปราะบาง
                         </h1>
                         <p className="text-gray-600">
@@ -261,7 +262,7 @@ export default function VulnerableGroupsPage() {
                         }}
                         className="bg-blue-600 text-white px-1 md:px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
-                        <span >➕</span>
+                        <span ><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มข้อมูลใหม่
                     </button>
                 </div>
@@ -272,33 +273,33 @@ export default function VulnerableGroupsPage() {
                         {/* สถิติจังหวัด */}
                         <div className="bg-gradient-to-r from-green-700 to-green-600 rounded-lg shadow-lg p-6 mb-6 text-white">
                             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                                <span>🏛️</span>
+                                <span><AppIcon icon="landmark" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 สถิติรวมจังหวัด{stats.province.province}
                             </h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                                 <div className="bg-white/20 backdrop-blur rounded-lg p-4 text-center">
                                     <div className="text-3xl font-bold">{stats.province.total_elderly || 0}</div>
-                                    <div className="text-sm mt-1">👴 ผู้สูงอายุ</div>
+                                    <div className="text-sm mt-1"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้สูงอายุ</div>
                                 </div>
                                 <div className="bg-white/20 backdrop-blur rounded-lg p-4 text-center">
                                     <div className="text-3xl font-bold">{stats.province.total_children || 0}</div>
-                                    <div className="text-sm mt-1">👶 เด็กเล็ก</div>
+                                    <div className="text-sm mt-1"><AppIcon icon="baby" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เด็กเล็ก</div>
                                 </div>
                                 <div className="bg-white/20 backdrop-blur rounded-lg p-4 text-center">
                                     <div className="text-3xl font-bold">{stats.province.total_disabled || 0}</div>
-                                    <div className="text-sm mt-1">♿ ผู้พิการ</div>
+                                    <div className="text-sm mt-1"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้พิการ</div>
                                 </div>
                                 <div className="bg-white/20 backdrop-blur rounded-lg p-4 text-center">
                                     <div className="text-3xl font-bold">{stats.province.total_bedridden || 0}</div>
-                                    <div className="text-sm mt-1">🛏️ ติดเตียง</div>
+                                    <div className="text-sm mt-1"><AppIcon icon="bed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ติดเตียง</div>
                                 </div>
                                 <div className="bg-white/20 backdrop-blur rounded-lg p-4 text-center">
                                     <div className="text-3xl font-bold">{stats.province.total_pregnant || 0}</div>
-                                    <div className="text-sm mt-1">🤰 มีครรภ์</div>
+                                    <div className="text-sm mt-1"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> มีครรภ์</div>
                                 </div>
                                 <div className="bg-white/20 backdrop-blur rounded-lg p-4 text-center">
                                     <div className="text-3xl font-bold">{stats.province.total_chronic_illness || 0}</div>
-                                    <div className="text-sm mt-1">💊 ป่วยเรื้อรัง</div>
+                                    <div className="text-sm mt-1"><AppIcon icon="pill" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ป่วยเรื้อรัง</div>
                                 </div>
                                 <div className="bg-yellow-400 text-yellow-950 rounded-lg p-4 text-center font-bold">
                                     <div className="text-4xl">{stats.province.grand_total || 0}</div>
@@ -311,7 +312,7 @@ export default function VulnerableGroupsPage() {
                         {stats.districts && stats.districts.length > 0 && (
                             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <span>🏘️</span>
+                                    <span><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     สถิติรวมแต่ละอำเภอ
                                 </h3>
                                 <div className="overflow-x-auto">
@@ -319,12 +320,12 @@ export default function VulnerableGroupsPage() {
                                         <thead className="bg-gray-50">
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">👴 ผู้สูงอายุ</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">👶 เด็กเล็ก</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">♿ ผู้พิการ</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">🛏️ ติดเตียง</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">🤰 มีครรภ์</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">💊 ป่วยเรื้อรัง</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้สูงอายุ</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="baby" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เด็กเล็ก</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้พิการ</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="bed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ติดเตียง</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> มีครรภ์</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="pill" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ป่วยเรื้อรัง</th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-bold">รวม</th>
                                             </tr>
                                         </thead>
@@ -353,7 +354,7 @@ export default function VulnerableGroupsPage() {
                         {stats.tambons && stats.tambons.length > 0 && (
                             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <span>🏡</span>
+                                    <span><AppIcon icon="house" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     สถิติรวมแต่ละตำบล
                                 </h3>
                                 <div className="overflow-x-auto">
@@ -362,12 +363,12 @@ export default function VulnerableGroupsPage() {
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ตำบล</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">👴 ผู้สูงอายุ</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">👶 เด็กเล็ก</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">♿ ผู้พิการ</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">🛏️ ติดเตียง</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">🤰 มีครรภ์</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">💊 ป่วยเรื้อรัง</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้สูงอายุ</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="baby" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เด็กเล็ก</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้พิการ</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="bed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ติดเตียง</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> มีครรภ์</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="pill" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ป่วยเรื้อรัง</th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-bold">รวม</th>
                                             </tr>
                                         </thead>
@@ -436,7 +437,7 @@ export default function VulnerableGroupsPage() {
                 {/* Table */}
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     <div className="p-4 bg-gray-50 border-b border-gray-200">
-                        <h3 className="font-bold text-gray-800">📋 ตารางข้อมูลที่บันทึกแล้ว</h3>
+                        <h3 className="font-bold text-gray-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางข้อมูลที่บันทึกแล้ว</h3>
                         <p className="text-sm text-gray-600 mt-1">แสดงข้อมูลทั้งหมด {records.length} รายการ</p>
                     </div>
 
@@ -447,7 +448,7 @@ export default function VulnerableGroupsPage() {
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4">📭</div>
+                            <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
                             <p className="text-gray-500 text-sm">คลิกปุ่ม &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มบันทึกข้อมูล</p>
                         </div>
@@ -458,12 +459,12 @@ export default function VulnerableGroupsPage() {
                                     <tr>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">พื้นที่</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">👴 ผู้สูงอายุ</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">👶 เด็ก</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">♿ พิการ</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">🛏️ ติดเตียง</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">🤰 ครรภ์</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">💊 เรื้อรัง</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้สูงอายุ</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="baby" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เด็ก</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> พิการ</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="bed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ติดเตียง</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ครรภ์</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"><AppIcon icon="pill" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เรื้อรัง</th>
                                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">รวม</th>
                                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
                                     </tr>
@@ -489,14 +490,14 @@ export default function VulnerableGroupsPage() {
                                                     className="text-blue-600 hover:text-blue-800 mr-3 px-2 py-1 rounded hover:bg-blue-50"
                                                     title="แก้ไข"
                                                 >
-                                                    ✏️
+                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(record.id)}
                                                     className="text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50"
                                                     title="ลบ"
                                                 >
-                                                    🗑️
+                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -579,7 +580,7 @@ export default function VulnerableGroupsPage() {
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    👴 ผู้สูงอายุ
+                                                    <AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้สูงอายุ
                                                 </label>
                                                 <input
                                                     type="number"
@@ -591,7 +592,7 @@ export default function VulnerableGroupsPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    👶 เด็กเล็ก (&#60;5ปี)
+                                                    <AppIcon icon="baby" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เด็กเล็ก (&lt;5ปี)
                                                 </label>
                                                 <input
                                                     type="number"
@@ -603,7 +604,7 @@ export default function VulnerableGroupsPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    ♿ ผู้พิการ
+                                                    <AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้พิการ
                                                 </label>
                                                 <input
                                                     type="number"
@@ -615,7 +616,7 @@ export default function VulnerableGroupsPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    🛏️ ผู้ป่วยติดเตียง
+                                                    <AppIcon icon="bed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ป่วยติดเตียง
                                                 </label>
                                                 <input
                                                     type="number"
@@ -627,7 +628,7 @@ export default function VulnerableGroupsPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    🤰 สตรีมีครรภ์
+                                                    <AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สตรีมีครรภ์
                                                 </label>
                                                 <input
                                                     type="number"
@@ -639,7 +640,7 @@ export default function VulnerableGroupsPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    💊 ผู้ป่วยเรื้อรัง
+                                                    <AppIcon icon="pill" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ป่วยเรื้อรัง
                                                 </label>
                                                 <input
                                                     type="number"

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ShelterCenterMap from "@/components/ShelterCenterMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { formatEocDisplayName, getEocTypeLabel } from "@/lib/eocDisplay";
+import AppIcon from "@/components/icons/AppIcon";
 
 const EOC_TYPE_LABELS = {
   flood: "อุทกภัย",
@@ -508,7 +509,7 @@ export default function PublicSheltersPage() {
             <h3 className="mb-3 text-lg font-black text-blue-900">การเตรียมตัวเข้าสู่ศูนย์พักพิง</h3>
             {["เตรียมเอกสารสำคัญและยาประจำตัว", "นำของใช้ส่วนตัวเท่าที่จำเป็น", "แจ้งผู้ดูแลหากมีผู้สูงอายุ เด็ก หรือผู้ป่วย", "ปฏิบัติตามคำแนะนำของเจ้าหน้าที่"].map((item) => (
               <div key={item} className="mb-2 flex gap-2 text-sm text-slate-700 last:mb-0">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-emerald-50 text-xs font-black text-emerald-700">✓</span>
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-emerald-50 text-emerald-700"><AppIcon icon="check" className="h-3.5 w-3.5" /></span>
                 <span>{item}</span>
               </div>
             ))}

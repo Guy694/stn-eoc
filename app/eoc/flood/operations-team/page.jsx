@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
+import AppIcon from "@/components/icons/AppIcon";
 
 const COMMAND_ROLES = {
     incident_commander: "ผู้บัญชาการเหตุการณ์",
@@ -776,7 +777,7 @@ function TeamNode({ team, canManage, onEdit, onDelete }) {
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl"
                     style={{ backgroundColor: team.color || "#dbeafe" }}
                 >
-                    {team.icon || "👥"}
+                    <AppIcon icon={team.icon || "users"} className="h-8 w-8" />
                 </div>
                 <div className="min-w-0">
                     <p className="text-xs font-black text-blue-700">{team.team_code || "TEAM"}</p>

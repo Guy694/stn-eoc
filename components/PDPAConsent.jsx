@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function PDPAConsent() {
     const [showConsent, setShowConsent] = useState(false);
@@ -35,7 +36,7 @@ export default function PDPAConsent() {
                 <div className="p-6 md:p-8">
                     {/* Header */}
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="text-4xl">🔒</div>
+                        <div className="text-4xl"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <div>
                             <h2 className="text-2xl font-bold text-gray-800">นโยบายความเป็นส่วนตัว</h2>
                             <p className="text-sm text-gray-600">Personal Data Protection Act (PDPA)</p>
@@ -49,7 +50,7 @@ export default function PDPAConsent() {
                         </p>
 
                         <div className="border-t border-gray-200 pt-4">
-                            <h3 className="font-bold text-gray-800 mb-2">📋 ข้อมูลที่เราเก็บรวบรวม</h3>
+                            <h3 className="font-bold text-gray-800 mb-2"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลที่เราเก็บรวบรวม</h3>
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                 <li>ชื่อ-นามสกุล และเบอร์โทรศัพท์</li>
                                 <li>ที่อยู่และตำแหน่งพิกัด (GPS)</li>
@@ -59,7 +60,7 @@ export default function PDPAConsent() {
                         </div>
 
                         <div className="border-t border-gray-200 pt-4">
-                            <h3 className="font-bold text-gray-800 mb-2">✅ วัตถุประสงค์การใช้ข้อมูล</h3>
+                            <h3 className="font-bold text-gray-800 mb-2"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> วัตถุประสงค์การใช้ข้อมูล</h3>
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                 <li>ติดต่อและให้ความช่วยเหลือในกรณีฉุกเฉิน</li>
                                 <li>ประมวลผลและวิเคราะห์สถานการณ์ภัยพิบัติ</li>
@@ -69,7 +70,7 @@ export default function PDPAConsent() {
                         </div>
 
                         <div className="border-t border-gray-200 pt-4">
-                            <h3 className="font-bold text-gray-800 mb-2">🔐 การรักษาความปลอดภัย</h3>
+                            <h3 className="font-bold text-gray-800 mb-2"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> การรักษาความปลอดภัย</h3>
                             <p className="text-sm max-w-prose">
                                 เราใช้มาตรการรักษาความปลอดภัยที่เหมาะสมเพื่อป้องกันการเข้าถึง การใช้ หรือการเปิดเผยข้อมูลโดยไม่ได้รับอนุญาต
                                 ข้อมูลของท่านจะถูกเก็บไว้เฉพาะระยะเวลาที่จำเป็นตามวัตถุประสงค์
@@ -77,7 +78,7 @@ export default function PDPAConsent() {
                         </div>
 
                         <div className="border-t border-gray-200 pt-4">
-                            <h3 className="font-bold text-gray-800 mb-2">👤 สิทธิของเจ้าของข้อมูล</h3>
+                            <h3 className="font-bold text-gray-800 mb-2"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สิทธิของเจ้าของข้อมูล</h3>
                             <p className="text-sm mb-2">ท่านมีสิทธิ์:</p>
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                 <li>เข้าถึงและขอสำเนาข้อมูลส่วนบุคคล</li>
@@ -89,7 +90,7 @@ export default function PDPAConsent() {
                         </div>
 
                         <div className="border-t border-gray-200 pt-4">
-                            <h3 className="font-bold text-gray-800 mb-2">📞 ติดต่อเรา</h3>
+                            <h3 className="font-bold text-gray-800 mb-2"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ติดต่อเรา</h3>
                             <p className="text-sm max-w-prose">
                                 หากมีข้อสงสัยเกี่ยวกับนโยบายนี้ กรุณาติดต่อ:<br />
                                 <strong>ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข (EOC) จังหวัดสตูล</strong><br />

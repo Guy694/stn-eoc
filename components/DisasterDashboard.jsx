@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getDisasterConfig, getAllDisasterTypesSync } from '@/lib/disasterConfig';
+import AppIcon from "@/components/icons/AppIcon";
 
 export default function DisasterDashboard() {
     const [activeSessions, setActiveSessions] = useState({});
@@ -94,7 +95,7 @@ export default function DisasterDashboard() {
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-4xl">{config.icon}</span>
+                                                <AppIcon icon={config.icon} className="h-10 w-10" />
                                                 {isActive && (
                                                     <span className="animate-pulse">
                                                         <span className="flex h-3 w-3 relative">
@@ -153,7 +154,7 @@ export default function DisasterDashboard() {
                 return sessionData.active > 0;
             }).length === 0 && (
                     <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
-                        <div className="text-6xl mb-4">✅</div>
+                        <div className="text-6xl mb-4"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h3 className="text-xl font-bold text-gray-700 mb-2">ไม่มี EOC ที่เปิดอยู่ในขณะนี้</h3>
                         <p className="text-gray-600">ขณะนี้ไม่มีสถานการณ์ภัยพิบัติที่ต้องเปิด EOC</p>
                     </div>
