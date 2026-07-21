@@ -90,10 +90,10 @@ export default function FloodDiseaseSummaryPanel({ sessionId, reportDate }) {
         <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
                 <div>
-                    <p className="text-xs font-black uppercase tracking-wide text-cyan-700">Flood Health Surveillance</p>
+                    <p className="text-xs font-black tracking-wide text-cyan-700">เฝ้าระวังสุขภาพจากอุทกภัยน้ำท่วม</p>
                     <h2 className="mt-1 font-black text-blue-900">สถานการณ์โรคที่เกี่ยวข้องกับอุทกภัย</h2>
                     <p className="mt-1 text-xs font-semibold text-slate-500">
-                        ข้อมูลรวมจากศูนย์พักพิงและพื้นที่น้ำท่วม ไม่ใช่ Dashboard โรคระบาดเชิงลึก
+                        ข้อมูลรวมจากศูนย์พักพิงและพื้นที่น้ำท่วม ไม่ใช่หน้าวิเคราะห์โรคระบาดเชิงลึก
                     </p>
                 </div>
                 <div className="rounded-lg bg-cyan-50 px-3 py-2 text-right text-xs font-bold text-cyan-800">

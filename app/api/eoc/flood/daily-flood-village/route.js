@@ -1,51 +1,30 @@
 import { NextResponse } from 'next/server';
 import { publicInternalError } from '@/lib/apiResponse';
+import mysql from 'mysql2/promise';
 
-// ข้อมูลจำลองสำหรับทดสอบ (ใช้จนกว่าจะมีตาราง daily_village_flood_status)
-const mockFloodData = {
-    '2025-12-01': [
-        { villcode: '9101010701', level: 'severe' },
-        { villcode: '9101010702', level: 'severe' },
-        { villcode: '9101010801', level: 'moderate' },
-        { villcode: '9101011001', level: 'moderate' },
-        { villcode: '9101011101', level: 'mild' },
-        { villcode: '9101011201', level: 'mild' },
-        { villcode: '9101020101', level: 'severe' },
-        { villcode: '9101020201', level: 'moderate' },
-    ],
-    '2025-12-02': [
-        { villcode: '9101010701', level: 'severe' },
-        { villcode: '9101010702', level: 'moderate' },
-        { villcode: '9101010801', level: 'moderate' },
-        { villcode: '9101011001', level: 'mild' },
-        { villcode: '9101011101', level: 'mild' },
-    ],
-    '2025-12-03': [
-        { villcode: '9101010701', level: 'moderate' },
-        { villcode: '9101010702', level: 'moderate' },
-        { villcode: '9101010801', level: 'mild' },
-        { villcode: '9101011001', level: 'mild' },
-    ],
-    '2025-12-11': [
-        { villcode: '9101010701', level: 'mild' },
-        { villcode: '9101010702', level: 'mild' },
-    ]
-};
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'stneoc',
+    charset: 'utf8mb4',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
-// ข้อมูลหมู่บ้านจำลอง
-const mockVillages = [
-    { villcode: '9101010701', name: 'บ้านควนสตอ', district: 'เมืองสตูล', population: 450 },
-    { villcode: '9101010702', name: 'บ้านคลองขุด', district: 'เมืองสตูล', population: 380 },
-    { villcode: '9101010801', name: 'บ้านปูยู', district: 'เมืองสตูล', population: 520 },
-    { villcode: '9101011001', name: 'บ้านควนโพธิ์', district: 'เมืองสตูล', population: 310 },
-    { villcode: '9101011101', name: 'บ้านท่าเสม็ด', district: 'เมืองสตูล', population: 290 },
-    { villcode: '9101011201', name: 'บ้านควนสตาร์', district: 'เมืองสตูล', population: 410 },
-    { villcode: '9101020101', name: 'บ้านควนขัน', district: 'เมืองสตูล', population: 350 },
-    { villcode: '9101020201', name: 'บ้านทุ่งนุ้ย', district: 'เมืองสตูล', population: 280 },
-];
+function mapFloodLevelToSeverity(level) {
+    const value = String(level || '').trim();
+    if (value === 'สูงมาก' || value === 'สูง' || value.toLowerCase() === 'severe') return 'severe';
+    if (value === 'ปานกลาง' || value.toLowerCase() === 'moderate') return 'moderate';
+    if (value === 'ต่ำ' || value.toLowerCase() === 'mild') return 'mild';
+    return 'safe';
+}
 
 // API สำหรับดึงข้อมูลพื้นที่อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
 export async function GET(request) {
+    let connection;
+
     try {
         const { searchParams } = new URL(request.url);
         const dateParam = searchParams.get('date');
@@ -57,20 +36,46 @@ export async function GET(request) {
             );
         }
 
-        // ใช้ข้อมูลจำลอง
-        const floodData = mockFloodData[dateParam] || [];
-        const floodDataMap = {};
-        floodData.forEach(f => {
-            floodDataMap[f.villcode] = f.level;
-        });
+        connection = await pool.getConnection();
 
-        // รวมข้อมูลอุทกภัยน้ำท่วม
-        const result = mockVillages.map(v => ({
-            villcode: v.villcode,
-            name: v.name,
-            district: v.district,
-            level: floodDataMap[v.villcode] || 'safe',
-            population: v.population || 0
+        const [sessionRows] = await connection.execute(
+            `SELECT id
+             FROM eoc_sessions
+             WHERE eoc_type = 'flood' AND status = 'active'
+             ORDER BY opened_at DESC
+             LIMIT 1`
+        );
+
+        if (!sessionRows.length) {
+            return NextResponse.json({
+                success: false,
+                message: 'ไม่มี EOC Session อุทกภัยน้ำท่วมที่เปิดอยู่'
+            }, { status: 404 });
+        }
+
+        const sessionId = sessionRows[0].id;
+
+        const [rows] = await connection.execute(
+            `SELECT
+                v.villcode,
+                v.villname as name,
+                v.distname as district,
+                f.flood_level,
+                f.affected_people
+             FROM flood_records f
+             INNER JOIN satun_village_polygon v ON v.id = f.polygon_id
+             WHERE f.session_id = ?
+               AND DATE(f.updated_at) = ?
+             ORDER BY v.distname, v.subdistnam, v.villname`,
+            [sessionId, dateParam]
+        );
+
+        const result = rows.map((row) => ({
+            villcode: row.villcode,
+            name: row.name,
+            district: row.district,
+            level: mapFloodLevelToSeverity(row.flood_level),
+            population: Number(row.affected_people || 0)
         }));
 
         // คำนวณสถิติสรุป
@@ -94,7 +99,9 @@ export async function GET(request) {
         });
 
         return NextResponse.json({
+            success: true,
             date: dateParam,
+            session_id: sessionId,
             villages: result,
             summary: summary
         });
@@ -102,5 +109,7 @@ export async function GET(request) {
     } catch (error) {
         console.error('Error fetching daily flood village data:', error);
         return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลอุทกภัยน้ำท่วมรายหมู่บ้าน');
+    } finally {
+        if (connection) connection.release();
     }
 }

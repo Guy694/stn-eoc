@@ -18,7 +18,7 @@ function ThaiDErrorHandler({ setError }) {
 
         // ตรวจสอบ session timeout
         if (timeout === 'true') {
-            setError('Session หมดอายุเนื่องจากไม่มีการใช้งานเกิน 10 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+            setError('การเข้าสู่ระบบหมดอายุเนื่องจากไม่มีการใช้งานเกิน 10 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
             return;
         }
 

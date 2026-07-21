@@ -111,30 +111,10 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Database error:', error);
-
-        // Mock data สำหรับ development
         return NextResponse.json({
-            success: true,
-            hasActiveSession: true,
-            useMockData: true,
-            activeSession: {
-                id: 10,
-                session_number: 1,
-                opened_at: '2026-01-13T00:00:00.000Z',
-                open_reason: 'เทศกาลปีใหม่ 2569 (7 วันอันตราย)'
-            },
-            accidents: [],
-            servicePoints: [],
-            healthFacilities: [],
-            stats: {
-                total_accidents: 0,
-                total_deaths: 0,
-                total_injuries: 0,
-                drunk_driving_cases: 0,
-                total_service_points: 0,
-                total_health_facilities: 0
-            }
-        });
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถานะพื้นที่อุบัติเหตุ'
+        }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }

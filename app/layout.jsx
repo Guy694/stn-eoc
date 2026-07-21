@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { EOCProvider } from "@/context/EOCContext";
 import { cn } from "@/lib/utils";
+import AppToaster from "@/components/providers/AppToaster";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <EOCProvider>
             {children}
+            <AppToaster />
           </EOCProvider>
         </AuthProvider>
       </body>

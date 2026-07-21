@@ -162,7 +162,8 @@ export default function Sidebar() {
             section: "executive-overview",
             requiresPermission: null,
             items: [
-                { name: "ภาพรวมระบบ", path: "/dashboard", icon: LayoutDashboard, description: "ภาพรวมข้อมูลทั้งหมด" },
+                { name: "หน้าหลัก", path: "/dashboard", icon: LayoutDashboard, description: "ภาพรวมข้อมูลทั้งหมด" },
+                { name: "ศูนย์งานเจ้าหน้าที่", path: "/eoc/staff", icon: Users, description: "เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมาย" },
                 { name: "วิเคราะห์ (Analytics)", path: "/analytics", icon: BrainCircuit, description: "วิเคราะห์สถานการณ์ ทีม เวชภัณฑ์ และโรคระบาด" },
             ],
         },
@@ -174,10 +175,10 @@ export default function Sidebar() {
             collapsible: true,
             requiresPermission: null, // ทุกคนเห็นได้
             items: [
-                { name: "ภาพรวม EOC", path: "/eoc/flood/overview", icon: BarChart3, description: "Dashboard ภาพรวมสถานการณ์ทั้งหมด" },
-                { name: "จัดการ EOC อุทกภัยน้ำท่วม", path: "/eoc/flood/management", icon: MonitorCog, description: "Officer EOC Management Dashboard" },
+                { name: "ภาพรวม EOC", path: "/eoc/flood/overview", icon: BarChart3, description: "ภาพรวมสถานการณ์ทั้งหมด" },
+                { name: "จัดการ EOC อุทกภัยน้ำท่วม", path: "/eoc/flood/management", icon: MonitorCog, description: "ระบบจัดการ EOC สำหรับเจ้าหน้าที่" },
                 { name: "แผนที่และสถานการณ์", path: "/eoc/flood", icon: Map, description: "ภาพรวมสถานการณ์อุทกภัยน้ำท่วม" },
-                { name: "ทีมปฏิบัติการ", path: "/eoc/flood/operations-team", icon: Users, description: "ผังทีมปฏิบัติการและบทบาท Incident Commander" },
+                { name: "ทีมปฏิบัติการ", path: "/eoc/flood/operations-team", icon: Users, description: "ผังทีมปฏิบัติการและบทบาทผู้บัญชาการเหตุการณ์" },
                 { name: "บันทึกพื้นที่อุทกภัยน้ำท่วม", path: "/eoc/flood/records", icon: Waves, description: "บันทึกข้อมูลพื้นที่อุทกภัยน้ำท่วม" },
                 { name: "ศูนย์พักพิงชั่วคราว", path: "/eoc/flood/shelters", icon: Tent, description: "แผนที่ศูนย์พักพิง" },
                 { name: "รายงานโรคในศูนย์พักพิง", path: "/eoc/flood/shelters/disease-reports", icon: HeartPulse, description: "บันทึกโรคในศูนย์พักพิง" },
@@ -201,32 +202,6 @@ export default function Sidebar() {
                 { name: "เปรียบเทียบเทศกาล", path: "/eoc/festival-accidents/compare", icon: FileChartColumn, description: "เปรียบเทียบสถิติข้ามเทศกาล/ปี" },
             ],
         },
-
-        // {
-        //     title: "EOC สึนามิ",
-        //     section: "eoc-tsunami",
-        //     key: "tsunami",
-        //     eocType: "tsunami",
-        //     collapsible: true,
-        //     requiresPermission: null,
-        //     items: [
-        //         { name: "แผนที่และสถานการณ์", path: "/eoc/tsunami", icon: BarChart3, description: "ภาพรวมสถานการณ์สึนามิ" },
-        //         { name: "จุดอพยพ", path: "/eoc/tsunami/evacuation", icon: Users, description: "จุดอพยพและเส้นทาง" },
-        //     ],
-        // },
-
-        // {
-        //     title: "EOC แผ่นดินไหว",
-        //     section: "eoc-earthquake",
-        //     key: "earthquake",
-        //     eocType: "earthquake",
-        //     collapsible: true,
-        //     requiresPermission: null,
-        //     items: [
-        //         { name: "แผนที่และสถานการณ์", path: "/eoc/earthquake", icon: BarChart3, description: "ภาพรวมสถานการณ์แผ่นดินไหว" },
-        //         { name: "อาคารเสียหาย", path: "/eoc/earthquake/damages", icon: Home, description: "รายงานความเสียหาย" },
-        //     ],
-        // },
 
         {
             title: `EOC ${getEOCDisplayName('disease')}`,
@@ -271,7 +246,8 @@ export default function Sidebar() {
             collapsible: true,
             items: [
                 { name: "จัดการ EOC", path: "/admin/eoc-management", icon: Settings, description: "เปิด/ปิด EOC" },
-                { name: "ประวัติ EOC Sessions", path: "/admin/eoc-sessions", icon: FileText, description: "ประวัติการเปิด-ปิด EOC" },
+                { name: "ประวัติเหตุการณ์ EOC", path: "/admin/eoc-sessions", icon: FileText, description: "ประวัติการเปิด-ปิด EOC" },
+                { name: "ประวัติการดำเนินงาน", path: "/admin/activity-logs", icon: ClipboardList, description: "ตรวจสอบประวัติการดำเนินงานในระบบ" },
             ],
         },
         {
@@ -328,6 +304,26 @@ export default function Sidebar() {
         },
     ];
 
+    const isRestrictedNonAdminMenu = user.role !== 'admin' && user.role !== 'citizen' && user.role !== 'user' && user.isApproved !== false;
+
+    const restrictedNonAdminMenu = [
+        {
+            title: "เมนูหลัก",
+            section: "restricted-main",
+            items: [
+                { name: "หน้าหลัก", path: "/dashboard", icon: LayoutDashboard, description: "เลือกเหตุการณ์และ session ก่อนเข้าสู่หน้าปฏิบัติการ" },
+            ],
+        },
+        {
+            title: "ตั้งค่า",
+            section: "restricted-settings",
+            items: [
+                { name: "โปรไฟล์ของฉัน", path: "/profile", icon: UserCog, description: "ข้อมูลส่วนตัว" },
+                { name: "ตั้งค่าระบบ", path: "/settings", icon: Settings, description: "กำหนดค่าต่างๆ" },
+            ],
+        },
+    ];
+
     // ============================================
     // PENDING USER MENU
     // ============================================
@@ -339,7 +335,7 @@ export default function Sidebar() {
             title: "แดชบอร์ด",
             section: "dashboard",
             items: [
-                { name: "ภาพรวมระบบ", path: "/dashboard", icon: LayoutDashboard, description: "ข้อมูลเบื้องต้น" },
+                { name: "หน้าหลัก", path: "/dashboard", icon: LayoutDashboard, description: "ข้อมูลเบื้องต้น" },
             ],
         },
         {
@@ -368,7 +364,9 @@ export default function Sidebar() {
     // ============================================
     const menuItems = (user.role === 'user' || user.isApproved === false)
         ? pendingUserMenu
-        : allMenuItems.filter(section => {
+        : isRestrictedNonAdminMenu
+            ? restrictedNonAdminMenu
+            : allMenuItems.filter(section => {
             // Admin-only sections
             if (section.requiresPermission === "admin") {
                 if (user.role !== 'admin') return false;

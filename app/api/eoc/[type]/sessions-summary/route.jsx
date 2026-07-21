@@ -132,28 +132,10 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Database error:', error);
-
-        // Mock data for development
-        const disasterType = params.type;
         return NextResponse.json({
-            success: true,
-            useMockData: true,
-            disasterType: disasterType,
-            availableYears: [2025, 2024, 2023],
-            yearSummaries: [
-                {
-                    year: 2025,
-                    total_sessions: 3,
-                    total_hours: 456.5,
-                    total_activities: 145,
-                    total_data_entries: 892,
-                    active_sessions: 1,
-                    closed_sessions: 2,
-                    first_opened: '2025-01-15T08:00:00',
-                    last_opened: '2025-11-20T14:30:00'
-                }
-            ]
-        });
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุป sessions'
+        }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }

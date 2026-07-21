@@ -136,46 +136,10 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Database error:', error);
-
-        // Mock data สำหรับ development
         return NextResponse.json({
-            success: true,
-            useMockData: true,
-            date: new Date().toISOString().split('T')[0],
-            totalStats: {
-                affected_districts: 5,
-                affected_tambons: 7,
-                affected_villages: 7,
-                total_households: 303,
-                total_population: 1212,
-                severe_count: 0,
-                moderate_count: 1,
-                mild_count: 4,
-                safe_count: 2
-            },
-            riskSummary: [
-                { flood_level: 'moderate', village_count: 1, total_households: 85, total_population: 340, avg_water_level: 52 },
-                { flood_level: 'mild', village_count: 4, total_households: 193, total_population: 772, avg_water_level: 28.5 },
-                { flood_level: 'safe', village_count: 2, total_households: 25, total_population: 100, avg_water_level: 6.5 }
-            ],
-            districtSummary: [
-                { district: 'ควนโดน', village_count: 1, total_households: 85, total_population: 340, has_severe: 0, has_moderate: 1 },
-                { district: 'ท่าแพ', village_count: 1, total_households: 58, total_population: 232, has_severe: 0, has_moderate: 0 },
-                { district: 'เมืองสตูล', village_count: 3, total_households: 100, total_population: 400, has_severe: 0, has_moderate: 0 },
-                { district: 'ละงู', village_count: 1, total_households: 45, total_population: 180, has_severe: 0, has_moderate: 0 },
-                { district: 'มะนัง', village_count: 1, total_households: 15, total_population: 60, has_severe: 0, has_moderate: 0 }
-            ],
-            activeSession: {
-                id: 3,
-                session_number: 3,
-                opened_at: '2025-12-18T09:00:00.000Z',
-                open_reason: 'ฝนตกหนักต่อเนื่องตามฤดูมรสุมตะวันออกเฉียงเหนือ',
-                total_activities: 23,
-                total_data_entries: 187,
-                hours_open: 96,
-                days_open: 4
-            }
-        });
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุปความเสี่ยงอุทกภัยน้ำท่วมรายวัน'
+        }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }

@@ -97,53 +97,10 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Database error:', error);
-
-        // Mock data
-        const currentYear = new Date().getFullYear();
         return NextResponse.json({
-            success: true,
-            useMockData: true,
-            year: currentYear,
-            yearSummaries: [{
-                year: currentYear,
-                total_sessions: 3,
-                active_sessions: 1,
-                total_activities: 45,
-                total_data_entries: 120,
-                total_patients: 350,
-                sessions: [
-                    {
-                        id: 3,
-                        session_number: 3,
-                        eoc_type: 'disease',
-                        disease_id: 1,
-                        disease_name: 'ไข้เลือดออก',
-                        status: 'active',
-                        opened_at: '2026-01-13T09:00:00.000Z',
-                        closed_at: null,
-                        open_reason: 'พบการระบาดของไข้เลือดออกในพื้นที่',
-                        duration_days: 1,
-                        reports_count: 12,
-                        total_patients: 127
-                    },
-                    {
-                        id: 2,
-                        session_number: 2,
-                        eoc_type: 'disease',
-                        disease_id: 4,
-                        disease_name: 'ไข้หวัดใหญ่',
-                        status: 'closed',
-                        opened_at: '2025-08-01T09:00:00.000Z',
-                        closed_at: '2025-08-15T17:00:00.000Z',
-                        open_reason: 'การระบาดของไข้หวัดใหญ่',
-                        duration_days: 14,
-                        reports_count: 45,
-                        total_patients: 180
-                    }
-                ]
-            }],
-            availableYears: [2026, 2025]
-        });
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุป sessions ของโรคระบาด'
+        }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }

@@ -2040,7 +2040,7 @@ function OpsTimeline({ rows, selectedDate }) {
   return (
     <section className="rounded-xl border border-blue-100 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
-        <h2 className="font-black text-blue-900">เหตุการณ์รายวัน / Daily Incident Timeline</h2>
+        <h2 className="font-black text-blue-900">ลำดับเหตุการณ์รายวัน</h2>
         <span className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-black text-white">{formatThaiDateOnly(selectedDate)}</span>
       </div>
       <div className="overflow-x-auto">
@@ -2449,7 +2449,7 @@ function HomeSituationDashboard({
     <section className="mb-8 md:mb-10">
       <div className="mb-4 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 px-1">
         <div>
-          <p className="text-sm font-semibold text-emerald-700 mb-1">Situation Dashboard</p>
+          <p className="text-sm font-semibold text-emerald-700 mb-1">ภาพรวมสถานการณ์</p>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">แผนที่สถานการณ์จังหวัดสตูล</h2>
           <p className="text-sm md:text-base text-gray-600 mt-1">
             {loading ? "กำลังตรวจสอบสถานะ EOC..." : activeTypesText}

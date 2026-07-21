@@ -171,50 +171,10 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Database error:', error);
-
-        // ส่งข้อมูลจำลองกรณี error (สำหรับ development)
-        const mockData = {
-            success: true,
-            useMockData: true,
-            availableYears: [2025, 2024, 2023],
-            yearSummaries: [
-                {
-                    year: 2025,
-                    total_sessions: 3,
-                    total_hours: 456.5,
-                    total_activities: 145,
-                    total_data_entries: 892,
-                    active_sessions: 1,
-                    closed_sessions: 2,
-                    first_opened: '2025-01-15T08:00:00',
-                    last_opened: '2025-11-20T14:30:00'
-                },
-                {
-                    year: 2024,
-                    total_sessions: 5,
-                    total_hours: 1234.2,
-                    total_activities: 456,
-                    total_data_entries: 2341,
-                    active_sessions: 0,
-                    closed_sessions: 5,
-                    first_opened: '2024-02-10T09:00:00',
-                    last_opened: '2024-12-05T16:00:00'
-                },
-                {
-                    year: 2023,
-                    total_sessions: 4,
-                    total_hours: 876.8,
-                    total_activities: 298,
-                    total_data_entries: 1567,
-                    active_sessions: 0,
-                    closed_sessions: 4,
-                    first_opened: '2023-03-22T10:00:00',
-                    last_opened: '2023-11-18T13:00:00'
-                }
-            ]
-        };
-
-        return NextResponse.json(mockData);
+        return NextResponse.json({
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุป sessions ของอุทกภัยน้ำท่วม'
+        }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }

@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import { publicInternalError } from "@/lib/apiResponse";
 import { notifySecurityEvent } from "@/lib/telegram";
+import { TEAM_ROLE_CODES, TEAM_ROLE_OPTIONS } from "@/lib/eocRoles";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -69,6 +70,18 @@ const roleDisplayNames = {
     SeRHT: 'ทีม SeRHT',
     staff: 'เจ้าหน้าที่'
 };
+
+for (const roleCode of TEAM_ROLE_CODES) {
+    if (!rolePermissions[roleCode]) {
+        rolePermissions[roleCode] = roleCode === 'EOC_COMMANDER'
+            ? rolePermissions.commander
+            : rolePermissions.staff;
+    }
+}
+
+for (const role of TEAM_ROLE_OPTIONS) {
+    roleDisplayNames[role.value] = role.roleDisplayName || `ทีม ${role.value}`;
+}
 
 export async function POST(request) {
     try {

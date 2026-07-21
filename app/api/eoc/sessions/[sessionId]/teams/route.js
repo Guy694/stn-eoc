@@ -38,6 +38,19 @@ export async function GET(request, { params }) {
             }, { status: 404 });
         }
 
+        // Staff sees only their assigned teams; administrators and commanders see all active teams.
+        const canViewAllTeams = ['admin', 'commander'].includes(auth.user.role);
+        const teamAccessClause = canViewAllTeams
+            ? ''
+            : `AND EXISTS (
+                SELECT 1
+                FROM eoc_team_members access_member
+                WHERE access_member.session_team_id = st.id
+                  AND access_member.officer_id = ?
+                  AND access_member.is_active = TRUE
+            )`;
+        const teamParams = canViewAllTeams ? [sessionId] : [sessionId, auth.user.id];
+
         // ดึงข้อมูลทีมงานที่เปิดใช้งานใน Session นี้
         const teams = await query(`
             SELECT 
@@ -63,9 +76,10 @@ export async function GET(request, { params }) {
             WHERE st.eoc_session_id = ? 
             AND st.is_active = TRUE 
             AND t.is_active = TRUE
+            ${teamAccessClause}
             GROUP BY st.id
             ORDER BY t.sort_order
-        `, [sessionId]);
+        `, teamParams);
 
         // ดึงรายละเอียดสมาชิกแต่ละทีม (เฉพาะสมาชิกที่ active)
         for (let team of teams) {

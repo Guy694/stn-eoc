@@ -3,6 +3,9 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
+import { SYSTEM_ROLE_CODES } from '@/lib/eocRoles';
+
+const SYSTEM_ROLES = new Set(SYSTEM_ROLE_CODES);
 
 // GET - ดึงข้อมูลเจ้าหน้าที่คนเดียว
 export async function GET(request, { params }) {
@@ -98,6 +101,12 @@ export async function PUT(request, { params }) {
             values.push(phone);
         }
         if (role) {
+            if (!SYSTEM_ROLES.has(role)) {
+                return NextResponse.json(
+                    { success: false, error: 'บทบาทสิทธิ์ระบบไม่ถูกต้อง' },
+                    { status: 400 }
+                );
+            }
             updates.push('role = ?');
             values.push(role);
         }

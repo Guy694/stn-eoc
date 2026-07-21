@@ -182,48 +182,10 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Database error:', error);
-
-        // Mock data for development
         return NextResponse.json({
-            success: true,
-            useMockData: true,
-            date: new Date().toISOString().split('T')[0],
-            totalStats: {
-                affected_districts: 3,
-                affected_facilities: 5,
-                diseases_count: 4,
-                total_patients: 127,
-                total_reports: 12
-            },
-            diseaseSummary: [
-                { disease_name: 'ไข้เลือดออก', report_count: 5, total_patients: 45, facilities_count: 4, severity: 'high' },
-                { disease_name: 'ไข้หวัดใหญ่', report_count: 4, total_patients: 52, facilities_count: 3, severity: 'high' },
-                { disease_name: 'อุจจาระร่วง', report_count: 2, total_patients: 20, facilities_count: 2, severity: 'medium' },
-                { disease_name: 'มือ เท้า ปาก', report_count: 1, total_patients: 10, facilities_count: 1, severity: 'low' }
-            ],
-            districtSummary: [
-                { district: 'เมืองสตูล', diseases_count: 4, facilities_count: 3, total_patients: 78, report_count: 7 },
-                { district: 'ควนโดน', diseases_count: 2, facilities_count: 1, total_patients: 29, report_count: 3 },
-                { district: 'ท่าแพ', diseases_count: 2, facilities_count: 1, total_patients: 20, report_count: 2 }
-            ],
-            details: [
-                { id: 1, disease_name: 'ไข้หวัดใหญ่', patient_count: 25, facility_name: 'รพ.สต.บ้านควนโดน', district_name: 'ควนโดน', facility_type: 'รพ.สต.' },
-                { id: 2, disease_name: 'ไข้เลือดออก', patient_count: 18, facility_name: 'โรงพยาบาลสตูล', district_name: 'เมืองสตูล', facility_type: 'รพ.' },
-                { id: 3, disease_name: 'อุจจาระร่วง', patient_count: 12, facility_name: 'รพ.สต.ท่าแพ', district_name: 'ท่าแพ', facility_type: 'รพ.สต.' }
-            ],
-            activeSession: {
-                id: 3,
-                session_number: 3,
-                disease_id: 1,
-                disease_name: 'ไข้เลือดออก',
-                opened_at: '2026-01-13T09:00:00.000Z',
-                open_reason: 'พบการระบาดของไข้เลือดออกในพื้นที่',
-                total_activities: 15,
-                total_data_entries: 45,
-                hours_open: 48,
-                days_open: 1
-            }
-        });
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุปสถานการณ์โรครายวัน'
+        }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }

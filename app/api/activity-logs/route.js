@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import { publicInternalError } from "@/lib/apiResponse";
+import { requireAuth } from "@/lib/auth";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -14,13 +15,14 @@ const pool = mysql.createPool({
 
 // POST - บันทึก activity log
 export async function POST(request) {
+    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+    if (!auth.success) return auth.response;
+
     const connection = await pool.getConnection();
 
     try {
         const body = await request.json();
         const {
-            userId,
-            username,
             actionType,
             targetType,
             targetId,
@@ -60,8 +62,8 @@ export async function POST(request) {
              ip_address, user_agent, metadata) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                userId || null,
-                username || null,
+                auth.user.id,
+                auth.user.username,
                 actionType,
                 targetType || null,
                 targetId || null,
@@ -87,6 +89,9 @@ export async function POST(request) {
 
 // GET - ดึง activity logs
 export async function GET(request) {
+    const auth = await requireAuth(request, ['admin']);
+    if (!auth.success) return auth.response;
+
     const connection = await pool.getConnection();
 
     try {
@@ -94,8 +99,11 @@ export async function GET(request) {
         const userId = searchParams.get('userId');
         const actionType = searchParams.get('actionType');
         const targetType = searchParams.get('targetType');
-        const limit = parseInt(searchParams.get('limit')) || 100;
-        const offset = parseInt(searchParams.get('offset')) || 0;
+        const search = searchParams.get('search')?.trim();
+        const dateFrom = searchParams.get('dateFrom');
+        const dateTo = searchParams.get('dateTo');
+        const limit = Math.min(Math.max(parseInt(searchParams.get('limit')) || 25, 1), 100);
+        const offset = Math.max(parseInt(searchParams.get('offset')) || 0, 0);
 
         let query = `
             SELECT 
@@ -136,6 +144,25 @@ export async function GET(request) {
             params.push(targetType);
         }
 
+        if (dateFrom) {
+            query += ' AND DATE(al.created_at) >= ?';
+            params.push(dateFrom);
+        }
+
+        if (dateTo) {
+            query += ' AND DATE(al.created_at) <= ?';
+            params.push(dateTo);
+        }
+
+        if (search) {
+            query += ' AND (al.username LIKE ? OR al.action_type LIKE ? OR al.target_type LIKE ? OR al.description LIKE ?)';
+            const wildcard = `%${search}%`;
+            params.push(wildcard, wildcard, wildcard, wildcard);
+        }
+
+        const countQuery = query.replace(/SELECT[\s\S]*?FROM activity_logs al/, 'SELECT COUNT(*) AS total FROM activity_logs al');
+        const [countRows] = await connection.execute(countQuery, params);
+
         query += ' ORDER BY al.created_at DESC LIMIT ? OFFSET ?';
         params.push(limit, offset);
 
@@ -150,7 +177,12 @@ export async function GET(request) {
         return NextResponse.json({
             success: true,
             data: logs,
-            count: logs.length
+            count: logs.length,
+            pagination: {
+                total: Number(countRows[0]?.total || 0),
+                limit,
+                offset
+            }
         });
 
     } catch (error) {

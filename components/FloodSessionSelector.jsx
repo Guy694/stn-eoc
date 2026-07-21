@@ -115,7 +115,7 @@ export default function FloodSessionSelector({
             <div className="bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-6 mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold mb-1"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์ปัจจุบัน (Real-time)</h3>
+                        <h3 className="text-lg font-semibold mb-1"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์ปัจจุบัน (เรียลไทม์)</h3>
                         {activeSessions.length > 0 ? (
                             <div className="space-y-2">
                                 {activeSessions.map(session => (
@@ -124,7 +124,7 @@ export default function FloodSessionSelector({
                                             <span className="text-2xl animate-pulse"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             <div>
                                                 <p className="font-medium">
-                                                    EOC Session #{session.session_number} - {new Date().getFullYear()}
+                                                    เหตุการณ์ EOC ที่ {session.session_number} - {new Date().getFullYear()}
                                                 </p>
                                                 <p className="text-sm opacity-90">
                                                     เปิดเมื่อ: {formatDate(session.opened_at)}
@@ -179,7 +179,7 @@ export default function FloodSessionSelector({
     return (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลย้อนหลัง (Historical Data)
+                <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลย้อนหลัง
             </h3>
 
             {/* เลือกปี */}
@@ -202,11 +202,11 @@ export default function FloodSessionSelector({
                     </select>
                 </div>
 
-                {/* เลือก Session */}
+                {/* เลือกเหตุการณ์ */}
                 {sessions.length > 0 ? (
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            เลือก EOC Session ({sessions.length} sessions)
+                            เลือกเหตุการณ์ EOC ({sessions.length} เหตุการณ์)
                         </label>
                         <select
                             value={selectedSession?.id || ''}
@@ -216,10 +216,10 @@ export default function FloodSessionSelector({
                             }}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
                         >
-                            <option value="">-- เลือก Session --</option>
+                            <option value="">-- เลือกเหตุการณ์ --</option>
                             {sessions.map(session => (
                                 <option key={session.id} value={session.id}>
-                                    Session #{session.session_number} - {formatDate(session.opened_at)}
+                                    เหตุการณ์ที่ {session.session_number} - {formatDate(session.opened_at)}
                                     {session.status === 'active' ? "(กำลังดำเนินการ)" : ` ถึง ${formatDate(session.closed_at)} (ปิดแล้ว)`}
                                 </option>
                             ))}
@@ -228,7 +228,7 @@ export default function FloodSessionSelector({
                 ) : selectedYear && !loading && (
                     <div className="md:col-span-2">
                         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                            <p className="text-gray-600"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่พบ EOC Session ในปี {selectedYear + 543}</p>
+                            <p className="text-gray-600"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่พบเหตุการณ์ EOC ในปี {selectedYear + 543}</p>
                             <p className="text-sm text-gray-500 mt-1">ลองเลือกปีอื่น</p>
                         </div>
                     </div>
@@ -248,7 +248,7 @@ export default function FloodSessionSelector({
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                         <SummaryItem
-                            label="EOC Sessions"
+                            label="จำนวนเหตุการณ์ EOC"
                             value={yearSummary.total_sessions || 0}
                             icon="circleDot"
                             subtext={`ปิดแล้ว: ${yearSummary.closed_sessions || 0}, ดำเนินการ: ${yearSummary.active_sessions || 0}`}
@@ -282,7 +282,7 @@ export default function FloodSessionSelector({
                 </div>
             )}
 
-            {/* แสดงรายละเอียด Session ที่เลือก */}
+            {/* แสดงรายละเอียดเหตุการณ์ที่เลือก */}
             {selectedSession && (
                 <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="flex items-start justify-between">
@@ -297,7 +297,7 @@ export default function FloodSessionSelector({
                                         <AppIcon icon="check" className="inline-block h-4 w-4" /> ปิดแล้ว
                                     </span>
                                 )}
-                                <span className="text-gray-700">EOC Session #{selectedSession.session_number}</span>
+                                <span className="text-gray-700">เหตุการณ์ EOC ที่ {selectedSession.session_number}</span>
                             </h4>
                             <div className="space-y-1 text-sm text-gray-600">
                                 <p><strong>เปิด:</strong> {formatDate(selectedSession.opened_at)} โดย {selectedSession.opened_by_name}</p>

@@ -36,11 +36,11 @@ export default function GistdaFloodMapPage() {
             const response = await fetch(`/stn-eoc/api/eoc/gistda/flood?days=${selectedDays}&limit=100&pv_idn=91`);
             const data = await response.json();
 
-            if (data.success || data.useMockData) {
-                setFloodData(data.useMockData ? data.data : data);
-            } else {
-                setError(data.error || 'Failed to fetch data');
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || data.error || 'Failed to fetch data');
             }
+
+            setFloodData(data);
         } catch (err) {
             console.error('Error fetching flood data:', err);
             setError('ไม่สามารถโหลดข้อมูลได้');
@@ -118,11 +118,7 @@ export default function GistdaFloodMapPage() {
                                 <AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่อุทกภัยน้ำท่วม GISTDA
                             </h1>
                             <p className="text-sm text-gray-600">
-                                {floodData?.source === 'MOCK' ? (
-                                    <span className="text-orange-600"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กำลังใช้ข้อมูลจำลอง (ยังไม่มี API Key)</span>
-                                ) : (
-                                    `ข้อมูลจาก GISTDA - อัปเดตล่าสุด: ${floodData?.summary?.lastUpdate ? new Date(floodData.summary.lastUpdate).toLocaleString('th-TH') : '-'}`
-                                )}
+                                {`ข้อมูลจาก GISTDA - อัปเดตล่าสุด: ${floodData?.summary?.lastUpdate ? new Date(floodData.summary.lastUpdate).toLocaleString('th-TH') : '-'}`}
                             </p>
                         </div>
 

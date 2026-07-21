@@ -8,6 +8,14 @@ export async function GET(request) {
         const limit = searchParams.get('limit') || '1000';
         const offset = searchParams.get('offset') || '0';
 
+        if (!process.env.GISTDA_API_KEY) {
+            return NextResponse.json({
+                success: false,
+                error: 'missing_api_key',
+                message: 'ยังไม่ได้ตั้งค่า GISTDA_API_KEY'
+            }, { status: 503 });
+        }
+
         // สร้าง URL สำหรับเรียก GISTDA API
         const gistdaUrl = `https://api-gateway.gistda.or.th/api/2.0/resources/features/flood/${days}days?limit=${limit}&offset=${offset}&pv_idn=91`;
 
@@ -17,13 +25,10 @@ export async function GET(request) {
             'Content-Type': 'application/json'
         };
 
-        // ถ้ามี API Key ใน environment variable
-        // ลองหลายวิธีส่ง API key
-        if (process.env.GISTDA_API_KEY) {
-            headers['apikey'] = process.env.GISTDA_API_KEY;
-            headers['X-API-Key'] = process.env.GISTDA_API_KEY;
-            headers['api-key'] = process.env.GISTDA_API_KEY;
-        }
+        // ลองหลายวิธีส่ง API key ให้รองรับรูปแบบ upstream ที่ต่างกัน
+        headers['apikey'] = process.env.GISTDA_API_KEY;
+        headers['X-API-Key'] = process.env.GISTDA_API_KEY;
+        headers['api-key'] = process.env.GISTDA_API_KEY;
 
         const response = await fetch(gistdaUrl, {
             method: 'GET',
@@ -39,11 +44,9 @@ export async function GET(request) {
             if (response.status === 407) {
                 return NextResponse.json({
                     success: false,
-                    error: 'Authentication Required',
-                    message: 'กรุณาตั้งค่า GISTDA_API_KEY ใน .env.local',
-                    useMockData: true,
-                    data: getMockFloodData()
-                }, { status: 200 }); // ส่ง 200 เพื่อให้ UI รับ mock data
+                    error: 'authentication_required',
+                    message: 'GISTDA API ปฏิเสธการยืนยันตัวตน'
+                }, { status: 503 });
             }
 
             return NextResponse.json({
@@ -74,82 +77,10 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Error in GISTDA API proxy:', error);
-
-        // ส่ง mock data แทนถ้า error
         return NextResponse.json({
             success: false,
             error: 'Internal server error',
             message: 'เกิดข้อผิดพลาดในการดึงข้อมูลจาก GISTDA',
-            useMockData: true,
-            data: getMockFloodData()
-        }, { status: 200 });
+        }, { status: 500 });
     }
-}
-
-// ข้อมูลจำลองสำหรับทดสอบ
-function getMockFloodData() {
-    return {
-        success: true,
-        source: 'MOCK',
-        timestamp: new Date().toISOString(),
-        total: 5,
-        features: [
-            {
-                type: 'Feature',
-                properties: {
-                    province: 'สตูล',
-                    district: 'เมืองสตูล',
-                    tambon: 'ควนสตอ',
-                    flood_level: 'moderate',
-                    water_depth: 50,
-                    affected_area: 1200,
-                    description: 'พื้นที่อุทกภัยน้ำท่วมบริเวณตำบลควนสตอ',
-                    date: '2025-12-11'
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [100.0673, 6.6238]
-                }
-            },
-            {
-                type: 'Feature',
-                properties: {
-                    province: 'สตูล',
-                    district: 'เมืองสตูล',
-                    tambon: 'คลองขุด',
-                    flood_level: 'mild',
-                    water_depth: 30,
-                    affected_area: 800,
-                    description: 'อุทกภัยน้ำท่วมเล็กน้อยบริเวณตำบลคลองขุด',
-                    date: '2025-12-11'
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [100.0823, 6.6338]
-                }
-            },
-            {
-                type: 'Feature',
-                properties: {
-                    province: 'สตูล',
-                    district: 'ควนโดน',
-                    tambon: 'ควนโดน',
-                    flood_level: 'severe',
-                    water_depth: 80,
-                    affected_area: 2000,
-                    description: 'อุทกภัยน้ำท่วมหนักบริเวณตำบลควนโดน',
-                    date: '2025-12-11'
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [99.9173, 6.7638]
-                }
-            }
-        ],
-        summary: {
-            totalAreas: 3,
-            provinces: ['สตูล'],
-            lastUpdate: new Date().toISOString()
-        }
-    };
 }

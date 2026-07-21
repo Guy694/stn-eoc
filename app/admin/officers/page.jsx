@@ -5,6 +5,7 @@ import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
+import { TEAM_ROLE_OPTIONS } from '@/lib/eocRoles';
 
 export default function OfficersManagementPage() {
     const [officers, setOfficers] = useState([]);
@@ -18,6 +19,9 @@ export default function OfficersManagementPage() {
     const [pageSize, setPageSize] = useState(20);
     const [showModal, setShowModal] = useState(false);
     const [editingOfficer, setEditingOfficer] = useState(null);
+    const [availableTeamAssignments, setAvailableTeamAssignments] = useState([]);
+    const [teamAssignments, setTeamAssignments] = useState([]);
+    const [loadingTeamAssignments, setLoadingTeamAssignments] = useState(false);
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -34,10 +38,9 @@ export default function OfficersManagementPage() {
 
     const roles = [
         { value: 'admin', label: 'ผู้ดูแลระบบ', color: 'bg-red-100 text-red-700' },
-        { value: 'MCATT', label: 'MCATT', color: 'bg-teal-100 text-teal-700' },
-        { value: 'SAT', label: 'SAT', color: 'bg-blue-100 text-blue-700' },
-        { value: 'SeRHT', label: 'SeRHT', color: 'bg-green-100 text-green-700' },
-        { value: 'staff', label: 'เจ้าหน้าที่ทั่วไป', color: 'bg-gray-100 text-gray-700' }
+        { value: 'commander', label: 'ผู้บัญชาการเหตุการณ์', color: 'bg-orange-100 text-orange-700' },
+        { value: 'staff', label: 'เจ้าหน้าที่ทั่วไป', color: 'bg-gray-100 text-gray-700' },
+        ...TEAM_ROLE_OPTIONS
     ];
 
     const registrationStatusLabels = {
@@ -99,6 +102,35 @@ export default function OfficersManagementPage() {
         setCurrentPage(1);
     }, [filterRole, searchTerm]);
 
+    const loadTeamAssignments = useCallback(async (officerId = 'new') => {
+        try {
+            setLoadingTeamAssignments(true);
+            const response = await fetch(`/stn-eoc/api/admin/officers/${officerId}/team-assignments`);
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.message || 'ไม่สามารถโหลดกลุ่มภารกิจ EOC ได้');
+            setAvailableTeamAssignments(data.availableTeams || []);
+            setTeamAssignments((data.assignments || []).map((assignment) => ({
+                sessionTeamId: String(assignment.session_team_id),
+                roleInTeam: assignment.role_in_team === 'เจ้าหน้าที่' ? 'สมาชิกทีม' : (assignment.role_in_team || 'สมาชิกทีม')
+            })));
+        } catch (error) {
+            console.error('Error loading officer team assignments:', error);
+            showError(error.message || 'ไม่สามารถโหลดกลุ่มภารกิจ EOC ได้');
+        } finally {
+            setLoadingTeamAssignments(false);
+        }
+    }, []);
+
+    const saveTeamAssignments = async (officerId) => {
+        const response = await fetch(`/stn-eoc/api/admin/officers/${officerId}/team-assignments`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assignments: teamAssignments })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'ไม่สามารถบันทึกกลุ่มภารกิจ EOC ได้');
+    };
+
     const paginatedOfficers = useMemo(
         () => paginateRows(officers, currentPage, pageSize),
         [officers, currentPage, pageSize]
@@ -128,6 +160,7 @@ export default function OfficersManagementPage() {
             const data = await response.json();
 
             if (data.success) {
+                await saveTeamAssignments(editingOfficer ? editingOfficer.id : data.data.id);
                 showSuccess(editingOfficer ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มเจ้าหน้าที่สำเร็จ');
                 setShowModal(false);
                 resetForm();
@@ -141,7 +174,7 @@ export default function OfficersManagementPage() {
         }
     };
 
-    const handleEdit = (officer) => {
+    const handleEdit = async (officer) => {
         setEditingOfficer(officer);
         setFormData({
             username: officer.username,
@@ -157,6 +190,7 @@ export default function OfficersManagementPage() {
             is_approved: officer.is_approved ?? 1
         });
         setShowModal(true);
+        await loadTeamAssignments(officer.id);
     };
 
     const handleApprove = async (officer) => {
@@ -214,6 +248,8 @@ export default function OfficersManagementPage() {
 
     const resetForm = () => {
         setEditingOfficer(null);
+        setTeamAssignments([]);
+        setAvailableTeamAssignments([]);
         setFormData({
             username: '',
             password: '',
@@ -235,6 +271,27 @@ export default function OfficersManagementPage() {
 
     const getRoleLabel = (role) => {
         return roles.find(r => r.value === role)?.label || role;
+    };
+
+    const openCreateModal = async () => {
+        resetForm();
+        setShowModal(true);
+        await loadTeamAssignments();
+    };
+
+    const toggleTeamAssignment = (sessionTeamId) => {
+        setTeamAssignments((current) => {
+            const existing = current.find((assignment) => assignment.sessionTeamId === String(sessionTeamId));
+            return existing
+                ? current.filter((assignment) => assignment.sessionTeamId !== String(sessionTeamId))
+                : [...current, { sessionTeamId: String(sessionTeamId), roleInTeam: 'สมาชิกทีม' }];
+        });
+    };
+
+    const changeTeamAssignmentRole = (sessionTeamId, roleInTeam) => {
+        setTeamAssignments((current) => current.map((assignment) => (
+            assignment.sessionTeamId === String(sessionTeamId) ? { ...assignment, roleInTeam } : assignment
+        )));
     };
 
     return (
@@ -359,10 +416,7 @@ export default function OfficersManagementPage() {
                             ))}
                         </select>
                         <button
-                            onClick={() => {
-                                resetForm();
-                                setShowModal(true);
-                            }}
+                            onClick={openCreateModal}
                             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
                             <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มเจ้าหน้าที่
@@ -479,7 +533,7 @@ export default function OfficersManagementPage() {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4 shadow-lg">
-                    <div className="bg-white rounded-lg max-w-md w-full p-6">
+                    <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
                         <h2 className="text-xl font-bold mb-4 text-gray-800">
                             {editingOfficer ? "แก้ไขเจ้าหน้าที่" : "เพิ่มเจ้าหน้าที่ใหม่"}
                         </h2>
@@ -585,7 +639,7 @@ export default function OfficersManagementPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    สิทธิ์การเข้าถึง *
+                                    สิทธิ์การเข้าถึงระบบ *
                                 </label>
                                 <select
                                     required
@@ -599,6 +653,32 @@ export default function OfficersManagementPage() {
                                         </option>
                                     ))}
                                 </select>
+                                <p className="mt-1 text-xs text-gray-500">กำหนดสิทธิ์ RBAC ของระบบ แยกจากการมอบหมายกลุ่มภารกิจ EOC ด้านล่าง</p>
+                            </div>
+
+                            <div className="border border-blue-200 bg-blue-50 p-4">
+                                <div className="mb-3">
+                                    <h3 className="font-bold text-blue-950">กลุ่มภารกิจ EOC</h3>
+                                    <p className="mt-1 text-xs text-blue-800">เลือกได้หลายกลุ่มภารกิจจากทุก Session ที่เปิดอยู่ พร้อมกำหนดบทบาทในแต่ละทีม</p>
+                                </div>
+                                {loadingTeamAssignments ? (
+                                    <p className="text-sm text-blue-800">กำลังโหลดกลุ่มภารกิจ...</p>
+                                ) : availableTeamAssignments.length === 0 ? (
+                                    <p className="text-sm text-blue-800">ยังไม่มีทีมใน EOC Session ที่เปิดใช้งาน</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {availableTeamAssignments.map((team) => {
+                                            const assignment = teamAssignments.find((item) => item.sessionTeamId === String(team.session_team_id));
+                                            return <div key={team.session_team_id} className="flex flex-col gap-2 border border-blue-100 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+                                                <label className="flex min-w-0 items-start gap-3 text-sm text-gray-800">
+                                                    <input type="checkbox" checked={Boolean(assignment)} onChange={() => toggleTeamAssignment(team.session_team_id)} className="mt-1 h-4 w-4" />
+                                                    <span><span className="font-bold">{team.team_code}</span> - {team.team_name_th}<span className="mt-0.5 block text-xs text-gray-500">EOC {team.eoc_type} · Session #{team.session_number}</span></span>
+                                                </label>
+                                                {assignment && <select value={assignment.roleInTeam} onChange={(event) => changeTeamAssignmentRole(team.session_team_id, event.target.value)} className="border border-gray-300 px-2 py-1 text-sm text-gray-800 sm:w-36"><option value="สมาชิกทีม">สมาชิกทีม</option><option value="รองหัวหน้าทีม">รองหัวหน้าทีม</option><option value="หัวหน้าทีม">หัวหน้าทีม</option></select>}
+                                            </div>;
+                                        })}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex gap-3 pt-4">

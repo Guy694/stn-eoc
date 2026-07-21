@@ -174,27 +174,10 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Database error:', error);
-
-        // Mock data for development
         return NextResponse.json({
-            success: true,
-            hasActiveSession: true,
-            useMockData: true,
-            activeSession: {
-                id: 3,
-                session_number: 3,
-                opened_at: '2026-01-13T09:00:00.000Z',
-                open_reason: 'พบการระบาดของไข้เลือดออก'
-            },
-            data: [],
-            tambonSummary: [],
-            stats: {
-                total_reports: 0,
-                total_patients: 0,
-                affected_districts: 0,
-                affected_tambons: 0
-            }
-        });
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถานะพื้นที่โรคระบาด'
+        }, { status: 500 });
     } finally {
         if (connection) connection.release();
     }

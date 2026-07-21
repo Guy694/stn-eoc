@@ -128,7 +128,7 @@ export default function DisasterSessionSelector({
                                             <div>
                                                 <p className="flex items-center gap-2 font-medium">
                                                     <AppIcon icon={disasterIcon} className="h-4 w-4" />
-                                                    EOC Session #{session.session_number} - {new Date().getFullYear()}
+                                                    เหตุการณ์ EOC ที่ {session.session_number} - {new Date().getFullYear()}
                                                 </p>
                                                 <p className="text-sm opacity-90">
                                                     เปิดเมื่อ: {formatDate(session.opened_at)}
@@ -210,7 +210,7 @@ export default function DisasterSessionSelector({
                 {sessions.length > 0 && (
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            เลือก EOC Session
+                            เลือกเหตุการณ์ EOC
                         </label>
                         <select
                             value={selectedSession?.id || ''}
@@ -220,10 +220,10 @@ export default function DisasterSessionSelector({
                             }}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
                         >
-                            <option value="">-- เลือก Session --</option>
+                            <option value="">-- เลือกเหตุการณ์ --</option>
                             {sessions.map(session => (
                                 <option key={session.id} value={session.id}>
-                                    Session #{session.session_number} - {formatDate(session.opened_at)}
+                                    เหตุการณ์ที่ {session.session_number} - {formatDate(session.opened_at)}
                                     {session.status === 'active' ? ' (กำลังดำเนินการ)' : ` - ${formatDate(session.closed_at)}`}
                                 </option>
                             ))}
@@ -243,7 +243,7 @@ export default function DisasterSessionSelector({
                         สรุปข้อมูลปี {selectedYear + 543}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        <SummaryItem label="EOC Sessions" value={yearSummary.total_sessions || 0} icon="circleDot" />
+                        <SummaryItem label="จำนวนเหตุการณ์ EOC" value={yearSummary.total_sessions || 0} icon="circleDot" />
                         <SummaryItem label="รวมเวลา" value={formatDuration(yearSummary.total_hours)} icon="clock" />
                         <SummaryItem label="กิจกรรม" value={yearSummary.total_activities || 0} icon="clipboard" />
                         <SummaryItem label="บันทึกข้อมูล" value={yearSummary.total_data_entries || 0} icon="file" />
@@ -260,7 +260,7 @@ export default function DisasterSessionSelector({
                             <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
                                 <AppIcon icon={selectedSession.status === 'active' ? "statusGreen" : "statusBlack"} className="h-4 w-4" />
                                 <AppIcon icon={disasterIcon} className="h-4 w-4" />
-                                EOC Session #{selectedSession.session_number}
+                                เหตุการณ์ EOC ที่ {selectedSession.session_number}
                             </h4>
                             <div className="space-y-1 text-sm text-gray-600">
                                 <p><strong>เปิด:</strong> {formatDate(selectedSession.opened_at)} โดย {selectedSession.opened_by_name}</p>

@@ -66,7 +66,7 @@ function formatDateTime(value) {
 function sessionLabel(session) {
     if (!session) return "";
     const status = session.status === "active" ? "เปิดอยู่" : "ปิดแล้ว";
-    return `Session #${session.session_number || session.id} (${status}) - ${formatDateTime(session.opened_at)}`;
+    return `เหตุการณ์ที่ ${session.session_number || session.id} (${status}) - ${formatDateTime(session.opened_at)}`;
 }
 
 function roleLabel(role) {
@@ -117,7 +117,7 @@ export default function FloodOperationsTeamPage() {
             const response = await fetch("/stn-eoc/api/eoc/sessions?type=flood&limit=100");
             const result = await response.json();
             if (!result.success) {
-                setError(result.message || "โหลดข้อมูล session ไม่สำเร็จ");
+                setError(result.message || "โหลดข้อมูลเหตุการณ์ไม่สำเร็จ");
                 setSessions([]);
                 return;
             }
@@ -128,7 +128,7 @@ export default function FloodOperationsTeamPage() {
             setSelectedSessionId((current) => current || (defaultSession ? String(defaultSession.id) : ""));
         } catch (fetchError) {
             console.error("Error loading flood sessions:", fetchError);
-            setError("เกิดข้อผิดพลาดในการโหลด EOC Session");
+            setError("เกิดข้อผิดพลาดในการโหลดข้อมูลเหตุการณ์ EOC");
             setSessions([]);
         } finally {
             setLoadingSessions(false);
@@ -373,7 +373,7 @@ export default function FloodOperationsTeamPage() {
 
     const deleteTeam = async (team) => {
         if (!selectedSessionId) return;
-        const confirmed = window.confirm(`ถอดทีม "${team.team_name_th || team.team_name_en}" ออกจาก Session นี้ใช่หรือไม่?`);
+        const confirmed = window.confirm(`ถอดทีม "${team.team_name_th || team.team_name_en}" ออกจากเหตุการณ์นี้ใช่หรือไม่?`);
         if (!confirmed) return;
 
         setTeamMessage("");
@@ -406,20 +406,20 @@ export default function FloodOperationsTeamPage() {
                             </div>
                             <h1 className="mt-2 text-2xl font-black text-slate-900 md:text-3xl">ทีมปฏิบัติการ</h1>
                             <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                                ผังใครเป็นใครของทีมปฏิบัติการในแต่ละ EOC Session โดยให้ผู้บัญชาการเหตุการณ์และรองผู้บัญชาการเหตุการณ์เป็น head ของโครงสร้าง ไม่อ้างอิงผู้ดูแลระบบ
+                                ผังบทบาทของทีมปฏิบัติการในแต่ละเหตุการณ์ EOC โดยให้ผู้บัญชาการเหตุการณ์และรองผู้บัญชาการเหตุการณ์เป็นหัวหน้าของโครงสร้าง ไม่อ้างอิงผู้ดูแลระบบ
                             </p>
                         </div>
 
                         <div className="flex flex-col gap-2">
                             <label className="block">
-                                <span className="mb-1 block text-xs font-bold text-slate-500">เลือก EOC Session</span>
+                                <span className="mb-1 block text-xs font-bold text-slate-500">เลือกเหตุการณ์ EOC</span>
                                 <select
                                     value={selectedSessionId}
                                     onChange={(event) => setSelectedSessionId(event.target.value)}
                                     disabled={loadingSessions || sessions.length === 0}
                                     className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 disabled:bg-slate-100"
                                 >
-                                    {sessions.length === 0 && <option value="">ไม่มี session</option>}
+                                    {sessions.length === 0 && <option value="">ไม่มีเหตุการณ์</option>}
                                     {sessions.map((session) => (
                                         <option key={session.id} value={session.id}>
                                             {sessionLabel(session)}
@@ -472,8 +472,8 @@ export default function FloodOperationsTeamPage() {
                 <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <h2 className="text-lg font-black text-slate-900">Head ของผังบัญชาการ</h2>
-                            <p className="mt-1 text-sm text-slate-500">เลือกจากเจ้าหน้าที่ที่ไม่ใช่ผู้ดูแลระบบ และผูกกับ EOC Session ที่เลือก</p>
+                            <h2 className="text-lg font-black text-slate-900">หัวหน้าผังบัญชาการ</h2>
+                            <p className="mt-1 text-sm text-slate-500">เลือกจากเจ้าหน้าที่ที่ไม่ใช่ผู้ดูแลระบบ และผูกกับเหตุการณ์ EOC ที่เลือก</p>
                         </div>
                         {canManageCommanders && selectedSessionId && (
                             <div className="flex flex-wrap gap-2">
@@ -503,8 +503,8 @@ export default function FloodOperationsTeamPage() {
                 <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <h2 className="text-lg font-black text-slate-900">ทีมใน EOC Session</h2>
-                            <p className="mt-1 text-sm text-slate-500">เพิ่ม แก้ไขหัวหน้าทีม/หมายเหตุ หรือถอดทีมออกจาก session ที่เลือก</p>
+                            <h2 className="text-lg font-black text-slate-900">ทีมในเหตุการณ์ EOC</h2>
+                            <p className="mt-1 text-sm text-slate-500">เพิ่ม แก้ไขหัวหน้าทีม/หมายเหตุ หรือถอดทีมออกจากเหตุการณ์ที่เลือก</p>
                         </div>
                         {canManageCommanders && selectedSessionId && (
                             <button

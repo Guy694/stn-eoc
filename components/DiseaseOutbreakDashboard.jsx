@@ -17,7 +17,7 @@ import {
     YAxis
 } from "recharts";
 import AppIcon from "@/components/icons/AppIcon";
-import { diseaseOutbreakMockData, enrichDistrictOutbreakData } from "@/lib/diseaseOutbreakMockData";
+import { enrichDistrictOutbreakData } from "@/lib/diseaseOutbreakMockData";
 import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 
 const yearColors = {
@@ -72,7 +72,7 @@ function getRiskFill(level) {
 
 export default function DiseaseOutbreakDashboard({
     session,
-    data = diseaseOutbreakMockData,
+    data = null,
     showHeader = true
 }) {
     const [districtFilter, setDistrictFilter] = useState("all");

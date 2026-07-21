@@ -12,8 +12,7 @@ export default function EOCLayout({ children }) {
     const pathname = usePathname();
 
     // Citizens don't get sidebar - they only have access to public features
-    // Sidebar is hidden on the main /dashboard page
-    const showSidebar = user?.role !== 'citizen' && pathname !== '/dashboard';
+    const showSidebar = user?.role !== 'citizen' && (pathname !== '/dashboard' || user?.role !== 'admin');
 
     return (
         <div className="flex flex-col min-h-screen">

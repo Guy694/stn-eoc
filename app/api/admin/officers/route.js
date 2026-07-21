@@ -3,6 +3,9 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
+import { SYSTEM_ROLE_CODES } from '@/lib/eocRoles';
+
+const SYSTEM_ROLES = new Set(SYSTEM_ROLE_CODES);
 
 // GET - ดึงรายการเจ้าหน้าที่ทั้งหมด
 export async function GET(request) {
@@ -89,6 +92,13 @@ export async function POST(request) {
         if (!username || !password || !given_name || !family_name || !role) {
             return NextResponse.json(
                 { success: false, error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
+        if (!SYSTEM_ROLES.has(role)) {
+            return NextResponse.json(
+                { success: false, error: 'บทบาทสิทธิ์ระบบไม่ถูกต้อง' },
                 { status: 400 }
             );
         }

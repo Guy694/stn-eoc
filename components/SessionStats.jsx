@@ -5,6 +5,7 @@ import AppIcon from './icons/AppIcon';
 export default function SessionStats({ session, year }) {
     const [floodData, setFloodData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const calculateStats = useCallback((data) => {
         // คำนวณสถิติจากข้อมูลจริง
@@ -44,27 +45,13 @@ export default function SessionStats({ session, year }) {
         };
     }, []);
 
-    const getMockStats = useCallback((session) => {
-        // ข้อมูลจำลองสำหรับ demo
-        return {
-            totalVillages: Math.floor(Math.random() * 50) + 20,
-            totalTambons: Math.floor(Math.random() * 15) + 5,
-            totalDistricts: Math.floor(Math.random() * 5) + 2,
-            totalPopulation: Math.floor(Math.random() * 20000) + 5000,
-            severeCount: Math.floor(Math.random() * 10) + 3,
-            moderateCount: Math.floor(Math.random() * 15) + 5,
-            mildCount: Math.floor(Math.random() * 20) + 8,
-            totalRecords: session?.total_data_entries || Math.floor(Math.random() * 100) + 50
-        };
-    }, []);
-
     const fetchSessionFloodData = useCallback(async () => {
         if (!session || !year) return;
 
         setLoading(true);
+        setError('');
         try {
             // ดึงข้อมูลอุทกภัยน้ำท่วมในช่วง session
-            const startDate = new Date(session.opened_at).toISOString().split('T')[0];
             const endDate = session.closed_at
                 ? new Date(session.closed_at).toISOString().split('T')[0]
                 : new Date().toISOString().split('T')[0];
@@ -74,24 +61,26 @@ export default function SessionStats({ session, year }) {
                 `/stn-eoc/api/eoc/flood/daily-flood-village?date=${endDate}`
             );
 
-            if (response.ok) {
-                const data = await response.json();
-                const records = Array.isArray(data) ? data : data.villages || [];
-
-                // คำนวณสถิติ
-                const stats = calculateStats(records);
-                setFloodData(stats);
-            } else {
-                setFloodData(getMockStats(session));
+            if (!response.ok) {
+                throw new Error('ไม่สามารถโหลดข้อมูลจากฐานข้อมูลได้');
             }
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.message || 'ไม่สามารถโหลดข้อมูลจากฐานข้อมูลได้');
+            }
+
+            const records = Array.isArray(data) ? data : data.villages || [];
+            const stats = calculateStats(records);
+            setFloodData(stats);
         } catch (error) {
             console.error('Error fetching session flood data:', error);
-            // ใช้ข้อมูลจำลอง
-            setFloodData(getMockStats(session));
+            setFloodData(null);
+            setError(error.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลสถิติ');
         } finally {
             setLoading(false);
         }
-    }, [calculateStats, getMockStats, session, year]);
+    }, [calculateStats, session, year]);
 
     useEffect(() => {
         fetchSessionFloodData();
@@ -108,6 +97,14 @@ export default function SessionStats({ session, year }) {
                     <div className="animate-spin rounded-full h-8 w-8 border-b border-teal-500 mx-auto mb-2"></div>
                     <p className="text-gray-600 text-sm">กำลังโหลดสถิติ...</p>
                 </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-white shadow-md rounded-lg p-6 mb-6 border border-red-200">
+                <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
         );
     }

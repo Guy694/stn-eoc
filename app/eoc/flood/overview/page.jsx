@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import {
@@ -15,6 +16,7 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import AppIcon from "@/components/icons/AppIcon";
+import { getOperationSessionLockByType } from '@/lib/eocSessionLock';
 
 const PublicIncidentMap = dynamic(() => import('@/components/PublicIncidentMap'), {
     ssr: false,
@@ -42,25 +44,21 @@ export default function EOCOverview() {
     const [selectedSession, setSelectedSession] = useState(null);
     const [viewMode, setViewMode] = useState('cumulative');
     const [selectedDate, setSelectedDate] = useState('');
+    const [missionTeams, setMissionTeams] = useState([]);
+    const [loadingTeams, setLoadingTeams] = useState(false);
 
-    useEffect(() => {
-        fetchSessions();
-    }, []);
-
-    useEffect(() => {
-        if (selectedSession) {
-            fetchDashboardData(selectedSession, viewMode, selectedDate);
-        }
-    }, [selectedDate, selectedSession, viewMode]);
-
-    const fetchSessions = async () => {
+    async function fetchSessions() {
         try {
             const response = await fetch('/stn-eoc/api/eoc/sessions?type=flood&limit=100');
             const result = await response.json();
             if (result.success && result.data.length > 0) {
                 setSessions(result.data);
+                const lock = getOperationSessionLockByType('flood');
+                const lockedSession = lock
+                    ? result.data.find((session) => Number(session.id) === Number(lock.sessionId))
+                    : null;
                 const activeSession = result.data.find(session => session.status === 'active') || result.data[0];
-                setSelectedSession(activeSession.id);
+                setSelectedSession((lockedSession || activeSession).id);
             } else {
                 setLoading(false);
             }
@@ -68,9 +66,9 @@ export default function EOCOverview() {
             console.error('Error fetching active sessions:', error);
             setLoading(false);
         }
-    };
+    }
 
-    const fetchDashboardData = async (sessionId, mode, date) => {
+    async function fetchDashboardData(sessionId, mode, date) {
         try {
             setLoading(true);
             const params = new URLSearchParams({
@@ -96,7 +94,45 @@ export default function EOCOverview() {
         } finally {
             setLoading(false);
         }
-    };
+    }
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchSessions();
+    }, []);
+
+    useEffect(() => {
+        if (selectedSession) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            fetchDashboardData(selectedSession, viewMode, selectedDate);
+        }
+    }, [selectedDate, selectedSession, viewMode]);
+
+    useEffect(() => {
+        if (!selectedSession) {
+            return;
+        }
+
+        const loadTeams = async () => {
+            setLoadingTeams(true);
+            try {
+                const response = await fetch(`/stn-eoc/api/eoc/sessions/${selectedSession}/teams`);
+                const result = await response.json();
+                if (result.success) {
+                    setMissionTeams(Array.isArray(result.teams) ? result.teams : []);
+                } else {
+                    setMissionTeams([]);
+                }
+            } catch (error) {
+                console.error('Error loading mission teams:', error);
+                setMissionTeams([]);
+            } finally {
+                setLoadingTeams(false);
+            }
+        };
+
+        loadTeams();
+    }, [selectedSession]);
 
     if (loading) {
         return (
@@ -173,22 +209,15 @@ export default function EOCOverview() {
 
                 {/* Display Filters */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                เลือก EOC Session:
-                            </label>
-                            <select
-                                value={selectedSession}
-                                onChange={(e) => setSelectedSession(parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                {sessions.map(s => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.eoc_type} - Session #{s.session_number} ({new Date(s.opened_at).toLocaleDateString('th-TH')}) {s.status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว'}
-                                    </option>
-                                ))}
-                            </select>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">EOC Session ที่ล็อกใช้งาน</label>
+                            <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-900">
+                                เหตุการณ์ #{session.session_number} ({session.status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว'})
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">
+                                ระบบเลือกจาก dashboard และใช้ session เดียวกันตลอดหน้าปฏิบัติการ
+                            </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -260,6 +289,45 @@ export default function EOCOverview() {
                         </div>
                         <div className="text-5xl"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                     </div>
+                </div>
+
+                <div className="mb-6 rounded-lg border border-cyan-200 bg-white p-5 shadow-sm">
+                    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900">กลุ่มภารกิจที่เปิดใช้งาน</h3>
+                            <p className="text-sm text-slate-600">แสดงข้อมูลเหมือนเมนูศูนย์ปฏิบัติงานเจ้าหน้าที่ EOC ของ session นี้</p>
+                        </div>
+                        <div className="rounded-lg bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700">
+                            ทั้งหมด {missionTeams.length} กลุ่ม
+                        </div>
+                    </div>
+
+                    {loadingTeams ? (
+                        <div className="text-sm text-slate-500">กำลังโหลดกลุ่มภารกิจ...</div>
+                    ) : missionTeams.length === 0 ? (
+                        <div className="text-sm text-slate-500">ยังไม่มีกลุ่มภารกิจสำหรับ session นี้</div>
+                    ) : (
+                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {missionTeams.map((team) => (
+                                <Link
+                                    key={team.session_team_id}
+                                    href={`/eoc/staff/${session.id}/teams/${team.session_team_id}`}
+                                    className="group rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <span className="text-2xl">{team.icon || 'ทีม'}</span>
+                                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                                            {team.team_code || '-'}
+                                        </span>
+                                    </div>
+                                    <h4 className="mt-3 text-base font-black text-slate-900">{team.team_name_th || team.team_name_en}</h4>
+                                    <p className="mt-2 text-sm text-slate-600">หัวหน้าทีม: {team.team_lead_name || 'ยังไม่กำหนด'}</p>
+                                    <p className="mt-1 text-sm text-slate-600">สมาชิก {team.member_count || 0} คน</p>
+                                    <div className="mt-3 border-t border-slate-100 pt-2 text-xs font-bold text-cyan-700">Dashboard · รายงานผล · ประวัติ</div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Meeting Summary */}
