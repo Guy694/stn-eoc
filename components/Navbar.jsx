@@ -12,7 +12,7 @@ export default function Navbar() {
 
     const allNavItems = [
         { name: "หน้าหลัก", path: "/" },
-        { name: "สภาพอากาศ", path: "/public/weather-watch" },
+        // { name: "สภาพอากาศ", path: "/public/weather-watch" },
         // { name: "แผนที่ภัยพิบัติ", path: "/public/disaster-map" },
         // { name: "แผนที่อุทกภัยน้ำท่วม", path: "/eoc/flood" },
         // { name: "แผนที่หมู่บ้าน", path: "/eoc/village-map" },

@@ -220,6 +220,8 @@ export default function Sidebar() {
                 { name: "ข้อมูลหน่วยบริการ", path: "/admin/health-facilities", icon: BriefcaseMedical, description: "โรงพยาบาล/สถานีอนามัย" },
                 { name: "ประกาศ", path: "/announcements", icon: Bell, description: "ข่าวประชาสัมพันธ์ แบนเนอร์ และเอกสารแนบ" },
                 { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: Activity, description: "ติดตามโรคระบาดจากหน่วยบริการ" },
+                { name: "แดชบอร์ด SAT", path: "/eoc/disease/sat/dashboard", icon: BarChart3, requiresSat: true, description: "แดชบอร์ดสำหรับกลุ่ม SAT" },
+                { name: "รายงานผล SAT", path: "/eoc/disease/sat/report", icon: ClipboardList, requiresSat: true, description: "รายงานผลการปฏิบัติงานของกลุ่ม SAT" },
             ],
         },
 

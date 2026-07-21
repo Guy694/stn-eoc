@@ -1,34 +1,6 @@
 import { NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import path from "path";
 import { requireAuth } from "@/lib/auth";
 import { query } from "@/lib/db";
-
-function parseCsvLine(line) {
-    const values = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let index = 0; index < line.length; index += 1) {
-        const char = line[index];
-        const next = line[index + 1];
-
-        if (char === '"' && next === '"') {
-            current += '"';
-            index += 1;
-        } else if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === "," && !inQuotes) {
-            values.push(current);
-            current = "";
-        } else {
-            current += char;
-        }
-    }
-
-    values.push(current);
-    return values;
-}
 
 function parseNumber(value) {
     if (value === undefined || value === null || String(value).trim() === "") return null;
@@ -183,138 +155,35 @@ async function ensureMedicalInventoryTables() {
     `, []);
 }
 
-async function loadCsvInventoryRows() {
-    const filepath = path.join(process.cwd(), "satun_flood_inventory_long.csv");
-    const content = await readFile(filepath, "utf8");
-    const [headerLine, ...lines] = content.replace(/^\uFEFF/, "").trim().split(/\r?\n/);
-    const headers = parseCsvLine(headerLine);
-
-    return lines
-        .filter(Boolean)
-        .map((line, index) => {
-            const values = parseCsvLine(line);
-            const row = Object.fromEntries(headers.map((header, headerIndex) => [header, values[headerIndex] ?? ""]));
-
-            return {
-                id: index + 1,
-                event_id: parseNumber(row.event_id),
-                event_name: row.event_name,
-                inventory_agency_id: parseNumber(row.agency_id),
-                agency_id: parseNumber(row.agency_id),
-                agency_name_original: row.agency_name,
-                agency_name: row.agency_name,
-                agency_type: row.agency_type,
-                item_code: row.item_code,
-                item_name: row.item_name,
-                unit: row.unit,
-                movement_tracked: row.movement_tracked === "1",
-                opening_qty: parseNumber(row.opening_qty),
-                received_qty: parseNumber(row.received_qty),
-                issued_qty: parseNumber(row.issued_qty),
-                balance_qty: parseNumber(row.balance_qty),
-                data_status: row.data_status || "not_recorded"
-            };
-        });
-}
-
-function attachHealthFacilityNames(rows, facilities) {
-    const facilityMap = buildFacilityMap(facilities);
-
-    return rows.map((row) => {
-        const matchedFacility = facilityMap.get(normalizeAgencyName(row.agency_name_original || row.agency_name));
-
-        if (!matchedFacility) {
-            return {
-                ...row,
-                health_facility_id: null,
-                health_facility_name: null,
-                matched_facility: false
-            };
-        }
-
-        return {
-            ...row,
-            health_facility_id: matchedFacility.id,
-            health_facility_name: matchedFacility.name,
-            agency_id: matchedFacility.id,
-            agency_name: matchedFacility.name,
-            agency_type: matchedFacility.typecode || row.agency_type,
-            district_name: matchedFacility.district_name,
-            tambon: matchedFacility.tambon,
-            lat: matchedFacility.lat,
-            lon: matchedFacility.lon,
-            matched_facility: true
-        };
-    });
-}
-
 async function getOrCreateInventoryEvent() {
-    const csvRows = await loadCsvInventoryRows();
-    const firstRow = csvRows[0] || {};
-    const eventName = firstRow.event_name || "อุทกภัย จ.สตูล";
-
+    // Try to find an existing event for flood, session 3
     const existing = await query(
         `SELECT id, external_event_id, event_name, eoc_type, session_number, source_file
          FROM medical_inventory_events
-         WHERE eoc_type = ? AND session_number = ? AND event_name = ?
-         LIMIT 1`,
-        ["flood", 3, eventName]
+         WHERE eoc_type = ? AND session_number = ?`,
+        ["flood", 3]
     );
 
-    if (existing.length > 0) return existing[0];
+    if (existing.length > 0) {
+        return existing[0];
+    }
 
+    // If not found, insert a new one with default values
     const result = await query(
         `INSERT INTO medical_inventory_events
          (external_event_id, eoc_type, session_number, event_name, source_file)
          VALUES (?, ?, ?, ?, ?)`,
-        [firstRow.event_id || 1, "flood", 3, eventName, "satun_flood_inventory_long.csv"]
+        [null, "flood", 3, "อุทกภัย จ.สตูล", null]
     );
 
     return {
         id: result.insertId,
-        external_event_id: firstRow.event_id || 1,
+        external_event_id: null,
         eoc_type: "flood",
         session_number: 3,
-        event_name: eventName,
-        source_file: "satun_flood_inventory_long.csv"
+        event_name: "อุทกภัย จ.สตูล",
+        source_file: null
     };
-}
-
-async function seedInventoryFromCsvIfEmpty(event, facilities) {
-    const countRows = await query(
-        `SELECT COUNT(*) AS total FROM medical_inventory_stock WHERE inventory_event_id = ?`,
-        [event.id]
-    );
-
-    if (Number(countRows[0]?.total || 0) > 0) return;
-
-    const csvRows = attachHealthFacilityNames(await loadCsvInventoryRows(), facilities);
-
-    for (const row of csvRows) {
-        await query(
-            `INSERT INTO medical_inventory_stock
-             (inventory_event_id, inventory_agency_id, health_facility_id, agency_name, agency_name_original, agency_type,
-              item_code, item_name, unit, movement_tracked, opening_qty, received_qty, issued_qty, balance_qty, data_status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                event.id,
-                row.inventory_agency_id || row.agency_id || 0,
-                row.health_facility_id,
-                row.agency_name,
-                row.agency_name_original || row.agency_name,
-                row.agency_type,
-                row.item_code,
-                row.item_name,
-                row.unit,
-                row.movement_tracked ? 1 : 0,
-                row.opening_qty,
-                row.received_qty,
-                row.issued_qty,
-                row.balance_qty,
-                row.data_status === "not_recorded" ? "not_recorded" : "recorded"
-            ]
-        );
-    }
 }
 
 function normalizeDbRow(row) {
@@ -377,7 +246,6 @@ async function getInventoryContext() {
     await ensureMedicalInventoryTables();
     const facilities = await loadHealthFacilities();
     const event = await getOrCreateInventoryEvent();
-    await seedInventoryFromCsvIfEmpty(event, facilities);
     return { facilities, event };
 }
 
