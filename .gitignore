@@ -22,6 +22,7 @@
 
 # local database dumps and runtime uploads
 /database/dumps/
+/database/
 /private/
 stneoc*.sql
 *dump*.sql
