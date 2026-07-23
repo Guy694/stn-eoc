@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import AppIcon from "@/components/icons/AppIcon";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -18,7 +19,6 @@ export default function ProfilePage() {
         department: "",
         position: ""
     });
-    const [message, setMessage] = useState({ type: "", text: "" });
     const [telegramSettings, setTelegramSettings] = useState({
         telegramChatId: "",
         telegramNotifyEnabled: false,
@@ -69,8 +69,6 @@ export default function ProfilePage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage({ type: "", text: "" });
-
         try {
             const response = await fetch('/stn-eoc/api/officer/profile', {
                 method: 'PUT',
@@ -81,7 +79,7 @@ export default function ProfilePage() {
             const data = await response.json();
 
             if (data.success) {
-                setMessage({ type: "success", text: "บันทึกข้อมูลสำเร็จ" });
+                showSuccess("บันทึกข้อมูลสำเร็จ");
                 setIsEditing(false);
 
                 // อัพเดท user context ด้วยข้อมูลใหม่
@@ -99,19 +97,17 @@ export default function ProfilePage() {
                     localStorage.setItem('user', JSON.stringify(updatedUser));
                 }
             } else {
-                setMessage({ type: "error", text: data.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+                showError(data.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
             }
         } catch (error) {
             console.error('Error updating profile:', error);
-            setMessage({ type: "error", text: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+            showError("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         }
     };
 
     const handleTelegramSubmit = async (event) => {
         event.preventDefault();
         setTelegramSaving(true);
-        setMessage({ type: "", text: "" });
-
         try {
             const response = await fetch("/stn-eoc/api/officer/telegram", {
                 method: "PUT",
@@ -121,13 +117,13 @@ export default function ProfilePage() {
             const data = await response.json();
             if (data.success) {
                 setTelegramSettings((current) => ({ ...current, ...data.data }));
-                setMessage({ type: "success", text: "บันทึกการแจ้งเตือน Telegram สำเร็จ" });
+                showSuccess("บันทึกการแจ้งเตือน Telegram สำเร็จ");
             } else {
-                setMessage({ type: "error", text: data.message || "บันทึก Telegram ไม่สำเร็จ" });
+                showError(data.message || "บันทึก Telegram ไม่สำเร็จ");
             }
         } catch (error) {
             console.error("Error saving Telegram settings:", error);
-            setMessage({ type: "error", text: "เกิดข้อผิดพลาดในการบันทึก Telegram" });
+            showError("เกิดข้อผิดพลาดในการบันทึก Telegram");
         } finally {
             setTelegramSaving(false);
         }
@@ -154,13 +150,6 @@ export default function ProfilePage() {
                     <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="user" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โปรไฟล์ผู้ใช้</h1>
                     <p className="text-gray-600">จัดการข้อมูลส่วนตัวของคุณ</p>
                 </div>
-
-                {/* Message */}
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                        <p className="font-medium">{message.text}</p>
-                    </div>
-                )}
 
                 {/* Profile Card */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
@@ -381,7 +370,6 @@ export default function ProfilePage() {
                                         type="button"
                                         onClick={() => {
                                             setIsEditing(false);
-                                            setMessage({ type: "", text: "" });
                                         }}
                                         className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
                                     >

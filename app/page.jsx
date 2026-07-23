@@ -178,7 +178,7 @@ function normalizeAnnouncement(announcement) {
 
 function buildHomepageAlertText(announcement, dateRange) {
   if (!announcement) {
-    return `ประกาศเตือนภัย: ติดตามประกาศล่าสุดจากศูนย์ ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข${dateRange ? ` ช่วง ${dateRange}` : ""}`;
+    return "ยังไม่มีประกาศล่าสุดจากฐานข้อมูล EOC";
   }
 
   const title = String(announcement.title || "").trim();
@@ -550,20 +550,7 @@ export default function Home() {
           { icon: "home", text: "ย้ายทรัพย์สินไปที่สูง ตัดไฟฟ้าก่อนอุทกภัยน้ำท่วม", level: "warning" },
           { icon: "phone", text: "ติดตามข่าวสารและเตรียมพร้อมอพยพ", level: "info" }
         ],
-        news: [
-          {
-            title: "พยากรณ์อากาศ 3 วันข้างหน้า",
-            content: "คาดการณ์ฝนตกหนักต่อเนื่อง ระดับน้ำในลำน้ำสตูลเพิ่มสูงขึ้น",
-            type: "warning",
-            date: "2025-12-17"
-          },
-          {
-            title: "แนวทางป้องกันตัวจากอุทกภัยน้ำท่วม",
-            content: "เตรียมถุงทราย ตรวจสอบเส้นทางอพยพ และเตรียมเสบียงอาหาร 3 วัน",
-            type: "info",
-            date: "2025-12-16"
-          }
-        ],
+        news: [],
         quickActions: [
           { icon: "map", title: "แผนที่รายงานจากประชาชน (ยืนยันแล้ว)", link: "/public/flood-map", color: "blue" },
           { icon: "siren", title: "แจ้งเหตุอุทกภัยน้ำท่วม", link: "/public/report-incident", color: "red" },
@@ -758,11 +745,7 @@ export default function Home() {
     : [];
   const homepageAnnouncements = databaseAnnouncements.length
     ? databaseAnnouncements.slice(0, 3)
-    : [
-        { id: "static-1", title: "ประกาศจังหวัดสตูล ฉบับล่าสุด", content: "ติดตามประกาศและคำแนะนำจากหน่วยงานราชการอย่างต่อเนื่อง" },
-        { id: "static-2", title: "เตรียมพร้อมพื้นที่เสี่ยง", content: "ประชาชนในพื้นที่ลุ่มต่ำควรตรวจสอบเส้นทางอพยพและอุปกรณ์จำเป็น" },
-        { id: "static-3", title: "รายงานสถานการณ์สาธารณะ", content: "ระบบสรุปข้อมูลจากรายงานประชาชนและฐานข้อมูล EOC เพื่อการติดตามร่วมกัน" }
-      ];
+    : [];
 
   if (process.env.NEXT_PUBLIC_EOC_LEGACY_HOME !== "true") {
     return (
@@ -2084,7 +2067,11 @@ function OpsRightPanel({ announcements, quickActionItems, helpRequestCount, traf
     <aside className="space-y-3">
       <Panel title="ประกาศล่าสุด" actionHref="/public/announcements">
         <div className="space-y-2">
-          {announcements.slice(0, 3).map((item) => (
+          {announcements.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs font-semibold text-slate-500">
+              ยังไม่มีประกาศล่าสุด
+            </div>
+          ) : announcements.slice(0, 3).map((item) => (
             <div key={item.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
               <div className="font-bold text-slate-900">{item.title}</div>
               <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{item.content}</p>

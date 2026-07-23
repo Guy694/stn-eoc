@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import AppIcon from "@/components/icons/AppIcon";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -14,7 +15,6 @@ export default function SettingsPage() {
         newPassword: "",
         confirmPassword: ""
     });
-    const [message, setMessage] = useState({ type: "", text: "" });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -25,15 +25,13 @@ export default function SettingsPage() {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-        setMessage({ type: "", text: "" });
-
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setMessage({ type: "error", text: "รหัสผ่านใหม่ไม่ตรงกัน" });
+            showError("รหัสผ่านใหม่ไม่ตรงกัน");
             return;
         }
 
         if (passwordData.newPassword.length < 6) {
-            setMessage({ type: "error", text: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" });
+            showError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
             return;
         }
 
@@ -53,13 +51,13 @@ export default function SettingsPage() {
             const data = await response.json();
 
             if (data.success) {
-                setMessage({ type: "success", text: "เปลี่ยนรหัสผ่านสำเร็จ" });
+                showSuccess("เปลี่ยนรหัสผ่านสำเร็จ");
                 setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
             } else {
-                setMessage({ type: "error", text: data.message || "เปลี่ยนรหัสผ่านไม่สำเร็จ" });
+                showError(data.message || "เปลี่ยนรหัสผ่านไม่สำเร็จ");
             }
         } catch (error) {
-            setMessage({ type: "error", text: "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน" });
+            showError("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
         } finally {
             setIsSubmitting(false);
         }
@@ -133,13 +131,6 @@ export default function SettingsPage() {
                     {/* Main Content */}
                     <div className="lg:col-span-3">
                         <div className="bg-white rounded-xl shadow-lg p-8">
-                            {/* Message */}
-                            {message.text && (
-                                <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                                    <p className="font-medium">{message.text}</p>
-                                </div>
-                            )}
-
                             {/* Password Tab */}
                             {activeTab === "password" && (
                                 <div>

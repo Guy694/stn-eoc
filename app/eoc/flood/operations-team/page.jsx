@@ -19,6 +19,7 @@ import {
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 const COMMAND_ROLES = {
     incident_commander: "ผู้บัญชาการเหตุการณ์",
@@ -95,7 +96,6 @@ export default function FloodOperationsTeamPage() {
     const [editingTeam, setEditingTeam] = useState(null);
     const [teamForm, setTeamForm] = useState(emptyTeamForm);
     const [savingTeam, setSavingTeam] = useState(false);
-    const [teamMessage, setTeamMessage] = useState("");
 
     const canManageCommanders = user?.role === "admin" || user?.role === "commander";
     const selectedSession = useMemo(
@@ -274,13 +274,14 @@ export default function FloodOperationsTeamPage() {
             const result = await response.json();
             if (result.success) {
                 closeCommanderModal();
+                showSuccess(editingCommander ? "แก้ไขผู้บัญชาการแล้ว" : "เพิ่มผู้บัญชาการแล้ว");
                 await loadCommanders(selectedSessionId);
             } else {
-                setCommanderMessage(result.message || "บันทึกข้อมูลไม่สำเร็จ");
+                showError(result.message || "บันทึกข้อมูลไม่สำเร็จ");
             }
         } catch (saveError) {
             console.error("Error saving commander:", saveError);
-            setCommanderMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+            showError("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         } finally {
             setSavingCommander(false);
         }
@@ -298,20 +299,20 @@ export default function FloodOperationsTeamPage() {
             });
             const result = await response.json();
             if (result.success) {
+                showSuccess("ลบผู้บัญชาการแล้ว");
                 await loadCommanders(selectedSessionId);
             } else {
-                setCommanderMessage(result.message || "ลบข้อมูลไม่สำเร็จ");
+                showError(result.message || "ลบข้อมูลไม่สำเร็จ");
             }
         } catch (deleteError) {
             console.error("Error deleting commander:", deleteError);
-            setCommanderMessage("เกิดข้อผิดพลาดในการลบข้อมูล");
+            showError("เกิดข้อผิดพลาดในการลบข้อมูล");
         }
     };
 
     const openAddTeam = () => {
         setEditingTeam(null);
         setTeamForm(emptyTeamForm);
-        setTeamMessage("");
         setShowTeamModal(true);
     };
 
@@ -323,7 +324,6 @@ export default function FloodOperationsTeamPage() {
             teamLeadOfficerId: team.team_lead_officer_id || "",
             notes: team.notes || ""
         });
-        setTeamMessage("");
         setShowTeamModal(true);
     };
 
@@ -338,7 +338,6 @@ export default function FloodOperationsTeamPage() {
         if (!selectedSessionId) return;
 
         setSavingTeam(true);
-        setTeamMessage("");
         try {
             const response = await fetch(`/stn-eoc/api/admin/eoc-sessions/${selectedSessionId}/teams`, {
                 method: editingTeam ? "PUT" : "POST",
@@ -358,14 +357,15 @@ export default function FloodOperationsTeamPage() {
             const result = await response.json();
             if (result.success) {
                 closeTeamModal();
+                showSuccess(editingTeam ? "แก้ไขทีมแล้ว" : "เพิ่มทีมใน Session แล้ว");
                 await loadTeams(selectedSessionId);
                 await loadAvailableTeams();
             } else {
-                setTeamMessage(result.message || "บันทึกทีมไม่สำเร็จ");
+                showError(result.message || "บันทึกทีมไม่สำเร็จ");
             }
         } catch (saveError) {
             console.error("Error saving session team:", saveError);
-            setTeamMessage("เกิดข้อผิดพลาดในการบันทึกทีม");
+            showError("เกิดข้อผิดพลาดในการบันทึกทีม");
         } finally {
             setSavingTeam(false);
         }
@@ -376,21 +376,21 @@ export default function FloodOperationsTeamPage() {
         const confirmed = window.confirm(`ถอดทีม "${team.team_name_th || team.team_name_en}" ออกจากเหตุการณ์นี้ใช่หรือไม่?`);
         if (!confirmed) return;
 
-        setTeamMessage("");
         try {
             const response = await fetch(`/stn-eoc/api/admin/eoc-sessions/${selectedSessionId}/teams?teamId=${team.team_id}`, {
                 method: "DELETE"
             });
             const result = await response.json();
             if (result.success) {
+                showSuccess("ถอดทีมออกจาก Session แล้ว");
                 await loadTeams(selectedSessionId);
                 await loadAvailableTeams();
             } else {
-                setTeamMessage(result.message || "ลบทีมไม่สำเร็จ");
+                showError(result.message || "ลบทีมไม่สำเร็จ");
             }
         } catch (deleteError) {
             console.error("Error deleting session team:", deleteError);
-            setTeamMessage("เกิดข้อผิดพลาดในการลบทีม");
+            showError("เกิดข้อผิดพลาดในการลบทีม");
         }
     };
 
@@ -453,13 +453,6 @@ export default function FloodOperationsTeamPage() {
                     <section className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
                         <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
                         <p className="text-sm font-semibold">{commanderMessage}</p>
-                    </section>
-                )}
-
-                {teamMessage && (
-                    <section className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-                        <p className="text-sm font-semibold">{teamMessage}</p>
                     </section>
                 )}
 
@@ -557,7 +550,6 @@ export default function FloodOperationsTeamPage() {
                     onClose={closeCommanderModal}
                     onSubmit={saveCommander}
                     saving={savingCommander}
-                    message={commanderMessage}
                 />
             )}
 
@@ -571,7 +563,6 @@ export default function FloodOperationsTeamPage() {
                     onClose={closeTeamModal}
                     onSubmit={saveTeam}
                     saving={savingTeam}
-                    message={teamMessage}
                 />
             )}
         </EOCLayout>
@@ -848,8 +839,7 @@ function CommanderModal({
     officerOptions,
     onClose,
     onSubmit,
-    saving,
-    message
+    saving
 }) {
     const incidentRoleDisabled = Boolean(incidentCommander && incidentCommander.id !== editingCommander?.id);
 
@@ -867,12 +857,6 @@ function CommanderModal({
                         <X className="h-5 w-5" />
                     </button>
                 </div>
-
-                {message && (
-                    <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-                        {message}
-                    </div>
-                )}
 
                 <div className="mt-5 space-y-4">
                     <label className="block">
@@ -962,8 +946,7 @@ function TeamModal({
     teamOptions,
     onClose,
     onSubmit,
-    saving,
-    message
+    saving
 }) {
     return (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/50 p-4">
@@ -981,12 +964,6 @@ function TeamModal({
                         <X className="h-5 w-5" />
                     </button>
                 </div>
-
-                {message && (
-                    <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-                        {message}
-                    </div>
-                )}
 
                 <div className="mt-5 space-y-4">
                     {editingTeam ? (

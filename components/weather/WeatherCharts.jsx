@@ -14,7 +14,7 @@ import {
   PointElement,
   Tooltip
 } from "chart.js";
-import { RISK_META } from "@/lib/weatherWatch";
+import { RISK_META } from "@/lib/weatherRiskConfig";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend);
 

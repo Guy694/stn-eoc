@@ -17,7 +17,7 @@ import {
     YAxis
 } from "recharts";
 import AppIcon from "@/components/icons/AppIcon";
-import { enrichDistrictOutbreakData } from "@/lib/diseaseOutbreakMockData";
+import { enrichDistrictOutbreakData } from "@/lib/diseaseOutbreakMetrics";
 import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 
 const yearColors = {
@@ -129,11 +129,16 @@ export default function DiseaseOutbreakDashboard({
         : districts.filter((item) => item.district_name === districtFilter);
     const totalCases = selectedDistrictRows.reduce((sum, item) => sum + item.total_cases, 0);
     const totalNewCases = selectedDistrictRows.reduce((sum, item) => sum + item.new_cases, 0);
-    const totalDeaths = selectedDistrictRows.reduce((sum, item) => sum + item.deaths, 0);
+    const hasDeathData = selectedDistrictRows.every((item) => item.deaths !== null);
+    const totalDeaths = hasDeathData
+        ? selectedDistrictRows.reduce((sum, item) => sum + Number(item.deaths || 0), 0)
+        : null;
     const totalPopulation = selectedDistrictRows.reduce((sum, item) => sum + item.population, 0);
     const previousWeek = selectedDistrictRows.reduce((sum, item) => sum + item.previous_week, 0);
-    const morbidityRate = totalPopulation > 0 ? (totalCases / totalPopulation) * 100000 : 0;
-    const caseFatalityRate = totalCases > 0 ? (totalDeaths / totalCases) * 100 : 0;
+    const morbidityRate = totalPopulation > 0 ? (totalCases / totalPopulation) * 100000 : null;
+    const caseFatalityRate = totalCases > 0 && hasDeathData
+        ? (totalDeaths / totalCases) * 100
+        : null;
     const topDistrict = districts[0];
     const latestWeek = dashboardData?.weeklyTrend?.[dashboardData.weeklyTrend.length - 1] || {};
     const previousTrendWeek = dashboardData?.weeklyTrend?.[Math.max((dashboardData.weeklyTrend?.length || 1) - 2, 0)] || {};
@@ -186,7 +191,7 @@ export default function DiseaseOutbreakDashboard({
         { label: "ผู้ป่วยสัปดาห์ล่าสุด", value: totalNewCases, unit: "ราย", icon: "calendar", risk: totalNewCases >= 30 ? "ระบาด" : "เฝ้าระวัง" },
         { label: "เพิ่ม/ลดจากสัปดาห์ก่อน", value: weeklyDelta, unit: "ราย", icon: "activity", risk: weeklyDelta > 10 ? "ระบาด" : weeklyDelta > 0 ? "เฝ้าระวัง" : "ปกติ", signed: true },
         { label: "อัตราป่วยต่อแสน", value: morbidityRate, unit: "ต่อแสน", icon: "barChart", risk: morbidityRate >= 65 ? "ระบาด" : "เฝ้าระวัง", digits: 1 },
-        { label: "จำนวนผู้เสียชีวิต", value: totalDeaths, unit: "ราย", icon: "skull", risk: totalDeaths > 0 ? "วิกฤต" : "ปกติ" },
+        { label: "จำนวนผู้เสียชีวิต", value: totalDeaths, unit: totalDeaths === null ? "ไม่มีข้อมูล" : "ราย", icon: "skull", risk: totalDeaths === null ? "ไม่มีข้อมูล" : totalDeaths > 0 ? "วิกฤต" : "ปกติ" },
         { label: "อัตราป่วยตาย", value: caseFatalityRate, unit: "%", icon: "alert", risk: caseFatalityRate > 0 ? "วิกฤต" : "ปกติ", digits: 2 },
         { label: "อำเภอผู้ป่วยสูงสุด", value: topDistrict?.district_name || "-", unit: `${formatNumber(topDistrict?.total_cases)} ราย`, icon: "mapPin", risk: topDistrict?.risk_level || "เฝ้าระวัง", textValue: true },
         { label: "อำเภอที่มีรายงาน", value: districts.filter((item) => item.total_cases > 0).length, unit: "อำเภอ", icon: "map", risk: "เฝ้าระวัง" }
@@ -455,7 +460,9 @@ function HeaderMetric({ label, value }) {
 }
 
 function SummaryCard({ label, value, unit, icon, risk, signed, digits = 0, textValue }) {
-    const displayedValue = textValue ? value : `${signed && Number(value) > 0 ? "+" : ""}${formatNumber(value, digits)}`;
+    const displayedValue = value === null || value === undefined
+        ? "-"
+        : textValue ? value : `${signed && Number(value) > 0 ? "+" : ""}${formatNumber(value, digits)}`;
 
     return (
         <div className={`rounded-xl border bg-white p-4 shadow-sm ${getRiskClass(risk)}`}>
@@ -540,16 +547,16 @@ function DistrictPublicTable({ rows }) {
                                 <div className="font-black text-slate-900">{row.district_name}</div>
                                 <div className="mt-1 text-xs font-semibold text-slate-500">กลุ่มอายุสูงสุด: {row.top_age_group}</div>
                             </div>
-                            <span className={`shrink-0 rounded-full border px-2 py-1 text-xs font-black ${getRiskClass(row.risk_level)}`}>{row.risk_level}</span>
+                            <span className={`shrink-0 rounded-full border px-2 py-1 text-xs font-black ${getRiskClass(row.risk_level)}`}>{row.risk_level || "ไม่มีข้อมูล"}</span>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                             <MobileMetric label="สะสม" value={`${formatNumber(row.total_cases)} ราย`} />
                             <MobileMetric label="สัปดาห์ล่าสุด" value={`${formatNumber(row.new_cases)} ราย`} />
-                            <MobileMetric label="ต่อแสน" value={formatNumber(row.morbidity_rate, 1)} />
-                            <MobileMetric label="เสียชีวิต" value={`${formatNumber(row.deaths)} ราย`} />
+                            <MobileMetric label="ต่อแสน" value={row.morbidity_rate === null ? "ไม่มีข้อมูล" : formatNumber(row.morbidity_rate, 1)} />
+                            <MobileMetric label="เสียชีวิต" value={row.deaths === null ? "ไม่มีข้อมูล" : `${formatNumber(row.deaths)} ราย`} />
                         </div>
                         <div className="mt-2 rounded-md bg-slate-50 px-2 py-1.5 text-xs font-bold text-slate-600">
-                            อัตราป่วยตาย {formatNumber(row.case_fatality_rate, 2)}% • แนวโน้ม {row.trend_status}
+                            อัตราป่วยตาย {row.case_fatality_rate === null ? "ไม่มีข้อมูล" : `${formatNumber(row.case_fatality_rate, 2)}%`} • แนวโน้ม {row.trend_status}
                         </div>
                     </div>
                 ))}

@@ -13,6 +13,7 @@ import {
     ChevronDown,
     CloudSun,
     ClipboardList,
+    Database,
     FileChartColumn,
     FileText,
     Gauge,
@@ -38,6 +39,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
+import { createLegacySatNavigation, createOfficerTeamSections } from "@/src/config/navigation/eoc-navigation";
 import AppIcon from "./icons/AppIcon";
 
 const iconClassName = "h-4 w-4 shrink-0";
@@ -56,15 +58,16 @@ export default function Sidebar() {
     const [isMobile, setIsMobile] = useState(false);
     const [pendingReportsCount, setPendingReportsCount] = useState(0);
     const [pendingRegistrationsCount, setPendingRegistrationsCount] = useState(0);
+    const [teamAssignments, setTeamAssignments] = useState([]);
     const [expandedSections, setExpandedSections] = useState({});
     const { user, canAccessResources } = useAuth();
     const { eocStatus, getEOCDisplayName } = useEOC();
 
     // Toggle expanded section
-    const toggleSection = (sectionKey) => {
+    const toggleSection = (sectionKey, defaultExpanded = false) => {
         setExpandedSections(prev => ({
             ...prev,
-            [sectionKey]: !prev[sectionKey]
+            [sectionKey]: !(prev[sectionKey] ?? defaultExpanded)
         }));
     };
 
@@ -124,6 +127,20 @@ export default function Sidebar() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (!user) return;
+        let active = true;
+        fetch('/stn-eoc/api/user/my-assignments/')
+            .then((response) => response.json())
+            .then((result) => {
+                if (active && result.success) setTeamAssignments(result.assignments || []);
+            })
+            .catch(() => {
+                if (active) setTeamAssignments([]);
+            });
+        return () => { active = false; };
+    }, [user]);
+
     // Close sidebar when clicking outside on mobile
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -156,6 +173,7 @@ export default function Sidebar() {
     //
     // ============================================
 
+
     const allMenuItems = [
         {
             title: "ภาพรวมผู้บริหาร",
@@ -164,6 +182,7 @@ export default function Sidebar() {
             items: [
                 { name: "หน้าหลัก", path: "/dashboard", icon: LayoutDashboard, description: "ภาพรวมข้อมูลทั้งหมด" },
                 { name: "ศูนย์งานเจ้าหน้าที่", path: "/eoc/staff", icon: Users, description: "เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมาย" },
+                { name: "กล่องงานของฉัน", path: "/eoc/staff/inbox", icon: Bell, description: "Mission รายงาน ข้อสั่งการ และการแจ้งเตือน" },
                 { name: "วิเคราะห์ (Analytics)", path: "/analytics", icon: BrainCircuit, description: "วิเคราะห์สถานการณ์ ทีม เวชภัณฑ์ และโรคระบาด" },
             ],
         },
@@ -220,8 +239,7 @@ export default function Sidebar() {
                 { name: "ข้อมูลหน่วยบริการ", path: "/admin/health-facilities", icon: BriefcaseMedical, description: "โรงพยาบาล/สถานีอนามัย" },
                 { name: "ประกาศ", path: "/announcements", icon: Bell, description: "ข่าวประชาสัมพันธ์ แบนเนอร์ และเอกสารแนบ" },
                 { name: "รายงานโรคระบาด", path: "/admin/disease-reports", icon: Activity, description: "ติดตามโรคระบาดจากหน่วยบริการ" },
-                { name: "แดชบอร์ด SAT", path: "/eoc/disease/sat/dashboard", icon: BarChart3, requiresSat: true, description: "แดชบอร์ดสำหรับกลุ่ม SAT" },
-                { name: "รายงานผล SAT", path: "/eoc/disease/sat/report", icon: ClipboardList, requiresSat: true, description: "รายงานผลการปฏิบัติงานของกลุ่ม SAT" },
+                
             ],
         },
 
@@ -249,6 +267,7 @@ export default function Sidebar() {
             items: [
                 { name: "จัดการ EOC", path: "/admin/eoc-management", icon: Settings, description: "เปิด/ปิด EOC" },
                 { name: "ประวัติเหตุการณ์ EOC", path: "/admin/eoc-sessions", icon: FileText, description: "ประวัติการเปิด-ปิด EOC" },
+                { name: "จัดการและตรวจคุณภาพข้อมูล", path: "/admin/data-management", icon: Database, description: "Master Data, Data Quality และ File Integrity" },
                 { name: "ประวัติการดำเนินงาน", path: "/admin/activity-logs", icon: ClipboardList, description: "ตรวจสอบประวัติการดำเนินงานในระบบ" },
             ],
         },
@@ -284,6 +303,7 @@ export default function Sidebar() {
             items: [
                 { name: "จัดการหน่วยบริการ", path: "/admin/health-facilities", icon: BriefcaseMedical, description: "โรงพยาบาล/สถานีอนามัย" },
                 { name: "จัดการข้อมูลหมู่บ้าน", path: "/admin/village-polygons", icon: MapPinned, description: "พื้นที่หมู่บ้าน" },
+                { name: "Master Data เพิ่มเติม", path: "/admin/master-data/agencies", icon: Database, description: "หน่วยงาน โรค ภัย ความเสี่ยง และเส้นทาง" },
             ],
         },
         {
@@ -308,6 +328,21 @@ export default function Sidebar() {
 
     const isRestrictedNonAdminMenu = user.role !== 'admin' && user.role !== 'citizen' && user.role !== 'user' && user.isApproved !== false;
 
+    const teamMenuIcons = {
+        dashboard: BarChart3,
+        records: ClipboardList,
+        assets: HardDrive,
+        announcements: Bell,
+    };
+    const officerTeamSections = createOfficerTeamSections({
+        pathname,
+        userRole: user.role,
+        assignments: teamAssignments,
+    }).map((section) => ({
+        ...section,
+        items: section.items.map((item) => ({ ...item, icon: teamMenuIcons[item.iconKey] || Users })),
+    }));
+
     const restrictedNonAdminMenu = [
         {
             title: "เมนูหลัก",
@@ -316,6 +351,7 @@ export default function Sidebar() {
                 { name: "หน้าหลัก", path: "/dashboard", icon: LayoutDashboard, description: "เลือกเหตุการณ์และ session ก่อนเข้าสู่หน้าปฏิบัติการ" },
             ],
         },
+        ...officerTeamSections,
         {
             title: "ตั้งค่า",
             section: "restricted-settings",
@@ -389,7 +425,7 @@ export default function Sidebar() {
             if (section.eocType) {
                 if (pathname.startsWith('/eoc/flood') && section.eocType === 'flood') return true;
                 if ((pathname.startsWith('/eoc/festival-accidents') || pathname.startsWith('/eoc/accident')) && section.eocType === 'festival-accidents') return true;
-                if (pathname.startsWith('/eoc/disease') && section.eocType === 'disease') return true;
+                if ((pathname.startsWith('/eoc/disease') || pathname.startsWith('/eoc/dengue')) && section.eocType === 'disease') return true;
                 if (pathname.startsWith('/eoc/tsunami') && section.eocType === 'tsunami') return true;
                 if (pathname.startsWith('/eoc/earthquake') && section.eocType === 'earthquake') return true;
                 
@@ -467,10 +503,10 @@ export default function Sidebar() {
                                         const sectionBadgeCount = section.items?.reduce((total, item) => total + getBadgeCount(item), 0) || 0;
                                         return (
                                     <button
-                                        onClick={() => toggleSection(section.key || section.section)}
+                                        onClick={() => toggleSection(section.key || section.section, section.defaultExpanded)}
                                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${hasAlertBadge
                                             ? "bg-red-50 text-red-700 ring-1 ring-red-200 hover:bg-red-100"
-                                            : section.items.some(item => pathname.startsWith(item.path))
+                                            : section.items.some(item => pathname.startsWith(item.path.split('?')[0]))
                                             ? "bg-blue-50 text-blue-800"
                                             : "text-gray-700 hover:bg-gray-100"
                                             }`}
@@ -494,7 +530,7 @@ export default function Sidebar() {
                                             )}
                                         </span>
                                         <ChevronDown
-                                            className={`h-4 w-4 transition-transform ${expandedSections[section.key || section.section] ? "rotate-180" : ""}`}
+                                            className={`h-4 w-4 transition-transform ${(expandedSections[section.key || section.section] ?? section.defaultExpanded) ? "rotate-180" : ""}`}
                                             aria-hidden="true"
                                         />
                                     </button>
@@ -502,7 +538,7 @@ export default function Sidebar() {
                                     })()}
 
                                     {/* Collapsible Menu Items */}
-                                    {expandedSections[section.key || section.section] && (
+                                    {(expandedSections[section.key || section.section] ?? section.defaultExpanded) && (
                                         <ul className="mt-1 ml-4 space-y-1">
                                             {section.items.map((item) => {
                                                 const badgeCount = getBadgeCount(item);

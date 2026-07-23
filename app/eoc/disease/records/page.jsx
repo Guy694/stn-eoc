@@ -1,13 +1,14 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
 
 export default function DiseaseRecordsPage() {
+    const satunDistricts = useSatunDistricts();
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -121,7 +122,7 @@ export default function DiseaseRecordsPage() {
         } else {
             setTambonOptions([]);
         }
-    }, [formData.district]);
+    }, [formData.district, satunDistricts]);
 
     // อัพเดตตัวเลือกหมู่บ้านเมื่อเลือกตำบล
     useEffect(() => {

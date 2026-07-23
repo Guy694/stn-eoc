@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
+import { requireAuth } from "@/lib/auth";
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -17,18 +18,37 @@ export async function GET(request) {
     let connection;
 
     try {
+        const auth = await requireAuth(request);
+        if (!auth.success) return auth.response;
         const { searchParams } = new URL(request.url);
         const year = searchParams.get('year'); // ปีที่ต้องการ (ถ้าไม่ระบุจะให้ทั้งหมด)
 
         connection = await pool.getConnection();
+        const privileged = ['admin', 'commander'].includes(auth.user.role);
+        const membershipClause = privileged ? '' : `
+            AND EXISTS (
+                SELECT 1
+                FROM eoc_session_teams access_team
+                JOIN eoc_teams access_team_definition
+                  ON access_team_definition.id = access_team.team_id
+                 AND UPPER(access_team_definition.team_code) = 'SAT'
+                JOIN eoc_team_members access_member
+                  ON access_member.session_team_id = access_team.id
+                 AND access_member.officer_id = ?
+                 AND access_member.is_active = TRUE
+                WHERE access_team.eoc_session_id = s.id
+                  AND access_team.is_active = TRUE
+            )`;
+        const membershipParams = privileged ? [] : [auth.user.id];
 
         // ดึงรายการปีที่มี flood sessions
         const [years] = await connection.execute(`
-            SELECT DISTINCT YEAR(opened_at) as year
-            FROM eoc_sessions
-            WHERE eoc_type = 'flood'
+            SELECT DISTINCT YEAR(s.opened_at) as year
+            FROM eoc_sessions s
+            WHERE s.eoc_type = 'flood'
+            ${membershipClause}
             ORDER BY year DESC
-        `);
+        `, membershipParams);
 
         // ถ้าระบุปีมา ให้ดึงข้อมูลเฉพาะปีนั้น
         if (year) {
@@ -65,8 +85,9 @@ export async function GET(request) {
                 LEFT JOIN officer oo ON s.opened_by = oo.id
                 LEFT JOIN officer co ON s.closed_by = co.id
                 LEFT JOIN flood_records fr ON fr.session_id = s.id
-                WHERE s.eoc_type = 'flood' 
+                WHERE s.eoc_type = 'flood'
                     AND YEAR(s.opened_at) = ?
+                    ${membershipClause}
                 GROUP BY
                     s.id,
                     s.session_number,
@@ -87,7 +108,7 @@ export async function GET(request) {
                     co.given_name,
                     co.family_name
                 ORDER BY s.opened_at DESC
-            `, [year]);
+            `, [year, ...membershipParams]);
 
             // คำนวณสถิติสรุปของปี
             const [stats] = await connection.execute(`
@@ -98,10 +119,11 @@ export async function GET(request) {
                     SUM(total_data_entries) as total_data_entries,
                     SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_sessions,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed_sessions
-                FROM eoc_sessions
-                WHERE eoc_type = 'flood' 
-                    AND YEAR(opened_at) = ?
-            `, [year]);
+                FROM eoc_sessions s
+                WHERE s.eoc_type = 'flood'
+                    AND YEAR(s.opened_at) = ?
+                    ${membershipClause}
+            `, [year, ...membershipParams]);
 
             // ดึงข้อมูลพื้นที่ที่ได้รับผลกระทบจาก flood_records JOIN satun_village_polygon
             const [affectedAreas] = await connection.execute(`
@@ -113,7 +135,8 @@ export async function GET(request) {
                 INNER JOIN satun_village_polygon v ON f.polygon_id = v.id
                 INNER JOIN eoc_sessions s ON f.session_id = s.id
                 WHERE s.eoc_type = 'flood' AND YEAR(s.opened_at) = ?
-            `, [year]);
+                ${membershipClause}
+            `, [year, ...membershipParams]);
 
             return NextResponse.json({
                 success: true,
@@ -150,10 +173,11 @@ export async function GET(request) {
                         SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed_sessions,
                         MIN(opened_at) as first_opened,
                         MAX(opened_at) as last_opened
-                    FROM eoc_sessions
-                    WHERE eoc_type = 'flood' 
-                        AND YEAR(opened_at) = ?
-                `, [year]);
+                    FROM eoc_sessions s
+                    WHERE s.eoc_type = 'flood'
+                        AND YEAR(s.opened_at) = ?
+                        ${membershipClause}
+                `, [year, ...membershipParams]);
 
                 return {
                     year,

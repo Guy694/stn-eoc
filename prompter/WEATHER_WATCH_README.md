@@ -6,7 +6,7 @@
 
 - หน้าเว็บ: `/stn-eoc/public/weather-watch`
 - API mock/proxy: `/stn-eoc/api/public/weather-watch?date=YYYY-MM-DD`
-- Mock data: `data/weather-watch.json`
+- Production data: Open-Meteo พร้อมข้อมูลพื้นที่จาก `satun_village_polygon`
 
 ## สิ่งที่มีในหน้า
 

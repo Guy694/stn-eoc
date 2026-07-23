@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import dynamic from 'next/dynamic';
 import AppIcon from "@/components/icons/AppIcon";
@@ -14,6 +14,7 @@ const MapSelector = dynamic(() => import('@/components/MapSelector'), {
 const pointTypes = ['จุดตรวจ', 'จุดบริการ', 'จุดพักรถ', 'ด่านชุมชน'];
 
 export default function ServicePointsPage() {
+    const satunDistricts = useSatunDistricts();
     const [points, setPoints] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -61,7 +62,7 @@ export default function ServicePointsPage() {
         } else {
             setTambonOptions([]);
         }
-    }, [formData.district]);
+    }, [formData.district, satunDistricts]);
 
     const fetchPoints = useCallback(async () => {
         if (!activeSession) return;

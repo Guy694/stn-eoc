@@ -13,8 +13,12 @@ export async function GET(request) {
         const district = searchParams.get('district');
         const tambon = searchParams.get('tambon');
         const search = searchParams.get('search');
-        const page = parseInt(searchParams.get('page')) || 1;
-        const limit = parseInt(searchParams.get('limit')) || 20;
+        const requestedPage = Number(searchParams.get('page'));
+        const requestedLimit = Number(searchParams.get('limit'));
+        const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+        const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+            ? Math.min(requestedLimit, 100)
+            : 20;
         const offset = (page - 1) * limit;
 
         let sql = `
@@ -26,7 +30,7 @@ export async function GET(request) {
                 subdistnam, 
                 geom
             FROM satun_village_polygon
-            WHERE 1=1
+            WHERE is_active = 1
         `;
         const params = [];
 
@@ -46,7 +50,7 @@ export async function GET(request) {
         }
 
         // นับจำนวนทั้งหมดตามเงื่อนไข
-        let countSql = 'SELECT COUNT(*) as total FROM satun_village_polygon WHERE 1=1';
+        let countSql = 'SELECT COUNT(*) as total FROM satun_village_polygon WHERE is_active = 1';
         const countParams = [];
 
         if (district) {
@@ -68,13 +72,14 @@ export async function GET(request) {
         const totalRecords = countResult.total;
         const totalPages = Math.ceil(totalRecords / limit);
 
-        sql += ' ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname LIMIT ? OFFSET ?';
-        params.push(limit, offset);
+        // This MySQL runtime rejects bound parameters in LIMIT/OFFSET. Both
+        // values are validated positive integers above before interpolation.
+        sql += ` ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname LIMIT ${limit} OFFSET ${offset}`;
 
         const polygons = await query(sql, params);
 
         // นับสtatistics
-        const allPolygons = await query('SELECT distname, subdistnam FROM satun_village_polygon');
+        const allPolygons = await query('SELECT distname, subdistnam FROM satun_village_polygon WHERE is_active = 1');
         const stats = {
             total: allPolygons.length,
             districts: new Set(allPolygons.map(p => p.distname)).size,

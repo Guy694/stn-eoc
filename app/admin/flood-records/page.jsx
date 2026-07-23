@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodRecordsPage() {
+    const satunDistricts = useSatunDistricts();
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -51,7 +52,7 @@ export default function FloodRecordsPage() {
         } else {
             setTambonOptions([]);
         }
-    }, [formData.district]);
+    }, [formData.district, satunDistricts]);
 
     const fetchRecords = useCallback(async () => {
         try {

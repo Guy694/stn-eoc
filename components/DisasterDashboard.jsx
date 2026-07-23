@@ -62,7 +62,6 @@ export default function DisasterDashboard() {
     }, [fetchAllActiveSessions]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadDisasterTypes();
     }, [loadDisasterTypes]);
 

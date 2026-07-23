@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from "@/lib/sweetAlert";
 import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
 
@@ -40,6 +40,7 @@ function total(record) {
 }
 
 export default function VulnerableGroupBaselinePage() {
+    const satunDistricts = useSatunDistricts();
     const [records, setRecords] = useState([]);
     const [summary, setSummary] = useState({});
     const [loading, setLoading] = useState(true);
@@ -55,12 +56,12 @@ export default function VulnerableGroupBaselinePage() {
     const tambonOptions = useMemo(() => {
         const district = satunDistricts.find(item => item.name === (formData.district || selectedDistrict));
         return district?.tambons || [];
-    }, [formData.district, selectedDistrict]);
+    }, [formData.district, selectedDistrict, satunDistricts]);
 
     const filterTambonOptions = useMemo(() => {
         const district = satunDistricts.find(item => item.name === selectedDistrict);
         return district?.tambons || [];
-    }, [selectedDistrict]);
+    }, [selectedDistrict, satunDistricts]);
 
     const fetchRecords = useCallback(async () => {
         try {

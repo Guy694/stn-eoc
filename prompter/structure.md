@@ -1,620 +1,264 @@
-คุณเป็น Senior Software Architect และ Senior Next.js Developer ผู้เชี่ยวชาญด้าน Modular Architecture, Feature-based Architecture และการปรับโครงสร้างระบบขนาดใหญ่โดยไม่กระทบการทำงานเดิม
-
-โปรเจกต์นี้เป็นระบบ Emergency Operations Center: EOC พัฒนาด้วย Next.js และใช้ JavaScript/JSX เป็นหลัก
-
-ปัจจุบันโครงสร้างโฟลเดอร์ยังไม่เป็นมาตรฐาน มีไฟล์ Component, Page, Service, API และ Business Logic กระจายอยู่หลายตำแหน่ง และยังแยกไม่ชัดเจนระหว่าง:
-
-* สิ่งที่ใช้ร่วมกันทั้งระบบ EOC
-* สิ่งที่เป็นความสามารถกลางของแต่ละทีม
-* สิ่งที่แตกต่างตามประเภท EOC
-* สิ่งที่แตกต่างเฉพาะทีมภายในประเภท EOC
-* เช็คก่อนว่ามีส่วนไหนที่สร้างไปแล้วบ้าง 
-
-ระบบมีเจ้าหน้าที่ทั้งหมด 23 ทีม และในอนาคตจะมี EOC Type เพิ่มเติม เช่น:
-ทีม คือ กลุ่มภารกิจ ที่มีในระบบอยู่แล้ว
-
-* `dengue` — ไข้เลือดออก
-* `flood` — อุทกภัย
-* `storm` — วาตภัย
-* `drought` — ภัยแล้ง
-* `epidemic` — โรคระบาด
-* `fire` — อัคคีภัย
-* EOC Type อื่นที่เพิ่มในอนาคต
-
-จงวิเคราะห์และปรับโครงสร้างโปรเจกต์ให้รองรับการเพิ่ม EOC Type และทีมใหม่ได้โดยไม่ต้องคัดลอกโค้ดจำนวนมาก
-
-## 1. ข้อกำหนดด้านภาษา
-
-ระบบปัจจุบันใช้ JavaScript และ JSX
-
-ดังนั้น:
-
-* ไฟล์ Component ให้ใช้ `.jsx`
-* ไฟล์ Service, Config, Registry, Resolver และ Utility ให้ใช้ `.js`
-* ห้ามบังคับเปลี่ยนทั้งระบบเป็น TypeScript หรือ TSX
-* ห้ามเปลี่ยนนามสกุลไฟล์เดิมเป็น `.ts` หรือ `.tsx` โดยอัตโนมัติ
-* สามารถออกแบบโครงสร้างให้รองรับการ Migration เป็น TypeScript ในอนาคตได้
-* หากจำเป็นต้องกำหนดโครงสร้างข้อมูล ให้ใช้ JSDoc แทน TypeScript
-
-ตัวอย่าง:
-
-```js
-/**
- * @typedef {"flood"|"dengue"|"storm"|"drought"|"epidemic"} EocType
- */
-
-/**
- * @typedef {"sat"|"it"|"logistics"|"medical"} TeamCode
- */
-```
-
-## 2. แนวคิดสถาปัตยกรรม
-
-ให้ใช้แนวคิด:
-
-```text
-EOC Shared Layer
-        ↓
-Base Team Modules
-        ↓
-EOC Type-specific Overrides
-        ↓
-Registry และ Resolver
-        ↓
-Dynamic Route
-```
-
-หลักการจัดตำแหน่งไฟล์:
-
-```text
-ใช้ร่วมกันทั้งระบบ EOC
-→ features/eoc/shared
-
-ใช้ร่วมกันทุก EOC Type ของทีมเดียว
-→ features/eoc/teams/{teamCode}
-
-ใช้ร่วมกันทุกทีมภายใน EOC Type เดียว
-→ features/eoc/eoc-types/{eocType}/shared
-
-ใช้เฉพาะ EOC Type และทีม
-→ features/eoc/eoc-types/{eocType}/{teamCode}
-```
-
-## 3. โครงสร้างเป้าหมาย
-
-```text
-src/
-├── app/
-│   └── eoc/
-│       └── [eocType]/
-│           └── teams/
-│               └── [teamCode]/
-│                   ├── dashboard/
-│                   │   ├── page.jsx
-│                   │   ├── loading.jsx
-│                   │   └── error.jsx
-│                   ├── records/
-│                   │   ├── page.jsx
-│                   │   ├── create/
-│                   │   │   └── page.jsx
-│                   │   └── [recordId]/
-│                   │       └── page.jsx
-│                   └── members/
-│                       └── page.jsx
-│
-├── features/
-│   └── eoc/
-│       ├── shared/
-│       │   ├── components/
-│       │   ├── charts/
-│       │   ├── forms/
-│       │   ├── tables/
-│       │   ├── hooks/
-│       │   ├── services/
-│       │   ├── constants/
-│       │   └── utils/
-│       │
-│       ├── teams/
-│       │   ├── sat/
-│       │   ├── it/
-│       │   ├── logistics/
-│       │   ├── medical/
-│       │   └── เพิ่มจนครบ 23 ทีม
-│       │
-│       ├── eoc-types/
-│       │   ├── flood/
-│       │   ├── dengue/
-│       │   ├── storm/
-│       │   ├── drought/
-│       │   ├── epidemic/
-│       │   └── registry.js
-│       │
-│       ├── registries/
-│       │   ├── team.registry.js
-│       │   ├── eoc-type.registry.js
-│       │   ├── dashboard.registry.js
-│       │   ├── records.registry.js
-│       │   └── navigation.registry.js
-│       │
-│       └── resolvers/
-│           ├── team-module.resolver.js
-│           ├── dashboard.resolver.js
-│           ├── records.resolver.js
-│           └── navigation.resolver.js
-│
-└── config/
-    └── navigation/
-        └── eoc-navigation.js
-```
-
-## 4. Base Team Module
-
-แต่ละทีมให้มีโมดูลกลางที่:
-
-```text
-features/eoc/teams/{teamCode}
-```
-
-ตัวอย่างทีม SAT:
-
-```text
-features/eoc/teams/sat/
-├── components/
-│   ├── sat-dashboard-layout.jsx
-│   ├── sat-dashboard-header.jsx
-│   ├── sat-summary-card.jsx
-│   ├── sat-member-list.jsx
-│   ├── sat-report-table.jsx
-│   ├── sat-filter-bar.jsx
-│   └── sat-loading-skeleton.jsx
-├── services/
-│   └── sat.service.js
-├── schemas/
-│   └── sat.schema.js
-├── permissions/
-│   └── sat.permissions.js
-├── constants/
-│   └── sat.constants.js
-├── config.js
-└── index.js
-```
-
-ให้เก็บเฉพาะสิ่งที่ใช้เหมือนกันในทุก EOC Type เช่น:
-
-* Layout ของทีม
-* Header ของทีม
-* สมาชิกทีม
-* Permission
-* ตารางพื้นฐาน
-* Filter กลาง
-* Loading State
-* Empty State
-* Service กลาง
-* Navigation Configuration
-
-ห้ามใส่ Metric หรือข้อมูลเฉพาะอุทกภัย ไข้เลือดออก หรือ EOC Type อื่นใน Base Team Module
-
-## 5. EOC Type-specific Override
-
-หากทีมมีข้อมูลแตกต่างตาม EOC Type ให้สร้างเฉพาะส่วนที่แตกต่างที่:
-
-```text
-features/eoc/eoc-types/{eocType}/{teamCode}
-```
-
-ตัวอย่างทีม SAT:
-
-```text
-features/eoc/eoc-types/
-├── flood/
-│   ├── shared/
-│   └── sat/
-│       ├── components/
-│       │   ├── flood-sat-dashboard.jsx
-│       │   ├── water-level-chart.jsx
-│       │   ├── affected-area-chart.jsx
-│       │   └── flood-sat-report-form.jsx
-│       ├── config.js
-│       ├── schema.js
-│       ├── service.js
-│       └── index.js
-│
-└── dengue/
-    ├── shared/
-    └── sat/
-        ├── components/
-        │   ├── dengue-sat-dashboard.jsx
-        │   ├── weekly-case-chart.jsx
-        │   ├── district-case-chart.jsx
-        │   └── dengue-sat-report-form.jsx
-        ├── config.js
-        ├── schema.js
-        ├── service.js
-        └── index.js
-```
-
-EOC Type-specific Override ให้เก็บเฉพาะ:
-
-* Metric เฉพาะ EOC Type
-* Chart เฉพาะ EOC Type
-* Form เฉพาะ EOC Type
-* Validation เฉพาะ EOC Type
-* Business Logic เฉพาะ EOC Type
-* Workflow เฉพาะ EOC Type
-
-ห้ามคัดลอก Base Team Module มาทั้งชุด
-
-## 6. การเพิ่ม EOC Type ใหม่
-
-การเพิ่ม EOC Type ใหม่ต้องทำได้โดย:
-
-1. เพิ่มรายการใน `eoc-type.registry.js`
-2. สร้างโฟลเดอร์ใหม่ใน `eoc-types/{eocType}`
-3. สร้างเฉพาะ Team Override ที่แตกต่างจริง
-4. ใช้ Team Base Module สำหรับทีมที่ข้อมูลเหมือนเดิม
-5. ไม่ต้องสร้างโฟลเดอร์ครบทั้ง 23 ทีม
-
-ตัวอย่างเพิ่ม EOC Type `storm`:
-
-```text
-features/eoc/eoc-types/storm/
-├── shared/
-├── sat/
-└── logistics/
-```
-
-หากทีม IT ใช้ Dashboard และ Records เหมือนทุก EOC Type ไม่ต้องสร้าง:
-
-```text
-features/eoc/eoc-types/storm/it
-```
-
-ให้ Resolver ใช้:
-
-```text
-features/eoc/teams/it
-```
-
-## 7. EOC Type Registry
-
-สร้าง Registry เช่น:
-
-```js
-export const EOC_TYPES = [
-  "flood",
-  "dengue",
-  "storm",
-  "drought",
-  "epidemic",
-];
-
-export const eocTypeRegistry = {
-  flood: {
-    code: "flood",
-    name: "อุทกภัย",
-    enabled: true,
-  },
-  dengue: {
-    code: "dengue",
-    name: "ไข้เลือดออก",
-    enabled: true,
-  },
-  storm: {
-    code: "storm",
-    name: "วาตภัย",
-    enabled: true,
-  },
-};
-```
-
-ห้ามกระจายค่า EOC Type แบบ Hard-code ในหลาย Component
-
-## 8. Team Registry
-
-สร้าง Team Registry สำหรับ 23 ทีม:
-
-```js
-export const teamRegistry = {
-  sat: {
-    code: "sat",
-    name: "ทีมตระหนักรู้สถานการณ์",
-    shortName: "SAT",
-    menus: [
-      {
-        key: "dashboard",
-        label: "Dashboard",
-      },
-      {
-        key: "records",
-        label: "รายงานผล",
-      },
-    ],
-  },
-
-  it: {
-    code: "it",
-    name: "ทีมเทคโนโลยีสารสนเทศ",
-    shortName: "IT",
-    menus: [
-      {
-        key: "dashboard",
-        label: "Dashboard",
-      },
-      {
-        key: "records",
-        label: "รายงานผล",
-      },
-      {
-        key: "members",
-        label: "สมาชิก",
-      },
-    ],
-  },
-};
-```
-
-Sidebar ต้องสร้างจาก Registry ไม่เขียนเมนูซ้ำ 23 ชุดใน JSX
-
-## 9. Dashboard Registry
-
-สร้าง Base Dashboard Registry:
-
-```js
-export const baseTeamDashboardRegistry = {
-  sat: SatBaseDashboard,
-  it: ItBaseDashboard,
-  logistics: LogisticsBaseDashboard,
-};
-```
-
-สร้าง EOC Type Override Registry:
-
-```js
-export const eocTypeTeamDashboardRegistry = {
-  "flood:sat": FloodSatDashboard,
-  "flood:logistics": FloodLogisticsDashboard,
-  "dengue:sat": DengueSatDashboard,
-  "dengue:medical": DengueMedicalDashboard,
-};
-```
-
-## 10. Resolver
-
-สร้าง Resolver ให้เลือกโมดูลตามลำดับ:
-
-```text
-ค้นหา EOC Type-specific Team Override
-        ↓
-ถ้าพบ ให้ใช้ Override
-        ↓
-ถ้าไม่พบ ให้ใช้ Base Team Module
-```
-
-ตัวอย่าง:
-
-```js
-export function resolveTeamDashboard(eocType, teamCode) {
-  const overrideKey = `${eocType}:${teamCode}`;
-
-  return (
-    eocTypeTeamDashboardRegistry[overrideKey] ||
-    baseTeamDashboardRegistry[teamCode] ||
-    null
-  );
-}
-```
-
-ต้อง Validate ว่า `eocType` และ `teamCode` มีอยู่จริงก่อนเรียก Resolver
-
-## 11. Dynamic Route
-
-ห้ามสร้าง Route แยกครบ 23 ทีมและทุก EOC Type
-
-ใช้ Dynamic Route:
-
-```text
-app/eoc/[eocType]/teams/[teamCode]/
-├── dashboard/page.jsx
-├── records/page.jsx
-└── members/page.jsx
-```
-
-ตัวอย่าง URL:
-
-```text
-/eoc/flood/teams/sat/dashboard
-/eoc/flood/teams/it/dashboard
-/eoc/dengue/teams/sat/dashboard
-/eoc/dengue/teams/medical/records
-/eoc/storm/teams/logistics/dashboard
-```
-
-`page.jsx` ต้องมีหน้าที่เพียง:
-
-1. ตรวจ Session
-2. ตรวจ Permission
-3. Validate `eocType`
-4. Validate `teamCode`
-5. เรียก Resolver
-6. Render Component
-
-ห้ามใส่ Business Logic ขนาดใหญ่ใน `page.jsx`
-
-## 12. Route เดิม
-
-ระบบมี Route เดิม เช่น:
-
-```text
-/stn-eoc/eoc/disease/dashboard
-/stn-eoc/eoc/disease/records
-```
-
-ห้ามลบ Route เดิมทันที
-
-ให้ Route เดิมเป็น Wrapper หรือ Compatibility Route เช่น:
-
-```jsx
-export default function DiseaseDashboardPage() {
-  return (
-    <TeamDashboardEntry
-      eocType="dengue"
-      teamCode="sat"
-    />
-  );
-}
-```
-
-หรือทำ Redirect หลังจากตรวจสอบผลกระทบแล้ว
-
-## 13. JavaScript Validation
-
-เนื่องจากยังไม่ใช้ TypeScript ให้ใช้เครื่องมือดังนี้:
-
-* Zod สำหรับ Runtime Validation
-* JSDoc สำหรับ Type Hint
-* ESLint สำหรับตรวจโค้ด
-* PropTypes เฉพาะ Component ที่ยังไม่ใช้ Zod หรือ JSDoc
-* หลีกเลี่ยง Object ที่ไม่มี Schema
-* ห้ามเชื่อถือข้อมูลจาก Route, Search Params หรือ API โดยตรง
-
-ตัวอย่าง:
-
-```js
-import { z } from "zod";
-
-export const routeParamsSchema = z.object({
-  eocType: z.string().min(1),
-  teamCode: z.string().min(1),
-});
-```
-
-## 14. Import Boundary
-
-กำหนดกฎ:
-
-```text
-shared
-→ ห้าม Import จาก teams หรือ eoc-types
-
-teams
-→ Import จาก shared ได้
-→ ห้าม Import จาก eoc-types
-
-eoc-types
-→ Import จาก shared และ teams ได้
-
-app
-→ Import จาก features และ server ได้
-
-server
-→ ห้าม Import UI Component
-```
-
-Incident Override หรือ EOC Type Override เป็นฝ่ายดึง Base Team Component มาใช้ ไม่ให้ Base Team Import กลับเข้า EOC Type
-
-## 15. Migration Plan
-
-ห้ามจัดโครงสร้างใหม่ทั้งหมดในครั้งเดียว
-
-แบ่งเป็น Phase:
-
-### Phase 1: วิเคราะห์
-
-* สร้าง Folder Tree ปัจจุบัน
-* ตรวจ Route
-* ตรวจ Import
-* ตรวจ Component ซ้ำ
-* ตรวจ Business Logic
-
-### Phase 2: Shared Layer
-
-* ย้าย Component ที่ใช้ร่วมกัน
-* ย้าย Utility
-* ย้าย Chart และ Table กลาง
-
-### Phase 3: Base Team Module
-
-เริ่มจาก:
-
-1. ทีม SAT
-2. ทีม IT
-3. ทีมอื่นทีละทีม
-
-### Phase 4: EOC Type Override
-
-เริ่มจาก:
-
-1. `dengue/sat`
-2. `flood/sat`
-3. ทีมที่แตกต่างจริง
-
-### Phase 5: Registry และ Resolver
-
-* Team Registry
-* EOC Type Registry
-* Dashboard Registry
-* Records Registry
-* Resolver
-
-### Phase 6: Dynamic Route
-
-* เพิ่ม Dynamic Route
-* รักษา Route เดิม
-* ทดสอบ Compatibility
-
-### Phase 7: Cleanup
-
-* ลบไฟล์ซ้ำหลังตรวจสอบ
-* แก้ Import
-* ลบ Dead Code
-* ตรวจ Circular Dependency
-
-## 16. สิ่งที่ต้องส่งมอบก่อนแก้ไข
-
-ก่อนแก้ไขโค้ด ให้แสดง:
-
-1. Current Folder Tree
-2. ปัญหาโครงสร้างปัจจุบัน
-3. Component หรือ Service ที่ซ้ำ
-4. Route ที่ได้รับผลกระทบ
-5. Proposed Folder Tree
-6. Migration Mapping
-7. Migration Plan
-8. Risk และผลกระทบ
-
-ห้ามเริ่มย้ายไฟล์จนกว่าจะวิเคราะห์ครบ
-
-## 17. Acceptance Criteria
+# Prompt: ปรับโครงสร้างระบบเจ้าหน้าที่ EOC และรายงานอุทกภัยให้เป็นระบบเดียว
+
+คุณคือ Senior Full-stack Developer, Software Architect และ Security Engineer ผู้เชี่ยวชาญระบบ Emergency Operations Center (EOC) จงวิเคราะห์และปรับปรุงระบบ Satun Geo-EOC โดยยึดโค้ดและฐานข้อมูลจริงเป็นหลัก เป้าหมายคือทำให้ระบบเจ้าหน้าที่ การมอบหมายกลุ่มภารกิจ รายงานย้อนหลัง และ Dashboard อุทกภัยรายวันทำงานสอดคล้องกัน ไม่สร้างหน้า API ตาราง หรือ workflow ซ้ำโดยไม่จำเป็น
+
+## 1. เป้าหมายหลัก
+
+1. เจ้าหน้าที่เห็นและเข้าใช้งานเฉพาะ EOC Session และกลุ่มภารกิจที่ได้รับมอบหมาย
+2. ผู้ที่ไม่ได้รับมอบหมายต้องไม่สามารถเข้าถึงหรือแก้ไขข้อมูลของกลุ่มภารกิจผ่านทั้ง UI และ API
+3. ผู้ดูแลระบบและผู้บัญชาการสามารถเข้าถึงทุกกลุ่มภารกิจตามขอบเขตสิทธิ์
+4. เมื่อปิด EOC แล้ว งานปฏิบัติการทั่วไปเป็น read-only แต่ workflow รายงานยังสามารถสร้าง แก้ไข ส่ง ตรวจ และอนุมัติย้อนหลังได้ตามสิทธิ์
+5. ระบบอุทกภัยต้องมีแหล่งข้อมูลจริงเพียงชุดเดียวสำหรับแบบบันทึก รายงาน และ Dashboard รายวัน
+6. ยกเลิกข้อมูล mock และลด route/service/component ที่ทำหน้าที่ซ้ำกัน
+
+## 2. หลักการ Source of Truth
+
+ให้กำหนดแหล่งข้อมูลกลางดังนี้:
+
+- `eoc_sessions` เป็นแหล่งข้อมูลสถานะและช่วงเวลาเปิด–ปิด EOC
+- `eoc_session_teams` เป็นแหล่งข้อมูลกลุ่มภารกิจที่เปิดใช้ในแต่ละ Session
+- `eoc_team_members` เป็นแหล่งข้อมูลการมอบหมายเจ้าหน้าที่และหัวหน้าทีม
+- `eoc_team_reports` เป็นแหล่งข้อมูล workflow รายงานของกลุ่มภารกิจ
+- `flood_records` เป็นแหล่งข้อมูลสถานการณ์อุทกภัยระดับพื้นที่
+- `activity_logs` เป็นแหล่งข้อมูล audit trail
+
+ห้ามสร้างตารางหรือ API ชุดใหม่ หากข้อมูลเดียวกันมี Source of Truth อยู่แล้ว ให้ปรับ consumer เดิมมาใช้ schema และ service กลางแทน
+
+## 3. โครงสร้างสิทธิ์เจ้าหน้าที่
+
+สร้าง authorization กลางฝั่ง server ที่ตรวจอย่างน้อย:
+
+- `user_id`
+- `eoc_session_id`
+- `session_team_id`
+- `team_code`
+- สถานะ membership
+- บทบาทในทีม
+- สถานะ Session
+- ประเภท action เช่น view, create, edit, submit, review, approve
+
+กติกาสิทธิ์:
+
+1. `admin` เข้าถึงและจัดการได้ทุก Session ตามสิทธิ์ผู้ดูแลระบบ
+2. `commander` ดูทุกกลุ่มภารกิจ ส่งตรวจ และอนุมัติรายงานได้
+3. หัวหน้าทีมดูข้อมูลทีม สร้าง/แก้ไขรายงานของทีม และส่งรายงานได้
+4. สมาชิกทีมดูข้อมูลทีมและสร้างรายงานได้ แก้ไขได้เฉพาะรายงานของตนเองที่เป็น `draft` หรือ `returned`
+5. เจ้าหน้าที่ที่ไม่ได้เป็นสมาชิกของทีมต้องได้ HTTP 403 จาก API แม้เรียก URL โดยตรง
+6. ห้ามใช้การซ่อนเมนูฝั่ง client เป็นกลไกควบคุมสิทธิ์หลัก
+7. การมี role ชื่อเดียวกับ `team_code` ต้องไม่เป็นเหตุให้ข้าม membership ของ Session เว้นแต่มีนโยบาย legacy ที่ประกาศและทดสอบไว้อย่างชัดเจน
+
+รวม logic ที่ซ้ำกันไว้ใน access helper/service กลาง และให้ทุก API mutation เรียกใช้ helper เดียวกัน
+
+## 4. พฤติกรรมของเจ้าหน้าที่ที่ได้รับและไม่ได้รับมอบหมาย
+
+### เจ้าหน้าที่ที่ได้รับมอบหมาย
+
+- Sidebar แสดงเฉพาะกลุ่มภารกิจที่ได้รับมอบหมายใน EOC ที่กำลังใช้งาน
+- หน้า Staff Workspace แสดงเฉพาะทีมที่เป็นสมาชิก
+- เข้าหน้า Dashboard, รายงาน และสมาชิกของทีมตนเองได้
+- หน้า “สมาชิก” แสดงเป็น responsive list table โดยมีลำดับ ชื่อ-นามสกุล ตำแหน่ง หน่วยงาน บทบาทในทีม และสถานะหัวหน้าทีม
+- สามารถเลือก Session ปิดย้อนหลังเพื่อจัดทำรายงานได้ หาก membership ใน Session นั้นยังถูกต้อง
+
+### เจ้าหน้าที่ที่ไม่ได้รับมอบหมาย
+
+- เข้าได้เฉพาะหน้าหลัก โปรไฟล์ ตั้งค่า และข้อมูลทั่วไปที่กำหนดให้ทุกคนดู
+- หน้า Staff Workspace แสดง empty state ที่อธิบายว่าไม่มีงานมอบหมาย
+- ไม่แสดงเมนูหรือปุ่มของกลุ่มภารกิจ
+- API ของทีมและ API mutation ต้องตอบ 403
+- ห้ามอ่านข้อมูลสมาชิกหรือรายงานภายในของทีมอื่น
+
+## 5. Session ปิดและรายงานย้อนหลัง
+
+แยก permission `canOperate` และ `canReport` ออกจากกันอย่างชัดเจน:
+
+- Session `active`: ทำงานปฏิบัติการและรายงานได้ตามสิทธิ์
+- Session `closed`: งานปฏิบัติการทั่วไปเป็น read-only แต่รายงานย้อนหลังยังทำได้ตามสิทธิ์
+
+เมื่อ Session ปิดแล้ว ผู้มีสิทธิ์ต้องสามารถ:
+
+- สร้างรายงาน
+- แก้ไขรายงานสถานะ `draft` หรือ `returned`
+- ส่งรายงาน
+- ส่งกลับแก้ไข
+- ตรวจและอนุมัติรายงาน
+- ส่งออกข้อมูล
+
+ทุกหน้าต้องใช้ข้อความสถานะเดียวกัน เช่น:
+
+> Session ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่ยังสามารถจัดทำ แก้ไข ส่ง และตรวจรายงานย้อนหลังได้
+
+แก้ `my-assignments`, Route Guard, Staff Workspace และ Report API ให้รองรับ membership ของ Session ปิดตรงกัน ห้ามมีหน้าหนึ่งอนุญาตแต่อีกหน้าปฏิเสธ
+
+## 6. Workflow รายงานกลุ่มภารกิจ
+
+ใช้สถานะมาตรฐาน:
+
+`draft -> submitted -> approved`
+
+และ:
+
+`submitted -> returned -> draft`
+
+ข้อกำหนด:
+
+- รายงานต้องผูก `eoc_session_id`, `session_team_id`, `team_code` และผู้บันทึก
+- ตรวจ ownership ก่อนแก้ไข
+- หัวหน้าทีมหรือผู้มีสิทธิ์เท่านั้นที่ส่งรายงาน
+- ผู้บัญชาการหรือผู้ดูแลระบบเท่านั้นที่อนุมัติหรือส่งกลับ
+- ทุก mutation ต้องบันทึก `activity_logs`
+- API response ต้องส่ง permissions ที่คำนวณจาก server
+- UI ต้องแสดงปุ่มตาม permissions จาก API ไม่คำนวณสิทธิ์ขึ้นเองจาก role เพียงอย่างเดียว
+
+## 7. ระบบอุทกภัยและ Dashboard รายวัน
+
+ใช้ `flood_records` เป็นข้อมูลจริงชุดเดียว โดยกำหนด schema กลางและชื่อ field ให้ตรงกันทุก route:
+
+- `session_id`
+- `polygon_id`
+- `province`
+- `district`
+- `tambon`
+- `village`
+- `flood_level`
+- `flood_start_date` หรือชื่อวันที่รายงานมาตรฐานเพียงชื่อเดียว
+- `water_depth_cm`
+- `affected_area_sqm`
+- `affected_households`
+- `affected_people`
+- `description`
+- `created_by`
+- `created_at`
+- `updated_at`
+
+Dashboard รายวันต้อง:
+
+1. รับ `session_id` และ `report_date` อย่างชัดเจน
+2. ตรวจว่า Session เป็น EOC ประเภท `flood`
+3. กรองข้อมูลด้วย `session_id` ทุก query
+4. กรองด้วยวันที่รายงานแบบตรงวัน ห้ามใช้เพียง `updated_at >= date`
+5. รองรับทั้ง Session เปิดและ Session ปิดย้อนหลัง
+6. สรุปจำนวนอำเภอ ตำบล หมู่บ้าน ครัวเรือน และประชาชนที่ได้รับผลกระทบ
+7. แสดงระดับความรุนแรง ระดับน้ำ และแนวโน้มตามข้อมูลจริง
+8. Drill down จากจังหวัด -> อำเภอ -> ตำบล -> หมู่บ้านได้
+9. แสดง empty state เมื่อวันนั้นไม่มีข้อมูล โดยไม่ดึงข้อมูลวันอื่นมาปน
+10. ใช้ timezone `Asia/Bangkok` อย่างสม่ำเสมอ
+
+## 8. การรวม API และหน้าที่ซ้ำกัน
+
+ตรวจสอบ route ที่เกี่ยวข้อง เช่น:
+
+- `/api/admin/flood-records`
+- `/api/eoc/flood/daily-records`
+- `/api/eoc/flood/daily-risk`
+- `/api/eoc/flood/management`
+
+จากนั้น:
+
+1. เลือก API production หลักเพียงชุดเดียว
+2. แยก service สำหรับ query รายการและ aggregate รายวัน โดยใช้ schema เดียวกัน
+3. ย้าย consumer ทุกหน้าให้เรียก service/API หลัก
+4. ทำ compatibility adapter ชั่วคราวเฉพาะกรณีจำเป็น
+5. ระบุ route ที่ deprecated และลบเมื่อไม่มี consumer
+6. ห้ามมี route ที่อ้าง field เก่า เช่น `vid`, `recorded_day`, `water_level` หาก schema จริงใช้ชื่ออื่น
+
+## 9. ยกเลิกข้อมูล Mock
+
+หน้า Flood EOC Management, Daily Dashboard, Reports, Completeness และ Team Workspace ต้องอ่านข้อมูลจากฐานข้อมูลจริง
+
+- ห้ามส่ง `data_mode: "mock"` ใน production
+- ห้ามใช้ seed JSON เป็นข้อมูล dashboard จริง
+- seed ใช้ได้เฉพาะ development fixture หรือ automated test
+- ถ้ายังไม่มีข้อมูลจริง ให้แสดง empty state
+- role access ต้องมาจาก authorization จริง ไม่ใช่ `role_access_mock`
+
+## 10. UX และ Navigation
+
+- ใช้ entry route และ Team Page Shell กลางสำหรับทุกกลุ่มภารกิจ
+- Sidebar, Staff Workspace และ deep link ต้องให้ผลสิทธิ์ตรงกัน
+- แสดงสถานะ loading, empty, error และ forbidden ให้ชัดเจน
+- ตารางต้องรองรับมือถือด้วย horizontal scroll
+- ห้ามสร้าง Dashboard ซ้ำหลายหน้าเพื่อแสดงข้อมูลเดียวกัน
+- หน้ารายงานและ Dashboard ต้องคง Session ที่ผู้ใช้เลือกตลอด workflow
+- URL ควรมี `sessionId` และวันที่เมื่อข้อมูลขึ้นกับ Session/วัน เพื่อให้ refresh และแชร์ deep link ได้ถูกต้อง
+
+## 11. Security และ Data Integrity
+
+- ทุก API ที่อ่านข้อมูลภายในต้องเรียก `requireAuth`
+- ทุก API mutation ต้องตรวจ membership และ action permission
+- validate ID ให้เป็น positive integer
+- ใช้ parameterized query เท่านั้น
+- validate วันที่ให้อยู่ในช่วงเปิด–ปิด Session
+- ห้ามเชื่อ `team_code`, `session_id`, `created_by` จาก client โดยไม่ตรวจจากฐานข้อมูล
+- ใช้ transaction ใน workflow ที่อัปเดตรายงานและ audit log พร้อมกัน
+- ห้ามเปิดเผย stack trace หรือรายละเอียดฐานข้อมูลใน response
+
+## 12. แผนดำเนินงาน
+
+ทำงานตามลำดับนี้:
+
+1. สำรวจ route, component, service, schema และ consumer ทั้งหมดก่อนแก้
+2. ทำ dependency map และเลือก Source of Truth
+3. เขียน authorization helper กลาง
+4. ปรับ API ให้ตรวจสิทธิ์และใช้ schema กลาง
+5. ปรับ `my-assignments`, Sidebar, Route Guard และ Staff Workspace
+6. รวม API อุทกภัยและแก้ query รายวัน
+7. เชื่อม Dashboard เข้าฐานข้อมูลจริง
+8. ย้าย consumer ออกจาก route เก่า
+9. เพิ่ม automated tests
+10. ลบ mock และโค้ด deprecated เมื่อยืนยันว่าไม่มี consumer
+
+ห้ามลบ route หรือตารางทันทีโดยยังไม่ได้ตรวจ consumer และ migration impact
+
+## 13. Automated Tests ที่ต้องมี
+
+### Authorization
+
+- สมาชิกทีมเข้าทีมตนเองได้
+- สมาชิกทีมเข้าทีมอื่นไม่ได้
+- ผู้ไม่ได้รับมอบหมายได้ 403 จาก API
+- admin และ commander เข้าถึงตามสิทธิ์
+- team role อย่างเดียวไม่สามารถข้าม Session membership
+
+### Session และรายงาน
+
+- Session เปิดสามารถปฏิบัติงานและรายงานได้
+- Session ปิดไม่สามารถแก้ข้อมูลงานปฏิบัติการทั่วไป
+- Session ปิดยังสร้าง แก้ ส่ง ตรวจ และอนุมัติรายงานได้ตามสิทธิ์
+- สมาชิกทั่วไปแก้รายงานของผู้อื่นไม่ได้
+- ทุก workflow สร้าง audit log
+
+### อุทกภัยรายวัน
+
+- ข้อมูลถูกกรองด้วย `session_id`
+- ข้อมูลถูกกรองด้วยวันที่รายงานตรงวัน
+- ข้อมูลคนละ Session หรือคนละวันไม่ปะปน
+- Session ปิดดู Dashboard ย้อนหลังได้
+- วันไม่มีข้อมูลคืนผลรวมเป็นศูนย์และ empty list
+- API ที่ไม่มี authentication ถูกปฏิเสธ
+
+## 14. Definition of Done
 
 งานถือว่าเสร็จเมื่อ:
 
-1. ระบบยังใช้ JSX และ JavaScript ได้ตามเดิม
-2. ไม่มีการบังคับ Migration เป็น TypeScript
-3. มี Shared EOC Layer
-4. มี Base Team Module
-5. มี EOC Type-specific Override
-6. ไม่สร้างครบ `23 ทีม × ทุก EOC Type`
-7. Sidebar สร้างจาก Registry
-8. Dashboard เลือกผ่าน Resolver
-9. Dynamic Route รองรับ EOC Type ใหม่
-10. Route เดิมยังใช้งานได้
-11. ไม่มี Import Path เสีย
-12. ไม่มี Circular Dependency
-13. ผ่าน ESLint
-14. ผ่าน Production Build
-15. เพิ่ม EOC Type ใหม่ได้โดยเพิ่ม Registry และ Override เฉพาะที่จำเป็น
+- ไม่มีเจ้าหน้าที่ที่ไม่ได้รับมอบหมายเข้าถึงข้อมูลทีมผ่าน UI หรือ API ได้
+- Sidebar, Staff Workspace, Route Guard และ API ให้ผลสิทธิ์ตรงกัน
+- รายงานย้อนหลังหลังปิด EOC ทำงานครบ workflow
+- Dashboard อุทกภัยรายวันใช้ข้อมูลฐานจริงและกรอง Session/วันที่ถูกต้อง
+- ไม่มี production page ที่ใช้ mock data
+- route ซ้ำถูกยุบหรือประกาศ deprecated พร้อม migration path
+- lint, unit tests, integration tests และ build ผ่าน
+- มีเอกสารสรุป route หลัก Source of Truth permission matrix และรายการ route ที่ยกเลิก
 
-## 18. ข้อห้าม
+## 15. รูปแบบผลลัพธ์ที่ต้องส่งมอบ
 
-* ห้ามเปลี่ยน JSX เป็น TSX ในงานนี้
-* ห้ามสร้าง Route ซ้ำครบทุกทีม
-* ห้ามสร้างโฟลเดอร์ครบ 23 ทีมในทุก EOC Type
-* ห้ามคัดลอก Dashboard หรือ Form ทั้งชุด
-* ห้าม Hard-code EOC Type ใน Component
-* ห้าม Hard-code Team Code ใน Sidebar
-* ห้ามลบ Route เดิมทันที
-* ห้ามย้ายไฟล์โดยไม่ตรวจ Dependency
-* ห้ามเปลี่ยน UI โดยไม่เกี่ยวข้องกับการจัดโครงสร้าง
-* ห้ามสรุปว่างานเสร็จหาก Build ยังไม่ผ่าน
+เมื่อพัฒนาเสร็จ ให้รายงาน:
 
-เป้าหมายคือทำให้ระบบ JSX ปัจจุบันมีโครงสร้างที่ชัดเจน รองรับทีม 23 ทีม รองรับ EOC Type ใหม่ในอนาคต ลดโค้ดซ้ำ และสามารถ Migration แบบทีละส่วนภายหลังได้
+1. Architecture และ Source of Truth หลังปรับ
+2. Permission matrix แยกตาม role และ action
+3. รายการไฟล์/API ที่แก้
+4. route ที่คงไว้ ยุบ หรือ deprecated
+5. database migration ที่ใช้
+6. automated tests และผลการทดสอบ
+7. known limitations ที่ยังเหลือ
+
+อย่ารายงานว่า “เสร็จแล้ว” จากการตรวจเฉพาะหน้าจอ ต้องยืนยันทั้ง UI, API authorization, database query และ automated tests

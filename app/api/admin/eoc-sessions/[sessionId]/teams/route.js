@@ -7,6 +7,53 @@ import { NextResponse } from 'next/server';
 import { query, getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { appendAuditLog } from '@/lib/auditLog';
+
+function fullName(officer) {
+    return [officer.title, officer.given_name, officer.family_name].filter(Boolean).join(' ');
+}
+
+async function logSessionTeamMemberChange(conn, request, user, {
+    action,
+    membershipId,
+    context,
+    officer,
+    oldRole = null,
+    newRole = null,
+    source,
+}) {
+    const labels = {
+        data_create: 'เพิ่มเข้ากลุ่มภารกิจ',
+        data_update: 'เปลี่ยนบทบาทในกลุ่มภารกิจ',
+        data_delete: 'ถอดออกจากกลุ่มภารกิจ',
+    };
+    const officerName = fullName(officer);
+    await appendAuditLog(
+        (sql, values) => conn.execute(sql, values),
+        {
+            request,
+            user,
+            action,
+            targetType: 'eoc_team_member',
+            targetId: membershipId,
+            sessionId: context.eoc_session_id,
+            sessionTeamId: context.session_team_id,
+            description: `${labels[action]}: ${officerName} · ${context.team_code} - ${context.team_name_th}`,
+            metadata: {
+                source,
+                officerId: Number(officer.officer_id || officer.id),
+                officerName,
+                officerUsername: officer.username,
+                sessionNumber: context.session_number,
+                eocType: context.eoc_type,
+                teamCode: context.team_code,
+                teamName: context.team_name_th,
+            },
+            oldValues: oldRole ? { roleInTeam: oldRole, isActive: true } : null,
+            newValues: newRole ? { roleInTeam: newRole, isActive: true } : null,
+        }
+    );
+}
 
 // GET: ดึงข้อมูลทีมงานทั้งหมดของ Session
 export async function GET(request, { params }) {
@@ -123,7 +170,7 @@ export async function POST(request, { params }) {
 
         // ตรวจสอบว่า Session ยังเปิดอยู่หรือไม่
         const [session] = await conn.query(
-            'SELECT status FROM eoc_sessions WHERE id = ?',
+            'SELECT id, status, session_number, eoc_type FROM eoc_sessions WHERE id = ?',
             [sessionId]
         );
 
@@ -168,11 +215,34 @@ export async function POST(request, { params }) {
 
         // เพิ่มหัวหน้าทีมเป็นสมาชิกคนแรก
         if (teamLeadOfficerId) {
-            await conn.query(`
+            const [memberResult] = await conn.query(`
                 INSERT INTO eoc_team_members 
                 (session_team_id, officer_id, role_in_team, assigned_by)
                 VALUES (?, ?, 'หัวหน้าทีม', ?)
             `, [sessionTeamId, teamLeadOfficerId, auth.user.id]);
+            const [contexts] = await conn.query(`
+                SELECT st.id AS session_team_id, st.eoc_session_id,
+                       s.session_number, s.eoc_type, t.team_code, t.team_name_th
+                FROM eoc_session_teams st
+                JOIN eoc_sessions s ON s.id = st.eoc_session_id
+                JOIN eoc_teams t ON t.id = st.team_id
+                WHERE st.id = ?
+                LIMIT 1
+            `, [sessionTeamId]);
+            const [officers] = await conn.query(`
+                SELECT id, username, title, given_name, family_name
+                FROM officer WHERE id = ? LIMIT 1
+            `, [teamLeadOfficerId]);
+            if (contexts.length && officers.length) {
+                await logSessionTeamMemberChange(conn, request, auth.user, {
+                    action: 'data_create',
+                    membershipId: memberResult.insertId,
+                    context: contexts[0],
+                    officer: officers[0],
+                    newRole: 'หัวหน้าทีม',
+                    source: 'session_team_create',
+                });
+            }
         }
 
         await conn.commit();
@@ -213,9 +283,12 @@ export async function PUT(request, { params }) {
         }
 
         const [sessionTeams] = await conn.query(`
-            SELECT st.id, st.eoc_session_id, s.status
+            SELECT st.id AS session_team_id, st.eoc_session_id, st.team_lead_officer_id,
+                   s.status, s.session_number, s.eoc_type,
+                   t.team_code, t.team_name_th
             FROM eoc_session_teams st
             JOIN eoc_sessions s ON st.eoc_session_id = s.id
+            JOIN eoc_teams t ON t.id = st.team_id
             WHERE st.id = ? AND st.eoc_session_id = ? AND st.is_active = TRUE
         `, [sessionTeamId, sessionId]);
 
@@ -242,10 +315,12 @@ export async function PUT(request, { params }) {
             WHERE id = ? AND eoc_session_id = ?
         `, [teamLeadOfficerId || null, notes || null, sessionTeamId, sessionId]);
 
-        if (teamLeadOfficerId) {
+        if (teamLeadOfficerId && Number(teamLeadOfficerId) !== Number(sessionTeams[0].team_lead_officer_id)) {
             const [existingLeadMember] = await conn.query(`
-                SELECT id
-                FROM eoc_team_members
+                SELECT tm.id, tm.role_in_team, o.id AS officer_id, o.username,
+                       o.title, o.given_name, o.family_name
+                FROM eoc_team_members tm
+                JOIN officer o ON o.id = tm.officer_id
                 WHERE session_team_id = ?
                   AND officer_id = ?
                   AND is_active = TRUE
@@ -253,17 +328,42 @@ export async function PUT(request, { params }) {
             `, [sessionTeamId, teamLeadOfficerId]);
 
             if (existingLeadMember.length === 0) {
-                await conn.query(`
+                const [memberResult] = await conn.query(`
                     INSERT INTO eoc_team_members
                     (session_team_id, officer_id, role_in_team, assigned_by)
                     VALUES (?, ?, 'หัวหน้าทีม', ?)
                 `, [sessionTeamId, teamLeadOfficerId, auth.user.id]);
+                const [officers] = await conn.query(`
+                    SELECT id, username, title, given_name, family_name
+                    FROM officer WHERE id = ? LIMIT 1
+                `, [teamLeadOfficerId]);
+                if (officers.length) {
+                    await logSessionTeamMemberChange(conn, request, auth.user, {
+                        action: 'data_create',
+                        membershipId: memberResult.insertId,
+                        context: sessionTeams[0],
+                        officer: officers[0],
+                        newRole: 'หัวหน้าทีม',
+                        source: 'session_team_lead',
+                    });
+                }
             } else {
                 await conn.query(`
                     UPDATE eoc_team_members
                     SET role_in_team = 'หัวหน้าทีม'
                     WHERE id = ?
                 `, [existingLeadMember[0].id]);
+                if (existingLeadMember[0].role_in_team !== 'หัวหน้าทีม') {
+                    await logSessionTeamMemberChange(conn, request, auth.user, {
+                        action: 'data_update',
+                        membershipId: existingLeadMember[0].id,
+                        context: sessionTeams[0],
+                        officer: existingLeadMember[0],
+                        oldRole: existingLeadMember[0].role_in_team,
+                        newRole: 'หัวหน้าทีม',
+                        source: 'session_team_lead',
+                    });
+                }
             }
         }
 
@@ -304,6 +404,21 @@ export async function DELETE(request, { params }) {
 
         await conn.beginTransaction();
 
+        const [removedMembers] = await conn.query(`
+            SELECT tm.id, tm.role_in_team, o.id AS officer_id, o.username,
+                   o.title, o.given_name, o.family_name,
+                   st.id AS session_team_id, st.eoc_session_id,
+                   s.session_number, s.eoc_type,
+                   t.team_code, t.team_name_th
+            FROM eoc_session_teams st
+            JOIN eoc_sessions s ON s.id = st.eoc_session_id
+            JOIN eoc_teams t ON t.id = st.team_id
+            JOIN eoc_team_members tm ON tm.session_team_id = st.id AND tm.is_active = TRUE
+            JOIN officer o ON o.id = tm.officer_id
+            WHERE st.eoc_session_id = ? AND st.team_id = ? AND st.is_active = TRUE
+            FOR UPDATE
+        `, [sessionId, teamId]);
+
         // อัพเดทสถานะทีมเป็น inactive
         await conn.query(`
             UPDATE eoc_session_teams 
@@ -316,9 +431,21 @@ export async function DELETE(request, { params }) {
             UPDATE eoc_team_members tm
             JOIN eoc_session_teams st ON tm.session_team_id = st.id
             SET tm.is_active = FALSE,
-                tm.removed_at = NOW()
+                tm.removed_at = NOW(),
+                tm.removed_by = ?
             WHERE st.eoc_session_id = ? AND st.team_id = ?
-        `, [sessionId, teamId]);
+        `, [auth.user.id, sessionId, teamId]);
+
+        for (const member of removedMembers) {
+            await logSessionTeamMemberChange(conn, request, auth.user, {
+                action: 'data_delete',
+                membershipId: member.id,
+                context: member,
+                officer: member,
+                oldRole: member.role_in_team,
+                source: 'session_team_remove',
+            });
+        }
 
         await conn.commit();
 

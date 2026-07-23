@@ -99,6 +99,8 @@ export async function GET(request) {
         const userId = searchParams.get('userId');
         const actionType = searchParams.get('actionType');
         const targetType = searchParams.get('targetType');
+        const sessionId = searchParams.get('sessionId');
+        const sessionTeamId = searchParams.get('sessionTeamId');
         const search = searchParams.get('search')?.trim();
         const dateFrom = searchParams.get('dateFrom');
         const dateTo = searchParams.get('dateTo');
@@ -117,6 +119,11 @@ export async function GET(request) {
                 al.ip_address,
                 al.user_agent,
                 al.metadata,
+                al.old_values,
+                al.new_values,
+                al.change_reason,
+                al.eoc_session_id,
+                al.session_team_id,
                 al.created_at,
                 o.title,
                 o.given_name,
@@ -144,6 +151,24 @@ export async function GET(request) {
             params.push(targetType);
         }
 
+        if (sessionId) {
+            const parsedSessionId = Number(sessionId);
+            if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
+                return NextResponse.json({ success: false, message: 'sessionId ไม่ถูกต้อง' }, { status: 400 });
+            }
+            query += ' AND al.eoc_session_id = ?';
+            params.push(parsedSessionId);
+        }
+
+        if (sessionTeamId) {
+            const parsedSessionTeamId = Number(sessionTeamId);
+            if (!Number.isInteger(parsedSessionTeamId) || parsedSessionTeamId <= 0) {
+                return NextResponse.json({ success: false, message: 'sessionTeamId ไม่ถูกต้อง' }, { status: 400 });
+            }
+            query += ' AND al.session_team_id = ?';
+            params.push(parsedSessionTeamId);
+        }
+
         if (dateFrom) {
             query += ' AND DATE(al.created_at) >= ?';
             params.push(dateFrom);
@@ -169,9 +194,15 @@ export async function GET(request) {
         const [rows] = await connection.execute(query, params);
 
         // Parse metadata JSON
+        const parseJson = (value) => {
+            if (!value || typeof value !== 'string') return value || null;
+            try { return JSON.parse(value); } catch { return null; }
+        };
         const logs = rows.map(row => ({
             ...row,
-            metadata: row.metadata ? JSON.parse(row.metadata) : null
+            metadata: parseJson(row.metadata),
+            old_values: parseJson(row.old_values),
+            new_values: parseJson(row.new_values)
         }));
 
         return NextResponse.json({

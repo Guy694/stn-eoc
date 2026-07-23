@@ -97,13 +97,11 @@ export default function EOCOverview() {
     }
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchSessions();
     }, []);
 
     useEffect(() => {
         if (selectedSession) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchDashboardData(selectedSession, viewMode, selectedDate);
         }
     }, [selectedDate, selectedSession, viewMode]);

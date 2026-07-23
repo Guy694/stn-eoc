@@ -33,6 +33,26 @@ export async function query(sql, params) {
     }
 }
 
-const db = { getConnection, query };
+export async function transaction(callback) {
+    const connectionPool = await getConnection();
+    const connection = await connectionPool.getConnection();
+    try {
+        await connection.beginTransaction();
+        const execute = async (sql, params) => {
+            const [results] = await connection.execute(sql, params);
+            return results;
+        };
+        const result = await callback(execute);
+        await connection.commit();
+        return result;
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+}
+
+const db = { getConnection, query, transaction };
 
 export default db;

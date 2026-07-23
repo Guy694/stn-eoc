@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { getSessionTeamAccessByCode } from '@/lib/eocTeamAccess';
 
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
@@ -66,6 +67,16 @@ export async function GET(request) {
         const tambon = searchParams.get('tambon');
         const floodLevel = searchParams.get('flood_level');
         const status = searchParams.get('status');
+        const privileged = ['admin', 'commander'].includes(auth.user.role);
+        if (!sessionId && !privileged) {
+            return NextResponse.json({ success: false, message: 'กรุณาระบุ EOC Session' }, { status: 400 });
+        }
+        if (sessionId) {
+            const access = await getSessionTeamAccessByCode(auth.user, sessionId, 'sat');
+            if (!access.ok) {
+                return NextResponse.json({ success: false, message: access.message }, { status: access.status });
+            }
+        }
 
         const connection = await mysql.createConnection(dbConfig);
 
@@ -128,6 +139,13 @@ export async function POST(request) {
         if (!auth.success) return auth.response;
 
         const data = await request.json();
+        const access = await getSessionTeamAccessByCode(auth.user, data.session_id, 'sat');
+        if (!access.ok) {
+            return NextResponse.json({ success: false, message: access.message }, { status: access.status });
+        }
+        if (!access.canOperate) {
+            return NextResponse.json({ success: false, message: 'Session นี้ไม่เปิดให้บันทึกข้อมูลปฏิบัติการ' }, { status: 409 });
+        }
         const connection = await mysql.createConnection(dbConfig);
         const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
         if (!validation.ok) {
@@ -184,6 +202,13 @@ export async function PUT(request) {
         if (!auth.success) return auth.response;
 
         const data = await request.json();
+        const access = await getSessionTeamAccessByCode(auth.user, data.session_id, 'sat');
+        if (!access.ok) {
+            return NextResponse.json({ success: false, message: access.message }, { status: access.status });
+        }
+        if (!access.canOperate) {
+            return NextResponse.json({ success: false, message: 'Session นี้ไม่เปิดให้แก้ไขข้อมูลปฏิบัติการ' }, { status: 409 });
+        }
         const connection = await mysql.createConnection(dbConfig);
         const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
         if (!validation.ok) {

@@ -3,13 +3,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AppIcon from "@/components/icons/AppIcon";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 export default function UploadInfographics() {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
 
     const [formData, setFormData] = useState({
         eocType: 'flood',
@@ -73,13 +73,11 @@ export default function UploadInfographics() {
         e.preventDefault();
 
         if (formData.files.length === 0) {
-            setMessage({ type: 'error', text: 'กรุณาเลือกไฟล์รูปภาพ' });
+            showError('กรุณาเลือกไฟล์รูปภาพ');
             return;
         }
 
         setUploading(true);
-        setMessage({ type: '', text: '' });
-
         try {
             const uploadFormData = new FormData();
             uploadFormData.append('eocType', formData.eocType);
@@ -96,16 +94,16 @@ export default function UploadInfographics() {
             const data = await response.json();
 
             if (data.success) {
-                setMessage({ type: 'success', text: 'อัปโหลดสำเร็จ!' });
+                showSuccess('อัปโหลดสำเร็จ!');
                 setFormData({ ...formData, files: [] });
                 document.getElementById('fileInput').value = '';
                 fetchExistingFiles();
             } else {
-                setMessage({ type: 'error', text: data.message || 'เกิดข้อผิดพลาด' });
+                showError(data.message || 'เกิดข้อผิดพลาด');
             }
         } catch (error) {
             console.error('Upload error:', error);
-            setMessage({ type: 'error', text: 'เกิดข้อผิดพลาดในการอัปโหลด' });
+            showError('เกิดข้อผิดพลาดในการอัปโหลด');
         } finally {
             setUploading(false);
         }
@@ -124,14 +122,14 @@ export default function UploadInfographics() {
             const data = await response.json();
 
             if (data.success) {
-                setMessage({ type: 'success', text: 'ลบไฟล์สำเร็จ' });
+                showSuccess('ลบไฟล์สำเร็จ');
                 fetchExistingFiles();
             } else {
-                setMessage({ type: 'error', text: data.message || 'เกิดข้อผิดพลาดในการลบ' });
+                showError(data.message || 'เกิดข้อผิดพลาดในการลบ');
             }
         } catch (error) {
             console.error('Delete error:', error);
-            setMessage({ type: 'error', text: 'เกิดข้อผิดพลาดในการลบ' });
+            showError('เกิดข้อผิดพลาดในการลบ');
         }
     };
 
@@ -164,15 +162,6 @@ export default function UploadInfographics() {
                         </button>
                     </div>
                 </div>
-
-                {/* Message */}
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-700 border border-green-300' :
-                        'bg-red-100 text-red-700 border border-red-300'
-                        }`}>
-                        {message.text}
-                    </div>
-                )}
 
                 {/* Upload Form */}
                 <div className="bg-white rounded-xl shadow-lg p-6 mb-6">

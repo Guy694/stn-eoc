@@ -102,6 +102,9 @@ export default function AIChatbot() {
                     content: data.data.answer,
                     sql: data.data.sql,
                     resultCount: data.data.resultCount,
+                    sourceType: data.data.source_type || (String(data.data.source || '').startsWith('database') ? 'database' : null),
+                    sourceLabel: data.data.source_label || null,
+                    generatedAt: data.data.generated_at || null,
                     timestamp: new Date().toISOString()
                 };
                 setMessages(prev => [...prev, aiMessage]);
@@ -285,6 +288,16 @@ export default function AIChatbot() {
                                         }`}
                                 >
                                     <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                                    {msg.role === 'assistant' && msg.sourceType ? (
+                                        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                                            แหล่งข้อมูล: {msg.sourceLabel || ({
+                                                database: 'ฐานข้อมูล EOC',
+                                                external_provider: 'ผู้ให้บริการภายนอก',
+                                                calculated: 'ผลคำนวณจากข้อมูลที่ระบุ',
+                                                general_guidance: 'คำแนะนำทั่วไปจาก AI ไม่ใช่สถานการณ์ปัจจุบัน'
+                                            }[msg.sourceType] || msg.sourceType)}
+                                        </div>
+                                    ) : null}
                                     <div className="text-xs opacity-60 mt-1">
                                         {new Date(msg.timestamp).toLocaleTimeString('th-TH', {
                                             hour: '2-digit',

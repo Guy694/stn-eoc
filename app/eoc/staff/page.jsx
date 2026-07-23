@@ -102,10 +102,10 @@ export default function StaffEocOverviewPage() {
 
     return (
         <EOCLayout>
-            <section className="mx-auto max-w-7xl space-y-5">
-                <header className="border-b-4 border-cyan-600 bg-white px-5 py-6 shadow-sm">
+            <section className=" mx-auto max-w-7xl space-y-5">
+                <header className="rounded-lg border-b-4 border-cyan-600 bg-white px-5 py-6 shadow-sm">
                     <p className="text-sm font-bold text-cyan-700">STAFF WORKSPACE</p>
-                    <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
+                    <div className=" mt-1 flex flex-wrap items-end justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-black text-slate-900">ศูนย์ปฏิบัติงานเจ้าหน้าที่ EOC</h1>
                             <p className="mt-1 text-sm text-slate-600">เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมายเพื่อดู Dashboard และรายงานผล</p>
@@ -116,19 +116,19 @@ export default function StaffEocOverviewPage() {
                     </div>
                 </header>
 
-                <div className="grid gap-3 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                <div className="rounded-lg grid gap-3 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                     <label className="grid gap-1 text-sm font-bold text-slate-700">โมดูล EOC
                         <select value={moduleType} onChange={(event) => setModuleType(event.target.value)} className="h-11 border border-slate-300 bg-white px-3 font-medium">
                             {MODULES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
                         </select>
                     </label>
-                    <label className="grid gap-1 text-sm font-bold text-slate-700">EOC Session
+                    <label className="rounded-lg grid gap-1 text-sm font-bold text-slate-700">EOC Session
                         <select value={selectedSessionId} onChange={(event) => setSelectedSessionId(event.target.value)} disabled={!sessions.length} className="h-11 border border-slate-300 bg-white px-3 font-medium disabled:bg-slate-100">
                             {!sessions.length && <option value="">ไม่พบ Session</option>}
                             {sessions.map((item) => <option key={item.id} value={item.id}>#{item.session_number || item.id} · {item.status === "active" ? "เปิดอยู่" : "ปิดแล้ว"} · {formatDate(item.opened_at)}</option>)}
                         </select>
                     </label>
-                    <div className="flex items-end"><div className={`w-full border px-3 py-3 text-sm font-bold ${isClosed ? "border-slate-300 bg-slate-100 text-slate-600" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>{isClosed ? "อ่านอย่างเดียว" : "เปิดรับรายงาน"}</div></div>
+                    <div className="flex items-end"><div className={`w-full border px-3 py-3 text-sm font-bold ${isClosed ? "border-cyan-200 bg-cyan-50 text-cyan-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>{isClosed ? "ปฏิบัติการอ่านอย่างเดียว · รายงานย้อนหลังได้" : "เปิดรับรายงาน"}</div></div>
                 </div>
 
                 {error && <div className="flex items-center gap-2 border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800"><AlertCircle className="h-5 w-5" />{error}</div>}

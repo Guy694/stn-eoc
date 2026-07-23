@@ -1,40 +1,39 @@
-import { NextResponse } from 'next/server';
-import { readdir } from 'fs/promises';
-import path from 'path';
-import { requireAuth } from '@/lib/auth';
-import { isSafeFilename, resolveInside } from '@/lib/fileUpload';
-import { publicInternalError } from '@/lib/apiResponse';
+import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { query } from "@/lib/db";
+import { publicInternalError } from "@/lib/apiResponse";
 
 export async function GET(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"]);
         if (!auth.success) return auth.response;
 
-        const eocTypes = ['flood', 'drought', 'tsunami', 'earthquake', 'disease'];
-        const files = {};
-
-        for (const eocType of eocTypes) {
-            const dirPath = resolveInside(path.join(process.cwd(), 'public', 'infographics'), eocType);
-
-            try {
-                const fileList = await readdir(dirPath);
-                // Filter only image files
-                files[eocType] = fileList.filter(file =>
-                    isSafeFilename(file) && /\.(jpg|jpeg|png)$/i.test(file)
-                ).sort();
-            } catch (error) {
-                // Directory doesn't exist yet
-                files[eocType] = [];
-            }
-        }
+        const rows = await query(`
+            SELECT id, eoc_type, stored_filename, original_filename, mime_type,
+                   file_size, checksum_sha256, created_at
+            FROM eoc_file_assets
+            WHERE asset_type = 'infographic'
+            ORDER BY created_at DESC, id DESC
+        `);
+        const types = ["flood", "drought", "tsunami", "earthquake", "disease"];
+        const files = Object.fromEntries(types.map((type) => [type, []]));
+        rows.forEach((row) => {
+            if (files[row.eoc_type]) files[row.eoc_type].push(row.stored_filename);
+        });
 
         return NextResponse.json({
             success: true,
-            files
+            files,
+            assets: rows,
+            meta: {
+                source_type: "database",
+                source_name: "eoc_file_assets",
+                record_count: rows.length,
+                generated_at: new Date().toISOString()
+            }
         });
-
     } catch (error) {
-        console.error('List files error:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการอ่านรายการไฟล์');
+        console.error("List infographic assets error:", error);
+        return publicInternalError("เกิดข้อผิดพลาดในการอ่านรายการไฟล์");
     }
 }

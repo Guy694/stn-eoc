@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showWarning } from "@/lib/sweetAlert";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
@@ -21,6 +21,7 @@ const ACCIDENT_TYPES = ["จักรยานยนต์", "รถยนต์
 const FESTIVAL_LABEL = { newyear: "เทศกาลปีใหม่", songkran: "เทศกาลสงกรานต์" };
 
 export default function CitizenFestivalReportPage() {
+    const satunDistricts = useSatunDistricts();
     const { user } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [festivalSession, setFestivalSession] = useState(null);
@@ -95,7 +96,7 @@ export default function CitizenFestivalReportPage() {
         } else {
             setTambonOptions([]);
         }
-    }, [form.district]);
+    }, [form.district, satunDistricts]);
 
     const set = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 

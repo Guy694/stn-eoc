@@ -13,33 +13,23 @@ export default function FloodDailyRiskPage() {
     const [detailsPage, setDetailsPage] = useState(1);
     const [detailsPageSize, setDetailsPageSize] = useState(20);
 
-    const fetchAvailableDates = useCallback(async () => {
-        try {
-            // สมมติว่ามี active session เริ่มต้นที่ 2025-12-20
-            const startDate = new Date('2025-12-20');
-            const today = new Date();
-            const dates = [];
-
-            for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
-                dates.push(new Date(d).toISOString().split('T')[0]);
-            }
-
-            setAvailableDates(dates.reverse()); // แสดงวันล่าสุดก่อน
-        } catch (error) {
-            console.error('Error fetching dates:', error);
-        }
-    }, []);
-
     const fetchRiskData = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await fetch(`/stn-eoc/api/eoc/flood/daily-risk?date=${selectedDate}`);
+            const sessionId = new URLSearchParams(window.location.search).get('sessionId');
+            const params = new URLSearchParams({ report_date: selectedDate });
+            if (sessionId) params.set('session_id', sessionId);
+            const response = await fetch(`/stn-eoc/api/eoc/flood/daily-risk?${params.toString()}`);
             const result = await response.json();
-            if (result.success) {
-                setData(result);
+            if (!response.ok || !result.success) throw new Error(result.message || 'ไม่สามารถโหลดข้อมูลรายวันได้');
+            setData(result);
+            setAvailableDates(result.availableDates || []);
+            if (!(result.details || []).length && result.availableDates?.length && !result.availableDates.includes(selectedDate)) {
+                setSelectedDate(result.availableDates[0]);
             }
         } catch (error) {
             console.error('Error fetching risk data:', error);
+            setData(null);
         } finally {
             setLoading(false);
         }
@@ -47,8 +37,7 @@ export default function FloodDailyRiskPage() {
 
     useEffect(() => {
         fetchRiskData();
-        fetchAvailableDates();
-    }, [fetchAvailableDates, fetchRiskData]);
+    }, [fetchRiskData]);
 
     useEffect(() => {
         setDetailsPage(1);

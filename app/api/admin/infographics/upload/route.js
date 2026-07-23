@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, unlink } from 'fs/promises';
+import { createHash } from 'crypto';
 import path from 'path';
 import { requireAuth } from '@/lib/auth';
 import { createRandomFilename, resolveInside, validateImageFile } from '@/lib/fileUpload';
 import { publicInternalError } from '@/lib/apiResponse';
+import { query } from '@/lib/db';
 
 const MAX_INFOGRAPHIC_SIZE_BYTES = 10 * 1024 * 1024;
 const INFOGRAPHIC_IMAGE_TYPES = new Map([
@@ -56,7 +58,28 @@ export async function POST(request) {
             const filepath = resolveInside(uploadDir, filename);
 
             await writeFile(filepath, validation.buffer);
-            uploadedFiles.push(filename);
+            try {
+                const checksum = createHash('sha256').update(validation.buffer).digest('hex');
+                await query(`
+                    INSERT INTO eoc_file_assets
+                      (asset_type, eoc_type, storage_path, stored_filename, original_filename,
+                       mime_type, file_size, checksum_sha256, uploaded_by)
+                    VALUES ('infographic', ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    eocType,
+                    `public/infographics/${eocType}/${filename}`,
+                    filename,
+                    file.name || filename,
+                    file.type,
+                    validation.buffer.length,
+                    checksum,
+                    auth.user.id
+                ]);
+                uploadedFiles.push(filename);
+            } catch (databaseError) {
+                await unlink(filepath).catch(() => {});
+                throw databaseError;
+            }
         }
 
         if (uploadedFiles.length === 0) {

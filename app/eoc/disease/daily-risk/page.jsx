@@ -8,7 +8,7 @@ import AppIcon from "@/components/icons/AppIcon";
 export default function DiseaseDailyRiskPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState('');
     const [availableDates, setAvailableDates] = useState([]);
     const [showAllDates, setShowAllDates] = useState(false);
     const [detailsPage, setDetailsPage] = useState(1);
@@ -17,30 +17,18 @@ export default function DiseaseDailyRiskPage() {
         ? formatEocDisplayName({ eoc_type: 'disease', ...data.activeSession })
         : 'โรคระบาด';
 
-    const fetchAvailableDates = useCallback(async () => {
-        try {
-            // สมมติว่ามี active session เริ่มต้นที่ 2026-01-01
-            const startDate = new Date('2026-01-01');
-            const today = new Date();
-            const dates = [];
-
-            for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
-                dates.push(new Date(d).toISOString().split('T')[0]);
-            }
-
-            setAvailableDates(dates.reverse()); // แสดงวันล่าสุดก่อน
-        } catch (error) {
-            console.error('Error fetching dates:', error);
-        }
-    }, []);
-
     const fetchRiskData = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await fetch(`/stn-eoc/api/eoc/disease/daily-risk?date=${selectedDate}`);
+            const params = new URLSearchParams();
+            if (selectedDate) params.set('date', selectedDate);
+            const response = await fetch(`/stn-eoc/api/eoc/disease/daily-risk?${params}`);
             const result = await response.json();
             if (result.success) {
                 setData(result);
+                const dates = result.available_dates || [];
+                setAvailableDates(dates);
+                if (!selectedDate && result.date) setSelectedDate(result.date);
             }
         } catch (error) {
             console.error('Error fetching risk data:', error);
@@ -51,8 +39,7 @@ export default function DiseaseDailyRiskPage() {
 
     useEffect(() => {
         fetchRiskData();
-        fetchAvailableDates();
-    }, [fetchAvailableDates, fetchRiskData]);
+    }, [fetchRiskData]);
 
     useEffect(() => {
         setDetailsPage(1);
@@ -116,13 +103,27 @@ export default function DiseaseDailyRiskPage() {
         );
     }
 
+    if (!availableDates.length) {
+        return (
+            <EOCLayout>
+                <div className="container mx-auto p-4 md:p-6">
+                    <div className="border border-dashed border-slate-300 bg-white py-12 text-center shadow-sm">
+                        <AppIcon icon="calendar" className="mx-auto h-10 w-10 text-slate-400" />
+                        <h1 className="mt-3 text-xl font-black text-slate-800">ยังไม่มีรายงานโรคใน Session นี้</h1>
+                        <p className="mt-2 text-sm text-slate-500">ระบบจะแสดงเฉพาะวันที่ที่มีข้อมูลจากฐานข้อมูล</p>
+                    </div>
+                </div>
+            </EOCLayout>
+        );
+    }
+
     const stats = data.totalStats || {};
-    const formatDate = new Date(selectedDate).toLocaleDateString('th-TH', {
+    const formatDate = selectedDate ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString('th-TH', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric'
-    });
+    }) : 'ยังไม่มีวันที่รายงาน';
 
     return (
         <EOCLayout>

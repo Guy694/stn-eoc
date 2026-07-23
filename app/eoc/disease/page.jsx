@@ -63,9 +63,6 @@ export default function DiseasePage() {
                         </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                        <Link href="/eoc/disease/records" className="rounded-lg bg-teal-600 px-4 py-2 text-center text-sm font-bold text-white hover:bg-teal-700">
-                            บันทึกรายงานผู้ป่วย
-                        </Link>
                         <Link href="/eoc/disease/daily-risk" className="rounded-lg border border-teal-200 bg-white px-4 py-2 text-center text-sm font-bold text-teal-700 hover:bg-teal-50">
                             สรุปรายวัน
                         </Link>
@@ -157,6 +154,15 @@ export default function DiseasePage() {
                                     )}
                                 />
                             </div>
+                        </section>
+
+                        <section>
+                            <div className="mb-6 rounded-xl bg-white p-4 shadow-sm">
+
+                                 <h2 className="text-lg font-black text-gray-900">ทีมปฏิบัติการ</h2>
+
+                            </div>
+
                         </section>
                     </>
                 )}

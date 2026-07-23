@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
 
 export default function FloodRecordsPage() {
+    const satunDistricts = useSatunDistricts();
     const [records, setRecords] = useState([]); // ข้อมูลที่แสดงในตาราง (กรองตามวันที่)
     const [allRecords, setAllRecords] = useState([]); // ข้อมูลทั้งหมด (สำหรับคำนวณสถานะ)
     const [loading, setLoading] = useState(false);
@@ -84,6 +85,7 @@ export default function FloodRecordsPage() {
         return closedDate < today ? closedDate : today;
     }, [activeSession?.closed_at]);
     const selectedSessionStatusLabel = activeSession?.status === 'active' ? 'กำลังเปิดใช้งาน' : 'ปิดแล้ว';
+    const canOperate = activeSession?.status === 'active';
 
 
     // ดึงข้อมูล polygon หมู่บ้าน
@@ -103,7 +105,7 @@ export default function FloodRecordsPage() {
         setSelectedDate(current => current || getTodayDate());
     }, []);
 
-    // ดึงรายการ EOC Session ทั้งหมด เพื่อให้แก้ไขข้อมูลย้อนหลังได้แม้ปิด EOC แล้ว
+    // ดึงรายการ EOC Session ทั้งหมดเพื่อดูข้อมูลย้อนหลังได้
     useEffect(() => {
         const fetchAvailableSessions = async () => {
             try {
@@ -180,7 +182,7 @@ export default function FloodRecordsPage() {
         } else {
             setTambonOptions([]);
         }
-    }, [formData.district]);
+    }, [formData.district, satunDistricts]);
 
     // อัพเดตตัวเลือกหมู่บ้านเมื่อเลือกตำบล
     useEffect(() => {
@@ -692,7 +694,7 @@ export default function FloodRecordsPage() {
                             </span>
                         </p>
                     </div>
-                    <button
+                    {canOperate && <button
                         onClick={() => {
                             setEditingRecord(null);
                             resetForm();
@@ -706,7 +708,7 @@ export default function FloodRecordsPage() {
                     >
                         <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มข้อมูลใหม่
-                    </button>
+                    </button>}
                 </div>
 
                 {/* Session Selector */}
@@ -754,8 +756,8 @@ export default function FloodRecordsPage() {
                         </label>
                     </div>
                     {activeSession?.status === 'closed' && (
-                        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                            Session นี้ปิด EOC แล้ว แต่ระบบเปิดให้เพิ่ม/แก้ไขข้อมูลย้อนหลังได้ภายในช่วงวันที่เปิดถึงวันที่ปิด EOC
+                        <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-800">
+                            Session นี้ปิด EOC แล้ว ข้อมูลปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่รายงานกลุ่มภารกิจยังจัดทำย้อนหลังได้
                         </div>
                     )}
                 </div>
@@ -775,7 +777,7 @@ export default function FloodRecordsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             {/* Previous Day */}
-                            <button
+                            {canOperate && <button
                                 onClick={() => {
                                     const current = new Date(selectedDate);
                                     current.setDate(current.getDate() - 1);
@@ -789,7 +791,7 @@ export default function FloodRecordsPage() {
                                 title="วันก่อนหน้า"
                             >
                                 <AppIcon icon="chevronLeft" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
-                            </button>
+                            </button>}
 
                             {/* Date Input */}
                             <input
@@ -928,6 +930,7 @@ export default function FloodRecordsPage() {
                                 {getUnrecordedTambons().map((item) => (
                                     <button
                                         key={item.key}
+                                        disabled={!canOperate}
                                         onClick={() => {
                                             setEditingRecord(null);
                                             setFormData({
@@ -940,7 +943,7 @@ export default function FloodRecordsPage() {
                                             setIsTambonMode(true);
                                             setShowModal(true);
                                         }}
-                                        className={`text-left px-3 py-2 rounded-lg hover:opacity-80 transition-colors text-sm ${item.status === 'partial'
+                                        className={`text-left px-3 py-2 rounded-lg transition-colors text-sm disabled:cursor-not-allowed disabled:opacity-60 ${item.status === 'partial'
                                             ? 'bg-orange-100 border border-orange-300'
                                             : 'bg-white border border-yellow-300 hover:bg-yellow-50'
                                             }`}
@@ -1022,7 +1025,7 @@ export default function FloodRecordsPage() {
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <h4 className="text-lg font-semibold text-gray-700 mb-2">ยังไม่มีข้อมูล</h4>
-                            <p className="text-gray-500 text-sm">คลิกปุ่ม &quot;เพิ่มข้อมูลใหม่&quot; เพื่อเริ่มบันทึกข้อมูล</p>
+                            <p className="text-gray-500 text-sm">{canOperate ? 'คลิกปุ่ม “เพิ่มข้อมูลใหม่” เพื่อเริ่มบันทึกข้อมูล' : 'ไม่พบข้อมูลในวันที่เลือก'}</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -1076,20 +1079,20 @@ export default function FloodRecordsPage() {
                                                 <div className="text-sm text-gray-500">{record.affected_people || 0} คน</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <button
+                                                {canOperate && <button
                                                     onClick={() => handleEdit(record)}
                                                     className="text-blue-600 hover:text-blue-800 mr-3 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
                                                     title="แก้ไขข้อมูล"
                                                 >
                                                     <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
-                                                </button>
-                                                <button
+                                                </button>}
+                                                {canOperate && <button
                                                     onClick={() => handleDelete(record.id)}
                                                     className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
                                                     title="ลบข้อมูล"
                                                 >
                                                     <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
-                                                </button>
+                                                </button>}
                                             </td>
                                         </tr>
                                     ))}

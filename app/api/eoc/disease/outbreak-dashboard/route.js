@@ -5,16 +5,6 @@ export const dynamic = 'force-dynamic';
 
 const DISEASE_NAME = 'ไข้เลือดออก';
 
-const DISTRICT_POPULATIONS = {
-    "เมืองสตูล": 116400,
-    "ควนโดน": 23300,
-    "ควนกาหลง": 43800,
-    "ท่าแพ": 29900,
-    "ละงู": 76000,
-    "ทุ่งหว้า": 26500,
-    "มะนัง": 19900
-};
-
 const DISEASE_CODE_NAMES = {
     DF: { th: 'ไข้เดงกี', en: 'Dengue fever' },
     DHF: { th: 'ไข้เลือดออกเดงกี', en: 'Dengue haemorrhagic fever' },
@@ -79,7 +69,7 @@ async function hasDiseaseMetadataColumns(pool) {
          FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
            AND TABLE_NAME = 'disease_reports'
-           AND COLUMN_NAME IN ('disease_code', 'patient_type', 'sex', 'age_years', 'agency')`
+           AND COLUMN_NAME IN ('disease_code', 'patient_type', 'sex', 'age_years', 'agency', 'death_count')`
     );
     return new Set(columns.map((column) => column.COLUMN_NAME));
 }
@@ -128,6 +118,7 @@ export async function GET(request) {
         const sexSelect = metadataColumns.has('sex') ? 'dr.sex' : 'NULL';
         const ageSelect = metadataColumns.has('age_years') ? 'dr.age_years' : 'NULL';
         const agencySelect = metadataColumns.has('agency') ? 'dr.agency' : 'NULL';
+        const deathSelect = metadataColumns.has('death_count') ? 'dr.death_count' : 'NULL';
 
         const [rows] = await pool.query(
             `SELECT
@@ -139,6 +130,7 @@ export async function GET(request) {
                 ${sexSelect} as sex,
                 ${ageSelect} as age_years,
                 ${agencySelect} as agency,
+                ${deathSelect} as death_count,
                 dr.updated_at
              FROM disease_reports dr
              LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
@@ -154,6 +146,7 @@ export async function GET(request) {
         const patientTypeMap = new Map();
         const ageSexMap = new Map();
         const diseaseCodeMap = new Map();
+        const districtDeathMap = new Map();
         let minDate = '';
         let maxDate = '';
         let lastUpdated = null;
@@ -173,6 +166,7 @@ export async function GET(request) {
             addToMap(districtMap, district, amount);
             addToMap(patientTypeMap, row.patient_type || 'ไม่ระบุ', amount);
             addToMap(diseaseCodeMap, row.disease_code || 'ไม่ระบุ', amount);
+            if (row.death_count !== null) addToMap(districtDeathMap, district, row.death_count);
 
             if (!districtWeekMap.has(district)) districtWeekMap.set(district, new Map());
             addToMap(districtWeekMap.get(district), weekKey, amount);
@@ -192,11 +186,37 @@ export async function GET(request) {
         const latestWeekNumber = latestWeekKey ? Number(latestWeekKey.slice(-2)) : 0;
         const totalCases = rows.reduce((sum, row) => sum + Number(row.patient_count || 0), 0);
 
+        const populationTableRows = await pool.query(
+            `SELECT COUNT(*) AS count
+             FROM INFORMATION_SCHEMA.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'area_population'`
+        );
+        const populationRows = Number(populationTableRows[0]?.[0]?.count || 0) > 0
+            ? (await pool.query(`
+                SELECT ap.district_name, ap.male_population, ap.female_population,
+                       ap.population, ap.population_year, ap.population_scope, ap.source_name
+                FROM area_population ap
+                WHERE ap.province_code = '91'
+                  AND ap.id = (
+                      SELECT latest.id
+                      FROM area_population latest
+                      WHERE latest.province_code = ap.province_code
+                        AND latest.district_name = ap.district_name
+                      ORDER BY latest.population_year IS NULL,
+                               latest.population_year DESC,
+                               latest.source_updated_at DESC,
+                               latest.id DESC
+                      LIMIT 1
+                  )
+            `))[0]
+            : [];
+        const populationMap = new Map(populationRows.map((row) => [row.district_name, row]));
+
         const weeklyTrend = weekKeys.map((weekKey) => ({
             epi_week: Number(weekKey.slice(-2)),
             week_key: weekKey,
             [currentYearKey]: weekMap.get(weekKey) || 0,
-            baseline: 0
+            baseline: null
         }));
 
         const districtCases = Array.from(districtMap.entries())
@@ -204,8 +224,9 @@ export async function GET(request) {
                 const districtWeeks = districtWeekMap.get(districtName) || new Map();
                 const newCases = latestWeekKey ? districtWeeks.get(latestWeekKey) || 0 : 0;
                 const previousWeek = previousWeekKey ? districtWeeks.get(previousWeekKey) || 0 : 0;
-                const population = DISTRICT_POPULATIONS[districtName] || 1;
-                const riskLevel = getRiskLevel(total, newCases, population);
+                const populationInfo = populationMap.get(districtName);
+                const population = Number(populationInfo?.population || 0);
+                const riskLevel = population > 0 ? getRiskLevel(total, newCases, population) : null;
                 const ageCounts = new Map();
                 rows
                     .filter((row) => (row.district_name || 'ไม่ระบุ') === districtName)
@@ -216,10 +237,19 @@ export async function GET(request) {
                     district_name: districtName,
                     total_cases: total,
                     new_cases: newCases,
-                    deaths: 0,
+                    deaths: metadataColumns.has('death_count') ? Number(districtDeathMap.get(districtName) || 0) : null,
                     previous_week: previousWeek,
                     top_age_group: topAgeGroup,
-                    risk_level: riskLevel
+                    risk_level: riskLevel,
+                    population: population || null,
+                    male_population: populationInfo?.male_population == null ? null : Number(populationInfo.male_population),
+                    female_population: populationInfo?.female_population == null ? null : Number(populationInfo.female_population),
+                    population_year: populationInfo?.population_year || null,
+                    population_scope: populationInfo?.population_scope || null,
+                    population_source: populationInfo?.source_name || null,
+                    data_quality_warning: population > 0
+                        ? null
+                        : 'ไม่มีข้อมูลประชากรในฐานข้อมูล จึงไม่คำนวณอัตราต่อแสนประชากร'
                 };
             })
             .sort((a, b) => b.total_cases - a.total_cases);
@@ -277,7 +307,8 @@ export async function GET(request) {
                 week_labels: weekKeys.map((weekKey) => `W${Number(weekKey.slice(-2))}`),
                 current_year_key: currentYearKey,
                 opened_at: session.opened_at,
-                source: 'Raw_Dengue.csv',
+                source: 'database:disease_reports',
+                source_type: 'database',
                 source_rows: rows.length,
                 period: { first_date: minDate, last_date: maxDate },
                 weeklyTrend,

@@ -13,14 +13,24 @@ export async function GET(request) {
         const auth = await requireAuth(request);
         if (!auth.success) return auth.response;
 
-        // ดึงข้อมูลจาก view
+        const { searchParams } = new URL(request.url);
+        const requestedSessionId = searchParams.get('sessionId');
+        const sessionId = requestedSessionId ? Number(requestedSessionId) : null;
+        if (requestedSessionId && (!Number.isInteger(sessionId) || sessionId <= 0)) {
+            return NextResponse.json({ success: false, message: 'sessionId ไม่ถูกต้อง' }, { status: 400 });
+        }
+
+        // Sidebar uses active assignments by default. A selected session (including
+        // a closed one) can be requested explicitly for retrospective reporting.
+        const sessionScope = sessionId ? 'AND session_id = ?' : "AND session_status = 'active'";
+        const assignmentParams = sessionId ? [auth.user.id, sessionId] : [auth.user.id];
         const assignments = await pool.query(`
             SELECT * FROM vw_officer_team_assignments
             WHERE officer_id = ? 
               AND is_active = TRUE
-              AND session_status = 'active'
+              ${sessionScope}
             ORDER BY assigned_at DESC
-        `, [auth.user.id]);
+        `, assignmentParams);
 
         const diseaseSessionIds = [
             ...new Set(assignments

@@ -30,7 +30,6 @@ export default function AnnouncementPopup() {
     }
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchPopupAnnouncement();
     }, []);
 

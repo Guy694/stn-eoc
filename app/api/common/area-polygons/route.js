@@ -1,146 +1,91 @@
-import { NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import path from 'path';
-import { query } from '@/lib/db';
-import { publicInternalError } from '@/lib/apiResponse';
+import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
+import { publicInternalError } from "@/lib/apiResponse";
 
-function parseGeoJsonValue(value) {
+function parseGeometry(value) {
     if (!value) return null;
-
-    if (Buffer.isBuffer(value)) {
-        const text = value.toString('utf8');
-        return text ? JSON.parse(text) : null;
-    }
-
-    if (typeof value === 'string') {
-        return JSON.parse(value);
-    }
-
+    if (Buffer.isBuffer(value)) return JSON.parse(value.toString("utf8"));
+    if (typeof value === "string") return JSON.parse(value);
     return value;
 }
 
-function collectCoordinatePairs(coordinates, pairs = []) {
+function collectPairs(coordinates, pairs = []) {
     if (!Array.isArray(coordinates)) return pairs;
-
-    if (
-        coordinates.length >= 2
-        && typeof coordinates[0] === 'number'
-        && typeof coordinates[1] === 'number'
-    ) {
+    if (coordinates.length >= 2 && typeof coordinates[0] === "number" && typeof coordinates[1] === "number") {
         pairs.push(coordinates);
         return pairs;
     }
-
-    coordinates.forEach((item) => collectCoordinatePairs(item, pairs));
+    coordinates.forEach((item) => collectPairs(item, pairs));
     return pairs;
 }
 
-function getGeoJsonCenter(geometry) {
-    const pairs = collectCoordinatePairs(geometry?.coordinates);
-    if (pairs.length === 0) return { center_lat: null, center_lng: null };
-
-    const bounds = pairs.reduce((acc, [lng, lat]) => ({
-        minLng: Math.min(acc.minLng, lng),
-        maxLng: Math.max(acc.maxLng, lng),
-        minLat: Math.min(acc.minLat, lat),
-        maxLat: Math.max(acc.maxLat, lat)
-    }), {
-        minLng: Number.POSITIVE_INFINITY,
-        maxLng: Number.NEGATIVE_INFINITY,
-        minLat: Number.POSITIVE_INFINITY,
-        maxLat: Number.NEGATIVE_INFINITY
-    });
-
-    return {
-        center_lat: (bounds.minLat + bounds.maxLat) / 2,
-        center_lng: (bounds.minLng + bounds.maxLng) / 2
-    };
+function centerOf(geometry) {
+    const pairs = collectPairs(geometry?.coordinates);
+    if (!pairs.length) return { center_lat: null, center_lng: null };
+    const totals = pairs.reduce((sum, [lng, lat]) => ({ lat: sum.lat + lat, lng: sum.lng + lng }), { lat: 0, lng: 0 });
+    return { center_lat: totals.lat / pairs.length, center_lng: totals.lng / pairs.length };
 }
 
-async function loadGeoJson(filename) {
-    const filePath = path.join(process.cwd(), filename);
-    const text = await readFile(filePath, 'utf8');
-    return JSON.parse(text);
-}
-
-// API สำหรับดึง polygon ตามระดับ (village, tambon, district)
-// ใช้ satun_village_polygon เป็น source หลัก และรวม polygon ด้วย ST_Union
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const level = searchParams.get('level') || 'village';
-
-        let sql = '';
-        let data = [];
-
-        if (level === 'district') {
-            const districts = await loadGeoJson('ampure.geojson');
-            data = (districts.features || []).map((feature, index) => ({
-                id: index + 1,
-                name: feature.properties?.dis_name || '',
-                code: feature.properties?.dis_code || '',
-                type: 'district',
-                geojson: feature.geometry
-            }));
-        } else if (level === 'tambon') {
-            const tambons = await loadGeoJson('tambonnn.geojson');
-            data = (tambons.features || []).map((feature, index) => ({
-                id: index + 1,
-                name: feature.properties?.tam_name || '',
-                district_name: feature.properties?.dis_name || '',
-                code: feature.properties?.tum_code || '',
-                type: 'tambon',
-                geojson: feature.geometry
-            }));
-        } else {
-            // ดึงจาก satun_village_polygon (default: village)
-            sql = `
-                SELECT 
-                    id,
-                    villname as name,
-                    moo,
-                    subdistnam as tambon_name,
-                    distname as district_name,
-                    villcode as code,
-                    ST_AsGeoJSON(geom) as geojson
-                FROM satun_village_polygon
-                ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname
-            `;
-            const results = await query(sql);
-            data = results.map(row => {
-                let geojson = null;
-                if (row.geojson) {
-                    try {
-                        geojson = parseGeoJsonValue(row.geojson);
-                    } catch (e) {
-                        console.error('Error parsing village geojson:', e);
-                    }
-                }
-                const center = getGeoJsonCenter(geojson);
-                return {
-                    id: row.id,
-                    name: row.name,
-                    moo: row.moo,
-                    tambon_name: row.tambon_name,
-                    district_name: row.district_name,
-                    code: row.code,
-                    type: 'village',
-                    geojson: geojson,
-                    center_lat: center.center_lat,
-                    center_lng: center.center_lng
-                };
-            });
+        const level = searchParams.get("level") || "village";
+        if (!["village", "tambon", "district"].includes(level)) {
+            return NextResponse.json({ success: false, message: "ระดับพื้นที่ไม่ถูกต้อง" }, { status: 400 });
         }
 
+        let rows;
+        if (level === "district") {
+            rows = await query(`
+                SELECT MIN(id) AS id, distname AS name, distname AS district_name,
+                       COUNT(*) AS village_count,
+                       ST_AsGeoJSON(ST_Collect(
+                           ST_SwapXY(ST_GeomFromWKB(ST_AsWKB(geom), 0))
+                       )) AS geojson
+                FROM satun_village_polygon
+                WHERE geom IS NOT NULL
+                GROUP BY distname
+                ORDER BY distname
+            `);
+        } else if (level === "tambon") {
+            rows = await query(`
+                SELECT MIN(id) AS id, subdistnam AS name, subdistnam AS tambon_name,
+                       distname AS district_name, COUNT(*) AS village_count,
+                       ST_AsGeoJSON(ST_Collect(
+                           ST_SwapXY(ST_GeomFromWKB(ST_AsWKB(geom), 0))
+                       )) AS geojson
+                FROM satun_village_polygon
+                WHERE geom IS NOT NULL
+                GROUP BY distname, subdistnam
+                ORDER BY distname, subdistnam
+            `);
+        } else {
+            rows = await query(`
+                SELECT id, villname AS name, moo, subdistnam AS tambon_name,
+                       distname AS district_name, villcode AS code,
+                       ST_AsGeoJSON(geom) AS geojson
+                FROM satun_village_polygon
+                ORDER BY distname, subdistnam, CAST(moo AS UNSIGNED), villname
+            `);
+        }
+
+        const data = rows.map((row) => {
+            const geojson = parseGeometry(row.geojson);
+            return { ...row, type: level, geojson, ...centerOf(geojson) };
+        });
         return NextResponse.json({
             success: true,
-            level: level,
-            data: data,
-            total: data.length
+            level,
+            data,
+            total: data.length,
+            meta: {
+                source_type: "database",
+                source_name: "satun_village_polygon",
+                generated_at: new Date().toISOString()
+            }
         });
-
     } catch (error) {
-        console.error('Error fetching polygons:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่');
+        console.error("Error fetching polygons:", error);
+        return publicInternalError("เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่");
     }
 }

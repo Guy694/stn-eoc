@@ -100,7 +100,7 @@ export async function GET(request) {
     const connection = await pool.getConnection();
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'RISKCOM']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);
@@ -243,7 +243,7 @@ export async function POST(request) {
     const connection = await pool.getConnection();
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'RISKCOM']);
         if (!auth.success) return auth.response;
 
         const formData = await request.formData();
@@ -332,7 +332,7 @@ export async function PUT(request) {
     const connection = await pool.getConnection();
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'RISKCOM']);
         if (!auth.success) return auth.response;
 
         const contentType = request.headers.get('content-type') || '';
@@ -442,7 +442,7 @@ export async function DELETE(request) {
     const connection = await pool.getConnection();
 
     try {
-        const auth = await requireAuth(request, ['admin']);
+        const auth = await requireAuth(request, ['admin', 'RISKCOM']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);

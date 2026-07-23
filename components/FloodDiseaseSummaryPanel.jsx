@@ -130,7 +130,7 @@ export default function FloodDiseaseSummaryPanel({ sessionId, reportDate }) {
                             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.75fr)]">
                                 <ChartCard
                                     title="แนวโน้มผู้ป่วยรายวันช่วงน้ำท่วม"
-                                    subtitle={data?.data_source === "google_sheet_seed" ? "ข้อมูลจาก Google Sheet กระจายรายวันแบบจำลองสำหรับ session 3" : "ข้อมูลรวมตามวันที่รายงาน"}
+                                    subtitle="ข้อมูลรวมตามวันที่รายงานจากฐานข้อมูล"
                                 >
                                     <div className="h-72">
                                         <ResponsiveContainer width="100%" height="100%">

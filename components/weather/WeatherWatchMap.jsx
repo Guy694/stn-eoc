@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { RISK_META } from "@/lib/weatherWatch";
+import { RISK_META } from "@/lib/weatherRiskConfig";
 import { getMapBaseLayer, getMapOverlayLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });

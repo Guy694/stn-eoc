@@ -660,6 +660,9 @@ async function createKnowledgeResponse({ model, message, conversationHistory, do
             results: null,
             resultCount: 0,
             source: 'general_knowledge',
+            source_type: 'general_guidance',
+            source_label: 'คำแนะนำทั่วไปจาก AI ไม่ใช่ข้อมูลสถานการณ์จาก EOC',
+            generated_at: new Date().toISOString(),
             domain
         }
     });
@@ -707,7 +710,10 @@ export async function POST(request) {
                     results: advice.success ? advice.routes : null,
                     routeAdvice: advice.success ? advice : null,
                     resultCount: advice.success ? advice.routes.length : 0,
-                    source: 'route_advice'
+                    source: 'route_advice',
+                    source_type: 'calculated',
+                    source_label: 'ผลคำนวณจากข้อมูล EOC และผู้ให้บริการเส้นทางภายนอก',
+                    generated_at: new Date().toISOString()
                 }
             });
         }

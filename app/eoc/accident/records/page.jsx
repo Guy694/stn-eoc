@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import dynamic from 'next/dynamic';
@@ -15,6 +15,7 @@ const MapSelector = dynamic(() => import('@/components/MapSelector'), {
 const accidentTypes = ['รถยนต์', 'จักรยานยนต์', 'รถจักรยาน', 'คนเดินเท้า', 'อื่นๆ'];
 
 export default function AccidentRecordsPage() {
+    const satunDistricts = useSatunDistricts();
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -66,7 +67,7 @@ export default function AccidentRecordsPage() {
         } else {
             setTambonOptions([]);
         }
-    }, [formData.district]);
+    }, [formData.district, satunDistricts]);
 
     const fetchRecords = useCallback(async () => {
         if (!activeSession) return;

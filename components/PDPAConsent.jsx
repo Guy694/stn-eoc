@@ -10,7 +10,6 @@ export default function PDPAConsent() {
         // ตรวจสอบว่าผู้ใช้ยอมรับ PDPA แล้วหรือยัง
         const consent = localStorage.getItem('pdpa_consent');
         if (!consent) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setShowConsent(true);
         }
     }, []);

@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { satunDistricts } from "@/data/satunData";
+import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
 
 export default function VulnerableGroupsPage() {
+    const satunDistricts = useSatunDistricts();
     const [records, setRecords] = useState([]);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -59,14 +60,14 @@ export default function VulnerableGroupsPage() {
         } else {
             setTambonOptions([]);
         }
-    }, [selectedDistrict]);
+    }, [selectedDistrict, satunDistricts]);
 
     useEffect(() => {
         if (formData.district) {
             const district = satunDistricts.find(d => d.name === formData.district);
             setTambonOptions(district?.tambons || []);
         }
-    }, [formData.district]);
+    }, [formData.district, satunDistricts]);
 
     const fetchRecords = useCallback(async () => {
         if (!activeSession) return;

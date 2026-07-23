@@ -7,6 +7,7 @@ import { useEOC } from "@/context/EOCContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import Swal from "sweetalert2";
 import AppIcon from "@/components/icons/AppIcon";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 function getDefaultDateTimeLocal() {
     const date = new Date();
@@ -40,7 +41,6 @@ export default function EOCManagementPage() {
     const { eocStatus, toggleEOC, getEOCDisplayName, refreshStatus } = useEOC();
     const [updating, setUpdating] = useState({});
     const [descriptions, setDescriptions] = useState({});
-    const [message, setMessage] = useState({ type: '', text: '' });
     const [eocTypes, setEocTypes] = useState([]);
     const [diseaseOptions, setDiseaseOptions] = useState([]);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -135,7 +135,6 @@ export default function EOCManagementPage() {
             description: descriptions[eocType] || ''
         });
         setShowCloseModal(true);
-        setMessage({ type: '', text: '' });
     };
 
     const closeCloseEOCForm = () => {
@@ -151,12 +150,11 @@ export default function EOCManagementPage() {
         if (!closingType) return;
 
         if (!closeForm.closedAt) {
-            await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันและเวลาปิด EOC', 'error');
+            showError('กรุณาเลือกวันและเวลาปิด EOC');
             return;
         }
 
         setUpdating(prev => ({ ...prev, [closingType]: true }));
-        setMessage({ type: '', text: '' });
 
         try {
             const result = await toggleEOC(
@@ -170,15 +168,15 @@ export default function EOCManagementPage() {
             );
 
             if (result.success) {
-                setMessage({ type: 'success', text: result.message });
+                showSuccess(result.message);
                 setDescriptions(prev => ({ ...prev, [closingType]: '' }));
                 closeCloseEOCForm();
                 await refreshStatus();
             } else {
-                setMessage({ type: 'error', text: result.message });
+                showError(result.message);
             }
         } catch (error) {
-            setMessage({ type: 'error', text: error.message });
+            showError(error.message);
         } finally {
             setUpdating(prev => ({ ...prev, [closingType]: false }));
         }
@@ -195,7 +193,6 @@ export default function EOCManagementPage() {
             orderFile: null
         });
         setShowOpenModal(true);
-        setMessage({ type: '', text: '' });
     };
 
     const closeEOCForm = () => {
@@ -215,29 +212,28 @@ export default function EOCManagementPage() {
         if (!openingType) return;
 
         if (!openForm.openedAt) {
-            await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันและเวลาเปิด EOC', 'error');
+            showError('กรุณาเลือกวันและเวลาเปิด EOC');
             return;
         }
 
         if (openingType === 'festival-accidents' && !openForm.festivalType) {
-            await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกประเภทเทศกาล', 'error');
+            showError('กรุณาเลือกประเภทเทศกาล');
             return;
         }
 
         if (openingType === 'disease') {
             if (!openForm.diseaseId) {
-                await Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกประเภทโรคระบาด', 'error');
+                showError('กรุณาเลือกประเภทโรคระบาด');
                 return;
             }
 
             if (openForm.diseaseId === '__custom__' && !openForm.customDiseaseName.trim()) {
-                await Swal.fire('ข้อผิดพลาด', 'กรุณาระบุชื่อโรคระบาด', 'error');
+                showError('กรุณาระบุชื่อโรคระบาด');
                 return;
             }
         }
 
         setUpdating(prev => ({ ...prev, [openingType]: true }));
-        setMessage({ type: '', text: '' });
 
         try {
             const result = await toggleEOC(
@@ -254,15 +250,15 @@ export default function EOCManagementPage() {
             );
 
             if (result.success) {
-                setMessage({ type: 'success', text: result.message });
+                showSuccess(result.message);
                 setDescriptions(prev => ({ ...prev, [openingType]: '' }));
                 closeEOCForm();
                 await refreshStatus();
             } else {
-                setMessage({ type: 'error', text: result.message });
+                showError(result.message);
             }
         } catch (error) {
-            setMessage({ type: 'error', text: error.message });
+            showError(error.message);
         } finally {
             setUpdating(prev => ({ ...prev, [openingType]: false }));
         }
@@ -272,7 +268,7 @@ export default function EOCManagementPage() {
     const handleAddEOCType = async () => {
         try {
             if (!formData.id || !formData.name_th || !formData.name_en) {
-                await Swal.fire('ข้อผิดพลาด', 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน', 'error');
+                showError('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
                 return;
             }
 
@@ -285,7 +281,7 @@ export default function EOCManagementPage() {
             const result = await response.json();
 
             if (result.success) {
-                await Swal.fire('สำเร็จ', 'เพิ่ม EOC Type สำเร็จ', 'success');
+                showSuccess('เพิ่ม EOC Type สำเร็จ');
                 setShowAddModal(false);
                 setFormData({
                     id: '', name_th: '', name_en: '', icon: "alert",
@@ -295,11 +291,11 @@ export default function EOCManagementPage() {
                 await loadEOCTypes();
                 await refreshStatus();
             } else {
-                await Swal.fire('ข้อผิดพลาด', result.error, 'error');
+                showError(result.error);
             }
         } catch (error) {
             console.error('Error adding EOC type:', error);
-            await Swal.fire('ข้อผิดพลาด', error.message, 'error');
+            showError(error.message);
         }
     };
 
@@ -315,17 +311,17 @@ export default function EOCManagementPage() {
             const result = await response.json();
 
             if (result.success) {
-                await Swal.fire('สำเร็จ', 'แก้ไข EOC Type สำเร็จ', 'success');
+                showSuccess('แก้ไข EOC Type สำเร็จ');
                 setShowEditModal(false);
                 setEditingType(null);
                 await loadEOCTypes();
                 await refreshStatus();
             } else {
-                await Swal.fire('ข้อผิดพลาด', result.error, 'error');
+                showError(result.error);
             }
         } catch (error) {
             console.error('Error editing EOC type:', error);
-            await Swal.fire('ข้อผิดพลาด', error.message, 'error');
+            showError(error.message);
         }
     };
 
@@ -352,15 +348,15 @@ export default function EOCManagementPage() {
             const result = await response.json();
 
             if (result.success) {
-                await Swal.fire('สำเร็จ', 'ลบ EOC Type สำเร็จ', 'success');
+                showSuccess('ลบ EOC Type สำเร็จ');
                 await loadEOCTypes();
                 await refreshStatus();
             } else {
-                await Swal.fire('ข้อผิดพลาด', result.error, 'error');
+                showError(result.error);
             }
         } catch (error) {
             console.error('Error deleting EOC type:', error);
-            await Swal.fire('ข้อผิดพลาด', error.message, 'error');
+            showError(error.message);
         }
     };
 
@@ -452,16 +448,6 @@ export default function EOCManagementPage() {
                         </Link>
                     </div>
                 </div>
-
-                {/* Message */}
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-lg ${message.type === 'success'
-                        ? 'bg-green-50 border border-green-200 text-green-700'
-                        : 'bg-red-50 border border-red-200 text-red-700'
-                        }`}>
-                        {message.text}
-                    </div>
-                )}
 
                 {/* EOC Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

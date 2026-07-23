@@ -306,13 +306,14 @@ export default function OfficersManagementPage() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-6">
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-6">
                     <div className="bg-white rounded-lg shadow p-4 border border-amber-200">
                         <div className="text-sm text-gray-600 mb-1">ผู้ลงทะเบียนใหม่</div>
                         <div className="text-2xl font-bold text-amber-700">
                             {registrationStats.actionable || 0}
                         </div>
                     </div>
+                    
                     {roles.map(role => (
                         <div key={role.value} className={`bg-white rounded-lg shadow p-4 border ${getRoleColor(role.value)}`}>
                             <div className="text-sm text-gray-600 mb-1">{role.label}</div>
@@ -321,7 +322,7 @@ export default function OfficersManagementPage() {
                             </div>
                         </div>
                     ))}
-                </div>
+                </div> */}
 
                 <div className="mb-6 rounded-lg border border-amber-200 bg-white shadow">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-100 bg-amber-50 px-5 py-4">

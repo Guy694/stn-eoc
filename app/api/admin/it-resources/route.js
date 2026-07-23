@@ -6,7 +6,7 @@ import { publicInternalError } from '@/lib/apiResponse';
 // GET - Fetch all IT resources
 export async function GET(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff', 'ITSUPPORT']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);
@@ -86,7 +86,7 @@ export async function GET(request) {
 // POST - Create new IT resource
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin']);
+        const auth = await requireAuth(request, ['admin', 'ITSUPPORT']);
         if (!auth.success) return auth.response;
 
         const body = await request.json();
@@ -153,7 +153,7 @@ export async function POST(request) {
 // PUT - Update IT resource
 export async function PUT(request) {
     try {
-        const auth = await requireAuth(request, ['admin']);
+        const auth = await requireAuth(request, ['admin', 'ITSUPPORT']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);
@@ -224,7 +224,7 @@ export async function PUT(request) {
 // DELETE - Delete IT resource
 export async function DELETE(request) {
     try {
-        const auth = await requireAuth(request, ['admin']);
+        const auth = await requireAuth(request, ['admin', 'ITSUPPORT']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);

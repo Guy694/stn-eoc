@@ -14,6 +14,7 @@ import {
     Search,
     Warehouse
 } from "lucide-react";
+import { showError, showSuccess } from "@/lib/sweetAlert";
 
 function formatNumber(value) {
     if (value === null || value === undefined) return "-";
@@ -34,7 +35,6 @@ export default function MedicalInventoryPage() {
     const [payload, setPayload] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
     const [filters, setFilters] = useState({ agency_id: "", item_code: "", status: "" });
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
@@ -158,20 +158,19 @@ export default function MedicalInventoryPage() {
     const saveInventory = async (event) => {
         event.preventDefault();
         setError("");
-        setSuccess("");
 
         if (!inventoryForm.health_facility_id) {
-            setError("กรุณาเลือกหน่วยบริการ");
+            showError("กรุณาเลือกหน่วยบริการ");
             return;
         }
 
         if (!inventoryForm.item_code || !inventoryForm.item_name || !inventoryForm.unit) {
-            setError("กรุณาระบุรหัส รายการ และหน่วยนับเวชภัณฑ์");
+            showError("กรุณาระบุรหัส รายการ และหน่วยนับเวชภัณฑ์");
             return;
         }
 
         if (calculatedBalance < 0 && inventoryForm.balance_qty === "") {
-            setError("ยอดคงเหลือจาก ยกมา + รับเข้า - เบิกจ่าย ต้องไม่ติดลบ");
+            showError("ยอดคงเหลือจาก ยกมา + รับเข้า - เบิกจ่าย ต้องไม่ติดลบ");
             return;
         }
 
@@ -190,7 +189,7 @@ export default function MedicalInventoryPage() {
                 throw new Error(data.message || "บันทึกข้อมูลไม่สำเร็จ");
             }
 
-            setSuccess(data.message);
+            showSuccess(data.message || "บันทึกข้อมูลเวชภัณฑ์แล้ว");
             setInventoryForm({
                 health_facility_id: inventoryForm.health_facility_id,
                 item_mode: "existing",
@@ -207,7 +206,7 @@ export default function MedicalInventoryPage() {
             await fetchInventory(filters);
         } catch (err) {
             console.error("Save inventory error:", err);
-            setError(err.message || "ไม่สามารถบันทึกข้อมูลเวชภัณฑ์ได้");
+            showError(err.message || "ไม่สามารถบันทึกข้อมูลเวชภัณฑ์ได้");
         }
     };
 
@@ -239,12 +238,6 @@ export default function MedicalInventoryPage() {
                         {error}
                     </div>
                 )}
-                {success && (
-                    <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
-                        {success}
-                    </div>
-                )}
-
                 <section className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <StatCard icon={Warehouse} label="หน่วยบริการ" value={summary.agency_count} suffix="แห่ง" />
                     <StatCard icon={BriefcaseMedical} label="รายการเวชภัณฑ์" value={summary.item_count} suffix="รายการ" />

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
-import { RISK_META } from "@/lib/weatherWatch";
+import { RISK_META } from "@/lib/weatherRiskConfig";
 
 const WeatherWatchMap = dynamic(() => import("@/components/weather/WeatherWatchMap"), {
   ssr: false,

@@ -12,16 +12,6 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-const ALL_DISTRICTS = [
-    'เมืองสตูล',
-    'ควนโดน',
-    'ควนกาหลง',
-    'ท่าแพ',
-    'ละงู',
-    'ทุ่งหว้า',
-    'มะนัง'
-];
-
 function mapFloodLevel(levelText) {
     const value = String(levelText || '').trim();
     if (value === 'สูงมาก' || value === 'สูง') return 'severe';
@@ -37,7 +27,7 @@ function levelRank(level) {
     return 0;
 }
 
-function summarizeDistrictRows(rows) {
+function summarizeDistrictRows(rows, districtNames) {
     const byDistrict = new Map();
 
     for (const row of rows) {
@@ -58,7 +48,7 @@ function summarizeDistrictRows(rows) {
         byDistrict.set(district, record);
     }
 
-    return ALL_DISTRICTS.map((name) => byDistrict.get(name) || {
+    return districtNames.map((name) => byDistrict.get(name) || {
         name,
         level: 'nodata',
         affectedArea: 0,
@@ -101,6 +91,12 @@ export async function GET(request) {
         const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
         connection = await pool.getConnection();
+        const [districtRows] = await connection.execute(`
+            SELECT DISTINCT distname AS name
+            FROM satun_village_polygon
+            ORDER BY distname
+        `);
+        const districtNames = districtRows.map((row) => row.name);
 
         const [sessionRows] = await connection.execute(
             `SELECT id
@@ -117,7 +113,7 @@ export async function GET(request) {
             return NextResponse.json({
                 success: true,
                 date,
-                districts: ALL_DISTRICTS.map((name) => ({
+                districts: districtNames.map((name) => ({
                     name,
                     level: 'nodata',
                     affectedArea: 0,
@@ -146,7 +142,7 @@ export async function GET(request) {
             [sessionId, date]
         );
 
-        const districts = summarizeDistrictRows(rows);
+        const districts = summarizeDistrictRows(rows, districtNames);
 
         return NextResponse.json({
             success: true,
