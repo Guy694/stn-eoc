@@ -99,7 +99,7 @@ export default function VillagePolygonsPage() {
     };
 
     const handleDelete = async (polygon) => {
-        if (!confirm(`ต้องการลบ ${polygon.villname} ใช่หรือไม่?`)) return;
+        if (!await showDeleteConfirm(`ต้องการลบ ${polygon.villname} ใช่หรือไม่?`)) return;
 
         try {
             const response = await fetch(`/stn-eoc/api/admin/village-polygons/${polygon.id}`, {
@@ -350,7 +350,7 @@ export default function VillagePolygonsPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4 shadow-lg">
+                <div className="app-modal-overlay" role="dialog" aria-modal="true">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-700">
                             {editingPolygon ? "แก้ไขข้อมูลหมู่บ้าน" : "เพิ่มข้อมูลหมู่บ้านใหม่"}

@@ -45,7 +45,8 @@ export default function AnalyticsAIChat() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message: text,
-                    conversationHistory: nextMessages.slice(-6)
+                    conversationHistory: nextMessages.slice(-6),
+                    analyticsContext: true
                 })
             });
             const payload = await response.json();

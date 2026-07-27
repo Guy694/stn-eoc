@@ -4,6 +4,7 @@ import { useEOC } from "@/context/EOCContext";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppIcon from "@/components/icons/AppIcon";
+import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/sweetAlert';
 
 export default function ShelterDiseaseReportsPage() {
     const { eocStatus } = useEOC();
@@ -112,7 +113,7 @@ export default function ShelterDiseaseReportsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.shelter_id || !formData.disease_type) {
-            alert('กรุณาเลือกศูนย์พักพิงและประเภทโรค');
+            showWarning('กรุณาเลือกศูนย์พักพิงและประเภทโรค');
             return;
         }
 
@@ -150,12 +151,13 @@ export default function ShelterDiseaseReportsPage() {
                     treatment_given: '',
                     notes: ''
                 });
+                showSuccess('บันทึกรายงานโรคสำเร็จ');
             } else {
-                alert('เกิดข้อผิดพลาด: ' + result.message);
+                showError(result.message || 'เกิดข้อผิดพลาดในการบันทึก');
             }
         } catch (error) {
             console.error('Error saving report:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึก');
+            showError(error.message || 'เกิดข้อผิดพลาดในการบันทึก');
         } finally {
             setSaving(false);
         }
@@ -163,16 +165,20 @@ export default function ShelterDiseaseReportsPage() {
 
     // ลบรายงาน
     const handleDelete = async (id) => {
-        if (!confirm('ต้องการลบรายงานนี้หรือไม่?')) return;
+        if (!await showDeleteConfirm('ต้องการลบรายงานนี้หรือไม่?')) return;
 
         try {
             const response = await fetch(`/stn-eoc/api/eoc/shelter-disease-reports?id=${id}`, { method: 'DELETE' });
             const result = await response.json();
             if (result.success) {
                 setReports(reports.filter(r => r.id !== id));
+                showSuccess('ลบรายงานสำเร็จ');
+            } else {
+                showError(result.message || 'ไม่สามารถลบรายงานได้');
             }
         } catch (error) {
             console.error('Error deleting report:', error);
+            showError(error.message || 'เกิดข้อผิดพลาดในการลบรายงาน');
         }
     };
 

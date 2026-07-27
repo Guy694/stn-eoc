@@ -240,7 +240,7 @@ export default function CitizensManagementPage() {
 
             {/* Promote Modal */}
             {showPromoteModal && selectedCitizen && (
-                <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay" role="dialog" aria-modal="true">
                     <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl">
                         <h2 className="text-xl font-bold mb-4 text-gray-800">
                             <AppIcon icon="arrowUp" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลื่อนตำแหน่งเป็นเจ้าหน้าที่

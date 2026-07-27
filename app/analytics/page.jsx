@@ -261,6 +261,7 @@ function TeamsTab({ teams }) {
                             <div className="text-right text-sm text-slate-600">
                                 <p>สมาชิก {team.member_count} คน</p>
                                 <p>กิจกรรม 7 วัน {team.activity_count_7d} รายการ</p>
+                                <p>อนุมัติแล้ว {team.approved_reports || 0} รายงาน</p>
                             </div>
                         </div>
                         <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">

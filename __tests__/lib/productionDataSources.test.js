@@ -76,6 +76,22 @@ describe("production data source safeguards", () => {
         expect(source).not.toContain("eoc_team_reports");
     });
 
+    test("analytics uses the complete team registry and scopes non-privileged users", () => {
+        const source = read("app/api/analytics/route.js");
+        expect(source).toContain("teamRegistry");
+        expect(source).toContain("REGISTERED_TEAM_CODES");
+        expect(source).not.toContain("CORE_TEAM_CODES");
+        expect(source).toContain("access_member.officer_id = ?");
+    });
+
+    test("AI analytics requests require authentication and rate limiting", () => {
+        const clientSource = read("components/analytics/AnalyticsAIChat.jsx");
+        const apiSource = read("app/api/chatbot/query/route.js");
+        expect(clientSource).toContain("analyticsContext: true");
+        expect(apiSource).toContain("requireAuth(request, ['admin', 'commander', 'staff'])");
+        expect(apiSource).toContain("consumeAnalyticsRateLimit");
+    });
+
     test("village polygon pagination does not bind LIMIT/OFFSET on incompatible MySQL", () => {
         const source = read("app/api/admin/village-polygons/route.js");
         expect(source).not.toContain("LIMIT ? OFFSET ?");

@@ -38,7 +38,7 @@ export default function Header() {
                     <div className="flex items-center gap-4">
                         {/* Province Name - Hidden on mobile if user logged in */}
                         <div className={`hidden ${user ? 'lg:flex' : 'md:flex'} items-center`}>
-                            <span className="text-xs sm:text-sm">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</span>
+                            
                         </div>
 
                         {/* User Menu */}
@@ -93,7 +93,7 @@ export default function Header() {
                                             {/* Menu Items */}
                                             <div className="py-2">
                                                 <a
-                                                    href="/dashboard"
+                                                    href="/stn-eoc/dashboard"
                                                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >

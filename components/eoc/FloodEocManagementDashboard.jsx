@@ -23,6 +23,7 @@ import {
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { getOperationSessionLockByType } from "@/lib/eocSessionLock";
 import { showError, showSuccess } from "@/lib/sweetAlert";
+import ReasonDialog from "@/components/ui/reason-dialog";
 
 export const FLOOD_EOC_BASE_PATH = "/eoc/flood/management";
 
@@ -208,6 +209,8 @@ function OperationalResourceView({ view, sessionId }) {
   const [resource, setResource] = useState({ loading: true, rows: [], permissions: {}, error: "" });
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pendingMove, setPendingMove] = useState(null);
+  const [moving, setMoving] = useState(false);
   const [form, setForm] = useState(() => initialResourceForm(view));
   const loadResource = useCallback(() => {
     const controller = new AbortController();
@@ -252,9 +255,13 @@ function OperationalResourceView({ view, sessionId }) {
       setSaving(false);
     }
   };
-  const moveMission = async (row, status) => {
-    const reason = window.prompt(`เหตุผลการเปลี่ยนสถานะเป็น ${status}`);
-    if (!reason) return;
+  const moveMission = (row, status) => {
+    setPendingMove({ row, status });
+  };
+  const confirmMoveMission = async (reason) => {
+    if (!pendingMove) return;
+    const { row, status } = pendingMove;
+    setMoving(true);
     try {
       const response = await fetch(`/stn-eoc/api/eoc/flood/management/resources/${row.id}`, {
         method: "PATCH",
@@ -264,9 +271,12 @@ function OperationalResourceView({ view, sessionId }) {
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || "เปลี่ยนสถานะไม่สำเร็จ");
       showSuccess(`เปลี่ยนสถานะภารกิจเป็น ${status} แล้ว`);
+      setPendingMove(null);
       loadResource();
     } catch (error) {
       showError(error.message);
+    } finally {
+      setMoving(false);
     }
   };
   if (resource.loading) return <div className="border border-slate-200 bg-white p-10 text-center text-slate-500">กำลังโหลดข้อมูลจากฐานข้อมูล...</div>;
@@ -296,6 +306,16 @@ function OperationalResourceView({ view, sessionId }) {
         <thead className="bg-slate-900 text-white"><tr>{columns.map(([, label]) => <th key={label} className="px-4 py-3">{label}</th>)}{view === "missions" ? <th className="px-4 py-3">Workflow</th> : null}</tr></thead>
         <tbody>{resource.rows.map((row) => <tr key={row.id} className="border-t border-slate-100">{columns.map(([key]) => <td key={key} className="max-w-xs px-4 py-3">{key === "progress_percent" ? `${row[key] ?? 0}%` : row[key] ?? "-"}</td>)}{view === "missions" ? <td className="px-4 py-3"><MissionActions row={row} canVerify={resource.permissions.canVerify} onMove={moveMission} /></td> : null}</tr>)}</tbody>
       </table></div>}
+    <ReasonDialog
+      open={Boolean(pendingMove)}
+      onOpenChange={(open) => { if (!open) setPendingMove(null); }}
+      title="ยืนยันการเปลี่ยนสถานะภารกิจ"
+      description={pendingMove ? `เปลี่ยนสถานะเป็น ${pendingMove.status}` : ""}
+      label="เหตุผลการเปลี่ยนสถานะ"
+      confirmText="เปลี่ยนสถานะ"
+      busy={moving}
+      onConfirm={confirmMoveMission}
+    />
   </div>;
 }
 

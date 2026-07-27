@@ -19,7 +19,8 @@ import {
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showDeleteConfirm, showError, showSuccess } from "@/lib/sweetAlert";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 
 const COMMAND_ROLES = {
     incident_commander: "ผู้บัญชาการเหตุการณ์",
@@ -289,7 +290,7 @@ export default function FloodOperationsTeamPage() {
 
     const deleteCommander = async (commander) => {
         if (!selectedSessionId) return;
-        const confirmed = window.confirm(`ลบ ${roleLabel(commander.command_role)}: ${personName(commander)} ใช่หรือไม่?`);
+        const confirmed = await showDeleteConfirm(`ลบ ${roleLabel(commander.command_role)}: ${personName(commander)} ใช่หรือไม่?`);
         if (!confirmed) return;
 
         setCommanderMessage("");
@@ -373,7 +374,7 @@ export default function FloodOperationsTeamPage() {
 
     const deleteTeam = async (team) => {
         if (!selectedSessionId) return;
-        const confirmed = window.confirm(`ถอดทีม "${team.team_name_th || team.team_name_en}" ออกจากเหตุการณ์นี้ใช่หรือไม่?`);
+        const confirmed = await showDeleteConfirm(`ถอดทีม "${team.team_name_th || team.team_name_en}" ออกจากเหตุการณ์นี้ใช่หรือไม่?`);
         if (!confirmed) return;
 
         try {
@@ -844,7 +845,7 @@ function CommanderModal({
     const incidentRoleDisabled = Boolean(incidentCommander && incidentCommander.id !== editingCommander?.id);
 
     return (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/50 p-4">
+        <AppDialogFrame open onOpenChange={(open) => { if (!open) onClose(); }} busy={saving}>
             <form onSubmit={onSubmit} className="w-full max-w-xl rounded-xl bg-white p-5 shadow-2xl">
                 <div className="flex items-start justify-between gap-3">
                     <div>
@@ -934,7 +935,7 @@ function CommanderModal({
                     </button>
                 </div>
             </form>
-        </div>
+        </AppDialogFrame>
     );
 }
 
@@ -949,7 +950,7 @@ function TeamModal({
     saving
 }) {
     return (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/50 p-4">
+        <AppDialogFrame open onOpenChange={(open) => { if (!open) onClose(); }} busy={saving}>
             <form onSubmit={onSubmit} className="w-full max-w-xl rounded-xl bg-white p-5 shadow-2xl">
                 <div className="flex items-start justify-between gap-3">
                     <div>
@@ -1040,6 +1041,6 @@ function TeamModal({
                     </button>
                 </div>
             </form>
-        </div>
+        </AppDialogFrame>
     );
 }

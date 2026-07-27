@@ -17,6 +17,7 @@ export async function POST(request, { params }) {
     if (!access.canReview) return NextResponse.json({ success: false, message: "เฉพาะผู้บัญชาการหรือผู้ดูแลระบบเท่านั้นที่ตรวจรายงานได้" }, { status: 403 });
     const body = await request.json();
     if (!["verified", "approved", "returned"].includes(body.status)) return NextResponse.json({ success: false, message: "สถานะการตรวจไม่ถูกต้อง" }, { status: 400 });
+    if (body.status === "returned" && !body.comment?.trim()) return NextResponse.json({ success: false, message: "กรุณาระบุเหตุผลที่ส่งรายงานกลับแก้ไข" }, { status: 400 });
     const updated = await transaction(async (execute) => {
       const expectedStatus = body.status === "approved" ? "verified" : body.status === "verified" ? "submitted" : null;
       const workflowCondition = expectedStatus ? "status = ?" : "status IN ('submitted','verified')";

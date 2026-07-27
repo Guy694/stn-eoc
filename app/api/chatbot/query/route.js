@@ -2,9 +2,24 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { query } from '@/lib/db';
 import { getRouteAdvice, isRouteAdviceQuestion } from '@/lib/routeAdvice';
 import { notifySecurityEvent } from '@/lib/telegram';
+import { requireAuth } from '@/lib/auth';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const analyticsRateLimit = new Map();
+const ANALYTICS_RATE_WINDOW_MS = 5 * 60 * 1000;
+const ANALYTICS_RATE_LIMIT = 20;
+
+function consumeAnalyticsRateLimit(key, now = Date.now()) {
+    const current = analyticsRateLimit.get(key);
+    if (!current || now - current.startedAt >= ANALYTICS_RATE_WINDOW_MS) {
+        analyticsRateLimit.set(key, { startedAt: now, count: 1 });
+        return true;
+    }
+    if (current.count >= ANALYTICS_RATE_LIMIT) return false;
+    current.count += 1;
+    return true;
+}
 
 const SENSITIVE_IDENTIFIER_PATTERNS = [
     /pid/i,
@@ -674,7 +689,15 @@ async function createKnowledgeResponse({ model, message, conversationHistory, do
  */
 export async function POST(request) {
     try {
-        const { message, conversationHistory = [] } = await request.json();
+        const { message, conversationHistory = [], analyticsContext = false } = await request.json();
+        if (analyticsContext) {
+            const auth = await requireAuth(request, ['admin', 'commander', 'staff']);
+            if (!auth.success) return auth.response;
+            const rateKey = `${auth.user.id}:${request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local'}`;
+            if (!consumeAnalyticsRateLimit(rateKey)) {
+                return Response.json({ success: false, error: 'ส่งคำถามถี่เกินไป กรุณารอสักครู่' }, { status: 429 });
+            }
+        }
 
         if (!message || typeof message !== 'string') {
             return Response.json(

@@ -1,6 +1,7 @@
 "use client";
 import { downloadCsv, objectsToCsvRows } from '@/lib/exportCsv';
 import AppIcon from "@/components/icons/AppIcon";
+import { showError, showWarning } from '@/lib/sweetAlert';
 
 export default function ExportExcelButton({
     data,
@@ -11,7 +12,7 @@ export default function ExportExcelButton({
 }) {
     const handleExport = () => {
         if (!data || data.length === 0) {
-            alert('ไม่มีข้อมูลให้ Export');
+            showWarning('ไม่มีข้อมูลให้ Export');
             return;
         }
 
@@ -21,7 +22,7 @@ export default function ExportExcelButton({
             downloadCsv([[sheetName], [], ...rows], `${filename}_${timestamp}.csv`);
         } catch (error) {
             console.error('Export error:', error);
-            alert('เกิดข้อผิดพลาดในการ Export ข้อมูล');
+            showError('เกิดข้อผิดพลาดในการ Export ข้อมูล');
         }
     };
 

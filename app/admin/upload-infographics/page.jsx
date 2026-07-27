@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AppIcon from "@/components/icons/AppIcon";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showDeleteConfirm, showError, showSuccess } from "@/lib/sweetAlert";
 
 export default function UploadInfographics() {
     const router = useRouter();
@@ -110,7 +110,7 @@ export default function UploadInfographics() {
     };
 
     const handleDelete = async (eocType, filename) => {
-        if (!confirm('ต้องการลบไฟล์นี้หรือไม่?')) return;
+        if (!await showDeleteConfirm('ต้องการลบไฟล์นี้หรือไม่?')) return;
 
         try {
             const response = await fetch('/stn-eoc/api/admin/infographics/delete', {

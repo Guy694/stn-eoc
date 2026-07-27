@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import db from "@/lib/db";
+import { teamRegistry } from "@/src/features/eoc/registries/team.registry";
 
-const CORE_TEAM_CODES = ["RISKCOM", "MCAT", "SAT", "SeRHT", "MEDICAL", "LOGISTICS", "SHELTER", "ITSUPPORT"];
+const REGISTERED_TEAM_CODES = Object.values(teamRegistry).map((team) => team.legacyCode);
 
 const number = (value) => {
     const parsed = Number(value);
@@ -45,6 +46,11 @@ function analyzeTeam(row) {
         activity_count_7d: activityCount,
         assigned_sessions: assignedSessions,
         lead_count: number(row.lead_count),
+        draft_reports: number(row.draft_reports),
+        submitted_reports: number(row.submitted_reports),
+        verified_reports: number(row.verified_reports),
+        approved_reports: number(row.approved_reports),
+        returned_reports: number(row.returned_reports),
         readiness_score: score,
         status: score < 40 ? "critical" : score < 70 ? "warning" : "ready",
         weaknesses
@@ -108,8 +114,10 @@ function buildRecommendations({ kpis, teams, lowStock, diseaseDistricts }) {
 
 export async function GET(request) {
     try {
-        const auth = await requireAuth(request, ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"]);
+        // `staff` also grants access to every registered EOC team role through requireAuth.
+        const auth = await requireAuth(request, ["admin", "commander", "staff"]);
         if (!auth.success) return auth.response;
+        const privileged = ["admin", "commander"].includes(auth.user.role);
 
         const [sessions, affectedRows, shelterRows, teamRows, diseaseDaily, diseaseDistrictRows] = await Promise.all([
             db.query(
@@ -146,6 +154,11 @@ export async function GET(request) {
                         COUNT(DISTINCT CASE WHEN etm.is_active = 1 THEN etm.officer_id END) AS member_count,
                         COUNT(DISTINCT CASE WHEN est.team_lead_officer_id IS NOT NULL THEN est.team_lead_officer_id END) AS lead_count,
                         COUNT(DISTINCT CASE WHEN al.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN al.id END) AS activity_count_7d,
+                        COUNT(DISTINCT CASE WHEN report.status = 'draft' THEN report.id END) AS draft_reports,
+                        COUNT(DISTINCT CASE WHEN report.status = 'submitted' THEN report.id END) AS submitted_reports,
+                        COUNT(DISTINCT CASE WHEN report.status = 'verified' THEN report.id END) AS verified_reports,
+                        COUNT(DISTINCT CASE WHEN report.status = 'approved' THEN report.id END) AS approved_reports,
+                        COUNT(DISTINCT CASE WHEN report.status = 'returned' THEN report.id END) AS returned_reports,
                         MAX(al.created_at) AS last_activity_at
                  FROM eoc_teams t
                  LEFT JOIN eoc_session_teams est ON est.team_id = t.id
@@ -153,10 +166,25 @@ export async function GET(request) {
                     AND EXISTS (SELECT 1 FROM eoc_sessions es WHERE es.id = est.eoc_session_id AND es.status = 'active')
                  LEFT JOIN eoc_team_members etm ON etm.session_team_id = est.id AND etm.is_active = 1
                  LEFT JOIN activity_logs al ON al.eoc_session_id = est.eoc_session_id AND al.user_id = etm.officer_id
-                 WHERE t.is_active = 1 AND t.team_code IN (${CORE_TEAM_CODES.map(() => "?").join(",")})
+                 LEFT JOIN eoc_team_reports report ON report.session_team_id = est.id
+                 WHERE t.is_active = 1
+                   AND t.team_code IN (${REGISTERED_TEAM_CODES.map(() => "?").join(",")})
+                   AND (? = 1 OR EXISTS (
+                     SELECT 1
+                     FROM eoc_session_teams access_st
+                     JOIN eoc_team_members access_member
+                       ON access_member.session_team_id = access_st.id
+                      AND access_member.is_active = 1
+                     JOIN eoc_sessions access_session
+                       ON access_session.id = access_st.eoc_session_id
+                      AND access_session.status = 'active'
+                     WHERE access_st.team_id = t.id
+                       AND access_st.is_active = 1
+                       AND access_member.officer_id = ?
+                   ))
                  GROUP BY t.id, t.team_code, t.team_name_th, t.team_name_en
-                 ORDER BY FIELD(t.team_code, ${CORE_TEAM_CODES.map(() => "?").join(",")})`,
-                [...CORE_TEAM_CODES, ...CORE_TEAM_CODES]
+                 ORDER BY FIELD(t.team_code, ${REGISTERED_TEAM_CODES.map(() => "?").join(",")})`,
+                [...REGISTERED_TEAM_CODES, privileged ? 1 : 0, auth.user.id, ...REGISTERED_TEAM_CODES]
             ),
             db.query(
                 `SELECT DATE_FORMAT(report_date, '%Y-%m-%d') AS report_date,

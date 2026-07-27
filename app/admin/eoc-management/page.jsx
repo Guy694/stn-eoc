@@ -5,9 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import Swal from "sweetalert2";
 import AppIcon from "@/components/icons/AppIcon";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showDeleteConfirm, showError, showSuccess } from "@/lib/sweetAlert";
 
 function getDefaultDateTimeLocal() {
     const date = new Date();
@@ -327,18 +326,7 @@ export default function EOCManagementPage() {
 
     // ลบ EOC Type
     const handleDeleteEOCType = async (id) => {
-        const confirm = await Swal.fire({
-            title: 'ยืนยันการลบ',
-            text: `คุณต้องการลบ EOC Type "${id}" ใช่หรือไม่?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'ลบ',
-            cancelButtonText: 'ยกเลิก'
-        });
-
-        if (!confirm.isConfirmed) return;
+        if (!await showDeleteConfirm(`คุณต้องการลบ EOC Type "${id}" ใช่หรือไม่?`)) return;
 
         try {
             const response = await fetch(`/stn-eoc/api/admin/eoc-types?id=${id}`, {
@@ -629,7 +617,7 @@ export default function EOCManagementPage() {
 
                 {/* Modal เปิด EOC */}
                 {showOpenModal && openingType && (
-                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <div className="flex items-start justify-between gap-4 mb-5">
@@ -773,7 +761,7 @@ export default function EOCManagementPage() {
 
                 {/* Modal ปิด EOC */}
                 {showCloseModal && closingType && (
-                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <div className="flex items-start justify-between gap-4 mb-5">
@@ -842,7 +830,7 @@ export default function EOCManagementPage() {
 
                 {/* Modal เพิ่ม EOC Type */}
                 {showAddModal && (
-                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-4">เพิ่มรายการ EOC ใหม่</h2>
@@ -978,7 +966,7 @@ export default function EOCManagementPage() {
 
                 {/* Modal แก้ไข EOC Type */}
                 {showEditModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-4">แก้ไข EOC Type: {formData.id}</h2>

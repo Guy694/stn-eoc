@@ -3,19 +3,8 @@ import { query, transaction } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getSessionTeamAccess, isReportDateWithinSession, writeTeamReportAudit } from "@/lib/eocTeamAccess";
-import { getTeamReportDefinition } from "@/src/features/eoc/registries/team-report-definition.registry";
 import { normalizeTeamCode } from "@/src/features/eoc/registries/team.registry";
-
-function validatePayload(teamCode, payload) {
-  const definition = getTeamReportDefinition(teamCode);
-  if (!definition || !payload || typeof payload !== "object" || Array.isArray(payload)) return "รูปแบบข้อมูลรายงานไม่ถูกต้อง";
-  for (const item of definition.fields) {
-    const value = payload[item.name];
-    if (item.required && (value === undefined || value === null || String(value).trim() === "")) return `กรุณากรอก ${item.label}`;
-    if (value !== undefined && value !== null && String(value).length > 10000) return `${item.label} มีข้อมูลยาวเกินกำหนด`;
-  }
-  return null;
-}
+import { validateTeamReportPayload } from "@/src/features/eoc/teams/shared/schemas/team-report-payload.schema";
 
 function parseReportDate(value) {
   if (!value) return new Date();
@@ -61,6 +50,11 @@ export async function GET(request, { params }) {
       data: reports.map((report) => ({
         ...report,
         payload: typeof report.payload === "string" ? JSON.parse(report.payload) : report.payload,
+        completeness: validateTeamReportPayload(
+          normalizeTeamCode(access.context.team_code),
+          typeof report.payload === "string" ? JSON.parse(report.payload) : report.payload,
+          { requireComplete: true }
+        ).completeness,
         permissions: {
           canEdit: access.canReport
             && ["draft", "returned"].includes(report.status)
@@ -88,8 +82,8 @@ export async function POST(request, { params }) {
     if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถสร้างรายงานใน Session นี้ได้" }, { status: 409 });
     const body = await request.json();
     const teamCode = normalizeTeamCode(access.context.team_code);
-    const validationError = validatePayload(teamCode, body.payload);
-    if (!body.title?.trim() || validationError) return NextResponse.json({ success: false, message: validationError || "กรุณาระบุหัวข้อรายงาน" }, { status: 400 });
+    const validation = validateTeamReportPayload(teamCode, body.payload);
+    if (!body.title?.trim() || !validation.success) return NextResponse.json({ success: false, message: validation.message || "กรุณาระบุหัวข้อรายงาน", fieldErrors: validation.fieldErrors }, { status: 400 });
     const reportDate = parseReportDate(body.reportDate);
     if (!reportDate) return NextResponse.json({ success: false, message: "วันเวลารายงานไม่ถูกต้อง" }, { status: 400 });
     if (!isReportDateWithinSession(access.context, reportDate)) return NextResponse.json({ success: false, message: "วันเวลารายงานต้องอยู่ในช่วงเปิด–ปิด Session" }, { status: 400 });

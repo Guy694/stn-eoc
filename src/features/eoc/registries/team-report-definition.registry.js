@@ -7,7 +7,15 @@ const commonFields = Object.freeze([
 ]);
 
 function definition(title, purpose, specificFields, options = {}) {
-  return Object.freeze({ title, purpose, fields: Object.freeze([...commonFields, ...specificFields]), ...options });
+  const fields = Object.freeze([...commonFields, ...specificFields]);
+  const submitRequiredFields = Object.freeze([
+    "reporting_period",
+    "urgency",
+    "situation_summary",
+    ...specificFields.slice(0, 2).map((item) => item.name),
+    ...fields.filter((item) => item.required).map((item) => item.name),
+  ].filter((name, index, values) => values.indexOf(name) === index));
+  return Object.freeze({ title, purpose, fields, submitRequiredFields, ...options });
 }
 
 /** แบบฟอร์มรายงาน MVP ครบ 23 กลุ่มภารกิจ โดยไม่เก็บ PII โดยตรง */

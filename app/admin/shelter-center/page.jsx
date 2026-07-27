@@ -604,7 +604,7 @@ function ShelterCenterContent() {
             {/* Modal */}
             {
                 showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                             <h2 className="text-xl font-bold mb-4 text-gray-700">
                                 {editingCenter ? "แก้ไขศูนย์พักพิงชั่วคราว" : "เพิ่มศูนย์พักพิงชั่วคราวใหม่"}

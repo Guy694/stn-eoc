@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
-import Swal from 'sweetalert2';
+import { showDeleteConfirm, showError, showSuccess } from '@/lib/sweetAlert';
+import { AppDialogFrame } from '@/components/ui/app-dialog';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -157,47 +158,32 @@ export default function ITResourcesPage() {
             const data = await response.json();
 
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'สำเร็จ',
-                    text: data.message,
-                    timer: 1500,
-                    showConfirmButton: false
-                });
                 setShowModal(false);
                 resetForm();
-                fetchResources();
+                await fetchResources();
+                showSuccess(data.message || (editingResource ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มข้อมูลสำเร็จ'));
             } else {
-                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: data.message });
+                showError(data.message || 'ไม่สามารถบันทึกข้อมูลได้');
             }
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message });
+            showError(error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         }
     };
 
     const handleDelete = async (id) => {
-        const result = await Swal.fire({
-            title: 'ยืนยันการลบ?',
-            text: 'คุณต้องการลบข้อมูลนี้หรือไม่?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'ลบ',
-            cancelButtonText: 'ยกเลิก'
-        });
-
-        if (result.isConfirmed) {
+        if (await showDeleteConfirm('คุณต้องการลบข้อมูลนี้หรือไม่?')) {
             try {
                 const response = await fetch(`/stn-eoc/api/admin/it-resources?id=${id}`, { method: 'DELETE' });
                 const data = await response.json();
 
                 if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1500, showConfirmButton: false });
-                    fetchResources();
+                    await fetchResources();
+                    showSuccess('ลบข้อมูลสำเร็จ');
+                } else {
+                    showError(data.message || 'ไม่สามารถลบข้อมูลได้');
                 }
             } catch (error) {
-                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message });
+                showError(error.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
             }
         }
     };
@@ -528,7 +514,7 @@ export default function ITResourcesPage() {
 
                 {/* Modal */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <AppDialogFrame open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) resetForm(); }}>
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">
@@ -661,7 +647,7 @@ export default function ITResourcesPage() {
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </AppDialogFrame>
                 )}
             </div>
         </EOCLayout>

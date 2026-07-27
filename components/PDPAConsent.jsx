@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import AppIcon from "@/components/icons/AppIcon";
+import { showWarning } from '@/lib/sweetAlert';
+import { AppDialogFrame } from '@/components/ui/app-dialog';
 
 export default function PDPAConsent() {
     const [showConsent, setShowConsent] = useState(false);
@@ -24,13 +26,13 @@ export default function PDPAConsent() {
 
     const handleDecline = () => {
         // ถ้าไม่ยอมรับ ให้แสดงข้อความและไม่ให้ใช้งานระบบ
-        alert('คุณจำเป็นต้องยอมรับนโยบายความเป็นส่วนตัวเพื่อใช้งานระบบ');
+        showWarning('คุณจำเป็นต้องยอมรับนโยบายความเป็นส่วนตัวเพื่อใช้งานระบบ');
     };
 
     if (!showConsent) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-[9999] p-4">
+        <AppDialogFrame open={showConsent} onOpenChange={() => {}} busy>
             <div className="bg-white rounded-t-2xl md:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div className="p-6 md:p-8">
                     {/* Header */}
@@ -132,7 +134,7 @@ export default function PDPAConsent() {
                                 if (checkbox && checkbox.checked) {
                                     handleAccept();
                                 } else {
-                                    alert('กรุณาทำเครื่องหมายยอมรับนโยบายความเป็นส่วนตัว');
+                                    showWarning('กรุณาทำเครื่องหมายยอมรับนโยบายความเป็นส่วนตัว');
                                 }
                             }}
                             className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg"
@@ -142,6 +144,6 @@ export default function PDPAConsent() {
                     </div>
                 </div>
             </div>
-        </div>
+        </AppDialogFrame>
     );
 }

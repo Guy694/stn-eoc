@@ -3,17 +3,8 @@ import { query, transaction } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getSessionTeamAccess, isReportDateWithinSession, writeTeamReportAudit } from "@/lib/eocTeamAccess";
-import { getTeamReportDefinition } from "@/src/features/eoc/registries/team-report-definition.registry";
 import { normalizeTeamCode } from "@/src/features/eoc/registries/team.registry";
-
-function validatePayload(teamCode, payload) {
-  const definition = getTeamReportDefinition(teamCode);
-  if (!definition || !payload || typeof payload !== "object" || Array.isArray(payload)) return "รูปแบบข้อมูลรายงานไม่ถูกต้อง";
-  const missingField = definition.fields.find((field) => field.required && (payload[field.name] === undefined || payload[field.name] === null || String(payload[field.name]).trim() === ""));
-  if (missingField) return `กรุณากรอก ${missingField.label}`;
-  const oversizedField = definition.fields.find((field) => payload[field.name] !== undefined && payload[field.name] !== null && String(payload[field.name]).length > 10000);
-  return oversizedField ? `${oversizedField.label} มีข้อมูลยาวเกินกำหนด` : null;
-}
+import { validateTeamReportPayload } from "@/src/features/eoc/teams/shared/schemas/team-report-payload.schema";
 
 function parseReportDate(value, fallback) {
   const date = value ? new Date(value) : new Date(fallback);
@@ -38,8 +29,8 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const storedPayload = typeof report.payload === "string" ? JSON.parse(report.payload) : report.payload;
     const nextPayload = body.payload || storedPayload;
-    const validationError = validatePayload(normalizeTeamCode(access.context.team_code), nextPayload);
-    if (validationError) return NextResponse.json({ success: false, message: validationError }, { status: 400 });
+    const validation = validateTeamReportPayload(normalizeTeamCode(access.context.team_code), nextPayload);
+    if (!validation.success) return NextResponse.json({ success: false, message: validation.message, fieldErrors: validation.fieldErrors }, { status: 400 });
     const reportDate = parseReportDate(body.reportDate, report.report_date);
     if (!reportDate) return NextResponse.json({ success: false, message: "วันเวลารายงานไม่ถูกต้อง" }, { status: 400 });
     if (!isReportDateWithinSession(access.context, reportDate)) return NextResponse.json({ success: false, message: "วันเวลารายงานต้องอยู่ในช่วงเปิด–ปิด Session" }, { status: 400 });

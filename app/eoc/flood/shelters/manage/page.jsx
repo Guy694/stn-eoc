@@ -3,7 +3,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { useEOC } from "@/context/EOCContext";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { showSuccess, showError } from "@/lib/sweetAlert";
+import { showSuccess, showError, showConfirm } from "@/lib/sweetAlert";
 import AppIcon from "@/components/icons/AppIcon";
 
 export default function ManageSheltersPage() {
@@ -85,14 +85,14 @@ export default function ManageSheltersPage() {
 
             const result = await response.json();
             if (result.success) {
-                // Refresh list
                 await fetchShelters();
+                showSuccess(currentStatus ? 'ปิดใช้งานศูนย์พักพิงแล้ว' : 'เปิดใช้งานศูนย์พักพิงแล้ว');
             } else {
-                alert('เกิดข้อผิดพลาด: ' + result.message);
+                showError(result.message || 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ');
             }
         } catch (error) {
             console.error('Error toggling activation:', error);
-            alert('เกิดข้อผิดพลาดในการเปลี่ยนสถานะ');
+            showError(error.message || 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ');
         } finally {
             setUpdating(null);
         }
@@ -100,7 +100,7 @@ export default function ManageSheltersPage() {
 
     // Activate all
     const activateAll = async () => {
-        if (!sessionId || !confirm('ต้องการเปิดใช้งานศูนย์พักพิงทั้งหมดหรือไม่?')) return;
+        if (!sessionId || !await showConfirm('ยืนยันการเปิดใช้งาน', 'ต้องการเปิดใช้งานศูนย์พักพิงทั้งหมดหรือไม่?')) return;
 
         setLoading(true);
         try {
@@ -116,8 +116,10 @@ export default function ManageSheltersPage() {
                 });
             }
             await fetchShelters();
+            showSuccess('เปิดใช้งานศูนย์พักพิงทั้งหมดแล้ว');
         } catch (error) {
             console.error('Error activating all:', error);
+            showError(error.message || 'ไม่สามารถเปิดใช้งานศูนย์พักพิงทั้งหมดได้');
         } finally {
             setLoading(false);
         }
@@ -414,7 +416,7 @@ export default function ManageSheltersPage() {
 
             {/* Edit Occupancy Modal */}
             {showEditModal && editingShelter && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay" role="dialog" aria-modal="true">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">

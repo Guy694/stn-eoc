@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Archive, ChevronLeft, ChevronRight, Database, Pencil, Plus, RefreshCw, Save, Search, ShieldCheck, X } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showConfirm, showError, showSuccess } from "@/lib/sweetAlert";
 
 const EMPTY_FORM = {
   province_code: "91",
@@ -132,7 +132,7 @@ export default function DataManagementPage() {
   };
 
   const archive = async (row) => {
-    if (!window.confirm(`เก็บข้อมูล ${row.district_name} เข้าคลังหรือไม่?`)) return;
+    if (!await showConfirm("ยืนยันการเก็บเข้าคลัง", `เก็บข้อมูล ${row.district_name} เข้าคลังหรือไม่?`, "เก็บเข้าคลัง")) return;
     setError("");
     try {
       const response = await fetch(`/stn-eoc/api/admin/master-data/population/${row.id}`, {

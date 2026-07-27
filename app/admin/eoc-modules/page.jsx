@@ -4,8 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
-import Swal from "sweetalert2";
 import AppIcon from "@/components/icons/AppIcon";
+import { showDeleteConfirm, showError, showSuccess, showWarning } from "@/lib/sweetAlert";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 
 function EOCModulesContent() {
     const router = useRouter();
@@ -135,7 +136,7 @@ function EOCModulesContent() {
     const handleSaveModule = async () => {
         try {
             if (!formData.module_code || !formData.module_name_th || !formData.module_name_en || !formData.route_path) {
-                await Swal.fire('ข้อผิดพลาด', 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน', 'error');
+                showWarning('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
                 return;
             }
 
@@ -158,32 +159,21 @@ function EOCModulesContent() {
             const result = await response.json();
 
             if (result.success) {
-                await Swal.fire('สำเร็จ', result.message, 'success');
                 setShowModal(false);
-                loadModules();
+                await loadModules();
+                showSuccess(result.message || (editingModule ? 'แก้ไข Module สำเร็จ' : 'เพิ่ม Module สำเร็จ'));
             } else {
-                await Swal.fire('ข้อผิดพลาด', result.error, 'error');
+                showError(result.error || 'ไม่สามารถบันทึก Module ได้');
             }
         } catch (error) {
             console.error("Error saving module:", error);
-            await Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+            showError(error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         }
     };
 
     const handleDeleteModule = async (moduleId) => {
         try {
-            const confirm = await Swal.fire({
-                title: 'ยืนยันการลบ',
-                text: 'คุณต้องการลบ Module นี้หรือไม่?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'ลบ',
-                cancelButtonText: 'ยกเลิก'
-            });
-
-            if (!confirm.isConfirmed) return;
+            if (!await showDeleteConfirm('คุณต้องการลบ Module นี้หรือไม่?')) return;
 
             const response = await fetch(`/stn-eoc/api/admin/eoc-modules?id=${moduleId}`, {
                 method: 'DELETE'
@@ -192,14 +182,14 @@ function EOCModulesContent() {
             const result = await response.json();
 
             if (result.success) {
-                await Swal.fire('สำเร็จ', 'ลบ Module สำเร็จ', 'success');
-                loadModules();
+                await loadModules();
+                showSuccess('ลบ Module สำเร็จ');
             } else {
-                await Swal.fire('ข้อผิดพลาด', result.error, 'error');
+                showError(result.error || 'ไม่สามารถลบ Module ได้');
             }
         } catch (error) {
             console.error("Error deleting module:", error);
-            await Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
+            showError(error.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
         }
     };
 
@@ -355,7 +345,7 @@ function EOCModulesContent() {
 
                 {/* Modal */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <AppDialogFrame open={showModal} onOpenChange={setShowModal}>
                         <div className="bg-white rounded-lg p-4 max-w-2xl w-full max-h-[90vh] overflow-y-auto sm:p-6">
                             <h2 className="text-2xl font-bold mb-4">
                                 {editingModule ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่'}
@@ -506,7 +496,7 @@ function EOCModulesContent() {
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </AppDialogFrame>
                 )}
             </div>
         </EOCLayout>

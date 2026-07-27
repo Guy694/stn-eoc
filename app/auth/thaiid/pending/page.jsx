@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
+import { showLogoutConfirm } from "@/lib/sweetAlert";
 
 export default function PendingApprovalPage() {
     const router = useRouter();
@@ -16,7 +17,7 @@ export default function PendingApprovalPage() {
     }, [user, router]);
 
     const handleLogout = async () => {
-        const confirmed = confirm('คุณต้องการออกจากระบบหรือไม่?');
+        const confirmed = await showLogoutConfirm();
         if (confirmed) {
             await logout();
             router.push('/');

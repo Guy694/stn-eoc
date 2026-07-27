@@ -120,7 +120,7 @@ export default function HealthFacilitiesPage() {
     };
 
     const handleDelete = async (facility) => {
-        if (!confirm(`ต้องการลบ ${facility.name} ใช่หรือไม่?`)) return;
+        if (!await showDeleteConfirm(`ต้องการลบ ${facility.name} ใช่หรือไม่?`)) return;
 
         try {
             const response = await fetch(`/stn-eoc/api/admin/health-facilities/${facility.id}`, {
@@ -306,7 +306,7 @@ export default function HealthFacilitiesPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay" role="dialog" aria-modal="true">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-700">
                             {editingFacility ? "แก้ไขสถานพยาบาล" : "เพิ่มสถานพยาบาลใหม่"}

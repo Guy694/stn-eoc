@@ -8,6 +8,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import AppIcon from './icons/AppIcon';
+import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/sweetAlert';
+import { AppDialogFrame } from '@/components/ui/app-dialog';
 
 export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     const { user } = useAuth();
@@ -89,18 +91,19 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             if (data.success) {
                 await loadSessionTeams();
                 setShowAddTeamModal(false);
+                showSuccess('เพิ่มทีมใน Session สำเร็จ');
                 if (onTeamUpdated) onTeamUpdated();
             } else {
-                alert(data.message);
+                showError(data.message || 'ไม่สามารถเพิ่มทีมได้');
             }
         } catch (error) {
             console.error('Error adding team:', error);
-            alert('เกิดข้อผิดพลาด');
+            showError(error.message || 'เกิดข้อผิดพลาดในการเพิ่มทีม');
         }
     };
 
     const handleRemoveTeam = async (teamId) => {
-        if (!confirm('ต้องการถอดทีมนี้ออกจาก Session หรือไม่?')) return;
+        if (!await showDeleteConfirm('ต้องการถอดทีมนี้ออกจาก Session หรือไม่?')) return;
 
         try {
             const response = await fetch(
@@ -111,10 +114,14 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             const data = await response.json();
             if (data.success) {
                 await loadSessionTeams();
+                showSuccess('ถอดทีมออกจาก Session สำเร็จ');
                 if (onTeamUpdated) onTeamUpdated();
+            } else {
+                showError(data.message || 'ไม่สามารถถอดทีมได้');
             }
         } catch (error) {
             console.error('Error removing team:', error);
+            showError(error.message || 'เกิดข้อผิดพลาดในการถอดทีม');
         }
     };
 
@@ -136,21 +143,21 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             const data = await response.json();
 
             if (data.success) {
-                alert('เพิ่มสมาชิกสำเร็จ');
                 await loadSessionTeams();
                 setShowAddMemberModal(false);
                 setSelectedSessionTeam(null);
+                showSuccess('เพิ่มสมาชิกสำเร็จ');
             } else {
-                alert(data.message || 'เกิดข้อผิดพลาด');
+                showError(data.message || 'ไม่สามารถเพิ่มสมาชิกได้');
             }
         } catch (error) {
             console.error('Error adding member:', error);
-            alert('เกิดข้อผิดพลาด: ' + error.message);
+            showError(error.message || 'เกิดข้อผิดพลาดในการเพิ่มสมาชิก');
         }
     };
 
     const handleRemoveMember = async (sessionTeamId, memberId) => {
-        if (!confirm('ต้องการถอดสมาชิกคนนี้ออกจากทีมหรือไม่?')) return;
+        if (!await showDeleteConfirm('ต้องการถอดสมาชิกคนนี้ออกจากทีมหรือไม่?')) return;
 
         try {
             const response = await fetch(
@@ -161,9 +168,13 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             const data = await response.json();
             if (data.success) {
                 await loadSessionTeams();
+                showSuccess('ถอดสมาชิกออกจากทีมสำเร็จ');
+            } else {
+                showError(data.message || 'ไม่สามารถถอดสมาชิกได้');
             }
         } catch (error) {
             console.error('Error removing member:', error);
+            showError(error.message || 'เกิดข้อผิดพลาดในการถอดสมาชิก');
         }
     };
 
@@ -431,14 +442,14 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!selectedTeam) {
-            alert('กรุณาเลือกทีม');
+            showWarning('กรุณาเลือกทีม');
             return;
         }
         onSubmit(parseInt(selectedTeam), selectedLead ? parseInt(selectedLead) : null);
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <AppDialogFrame open onOpenChange={(open) => { if (!open) onClose(); }}>
             <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md sm:p-6">
                 <h3 className="text-gray-600 text-xl font-bold mb-4">เพิ่มทีมเข้า Session</h3>
                 <form onSubmit={handleSubmit}>
@@ -498,7 +509,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                     </div>
                 </form>
             </div>
-        </div>
+        </AppDialogFrame>
     );
 }
 
@@ -515,14 +526,14 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!selectedOfficer) {
-            alert('กรุณาเลือกเจ้าหน้าที่');
+            showWarning('กรุณาเลือกเจ้าหน้าที่');
             return;
         }
         onSubmit(team.session_team_id, parseInt(selectedOfficer), roleInTeam);
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <AppDialogFrame open onOpenChange={(open) => { if (!open) onClose(); }}>
             <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md sm:p-6">
                 <h3 className="text-xl text-gray-600 font-bold mb-4">
                     เพิ่มสมาชิกเข้าทีม {team.team_name_th}
@@ -581,6 +592,6 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                     </div>
                 </form>
             </div>
-        </div>
+        </AppDialogFrame>
     );
 }

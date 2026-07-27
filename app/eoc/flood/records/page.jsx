@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
-import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import { showConfirm, showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
 
@@ -395,9 +395,11 @@ export default function FloodRecordsPage() {
                 });
 
                 if (existingRecord) {
-                    const confirmOverwrite = confirm(
+                    const confirmOverwrite = await showConfirm(
+                        'พบข้อมูลเดิม',
                         `หมู่บ้าน ${formData.village} มีข้อมูลที่บันทึกไว้ในวันที่ ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH')} แล้ว\n` +
-                        `ต้องการบันทึกทับข้อมูลเดิมหรือไม่?`
+                        `ต้องการบันทึกทับข้อมูลเดิมหรือไม่?`,
+                        'บันทึกทับ'
                     );
                     if (!confirmOverwrite) {
                         return;
@@ -1111,7 +1113,7 @@ export default function FloodRecordsPage() {
 
                 {/* Modal */}
                 {showModal && (
-                    <div className="fixed inset-0  backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4">
@@ -1296,7 +1298,7 @@ export default function FloodRecordsPage() {
 
                 {/* Copy Data Modal */}
                 {showCopyModal && (
-                    <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
+                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-sky-200">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4 flex items-center gap-2">

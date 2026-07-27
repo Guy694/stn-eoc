@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Archive, Pencil, Plus, RefreshCw, Save, Search, X } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showConfirm, showError, showSuccess } from "@/lib/sweetAlert";
 
 const TYPES = [
   ["agencies", "หน่วยงาน"],
@@ -87,7 +87,7 @@ export default function MasterDataCatalogPage() {
     } finally { setSaving(false); }
   };
   const archive = async (row) => {
-    if (!window.confirm("เก็บรายการนี้เข้าคลังหรือไม่?")) return;
+    if (!await showConfirm("ยืนยันการเก็บเข้าคลัง", "เก็บรายการนี้เข้าคลังหรือไม่?", "เก็บเข้าคลัง")) return;
     try {
       const response = await fetch(`/stn-eoc/api/admin/master-data/catalog/${type}/${row.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: "เก็บเข้าคลังจากหน้า Master Data" }) });
       const result = await response.json();

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { getTeam, normalizeTeamCode } from '@/src/features/eoc/registries/team.registry';
 
 // GET: ดึงรายชื่อทีมทั้งหมด
 export async function GET(request) {
@@ -48,6 +49,13 @@ export async function POST(request) {
             return NextResponse.json({
                 success: false,
                 message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน'
+            }, { status: 400 });
+        }
+        const registeredTeam = getTeam(normalizeTeamCode(team_code));
+        if (!registeredTeam || registeredTeam.legacyCode.toLowerCase() !== String(team_code).trim().toLowerCase()) {
+            return NextResponse.json({
+                success: false,
+                message: 'รหัสกลุ่มภารกิจไม่อยู่ในทะเบียนกลางของระบบ'
             }, { status: 400 });
         }
 

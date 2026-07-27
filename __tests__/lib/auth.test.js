@@ -96,4 +96,29 @@ describe('auth helpers', () => {
             ['valid-token']
         );
     });
+
+    test('treats every registered EOC team role as staff-equivalent access', async () => {
+        query
+            .mockResolvedValueOnce([{
+                session_token: 'valid-token',
+                user_id: 23,
+                username: 'finance1',
+                role: 'FINANCE',
+                idle_minutes: 1,
+                title: null,
+                given_name: 'Finance',
+                family_name: 'Officer',
+                email: 'finance@example.test',
+                phone: null,
+                department: 'EOC',
+                position: 'Officer',
+                is_approved: 1
+            }])
+            .mockResolvedValueOnce([]);
+
+        const auth = await requireAuth(createRequest({ token: 'valid-token' }), ['staff']);
+
+        expect(auth.success).toBe(true);
+        expect(auth.user.role).toBe('FINANCE');
+    });
 });

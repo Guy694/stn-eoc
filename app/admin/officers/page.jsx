@@ -223,7 +223,7 @@ export default function OfficersManagementPage() {
 
     const handleDelete = async (officer) => {
         const fullName = `${officer.title || ''} ${officer.given_name} ${officer.family_name}`.trim();
-        if (!confirm(`คุณต้องการลบ ${fullName} ใช่หรือไม่?`)) {
+        if (!await showDeleteConfirm(`คุณต้องการลบ ${fullName} ใช่หรือไม่?`)) {
             return;
         }
 
@@ -533,7 +533,7 @@ export default function OfficersManagementPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4 shadow-lg">
+                <div className="app-modal-overlay" role="dialog" aria-modal="true">
                     <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
                         <h2 className="text-xl font-bold mb-4 text-gray-800">
                             {editingOfficer ? "แก้ไขเจ้าหน้าที่" : "เพิ่มเจ้าหน้าที่ใหม่"}

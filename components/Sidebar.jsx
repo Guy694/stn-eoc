@@ -52,6 +52,13 @@ function MenuIcon({ icon: Icon, className = iconClassName }) {
     return <Icon className={className} aria-hidden="true" strokeWidth={2.2} />;
 }
 
+const ANALYTICS_MENU_ITEM = Object.freeze({
+    name: "วิเคราะห์ (Analytics)",
+    path: "/analytics",
+    icon: BrainCircuit,
+    description: "วิเคราะห์สถานการณ์ ทีม เวชภัณฑ์ และโรคระบาด",
+});
+
 export default function Sidebar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
@@ -183,7 +190,7 @@ export default function Sidebar() {
                 { name: "หน้าหลัก", path: "/dashboard", icon: LayoutDashboard, description: "ภาพรวมข้อมูลทั้งหมด" },
                 { name: "ศูนย์งานเจ้าหน้าที่", path: "/eoc/staff", icon: Users, description: "เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมาย" },
                 { name: "กล่องงานของฉัน", path: "/eoc/staff/inbox", icon: Bell, description: "Mission รายงาน ข้อสั่งการ และการแจ้งเตือน" },
-                { name: "วิเคราะห์ (Analytics)", path: "/analytics", icon: BrainCircuit, description: "วิเคราะห์สถานการณ์ ทีม เวชภัณฑ์ และโรคระบาด" },
+                ANALYTICS_MENU_ITEM,
             ],
         },
         {
@@ -349,6 +356,7 @@ export default function Sidebar() {
             section: "restricted-main",
             items: [
                 { name: "หน้าหลัก", path: "/dashboard", icon: LayoutDashboard, description: "เลือกเหตุการณ์และ session ก่อนเข้าสู่หน้าปฏิบัติการ" },
+                ANALYTICS_MENU_ITEM,
             ],
         },
         ...officerTeamSections,

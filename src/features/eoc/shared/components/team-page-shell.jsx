@@ -14,12 +14,12 @@ export default function TeamPageShell({ eocType, teamCode, activeSection, childr
   return (
     <EOCLayout>
       <section className="mx-auto max-w-7xl space-y-5">
-        <header className="border-l-4 border-cyan-700 bg-white p-5 shadow-sm">
+        <header className="rounded-xl border-l-4 border-cyan-700 bg-white p-5 shadow-sm">
           <p className="text-xs font-black uppercase tracking-wider text-cyan-700">{team?.shortName}</p>
           <h1 className="mt-1 text-2xl font-black text-slate-900">{team?.name}</h1>
           <p className="mt-1 text-sm text-slate-600">EOC {eoc?.name}</p>
         </header>
-        <nav className="flex overflow-x-auto border-b border-slate-200 bg-white" aria-label="เมนูกลุ่มภารกิจ">
+        <nav className="flex overflow-x-auto rounded-xl border-b border-slate-200 bg-white" aria-label="เมนูกลุ่มภารกิจ">
           {navigation.map((item) => (
             <Link
               key={item.key}
