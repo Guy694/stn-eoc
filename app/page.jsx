@@ -11,8 +11,8 @@ import FloodDiseaseSummaryPanel from "@/components/FloodDiseaseSummaryPanel";
 import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import dynamic from "next/dynamic";
-import { Bell, Bot, Building2, CloudSun, Home as HomeIcon, LogIn, Map, Phone, Tent } from "lucide-react";
 import AppIcon from "@/components/icons/AppIcon";
+import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 
 const FestivalPublicDashboard = dynamic(() => import("@/components/festival/FestivalPublicDashboard"), { ssr: false });
 const DailyDiseaseChart = dynamic(() => import("@/components/DailyDiseaseChart"), {
@@ -192,25 +192,6 @@ function mapEocTypeToPublicDisasterType(eocType) {
   if (eocType === "disease") return "disease";
   if (eocType === "festival-accidents" || eocType === "accident") return "accident";
   return "flood";
-}
-
-function openPublicAssistant() {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("eoc-assistant:open"));
-  }
-}
-
-function buildPublicHomeMenu(showWeatherMenu) {
-  return [
-    { href: "/", label: "หน้าหลัก", icon: HomeIcon, key: "home" },
-    { href: "/public/disaster-map", label: "แผนที่", icon: Map, key: "map" },
-    ...(showWeatherMenu ? [{ href: "/public/weather-watch", label: "อากาศ/ฝน", icon: CloudSun, key: "weather" }] : []),
-    { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
-    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
-    { href: "/public/agencies", label: "หน่วยงาน", icon: Building2, key: "agencies" },
-    { href: "#", label: "EOC Assistant", icon: Bot, key: "assistant", action: openPublicAssistant },
-    { href: "/login", label: "เข้าสู่ระบบ", icon: LogIn, key: "staff" }
-  ];
 }
 
 export default function Home() {
@@ -1412,10 +1393,10 @@ function PublicOperationalDashboard({
         </div>
       </header>
 
-      <div className="grid min-h-[calc(100vh-87px)] grid-cols-[98px_minmax(0,1fr)] max-lg:grid-cols-1">
-        <OpsSidebar selectedDisasterType={selectedDisasterType} />
+      <PublicTopNavigation activeMenu="home" showWeatherMenu={selectedDisasterType === "flood"} />
 
-        <main className="min-w-0 p-2 pb-24 sm:p-3 lg:pb-3">
+      <div className="min-h-[calc(100vh-143px)]">
+        <main className="min-w-0 p-2 sm:p-3">
           <div className="mb-2 flex items-center justify-between gap-2 overflow-hidden rounded-lg bg-red-600 px-3 py-2 text-white shadow-sm sm:mb-3 sm:gap-3 sm:px-4 sm:py-2.5">
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-base font-black sm:h-8 sm:w-8 sm:text-lg">!</span>
@@ -1560,104 +1541,11 @@ function PublicOperationalDashboard({
             <DiseaseChartSection chartSession={selectedSession?.isOverviewFallback ? null : selectedSession} />
           )}
         </main>
-        <OpsMobileNav selectedDisasterType={selectedDisasterType} />
       </div>
 
       <FloatingReportButton />
       <PDPAConsent />
     </div>
-  );
-}
-
-function OpsSidebar({ selectedDisasterType }) {
-  const showWeatherMenu = selectedDisasterType === "flood";
-  const items = buildPublicHomeMenu(showWeatherMenu);
-
-  return (
-    <aside className="flex flex-col items-center gap-2 bg-[#0b4c86] px-2 py-6 text-white max-lg:hidden">
-      {items.map((item) => {
-        const Icon = item.icon || Phone;
-        const isActive = item.key === "home";
-        const sharedClassName = `flex w-full flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-bold transition ${isActive ? "bg-white text-blue-800 shadow-md" : "text-blue-50 hover:bg-white/10"}`;
-
-        if (item.action) {
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={item.action}
-              className={sharedClassName}
-            >
-              <Icon className="h-6 w-6" aria-hidden="true" />
-              <span>{item.label}</span>
-            </button>
-          );
-        }
-
-        return (
-          <Link
-            key={item.key}
-            href={item.href}
-            className={sharedClassName}
-          >
-            <Icon className="h-6 w-6" aria-hidden="true" />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
-      <div className="mt-auto rounded-xl bg-white/15 p-3 text-center text-xs font-semibold leading-5">
-        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/15">
-          <Building2 className="h-5 w-5" aria-hidden="true" />
-        </div>
-        ข้อมูลสาธารณะ
-      </div>
-    </aside>
-  );
-}
-
-function OpsMobileNav({ selectedDisasterType }) {
-  const showWeatherMenu = selectedDisasterType === "flood";
-  const items = buildPublicHomeMenu(showWeatherMenu).filter((item) => item.key !== "agencies").slice(0, 5);
-
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t border-blue-100 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden">
-      {items.map((item) => {
-        const Icon = item.icon || Phone;
-        const isActive = item.key === "home";
-        const sharedClassName = `flex flex-col items-center gap-1 px-1 py-2 text-[11px] font-bold ${isActive ? "text-blue-700" : "text-slate-500"}`;
-        const content = (
-          <>
-            <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${isActive ? "bg-blue-50" : "bg-transparent"}`}>
-              <Icon className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="truncate">{item.label}</span>
-          </>
-        );
-
-        if (item.action) {
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={item.action}
-              className={sharedClassName}
-            >
-              {content}
-            </button>
-          );
-        }
-
-        return (
-          <Link
-            key={item.key}
-            href={item.href}
-            className={sharedClassName}
-          >
-            {content}
-          </Link>
-        );
-      })}
-    </nav>
   );
 }
 
