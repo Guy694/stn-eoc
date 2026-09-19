@@ -45,7 +45,11 @@ export default function OfficersManagementPage() {
 
     const registrationStatusLabels = {
         pending: 'รอ ThaiD',
+<<<<<<< Updated upstream
         verified: 'ยืนยัน ThaiD แล้ว',
+=======
+        verified: 'ยืนยัน ThaID แล้ว',
+>>>>>>> Stashed changes
         approved: 'อนุมัติแล้ว',
         rejected: 'ปฏิเสธ'
     };

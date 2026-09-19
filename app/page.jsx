@@ -12,7 +12,11 @@ import { getPublicAssetPath } from "@/lib/publicAssetPath";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import dynamic from "next/dynamic";
 import AppIcon from "@/components/icons/AppIcon";
+<<<<<<< Updated upstream
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
+=======
+import SiteViewCounter from "@/components/SiteViewCounter";
+>>>>>>> Stashed changes
 
 const FestivalPublicDashboard = dynamic(() => import("@/components/festival/FestivalPublicDashboard"), { ssr: false });
 const DailyDiseaseChart = dynamic(() => import("@/components/DailyDiseaseChart"), {
@@ -1208,6 +1212,7 @@ export default function Home() {
         <div className="container mx-auto px-4 md:px-6 text-center">
           <p className="text-sm md:text-base">&copy; 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข - Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
           <p className="text-xs md:text-sm mt-1 md:mt-2">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
+          <SiteViewCounter className="mt-2 text-xs md:text-sm" />
         </div>
       </footer>
 

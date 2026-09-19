@@ -1,3 +1,5 @@
+import SiteViewCounter from '@/components/SiteViewCounter';
+
 export default function Footer() {
     return (
         <footer className="bg-gray-800 text-gray-300 border-t border-gray-700">
@@ -37,6 +39,7 @@ export default function Footer() {
                 </div>
                 <div className="border-t border-gray-700 mt-6 pt-4 text-center text-xs sm:text-sm">
                     <p>&copy; 2025 สำนักงานสาธารณสุขจังหวัดสตูล - All Rights Reserved</p>
+                    <SiteViewCounter className="mt-2 text-gray-300" />
                 </div>
             </div>
         </footer>

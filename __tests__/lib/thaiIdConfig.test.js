@@ -1,6 +1,6 @@
 const originalEnv = { ...process.env };
 
-const { resolveThaiIdCallbackUrl } = require('@/lib/thaiIdConfig');
+const { getThaiIdScope, resolveThaiIdCallbackUrl } = require('@/lib/thaiIdConfig');
 
 function createRequest(url = 'https://example.com/stn-eoc/api/auth/thaiid/authorize') {
     return {
@@ -52,5 +52,27 @@ describe('ThaiID callback URL resolution', () => {
         const callbackUrl = resolveThaiIdCallbackUrl(createRequest(), '/api/auth/thaiid/callback');
 
         expect(callbackUrl).toBe('https://ngrok.example.com/stn-eoc/api/auth/thaiid/callback');
+    });
+});
+
+describe('ThaiID scopes', () => {
+    beforeEach(() => {
+        process.env = { ...originalEnv };
+        delete process.env.THAIID_SCOPE;
+        delete process.env.THAIID_OFFICER_SCOPE;
+        delete process.env.THAIID_CITIZEN_SCOPE;
+    });
+
+    afterAll(() => {
+        process.env = originalEnv;
+    });
+
+    test('requests PID and name claims for officer authentication by default', () => {
+        expect(getThaiIdScope('officer')).toBe('pid given_name family_name');
+    });
+
+    test('allows the officer scope to be overridden through the environment', () => {
+        process.env.THAIID_OFFICER_SCOPE = 'pid custom_claim';
+        expect(getThaiIdScope('officer')).toBe('pid custom_claim');
     });
 });

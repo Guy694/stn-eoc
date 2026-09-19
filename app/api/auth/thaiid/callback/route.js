@@ -191,12 +191,21 @@ async function fetchThaiIdUserInfo(accessToken, thaiIdConfig) {
 }
 
 function mergeThaiIdProfile(tokenData, userInfo) {
-    const data = { ...(userInfo || {}), ...(tokenData || {}) };
+    // Prefer UserInfo claims because the token response may contain only PID
+    // (or contain empty name claims) even when the requested scope includes names.
+    const data = { ...(tokenData || {}), ...(userInfo || {}) };
     return {
         ...data,
-        pid: data.pid || data.sub || data.citizen_id || data.citizenId || data.personal_id,
-        given_name: data.given_name || data.givenName || data.first_name || data.firstName,
-        family_name: data.family_name || data.familyName || data.last_name || data.lastName
+        pid: userInfo?.pid || tokenData?.pid
+            || data.sub || data.citizen_id || data.citizenId || data.personal_id,
+        given_name: userInfo?.given_name || userInfo?.givenName
+            || userInfo?.first_name || userInfo?.firstName
+            || tokenData?.given_name || tokenData?.givenName
+            || tokenData?.first_name || tokenData?.firstName,
+        family_name: userInfo?.family_name || userInfo?.familyName
+            || userInfo?.last_name || userInfo?.lastName
+            || tokenData?.family_name || tokenData?.familyName
+            || tokenData?.last_name || tokenData?.lastName
     };
 }
 
@@ -309,7 +318,7 @@ export async function GET(request) {
         // 1. แลกเปลี่ยน Authorization Code กับ Access Token
         const tokenData = await exchangeCodeForToken(code, thaiIdConfig);
         const accessToken = tokenData.access_token;
-        const userInfo = tokenData.pid ? null : await fetchThaiIdUserInfo(accessToken, thaiIdConfig);
+        const userInfo = await fetchThaiIdUserInfo(accessToken, thaiIdConfig);
         const thaiIdProfile = mergeThaiIdProfile(tokenData, userInfo);
         const pid = thaiIdProfile.pid;
 
@@ -317,6 +326,13 @@ export async function GET(request) {
             const baseUrl = getAppBaseUrl(request);
             return applyNoStoreHeaders(NextResponse.redirect(
                 `${baseUrl}/login?error=no_pid`
+            ));
+        }
+
+        if (!thaiIdProfile.given_name || !thaiIdProfile.family_name) {
+            const baseUrl = getAppBaseUrl(request);
+            return applyNoStoreHeaders(NextResponse.redirect(
+                `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ThaiD ไม่ได้ส่งชื่อหรือนามสกุลกลับมา กรุณาตรวจสอบว่า client ได้รับสิทธิ์ scope given_name และ family_name จาก DOPA')}`
             ));
         }
 
