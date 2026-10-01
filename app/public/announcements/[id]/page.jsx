@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
 import AnnouncementDetailView from '@/components/announcements/AnnouncementDetailView';
@@ -10,11 +10,31 @@ export default function PublicAnnouncementDetailPage({ params }) {
   const { id } = use(params);
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const trackedViewId = useRef(null);
 
   useEffect(() => {
     fetch(`/stn-eoc/api/public/announcements?id=${encodeURIComponent(id)}&include_old=1`)
       .then((response) => response.json())
-      .then((result) => setItem(result.success ? result.data?.[0] || null : null))
+      .then((result) => {
+        const announcement = result.success ? result.data?.[0] || null : null;
+        setItem(announcement);
+
+        if (announcement && trackedViewId.current !== String(id)) {
+          trackedViewId.current = String(id);
+          fetch('/stn-eoc/api/public/announcements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+          })
+            .then((response) => response.json())
+            .then((viewResult) => {
+              if (viewResult.success) {
+                setItem((current) => current ? { ...current, view_count: viewResult.data.view_count } : current);
+              }
+            })
+            .catch((error) => console.error('Record public announcement view error:', error));
+        }
+      })
       .catch((error) => console.error('Load public announcement detail error:', error))
       .finally(() => setLoading(false));
   }, [id]);

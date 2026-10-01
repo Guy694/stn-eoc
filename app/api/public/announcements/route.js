@@ -23,7 +23,7 @@ export async function GET(request) {
              FROM INFORMATION_SCHEMA.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE()
                AND TABLE_NAME = 'announcements'
-               AND COLUMN_NAME IN ('content_type', 'category', 'attachment_path', 'attachment_name')`
+               AND COLUMN_NAME IN ('content_type', 'category', 'attachment_path', 'attachment_name', 'view_count')`
         );
         const availableColumns = new Set(optionalColumns.map((column) => column.COLUMN_NAME));
 
@@ -61,6 +61,7 @@ export async function GET(request) {
                 a.description,
                 a.image_path,
                 a.priority,
+                ${availableColumns.has('view_count') ? 'a.view_count' : '0 as view_count'},
                 a.show_popup,
                 a.start_date,
                 a.end_date,
@@ -131,6 +132,61 @@ export async function GET(request) {
     } catch (error) {
         console.error('Get public announcements error:', error);
         return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลประกาศ');
+    } finally {
+        connection.release();
+    }
+}
+
+export async function POST(request) {
+    const connection = await pool.getConnection();
+
+    try {
+        const body = await request.json();
+        const announcementId = Number.parseInt(String(body?.id || ''), 10);
+
+        if (!Number.isInteger(announcementId) || announcementId <= 0) {
+            return NextResponse.json(
+                { success: false, message: 'รหัสประกาศไม่ถูกต้อง' },
+                { status: 400 }
+            );
+        }
+
+        const [columns] = await connection.execute(
+            `SHOW COLUMNS FROM announcements LIKE 'view_count'`
+        );
+        if (columns.length === 0) {
+            return NextResponse.json(
+                { success: false, message: 'ยังไม่ได้ติดตั้ง migration สำหรับยอดเข้าดูประกาศ' },
+                { status: 503 }
+            );
+        }
+
+        const [result] = await connection.execute(
+            `UPDATE announcements
+             SET view_count = COALESCE(view_count, 0) + 1
+             WHERE id = ? AND is_active = 1`,
+            [announcementId]
+        );
+
+        if (result.affectedRows === 0) {
+            return NextResponse.json(
+                { success: false, message: 'ไม่พบประกาศนี้' },
+                { status: 404 }
+            );
+        }
+
+        const [rows] = await connection.execute(
+            `SELECT view_count FROM announcements WHERE id = ? LIMIT 1`,
+            [announcementId]
+        );
+
+        return NextResponse.json({
+            success: true,
+            data: { view_count: Number(rows[0]?.view_count || 0) }
+        });
+    } catch (error) {
+        console.error('Record announcement view error:', error);
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกยอดเข้าดูประกาศ');
     } finally {
         connection.release();
     }

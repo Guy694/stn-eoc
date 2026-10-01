@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, FileText, ImageIcon, Paperclip } from 'lucide-react';
+import { ArrowRight, Eye, FileText, ImageIcon, Paperclip } from 'lucide-react';
 import { formatAnnouncementDate, getAnnouncementAsset, getAnnouncementCategory, getAnnouncementStatus } from './announcementUtils';
 
 export default function AnnouncementGrid({ items, loading, detailBasePath = '/announcements' }) {
@@ -19,7 +19,11 @@ export default function AnnouncementGrid({ items, loading, detailBasePath = '/an
           <div className="flex flex-wrap gap-2 text-xs font-bold"><span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">{getAnnouncementCategory(item)}</span><span className={`rounded-full px-2.5 py-1 ${status.className}`}>{status.label}</span>{item.attachment_path && <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 text-violet-700"><Paperclip className="h-3 w-3" />เอกสารแนบ</span>}</div>
           <h3 className="mt-3 line-clamp-2 text-lg font-black leading-snug text-slate-900 group-hover:text-blue-700">{item.title}</h3>
           <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{item.description || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
-          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500"><span>{formatAnnouncementDate(item.start_date || item.created_at)}</span><span className="inline-flex items-center gap-1 font-bold text-blue-700">อ่านต่อ <ArrowRight className="h-3.5 w-3.5" /></span></div>
+          <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500">
+            <span>{formatAnnouncementDate(item.start_date || item.created_at)}</span>
+            <span className="inline-flex items-center gap-1.5"><Eye className="h-3.5 w-3.5" />{Number(item.view_count || 0).toLocaleString('th-TH')} ครั้ง</span>
+            <span className="inline-flex items-center gap-1 font-bold text-blue-700">อ่านต่อ <ArrowRight className="h-3.5 w-3.5" /></span>
+          </div>
         </div>
       </Link>
     </article>;

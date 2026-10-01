@@ -26,7 +26,11 @@ function ThaiDErrorHandler({ setError }) {
             switch (errorType) {
                 case 'thaiid_auth_failed':
                     if (errorMessage && decodeURIComponent(errorMessage).includes('unauthorized_client')) {
+<<<<<<< Updated upstream
                         setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n• ยืนยันว่า ThaiD console อนุญาต client_id นี้\n• ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n• รีสตาร์ต server หลังแก้ .env');
+=======
+                        setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiD console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
+>>>>>>> Stashed changes
                         break;
                     }
                     setError(`การยืนยันตัวตนผ่าน ThaiD ล้มเหลว: ${errorMessage || 'ไม่ทราบสาเหตุ'}`);
@@ -44,13 +48,21 @@ function ThaiDErrorHandler({ setError }) {
                     const decodedMessage = errorMessage ? decodeURIComponent(errorMessage) : 'การเข้าสู่ระบบผ่าน ThaiD ล้มเหลว';
 
                     if (decodedMessage.includes('unauthorized_client')) {
+<<<<<<< Updated upstream
                         setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n• ยืนยันว่า ThaiD console อนุญาต client_id นี้\n• ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n• รีสตาร์ต server หลังแก้ .env');
+=======
+                        setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiD console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
+>>>>>>> Stashed changes
                         break;
                     }
 
                     // ตรวจสอบว่าเป็น timeout error หรือไม่
                     if (decodedMessage.includes('timeout') || decodedMessage.includes('ETIMEDOUT')) {
+<<<<<<< Updated upstream
                         setError('การเชื่อมต่อ ThaiD หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiD ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiD API\n\nคำแนะนำ:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ลองใหม่อีกครั้งในอีกสักครู่\n• หรือใช้ username/password แทน');
+=======
+                        setError('การเชื่อมต่อ ThaiD หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiD ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiD API\n\nคำแนะนำ:\n✓ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n✓ ลองใหม่อีกครั้งในอีกสักครู่\n✓ หรือใช้ username/password แทน');
+>>>>>>> Stashed changes
                     } else {
                         setError(`เกิดข้อผิดพลาด: ${decodedMessage}`);
                     }

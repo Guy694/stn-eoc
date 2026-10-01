@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Megaphone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Megaphone } from 'lucide-react';
 import { formatAnnouncementDate, getAnnouncementAsset, getAnnouncementCategory } from './announcementUtils';
 
 export default function AnnouncementCarousel({ items, detailBasePath = '/announcements' }) {
@@ -29,6 +29,7 @@ export default function AnnouncementCarousel({ items, detailBasePath = '/announc
           <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5"><Megaphone className="h-3.5 w-3.5" />ประกาศเด่น</span>
           <span className="rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">{getAnnouncementCategory(item)}</span>
           <span className="text-white/70">{formatAnnouncementDate(item.start_date || item.created_at)}</span>
+          <span className="inline-flex items-center gap-1.5 text-white/70"><Eye className="h-3.5 w-3.5" />{Number(item.view_count || 0).toLocaleString('th-TH')} ครั้ง</span>
         </div>
         <h2 className="max-w-4xl text-2xl font-black leading-tight md:text-4xl">{item.title}</h2>
         <p className="mt-3 line-clamp-2 max-w-3xl text-sm leading-6 text-white/80 md:text-base">{item.description}</p>
