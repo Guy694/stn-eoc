@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
 
 // API Proxy สำหรับดึงข้อมูลอุทกภัยน้ำท่วมจาก GISTDA
 export async function GET(request) {
+    // ข้อมูลปฏิบัติการภายใน — เฉพาะเจ้าหน้าที่ที่เข้าสู่ระบบ
+    const auth = await requireAuth(request, OFFICER_ROLES);
+    if (!auth.success) return auth.response;
+
     try {
         const { searchParams } = new URL(request.url);
         const days = searchParams.get('days') || '30';

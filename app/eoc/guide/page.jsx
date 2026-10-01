@@ -1,6 +1,6 @@
 "use client";
 import Link from 'next/link';
-import PublicLayout from '@/components/layouts/PublicLayout';
+import EOCLayout from '@/components/layouts/EOCLayout';
 import AppIcon from "@/components/icons/AppIcon";
 
 export default function EOCGuidePage() {
@@ -128,7 +128,7 @@ export default function EOCGuidePage() {
     ];
 
     return (
-        <PublicLayout>
+        <EOCLayout>
             <div className="container mx-auto px-4 py-8 max-w-5xl">
                 {/* Header */}
                 <div className="mb-8">
@@ -229,6 +229,6 @@ export default function EOCGuidePage() {
                     </Link>
                 </div>
             </div>
-        </PublicLayout>
+        </EOCLayout>
     );
 }

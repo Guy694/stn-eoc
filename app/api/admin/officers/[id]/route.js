@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { requireAuth, revokeUserSessions } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
 import { SYSTEM_ROLE_CODES } from '@/lib/eocRoles';
+import { validatePassword } from "@/lib/passwordPolicy";
 
 const SYSTEM_ROLES = new Set(SYSTEM_ROLE_CODES);
 
@@ -50,7 +51,7 @@ export async function PUT(request, { params }) {
         const { username, password, title, given_name, family_name, email, phone, role, department, requested_role, is_approved } = body;
 
         // ตรวจสอบว่ามีเจ้าหน้าที่นี้อยู่หรือไม่
-        const existing = await query('SELECT id FROM officer WHERE id = ?', [id]);
+        const existing = await query('SELECT id, role, is_approved FROM officer WHERE id = ?', [id]);
         if (existing.length === 0) {
             return NextResponse.json(
                 { success: false, error: 'Officer not found' },
@@ -128,8 +129,13 @@ export async function PUT(request, { params }) {
             values.push(auth.user?.id || null);
         }
         if (password) {
-            const password_hash = await bcrypt.hash(password, 10);
-            updates.push('password_hash = ?');
+            const passwordError = validatePassword(password, { username });
+            if (passwordError) {
+                return NextResponse.json({ success: false, error: passwordError }, { status: 400 });
+            }
+            const password_hash = await bcrypt.hash(password, 12);
+            // รหัสผ่านที่ผู้ดูแลรีเซ็ตให้เป็นรหัสชั่วคราว บังคับเปลี่ยนเมื่อเข้าสู่ระบบครั้งถัดไป
+            updates.push('password_hash = ?', 'must_change_password = 1', 'failed_login_attempts = 0', 'account_locked_until = NULL');
             values.push(password_hash);
         }
 
@@ -154,6 +160,13 @@ export async function PUT(request, { params }) {
                  WHERE officer_id = ?`,
                 [id]
             );
+        }
+
+        // เมื่อรีเซ็ตรหัสผ่าน เปลี่ยน role หรือยกเลิกอนุมัติ ให้ปิด session เดิมของผู้ใช้นั้นทั้งหมด
+        const roleChanged = Boolean(role) && role !== existing[0].role;
+        const approvalRevoked = is_approved !== undefined && Number(is_approved) !== 1 && Number(existing[0].is_approved) === 1;
+        if (password || roleChanged || approvalRevoked) {
+            await revokeUserSessions(id);
         }
 
         // ดึงข้อมูลที่อัปเดตแล้ว

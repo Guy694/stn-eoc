@@ -64,8 +64,16 @@ function ThaiDErrorHandler({ setError }) {
     return null;
 }
 
+// รับเฉพาะ path ภายในแอป (กัน open redirect ไปเว็บอื่น)
+function getSafeNextPath(value) {
+    if (!value || typeof value !== 'string') return null;
+    if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null;
+    return value;
+}
+
 function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { login } = useAuth();
     const [formData, setFormData] = useState({
         username: "",
@@ -91,7 +99,8 @@ function LoginForm() {
             const result = await login(formData.username, formData.password);
 
             if (result.success) {
-                router.push("/dashboard");
+                const nextPath = getSafeNextPath(searchParams.get('next'));
+                router.push(result.mustChangePassword ? "/settings/?forcePasswordChange=1" : (nextPath || "/dashboard"));
             } else {
                 setError(result.message || "เข้าสู่ระบบไม่สำเร็จ");
             }

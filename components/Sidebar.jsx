@@ -329,6 +329,7 @@ export default function Sidebar() {
             items: [
                 { name: "โปรไฟล์ของฉัน", path: "/profile", icon: UserCog, description: "ข้อมูลส่วนตัว" },
                 { name: "ตั้งค่าระบบ", path: "/settings", icon: Settings, description: "กำหนดค่าต่างๆ" },
+                { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", icon: ClipboardList, description: "ขั้นตอนตรวจสอบและอนุมัติรายงาน" },
             ],
         },
     ];
@@ -366,6 +367,7 @@ export default function Sidebar() {
             items: [
                 { name: "โปรไฟล์ของฉัน", path: "/profile", icon: UserCog, description: "ข้อมูลส่วนตัว" },
                 { name: "ตั้งค่าระบบ", path: "/settings", icon: Settings, description: "กำหนดค่าต่างๆ" },
+                { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", icon: ClipboardList, description: "ขั้นตอนตรวจสอบและอนุมัติรายงาน" },
             ],
         },
     ];

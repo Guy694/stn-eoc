@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { formatEocDisplayName } from '@/lib/eocDisplay';
 import AppIcon from './icons/AppIcon';
+import HelpRequestLink from '@/components/public/HelpRequestLink';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 
 export default function CitizenDashboard() {
@@ -243,14 +244,18 @@ export default function CitizenDashboard() {
                     เมนูด่วน
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Link
-                        href="/public/report-incident"
-                        className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200 hover:border-red-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
+                    <HelpRequestLink
+                        className="block bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200 hover:border-red-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
+                        disabledClassName="cursor-not-allowed bg-none! bg-slate-100! border-slate-200! opacity-70 hover:shadow-md! hover:scale-100!"
                     >
-                        <AppIcon icon="siren" className="mx-auto mb-4 h-12 w-12 text-red-600 transition-transform group-hover:scale-110" />
-                        <h4 className="font-bold text-lg text-gray-800">แจ้งเหตุภัยพิบัติ</h4>
-                        <p className="text-sm text-gray-600 mt-2">รายงานเหตุการณ์ที่พบเจอ</p>
-                    </Link>
+                        {({ helpOpen }) => (
+                            <>
+                                <AppIcon icon="siren" className="mx-auto mb-4 h-12 w-12 text-red-600 transition-transform group-hover:scale-110" />
+                                <h4 className="font-bold text-lg text-gray-800">ขอความช่วยเหลือ</h4>
+                                <p className="text-sm text-gray-600 mt-2">{helpOpen ? "ส่งคำขอถึงเจ้าหน้าที่ EOC" : "เปิดเมื่อมีเหตุการณ์ฉุกเฉิน • เหตุด่วนโทร 1669"}</p>
+                            </>
+                        )}
+                    </HelpRequestLink>
 
                     <Link
                         href="/public/disaster-map"
@@ -344,12 +349,12 @@ export default function CitizenDashboard() {
                         <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                         <h4 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มีประวัติการแจ้งเหตุ</h4>
                         <p className="text-gray-600 mb-4">คุณยังไม่เคยแจ้งเหตุภัยพิบัติ</p>
-                        <Link
-                            href="/public/report-incident"
+                        <HelpRequestLink
                             className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all"
+                            disabledClassName="cursor-not-allowed bg-slate-300! text-slate-600! shadow-none! hover:bg-slate-300!"
                         >
-                            แจ้งเหตุเลย
-                        </Link>
+                            ขอความช่วยเหลือ
+                        </HelpRequestLink>
                     </div>
                 )}
             </div>

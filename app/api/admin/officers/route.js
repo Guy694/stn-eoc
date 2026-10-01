@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
 import { SYSTEM_ROLE_CODES } from '@/lib/eocRoles';
+import { validatePassword } from "@/lib/passwordPolicy";
 
 const SYSTEM_ROLES = new Set(SYSTEM_ROLE_CODES);
 
@@ -116,13 +117,18 @@ export async function POST(request) {
             );
         }
 
-        // Hash password
-        const password_hash = await bcrypt.hash(password, 10);
+        const passwordError = validatePassword(password, { username });
+        if (passwordError) {
+            return NextResponse.json({ success: false, error: passwordError }, { status: 400 });
+        }
+
+        // Hash password — รหัสผ่านที่ผู้ดูแลตั้งให้ถือเป็นรหัสชั่วคราว ผู้ใช้ต้องเปลี่ยนเมื่อเข้าสู่ระบบครั้งแรก
+        const password_hash = await bcrypt.hash(password, 12);
 
         // Insert new officer
         const result = await query(`
-            INSERT INTO officer (username, password_hash, title, given_name, family_name, email, phone, role, requested_role, is_approved)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            INSERT INTO officer (username, password_hash, title, given_name, family_name, email, phone, role, requested_role, is_approved, must_change_password)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
         `, [username, password_hash, title, given_name, family_name, email, phone, role, role]);
 
         // ดึงข้อมูลที่เพิ่งสร้าง

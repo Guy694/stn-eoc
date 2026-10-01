@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { getPool } from "@/lib/db";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    charset: 'utf8mb4',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 const COUNT_COLUMNS = new Set([
     'elderly',
@@ -32,37 +23,6 @@ function normalizeVillage(value) {
     return String(value || '').trim() || 'รวม';
 }
 
-async function ensureBaselineSchema(connection) {
-    await connection.execute(`
-        CREATE TABLE IF NOT EXISTS vulnerable_group_baselines (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            province VARCHAR(100) NOT NULL DEFAULT 'สตูล',
-            district VARCHAR(100) NOT NULL,
-            tambon VARCHAR(100) NOT NULL,
-            village VARCHAR(100) NULL,
-            elderly INT NULL DEFAULT 0,
-            children INT NULL DEFAULT 0,
-            disabled INT NULL DEFAULT 0,
-            bedridden INT NULL DEFAULT 0,
-            pregnant INT NULL DEFAULT 0,
-            chronic_illness INT NULL DEFAULT 0,
-            total_cared INT NULL DEFAULT 0,
-            moved INT NULL DEFAULT 0,
-            notes TEXT NULL,
-            needs TEXT NULL,
-            import_source VARCHAR(255) NULL,
-            source_url TEXT NULL,
-            source_as_of_date DATE NULL,
-            created_by VARCHAR(100) NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY unique_baseline_location (province, district, tambon, village),
-            INDEX idx_location (district, tambon),
-            INDEX idx_source_as_of_date (source_as_of_date)
-        )
-    `);
-}
-
 export async function GET(request) {
     let connection;
 
@@ -75,7 +35,6 @@ export async function GET(request) {
         const tambon = searchParams.get('tambon');
 
         connection = await pool.getConnection();
-        await ensureBaselineSchema(connection);
 
         const whereParts = ['1=1'];
         const params = [];
@@ -162,7 +121,6 @@ export async function POST(request) {
         }
 
         connection = await pool.getConnection();
-        await ensureBaselineSchema(connection);
 
         const [result] = await connection.execute(`
             INSERT INTO vulnerable_group_baselines
@@ -232,7 +190,6 @@ export async function PATCH(request) {
         }
 
         connection = await pool.getConnection();
-        await ensureBaselineSchema(connection);
 
         await connection.execute(`
             UPDATE vulnerable_group_baselines
@@ -276,7 +233,6 @@ export async function PUT(request) {
         }
 
         connection = await pool.getConnection();
-        await ensureBaselineSchema(connection);
 
         await connection.execute(`
             UPDATE vulnerable_group_baselines SET

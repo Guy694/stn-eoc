@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
+import { getPool } from "@/lib/db";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    charset: 'utf8mb4',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 function mapFloodLevel(levelText) {
     const value = String(levelText || '').trim();
@@ -84,6 +76,10 @@ function buildSummary(districts) {
 }
 
 export async function GET(request) {
+    // ข้อมูลปฏิบัติการภายใน — เฉพาะเจ้าหน้าที่ที่เข้าสู่ระบบ
+    const auth = await requireAuth(request, OFFICER_ROLES);
+    if (!auth.success) return auth.response;
+
     let connection;
 
     try {

@@ -8,6 +8,7 @@ import {
   BarElement,
   CategoryScale,
   Chart as ChartJS,
+  Filler,
   Legend,
   LinearScale,
   LineElement,
@@ -16,7 +17,7 @@ import {
 } from "chart.js";
 import { RISK_META } from "@/lib/weatherRiskConfig";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend, Filler);
 
 function chartOptions(unitLabel) {
   return {

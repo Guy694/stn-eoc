@@ -7,7 +7,7 @@ import { getCitizenSession } from "@/lib/citizenAuth";
  */
 export async function GET(request) {
     try {
-        const auth = await getAuthSession(request);
+        const auth = await getAuthSession(request, { allowPasswordChangeRequired: true });
         if (!auth.success) {
             const citizenSession = await getCitizenSession();
 

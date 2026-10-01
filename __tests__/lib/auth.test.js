@@ -11,11 +11,12 @@ jest.mock('@/lib/db', () => ({
     query: jest.fn()
 }));
 
-const { getAuthSession, requireAuth } = require('@/lib/auth');
+const { getAuthSession, requireAuth, hashSessionToken } = require('@/lib/auth');
 const { query } = require('@/lib/db');
 
-function createRequest({ token, authHeader } = {}) {
+function createRequest({ token, authHeader, path = '/stn-eoc/api/eoc/sessions' } = {}) {
     return {
+        url: `http://localhost${path}`,
         cookies: {
             get: jest.fn((name) => (name === 'session_token' && token ? { value: token } : undefined))
         },
@@ -93,7 +94,7 @@ describe('auth helpers', () => {
         expect(auth.remainingMinutes).toBe(7);
         expect(query).toHaveBeenLastCalledWith(
             'UPDATE user_sessions SET last_activity = NOW() WHERE session_token = ?',
-            ['valid-token']
+            [hashSessionToken('valid-token')]
         );
     });
 
@@ -120,5 +121,59 @@ describe('auth helpers', () => {
 
         expect(auth.success).toBe(true);
         expect(auth.user.role).toBe('FINANCE');
+    });
+
+    test('looks sessions up by SHA-256 hash, never by the raw token', async () => {
+        query.mockResolvedValueOnce([]);
+
+        await getAuthSession(createRequest({ token: 'raw-token-value' }));
+
+        const [, params] = query.mock.calls[0];
+        expect(params).toEqual([hashSessionToken('raw-token-value')]);
+        expect(params[0]).toMatch(/^[a-f0-9]{64}$/);
+        expect(params[0]).not.toBe('raw-token-value');
+    });
+
+    test('rejects sessions of officers that are not approved', async () => {
+        query.mockResolvedValueOnce([{
+            user_id: 5, username: 'pending1', role: 'staff', idle_minutes: 0, is_approved: 0, must_change_password: 0
+        }]);
+
+        const auth = await getAuthSession(createRequest({ token: 'valid-token' }));
+
+        expect(auth.success).toBe(false);
+        expect(auth.response.status).toBe(403);
+        expect(auth.response.body.code).toBe('ACCOUNT_PENDING_APPROVAL');
+    });
+
+    test('blocks normal APIs until a temporary password is changed', async () => {
+        query.mockResolvedValue([{
+            user_id: 9, username: 'eoc2569_001', role: 'staff', idle_minutes: 0, is_approved: 1, must_change_password: 1
+        }]);
+
+        const blocked = await getAuthSession(createRequest({ token: 't', path: '/stn-eoc/api/eoc/sessions/' }));
+        expect(blocked.success).toBe(false);
+        expect(blocked.response.body.code).toBe('PASSWORD_CHANGE_REQUIRED');
+
+        const allowed = await getAuthSession(createRequest({ token: 't', path: '/stn-eoc/api/auth/change-password' }));
+        expect(allowed.success).toBe(true);
+        expect(allowed.user.mustChangePassword).toBe(true);
+
+        query.mockReset();
+    });
+
+    test('expires idle sessions using the configured idle limit', async () => {
+        query.mockResolvedValueOnce([{
+            user_id: 3, username: 'idle', role: 'staff', idle_minutes: 10, is_approved: 1
+        }]).mockResolvedValueOnce([]);
+
+        const auth = await getAuthSession(createRequest({ token: 'valid-token' }));
+
+        expect(auth.success).toBe(false);
+        expect(auth.response.status).toBe(401);
+        expect(query).toHaveBeenLastCalledWith(
+            'UPDATE user_sessions SET is_active = 0 WHERE session_token = ?',
+            [hashSessionToken('valid-token')]
+        );
     });
 });

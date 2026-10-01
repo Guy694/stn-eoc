@@ -1,87 +1,13 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import { publicInternalError } from "@/lib/apiResponse";
 import { notifySecurityEvent } from "@/lib/telegram";
-import { TEAM_ROLE_CODES, TEAM_ROLE_OPTIONS } from "@/lib/eocRoles";
+import { createUserSession, getRoleDisplayName, getRolePermissions, setSessionCookie } from "@/lib/auth";
+import { getClientIp, getUserAgent } from "@/lib/clientIp";
+import { consumeRateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
+import { getPool } from "@/lib/db";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
-
-// กำหนด permissions สำหรับแต่ละ role
-const rolePermissions = {
-    admin: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: true, delete: true },
-        admin: { view: true, create: true, edit: true, delete: true },
-        reports: { view: true, create: true, export: true },
-        users: { view: true, create: true, edit: true, delete: true }
-    },
-    commander: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: true, delete: false },
-        admin: { view: true, create: false, edit: false, delete: false },
-        reports: { view: true, create: true, export: true },
-        users: { view: true, create: false, edit: false, delete: false }
-    },
-    MCATT: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: true, delete: false },
-        admin: { view: true, create: false, edit: false, delete: false },
-        reports: { view: true, create: true, export: true },
-        users: { view: true, create: false, edit: false, delete: false }
-    },
-    SAT: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: true, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: true, create: false, export: false },
-        users: { view: false, create: false, edit: false, delete: false }
-    },
-    SeRHT: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: false, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: true, create: false, export: false },
-        users: { view: false, create: false, edit: false, delete: false }
-    },
-    staff: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: false, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: true, create: false, export: false },
-        users: { view: false, create: false, edit: false, delete: false }
-    }
-};
-
-// กำหนดชื่อแสดงสำหรับแต่ละ role
-const roleDisplayNames = {
-    admin: 'ผู้ดูแลระบบ',
-    commander: 'ผู้บัญชาการเหตุการณ์',
-    MCATT: 'ทีม MCATT',
-    SAT: 'ทีม SAT',
-    SeRHT: 'ทีม SeRHT',
-    staff: 'เจ้าหน้าที่'
-};
-
-for (const roleCode of TEAM_ROLE_CODES) {
-    if (!rolePermissions[roleCode]) {
-        rolePermissions[roleCode] = roleCode === 'EOC_COMMANDER'
-            ? rolePermissions.commander
-            : rolePermissions.staff;
-    }
-}
-
-for (const role of TEAM_ROLE_OPTIONS) {
-    roleDisplayNames[role.value] = role.roleDisplayName || `ทีม ${role.value}`;
-}
+const pool = getPool();
 
 export async function POST(request) {
     try {
@@ -94,11 +20,23 @@ export async function POST(request) {
             );
         }
 
-        // ดึง IP address และ User Agent
-        const ip_address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-            || request.headers.get('x-real-ip')
-            || 'unknown';
-        const user_agent = request.headers.get('user-agent') || 'unknown';
+        if (typeof username !== 'string' || typeof password !== 'string' || username.length > 100 || password.length > 256) {
+            return NextResponse.json(
+                { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
+                { status: 400 }
+            );
+        }
+
+        // ดึง IP address และ User Agent (ดูกติกาการเชื่อ proxy ใน lib/clientIp.js)
+        const ip_address = getClientIp(request);
+        const user_agent = getUserAgent(request);
+
+        // จำกัดจำนวนครั้งต่อ IP (กันการสุ่มรหัสผ่านไล่หลายบัญชี)
+        const ipLimit = await consumeRateLimit('login', ip_address);
+        if (!ipLimit.allowed) {
+            void notifySecurityEvent('login_ip_rate_limit_triggered', { ip: ip_address, userAgent: user_agent });
+            return tooManyRequestsResponse(ipLimit, 'พยายามเข้าสู่ระบบถี่เกินไป กรุณารอสักครู่');
+        }
 
         const connection = await pool.getConnection();
 
@@ -249,18 +187,10 @@ export async function POST(request) {
                 [officer.id]
             );
 
-            // สร้าง session token
-            const crypto = require('crypto');
-            const sessionToken = crypto.randomBytes(32).toString('hex');
-            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 ชั่วโมง
-
-            // บันทึก session ลงฐานข้อมูล
-            await connection.execute(
-                `INSERT INTO user_sessions 
-                (session_token, user_id, username, title, given_name, family_name, email, phone, role, ip_address, user_agent, expires_at, login_method) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'username_password')`,
-                [sessionToken, officer.id, officer.username, officer.title, officer.given_name, officer.family_name,
-                    officer.email, officer.phone, officer.role, ip_address, user_agent, expiresAt]
+            // สร้าง session (ฐานข้อมูลเก็บเฉพาะ hash ของ token)
+            const { token: sessionToken } = await createUserSession(
+                (sql, params) => connection.execute(sql, params),
+                { officer, ipAddress: ip_address, userAgent: user_agent, loginMethod: 'username_password' }
             );
 
             // บันทึก login attempt ที่สำเร็จ
@@ -283,7 +213,7 @@ export async function POST(request) {
             );
 
             // ดึง permissions ตาม role
-            const permissions = rolePermissions[officer.role] || rolePermissions.staff;
+            const permissions = getRolePermissions(officer.role);
 
             // ส่งข้อมูลกลับ
             const response = NextResponse.json({
@@ -298,19 +228,14 @@ export async function POST(request) {
                     familyName: officer.family_name,
                     phone: officer.phone,
                     role: officer.role,
-                    roleDisplay: roleDisplayNames[officer.role] || officer.role,
+                    roleDisplay: getRoleDisplayName(officer.role),
                     permissions: permissions,
-                    mustChangePassword: officer.must_change_password
+                    mustChangePassword: Number(officer.must_change_password) === 1
                 }
             });
 
-            // ตั้งค่า cookie สำหรับ session (httpOnly เพื่อความปลอดภัย)
-            response.cookies.set('session_token', sessionToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict', // เปลี่ยนเป็น strict สำหรับความปลอดภัย
-                maxAge: 60 * 60 * 24 // 24 ชั่วโมง
-            });
+            // ตั้งค่า cookie สำหรับ session (httpOnly + SameSite=Strict)
+            setSessionCookie(response, sessionToken);
 
             return response;
 

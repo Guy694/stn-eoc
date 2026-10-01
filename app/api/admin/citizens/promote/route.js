@@ -1,20 +1,11 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
+import { getPool } from "@/lib/db";
 
-// Database Pool
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 /**
  * API: Promote citizen to officer
@@ -97,8 +88,8 @@ export async function POST(request) {
             const [result] = await connection.execute(
                 `INSERT INTO officer 
                 (username, password_hash, title, given_name, family_name, role, pid_hash, 
-                position, department, is_approved, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, NOW())`,
+                position, department, is_approved, must_change_password, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, 1, NOW())`,
                 [
                     username,
                     passwordHash,

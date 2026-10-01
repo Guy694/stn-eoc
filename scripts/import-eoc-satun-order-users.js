@@ -1,9 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
-const DEFAULT_PASSWORD = '1234';
+// ห้ามใช้รหัสผ่านตายตัว: บัญชีใหม่ทุกบัญชีได้รหัสผ่านชั่วคราวแบบสุ่มของตัวเอง
+// และถูกบังคับให้เปลี่ยนรหัสผ่านเมื่อเข้าสู่ระบบครั้งแรก (must_change_password = 1)
+const TEMP_PASSWORD_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+function generateTemporaryPassword(length = 14) {
+  const bytes = crypto.randomBytes(length);
+  let out = '';
+  for (let i = 0; i < length; i += 1) out += TEMP_PASSWORD_ALPHABET[bytes[i] % TEMP_PASSWORD_ALPHABET.length];
+  return out;
+}
 const SOURCE_FILE = 'ค่ำสั่ง eoc สตูล.pdf';
 const USERNAME_PREFIX = 'eoc2569';
 
@@ -295,7 +304,7 @@ async function upsertTeam(connection, team) {
   return { action: 'created', id: result.insertId };
 }
 
-async function upsertPerson(connection, person, passwordHash) {
+async function upsertPerson(connection, person) {
   const [existing] = await connection.execute(
     `SELECT id, username, role, password_hash
      FROM officer
@@ -310,7 +319,12 @@ async function upsertPerson(connection, person, passwordHash) {
   if (existing.length > 0) {
     const officer = existing[0];
     const nextRole = preserveRoles.has(officer.role) ? officer.role : person.systemRole;
-    const nextPasswordHash = officer.password_hash || passwordHash;
+    let temporaryPassword = null;
+    let nextPasswordHash = officer.password_hash;
+    if (!nextPasswordHash) {
+      temporaryPassword = generateTemporaryPassword();
+      nextPasswordHash = await bcrypt.hash(temporaryPassword, 12);
+    }
 
     await connection.execute(
       `UPDATE officer
@@ -341,10 +355,12 @@ async function upsertPerson(connection, person, passwordHash) {
         officer.id,
       ]
     );
-    return { action: 'updated', id: officer.id, username: officer.username };
+    return { action: 'updated', id: officer.id, username: officer.username, temporaryPassword };
   }
 
   const username = await nextUsername(connection);
+  const temporaryPassword = generateTemporaryPassword();
+  const passwordHash = await bcrypt.hash(temporaryPassword, 12);
   const [result] = await connection.execute(
     `INSERT INTO officer
      (username, title, given_name, family_name, password_hash, role, requested_role, position, department,
@@ -362,25 +378,32 @@ async function upsertPerson(connection, person, passwordHash) {
       person.department,
     ]
   );
-  return { action: 'created', id: result.insertId, username };
+  return { action: 'created', id: result.insertId, username, temporaryPassword };
 }
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
+  const credentialsIndex = process.argv.indexOf('--credentials-out');
+  const credentialsOut = credentialsIndex >= 0 ? process.argv[credentialsIndex + 1] : null;
+  if (!dryRun && !credentialsOut) {
+    throw new Error('ต้องระบุ --credentials-out <path นอก repository> เพื่อเก็บรหัสผ่านชั่วคราวสำหรับแจกจ่ายแบบปลอดภัย');
+  }
+  if (credentialsOut && path.resolve(credentialsOut).startsWith(path.resolve(__dirname, '..') + path.sep)) {
+    throw new Error('--credentials-out ต้องอยู่นอกโฟลเดอร์โปรเจกต์ เพื่อไม่ให้รหัสผ่านหลุดเข้า git');
+  }
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '123456',
+    password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME || 'stneoc',
     port: Number(process.env.DB_PORT || 3306),
     charset: 'utf8mb4',
   });
 
-  const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+  const credentials = [];
   const report = {
     sourceFile: SOURCE_FILE,
     dryRun,
-    defaultPassword: DEFAULT_PASSWORD,
     teams: [],
     officers: [],
     groupEntries,
@@ -401,8 +424,11 @@ async function main() {
       if (seen.has(key)) continue;
       seen.add(key);
 
-      const result = await upsertPerson(connection, person, passwordHash);
-      report.officers.push({ ...person, ...result });
+      const { temporaryPassword, ...result } = await upsertPerson(connection, person);
+      if (temporaryPassword) {
+        credentials.push({ username: result.username, name: `${person.givenName} ${person.familyName}`, temporaryPassword });
+      }
+      report.officers.push({ ...person, ...result, passwordIssued: Boolean(temporaryPassword) });
     }
 
     if (dryRun) {
@@ -420,6 +446,10 @@ async function main() {
   const reportPath = path.join(process.cwd(), 'tmp_eoc_satun_import_report.json');
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf8');
 
+  if (credentialsOut && !dryRun && credentials.length > 0) {
+    fs.writeFileSync(credentialsOut, JSON.stringify(credentials, null, 2), { encoding: 'utf8', mode: 0o600 });
+  }
+
   const createdOfficers = report.officers.filter((item) => item.action === 'created').length;
   const updatedOfficers = report.officers.filter((item) => item.action === 'updated').length;
   const createdTeams = report.teams.filter((item) => item.action === 'created').length;
@@ -432,6 +462,8 @@ async function main() {
     officers: { created: createdOfficers, updated: updatedOfficers, total: report.officers.length },
     groupEntriesSkipped: groupEntries.length,
     reportPath,
+    credentialsIssued: dryRun ? 0 : credentials.length,
+    credentialsOut: dryRun ? null : credentialsOut,
   }, null, 2));
 }
 

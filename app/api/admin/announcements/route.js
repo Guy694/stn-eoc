@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { requireAuth } from "@/lib/auth";
 import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from "@/lib/fileUpload";
 import { publicInternalError } from "@/lib/apiResponse";
+import { getPool } from "@/lib/db";
 
 const MAX_ANNOUNCEMENT_IMAGE_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const VALID_EOC_TYPES = ['flood', 'drought', 'tsunami', 'earthquake', 'disease', 'accident', 'festival-accidents'];
@@ -17,16 +17,7 @@ const ALLOWED_ATTACHMENT_TYPES = new Map([
     ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xlsx']
 ]);
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    charset: 'utf8mb4',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 async function hasAnnouncementColumn(connection, columnName) {
     const [columns] = await connection.execute(

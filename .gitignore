@@ -29,6 +29,20 @@ stneoc*.sql
 *backup*.sql
 /public/uploads/
 
+# ไฟล์สำรองฐานข้อมูล/ไฟล์ข้อมูลจริง — ห้าม commit เด็ดขาด (มีข้อมูลส่วนบุคคลและกุญแจของ MySQL)
+/backups/
+*.backup
+*.backup.sha256
+*.tar.gz
+*.sql.gz
+/prompter/*.pdf
+/prompter/*.csv
+
+# รายงาน/รหัสผ่านชั่วคราวที่สคริปต์นำเข้าผู้ใช้สร้างขึ้น
+tmp_*_report.json
+*credentials*.json
+*temp-passwords*.json
+
 # misc
 .DS_Store
 *.pem

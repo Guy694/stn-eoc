@@ -12,6 +12,11 @@
     "test:coverage": "jest --coverage",
     "backup:eoc": "node --env-file=.env scripts/backup-eoc.mjs",
     "restore:test": "node --env-file=.env scripts/restore-test-eoc.mjs",
+    "db:migrate": "node --env-file=.env scripts/migrate.mjs up",
+    "db:migrate:status": "node --env-file=.env scripts/migrate.mjs status",
+    "db:migrate:baseline": "node --env-file=.env scripts/migrate.mjs baseline",
+    "db:migrate:check": "node scripts/migrate.mjs check",
+    "security:weak-passwords": "node --env-file=.env scripts/revoke-weak-passwords.js",
     "import:area-population": "node --env-file=.env scripts/import-area-population-csv.js",
     "reset-dev-admin": "node scripts/reset-dev-admin.js"
   },

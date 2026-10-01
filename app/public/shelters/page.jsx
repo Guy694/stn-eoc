@@ -1,27 +1,35 @@
 "use client";
 
-import Image from "next/image";
+import { Noto_Sans_Thai_Looped } from "next/font/google";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { LocateFixed, MapPin, Navigation, Phone, Search, Tent } from "lucide-react";
 import ShelterCenterMap from "@/components/ShelterCenterMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
-import { formatEocDisplayName, getEocTypeLabel } from "@/lib/eocDisplay";
-import AppIcon from "@/components/icons/AppIcon";
+import { formatEocDisplayName } from "@/lib/eocDisplay";
 
-const EOC_TYPE_LABELS = {
-  flood: "อุทกภัย",
-  drought: "ภัยแล้ง",
-  tsunami: "สึนามิ",
-  earthquake: "แผ่นดินไหว",
-  disease: "โรคระบาด",
-  accident: "อุบัติเหตุ",
-  "festival-accidents": "อุบัติเหตุช่วงเทศกาล"
-};
+const bodyFont = Noto_Sans_Thai_Looped({ subsets: ["thai", "latin"], weight: ["400", "500", "600"], display: "swap" });
+const NO_DATA_MESSAGE = "ยังไม่มีข้อมูลการเปิดศูนย์พักพิง";
+const HEADING = "font-[family-name:var(--font-kanit)]";
 
 const STATUS_FILTERS = [
   { value: "all", label: "ทั้งหมด" },
-  { value: "available", label: "เปิดให้บริการ" },
+  { value: "available", label: "รับเพิ่มได้" },
   { value: "near_full", label: "ใกล้เต็ม" },
   { value: "full", label: "เต็ม" }
+];
+
+const PREPARATION = [
+  "เอกสารสำคัญ และยาประจำตัว",
+  "ของใช้ส่วนตัวเท่าที่จำเป็น",
+  "แจ้งเจ้าหน้าที่ถ้ามีผู้สูงอายุ เด็ก หรือผู้ป่วยมาด้วย",
+  "ทำตามคำแนะนำของเจ้าหน้าที่ในศูนย์"
+];
+
+const EMERGENCY_NUMBERS = [
+  ["1669", "หน่วยแพทย์ฉุกเฉิน"],
+  ["191", "แจ้งเหตุด่วน"],
+  ["1784", "ปภ. สายด่วน"],
+  ["074-711221", "จังหวัดสตูล"]
 ];
 
 function formatDate(value) {
@@ -61,10 +69,11 @@ function getShelterStatus(shelter) {
   return "available";
 }
 
+// ใช้คำที่ประชาชนเข้าใจทันที พร้อมสีประจำสถานะ (ไม่ใช้สีอย่างเดียว: มีคำกำกับเสมอ)
 function getStatusMeta(status) {
-  if (status === "full") return { label: "เต็ม", className: "border-red-200 bg-red-50 text-red-700" };
-  if (status === "near_full") return { label: "ใกล้เต็ม", className: "border-orange-200 bg-orange-50 text-orange-700" };
-  return { label: "เปิดให้บริการ", className: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+  if (status === "full") return { label: "เต็ม", color: "#c81e1e", soft: "bg-red-50 text-red-800" };
+  if (status === "near_full") return { label: "ใกล้เต็ม", color: "#c77a0a", soft: "bg-amber-50 text-amber-900" };
+  return { label: "รับเพิ่มได้", color: "#2e6b4e", soft: "bg-emerald-50 text-emerald-900" };
 }
 
 function getCoordinate(value) {
@@ -95,48 +104,30 @@ function formatDistance(distanceKm) {
   return `${distanceKm.toLocaleString("th-TH", { maximumFractionDigits: 1 })} กม.`;
 }
 
-function buildContextOptions(activeEocs, sessions) {
-  const active = activeEocs
-    .filter((item) => item.is_active)
+// แสดงเฉพาะเหตุการณ์ (EOC) ที่เปิดอยู่ ณ ปัจจุบัน — ไม่แสดงข้อมูลย้อนหลัง
+function buildContextOptions(activeEocs) {
+  return activeEocs
+    .filter((item) => item.is_active && item.session_id)
     .sort((a, b) => new Date(b.activated_at || 0) - new Date(a.activated_at || 0))
     .map((item) => ({
-      key: `active-${item.eoc_type}-${item.session_id || item.id}`,
-      mode: "active",
-      session_id: item.session_id || null,
+      key: `active-${item.eoc_type}-${item.session_id}`,
+      session_id: item.session_id,
       eoc_type: item.eoc_type,
-      disease_name: item.disease_name,
-      label: `${getEocLabel(item)} ที่เปิดอยู่`,
-      opened_at: item.activated_at,
-      closed_at: null
+      label: getEocLabel(item),
+      opened_at: item.activated_at
     }));
-
-  const activeSessionIds = new Set(active.map((item) => String(item.session_id)).filter(Boolean));
-  const history = sessions
-    .filter((session) => !activeSessionIds.has(String(session.id)))
-    .map((session) => ({
-      key: `history-${session.id}`,
-      mode: "history",
-      session_id: session.id,
-      eoc_type: session.eoc_type,
-      disease_name: session.disease_name,
-      label: `${formatEocDisplayName(session) || getEocTypeLabel(session.eoc_type)} #${session.session_number || session.id}`,
-      opened_at: session.opened_at,
-      closed_at: session.closed_at
-    }));
-
-  return [...active, ...history];
 }
 
 export default function PublicSheltersPage() {
   const [loadingContext, setLoadingContext] = useState(true);
   const [loadingShelters, setLoadingShelters] = useState(false);
   const [activeEocs, setActiveEocs] = useState([]);
-  const [sessions, setSessions] = useState([]);
   const [selectedKey, setSelectedKey] = useState("");
   const [shelters, setShelters] = useState([]);
   const [search, setSearch] = useState("");
   const [district, setDistrict] = useState("all");
   const [status, setStatus] = useState("all");
+  const [view, setView] = useState("list");
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationMessage, setLocationMessage] = useState("");
@@ -144,20 +135,9 @@ export default function PublicSheltersPage() {
   useEffect(() => {
     const loadContext = async () => {
       try {
-        const [statusRes, summaryRes] = await Promise.all([
-          fetch("/stn-eoc/api/eoc/status/"),
-          fetch("/stn-eoc/api/dashboard/summary/")
-        ]);
-
+        const statusRes = await fetch("/stn-eoc/api/eoc/status/");
         const statusJson = statusRes.ok ? await statusRes.json() : { success: false, data: [] };
-        const summaryJson = summaryRes.ok ? await summaryRes.json() : { success: false, data: {} };
-        const statusRows = statusJson.success ? statusJson.data || [] : [];
-        const sessionRows = summaryJson?.success ? summaryJson.data?.eocSessions || [] : [];
-
-        setActiveEocs(statusRows);
-        setSessions(
-          [...sessionRows].sort((a, b) => new Date(b.opened_at || 0) - new Date(a.opened_at || 0))
-        );
+        setActiveEocs(statusJson.success ? statusJson.data || [] : []);
       } catch (error) {
         console.error("Error loading shelter context:", error);
       } finally {
@@ -168,10 +148,7 @@ export default function PublicSheltersPage() {
     loadContext();
   }, []);
 
-  const contextOptions = useMemo(
-    () => buildContextOptions(activeEocs, sessions),
-    [activeEocs, sessions]
-  );
+  const contextOptions = useMemo(() => buildContextOptions(activeEocs), [activeEocs]);
 
   useEffect(() => {
     if (!selectedKey && contextOptions.length > 0) setSelectedKey(contextOptions[0].key);
@@ -182,12 +159,10 @@ export default function PublicSheltersPage() {
     [contextOptions, selectedKey]
   );
 
-  const eocIsOpen = activeEocs.some((item) => Boolean(item.is_active));
+  const eocIsOpen = contextOptions.length > 0;
   const latestActive = activeEocs.find((item) => item.is_active);
-  const scaffoldEocStatus = selectedContext?.mode === "active" ? "open" : selectedContext ? "closed" : eocIsOpen ? "open" : "closed";
-  const scaffoldEocLabel = selectedContext
-    ? `${selectedContext.label}${selectedContext.closed_at ? ` ปิดเมื่อ ${formatDate(selectedContext.closed_at)}` : ""}`
-    : latestActive ? getEocLabel(latestActive) : "ไม่มี EOC ที่เปิดอยู่";
+  const scaffoldEocStatus = eocIsOpen ? "open" : "closed";
+  const scaffoldEocLabel = latestActive ? getEocLabel(latestActive) : "ไม่มีเหตุการณ์ฉุกเฉิน";
 
   const loadShelters = useCallback(async () => {
     if (!selectedContext?.session_id) {
@@ -223,314 +198,355 @@ export default function PublicSheltersPage() {
   );
 
   const sheltersWithDistance = useMemo(
-    () => shelters.map((item) => ({
-      ...item,
-      distance_km: getDistanceKm(userLocation, item)
-    })),
+    () => shelters.map((item) => ({ ...item, distance_km: getDistanceKm(userLocation, item) })),
     [shelters, userLocation]
   );
 
+  // เรียง: ที่ยังรับได้ก่อน → ใกล้คุณก่อน (ถ้ามีตำแหน่ง) → ที่ว่างมากก่อน
   const filteredShelters = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return sheltersWithDistance.filter((item) => {
-      const itemDistrict = item.district_name || item.district || "";
-      const haystack = `${item.sheltername || ""} ${item.address || ""} ${item.tambon || ""} ${itemDistrict}`.toLowerCase();
-      if (query && !haystack.includes(query)) return false;
-      if (district !== "all" && itemDistrict !== district) return false;
-      if (status !== "all" && getShelterStatus(item) !== status) return false;
-      return true;
-    });
-  }, [district, search, sheltersWithDistance, status]);
+    return sheltersWithDistance
+      .filter((item) => {
+        const itemDistrict = item.district_name || item.district || "";
+        const haystack = `${item.sheltername || ""} ${item.address || ""} ${item.tambon || ""} ${itemDistrict}`.toLowerCase();
+        if (query && !haystack.includes(query)) return false;
+        if (district !== "all" && itemDistrict !== district) return false;
+        if (status !== "all" && getShelterStatus(item) !== status) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const fullDiff = Number(getShelterStatus(a) === "full") - Number(getShelterStatus(b) === "full");
+        if (fullDiff !== 0) return fullDiff;
+        if (userLocation) {
+          const distanceDiff = (a.distance_km ?? Infinity) - (b.distance_km ?? Infinity);
+          if (distanceDiff !== 0) return distanceDiff;
+        }
+        return getVacancy(b) - getVacancy(a);
+      });
+  }, [district, search, sheltersWithDistance, status, userLocation]);
 
   const stats = useMemo(() => {
     const totalCapacity = shelters.reduce((sum, item) => sum + getCapacity(item), 0);
     const totalOccupancy = shelters.reduce((sum, item) => sum + getOccupancy(item), 0);
-    const nearFull = shelters.filter((item) => getShelterStatus(item) === "near_full").length;
-    const full = shelters.filter((item) => getShelterStatus(item) === "full").length;
-
+    const nearFullOrFull = shelters.filter((item) => getShelterStatus(item) !== "available").length;
     return {
       total: shelters.length,
-      totalCapacity,
-      totalOccupancy,
       vacancy: Math.max(totalCapacity - totalOccupancy, 0),
-      districts: districts.length,
-      risk: nearFull + full
+      nearFullOrFull
     };
-  }, [districts.length, shelters]);
-
-  const recommendedShelters = useMemo(
-    () => [...sheltersWithDistance]
-      .filter((item) => getShelterStatus(item) !== "full")
-      .sort((a, b) => {
-        if (userLocation) {
-          const distanceA = a.distance_km ?? Number.POSITIVE_INFINITY;
-          const distanceB = b.distance_km ?? Number.POSITIVE_INFINITY;
-          if (distanceA !== distanceB) return distanceA - distanceB;
-        }
-        return getVacancy(b) - getVacancy(a);
-      })
-      .slice(0, 3),
-    [sheltersWithDistance, userLocation]
-  );
+  }, [shelters]);
 
   const requestUserLocation = useCallback(() => {
     if (typeof window === "undefined" || !navigator.geolocation) {
       setLocationStatus("error");
-      setLocationMessage("เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง");
+      setLocationMessage("เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง ลองเลือกอำเภอจากตัวกรองแทน");
       return;
     }
 
     setLocationStatus("loading");
-    setLocationMessage("กำลังตรวจสอบตำแหน่งของคุณ...");
+    setLocationMessage("กำลังหาตำแหน่งของคุณ…");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude
-        });
+        setUserLocation({ lat: position.coords.latitude, lon: position.coords.longitude });
         setLocationStatus("ready");
-        setLocationMessage("จัดอันดับจากศูนย์พักพิงที่ใกล้คุณที่สุด");
+        setLocationMessage("เรียงจากศูนย์ที่อยู่ใกล้คุณที่สุด");
       },
       (error) => {
         setLocationStatus("error");
-        if (error.code === error.PERMISSION_DENIED) {
-          setLocationMessage("ไม่สามารถใช้ตำแหน่งได้ เพราะยังไม่ได้รับอนุญาต");
-        } else {
-          setLocationMessage("ไม่สามารถตรวจสอบตำแหน่งได้ในขณะนี้");
-        }
+        setLocationMessage(
+          error.code === error.PERMISSION_DENIED
+            ? "ยังไม่ได้อนุญาตให้ใช้ตำแหน่ง ลองเลือกอำเภอจากตัวกรองแทนได้"
+            : "หาตำแหน่งไม่ได้ในขณะนี้ ลองเลือกอำเภอจากตัวกรองแทนได้"
+        );
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     );
   }, []);
 
-  const selectedPeriod = selectedContext
-    ? `${formatDate(selectedContext.opened_at)} - ${selectedContext.closed_at ? formatDate(selectedContext.closed_at) : "ปัจจุบัน"}`
-    : "-";
+  // เปิดจากหน้าแรกด้วยปุ่ม "ศูนย์พักพิงใกล้ฉัน" (?near=1) ให้ขอตำแหน่งทันที
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("near") === "1") {
+      requestUserLocation();
+    }
+  }, [requestUserLocation]);
+
+  const hasData = shelters.length > 0;
+
+  const headline = loadingContext
+    ? "กำลังตรวจสอบศูนย์พักพิง…"
+    : !selectedContext
+      ? NO_DATA_MESSAGE
+      : hasData
+        ? `เปิดรับอยู่ ${formatNumber(stats.total)} แห่ง ที่ว่างรวม ${formatNumber(stats.vacancy)} ที่`
+        : loadingShelters ? "กำลังโหลดรายชื่อศูนย์พักพิง…" : NO_DATA_MESSAGE;
 
   return (
     <PublicOpsScaffold
-      title="ศูนย์พักพิง / Shelters"
-      subtitle="ค้นหาศูนย์พักพิงที่ใกล้ที่สุด ตรวจสอบความจุ และบริการที่มี"
+      title="ศูนย์พักพิง"
       activeMenu="shelters"
       eocIsOpen={eocIsOpen}
       eocStatus={scaffoldEocStatus}
       eocLabel={scaffoldEocLabel}
+      showPageHeader={false}
+      mainClassName="p-0!"
     >
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="min-w-0 space-y-3">
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-            {[
-              { label: "จำนวนศูนย์พักพิง", value: stats.total, unit: "แห่ง", tone: "border-violet-200 bg-violet-50 text-violet-700" },
-              { label: "ความจุรวม", value: stats.totalCapacity, unit: "เตียง", tone: "border-blue-200 bg-blue-50 text-blue-700" },
-              { label: "ผู้เข้าพักปัจจุบัน", value: stats.totalOccupancy, unit: "คน", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-              { label: "ที่ว่างคงเหลือ", value: stats.vacancy, unit: "เตียง", tone: "border-orange-200 bg-orange-50 text-orange-700" },
-              { label: "อำเภอที่มีศูนย์พักพิง", value: stats.districts, unit: "อำเภอ", tone: "border-cyan-200 bg-cyan-50 text-cyan-700" },
-              { label: "ใกล้เต็ม/เต็ม", value: stats.risk, unit: "แห่ง", tone: "border-red-200 bg-red-50 text-red-700" }
-            ].map((item) => (
-              <div key={item.label} className={`rounded-xl border p-4 shadow-sm ${item.tone}`}>
-                <p className="text-xs font-bold">{item.label}</p>
-                <p className="mt-1 text-3xl font-black leading-none">{formatNumber(item.value)}</p>
-                <p className="mt-1 text-xs font-semibold">{item.unit}</p>
-              </div>
-            ))}
-          </div>
+      <div className={`${bodyFont.className} bg-[#eef2f1] text-[#15232e]`}>
+        {/* ── หัวหน้า: บอกสถานการณ์ + ปุ่มหลักปุ่มเดียว ── */}
+        <section className="bg-[#0c2f4a] text-white" aria-labelledby="shelter-title">
+          <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:pb-20 lg:pt-10">
+            <p className="flex items-center gap-2 text-sm text-[#9fc9d6]">
+              <Tent className="h-4 w-4" aria-hidden="true" /> ศูนย์พักพิงจังหวัดสตูล
+            </p>
+            <h1 id="shelter-title" className={`${HEADING} mt-2 max-w-3xl text-[1.9rem] font-bold leading-[1.25] sm:text-[2.4rem]`}>
+              {headline}
+            </h1>
 
-          <div className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <div className="grid gap-3 lg:grid-cols-[minmax(230px,1fr)_180px_170px] xl:grid-cols-[minmax(260px,1fr)_170px_160px_190px]">
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-slate-500">ชุดข้อมูล</span>
-                <select
-                  value={selectedKey}
-                  onChange={(event) => setSelectedKey(event.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
-                >
-                  {contextOptions.length === 0 && <option value="">ไม่มีข้อมูล session</option>}
-                  {contextOptions.map((item) => (
-                    <option key={item.key} value={item.key}>
-                      {item.mode === "active" ? "เปิดอยู่: " : "ย้อนหลัง: "}{item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            {hasData && (
+              <p className="mt-3 max-w-2xl text-[#cfe3ea]">
+                {stats.nearFullOrFull > 0
+                  ? `${formatNumber(stats.nearFullOrFull)} แห่งใกล้เต็มหรือเต็มแล้ว ควรโทรสอบถามก่อนเดินทาง`
+                  : "ทุกแห่งยังรับเพิ่มได้ ควรโทรสอบถามก่อนเดินทาง"}
+              </p>
+            )}
 
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-slate-500">อำเภอ</span>
-                <select
-                  value={district}
-                  onChange={(event) => setDistrict(event.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
-                >
-                  <option value="all">ทั้งหมด</option>
-                  {districts.map((name) => <option key={name} value={name}>{name}</option>)}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-slate-500">สถานะ</span>
-                <select
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
-                >
-                  {STATUS_FILTERS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-                </select>
-              </label>
-
-              <label className="block lg:col-span-3 xl:col-span-1">
-                <span className="mb-1 block text-xs font-bold text-slate-500">ค้นหา</span>
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="ชื่อศูนย์ / ตำบล"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
-                />
-              </label>
-            </div>
-
-            <div className="mt-3 flex flex-col gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-black text-slate-800">แนะนำศูนย์พักพิงใกล้คุณ</p>
-                <p className={`mt-0.5 text-xs ${locationStatus === "error" ? "text-red-600" : "text-slate-500"}`}>
-                  {locationMessage || "กดใช้ตำแหน่งเพื่อแสดงระยะห่างและเรียงศูนย์พักพิงที่ใกล้ที่สุด"}
-                </p>
-              </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={requestUserLocation}
                 disabled={locationStatus === "loading"}
-                className="rounded-lg bg-blue-700 px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className={`${HEADING} inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-lg font-semibold text-[#0c2f4a] shadow-lg transition hover:bg-[#e6f4f1] disabled:cursor-wait disabled:opacity-70`}
               >
-                {locationStatus === "loading" ? "กำลังค้นหา..." : userLocation ? "อัปเดตตำแหน่ง" : "ใช้ตำแหน่งของฉัน"}
+                <LocateFixed className="h-5 w-5" aria-hidden="true" />
+                {locationStatus === "loading" ? "กำลังหาตำแหน่ง…" : userLocation ? "อัปเดตตำแหน่งของฉัน" : "หาศูนย์ที่ใกล้ฉัน"}
               </button>
-            </div>
-
-            <div className={`mt-3 rounded-lg p-3 text-sm font-semibold ${eocIsOpen ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>
-              {eocIsOpen
-                ? `แสดงข้อมูลจาก ${selectedContext?.label || "EOC ที่เปิดอยู่"}`
-                : "ขณะนี้ไม่มี EOC ที่เปิดอยู่ สามารถเลือกดูข้อมูลย้อนหลังได้เหมือนหน้าหลัก"}
-              <span className="ml-2 text-xs font-medium text-slate-500">ช่วงข้อมูล: {selectedPeriod}</span>
+              <p className={`text-sm ${locationStatus === "error" ? "text-[#ffd4d4]" : "text-[#9fc9d6]"}`} role="status">
+                {locationMessage || "แตะปุ่มเพื่อเรียงศูนย์จากใกล้ไปไกล (ตำแหน่งไม่ถูกเก็บไว้)"}
+              </p>
             </div>
           </div>
+        </section>
 
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
-            <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h3 className="text-lg font-black text-blue-900">แผนที่ศูนย์พักพิง</h3>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{formatNumber(filteredShelters.length)} แห่ง</span>
-              </div>
-              {selectedContext?.session_id ? (
-                <ShelterCenterMap
-                  key={`shelter-map-${selectedContext.session_id}`}
-                  eocType={selectedContext?.eoc_type || null}
-                  sessionId={selectedContext.session_id}
-                  apiPath="/stn-eoc/api/public/shelter-centers"
-                  includeAll={false}
-                  embedded
-                  heightClass="h-[460px]"
-                  showLayerControls={false}
+        <div className="relative z-10 mx-auto -mt-8 max-w-6xl px-4 pb-10 sm:px-6">
+          {/* ── ตัวกรอง ── */}
+          <section className="rounded-2xl bg-white p-4 shadow-[0_20px_45px_-28px_rgba(12,47,74,.6)]" aria-label="ค้นหาและกรองศูนย์พักพิง">
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_200px]">
+              <label className="relative block">
+                <span className="sr-only">ค้นหาศูนย์พักพิง</span>
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="ค้นหาชื่อศูนย์ หรือตำบล"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-base text-slate-800 outline-none focus:border-[#2a9db0] focus:ring-2 focus:ring-[#2a9db0]/25"
                 />
-              ) : (
-                <div className="flex h-[460px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
-                  ยังไม่มีรอบ EOC สำหรับแสดงศูนย์พักพิง
-                </div>
+              </label>
+              <label className="block">
+                <span className="sr-only">อำเภอ</span>
+                <select
+                  value={district}
+                  onChange={(event) => setDistrict(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base text-slate-800 outline-none focus:border-[#2a9db0] focus:ring-2 focus:ring-[#2a9db0]/25"
+                >
+                  <option value="all">ทุกอำเภอ</option>
+                  {districts.map((name) => <option key={name} value={name}>อ.{name}</option>)}
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="กรองตามสถานะ">
+              {STATUS_FILTERS.map((item) => {
+                const selected = status === item.value;
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setStatus(item.value)}
+                    className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${selected ? "border-[#0c2f4a] bg-[#0c2f4a] text-white" : "border-slate-200 bg-white text-slate-700 hover:border-[#2a9db0]"}`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+
+              {contextOptions.length > 1 && (
+                <label className="ml-auto flex items-center gap-2 text-sm text-slate-600">
+                  <span>เหตุการณ์</span>
+                  <select
+                    value={selectedKey}
+                    onChange={(event) => setSelectedKey(event.target.value)}
+                    className="max-w-[14rem] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-[#2a9db0]"
+                  >
+                    {contextOptions.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                  </select>
+                </label>
               )}
-              <p className="mt-3 text-xs text-slate-500">หมายเหตุ: ความจุและจำนวนผู้พักพิงอาจเปลี่ยนแปลงได้ตลอดเวลา กรุณาตรวจสอบล่าสุดก่อนเดินทาง</p>
-            </section>
+            </div>
 
-            <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-lg font-black text-blue-900">รายการศูนย์พักพิง ({formatNumber(filteredShelters.length)} แห่ง)</h3>
-                {loadingShelters && <span className="text-xs font-bold text-slate-500">กำลังโหลด...</span>}
-              </div>
+          </section>
 
-              <div className="max-h-[520px] space-y-2 overflow-auto pr-1">
-                {filteredShelters.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">ไม่พบศูนย์พักพิงในเงื่อนไขนี้</div>
-                ) : filteredShelters.map((shelter) => {
-                  const meta = getStatusMeta(getShelterStatus(shelter));
+          {/* มือถือ: สลับ รายการ / แผนที่ */}
+          <div className="mt-5 grid grid-cols-2 rounded-xl bg-white p-1 shadow-sm lg:hidden" role="tablist" aria-label="มุมมอง">
+            {[["list", "รายการ"], ["map", "แผนที่"]].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={view === value}
+                onClick={() => setView(value)}
+                className={`${HEADING} rounded-lg py-2 text-base font-semibold transition ${view === value ? "bg-[#0c2f4a] text-white" : "text-slate-600"}`}
+              >
+                {label}{value === "list" ? ` (${formatNumber(filteredShelters.length)})` : ""}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            {/* รายการ */}
+            <section className={view === "map" ? "hidden lg:block" : ""} aria-label="รายการศูนย์พักพิง">
+              <h2 className={`${HEADING} mb-3 hidden text-xl font-bold text-[#0c2f4a] lg:block`}>
+                รายการศูนย์พักพิง <span className="text-base font-medium text-slate-500">({formatNumber(filteredShelters.length)} แห่ง)</span>
+              </h2>
+
+              <div className="space-y-3 lg:max-h-[640px] lg:overflow-y-auto lg:pr-1">
+                {loadingShelters && filteredShelters.length === 0 && (
+                  <div className="h-28 animate-pulse rounded-2xl bg-white" aria-hidden="true" />
+                )}
+                {!loadingShelters && filteredShelters.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
+                    {hasData ? "ไม่พบศูนย์พักพิงตามที่เลือก ลองล้างตัวกรองหรือเปลี่ยนอำเภอ" : `${NO_DATA_MESSAGE} • หากต้องการความช่วยเหลือเร่งด่วนโทร 1669`}
+                  </div>
+                )}
+
+                {filteredShelters.map((shelter, index) => {
+                  const state = getShelterStatus(shelter);
+                  const meta = getStatusMeta(state);
+                  const capacity = getCapacity(shelter);
+                  const occupancy = getOccupancy(shelter);
+                  const ratio = capacity ? Math.min(occupancy / capacity, 1) : 0;
+                  const lat = getCoordinate(shelter.lat);
+                  const lon = getCoordinate(shelter.lon);
+                  const nearest = userLocation && index === 0 && state !== "full" && shelter.distance_km !== null;
                   return (
-                    <article key={shelter.id} className="grid gap-3 rounded-xl border border-slate-100 p-3 text-sm shadow-sm sm:grid-cols-[minmax(0,1fr)_220px]">
-                      <div className="min-w-0">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50">
-                            <Image src="/stn-eoc/img/shelter.png" alt="" width={28} height={28} className="h-7 w-7 object-contain" />
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="truncate font-black text-slate-800">{shelter.sheltername}</h4>
-                            <p className="mt-0.5 text-xs text-slate-500">ต.{shelter.tambon || "-"} อ.{shelter.district_name || shelter.district || "-"}</p>
-                            {shelter.distance_km !== null && shelter.distance_km !== undefined && (
-                              <p className="mt-1 text-xs font-black text-violet-700">ห่างจากคุณประมาณ {formatDistance(shelter.distance_km)}</p>
-                            )}
-                            {shelter.contact_phone && (
-                              <a href={`tel:${shelter.contact_phone}`} className="mt-1 inline-flex text-xs font-bold text-blue-700 hover:underline">
-                                {shelter.contact_phone}
-                              </a>
-                            )}
-                          </div>
+                    <article
+                      key={shelter.id}
+                      className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70"
+                      style={{ borderLeft: `6px solid ${meta.color}` }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          {nearest && <p className="mb-1 text-xs font-semibold text-[#11466e]">ใกล้คุณที่สุด</p>}
+                          <h3 className={`${HEADING} text-lg font-semibold leading-snug text-[#0c2f4a]`}>{shelter.sheltername}</h3>
+                          <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-600">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            ต.{shelter.tambon || "-"} อ.{shelter.district_name || shelter.district || "-"}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <span className={`${HEADING} inline-block rounded-full px-3 py-1 text-sm font-semibold ${meta.soft}`}>{meta.label}</span>
+                          {shelter.distance_km !== null && shelter.distance_km !== undefined && (
+                            <p className={`${HEADING} mt-1 text-sm font-semibold text-[#11466e]`}>{formatDistance(shelter.distance_km)}</p>
+                          )}
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-2 text-center sm:grid-cols-[48px_48px_48px_minmax(74px,1fr)]">
-                        <div><p className="font-black">{formatNumber(getCapacity(shelter))}</p><p className="text-[11px] text-slate-500">จุ</p></div>
-                        <div><p className="font-black">{formatNumber(getOccupancy(shelter))}</p><p className="text-[11px] text-slate-500">พัก</p></div>
-                        <div><p className="font-black text-emerald-700">{formatNumber(getVacancy(shelter))}</p><p className="text-[11px] text-slate-500">ว่าง</p></div>
-                        <span className={`rounded-full border px-2 py-1 text-xs font-bold ${meta.className}`}>{meta.label}</span>
-                      </div>
+
+                      {capacity > 0 && (
+                        <div className="mt-3">
+                          <div className="flex items-baseline justify-between text-sm">
+                            <span className="text-slate-600">ว่าง <strong className={`${HEADING} text-base font-semibold`} style={{ color: meta.color }}>{formatNumber(getVacancy(shelter))}</strong> จาก {formatNumber(capacity)} ที่</span>
+                            <span className="text-xs text-slate-500">พักอยู่ {formatNumber(occupancy)} คน</span>
+                          </div>
+                          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100" role="img" aria-label={`เต็มแล้ว ${Math.round(ratio * 100)} เปอร์เซ็นต์`}>
+                            <div className="h-full rounded-full" style={{ width: `${Math.round(ratio * 100)}%`, backgroundColor: meta.color }} />
+                          </div>
+                        </div>
+                      )}
+
+                      {(shelter.contact_phone || (lat !== null && lon !== null)) && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {lat !== null && lon !== null && (
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={`${HEADING} inline-flex items-center gap-1.5 rounded-lg bg-[#11466e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c2f4a]`}
+                            >
+                              <Navigation className="h-4 w-4" aria-hidden="true" /> นำทาง
+                            </a>
+                          )}
+                          {shelter.contact_phone && (
+                            <a
+                              href={`tel:${shelter.contact_phone}`}
+                              className={`${HEADING} inline-flex items-center gap-1.5 rounded-lg border border-[#11466e] px-4 py-2 text-sm font-semibold text-[#11466e] hover:bg-[#eef2f1]`}
+                            >
+                              <Phone className="h-4 w-4" aria-hidden="true" /> โทร {shelter.contact_phone}
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </article>
                   );
                 })}
               </div>
+              <p className="mt-3 text-xs text-slate-500">ความจุและจำนวนผู้พักอาจเปลี่ยนแปลงได้ตลอดเวลา กรุณาโทรสอบถามก่อนเดินทาง</p>
+            </section>
+
+            {/* แผนที่: จอใหญ่ลอยตามการเลื่อน */}
+            <section className={`${view === "list" ? "hidden lg:block" : ""} lg:sticky lg:top-4 lg:self-start`} aria-label="แผนที่ศูนย์พักพิง">
+              <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-200/70">
+                {selectedContext?.session_id && hasData ? (
+                  <ShelterCenterMap
+                    key={`shelter-map-${selectedContext.session_id}-${view}`}
+                    eocType={selectedContext?.eoc_type || null}
+                    sessionId={selectedContext.session_id}
+                    apiPath="/stn-eoc/api/public/shelter-centers"
+                    includeAll={false}
+                    embedded
+                    heightClass="h-[440px] lg:h-[600px]"
+                    showLayerControls={false}
+                  />
+                ) : (
+                  <div className="flex h-[320px] items-center justify-center rounded-xl bg-slate-50 p-6 text-center text-slate-500">
+                    ยังไม่มีข้อมูลการเปิดศูนย์พักพิง
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* ── ข้อมูลประกอบ ── */}
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70">
+              <h2 className={`${HEADING} text-xl font-bold text-[#0c2f4a]`}>เตรียมอะไรไปบ้าง</h2>
+              <ul className="mt-3 space-y-2">
+                {PREPARATION.map((item) => (
+                  <li key={item} className="flex gap-2.5 text-slate-700">
+                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#2e6b4e]" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70">
+              <h2 className={`${HEADING} text-xl font-bold text-[#0c2f4a]`}>เบอร์โทรฉุกเฉิน</h2>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {EMERGENCY_NUMBERS.map(([number, label], index) => (
+                  <a
+                    key={number}
+                    href={`tel:${number}`}
+                    className={`rounded-xl px-3 py-2.5 hover:opacity-90 ${index === 0 ? "bg-[#c81e1e] text-white" : "bg-[#eef2f1] text-[#0c2f4a]"}`}
+                  >
+                    <span className={`${HEADING} block text-lg font-semibold leading-tight`}>{number}</span>
+                    <span className="block text-sm">{label}</span>
+                  </a>
+                ))}
+              </div>
             </section>
           </div>
         </div>
-
-        <aside className="space-y-3">
-          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-lg font-black text-blue-900">ศูนย์พักพิงแนะนำ</h3>
-            <p className="mb-3 text-xs text-slate-500">
-              {userLocation ? "เรียงจากระยะใกล้คุณที่สุด" : "กดใช้ตำแหน่งของฉันเพื่อแนะนำจากระยะใกล้ที่สุด"}
-            </p>
-            <div className="space-y-2">
-              {recommendedShelters.length === 0 ? (
-                <p className="text-sm text-slate-500">ยังไม่มีศูนย์ที่แนะนำในชุดข้อมูลนี้</p>
-              ) : recommendedShelters.map((item) => (
-                <div key={item.id} className="rounded-lg border border-slate-100 p-3">
-                  <p className="truncate text-sm font-black text-slate-800">{item.sheltername}</p>
-                  <p className="mt-1 text-xs text-slate-500">อ.{item.district_name || item.district || "-"} เหลือ {formatNumber(getVacancy(item))} เตียง</p>
-                  {item.distance_km !== null && item.distance_km !== undefined && (
-                    <p className="mt-1 text-xs font-black text-violet-700">ระยะทางประมาณ {formatDistance(item.distance_km)}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-lg font-black text-blue-900">การเตรียมตัวเข้าสู่ศูนย์พักพิง</h3>
-            {["เตรียมเอกสารสำคัญและยาประจำตัว", "นำของใช้ส่วนตัวเท่าที่จำเป็น", "แจ้งผู้ดูแลหากมีผู้สูงอายุ เด็ก หรือผู้ป่วย", "ปฏิบัติตามคำแนะนำของเจ้าหน้าที่"].map((item) => (
-              <div key={item} className="mb-2 flex gap-2 text-sm text-slate-700 last:mb-0">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-emerald-50 text-emerald-700"><AppIcon icon="check" className="h-3.5 w-3.5" /></span>
-                <span>{item}</span>
-              </div>
-            ))}
-          </section>
-
-          <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-lg font-black text-blue-900">หมายเลขฉุกเฉิน</h3>
-            {[
-              ["191", "เหตุฉุกเฉิน / แจ้งเหตุ", "text-red-700"],
-              ["1784", "ปภ. สายด่วน", "text-blue-700"],
-              ["1669", "หน่วยแพทย์ฉุกเฉิน", "text-emerald-700"],
-              ["074-711221", "จังหวัดสตูล", "text-slate-700"]
-            ].map(([number, label, tone]) => (
-              <a key={number} href={`tel:${number}`} className="mb-2 flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-sm font-bold last:mb-0">
-                <span>{label}</span>
-                <span className={tone}>{number}</span>
-              </a>
-            ))}
-          </section>
-        </aside>
-      </section>
+      </div>
     </PublicOpsScaffold>
   );
 }

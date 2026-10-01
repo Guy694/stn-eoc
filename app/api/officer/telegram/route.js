@@ -3,31 +3,6 @@ import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { buildTelegramBotLink } from '@/lib/telegram';
 
-async function ensureTelegramColumns(connection) {
-    const [columns] = await connection.execute(
-        `SELECT COLUMN_NAME
-         FROM INFORMATION_SCHEMA.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = 'officer'
-           AND COLUMN_NAME IN ('telegram_chat_id', 'telegram_notify_enabled')`
-    );
-    const names = new Set(columns.map((column) => column.COLUMN_NAME));
-
-    if (!names.has('telegram_chat_id')) {
-        await connection.execute(
-            `ALTER TABLE officer
-             ADD COLUMN telegram_chat_id VARCHAR(64) NULL COMMENT 'Telegram chat id for citizen help request notifications'`
-        );
-    }
-
-    if (!names.has('telegram_notify_enabled')) {
-        await connection.execute(
-            `ALTER TABLE officer
-             ADD COLUMN telegram_notify_enabled TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Enable Telegram help request notifications'`
-        );
-    }
-}
-
 function normalizeChatId(value) {
     return String(value || '').trim();
 }
@@ -40,7 +15,6 @@ export async function GET(request) {
 
         const pool = await getConnection();
         connection = await pool.getConnection();
-        await ensureTelegramColumns(connection);
 
         const [rows] = await connection.execute(
             `SELECT telegram_chat_id, telegram_notify_enabled
@@ -85,7 +59,6 @@ export async function PUT(request) {
 
         const pool = await getConnection();
         connection = await pool.getConnection();
-        await ensureTelegramColumns(connection);
 
         await connection.execute(
             `UPDATE officer

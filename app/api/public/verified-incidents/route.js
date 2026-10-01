@@ -1,17 +1,10 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
 import { publicInternalError } from '@/lib/apiResponse';
+import { getPool } from "@/lib/db";
+import { getAuthSession } from "@/lib/auth";
+import { coarsenLocation } from "@/lib/privacy";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    charset: 'utf8mb4',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 async function hasSessionColumn(connection) {
     const [columns] = await connection.execute(
@@ -79,12 +72,18 @@ export async function GET(request) {
             FROM public_incident_reports
             WHERE ${whereClause}
             ORDER BY occurred_at DESC
+            LIMIT 1000
         `, params);
+
+        // ประชาชนทั่วไปเห็นพิกัดแบบประมาณ (~100 ม.) เพื่อไม่ระบุบ้านผู้ขอความช่วยเหลือ
+        // เจ้าหน้าที่ที่เข้าสู่ระบบยังเห็นพิกัดจริงเพื่อใช้ปฏิบัติงาน
+        const viewer = await getAuthSession(request).catch(() => ({ success: false }));
+        const data = viewer.success ? incidents : incidents.map((incident) => coarsenLocation(incident));
 
         return NextResponse.json({
             success: true,
-            data: incidents,
-            count: incidents.length
+            data,
+            count: data.length
         });
 
     } catch (error) {

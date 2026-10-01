@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
+import { getPool } from "@/lib/db";
+import { getAuthSession } from "@/lib/auth";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    charset: 'utf8mb4',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 async function hasDiseaseSubtypeColumns(connection) {
     const [columns] = await connection.execute(
@@ -362,8 +354,10 @@ export async function GET(request) {
         } catch {
         }
 
-        // 7. ดึงกิจกรรมล่าสุด 10 รายการ
-        try {
+        // 7. ดึงกิจกรรมล่าสุด 10 รายการ — เฉพาะเจ้าหน้าที่ที่เข้าสู่ระบบแล้ว
+        //    (มีชื่อเจ้าหน้าที่และรายละเอียดการทำงาน ไม่ควรเปิดให้หน้าสาธารณะเห็น)
+        const viewer = await getAuthSession(request).catch(() => ({ success: false }));
+        if (viewer.success) try {
             const [activities] = await connection.execute(`
                 SELECT 
                     al.id,

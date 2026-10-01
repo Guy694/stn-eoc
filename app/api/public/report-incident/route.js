@@ -4,6 +4,8 @@ import { writeFile, mkdir } from 'fs/promises';
 import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
 import { publicInternalError } from '@/lib/apiResponse';
 import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage, sendTelegramPhoto } from '@/lib/telegram';
+import { enforceIpRateLimit } from "@/lib/rateLimit";
+import { HELP_CLOSED_MESSAGE, hasOpenEoc } from '@/lib/eocOpen';
 
 const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const HELP_CATEGORY_LABELS = {
@@ -93,6 +95,10 @@ async function notifyTelegramOfficers(pool, report) {
 }
 
 export async function POST(request) {
+    // กันการส่งข้อมูลขยะ/สแปมจาก IP เดียวกัน
+    const rateLimited = await enforceIpRateLimit(request, 'publicReport');
+    if (rateLimited) return rateLimited;
+
     try {
         const formData = await request.formData();
 
@@ -131,6 +137,15 @@ export async function POST(request) {
                 success: false,
                 message: 'ประเภทรายงานไม่ถูกต้อง'
             }, { status: 400 });
+        }
+
+        // รับคำขอความช่วยเหลือเฉพาะตอนที่มี EOC เปิดอยู่ (ตรวจที่เซิร์ฟเวอร์ ไม่พึ่งแค่ปุ่มบนหน้าเว็บ)
+        if (reportType === 'help_request' && !(await hasOpenEoc())) {
+            return NextResponse.json({
+                success: false,
+                code: 'EOC_NOT_OPEN',
+                message: HELP_CLOSED_MESSAGE
+            }, { status: 403 });
         }
 
         if (reportType === 'help_request' && (!helpCategory || !helpReason)) {

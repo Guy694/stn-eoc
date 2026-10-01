@@ -302,7 +302,7 @@ async function main() {
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '123456',
+    password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME || 'stneoc',
     port: Number(process.env.DB_PORT || 3306),
     charset: 'utf8mb4',

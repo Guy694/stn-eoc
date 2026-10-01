@@ -54,60 +54,6 @@ function buildImpactValues(body) {
     };
 }
 
-async function columnExists(pool, columnName) {
-    const [rows] = await pool.query(
-        `SELECT COLUMN_NAME
-         FROM INFORMATION_SCHEMA.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = 'affected_persons'
-           AND COLUMN_NAME = ?`,
-        [columnName]
-    );
-    return rows.length > 0;
-}
-
-async function indexExists(pool, indexName) {
-    const [rows] = await pool.query(
-        `SELECT INDEX_NAME
-         FROM INFORMATION_SCHEMA.STATISTICS
-         WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = 'affected_persons'
-           AND INDEX_NAME = ?`,
-        [indexName]
-    );
-    return rows.length > 0;
-}
-
-async function ensureAffectedPersonsImpactSchema(pool) {
-    const columns = [
-        ['citizen_property', 'INT NOT NULL DEFAULT 0 AFTER tambon'],
-        ['citizen_injured', 'INT NOT NULL DEFAULT 0 AFTER citizen_property'],
-        ['citizen_deaths', 'INT NOT NULL DEFAULT 0 AFTER citizen_injured'],
-        ['citizen_missing', 'INT NOT NULL DEFAULT 0 AFTER citizen_deaths'],
-        ['volunteer_property', 'INT NOT NULL DEFAULT 0 AFTER citizen_missing'],
-        ['volunteer_injured', 'INT NOT NULL DEFAULT 0 AFTER volunteer_property'],
-        ['volunteer_deaths', 'INT NOT NULL DEFAULT 0 AFTER volunteer_injured'],
-        ['volunteer_missing', 'INT NOT NULL DEFAULT 0 AFTER volunteer_deaths'],
-        ['staff_property', 'INT NOT NULL DEFAULT 0 AFTER volunteer_missing'],
-        ['staff_injured', 'INT NOT NULL DEFAULT 0 AFTER staff_property'],
-        ['staff_deaths', 'INT NOT NULL DEFAULT 0 AFTER staff_injured'],
-        ['staff_missing', 'INT NOT NULL DEFAULT 0 AFTER staff_deaths'],
-        ['medicine_support', 'INT NOT NULL DEFAULT 0 AFTER affected'],
-        ['evacuated', 'INT NOT NULL DEFAULT 0 AFTER medicine_support'],
-        ['not_evacuated', 'INT NOT NULL DEFAULT 0 AFTER evacuated'],
-    ];
-
-    for (const [name, definition] of columns) {
-        if (!(await columnExists(pool, name))) {
-            await pool.query(`ALTER TABLE affected_persons ADD COLUMN ${name} ${definition}`);
-        }
-    }
-
-    if (!(await indexExists(pool, 'idx_affected_persons_assistance'))) {
-        await pool.query('ALTER TABLE affected_persons ADD INDEX idx_affected_persons_assistance (medicine_support, evacuated, not_evacuated)');
-    }
-}
-
 // GET - ดึงรายงานผู้ได้รับผลกระทบ
 export async function GET(request) {
     try {
@@ -115,7 +61,6 @@ export async function GET(request) {
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
-        await ensureAffectedPersonsImpactSchema(pool);
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date'); // YYYY-MM-DD
         const sessionId = searchParams.get('session_id');
@@ -346,7 +291,6 @@ export async function POST(request) {
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
-        await ensureAffectedPersonsImpactSchema(pool);
         const body = await request.json();
         const {
             session_id,
@@ -450,7 +394,6 @@ export async function PUT(request) {
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
-        await ensureAffectedPersonsImpactSchema(pool);
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 

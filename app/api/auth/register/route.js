@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
+import { getPool } from "@/lib/db";
+import { validatePassword } from "@/lib/passwordPolicy";
+import { enforceIpRateLimit } from "@/lib/rateLimit";
+import { getClientIp } from "@/lib/clientIp";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 const VALID_USER_TYPES = new Set(['citizen', 'officer']);
 const VALID_ROLES = new Set(['staff', 'MCATT', 'SAT', 'SeRHT', 'commander']);
@@ -27,12 +22,6 @@ function normalizeText(value) {
     return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
-function getClientIp(request) {
-    return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || request.headers.get('x-real-ip')
-        || 'unknown';
-}
-
 function isValidPersonName(value) {
     const text = normalizeText(value);
     return text.length >= 2
@@ -44,45 +33,6 @@ function isValidUsername(value) {
     return /^[a-zA-Z0-9._-]{4,50}$/.test(String(value || ''));
 }
 
-function isStrongEnoughPassword(value) {
-    const password = String(value || '');
-    return password.length >= 8
-        && /[A-Za-z]/.test(password)
-        && /[0-9]/.test(password);
-}
-
-async function ensureRegistrationSchema(connection) {
-    await connection.execute(`
-        CREATE TABLE IF NOT EXISTS registration_requests (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_type ENUM('citizen', 'officer') NOT NULL,
-            officer_id INT NULL,
-            pid_hash VARCHAR(64) NULL,
-            title VARCHAR(50) NULL,
-            given_name VARCHAR(100) NOT NULL,
-            family_name VARCHAR(100) NOT NULL,
-            normalized_given_name VARCHAR(120) NOT NULL,
-            normalized_family_name VARCHAR(120) NOT NULL,
-            agency VARCHAR(255) NOT NULL,
-            username VARCHAR(50) NULL,
-            email VARCHAR(100) NULL,
-            phone VARCHAR(20) NULL,
-            status ENUM('pending', 'verified', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
-            request_ip VARCHAR(45) NULL,
-            user_agent TEXT NULL,
-            verified_at TIMESTAMP NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_registration_requests_lookup (user_type, normalized_given_name, normalized_family_name, status),
-            INDEX idx_registration_requests_ip (request_ip, created_at),
-            INDEX idx_registration_requests_pid_hash (pid_hash),
-            UNIQUE KEY unique_registration_username (username),
-            CONSTRAINT fk_registration_requests_officer
-                FOREIGN KEY (officer_id) REFERENCES officer(id)
-                ON DELETE SET NULL
-        )
-    `);
-}
 
 async function getAgencyOptions(connection) {
     const [rows] = await connection.execute(`
@@ -129,7 +79,6 @@ export async function GET() {
 
     try {
         connection = await pool.getConnection();
-        await ensureRegistrationSchema(connection);
         const agencies = await getAgencyOptions(connection);
 
         return NextResponse.json({
@@ -148,6 +97,10 @@ export async function GET() {
 }
 
 export async function POST(request) {
+    // กันการส่งข้อมูลขยะ/สแปมจาก IP เดียวกัน
+    const rateLimited = await enforceIpRateLimit(request, 'register');
+    if (rateLimited) return rateLimited;
+
     let connection;
 
     try {
@@ -190,13 +143,13 @@ export async function POST(request) {
                 return buildValidationError('username ต้องยาว 4-50 ตัว และใช้ได้เฉพาะ a-z, 0-9, จุด, ขีดกลาง, ขีดล่าง');
             }
 
-            if (!isStrongEnoughPassword(password)) {
-                return buildValidationError('password ต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรกับตัวเลข');
+            const passwordError = validatePassword(password, { username });
+            if (passwordError) {
+                return buildValidationError(passwordError);
             }
         }
 
         connection = await pool.getConnection();
-        await ensureRegistrationSchema(connection);
 
         const rateLimit = await assertRateLimit(connection, ipAddress);
         if (!rateLimit.allowed) {

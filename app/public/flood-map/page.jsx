@@ -1,7 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { PublicDisasterMapContent } from "../disaster-map/page";
-
+// รวมเป็นแผนที่เดียว: /public/disaster-map (เลือกประเภทภัยได้ในหน้า)
 export default function PublicFloodMapPage() {
-  return <PublicDisasterMapContent initialDisasterType="flood" lockDisasterType />;
+  redirect("/public/disaster-map?type=flood");
 }

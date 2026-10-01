@@ -11,6 +11,7 @@ const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLaye
 const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
+const ZoomControl = dynamic(() => import('react-leaflet').then(mod => mod.ZoomControl), { ssr: false });
 
 const renderMapIcon = (icon, className = "h-5 w-5 text-white") => renderToStaticMarkup(<AppIcon icon={icon} className={className} strokeWidth={2.5} />);
 
@@ -30,7 +31,11 @@ export default function PublicIncidentMap({
     baseMap = 'street',
     onBaseMapChange,
     onDataChange,
-    includeAllShelters = false
+    includeAllShelters = false,
+    // ชั้นข้อมูล tile เพิ่มเติมที่ซ้อนบนแผนที่ (เช่น เรดาร์ฝน) [{ key, url, attribution, opacity, maxNativeZoom, zIndex }]
+    extraTileLayers = [],
+    // ตำแหน่งปุ่มซูม: ค่าเริ่มต้นของ Leaflet (topleft) หรือกำหนดเอง เช่น 'bottomright'
+    zoomControlPosition = 'topleft'
 }) {
     const [incidents, setIncidents] = useState([]);
     const [floodAreas, setFloodAreas] = useState([]);
@@ -793,8 +798,19 @@ export default function PublicIncidentMap({
 
                 {/* Map */}
                 <div className={`${isFullscreen ? 'h-screen' : heightClass || 'h-[460px] md:h-[560px]'} overflow-visible`}>
-                    <MapContainer center={[6.6238, 100.0673]} zoom={10} style={{ height: '100%', width: '100%' }}>
+                    <MapContainer center={[6.6238, 100.0673]} zoom={10} zoomControl={zoomControlPosition === 'topleft'} style={{ height: '100%', width: '100%' }}>
+                        {zoomControlPosition !== 'topleft' && <ZoomControl position={zoomControlPosition} />}
                         <TileLayer attribution={selectedBaseLayer.attribution} url={selectedBaseLayer.url} />
+                        {extraTileLayers.map((layer) => (
+                            <TileLayer
+                                key={`${layer.key}-${layer.url}`}
+                                attribution={layer.attribution}
+                                url={layer.url}
+                                opacity={layer.opacity ?? 0.7}
+                                maxNativeZoom={layer.maxNativeZoom}
+                                zIndex={layer.zIndex ?? 300}
+                            />
+                        ))}
                         {showHillshadeLayer && hillshadeLayer && (
                             <TileLayer
                                 attribution={hillshadeLayer.attribution}

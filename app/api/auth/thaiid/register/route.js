@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import { REGISTRATION_SESSION_COOKIE, setRegistrationSessionCookie, unsealRegistrationSession } from "@/lib/registrationSession";
 import { notifySecurityEvent } from "@/lib/telegram";
+import { getPool } from "@/lib/db";
+import { getClientIp } from "@/lib/clientIp";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 export async function POST(request) {
     try {
@@ -30,7 +23,7 @@ export async function POST(request) {
             userData = unsealRegistrationSession(userSession);
         } catch {
             void notifySecurityEvent('tampered_registration_session', {
-                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                ip: getClientIp(request),
                 path: '/api/auth/thaiid/register'
             });
             return NextResponse.json({ success: false, message: 'Session ไม่ถูกต้อง กรุณายืนยันตัวตนใหม่' }, { status: 401 });

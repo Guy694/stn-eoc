@@ -5,30 +5,6 @@ import { publicInternalError } from "@/lib/apiResponse";
 
 const VALID_ROLES = new Set(["incident_commander", "deputy_incident_commander"]);
 
-async function ensureCommandersTable() {
-    await query(`
-        CREATE TABLE IF NOT EXISTS eoc_session_commanders (
-            id INT NOT NULL AUTO_INCREMENT,
-            eoc_session_id BIGINT NOT NULL,
-            officer_id INT NOT NULL,
-            command_role ENUM('incident_commander', 'deputy_incident_commander') NOT NULL DEFAULT 'deputy_incident_commander',
-            notes TEXT NULL,
-            sort_order INT NOT NULL DEFAULT 0,
-            is_active TINYINT(1) NOT NULL DEFAULT 1,
-            assigned_by INT NULL,
-            assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_by INT NULL,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            removed_by INT NULL,
-            removed_at DATETIME NULL,
-            PRIMARY KEY (id),
-            KEY idx_eoc_session_commanders_session (eoc_session_id),
-            KEY idx_eoc_session_commanders_officer (officer_id),
-            KEY idx_eoc_session_commanders_role (command_role, is_active)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `, []);
-}
-
 async function getSession(sessionId) {
     const rows = await query(`
         SELECT id, eoc_type, session_number, status, opened_at, closed_at
@@ -162,7 +138,6 @@ export async function GET(request, { params }) {
         if (!auth.success) return auth.response;
 
         const { sessionId } = await params;
-        await ensureCommandersTable();
 
         const session = await getSession(sessionId);
         if (!session) {
@@ -198,7 +173,6 @@ export async function POST(request, { params }) {
             return NextResponse.json({ success: false, message: validation.error }, { status: 400 });
         }
 
-        await ensureCommandersTable();
         const session = await getSession(sessionId);
         if (!session) {
             return NextResponse.json({ success: false, message: "ไม่พบ EOC Session" }, { status: 404 });
@@ -243,7 +217,6 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ success: false, message: validation.error }, { status: 400 });
         }
 
-        await ensureCommandersTable();
         const { id, officerId, commandRole, sortOrder, notes } = validation.value;
         const officerAllowed = await assertOfficerAllowed(officerId);
         if (!officerAllowed) {
@@ -296,7 +269,6 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ success: false, message: "กรุณาระบุรายการที่ต้องการลบ" }, { status: 400 });
         }
 
-        await ensureCommandersTable();
         const [result] = await conn.execute(`
             UPDATE eoc_session_commanders
             SET is_active = 0,

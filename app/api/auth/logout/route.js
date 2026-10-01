@@ -1,91 +1,47 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import { publicInternalError } from "@/lib/apiResponse";
 import { clearCitizenSessionCookie } from "@/lib/citizenAuth";
 import { clearRegistrationSessionCookie } from "@/lib/registrationSession";
+import { clearSessionCookie, getSessionToken, hashSessionToken } from "@/lib/auth";
+import { getClientIp, getUserAgent } from "@/lib/clientIp";
+import { query } from "@/lib/db";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+function loggedOutResponse() {
+    const response = NextResponse.json({
+        success: true,
+        message: 'ออกจากระบบสำเร็จ'
+    });
+    clearCitizenSessionCookie(response);
+    clearRegistrationSessionCookie(response);
+    clearSessionCookie(response);
+    return response;
+}
 
 export async function POST(request) {
     try {
-        let body = {};
-        try {
-            body = await request.json();
-        } catch {
-            body = {};
-        }
-
-        const sessionToken = body.sessionToken || request.cookies.get('session_token')?.value;
-        const ip_address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-            || request.headers.get('x-real-ip')
-            || 'unknown';
-        const user_agent = request.headers.get('user-agent') || 'unknown';
-
+        // รับ token จาก cookie/Authorization เท่านั้น (ไม่รับจาก body เพื่อกันการสั่งปิด session ของผู้อื่นแบบ CSRF)
+        const sessionToken = getSessionToken(request);
         if (!sessionToken) {
-            const response = NextResponse.json({
-                success: true,
-                message: 'ออกจากระบบสำเร็จ'
-            });
-            clearCitizenSessionCookie(response);
-            clearRegistrationSessionCookie(response);
-            return response;
+            return loggedOutResponse();
         }
 
-        const connection = await pool.getConnection();
+        const tokenHash = hashSessionToken(sessionToken);
+        const sessions = await query(
+            'SELECT user_id, username FROM user_sessions WHERE session_token = ?',
+            [tokenHash]
+        );
 
-        try {
-            // ดึงข้อมูล session ก่อนลบ
-            const [sessions] = await connection.execute(
-                'SELECT user_id, username FROM user_sessions WHERE session_token = ?',
-                [sessionToken]
+        await query('DELETE FROM user_sessions WHERE session_token = ?', [tokenHash]);
+
+        if (sessions.length > 0) {
+            await query(
+                `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                ['logout', sessions[0].user_id, sessions[0].username, getClientIp(request), getUserAgent(request), 'User logged out', 'low']
             );
-
-            // ลบ session
-            await connection.execute(
-                'DELETE FROM user_sessions WHERE session_token = ?',
-                [sessionToken]
-            );
-
-            // บันทึก security log
-            if (sessions.length > 0) {
-                await connection.execute(
-                    `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                    ['logout', sessions[0].user_id, sessions[0].username, ip_address, user_agent, 'User logged out', 'low']
-                );
-            }
-
-            const response = NextResponse.json({
-                success: true,
-                message: 'ออกจากระบบสำเร็จ'
-            });
-
-            // ลบ cookie สำหรับ ThaiD session และ session_token
-            clearRegistrationSessionCookie(response);
-
-            response.cookies.set('session_token', '', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                maxAge: 0,
-                path: '/'
-            });
-            clearCitizenSessionCookie(response);
-
-            return response;
-
-        } finally {
-            connection.release();
         }
 
+        return loggedOutResponse();
     } catch (error) {
         console.error('Logout error:', error);
         return publicInternalError('เกิดข้อผิดพลาดในการออกจากระบบ');

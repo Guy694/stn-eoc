@@ -24,7 +24,7 @@ export default function PublicAnnouncementsPage() {
       activeMenu="announce"
       eocIsOpen={activeEocs.length > 0}
       eocStatus={activeEocs.length > 0 ? 'open' : 'closed'}
-      eocLabel={latestEoc ? formatEocDisplayName(latestEoc) : 'ไม่มี EOC ที่เปิดอยู่'}
+      eocLabel={latestEoc ? formatEocDisplayName(latestEoc) : 'ไม่มีเหตุการณ์ฉุกเฉิน'}
       showPageHeader={false}
     >
       <AnnouncementHub detailBasePath="/public/announcements" />

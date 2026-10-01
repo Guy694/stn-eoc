@@ -2,11 +2,12 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import AppIcon from './icons/AppIcon';
+import HelpRequestLink from '@/components/public/HelpRequestLink';
 
 const CHATBOT_HISTORY_KEY = 'chatbot_history';
 const CHATBOT_LAUNCHER_HIDDEN_KEY = 'chatbot_launcher_hidden';
 
-export default function AIChatbot() {
+export default function AIChatbot({ showLauncher = true }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLauncherHidden, setIsLauncherHidden] = useState(false);
     const [messages, setMessages] = useState([]);
@@ -146,7 +147,7 @@ export default function AIChatbot() {
     return (
         <>
             {/* Speech Bubble Tooltip - "Ask Me" */}
-            {!isOpen && !isLauncherHidden && (
+            {!isOpen && !isLauncherHidden && showLauncher && (
                 <div className="fixed bottom-20 right-24 z-[1100] hidden animate-float-subtle sm:block">
                     <div className="relative bg-white rounded-2xl shadow-xl px-4 py-3 border-2 border-green-500">
                         <div className="flex items-center gap-2">
@@ -162,7 +163,7 @@ export default function AIChatbot() {
             )}
 
             {/* Floating Bubble Button */}
-            {!isLauncherHidden && (
+            {!isLauncherHidden && showLauncher && (
                 <div className="fixed bottom-5 right-5 z-[1100] lg:bottom-6">
                     {!isOpen && (
                         <button
@@ -234,12 +235,12 @@ export default function AIChatbot() {
                                 <AppIcon icon="message" className="mx-auto mb-4 h-14 w-14 text-emerald-600" />
                                 <p className="text-gray-600 mb-4">สวัสดีครับ! ผมช่วยตอบข้อมูล EOC โรค น้ำท่วม และสภาพฟ้าฝนได้</p>
                                 <div className="mb-4 grid gap-2">
-                                    <Link
-                                        href="/public/report-incident"
+                                    <HelpRequestLink
                                         className="rounded-xl bg-red-600 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-red-700"
+                                        disabledClassName="cursor-not-allowed bg-slate-200! text-slate-500! shadow-none! hover:bg-slate-200!"
                                     >
-                                        แจ้งขอความช่วยเหลือ
-                                    </Link>
+                                        {({ helpOpen }) => helpOpen ? 'แจ้งขอความช่วยเหลือ' : 'แจ้งขอความช่วยเหลือ (เปิดเมื่อมีเหตุการณ์ฉุกเฉิน)'}
+                                    </HelpRequestLink>
                                     <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-left">
                                         <p className="mb-2 text-sm font-black text-red-900">เบอร์โทรฉุกเฉิน</p>
                                         <div className="grid grid-cols-2 gap-2">

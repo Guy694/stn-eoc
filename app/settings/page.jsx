@@ -5,10 +5,11 @@ import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import AppIcon from "@/components/icons/AppIcon";
 import { showError, showSuccess } from "@/lib/sweetAlert";
+import { PASSWORD_MIN_LENGTH, PASSWORD_POLICY_TEXT, validatePassword } from "@/lib/passwordPolicy";
 
 export default function SettingsPage() {
     const router = useRouter();
-    const { user, loading } = useAuth();
+    const { user, loading, validateSession } = useAuth();
     const [activeTab, setActiveTab] = useState("password");
     const [passwordData, setPasswordData] = useState({
         currentPassword: "",
@@ -30,8 +31,12 @@ export default function SettingsPage() {
             return;
         }
 
-        if (passwordData.newPassword.length < 6) {
-            showError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+        const policyError = validatePassword(passwordData.newPassword, {
+            username: user?.username,
+            currentPassword: passwordData.currentPassword
+        });
+        if (policyError) {
+            showError(policyError);
             return;
         }
 
@@ -42,7 +47,6 @@ export default function SettingsPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userId: user.id,
                     currentPassword: passwordData.currentPassword,
                     newPassword: passwordData.newPassword
                 })
@@ -51,8 +55,13 @@ export default function SettingsPage() {
             const data = await response.json();
 
             if (data.success) {
+                const wasForced = Boolean(user?.mustChangePassword);
                 showSuccess("เปลี่ยนรหัสผ่านสำเร็จ");
                 setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                await validateSession();
+                if (wasForced) {
+                    router.push("/dashboard");
+                }
             } else {
                 showError(data.message || "เปลี่ยนรหัสผ่านไม่สำเร็จ");
             }
@@ -135,6 +144,13 @@ export default function SettingsPage() {
                             {activeTab === "password" && (
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-800 mb-6"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปลี่ยนรหัสผ่าน</h2>
+                                    {user.mustChangePassword && (
+                                        <div role="alert" className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
+                                            <p className="font-semibold">กรุณาเปลี่ยนรหัสผ่านก่อนใช้งานระบบ</p>
+                                            <p className="text-sm">บัญชีนี้ใช้รหัสผ่านชั่วคราวที่ผู้ดูแลระบบออกให้ ระบบจะเปิดให้ใช้งานเมนูอื่นหลังจากตั้งรหัสผ่านใหม่แล้ว</p>
+                                        </div>
+                                    )}
+                                    <p className="mb-6 text-sm text-gray-600">{PASSWORD_POLICY_TEXT}</p>
                                     <form onSubmit={handlePasswordChange} className="space-y-6">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -161,9 +177,9 @@ export default function SettingsPage() {
                                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                                                 required
                                                 disabled={isSubmitting}
-                                                minLength={6}
+                                                minLength={PASSWORD_MIN_LENGTH}
                                             />
-                                            <p className="text-sm text-gray-500 mt-1">รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</p>
+                                            <p className="text-sm text-gray-500 mt-1">อย่างน้อย {PASSWORD_MIN_LENGTH} ตัวอักษร มีทั้งตัวอักษรและตัวเลข</p>
                                         </div>
 
                                         <div>

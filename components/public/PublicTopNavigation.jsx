@@ -3,20 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import HelpRequestLink from "@/components/public/HelpRequestLink";
 import {
   Bell,
   Bot,
   Building2,
   CloudSun,
   Home,
-  LogIn,
   Map,
   Menu,
+  Siren,
   Tent,
   X
 } from "lucide-react";
 
-export default function PublicTopNavigation({ activeMenu, showWeatherMenu = true }) {
+// เมนูสำหรับประชาชน: เรียงตามสิ่งที่ประชาชนต้องการรู้ก่อน
+// (ลิงก์เข้าสู่ระบบเจ้าหน้าที่และหน่วยงานย้ายไปอยู่ใน footer)
+// (prop showWeatherMenu เดิมไม่มีผลแล้ว — เมนูสภาพอากาศแสดงตลอด)
+export default function PublicTopNavigation({ activeMenu }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,15 +33,12 @@ export default function PublicTopNavigation({ activeMenu, showWeatherMenu = true
 
   const items = [
     { href: "/", label: "หน้าหลัก", icon: Home, key: "home" },
-    { href: "/public/disaster-map", label: "แผนที่สถานการณ์", icon: Map, key: "map" },
-    ...(showWeatherMenu || activeMenu === "weather"
-      ? [{ href: "/public/weather-watch", label: "อากาศและฝน", icon: CloudSun, key: "weather" }]
-      : []),
-    { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
+    { href: "/public/disaster-map", label: "แผนที่", icon: Map, key: "map" },
+    { href: "/public/weather-watch", label: "สภาพอากาศและความเสี่ยง", icon: CloudSun, key: "weather" },
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
-    { href: "/public/agencies", label: "หน่วยงานช่วยเหลือ", icon: Building2, key: "agencies" },
-    { label: "EOC Assistant", icon: Bot, key: "assistant", action: openAssistant },
-    { href: "/login", label: "เข้าสู่ระบบเจ้าหน้าที่", icon: LogIn, key: "staff" }
+    { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
+    { label: "ถามผู้ช่วย", icon: Bot, key: "assistant", action: openAssistant },
+    { href: "/public/report-incident", label: "ขอความช่วยเหลือ", icon: Siren, key: "help", emphasis: true }
   ];
 
   const isActive = (item) => {
@@ -54,8 +55,8 @@ export default function PublicTopNavigation({ activeMenu, showWeatherMenu = true
       : "shrink-0 px-3 py-2.5 text-sm xl:px-4"
     } ${active
       ? "bg-white text-[#083865] shadow-sm"
-      : item.key === "staff"
-        ? "bg-amber-400 text-slate-950 hover:bg-amber-300"
+      : item.emphasis
+        ? "bg-red-600 text-white shadow-sm ring-1 ring-white/30 hover:bg-red-500"
         : "text-blue-50 hover:bg-white/10 hover:text-white"
     }`;
     const content = (
@@ -69,6 +70,15 @@ export default function PublicTopNavigation({ activeMenu, showWeatherMenu = true
       return <button key={item.key} type="button" onClick={item.action} className={className}>{content}</button>;
     }
 
+    // ปุ่มขอความช่วยเหลือ: ใช้ได้เฉพาะเมื่อมี EOC เปิดอยู่
+    if (item.emphasis) {
+      return (
+        <HelpRequestLink key={item.key} onClick={() => setIsOpen(false)} className={className} disabledClassName="cursor-not-allowed bg-white/15! text-white/60! ring-0! shadow-none! hover:bg-white/15!">
+          {content}
+        </HelpRequestLink>
+      );
+    }
+
     return <Link key={item.key} href={item.href} onClick={() => setIsOpen(false)} className={className}>{content}</Link>;
   };
 
@@ -76,14 +86,19 @@ export default function PublicTopNavigation({ activeMenu, showWeatherMenu = true
     <nav className="relative z-[900] border-b border-blue-950/20 bg-[#0b4c86] text-white shadow-md" aria-label="เมนูข้อมูลสาธารณะ">
       <div className="mx-auto max-w-[1600px] px-3 sm:px-5">
         <div className="hidden min-h-14 items-center gap-1 overflow-x-auto py-1.5 lg:flex">
-          {items.map(item => renderItem(item))}
+          {items.filter(item => !item.emphasis).map(item => renderItem(item))}
+          <div className="ml-auto">{items.filter(item => item.emphasis).map(item => renderItem(item))}</div>
         </div>
 
         <div className="flex min-h-14 items-center justify-between lg:hidden">
           <div className="flex items-center gap-2">
             <Building2 className="h-5 w-5" aria-hidden="true" />
-            <span className="text-sm font-black">ข้อมูลสาธารณะ</span>
+            <span className="hidden text-sm font-black sm:inline">ข้อมูลสาธารณะ</span>
           </div>
+          <div className="flex items-center gap-2">
+          <HelpRequestLink className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-sm font-black text-white hover:bg-red-500" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! hover:bg-white/15!">
+            <Siren className="h-4 w-4" aria-hidden="true" /> ขอความช่วยเหลือ
+          </HelpRequestLink>
           <button
             type="button"
             onClick={() => setIsOpen(value => !value)}
@@ -94,11 +109,15 @@ export default function PublicTopNavigation({ activeMenu, showWeatherMenu = true
             {isOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
             {isOpen ? "ปิด" : "เมนู"}
           </button>
+          </div>
         </div>
 
         {isOpen && (
           <div id="public-mobile-menu" className="grid gap-1 border-t border-white/10 py-3 sm:grid-cols-2 lg:hidden">
-            {items.map(item => renderItem(item, true))}
+            {items.filter(item => !item.emphasis).map(item => renderItem(item, true))}
+            <Link href="/public/agencies" onClick={() => setIsOpen(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-3 text-sm font-bold text-blue-50 hover:bg-white/10">
+              <Building2 className="h-4 w-4 shrink-0" aria-hidden="true" /> ติดต่อหน่วยงาน
+            </Link>
           </div>
         )}
       </div>

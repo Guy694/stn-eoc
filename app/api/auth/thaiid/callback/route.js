@@ -1,24 +1,17 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import crypto from "crypto";
 import { clearCitizenSessionCookie, setCitizenSessionCookie } from "@/lib/citizenAuth";
 import { applyNoStoreHeaders, getThaiIdConfigError, getThaiIdOAuthConfig } from "@/lib/thaiIdConfig";
 import { clearRegistrationSessionCookie, setRegistrationSessionCookie } from "@/lib/registrationSession";
 import { notifySecurityEvent } from "@/lib/telegram";
+import { createUserSession, getRoleDisplayName, getRolePermissions, setSessionCookie } from "@/lib/auth";
+import { getClientIp, getUserAgent } from "@/lib/clientIp";
+import { getPool } from "@/lib/db";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Database Pool
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 // สร้างค่า PID hash แบบ deterministic สำหรับค้นผู้ใช้เดิมโดยไม่เก็บ PID ตรง ๆ
 function hashPID(pid) {
@@ -47,69 +40,6 @@ function getAppBaseUrl(request) {
 
     return normalizeAppBaseUrl(request.url);
 }
-
-// กำหนด permissions สำหรับแต่ละ role
-const rolePermissions = {
-    admin: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: true, delete: true },
-        admin: { view: true, create: true, edit: true, delete: true },
-        reports: { view: true, create: true, export: true },
-        users: { view: true, create: true, edit: true, delete: true }
-    },
-    MCATT: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: true, delete: false },
-        admin: { view: true, create: false, edit: false, delete: false },
-        reports: { view: true, create: true, export: true },
-        users: { view: true, create: false, edit: false, delete: false }
-    },
-    SAT: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: true, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: true, create: false, export: false },
-        users: { view: false, create: false, edit: false, delete: false }
-    },
-    SeRHT: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: false, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: true, create: false, export: false },
-        users: { view: false, create: false, edit: false, delete: false }
-    },
-    staff: {
-        dashboard: true,
-        eoc: { view: true, create: true, edit: false, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: true, create: false, export: false },
-        users: { view: false, create: false, edit: false, delete: false }
-    },
-    citizen: {
-        dashboard: true, // ให้ citizen ดู dashboard ได้ (อาจจำกัดการมองเห็นใน component)
-        eoc: { view: false, create: false, edit: false, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: true, create: true, export: false }, // ประชาชนดูและส่งรายงานได้
-        users: { view: false, create: false, edit: false, delete: false }
-    },
-    user: { // Legacy role
-        dashboard: true,
-        eoc: { view: false, create: false, edit: false, delete: false },
-        admin: { view: false, create: false, edit: false, delete: false },
-        reports: { view: false, create: false, export: false },
-        users: { view: false, create: false, edit: false, delete: false }
-    }
-};
-
-const roleDisplayNames = {
-    admin: 'ผู้ดูแลระบบ',
-    MCATT: 'ทีม MCATT',
-    SAT: 'ทีม SAT',
-    SeRHT: 'ทีม SeRHT',
-    staff: 'เจ้าหน้าที่',
-    user: 'ผู้ใช้งานทั่วไป',
-    citizen: 'ประชาชน' // เพิ่ม Role Citizens
-};
 
 /**
  * แลกเปลี่ยน Authorization Code กับ Access Token
@@ -213,39 +143,6 @@ function isSameThaiIdName(profile, record) {
         && normalizeName(profile.family_name) === normalizeName(record.family_name);
 }
 
-async function ensureRegistrationSchema(connection) {
-    await connection.execute(`
-        CREATE TABLE IF NOT EXISTS registration_requests (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_type ENUM('citizen', 'officer') NOT NULL,
-            officer_id INT NULL,
-            pid_hash VARCHAR(64) NULL,
-            title VARCHAR(50) NULL,
-            given_name VARCHAR(100) NOT NULL,
-            family_name VARCHAR(100) NOT NULL,
-            normalized_given_name VARCHAR(120) NOT NULL,
-            normalized_family_name VARCHAR(120) NOT NULL,
-            agency VARCHAR(255) NOT NULL,
-            username VARCHAR(50) NULL,
-            email VARCHAR(100) NULL,
-            phone VARCHAR(20) NULL,
-            status ENUM('pending', 'verified', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
-            request_ip VARCHAR(45) NULL,
-            user_agent TEXT NULL,
-            verified_at TIMESTAMP NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_registration_requests_lookup (user_type, normalized_given_name, normalized_family_name, status),
-            INDEX idx_registration_requests_ip (request_ip, created_at),
-            INDEX idx_registration_requests_pid_hash (pid_hash),
-            UNIQUE KEY unique_registration_username (username),
-            CONSTRAINT fk_registration_requests_officer
-                FOREIGN KEY (officer_id) REFERENCES officer(id)
-                ON DELETE SET NULL
-        )
-    `);
-}
-
 async function findRegistrationByThaiIdName(connection, thaiIdProfile) {
     const [rows] = await connection.execute(
         `SELECT *
@@ -296,7 +193,7 @@ export async function GET(request) {
         const storedState = request.cookies.get('thaiid_state')?.value;
         if (!state || !storedState || state !== storedState) {
             void notifySecurityEvent('thaiid_oauth_state_mismatch', {
-                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                ip: getClientIp(request),
                 hasState: Boolean(state),
                 hasStoredState: Boolean(storedState)
             });
@@ -326,7 +223,6 @@ export async function GET(request) {
         const connection = await pool.getConnection();
 
         try {
-            await ensureRegistrationSchema(connection);
 
             // STEP 2.1: Check Officer Table First
             const [officers] = await connection.execute(
@@ -512,8 +408,8 @@ export async function GET(request) {
                             userRecord.id,
                             'LOGIN',
                             `เข้าสู่ระบบด้วย ThaiD สำเร็จ (Officer) - User: ${userRecord.username}`,
-                            request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-                            request.headers.get('user-agent') || 'unknown'
+                            getClientIp(request),
+                            getUserAgent(request)
                         ]
                     );
                 } else {
@@ -539,8 +435,8 @@ export async function GET(request) {
                     email: userRecord.email,
                     phone: userRecord.phone,
                     role: userRecord.role,
-                    roleDisplayName: roleDisplayNames[userRecord.role] || userRecord.role,
-                    permissions: userRecord.is_approved ? (rolePermissions[userRecord.role] || rolePermissions.staff) : {},
+                    roleDisplayName: getRoleDisplayName(userRecord.role),
+                    permissions: Number(userRecord.is_approved) === 1 ? getRolePermissions(userRecord.role) : {},
                     loginMethod: 'thaiid',
                     isApproved: Number(userRecord.is_approved) === 1,
                     isNewUser: isNewUser,
@@ -559,7 +455,7 @@ export async function GET(request) {
                     familyName: userRecord.family_name,
                     role: 'citizen',
                     roleDisplayName: 'ประชาชน',
-                    permissions: rolePermissions.citizen,
+                    permissions: getRolePermissions('citizen'),
                     loginMethod: 'thaiid',
                     isApproved: true, // Citizens implicitly approved
                     isNewUser: isNewUser,
@@ -576,42 +472,22 @@ export async function GET(request) {
 
             const response = NextResponse.redirect(`${baseUrl}${redirectPath}`);
 
-            if (userType === 'officer') {
-                const sessionToken = crypto.randomBytes(32).toString('hex');
-                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-                    || request.headers.get('x-real-ip')
-                    || 'unknown';
-                const userAgent = request.headers.get('user-agent') || 'unknown';
-
-                await connection.execute(
-                    `INSERT INTO user_sessions
-                    (session_token, user_id, username, title, given_name, family_name, email, phone, role, ip_address, user_agent, expires_at, login_method)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'thaiid')`,
-                    [
-                        sessionToken,
-                        userRecord.id,
-                        userRecord.username,
-                        userRecord.title,
-                        userRecord.given_name,
-                        userRecord.family_name,
-                        userRecord.email,
-                        userRecord.phone,
-                        userRecord.role,
-                        ipAddress,
-                        userAgent,
-                        expiresAt
-                    ]
+            if (userType === 'officer' && Number(userRecord.is_approved) === 1) {
+                // สร้าง session เฉพาะบัญชีที่อนุมัติแล้ว (บัญชีรออนุมัติไปหน้า pending โดยไม่มี session)
+                const { token: sessionToken } = await createUserSession(
+                    (sql, params) => connection.execute(sql, params),
+                    {
+                        officer: userRecord,
+                        ipAddress: getClientIp(request),
+                        userAgent: getUserAgent(request),
+                        loginMethod: 'thaiid'
+                    }
                 );
+                setSessionCookie(response, sessionToken);
 
-                response.cookies.set('session_token', sessionToken, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'strict',
-                    maxAge: 60 * 60 * 24,
-                    path: '/'
-                });
-
+                clearRegistrationSessionCookie(response);
+                clearCitizenSessionCookie(response);
+            } else if (userType === 'officer') {
                 clearRegistrationSessionCookie(response);
                 clearCitizenSessionCookie(response);
             } else {
@@ -643,7 +519,7 @@ export async function GET(request) {
         console.error('ThaiD Callback Error:', error);
         const baseUrl = getAppBaseUrl(request);
         return applyNoStoreHeaders(NextResponse.redirect(
-            `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent(error.message)}`
+            `${baseUrl}/login?error=callback_failed`
         ));
     }
 }

@@ -1,17 +1,9 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
 import { publicInternalError } from '@/lib/apiResponse';
+import { getPool } from "@/lib/db";
+import { enforceIpRateLimit } from "@/lib/rateLimit";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    charset: 'utf8mb4',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 const ACCIDENT_TYPES = new Set(['รถยนต์', 'จักรยานยนต์', 'รถจักรยาน', 'คนเดินเท้า', 'อื่นๆ']);
 
@@ -32,6 +24,10 @@ function buildCitizenNotes({ reporterName, reporterPhone, notes }) {
 }
 
 export async function POST(request) {
+    // กันการส่งข้อมูลขยะ/สแปมจาก IP เดียวกัน
+    const rateLimited = await enforceIpRateLimit(request, 'publicAccidentReport');
+    if (rateLimited) return rateLimited;
+
     let connection;
 
     try {

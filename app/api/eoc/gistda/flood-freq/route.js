@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 
 const GISTDA_API_BASE = 'https://api-gateway.gistda.or.th/api/2.0';
 const GISTDA_API_KEY = process.env.GISTDA_API_KEY || '';
 
 export async function GET(request) {
+    // ข้อมูลปฏิบัติการภายใน — เฉพาะเจ้าหน้าที่ที่เข้าสู่ระบบ
+    const auth = await requireAuth(request, OFFICER_ROLES);
+    if (!auth.success) return auth.response;
+
     try {
         const { searchParams } = new URL(request.url);
         const offset = searchParams.get('offset') || '0';

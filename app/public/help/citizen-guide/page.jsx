@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import AppIcon from "@/components/icons/AppIcon";
+import HelpRequestLink from "@/components/public/HelpRequestLink";
 
 export default function CitizenGuidePage() {
     const steps = [
@@ -179,13 +180,17 @@ export default function CitizenGuidePage() {
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">
                         พร้อมแจ้งเหตุแล้วหรือยัง?
                     </h2>
-                    <Link
-                        href="/public/report-incident"
+                    <HelpRequestLink
                         className="inline-block bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        disabledClassName="cursor-not-allowed bg-none! bg-slate-300! text-slate-600! shadow-none! hover:scale-100! hover:shadow-none!"
                     >
-                        <span className="text-2xl mr-2"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                        แจ้งเหตุภัยพิบัติ
-                    </Link>
+                        {({ helpOpen }) => (
+                            <>
+                                <span className="text-2xl mr-2"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                                {helpOpen ? "ขอความช่วยเหลือ" : "ขอความช่วยเหลือ (เปิดเมื่อมีเหตุการณ์ฉุกเฉิน)"}
+                            </>
+                        )}
+                    </HelpRequestLink>
                 </div>
             </div>
         </PublicLayout>

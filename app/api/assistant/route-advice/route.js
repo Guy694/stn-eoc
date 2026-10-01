@@ -1,7 +1,12 @@
 import { getRouteAdvice } from "@/lib/routeAdvice";
+import { enforceIpRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request) {
     try {
+        // เรียกผู้ให้บริการเส้นทางภายนอก จึงจำกัดจำนวนครั้งต่อ IP
+        const rateLimited = await enforceIpRateLimit(request, 'routeAdvice');
+        if (rateLimited) return rateLimited;
+
         const body = await request.json();
         const result = await getRouteAdvice({
             message: body.message || "",
@@ -21,6 +26,10 @@ export async function POST(request) {
 
 export async function GET(request) {
     try {
+        // เรียกผู้ให้บริการเส้นทางภายนอก จึงจำกัดจำนวนครั้งต่อ IP
+        const rateLimited = await enforceIpRateLimit(request, 'routeAdvice');
+        if (rateLimited) return rateLimited;
+
         const { searchParams } = new URL(request.url);
         const result = await getRouteAdvice({
             message: searchParams.get("message") || "",

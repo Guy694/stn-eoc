@@ -1,17 +1,8 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import { getCitizenSession } from "@/lib/citizenAuth";
+import { getPool } from "@/lib/db";
 
-// Database Pool
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 /**
  * API: Get incident reports submitted by a specific citizen

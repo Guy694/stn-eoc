@@ -1,6 +1,16 @@
 const { appendAuditLog } = require("@/lib/auditLog");
 
 describe("appendAuditLog", () => {
+  const originalTrustProxy = process.env.TRUST_PROXY;
+  beforeEach(() => {
+    // ระบบอยู่หลัง proxy 2 ชั้นในกรณีทดสอบนี้ จึงเชื่อ IP ลำดับที่ 2 จากขวาของ X-Forwarded-For
+    process.env.TRUST_PROXY = "2";
+  });
+  afterEach(() => {
+    if (originalTrustProxy === undefined) delete process.env.TRUST_PROXY;
+    else process.env.TRUST_PROXY = originalTrustProxy;
+  });
+
   test("stores assignment context, request identity, and before/after values", async () => {
     const execute = jest.fn().mockResolvedValue({ insertId: 101 });
     const request = {

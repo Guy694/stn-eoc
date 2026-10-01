@@ -3,6 +3,12 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
+const PASSWORD_CHANGE_PATH = '/settings';
+
+function getAppPath() {
+    if (typeof window === 'undefined') return '/';
+    return window.location.pathname.replace(/^\/stn-eoc/, '').replace(/\/+$/, '') || '/';
+}
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
@@ -47,6 +53,11 @@ export function AuthProvider({ children }) {
                 if (cookieData.success && cookieData.user) {
                     // พบ server session จาก httpOnly cookie
                     setUser(cookieData.user);
+
+                    // บัญชีที่ใช้รหัสผ่านชั่วคราวต้องเปลี่ยนรหัสผ่านก่อน (API อื่นจะตอบ 403 จนกว่าจะเปลี่ยน)
+                    if (cookieData.user.mustChangePassword && getAppPath() !== PASSWORD_CHANGE_PATH) {
+                        router.replace(`${PASSWORD_CHANGE_PATH}/?forcePasswordChange=1`);
+                    }
                     if (cookieData.remainingMinutes !== undefined && cookieData.remainingMinutes <= 2 && cookieData.remainingMinutes > 0) {
                         setIdleWarning(true);
                     } else {
@@ -66,7 +77,7 @@ export function AuthProvider({ children }) {
         } finally {
             setLoading(false);
         }
-    }, [handleSessionExpired, isPublicPath]);
+    }, [handleSessionExpired, isPublicPath, router]);
 
     // ตรวจสอบ session ทุก 1 นาที
     useEffect(() => {
@@ -97,7 +108,7 @@ export function AuthProvider({ children }) {
 
             if (data.success && data.user) {
                 setUser(data.user);
-                return { success: true, message: data.message };
+                return { success: true, message: data.message, mustChangePassword: Boolean(data.user.mustChangePassword) };
             } else {
                 return { success: false, message: data.message || 'เข้าสู่ระบบไม่สำเร็จ' };
             }
@@ -220,7 +231,7 @@ export function AuthProvider({ children }) {
                             </div>
                         </div>
                         <p className="text-gray-700 mb-4">
-                            คุณไม่ได้ใช้งานเกินกว่า 8 นาที ระบบจะออกจากระบบอัตโนมัติในอีก <span className="font-bold text-red-600">2 นาที</span> หากไม่มีการใช้งาน
+                            คุณไม่ได้ใช้งานมาระยะหนึ่ง ระบบจะออกจากระบบอัตโนมัติในอีก <span className="font-bold text-red-600">2 นาที</span> หากไม่มีการใช้งาน
                         </p>
                         <div className="flex gap-3">
                             <button

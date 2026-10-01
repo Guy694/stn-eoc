@@ -1,0 +1,624 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  Anchor,
+  ChevronDown,
+  ChevronUp,
+  Cloud,
+  CloudLightning,
+  CloudRain,
+  Droplets,
+  ExternalLink,
+  Gauge,
+  Layers,
+  LocateFixed,
+  Map as MapIcon,
+  Megaphone,
+  Phone,
+  Radar,
+  RefreshCw,
+  Satellite,
+  ShieldCheck,
+  Siren,
+  Tent,
+  Thermometer,
+  Tornado,
+  Umbrella,
+  Waves,
+  Wind
+} from "lucide-react";
+import AIChatbot from "@/components/AIChatbot";
+import HelpRequestLink from "@/components/public/HelpRequestLink";
+import PublicTopNavigation from "@/components/public/PublicTopNavigation";
+import { GLASS, MenuToggle, SectionTitle, SidebarItem, WindyFrame } from "@/components/public/map/WindyStyleControls";
+import {
+  WINDY_OVERLAYS,
+  WINDY_PRODUCTS,
+  buildWindyEmbedUrl,
+  buildWindyWebsiteUrl,
+  fetchLatestRadarLayer
+} from "@/components/public/disaster-map/windyLayers";
+import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
+
+const WeatherRiskMap = dynamic(() => import("@/components/weather/WeatherRiskMap"), {
+  ssr: false,
+  loading: () => <div className="flex h-full items-center justify-center bg-slate-800 text-sm font-bold text-white/70">กำลังโหลดแผนที่…</div>
+});
+
+const WEATHER_ICONS = { Wind, Tornado, CloudRain, Umbrella, CloudLightning, Thermometer, Cloud, Droplets, Gauge, Waves };
+
+const BASE_MAPS = [
+  { key: "street", label: "แผนที่ถนน", icon: MapIcon, tone: "from-sky-400 to-blue-600" },
+  { key: "satellite", label: "ภาพดาวเทียม", icon: Satellite, tone: "from-emerald-500 to-slate-700" },
+  { key: "topo", label: "ภูมิประเทศ", icon: Layers, tone: "from-lime-400 to-green-700" }
+];
+
+const EMERGENCY_CONTACTS = [
+  { number: "1669", label: "เจ็บป่วยฉุกเฉิน" },
+  { number: "1784", label: "สาธารณภัย (ปภ.)" },
+  { number: "191", label: "เหตุด่วนเหตุร้าย" },
+  { number: "1182", label: "กรมอุตุนิยมวิทยา" }
+];
+
+function riskMeta(level) {
+  return RISK_META[level] || RISK_META.normal;
+}
+
+function worstLevel(levels) {
+  return levels.reduce((worst, level) => (RISK_LEVELS.indexOf(level) > RISK_LEVELS.indexOf(worst) ? level : worst), "normal");
+}
+
+function formatTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatDay(value, index) {
+  if (index === 0) return "วันนี้";
+  if (index === 1) return "พรุ่งนี้";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric" });
+}
+
+function distanceKm(a, b) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const dLat = toRad(b.latitude - a.latitude);
+  const dLon = toRad(b.longitude - a.longitude);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.latitude)) * Math.cos(toRad(b.latitude)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+/** คำแนะนำสำหรับประชาชนตามระดับความเสี่ยงของพื้นที่ */
+function adviceFor(district) {
+  if (!district) return [];
+  const level = district.risk_level;
+  const items = [];
+  if (level === "critical") {
+    items.push("เตรียมพร้อมอพยพ ขนย้ายสิ่งของขึ้นที่สูง และติดตามประกาศจากอำเภอ/ท้องถิ่นทุกชั่วโมง");
+    items.push("ตรวจสอบศูนย์พักพิงที่ใกล้ที่สุด และเส้นทางไปศูนย์พักพิงไว้ล่วงหน้า");
+  }
+  if (level === "high" || level === "critical") {
+    items.push("หลีกเลี่ยงการเดินทางผ่านทางน้ำไหล สะพานข้ามคลอง และถนนที่น้ำท่วมขัง");
+    items.push("เตรียมยาประจำตัว เอกสารสำคัญ ไฟฉาย และโทรศัพท์ที่ชาร์จเต็ม");
+    items.push("ดูแลผู้สูงอายุ เด็ก ผู้ป่วยติดเตียง และผู้พิการในบ้านเป็นพิเศษ");
+  }
+  if (level === "watch") {
+    items.push("ติดตามพยากรณ์และประกาศเตือนภัยเป็นระยะ");
+    items.push("เก็บสิ่งของสำคัญให้พ้นจากจุดที่น้ำเคยขัง และตรวจสอบทางระบายน้ำรอบบ้าน");
+  }
+  if (district.thunder_expected) {
+    items.push("ช่วงฝนฟ้าคะนอง หลีกเลี่ยงที่โล่งแจ้ง ต้นไม้ใหญ่ และการใช้โทรศัพท์ขณะชาร์จไฟ");
+  }
+  if (district.landslide_risk && district.landslide_risk !== "normal") {
+    items.push("ผู้อยู่อาศัยเชิงเขา/ลาดชัน สังเกตน้ำป่าขุ่นข้น เสียงดังผิดปกติ หรือดินแยก และอพยพทันทีเมื่อพบ");
+  }
+  if (Number(district.wind_speed) >= 22) {
+    items.push("ลมแรง ระวังต้นไม้และป้ายโฆษณาล้ม ยึดสิ่งของรอบบ้านให้แน่น");
+  }
+  if (items.length === 0) {
+    items.push("สภาพอากาศอยู่ในเกณฑ์ปกติ ใช้ชีวิตได้ตามปกติ และติดตามข้อมูลล่าสุดเป็นระยะ");
+  }
+  return items;
+}
+
+function RiskBadge({ level, large = false }) {
+  const meta = riskMeta(level);
+  return (
+    <span
+      className={`inline-flex items-center rounded-full font-black text-white shadow ${large ? "px-4 py-1.5 text-base" : "px-2.5 py-0.5 text-xs"}`}
+      style={{ backgroundColor: meta.color }}
+    >
+      {meta.label}
+    </span>
+  );
+}
+
+function Stat({ icon: Icon, label, value }) {
+  return (
+    <div className="rounded-xl bg-white/5 p-2 ring-1 ring-white/10">
+      <div className="flex items-center gap-1 text-[11px] font-bold text-white/60">
+        <Icon className="h-3.5 w-3.5" aria-hidden="true" /> {label}
+      </div>
+      <div className="mt-0.5 text-sm font-black">{value}</div>
+    </div>
+  );
+}
+
+export default function WeatherWatchWorkspace() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [viewMode, setViewMode] = useState("risk"); // risk | windy
+  const [windyOverlay, setWindyOverlay] = useState("rain");
+  const [windyProduct, setWindyProduct] = useState("ecmwf");
+  const [baseMap, setBaseMap] = useState("street");
+  const [radarEnabled, setRadarEnabled] = useState(false);
+  const [radarLayer, setRadarLayer] = useState(null);
+
+  const [selectedDistrictId, setSelectedDistrictId] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationMessage, setLocationMessage] = useState("");
+  const [flyTarget, setFlyTarget] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(0);
+
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(true);
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setSidebarOpen(false);
+    }
+  }, []);
+
+  const loadWeather = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/stn-eoc/api/public/weather-watch", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.error || "โหลดข้อมูลไม่สำเร็จ");
+      setData(payload);
+    } catch (err) {
+      console.error("Weather Watch load error:", err);
+      setError(err.message || "ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadWeather();
+    const timer = window.setInterval(loadWeather, 15 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [loadWeather]);
+
+  useEffect(() => {
+    if (!radarEnabled) return undefined;
+    let controller = new AbortController();
+    const load = () => {
+      controller.abort();
+      controller = new AbortController();
+      fetchLatestRadarLayer(controller.signal).then(setRadarLayer).catch(() => {});
+    };
+    load();
+    const timer = window.setInterval(load, 10 * 60 * 1000);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, [radarEnabled]);
+
+  const districts = useMemo(() => data?.district_weather || [], [data?.district_weather]);
+  const current = data?.weather_current || {};
+  const marine = data?.marine || null;
+
+  // เริ่มต้นเลือกอำเภอที่เสี่ยงที่สุด
+  useEffect(() => {
+    if (!selectedDistrictId && districts.length > 0) {
+      setSelectedDistrictId(String(districts[0].district_id));
+    }
+  }, [districts, selectedDistrictId]);
+
+  const selectedDistrict = districts.find((item) => String(item.district_id) === String(selectedDistrictId)) || null;
+  const districtsAtRisk = districts.filter((item) => item.risk_level !== "normal").length;
+  const provinceLevel = worstLevel([current.risk_level || "normal", marine?.risk_level || "normal"]);
+  const dailyForecast = selectedDistrict?.forecast_daily || [];
+  const dayForecast = dailyForecast[selectedDay] || null;
+  const hourlyForecast = selectedDistrict?.forecast_hourly || [];
+  const advice = useMemo(() => adviceFor(selectedDistrict), [selectedDistrict]);
+
+  const isWindy = viewMode === "windy";
+  const windyUrl = useMemo(() => buildWindyEmbedUrl({ overlay: windyOverlay, product: windyProduct }), [windyOverlay, windyProduct]);
+  const extraTileLayers = useMemo(() => (radarEnabled && radarLayer ? [radarLayer] : []), [radarEnabled, radarLayer]);
+
+  const selectDistrict = useCallback((districtId) => {
+    setSelectedDistrictId(String(districtId));
+    setSelectedDay(0);
+    setPanelOpen(true);
+    const district = districts.find((item) => String(item.district_id) === String(districtId));
+    if (district) setFlyTarget({ latitude: district.latitude, longitude: district.longitude, zoom: 11, at: Date.now() });
+  }, [districts]);
+
+  const locateMe = () => {
+    if (!navigator.geolocation) {
+      setLocationMessage("อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง");
+      return;
+    }
+    setLocationMessage("กำลังระบุตำแหน่ง…");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const here = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+        setUserLocation(here);
+        setViewMode("risk");
+        const nearest = districts
+          .map((district) => ({ district, km: distanceKm(here, district) }))
+          .sort((a, b) => a.km - b.km)[0];
+        if (!nearest || nearest.km > 60) {
+          setLocationMessage("ตำแหน่งของคุณอยู่นอกจังหวัดสตูล กรุณาเลือกอำเภอเอง");
+          setFlyTarget({ ...here, zoom: 10, at: Date.now() });
+          return;
+        }
+        setLocationMessage(`ตำแหน่งของคุณใกล้ อ.${nearest.district.district_name}`);
+        setSelectedDistrictId(String(nearest.district.district_id));
+        setSelectedDay(0);
+        setFlyTarget({ ...here, zoom: 12, at: Date.now() });
+      },
+      () => setLocationMessage("ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง กรุณาเลือกอำเภอจากรายการ"),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 }
+    );
+  };
+
+  return (
+    <div className="flex h-dvh flex-col overflow-hidden bg-slate-900">
+      <PublicTopNavigation activeMenu="weather" showWeatherMenu />
+
+      <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่สภาพอากาศและความเสี่ยง">
+        <div className={`absolute inset-0 ${isWindy ? "invisible" : ""}`} aria-hidden={isWindy}>
+          <WeatherRiskMap
+            districts={districts}
+            selectedDistrictId={selectedDistrictId}
+            onSelectDistrict={selectDistrict}
+            baseMap={baseMap}
+            extraTileLayers={extraTileLayers}
+            userLocation={userLocation}
+            flyTarget={flyTarget}
+          />
+        </div>
+        {isWindy && <WindyFrame src={windyUrl} />}
+
+        {/* บน: ภาพรวมจังหวัด */}
+        <div className="pointer-events-none absolute left-1/2 top-3 z-[690] hidden -translate-x-1/2 lg:block">
+          <div className={`pointer-events-auto flex items-center gap-3 rounded-full py-1.5 pl-2 pr-2 text-sm ${GLASS}`}>
+            <RiskBadge level={provinceLevel} />
+            <span className="font-bold">จ.สตูล: {current.weather_condition || "-"} {current.temperature ?? "-"}°C</span>
+            <span className="text-white/60">|</span>
+            <span className="font-semibold text-white/85">พื้นที่ต้องเฝ้าระวัง {districtsAtRisk}/{districts.length || 7} อำเภอ</span>
+            <span className="text-white/60">|</span>
+            <span className="text-xs text-white/70">อัปเดต {formatTime(current.observed_at)} น.</span>
+            <button
+              type="button"
+              onClick={loadWeather}
+              className="rounded-full p-1.5 text-white/80 hover:bg-white/10 hover:text-white"
+              aria-label="โหลดข้อมูลล่าสุด"
+              title="โหลดข้อมูลล่าสุด"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* ซ้าย: เช็คความเสี่ยงพื้นที่ของฉัน */}
+        <section
+          className={`absolute z-[700] flex flex-col overflow-hidden rounded-2xl ${GLASS}
+            left-3 top-3 w-[360px] max-h-[calc(100%-7rem)]
+            max-md:inset-x-2 max-md:top-auto max-md:bottom-2 max-md:w-auto max-md:max-h-[62%]
+            ${sidebarOpen ? "max-md:hidden" : ""}`}
+          aria-label="เช็คความเสี่ยงพื้นที่ของฉัน"
+        >
+          <button
+            type="button"
+            onClick={() => setPanelOpen((open) => !open)}
+            className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3 text-left"
+            aria-expanded={panelOpen}
+          >
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+              <span className="text-base font-black">เช็คความเสี่ยงพื้นที่ของคุณ</span>
+            </span>
+            {panelOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+
+          {panelOpen && (
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 [scrollbar-width:thin]">
+              <div className="flex gap-2">
+                <select
+                  value={selectedDistrictId}
+                  onChange={(event) => selectDistrict(event.target.value)}
+                  className="h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-800 px-2 text-sm font-bold text-white outline-none focus:border-sky-400"
+                  aria-label="เลือกอำเภอ"
+                  disabled={districts.length === 0}
+                >
+                  {districts.length === 0 && <option value="">{loading ? "กำลังโหลด…" : "ไม่มีข้อมูล"}</option>}
+                  {districts.map((district) => (
+                    <option key={district.district_id} value={district.district_id}>อ.{district.district_name} — {riskMeta(district.risk_level).label}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={locateMe}
+                  className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-sky-500 px-3 text-sm font-black text-white hover:bg-sky-400"
+                >
+                  <LocateFixed className="h-4 w-4" aria-hidden="true" /> ตำแหน่งฉัน
+                </button>
+              </div>
+              {locationMessage && <p className="text-xs font-semibold text-sky-200">{locationMessage}</p>}
+
+              {error && (
+                <p className="rounded-lg bg-red-500/20 p-3 text-sm font-bold text-red-100">
+                  {error} — ระบบจะไม่แสดงข้อมูลจำลอง
+                </p>
+              )}
+
+              {selectedDistrict && (
+                <>
+                  <div className="rounded-xl p-3" style={{ backgroundColor: `${riskMeta(selectedDistrict.risk_level).color}33` }}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-bold text-white/70">ระดับความเสี่ยงวันนี้</p>
+                        <p className="text-lg font-black">อ.{selectedDistrict.district_name}</p>
+                      </div>
+                      <RiskBadge level={selectedDistrict.risk_level} large />
+                    </div>
+                    <ul className="mt-2 space-y-1 text-[13px] font-semibold text-white/90">
+                      {(selectedDistrict.risk_reasons || []).map((reason) => (
+                        <li key={reason} className="flex gap-1.5"><span aria-hidden="true">•</span>{reason}</li>
+                      ))}
+                    </ul>
+                    <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-bold">
+                      <span className="rounded-full bg-black/25 px-2 py-0.5">น้ำท่วม: {riskMeta(selectedDistrict.flood_risk).label}</span>
+                      <span className="rounded-full bg-black/25 px-2 py-0.5">ดินถล่ม: {riskMeta(selectedDistrict.landslide_risk).label}</span>
+                      {selectedDistrict.thunder_expected && <span className="rounded-full bg-amber-400/90 px-2 py-0.5 text-slate-900">ฟ้าคะนอง</span>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-1.5 text-xs font-black text-white/70">ขณะนี้ • {selectedDistrict.weather_condition}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Stat icon={Thermometer} label="อุณหภูมิ" value={`${selectedDistrict.temperature}°C`} />
+                      <Stat icon={CloudRain} label="ฝน 1 ชม." value={`${selectedDistrict.rainfall_1h} มม.`} />
+                      <Stat icon={Umbrella} label="ฝน 24 ชม." value={`${selectedDistrict.rainfall_24h} มม.`} />
+                      <Stat icon={Droplets} label="ความชื้น" value={`${selectedDistrict.humidity}%`} />
+                      <Stat icon={Wind} label={`ลม${selectedDistrict.wind_direction && selectedDistrict.wind_direction !== "-" ? ` (${selectedDistrict.wind_direction})` : ""}`} value={`${selectedDistrict.wind_speed} กม./ชม.`} />
+                      <Stat icon={Cloud} label="โอกาสฝน" value={`${selectedDistrict.rain_probability_24h}%`} />
+                    </div>
+                  </div>
+
+                  {hourlyForecast.length > 0 && (
+                    <div>
+                      <p className="mb-1.5 text-xs font-black text-white/70">ฝน 24 ชั่วโมงข้างหน้า (ทุก 3 ชม.)</p>
+                      <div className="grid grid-cols-8 gap-1">
+                        {hourlyForecast.map((item) => {
+                          const rain = Number(item.rainfall_forecast || 0);
+                          const height = Math.min(100, Math.max(6, rain * 8));
+                          return (
+                            <div key={item.forecast_datetime} className="flex flex-col items-center gap-1" title={`${formatTime(item.forecast_datetime)} • ${item.weather_condition} • ฝน ${rain} มม. • โอกาส ${item.rain_probability}%`}>
+                              <span className="text-[10px] font-bold text-white/80">{rain > 0 ? rain : "-"}</span>
+                              <div className="flex h-12 w-full items-end rounded bg-white/5">
+                                <div className="w-full rounded bg-sky-400" style={{ height: `${height}%` }} />
+                              </div>
+                              <span className="text-[10px] text-white/60">{formatTime(item.forecast_datetime).slice(0, 2)}น.</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {dayForecast && selectedDay > 0 && (
+                    <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-black">พยากรณ์{formatDay(dayForecast.forecast_datetime, selectedDay)}</p>
+                        <RiskBadge level={dayForecast.risk_level} />
+                      </div>
+                      <p className="mt-1 text-[13px] text-white/85">
+                        {dayForecast.weather_condition} • {dayForecast.temperature_min}–{dayForecast.temperature_max}°C • ฝน {dayForecast.rainfall_forecast} มม. (โอกาส {dayForecast.rain_probability}%) • ลมสูงสุด {dayForecast.wind_speed} กม./ชม.
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="mb-1.5 flex items-center gap-1.5 text-xs font-black text-white/70">
+                      <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" /> สิ่งที่ควรทำ
+                    </p>
+                    <ul className="space-y-1.5 text-[13px] leading-5 text-white/90">
+                      {advice.map((item) => (
+                        <li key={item} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" aria-hidden="true" />{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
+
+              {marine && (
+                <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex items-center gap-1.5 text-sm font-black"><Anchor className="h-4 w-4" aria-hidden="true" /> คลื่นลมทะเล</p>
+                    <RiskBadge level={marine.risk_level} />
+                  </div>
+                  <p className="mt-1 text-[13px] text-white/85">
+                    {marine.location}: คลื่นสูงสุดวันนี้ ~{marine.wave_height_max_today} ม.{marine.wave_direction && marine.wave_direction !== "-" ? ` จากทิศ${marine.wave_direction}` : ""}
+                  </p>
+                  <p className="mt-1 text-[13px] font-semibold text-white">{marine.advice}</p>
+                </div>
+              )}
+
+              <div>
+                <p className="mb-1.5 flex items-center gap-1.5 text-xs font-black text-white/70">
+                  <Phone className="h-3.5 w-3.5" aria-hidden="true" /> เบอร์ฉุกเฉิน (โทรฟรี 24 ชม.)
+                </p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {EMERGENCY_CONTACTS.map((contact) => (
+                    <a key={contact.number} href={`tel:${contact.number}`} className="rounded-lg bg-red-600/85 px-2 py-1.5 text-center hover:bg-red-500">
+                      <span className="block text-base font-black leading-tight">{contact.number}</span>
+                      <span className="block text-[11px] font-semibold text-white/85">{contact.label}</span>
+                    </a>
+                  ))}
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px] font-bold">
+                  <HelpRequestLink className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20" disabledClassName="cursor-not-allowed opacity-50 hover:bg-white/10">
+                    <Siren className="h-4 w-4" aria-hidden="true" /> ขอความช่วยเหลือ
+                  </HelpRequestLink>
+                  <Link href="/public/shelters" className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20">
+                    <Tent className="h-4 w-4" aria-hidden="true" /> ศูนย์พักพิง
+                  </Link>
+                  <Link href="/public/announcements" className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20">
+                    <Megaphone className="h-4 w-4" aria-hidden="true" /> ประกาศเตือนภัย
+                  </Link>
+                </div>
+              </div>
+
+              <p className="text-[11px] leading-4 text-white/50">
+                ประเมินอัตโนมัติจากข้อมูล {data?.provider || "Open-Meteo"}
+                {marine ? " และ Open-Meteo Marine" : ""} ไม่ใช่ประกาศทางราชการ
+                โปรดยึดประกาศของกรมอุตุนิยมวิทยาและจังหวัดสตูลเป็นหลัก
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* ขวา: เมนูชั้นข้อมูลแบบ Windy */}
+        <div className="pointer-events-none absolute right-3 top-3 z-[700] flex max-h-[calc(100%-7.5rem)] flex-col items-end">
+          <MenuToggle open={sidebarOpen} onToggle={() => setSidebarOpen((open) => !open)} controls="weather-layer-menu" />
+          {sidebarOpen && (
+            <nav id="weather-layer-menu" aria-label="ชั้นข้อมูลสภาพอากาศ" className="pointer-events-auto mt-3 min-h-0 w-[250px] overflow-y-auto overscroll-contain pb-2 pl-2 pr-0.5 [scrollbar-width:thin]">
+              <SectionTitle>ความเสี่ยงรายอำเภอ</SectionTitle>
+              <div className="space-y-1.5">
+                <SidebarItem
+                  label="แผนที่ความเสี่ยง"
+                  icon={ShieldCheck}
+                  tone="from-emerald-400 to-red-500"
+                  active={!isWindy}
+                  onClick={() => setViewMode("risk")}
+                />
+                <SidebarItem
+                  label={radarEnabled && radarLayer?.time ? `เรดาร์ฝน ${formatTime(radarLayer.time)}` : "เรดาร์ฝน"}
+                  icon={Radar}
+                  tone="from-green-400 to-yellow-400"
+                  active={!isWindy && radarEnabled}
+                  onClick={() => {
+                    setViewMode("risk");
+                    setRadarEnabled((enabled) => (isWindy ? true : !enabled));
+                  }}
+                />
+                {BASE_MAPS.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    label={item.label}
+                    icon={item.icon}
+                    tone={item.tone}
+                    active={!isWindy && baseMap === item.key}
+                    onClick={() => {
+                      setViewMode("risk");
+                      setBaseMap(item.key);
+                    }}
+                  />
+                ))}
+              </div>
+
+              <SectionTitle>พยากรณ์อากาศ (Windy)</SectionTitle>
+              <div className="space-y-1.5">
+                {WINDY_OVERLAYS.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    label={item.label}
+                    icon={WEATHER_ICONS[item.icon] || Cloud}
+                    tone={item.tone}
+                    active={isWindy && windyOverlay === item.key}
+                    onClick={() => {
+                      setWindyOverlay(item.key);
+                      setViewMode("windy");
+                    }}
+                  />
+                ))}
+              </div>
+              {isWindy && (
+                <div className="mt-2 flex justify-end gap-1">
+                  {WINDY_PRODUCTS.map((product) => (
+                    <button
+                      key={product.key}
+                      type="button"
+                      onClick={() => setWindyProduct(product.key)}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-black ${windyProduct === product.key ? "bg-amber-400 text-slate-900" : "bg-slate-900/70 text-white hover:bg-slate-900"}`}
+                    >
+                      {product.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 flex justify-end">
+                <a
+                  href={buildWindyWebsiteUrl({ overlay: windyOverlay })}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-full bg-slate-900/70 px-3 py-1 text-xs font-bold text-white hover:bg-slate-900"
+                >
+                  เปิดใน Windy.com <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+              </div>
+            </nav>
+          )}
+        </div>
+
+        {/* ซ้ายล่าง: คำอธิบายสี (โหมดความเสี่ยง) */}
+        {!isWindy && (
+          <div className={`absolute bottom-[5.5rem] left-[384px] z-[650] hidden rounded-xl px-3 py-2 text-xs md:block ${GLASS}`}>
+            <div className="flex items-center gap-3">
+              {RISK_LEVELS.map((level) => (
+                <span key={level} className="flex items-center gap-1.5 font-bold">
+                  <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: riskMeta(level).color }} aria-hidden="true" />
+                  {riskMeta(level).label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ล่าง: พยากรณ์ 7 วันของอำเภอที่เลือก */}
+        {!isWindy && dailyForecast.length > 0 && (
+          <div className="absolute bottom-3 right-14 z-[650] max-md:hidden md:left-[384px]">
+            <div className={`flex items-center gap-1 overflow-x-auto rounded-2xl p-1.5 [scrollbar-width:none] ${GLASS}`}>
+              <span className="hidden shrink-0 px-2 text-xs font-bold text-white/70 xl:block">7 วัน อ.{selectedDistrict?.district_name}</span>
+              {dailyForecast.map((day, index) => {
+                const meta = riskMeta(day.risk_level);
+                const active = index === selectedDay;
+                return (
+                  <button
+                    key={day.forecast_datetime}
+                    type="button"
+                    onClick={() => {
+                      setSelectedDay(index);
+                      setPanelOpen(true);
+                    }}
+                    className={`min-w-[92px] flex-1 shrink-0 rounded-xl px-2 py-1.5 text-center transition ${active ? "bg-white text-slate-900" : "hover:bg-white/10"}`}
+                  >
+                    <span className="block text-xs font-black">{formatDay(day.forecast_datetime, index)}</span>
+                    <span className={`block whitespace-nowrap text-[11px] ${active ? "text-slate-600" : "text-white/70"}`}>{day.temperature_min}–{day.temperature_max}°C</span>
+                    <span className={`block whitespace-nowrap text-[11px] font-bold ${active ? "text-sky-700" : "text-sky-200"}`}>ฝน {day.rainfall_forecast} มม.</span>
+                    <span className="mx-auto mt-1 block h-1.5 w-10 rounded-full" style={{ backgroundColor: meta.color }} aria-label={meta.label} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </main>
+
+      <AIChatbot showLauncher={false} />
+    </div>
+  );
+}

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import AIChatbot from "@/components/AIChatbot";
-import FloatingReportButton from "@/components/FloatingReportButton";
 import Footer from "@/components/Footer";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 
@@ -43,20 +42,21 @@ export default function PublicOpsScaffold({
 }) {
   const statusKey = eocStatus || (eocIsOpen ? "open" : "watch");
   const statusMeta = {
+    // ใช้ภาษาที่ประชาชนเข้าใจแทนคำว่า "เปิด/ปิด EOC"
     open: {
-      title: "เปิด EOC",
-      className: "border-emerald-300 bg-emerald-600"
+      title: "มีเหตุการณ์ที่ต้องติดตาม",
+      className: "border-amber-300 bg-amber-600"
     },
     closed: {
-      title: "ปิด EOC",
-      className: "border-slate-300 bg-slate-700"
+      title: "สถานการณ์ปกติ",
+      className: "border-emerald-300 bg-emerald-700"
     },
     watch: {
       title: "เฝ้าระวัง",
       className: "border-sky-300 bg-sky-700"
     }
   }[statusKey] || {
-    title: eocIsOpen ? "เปิด EOC" : "เฝ้าระวัง",
+    title: eocIsOpen ? "มีเหตุการณ์ที่ต้องติดตาม" : "เฝ้าระวัง",
     className: eocIsOpen ? "border-emerald-300 bg-emerald-600" : "border-sky-300 bg-sky-700"
   };
 
@@ -107,8 +107,8 @@ export default function PublicOpsScaffold({
         <Footer />
       </div>
 
-      <FloatingReportButton />
-      <AIChatbot />
+      {/* เปิดผู้ช่วยได้จากเมนู "ถามผู้ช่วย" / ขอความช่วยเหลือมีปุ่มใน navbar แล้ว จึงไม่ใช้ปุ่มลอย */}
+      <AIChatbot showLauncher={false} />
     </div>
   );
 }

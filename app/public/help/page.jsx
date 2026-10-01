@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import AppIcon from "@/components/icons/AppIcon";
+import HelpRequestLink from "@/components/public/HelpRequestLink";
 
 export default function HelpCenterPage() {
     const helpCategories = [
@@ -11,13 +12,6 @@ export default function HelpCenterPage() {
             description: "คู่มือการใช้งานสำหรับประชาชนทั่วไป",
             link: "/public/help/citizen-guide",
             color: "from-blue-500 to-blue-600"
-        },
-        {
-            title: "สำหรับเจ้าหน้าที่ EOC",
-            icon: "userCog",
-            description: "คู่มือการใช้งานสำหรับเจ้าหน้าที่",
-            link: "/public/help/eoc-guide",
-            color: "from-green-500 to-green-600"
         },
         {
             title: "คำถามที่พบบ่อย (FAQ)",
@@ -42,7 +36,7 @@ export default function HelpCenterPage() {
                 </div>
 
                 {/* Help Categories */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                     {helpCategories.map((category, index) => (
                         <Link
                             key={index}
@@ -77,16 +71,20 @@ export default function HelpCenterPage() {
                         <AppIcon icon="link" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลิงก์ด่วน
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Link
-                            href="/public/report-incident"
+                        <HelpRequestLink
                             className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow flex items-center gap-3"
+                            disabledClassName="cursor-not-allowed opacity-60 hover:shadow-none"
                         >
-                            <span className="text-3xl"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                            <div>
-                                <h3 className="font-semibold text-gray-800">แจ้งเหตุภัยพิบัติ</h3>
-                                <p className="text-sm text-gray-600">รายงานเหตุการณ์ฉุกเฉิน</p>
-                            </div>
-                        </Link>
+                            {({ helpOpen }) => (
+                                <>
+                                    <span className="text-3xl"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-800">ขอความช่วยเหลือ</h3>
+                                        <p className="text-sm text-gray-600">{helpOpen ? "ส่งคำขอถึงเจ้าหน้าที่ EOC" : "เปิดเมื่อมีเหตุการณ์ฉุกเฉิน • เหตุด่วนโทร 1669"}</p>
+                                    </div>
+                                </>
+                            )}
+                        </HelpRequestLink>
 
                         <Link
                             href="/public/disaster-map"

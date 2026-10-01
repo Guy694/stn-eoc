@@ -8,6 +8,8 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "connect-src 'self' https:",
   "media-src 'self' blob:",
+  // แผนที่พยากรณ์อากาศ Windy (หน้า /public/weather-watch) แสดงผ่าน iframe
+  "frame-src 'self' https://embed.windy.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

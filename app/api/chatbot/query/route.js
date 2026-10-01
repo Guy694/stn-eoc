@@ -3,51 +3,11 @@ import { query } from '@/lib/db';
 import { getRouteAdvice, isRouteAdviceQuestion } from '@/lib/routeAdvice';
 import { notifySecurityEvent } from '@/lib/telegram';
 import { requireAuth } from '@/lib/auth';
+import { getClientIp } from '@/lib/clientIp';
+import { consumeRateLimit, tooManyRequestsResponse } from '@/lib/rateLimit';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const analyticsRateLimit = new Map();
-const ANALYTICS_RATE_WINDOW_MS = 5 * 60 * 1000;
-const ANALYTICS_RATE_LIMIT = 20;
-
-function consumeAnalyticsRateLimit(key, now = Date.now()) {
-    const current = analyticsRateLimit.get(key);
-    if (!current || now - current.startedAt >= ANALYTICS_RATE_WINDOW_MS) {
-        analyticsRateLimit.set(key, { startedAt: now, count: 1 });
-        return true;
-    }
-    if (current.count >= ANALYTICS_RATE_LIMIT) return false;
-    current.count += 1;
-    return true;
-}
-
-const SENSITIVE_IDENTIFIER_PATTERNS = [
-    /pid/i,
-    /citizen/i,
-    /thaiid/i,
-    /id_card/i,
-    /passport/i,
-    /phone/i,
-    /mobile/i,
-    /tel/i,
-    /email/i,
-    /address/i,
-    /birth(date)?/i,
-    /first_name/i,
-    /last_name/i,
-    /given_name/i,
-    /family_name/i,
-    /fullname/i,
-    /name$/i,
-    /secret/i,
-    /password/i,
-    /token/i,
-    /cookie/i,
-    /session/i,
-    /hash/i,
-    /consent/i,
-    /exact_location/i
-];
 
 const FLOOD_KNOWLEDGE_PATTERNS = [
     /น้ำท่วม/i,
@@ -122,55 +82,6 @@ const WEATHER_KNOWLEDGE_PATTERNS = [
     /radar/i
 ];
 
-function isSensitiveIdentifier(value) {
-    if (!value) return false;
-    return SENSITIVE_IDENTIFIER_PATTERNS.some((pattern) => pattern.test(String(value)));
-}
-
-function filterSchemaForPdpa(rawSchema) {
-    const safeSchema = {};
-
-    for (const [tableName, tableDef] of Object.entries(rawSchema)) {
-        if (isSensitiveIdentifier(tableName)) continue;
-
-        const safeColumns = (tableDef.columns || []).filter((col) => {
-            return !isSensitiveIdentifier(col.name) && !isSensitiveIdentifier(col.comment);
-        });
-
-        if (safeColumns.length > 0) {
-            safeSchema[tableName] = {
-                comment: tableDef.comment || '',
-                columns: safeColumns
-            };
-        }
-    }
-
-    return safeSchema;
-}
-
-function containsSensitiveSql(sql) {
-    if (!sql) return false;
-    const lowered = String(sql).toLowerCase();
-    return SENSITIVE_IDENTIFIER_PATTERNS.some((pattern) => {
-        const source = pattern.source.replace(/^\^/, '').replace(/\$$/, '');
-        const simple = source.replace(/\\/g, '');
-        if (!simple || simple.includes('(') || simple.includes('[') || simple.includes('|')) return false;
-        const matcher = new RegExp(`\\b${simple}\\b`, 'i');
-        return matcher.test(lowered);
-    });
-}
-
-function redactSensitiveFields(rows) {
-    return rows.map((row) => {
-        const sanitized = {};
-        for (const [key, value] of Object.entries(row)) {
-            if (isSensitiveIdentifier(key)) continue;
-            sanitized[key] = value;
-        }
-        return sanitized;
-    });
-}
-
 function detectAllowedKnowledgeDomain(message) {
     const text = String(message || '');
     const isFlood = FLOOD_KNOWLEDGE_PATTERNS.some((pattern) => pattern.test(text));
@@ -228,28 +139,6 @@ function createAssistantUnavailableResponse({ domain = null, reason = 'ai_unavai
             domain
         }
     });
-}
-
-function createBasicDatabaseAnswer({ message, results }) {
-    const rows = Array.isArray(results) ? results : [];
-
-    if (rows.length === 0) {
-        return 'ไม่พบข้อมูลตามคำถามนี้ในฐานข้อมูลครับ';
-    }
-
-    const previewRows = rows.slice(0, 5).map((row, index) => {
-        const fields = Object.entries(row)
-            .slice(0, 5)
-            .map(([key, value]) => `${key}: ${value ?? '-'}`)
-            .join(', ');
-        return `${index + 1}. ${fields}`;
-    });
-
-    return [
-        `พบข้อมูลจากฐานข้อมูล ${formatThaiNumber(rows.length)} รายการสำหรับคำถาม "${message}" ครับ`,
-        'ระบบ AI สำหรับสรุปภาษาธรรมชาติมีปัญหาชั่วคราว จึงแสดงผลลัพธ์สำคัญแบบย่อ:',
-        previewRows.join('\n')
-    ].join('\n');
 }
 
 const DENGUE_DISEASE_NAME = 'ไข้เลือดออก';
@@ -690,13 +579,16 @@ async function createKnowledgeResponse({ model, message, conversationHistory, do
 export async function POST(request) {
     try {
         const { message, conversationHistory = [], analyticsContext = false } = await request.json();
+        const clientIp = getClientIp(request);
         if (analyticsContext) {
             const auth = await requireAuth(request, ['admin', 'commander', 'staff']);
             if (!auth.success) return auth.response;
-            const rateKey = `${auth.user.id}:${request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local'}`;
-            if (!consumeAnalyticsRateLimit(rateKey)) {
-                return Response.json({ success: false, error: 'ส่งคำถามถี่เกินไป กรุณารอสักครู่' }, { status: 429 });
-            }
+            const limit = await consumeRateLimit('chatbotAnalytics', `user:${auth.user.id}`);
+            if (!limit.allowed) return tooManyRequestsResponse(limit, 'ส่งคำถามถี่เกินไป กรุณารอสักครู่');
+        } else {
+            // แชตบอตสาธารณะเรียก Gemini ซึ่งมีค่าใช้จ่ายจริง จึงจำกัดจำนวนครั้งต่อ IP
+            const limit = await consumeRateLimit('chatbotPublic', clientIp);
+            if (!limit.allowed) return tooManyRequestsResponse(limit, 'ส่งคำถามถี่เกินไป กรุณารอสักครู่');
         }
 
         if (!message || typeof message !== 'string') {
@@ -707,14 +599,14 @@ export async function POST(request) {
         }
         if (message.length > 2000) {
             void notifySecurityEvent('chatbot_oversized_prompt', {
-                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                ip: clientIp,
                 length: message.length
             });
             return Response.json({ success: false, error: 'Message is too long' }, { status: 413 });
         }
         if (/\b(select|union|insert|update|delete|drop|alter|information_schema|sleep|benchmark)\b/i.test(message)) {
             void notifySecurityEvent('chatbot_sql_probe_blocked', {
-                ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
+                ip: clientIp,
                 sample: message.slice(0, 200)
             });
             return Response.json({ success: false, error: 'Unsupported request' }, { status: 400 });
@@ -775,289 +667,6 @@ export async function POST(request) {
                 results: null,
                 resultCount: 0,
                 source: 'out_of_scope'
-            }
-        });
-
-        // Check if API key is configured
-        if (!process.env.GEMINI_API_KEY) {
-            if (allowedKnowledgeDomain) {
-                return createAssistantUnavailableResponse({
-                    domain: allowedKnowledgeDomain,
-                    reason: 'ai_not_configured'
-                });
-            }
-
-            return Response.json({
-                success: true,
-                data: {
-                    answer: buildScopeAnswer(),
-                    sql: null,
-                    results: null,
-                    resultCount: 0,
-                    source: 'out_of_scope'
-                }
-            });
-        }
-
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: 2048,
-            }
-        });
-
-        // Step 1: Get database schema directly from database
-        let schema = {};
-        let relationships = [];
-
-        try {
-            // Get all tables in the database
-            const tables = await query(`
-                SELECT TABLE_NAME, TABLE_COMMENT
-                FROM INFORMATION_SCHEMA.TABLES
-                WHERE TABLE_SCHEMA = DATABASE()
-                AND TABLE_TYPE = 'BASE TABLE'
-                ORDER BY TABLE_NAME
-            `);
-
-            // For each table, get column information
-            for (const table of tables) {
-                const tableName = table.TABLE_NAME;
-
-                const columns = await query(`
-                    SELECT 
-                        COLUMN_NAME,
-                        DATA_TYPE,
-                        COLUMN_TYPE,
-                        IS_NULLABLE,
-                        COLUMN_KEY,
-                        COLUMN_COMMENT
-                    FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE TABLE_SCHEMA = DATABASE()
-                    AND TABLE_NAME = ?
-                    ORDER BY ORDINAL_POSITION
-                `, [tableName]);
-
-                schema[tableName] = {
-                    comment: table.TABLE_COMMENT || '',
-                    columns: columns.map(col => ({
-                        name: col.COLUMN_NAME,
-                        type: col.DATA_TYPE,
-                        fullType: col.COLUMN_TYPE,
-                        nullable: col.IS_NULLABLE === 'YES',
-                        key: col.COLUMN_KEY,
-                        comment: col.COLUMN_COMMENT || ''
-                    }))
-                };
-            }
-
-            // Get foreign key relationships
-            const foreignKeys = await query(`
-                SELECT 
-                    TABLE_NAME,
-                    COLUMN_NAME,
-                    REFERENCED_TABLE_NAME,
-                    REFERENCED_COLUMN_NAME
-                FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-                WHERE TABLE_SCHEMA = DATABASE()
-                AND REFERENCED_TABLE_NAME IS NOT NULL
-            `);
-
-            relationships = foreignKeys.map(fk => ({
-                from: `${fk.TABLE_NAME}.${fk.COLUMN_NAME}`,
-                to: `${fk.REFERENCED_TABLE_NAME}.${fk.REFERENCED_COLUMN_NAME}`
-            }));
-
-        } catch (schemaError) {
-            console.error('Error fetching database schema:', schemaError);
-
-            if (allowedKnowledgeDomain) {
-                return createKnowledgeResponse({
-                    model,
-                    message,
-                    conversationHistory,
-                    domain: allowedKnowledgeDomain
-                });
-            }
-
-            return Response.json({
-                success: false,
-                error: 'Failed to fetch database schema',
-                message: 'ไม่สามารถดึงข้อมูล schema จาก database ได้'
-            }, { status: 500 });
-        }
-
-        const safeSchema = filterSchemaForPdpa(schema);
-
-        // Step 2: Generate SQL query using Gemini
-        const sqlPrompt = `คุณเป็น SQL Expert สำหรับระบบ EOC (Satun Provincial Emergency Operations Center (Satun Geo-EOC)) จังหวัดสตูล
-
-DATABASE SCHEMA (PDPA SAFE VIEW):
-${JSON.stringify(safeSchema, null, 2)}
-
-RELATIONSHIPS:
-${JSON.stringify(relationships, null, 2)}
-
-USER QUESTION: ${message}
-
-INSTRUCTIONS:
-1. วิเคราะห์คำถามของผู้ใช้
-2. สร้าง SQL query ที่เหมาะสม (เฉพาะ SELECT เท่านั้น)
-3. ตอบกลับในรูปแบบ JSON เท่านั้น:
-   {
-     "sql": "SELECT ... FROM ...",
-     "explanation": "คำอธิบายว่าทำอะไร"
-   }
-
-RULES:
-- ใช้เฉพาะ SELECT query เท่านั้น (ห้าม INSERT, UPDATE, DELETE, DROP)
-- ถ้าคำถามไม่เกี่ยวกับข้อมูลในระบบ ให้ตอบ { "sql": null, "explanation": "คำถามนี้ไม่เกี่ยวข้องกับข้อมูลในระบบ EOC" }
-- ใช้ LIMIT เพื่อจำกัดผลลัพธ์ (ไม่เกิน 100 rows)
-- ตรวจสอบว่า table และ column ที่ใช้มีอยู่จริงใน schema
-- ห้ามใช้หรือเปิดเผยข้อมูลที่เข้าข่าย PDPA เช่น ชื่อบุคคล, เลขบัตร, เบอร์โทร, อีเมล, ที่อยู่ละเอียด หรือพิกัดบ้าน/ตำแหน่งส่วนบุคคล
-- อนุญาตให้ใช้ latitude/longitude ของเหตุการณ์ ถนน จุดบริการ หรือพื้นที่สาธารณะ เพื่อวิเคราะห์สถานการณ์และเส้นทาง
-- ถ้าผู้ใช้ถามข้อมูลส่วนบุคคล ให้ตอบรวมเชิงสถิติเท่านั้น
-
-ตอบกลับเป็น JSON เท่านั้น:`;
-
-        let sqlResponse;
-        try {
-            const sqlResult = await model.generateContent(sqlPrompt);
-            sqlResponse = sqlResult.response.text();
-        } catch (sqlGenerationError) {
-            console.error('Failed to generate SQL response:', sqlGenerationError);
-
-            if (allowedKnowledgeDomain) {
-                return createKnowledgeResponse({
-                    model,
-                    message,
-                    conversationHistory,
-                    domain: allowedKnowledgeDomain
-                });
-            }
-
-            throw sqlGenerationError;
-        }
-
-        // Parse JSON response
-        let sqlData;
-        try {
-            // Remove markdown code blocks if present
-            const cleanedResponse = sqlResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            sqlData = JSON.parse(cleanedResponse);
-        } catch (parseError) {
-            console.error('Failed to parse SQL response:', sqlResponse);
-
-            if (allowedKnowledgeDomain) {
-                return createKnowledgeResponse({
-                    model,
-                    message,
-                    conversationHistory,
-                    domain: allowedKnowledgeDomain
-                });
-            }
-
-            throw new Error('AI ไม่สามารถสร้าง SQL query ได้');
-        }
-
-        // If no SQL query (question not relevant)
-        if (!sqlData.sql) {
-            if (allowedKnowledgeDomain) {
-                return createKnowledgeResponse({
-                    model,
-                    message,
-                    conversationHistory,
-                    domain: allowedKnowledgeDomain
-                });
-            }
-
-            return Response.json({
-                success: true,
-                data: {
-                    answer: buildScopeAnswer(),
-                    sql: null,
-                    results: null,
-                    resultCount: 0,
-                    source: 'out_of_scope'
-                }
-            });
-        }
-
-        // Validate SQL (basic security check)
-        const sqlLower = sqlData.sql.toLowerCase();
-        const dangerousKeywords = ['insert', 'update', 'delete', 'drop', 'alter', 'create', 'truncate', 'exec', 'execute'];
-
-        if (dangerousKeywords.some(keyword => sqlLower.includes(keyword))) {
-            return Response.json({
-                success: false,
-                error: 'Invalid SQL query detected',
-                message: 'ตรวจพบคำสั่ง SQL ที่ไม่อนุญาต'
-            }, { status: 400 });
-        }
-
-        if (containsSensitiveSql(sqlData.sql)) {
-            return Response.json({
-                success: false,
-                error: 'PDPA restricted query',
-                message: 'คำขอนี้มีข้อมูลส่วนบุคคลตาม PDPA ระบบจึงไม่อนุญาต กรุณาถามเป็นข้อมูลสถิติภาพรวม'
-            }, { status: 403 });
-        }
-
-        // Step 3: Execute SQL query
-        let queryResults;
-        try {
-            // Defense in depth: free-form SQL execution is permanently disabled.
-            // Database answers must be added as deterministic templates above.
-            throw new Error('Free-form SQL execution is disabled');
-        } catch (dbError) {
-            console.error('Database query error:', dbError);
-            return Response.json({
-                success: false,
-                error: 'Database query failed',
-                message: 'ไม่สามารถดึงข้อมูลจาก database ได้',
-                sql: sqlData.sql
-            }, { status: 500 });
-        }
-
-        const safeResults = redactSensitiveFields(queryResults);
-
-        // Step 4: Generate natural language response using Gemini
-        const answerPrompt = `คุณเป็นผู้ช่วย AI สำหรับระบบ EOC (Satun Geo-EOC Intelligence Platform) จังหวัดสตูล
-
-USER QUESTION: ${message}
-
-SQL QUERY ที่ใช้: ${sqlData.sql}
-
-QUERY RESULTS:
-${JSON.stringify(safeResults, null, 2)}
-
-INSTRUCTIONS:
-1. วิเคราะห์ผลลัพธ์จาก database
-2. สรุปข้อมูลเป็นภาษาไทยที่เข้าใจง่าย
-3. ถ้ามีตัวเลข ให้แสดงอย่างชัดเจน
-4. ถ้าไม่มีข้อมูล ให้บอกว่าไม่พบข้อมูล
-5. ตอบแบบสั้นกระชับ เป็นมิตร
-
-ตอบกลับเป็นภาษาไทยเท่านั้น:`;
-
-        let answer;
-        try {
-            const answerResult = await model.generateContent(answerPrompt);
-            answer = answerResult.response.text().trim();
-        } catch (answerGenerationError) {
-            console.error('Failed to generate natural language answer:', answerGenerationError);
-            answer = createBasicDatabaseAnswer({ message, results: safeResults });
-        }
-
-        return Response.json({
-            success: true,
-            data: {
-                answer,
-                sql: sqlData.sql,
-                results: safeResults,
-                resultCount: safeResults.length,
-                source: 'database'
             }
         });
 

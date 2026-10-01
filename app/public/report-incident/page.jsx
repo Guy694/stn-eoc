@@ -6,6 +6,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
 import { showWarning } from "@/lib/sweetAlert";
+import useHelpAvailability from "@/components/public/useHelpAvailability";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -49,8 +50,10 @@ function getLocalDateTimeValue() {
 }
 
 export default function ReportIncidentPage() {
+    const { helpOpen } = useHelpAvailability();
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [consentGiven, setConsentGiven] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState("");
     const [markerPosition, setMarkerPosition] = useState(null);
@@ -240,6 +243,11 @@ export default function ReportIncidentPage() {
             return;
         }
 
+        if (!consentGiven) {
+            showWarning("กรุณายืนยันการให้ใช้ข้อมูลส่วนบุคคลเพื่อการช่วยเหลือ");
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -296,6 +304,31 @@ export default function ReportIncidentPage() {
             setIsSubmitting(false);
         }
     };
+
+    // ฟอร์มนี้รับคำขอเฉพาะตอนที่ EOC เปิดอยู่ (เซิร์ฟเวอร์ตรวจซ้ำอีกชั้น)
+    if (!helpOpen) {
+        return (
+            <div className="flex min-h-screen flex-col bg-slate-50">
+                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10">
+                    <section className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm" role="status">
+                        <h1 className="text-2xl font-black text-slate-900">ขณะนี้ยังไม่เปิดรับคำขอความช่วยเหลือ</h1>
+                        <p className="mt-3 text-slate-700">
+                            เว็บไซต์รับคำขอความช่วยเหลือเฉพาะเมื่อศูนย์ปฏิบัติการ (EOC) เปิดรับมือเหตุการณ์ฉุกเฉิน ขณะนี้ยังไม่มีเหตุการณ์ที่เปิดอยู่
+                        </p>
+                        <a href="tel:1669" className="mt-5 flex items-center justify-center rounded-xl bg-red-600 px-4 py-4 text-lg font-black text-white hover:bg-red-700">
+                            เหตุฉุกเฉินโทร 1669
+                        </a>
+                        <div className="mt-4 flex flex-wrap justify-center gap-2 text-sm font-bold">
+                            <Link href="/public/shelters" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">ศูนย์พักพิง</Link>
+                            <Link href="/public/announcements" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">ประกาศ</Link>
+                            <Link href="/" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">กลับหน้าหลัก</Link>
+                        </div>
+                    </section>
+                </main>
+                <Footer />
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col bg-slate-50">
@@ -490,6 +523,20 @@ export default function ReportIncidentPage() {
                                 <EmergencyCall number="199" label="ดับเพลิง" />
                             </div>
                         </section>
+
+                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm">
+                            <input
+                                type="checkbox"
+                                checked={consentGiven}
+                                onChange={(event) => setConsentGiven(event.target.checked)}
+                                className="mt-1 h-5 w-5 shrink-0 accent-red-600"
+                                required
+                            />
+                            <span>
+                                ยินยอมให้เจ้าหน้าที่ใช้ชื่อ เบอร์โทรศัพท์ ตำแหน่ง และรูปภาพที่แจ้ง เพื่อติดต่อกลับและประสานความช่วยเหลือเท่านั้น
+                                (<Link href="/privacy-policy" target="_blank" className="font-bold text-red-700 underline">อ่านนโยบายความเป็นส่วนตัว</Link>)
+                            </span>
+                        </label>
 
                         <button
                             type="submit"

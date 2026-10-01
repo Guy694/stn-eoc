@@ -9,8 +9,13 @@ async function main() {
         process.exit(1);
     }
 
-    if (password.length < 8) {
-        console.error('ADMIN_PASSWORD must be at least 8 characters');
+    if (process.env.NODE_ENV === 'production' && !process.argv.includes('--allow-production')) {
+        console.error('Refusing to reset admin in production (pass --allow-production if this is intentional)');
+        process.exit(1);
+    }
+
+    if (password.length < 10 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+        console.error('ADMIN_PASSWORD must be at least 10 characters and contain letters and digits');
         process.exit(1);
     }
 
@@ -18,12 +23,12 @@ async function main() {
         host: process.env.DB_HOST || 'localhost',
         port: Number(process.env.DB_PORT || 3306),
         user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
+        password: process.env.DB_PASSWORD ?? '',
         database: process.env.DB_NAME || 'stneoc'
     });
 
     try {
-        const passwordHash = await bcrypt.hash(password, 10);
+        const passwordHash = await bcrypt.hash(password, 12);
         const [result] = await connection.execute(
             `UPDATE officer
              SET password_hash = ?,

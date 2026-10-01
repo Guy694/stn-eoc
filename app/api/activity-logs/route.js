@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
 import { publicInternalError } from "@/lib/apiResponse";
 import { requireAuth } from "@/lib/auth";
+import { getPool } from "@/lib/db";
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+const pool = getPool();
 
 // POST - บันทึก activity log
 export async function POST(request) {

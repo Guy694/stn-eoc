@@ -1,0 +1,33 @@
+{
+  "description": "ลำดับการรัน migration (เรียงตามวันที่เพิ่มเข้า repository) — migration ใหม่ให้ต่อท้ายเสมอ ห้ามแก้ไฟล์ที่ถูกใช้ไปแล้ว",
+  "migrations": [
+    "add_multi_photo_support.sql",
+    "add_thaiid_to_incident_reports.sql",
+    "add_commander_role.sql",
+    "add_shelter_contact_phone.sql",
+    "create_officer_team_assignments_view.sql",
+    "add_eoc_open_order_file.sql",
+    "extend_shelter_centers_google_sheet.sql",
+    "create_vulnerable_group_baselines.sql",
+    "extend_affected_persons_impact_groups.sql",
+    "add_announcement_session_id.sql",
+    "add_disease_subtype_to_eoc_sessions.sql",
+    "create_agency_contacts.sql",
+    "add_telegram_help_notifications.sql",
+    "create_flood_eoc_management.sql",
+    "create_medical_inventory.sql",
+    "create_eoc_session_commanders.sql",
+    "add_moo_to_satun_village_polygon.sql",
+    "extend_disease_reports_village_location.sql",
+    "create_registration_requests.sql",
+    "extend_announcements_content.sql",
+    "expand-eoc-team-system-roles.sql",
+    "create_area_population_and_file_assets.sql",
+    "create_eoc_team_reports.sql",
+    "enhance_master_data_metadata.sql",
+    "enhance_officer_data_management.sql",
+    "extend_area_population_gender.sql",
+    "reconcile_eoc_team_registry.sql",
+    "20260930_security_hardening.sql"
+  ]
+}

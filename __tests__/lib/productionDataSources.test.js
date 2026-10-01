@@ -89,7 +89,7 @@ describe("production data source safeguards", () => {
         const apiSource = read("app/api/chatbot/query/route.js");
         expect(clientSource).toContain("analyticsContext: true");
         expect(apiSource).toContain("requireAuth(request, ['admin', 'commander', 'staff'])");
-        expect(apiSource).toContain("consumeAnalyticsRateLimit");
+        expect(apiSource).toContain("consumeRateLimit('chatbotAnalytics'");
     });
 
     test("village polygon pagination does not bind LIMIT/OFFSET on incompatible MySQL", () => {
