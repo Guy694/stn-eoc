@@ -80,35 +80,34 @@ async function loadHealthFacilities() {
     );
 }
 
-async function getOrCreateInventoryEvent() {
-    // Try to find an existing event for flood, session 3
-    const existing = await query(
-        `SELECT id, external_event_id, event_name, eoc_type, session_number, source_file
-         FROM medical_inventory_events
-         WHERE eoc_type = ? AND session_number = ?`,
-        ["flood", 3]
+// เลือกบัญชีคลังตามเหตุการณ์อุทกภัยที่เปิดอยู่ (เดิมผูกตายตัวกับครั้งที่ 3)
+// ถ้าไม่มีเหตุการณ์เปิดอยู่ ใช้บัญชีคลังล่าสุดเพื่อดูย้อนหลัง
+async function getOrCreateInventoryEvent({ create = false } = {}) {
+    const active = await query(
+        `SELECT session_number FROM eoc_sessions WHERE eoc_type = 'flood' AND status = 'active' ORDER BY opened_at DESC LIMIT 1`
     );
-
-    if (existing.length > 0) {
-        return existing[0];
+    if (active.length) {
+        const sessionNumber = active[0].session_number;
+        const existing = await query(
+            `SELECT id, external_event_id, event_name, eoc_type, session_number, source_file
+             FROM medical_inventory_events WHERE eoc_type = 'flood' AND session_number = ? LIMIT 1`,
+            [sessionNumber]
+        );
+        if (existing.length) return existing[0];
+        if (create) {
+            const eventName = `อุทกภัยน้ำท่วม ครั้งที่ ${sessionNumber}`;
+            const result = await query(
+                `INSERT INTO medical_inventory_events (eoc_type, session_number, event_name) VALUES ('flood', ?, ?)`,
+                [sessionNumber, eventName]
+            );
+            return { id: result.insertId, external_event_id: null, eoc_type: "flood", session_number: sessionNumber, event_name: eventName, source_file: null };
+        }
     }
-
-    // If not found, insert a new one with default values
-    const result = await query(
-        `INSERT INTO medical_inventory_events
-         (external_event_id, eoc_type, session_number, event_name, source_file)
-         VALUES (?, ?, ?, ?, ?)`,
-        [null, "flood", 3, "อุทกภัย จ.สตูล", null]
+    const latest = await query(
+        `SELECT id, external_event_id, event_name, eoc_type, session_number, source_file
+         FROM medical_inventory_events ORDER BY (session_number IS NULL), session_number DESC, id DESC LIMIT 1`
     );
-
-    return {
-        id: result.insertId,
-        external_event_id: null,
-        eoc_type: "flood",
-        session_number: 3,
-        event_name: "อุทกภัย จ.สตูล",
-        source_file: null
-    };
+    return latest[0] || { id: 0, external_event_id: null, eoc_type: "flood", session_number: null, event_name: "ยังไม่มีบัญชีคลัง", source_file: null };
 }
 
 function normalizeDbRow(row) {
@@ -167,9 +166,9 @@ async function loadInventoryRowsFromDb(eventId) {
     return rows.map(normalizeDbRow);
 }
 
-async function getInventoryContext() {
+async function getInventoryContext(options) {
     const facilities = await loadHealthFacilities();
-    const event = await getOrCreateInventoryEvent();
+    const event = await getOrCreateInventoryEvent(options);
     return { facilities, event };
 }
 
@@ -273,7 +272,10 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: "กรุณาระบุรหัส รายการ และหน่วยนับเวชภัณฑ์" }, { status: 400 });
         }
 
-        const { facilities, event } = await getInventoryContext();
+        const { facilities, event } = await getInventoryContext({ create: true });
+        if (!event.id) {
+            return NextResponse.json({ success: false, message: "ยังไม่มีเหตุการณ์อุทกภัยที่เปิดอยู่" }, { status: 409 });
+        }
         const facility = facilities.find((item) => Number(item.id) === facilityId);
         if (!facility) {
             return NextResponse.json({ success: false, message: "ไม่พบหน่วยบริการในระบบ" }, { status: 400 });
