@@ -218,7 +218,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         return (
             <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86]"></div>
                     <span className="ml-3 text-gray-600">กำลังโหลดข้อมูล...</span>
                 </div>
             </div>
@@ -229,9 +229,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         return (
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                 <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
                 <p className="text-gray-600">
-                    ไม่พบ EOC Session อุทกภัยน้ำท่วมที่กำลังดำเนินการอยู่ในขณะนี้
+                    ไม่พบ เหตุการณ์ EOC อุทกภัยน้ำท่วมที่กำลังดำเนินการอยู่ในขณะนี้
                 </p>
             </div>
         );
@@ -594,7 +594,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 <select
                                     value={baseMap}
                                     onChange={(e) => setBaseMap(e.target.value)}
-                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-blue-400"
+                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-[#0b4c86]"
                                 >
                                     {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
                                         <option key={key} value={key}>{layer.label}</option>
@@ -625,7 +625,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </div>
 
                         {selectedDate && (
-                            <div className="text-sm text-blue-900 bg-blue-50 p-3 rounded-lg">
+                            <div className="text-sm text-[#083865] bg-[#edf5fc] p-3 rounded-lg">
                                 <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดงข้อมูลวันที่: <strong>{selectedDate.toLocaleDateString('th-TH', {
                                     weekday: 'long',
                                     day: 'numeric',
@@ -640,13 +640,13 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
             {/* แสดงข้อความเมื่อไม่มีข้อมูล flood */}
             {hasNoFloodData && (
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-center">
+                <div className="bg-[#edf5fc] border-2 border-[#c9dcee] rounded-lg p-4 text-center">
                     <div className="text-2xl mb-2"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                    <p className="text-blue-700 font-medium">ยังไม่มีข้อมูลอุทกภัยน้ำท่วมในช่วงเวลาที่เลือก</p>
-                    <p className="text-blue-600 text-sm mt-1">
+                    <p className="text-[#0b4c86] font-medium">ยังไม่มีข้อมูลอุทกภัยน้ำท่วมในช่วงเวลาที่เลือก</p>
+                    <p className="text-[#0b4c86] text-sm mt-1">
                         {latestRecordDate
                             ? 'ลองเลือกวันที่ที่มีข้อมูลในไทม์ไลน์ด้านบน'
-                            : 'ยังไม่พบรายการในฐานข้อมูล flood_records สำหรับ session นี้'}
+                            : 'ยังไม่พบรายการในฐานข้อมูล flood_records สำหรับเหตุการณ์นี้'}
                     </p>
                 </div>
             )}
@@ -666,7 +666,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             setVillageFilter('all');
 
                         }}
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="text-sm text-[#0b4c86] hover:text-[#083865]"
                     >
                         ล้างตัวกรอง
                     </button>
@@ -685,7 +685,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 setTambonFilter('all');
                                 setVillageFilter('all');
                             }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40"
                         >
                             <option value="all">ทั้งหมด ({allDistricts.length} อำเภอ)</option>
                             {allDistricts.map(district => (
@@ -702,7 +702,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 setVillageFilter('all');
                             }}
                             disabled={districtFilter === 'all'}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >
                             <option value="all">{districtFilter === 'all' ? 'กรุณาเลือกอำเภอก่อน' : `ทั้งหมด (${allTambons.length} ตำบล)`}</option>
                             {allTambons.map(tambon => (
@@ -716,7 +716,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             value={villageFilter}
                             onChange={(e) => setVillageFilter(e.target.value)}
                             disabled={tambonFilter === 'all'}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >
                             <option value="all">{tambonFilter === 'all' ? 'กรุณาเลือกตำบลก่อน' : `ทั้งหมด (${allVillages.length} หมู่บ้าน)`}</option>
                             {allVillages.map(village => (
@@ -758,7 +758,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     type="checkbox"
                                     checked={showVillageLabels}
                                     onChange={(e) => setShowVillageLabels(e.target.checked)}
-                                    className="w-4 h-4 text-blue-600 rounded"
+                                    className="w-4 h-4 text-[#0b4c86] rounded"
                                 />
                                 แสดงชื่อหมู่บ้าน
                             </label>
@@ -787,7 +787,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     type="checkbox"
                                     checked={showFacilities}
                                     onChange={(e) => setShowFacilities(e.target.checked)}
-                                    className="w-4 h-4 text-blue-600 rounded"
+                                    className="w-4 h-4 text-[#0b4c86] rounded"
                                 />
                                 แสดงสถานพยาบาล
                             </label>
@@ -796,7 +796,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     type="checkbox"
                                     checked={showWaterways}
                                     onChange={(e) => setShowWaterways(e.target.checked)}
-                                    className="w-4 h-4 text-sky-600 rounded"
+                                    className="w-4 h-4 text-[#0b4c86] rounded"
                                 />
                                 เส้นทางน้ำ/คลอง
                             </label>
@@ -1356,7 +1356,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             <div className="mb-4">
                                 <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-1 border-2 border-teal-500" style={{ borderStyle: 'dashed' }}></div>
+                                    <div className="w-12 h-1 border-2 border-[#0b4c86]" style={{ borderStyle: 'dashed' }}></div>
                                     <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
                                 </div>
                             </div>
@@ -1400,7 +1400,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             <StatBox
                                 label="ตำบลปกติ"
                                 value={Object.values(tambonFloodLevels).filter(t => t.level === 'safe').length}
-                                color="bg-blue-100 text-blue-700"
+                                color="bg-[#dbeaf7] text-[#0b4c86]"
                                 unit="ตำบล"
                             />
                         </div>
@@ -1489,9 +1489,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
 function StatCard({ label, value, icon, color }) {
     const colors = {
-        blue: 'from-blue-500 to-blue-600',
-        indigo: 'from-sky-500 to-sky-600',
-        purple: 'from-teal-500 to-teal-600',
+        blue: 'from-[#0b4c86] to-[#11466e]',
+        indigo: 'from-[#0b4c86] to-[#11466e]',
+        purple: 'from-[#0b4c86] to-[#11466e]',
         pink: 'from-pink-500 to-pink-600'
     };
 

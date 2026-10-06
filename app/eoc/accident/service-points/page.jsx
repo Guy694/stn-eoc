@@ -91,7 +91,7 @@ export default function ServicePointsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!activeSession) {
-            showError('ไม่พบ EOC Session ที่เปิดอยู่');
+            showError('ไม่พบเหตุการณ์ EOC ที่เปิดอยู่');
             return;
         }
 
@@ -211,8 +211,8 @@ export default function ServicePointsPage() {
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
-                        <p className="text-gray-600">กรุณาเปิด EOC Session ก่อนจัดการจุดบริการ</p>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                        <p className="text-gray-600">กรุณาเปิดเหตุการณ์ EOC ก่อนจัดการจุดบริการ</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -225,12 +225,12 @@ export default function ServicePointsPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
                             <span className="text-4xl"><AppIcon icon="route" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             จุดบริการชั่วคราว
                         </h1>
                         <p className="text-gray-600">
-                            EOC Session #{activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย
+                            เหตุการณ์ EOC #{activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย
                         </p>
                     </div>
                     <button
@@ -251,12 +251,12 @@ export default function ServicePointsPage() {
                         <div className="text-3xl font-bold text-green-600">{stats.active}</div>
                         <div className="text-sm text-gray-600"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปิดให้บริการ</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-blue-500">
-                        <div className="text-3xl font-bold text-blue-600">{stats.officers}</div>
+                    <div className="bg-white rounded-lg p-4 shadow border border-[#0b4c86]">
+                        <div className="text-3xl font-bold text-[#0b4c86]">{stats.officers}</div>
                         <div className="text-sm text-gray-600"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-teal-500">
-                        <div className="text-3xl font-bold text-teal-600">{stats.vehicles}</div>
+                    <div className="bg-white rounded-lg p-4 shadow border border-[#0b4c86]">
+                        <div className="text-3xl font-bold text-[#0b4c86]">{stats.vehicles}</div>
                         <div className="text-sm text-gray-600"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
                     </div>
                 </div>
@@ -303,13 +303,13 @@ export default function ServicePointsPage() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                                        <div className="bg-blue-50 rounded p-2 text-center">
-                                            <div className="font-bold text-blue-700">{point.officer_count || 0}</div>
-                                            <div className="text-xs text-blue-600"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
+                                        <div className="bg-[#edf5fc] rounded p-2 text-center">
+                                            <div className="font-bold text-[#0b4c86]">{point.officer_count || 0}</div>
+                                            <div className="text-xs text-[#0b4c86]"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
                                         </div>
-                                        <div className="bg-teal-50 rounded p-2 text-center">
-                                            <div className="font-bold text-teal-700">{point.vehicle_count || 0}</div>
-                                            <div className="text-xs text-teal-600"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
+                                        <div className="bg-[#edf5fc] rounded p-2 text-center">
+                                            <div className="font-bold text-[#0b4c86]">{point.vehicle_count || 0}</div>
+                                            <div className="text-xs text-[#0b4c86]"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
                                         </div>
                                     </div>
 
@@ -329,7 +329,7 @@ export default function ServicePointsPage() {
                                         </button>
                                         <button
                                             onClick={() => handleEdit(point)}
-                                            className="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                                            className="px-4 py-2 bg-[#dbeaf7] text-[#0b4c86] rounded hover:bg-blue-200"
                                         >
                                             <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                         </button>

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { validateSessionDates } from '@/lib/sessionDateRange';
 import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
@@ -262,9 +263,14 @@ export async function POST(request) {
         if (!session_id || !report_date || !disease_name || patient_count === undefined || patient_count === null) {
             console.error('Validation failed:', { session_id, report_date, disease_name, patient_count });
             return NextResponse.json(
-                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง session_id)' },
+                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึงเหตุการณ์ EOC)' },
                 { status: 400 }
             );
+        }
+
+        const dateCheck = await validateSessionDates(pool.query.bind(pool), session_id, [report_date], { label: 'EOC' });
+        if (!dateCheck.ok) {
+            return NextResponse.json({ success: false, message: dateCheck.error }, { status: dateCheck.status });
         }
 
         if (!finalHealthFacilityId && (!finalDistrictName || !finalTambonName || !finalMoo)) {
@@ -379,9 +385,14 @@ export async function PUT(request) {
 
         if (!session_id || !report_date || !disease_name || patient_count === undefined) {
             return NextResponse.json(
-                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึง session_id)' },
+                { success: false, message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รวมถึงเหตุการณ์ EOC)' },
                 { status: 400 }
             );
+        }
+
+        const dateCheck = await validateSessionDates(pool.query.bind(pool), session_id, [report_date], { label: 'EOC' });
+        if (!dateCheck.ok) {
+            return NextResponse.json({ success: false, message: dateCheck.error }, { status: dateCheck.status });
         }
 
         if (!finalHealthFacilityId && (!finalDistrictName || !finalTambonName || !finalMoo)) {

@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
     if (!auth.success) return auth.response;
     const type = (await params).type;
     const config = MASTER_DATA_CONFIG[type];
-    if (!config) return NextResponse.json({ success: false, message: "ประเภท Master Data ไม่ถูกต้อง" }, { status: 404 });
+    if (!config) return NextResponse.json({ success: false, message: "ประเภทข้อมูลหลักไม่ถูกต้อง" }, { status: 404 });
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search")?.trim();
     const page = Math.max(Number(searchParams.get("page")) || 1, 1);
@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
     return NextResponse.json({ success: true, type, label: config.label, fields: config.fields, required: config.required, data: rows, pagination: { page, limit, total: Number(count[0]?.total || 0) } });
   } catch (error) {
     console.error("Master catalog GET error:", error);
-    return publicInternalError("ไม่สามารถโหลด Master Data ได้");
+    return publicInternalError("ไม่สามารถโหลดข้อมูลหลักได้");
   }
 }
 
@@ -53,6 +53,6 @@ export async function POST(request, { params }) {
     return NextResponse.json({ success: true, id }, { status: 201 });
   } catch (error) {
     console.error("Master catalog POST error:", error);
-    return publicInternalError("ไม่สามารถเพิ่ม Master Data ได้");
+    return publicInternalError("ไม่สามารถเพิ่มข้อมูลหลักได้");
   }
 }

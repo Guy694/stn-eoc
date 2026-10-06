@@ -291,7 +291,7 @@ export default function CitizensManagementPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    ตำแหน่ง (Position)
+                                    ตำแหน่ง
                                 </label>
                                 <input
                                     type="text"
@@ -304,7 +304,7 @@ export default function CitizensManagementPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    แผนก (Department)
+                                    แผนก
                                 </label>
                                 <input
                                     type="text"

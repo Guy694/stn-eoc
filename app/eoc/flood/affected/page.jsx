@@ -1,4 +1,5 @@
 "use client";
+import { getEocTypeLabel } from '@/lib/eocDisplay';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
 import EOCLayout from '@/components/layouts/EOCLayout';
@@ -172,7 +173,7 @@ export default function AffectedPersonsPage() {
         e.preventDefault();
 
         if (!selectedSession) {
-            showWarning('กรุณาเลือก EOC Session');
+            showWarning('กรุณาเลือกเหตุการณ์ EOC');
             return;
         }
 
@@ -346,7 +347,7 @@ export default function AffectedPersonsPage() {
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
                             <span className="text-4xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             ข้อมูลผู้ได้รับผลกระทบย้อนหลัง
                         </h1>
@@ -365,11 +366,11 @@ export default function AffectedPersonsPage() {
                 </div>
 
                 {/* Session Selector */}
-                <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg shadow-md p-4 mb-6 border border-blue-200">
+                <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg shadow-md p-4 mb-6 border border-[#c9dcee]">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                            <label className="text-sm font-medium text-gray-700">เลือก EOC Session:</label>
+                            <label className="text-sm font-medium text-gray-700">เลือกเหตุการณ์ EOC:</label>
                         </div>
                         <select
                             value={selectedSession?.id || ''}
@@ -377,21 +378,21 @@ export default function AffectedPersonsPage() {
                                 const session = sessions.find(s => s.id === parseInt(e.target.value));
                                 setSelectedSession(session);
                             }}
-                            className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-transparent"
                         >
-                            <option value="">เลือก EOC Session</option>
+                            <option value="">เลือกเหตุการณ์ EOC</option>
                             {sessions.map(session => (
                                 <option key={session.id} value={session.id}>
-                                    #{session.session_number} - {session.eoc_type} - {new Date(session.opened_at).toLocaleDateString('th-TH')}
+                                    ครั้งที่ {session.session_number} - {getEocTypeLabel(session.eoc_type)} - {new Date(session.opened_at).toLocaleDateString('th-TH')}
                                     {session.status === 'active' ? ' (เปิดอยู่)' : ' (ปิดแล้ว)'}
                                 </option>
                             ))}
                         </select>
                         {selectedSession && (
-                            <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-lg border border-blue-300">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-lg border border-[#c9dcee]">
                                 <span className={`w-2 h-2 rounded-full ${selectedSession.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                                 <span className="text-sm font-medium text-gray-700">
-                                    {selectedSession.eoc_type}
+                                    {getEocTypeLabel(selectedSession.eoc_type)}
                                 </span>
                             </div>
                         )}
@@ -401,9 +402,9 @@ export default function AffectedPersonsPage() {
                 {!selectedSession ? (
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-8 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือก EOC Session</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
                         <p className="text-gray-600">
-                            เลือก EOC Session ที่ต้องการดูรายงานผู้ได้รับผลกระทบ
+                            เลือกเหตุการณ์ EOC ที่ต้องการดูรายงานผู้ได้รับผลกระทบ
                         </p>
                     </div>
                 ) : (
@@ -428,9 +429,9 @@ export default function AffectedPersonsPage() {
                                     {formatNumber(summary.province.province_injured)} คน
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
+                            <div className="bg-white rounded-lg shadow p-4 border border-[#0b4c86]">
                                 <div className="text-sm text-gray-600 mb-1">ผู้ได้รับผลกระทบ</div>
-                                <div className="text-2xl font-bold text-blue-600">
+                                <div className="text-2xl font-bold text-[#0b4c86]">
                                     {formatNumber(summary.province.province_affected)} คน
                                 </div>
                             </div>
@@ -705,7 +706,7 @@ export default function AffectedPersonsPage() {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-center">
-                                                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-bold">
+                                                        <span className="px-3 py-1 bg-[#dbeaf7] text-[#083865] rounded-full font-bold">
                                                             {report.affected}
                                                         </span>
                                                     </td>
@@ -725,7 +726,7 @@ export default function AffectedPersonsPage() {
                                                     <td className="px-6 py-4 text-sm font-medium">
                                                         <button
                                                             onClick={() => handleEdit(report)}
-                                                            className="text-blue-600 hover:text-blue-900 mr-3"
+                                                            className="text-[#0b4c86] hover:text-[#083865] mr-3"
                                                         >
                                                             <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
                                                         </button>

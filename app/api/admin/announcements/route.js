@@ -48,7 +48,7 @@ async function resolveSessionEocType(connection, sessionId) {
 
 function missingSessionResponse() {
     return NextResponse.json(
-        { success: false, message: 'กรุณาเลือก EOC Session' },
+        { success: false, message: 'กรุณาเลือกเหตุการณ์ EOC' },
         { status: 400 }
     );
 }

@@ -15,7 +15,7 @@ export async function POST(request, { params }) {
     if (!Number.isInteger(parsedReportId) || parsedReportId <= 0) return NextResponse.json({ success: false, message: "reportId ไม่ถูกต้อง" }, { status: 400 });
     const access = await getSessionTeamAccess(auth.user, sessionId, sessionTeamId);
     if (!access.ok) return NextResponse.json({ success: false, message: access.message }, { status: access.status });
-    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถส่งรายงานใน Session นี้ได้" }, { status: 409 });
+    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถส่งรายงานในเหตุการณ์นี้ได้" }, { status: 409 });
     if (!access.canSubmit) return NextResponse.json({ success: false, message: "เฉพาะหัวหน้าทีมหรือผู้บัญชาการเท่านั้นที่ส่งรายงานได้" }, { status: 403 });
     const reports = await query(`SELECT payload FROM eoc_team_reports WHERE id = ? AND eoc_session_id = ? AND session_team_id = ? AND status IN ('draft','returned') LIMIT 1`, [parsedReportId, sessionId, sessionTeamId]);
     if (!reports.length) return NextResponse.json({ success: false, message: "ไม่พบรายงานหรือสถานะไม่สามารถส่งได้" }, { status: 409 });

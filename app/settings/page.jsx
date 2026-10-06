@@ -223,7 +223,7 @@ export default function SettingsPage() {
                                             defaultChecked={true}
                                         />
                                         <NotificationToggle
-                                            label="แจ้งเตือนทาง Email"
+                                            label="แจ้งเตือนทางอีเมล"
                                             description="รับการแจ้งเตือนผ่านอีเมล"
                                             defaultChecked={false}
                                         />

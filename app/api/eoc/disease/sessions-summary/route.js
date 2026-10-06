@@ -90,7 +90,7 @@ export async function GET(request) {
         console.error('Database error:', error);
         return NextResponse.json({
             success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุป sessions ของโรคระบาด'
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุปเหตุการณ์ของโรคระบาด'
         }, { status: 500 });
     } finally {
         if (connection) connection.release();

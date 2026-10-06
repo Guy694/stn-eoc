@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getPool } from "@/lib/db";
+import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
 
 const pool = getPool();
 
@@ -191,6 +192,12 @@ export async function PUT(request) {
             [reportId]
         );
 
+        await recordChange({
+            request, user: auth.user, action: 'data_update', table: 'public_incident_reports', id: reportId,
+            description: `เปลี่ยนสถานะรายงานจากประชาชน #${reportId} เป็น ${status}`,
+            newValues: { status, admin_notes: adminNotes || null }
+        });
+
         return NextResponse.json({
             success: true,
             message: 'อัปเดตสถานะสำเร็จ',
@@ -205,39 +212,9 @@ export async function PUT(request) {
     }
 }
 
-// DELETE - ลบรายงาน
+// DELETE - ย้ายรายงานไปถังขยะ (กู้คืนได้) พร้อมบันทึกเหตุผล
 export async function DELETE(request) {
     const auth = await requireAuth(request, ['admin']);
     if (!auth.success) return auth.response;
-
-    const connection = await pool.getConnection();
-
-    try {
-        const { searchParams } = new URL(request.url);
-        const reportId = searchParams.get('id');
-
-        if (!reportId) {
-            return NextResponse.json(
-                { success: false, message: 'ไม่พบ ID รายงาน' },
-                { status: 400 }
-            );
-        }
-
-        // ลบรายงาน
-        await connection.execute(
-            'DELETE FROM public_incident_reports WHERE id = ?',
-            [reportId]
-        );
-
-        return NextResponse.json({
-            success: true,
-            message: 'ลบรายงานสำเร็จ'
-        });
-
-    } catch (error) {
-        console.error('Error deleting incident report:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการลบรายงานเหตุการณ์');
-    } finally {
-        connection.release();
-    }
+    return handleArchiveDelete(request, auth.user, { table: 'public_incident_reports' });
 }

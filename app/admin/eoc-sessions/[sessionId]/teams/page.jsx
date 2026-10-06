@@ -40,7 +40,7 @@ export default function EOCSessionTeamsPage() {
     useEffect(() => { loadReadiness(); }, [loadReadiness]);
 
     const applyStandardTemplate = async () => {
-        const confirmed = await showConfirm("เพิ่มกลุ่มภารกิจมาตรฐาน", "ระบบจะเพิ่มเฉพาะกลุ่มที่ยังไม่มีใน Session และไม่ลบข้อมูลเดิม", "เพิ่มกลุ่ม");
+        const confirmed = await showConfirm("เพิ่มกลุ่มภารกิจมาตรฐาน", "ระบบจะเพิ่มเฉพาะกลุ่มที่ยังไม่มีในเหตุการณ์และไม่ลบข้อมูลเดิม", "เพิ่มกลุ่ม");
         if (!confirmed) return;
         try {
             const response = await fetch(`/stn-eoc/api/admin/eoc-sessions/${sessionId}/template`, {

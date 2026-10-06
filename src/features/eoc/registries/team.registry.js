@@ -1,5 +1,5 @@
 const DEFAULT_MENUS = Object.freeze([
-  { key: "dashboard", label: "Dashboard" },
+  { key: "dashboard", label: "แดชบอร์ด" },
   { key: "records", label: "รายงานผล" },
   { key: "members", label: "สมาชิก" },
 ]);

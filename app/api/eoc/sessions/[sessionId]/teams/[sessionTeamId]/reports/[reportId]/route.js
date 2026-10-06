@@ -20,7 +20,7 @@ export async function PUT(request, { params }) {
     if (!Number.isInteger(parsedReportId) || parsedReportId <= 0) return NextResponse.json({ success: false, message: "reportId ไม่ถูกต้อง" }, { status: 400 });
     const access = await getSessionTeamAccess(auth.user, sessionId, sessionTeamId);
     if (!access.ok) return NextResponse.json({ success: false, message: access.message }, { status: access.status });
-    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถแก้ไขรายงานใน Session นี้ได้" }, { status: 409 });
+    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถแก้ไขรายงานในเหตุการณ์นี้ได้" }, { status: 409 });
     const reports = await query(`SELECT * FROM eoc_team_reports WHERE id = ? AND eoc_session_id = ? AND session_team_id = ? LIMIT 1`, [parsedReportId, sessionId, sessionTeamId]);
     if (!reports.length) return NextResponse.json({ success: false, message: "ไม่พบรายงาน" }, { status: 404 });
     const report = reports[0];
@@ -33,7 +33,7 @@ export async function PUT(request, { params }) {
     if (!validation.success) return NextResponse.json({ success: false, message: validation.message, fieldErrors: validation.fieldErrors }, { status: 400 });
     const reportDate = parseReportDate(body.reportDate, report.report_date);
     if (!reportDate) return NextResponse.json({ success: false, message: "วันเวลารายงานไม่ถูกต้อง" }, { status: 400 });
-    if (!isReportDateWithinSession(access.context, reportDate)) return NextResponse.json({ success: false, message: "วันเวลารายงานต้องอยู่ในช่วงเปิด–ปิด Session" }, { status: 400 });
+    if (!isReportDateWithinSession(access.context, reportDate)) return NextResponse.json({ success: false, message: "วันเวลารายงานต้องอยู่ในช่วงเปิด–ปิดเหตุการณ์" }, { status: 400 });
     await transaction(async (execute) => {
       await execute(`UPDATE eoc_team_reports SET title = ?, report_date = ?, report_type = ?, payload = ?, status = 'draft', updated_by = ? WHERE id = ?`, [body.title || report.title, reportDate, body.reportType || report.report_type, JSON.stringify(nextPayload), auth.user.id, parsedReportId]);
       await writeTeamReportAudit(auth.user, access.context, parsedReportId, "data_update", { description: "แก้ไขรายงาน" }, execute);

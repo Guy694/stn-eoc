@@ -83,7 +83,7 @@ export default function DiseaseDailyRiskPage() {
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b border-teal-500 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
                         <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
@@ -94,7 +94,7 @@ export default function DiseaseDailyRiskPage() {
     if (!data) {
         return (
             <EOCLayout>
-                <div className="container mx-auto p-4 md:p-6">
+                <div className="mx-auto max-w-7xl">
                     <div className="text-center py-12">
                         <p className="text-gray-600">ไม่พบข้อมูล</p>
                     </div>
@@ -106,10 +106,10 @@ export default function DiseaseDailyRiskPage() {
     if (!availableDates.length) {
         return (
             <EOCLayout>
-                <div className="container mx-auto p-4 md:p-6">
+                <div className="mx-auto max-w-7xl">
                     <div className="border border-dashed border-slate-300 bg-white py-12 text-center shadow-sm">
                         <AppIcon icon="calendar" className="mx-auto h-10 w-10 text-slate-400" />
-                        <h1 className="mt-3 text-xl font-black text-slate-800">ยังไม่มีรายงานโรคใน Session นี้</h1>
+                        <h1 className="mt-3 text-xl font-black text-slate-800">ยังไม่มีรายงานโรคในเหตุการณ์นี้</h1>
                         <p className="mt-2 text-sm text-slate-500">ระบบจะแสดงเฉพาะวันที่ที่มีข้อมูลจากฐานข้อมูล</p>
                     </div>
                 </div>
@@ -127,10 +127,10 @@ export default function DiseaseDailyRiskPage() {
 
     return (
         <EOCLayout>
-            <div className="container mx-auto p-4 md:p-6">
+            <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3 md:text-3xl">
+                    <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3 md:text-3xl">
                         <span className="text-3xl md:text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         สรุปสถานการณ์โรครายวัน
                     </h1>
@@ -145,7 +145,7 @@ export default function DiseaseDailyRiskPage() {
                         </label>
                         <button
                             onClick={() => setShowAllDates(!showAllDates)}
-                            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
+                            className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors text-sm"
                         >
                             {showAllDates ? "ซ่อนลิสวันที่" : "แสดงลิสวันที่ทั้งหมด"}
                         </button>
@@ -155,7 +155,7 @@ export default function DiseaseDailyRiskPage() {
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         max={new Date().toISOString().split('T')[0]}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-gray-700 w-full md:w-auto"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 text-gray-700 w-full md:w-auto"
                     />
 
                     {/* Available Dates List */}
@@ -180,7 +180,7 @@ export default function DiseaseDailyRiskPage() {
                                                 setShowAllDates(false);
                                             }}
                                             className={`p-3 rounded-lg text-sm transition-all ${isSelected
-                                                ? 'bg-teal-600 text-white shadow-lg font-bold'
+                                                ? 'bg-[#0b4c86] text-white shadow-lg font-bold'
                                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                 }`}
                                         >
@@ -196,7 +196,7 @@ export default function DiseaseDailyRiskPage() {
 
                 {/* Active EOC Session Info */}
                 {data.activeSession && (
-                    <div className="bg-gradient-to-r from-teal-500 to-pink-500 text-white rounded-lg shadow-lg p-4 mb-6 md:p-6">
+                    <div className="bg-gradient-to-r from-[#0b4c86] to-pink-500 text-white rounded-lg shadow-lg p-4 mb-6 md:p-6">
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div className="min-w-0">
                                 <h3 className="text-lg font-bold mb-2 md:text-xl">
@@ -360,7 +360,7 @@ export default function DiseaseDailyRiskPage() {
                         {paginatedDetails.map((item, index) => (
                             <div
                                 key={index}
-                                className="bg-gray-50 border border-teal-500 p-4 rounded-r-lg"
+                                className="bg-gray-50 border border-[#0b4c86] p-4 rounded-r-lg"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -410,8 +410,8 @@ export default function DiseaseDailyRiskPage() {
 
 function StatCard({ icon, label, value, color }) {
     const colorClasses = {
-        purple: 'bg-teal-50 border-teal-200 text-teal-700',
-        blue: 'bg-blue-50 border-blue-200 text-blue-700',
+        purple: 'bg-[#edf5fc] border-[#c9dcee] text-[#0b4c86]',
+        blue: 'bg-[#edf5fc] border-[#c9dcee] text-[#0b4c86]',
         green: 'bg-green-50 border-green-200 text-green-700',
         orange: 'bg-orange-50 border-orange-200 text-orange-700',
         red: 'bg-red-50 border-red-200 text-red-700'

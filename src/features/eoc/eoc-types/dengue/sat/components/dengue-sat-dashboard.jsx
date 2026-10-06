@@ -32,7 +32,7 @@ export default function DengueSatDashboard({ eocType = "dengue", teamCode = "sat
       <div className="flex flex-wrap items-end justify-between gap-3 border border-slate-200 bg-white p-4 shadow-sm">
         <div>
           <h2 className="text-lg font-black text-slate-900">สรุปสถานการณ์ไข้เลือดออก</h2>
-          <p className="text-sm text-slate-600">Dashboard เฉพาะ EOC ไข้เลือดออกของทีม SAT</p>
+          <p className="text-sm text-slate-600">แดชบอร์ดเฉพาะ EOC ไข้เลือดออกของทีม SAT</p>
         </div>
         <label className="text-sm font-bold text-slate-700">
           วันที่

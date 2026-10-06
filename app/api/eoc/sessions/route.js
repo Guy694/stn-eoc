@@ -174,7 +174,7 @@ export async function POST(request) {
 
         if (!sessionId) {
             return NextResponse.json(
-                { success: false, message: 'กรุณาระบุ session ID' },
+                { success: false, message: 'กรุณาระบุเหตุการณ์ ID' },
                 { status: 400 }
             );
         }
@@ -204,7 +204,7 @@ export async function POST(request) {
 
         if (sessions.length === 0) {
             return NextResponse.json(
-                { success: false, message: 'ไม่พบ session นี้' },
+                { success: false, message: 'ไม่พบเหตุการณ์นี้' },
                 { status: 404 }
             );
         }
@@ -270,7 +270,7 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error fetching session detail:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงรายละเอียด session');
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงรายละเอียดเหตุการณ์');
     } finally {
         connection.release();
     }

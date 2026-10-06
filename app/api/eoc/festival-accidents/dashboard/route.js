@@ -76,7 +76,7 @@ export async function GET(request) {
                 success: true,
                 hasActiveSession: false,
                 sessions: allSessions,
-                message: 'ไม่มี EOC Session ที่เปิดอยู่'
+                message: 'ไม่มีเหตุการณ์ EOC ที่เปิดอยู่'
             });
         }
 

@@ -13,7 +13,7 @@ export async function POST(request, { params }) {
     if (!Number.isInteger(parsedReportId) || parsedReportId <= 0) return NextResponse.json({ success: false, message: "reportId ไม่ถูกต้อง" }, { status: 400 });
     const access = await getSessionTeamAccess(auth.user, sessionId, sessionTeamId);
     if (!access.ok) return NextResponse.json({ success: false, message: access.message }, { status: access.status });
-    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถตรวจรายงานใน Session นี้ได้" }, { status: 409 });
+    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถตรวจรายงานในเหตุการณ์นี้ได้" }, { status: 409 });
     if (!access.canReview) return NextResponse.json({ success: false, message: "เฉพาะผู้บัญชาการหรือผู้ดูแลระบบเท่านั้นที่ตรวจรายงานได้" }, { status: 403 });
     const body = await request.json();
     if (!["verified", "approved", "returned"].includes(body.status)) return NextResponse.json({ success: false, message: "สถานะการตรวจไม่ถูกต้อง" }, { status: 400 });
@@ -54,7 +54,7 @@ export async function POST(request, { params }) {
       }
       return true;
     });
-    if (!updated) return NextResponse.json({ success: false, message: "ไม่พบรายงานหรือสถานะ workflow ไม่ถูกต้อง" }, { status: 409 });
+    if (!updated) return NextResponse.json({ success: false, message: "ไม่พบรายงานหรือสถานะขั้นตอนการทำงานไม่ถูกต้อง" }, { status: 409 });
     const messages = { verified: "ตรวจสอบรายงานเรียบร้อย", approved: "อนุมัติรายงานเรียบร้อย", returned: "ส่งกลับให้แก้ไขแล้ว" };
     return NextResponse.json({ success: true, message: messages[body.status] });
   } catch (error) {

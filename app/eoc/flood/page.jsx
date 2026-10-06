@@ -141,7 +141,7 @@ export default function FloodMapPage() {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
                     <p className="text-gray-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
@@ -150,12 +150,12 @@ export default function FloodMapPage() {
 
     return (
         <EOCLayout>
-            <div className="container mx-auto p-6">
+            <div className="mx-auto max-w-7xl">
                 {/* Page Header */}
                 <div className="mb-6">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                            <h1 className="text-2xl font-black text-slate-900 mb-4 flex items-center gap-3">
                                 <span className="text-4xl"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 {mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}
                             </h1>
@@ -179,18 +179,18 @@ export default function FloodMapPage() {
 
                 {/* แสดงทีมงาน EOC ที่เปิดใช้งาน - Realtime Mode */}
                 {mode === "realtime" && hasActiveSession && activeSessionData && sessionTeams.length > 0 && (
-                    <div className="mb-6 bg-blue-50 border border-blue-500 rounded-lg p-6 shadow-sm">
-                        <h2 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+                    <div className="mb-6 bg-[#edf5fc] border border-[#0b4c86] rounded-lg p-6 shadow-sm">
+                        <h2 className="text-xl font-bold text-[#083865] mb-4 flex items-center gap-2">
                             <span className="text-2xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             ทีมงาน EOC ที่ปฏิบัติงาน
-                            <span className="text-sm font-normal text-blue-700 ml-2">
+                            <span className="text-sm font-normal text-[#0b4c86] ml-2">
                                 (Session #{activeSessionData.session_number})
                             </span>
                         </h2>
 
                         {loadingTeams ? (
-                            <div className="flex items-center gap-2 text-blue-700">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b border-blue-500"></div>
+                            <div className="flex items-center gap-2 text-[#0b4c86]">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b border-[#0b4c86]"></div>
                                 <span>กำลังโหลดข้อมูลทีม...</span>
                             </div>
                         ) : (
@@ -215,14 +215,14 @@ export default function FloodMapPage() {
                                                 )}
 
                                                 <div className="flex items-center justify-between mt-2">
-                                                    <p className="text-sm text-blue-600 font-medium">
+                                                    <p className="text-sm text-[#0b4c86] font-medium">
                                                         สมาชิก: {team.member_count || 0} คน
                                                     </p>
 
                                                     {team.members && team.members.length > 0 && (
                                                         <button
                                                             onClick={() => toggleTeamExpand(teamKey)}
-                                                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                                                            className="text-xs text-[#0b4c86] hover:text-[#083865] flex items-center gap-1 transition-colors"
                                                         >
                                                             {isExpanded ? (
                                                                 <>
@@ -257,7 +257,7 @@ export default function FloodMapPage() {
                                                     <ul className="space-y-1">
                                                         {team.members.map((member, mIdx) => (
                                                             <li key={mIdx} className="text-sm text-gray-700 flex items-center gap-2">
-                                                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                                                <span className="w-1.5 h-1.5 bg-[#0b4c86] rounded-full"></span>
                                                                 {member.given_name && member.family_name
                                                                     ? `${member.given_name} ${member.family_name}`
                                                                     : member.full_name || member.name || `สมาชิก ${mIdx + 1}`}

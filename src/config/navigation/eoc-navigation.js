@@ -31,10 +31,10 @@ function createTeamWorkItems(eocType, teamCode) {
   const routeEocType = eocType === "dengue" ? "disease" : eocType;
   const dashboard = {
     key: "dashboard",
-    name: "Dashboard",
+    name: "แดชบอร์ด",
     path: `/eoc/${routeEocType}/teams/${teamCode}/dashboard`,
     iconKey: "dashboard",
-    description: `Dashboard กลุ่มภารกิจ ${getTeam(teamCode)?.shortName || teamCode}`,
+    description: `แดชบอร์ดกลุ่มภารกิจ ${getTeam(teamCode)?.shortName || teamCode}`,
   };
 
   const workItemByTeam = {

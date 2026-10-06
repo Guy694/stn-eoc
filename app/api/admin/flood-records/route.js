@@ -1,58 +1,13 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
+import { getPool } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getSessionTeamAccessByCode } from '@/lib/eocTeamAccess';
-
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-};
-
-function toDateKey(value) {
-    if (!value) return '';
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
+import { validateSessionDates } from '@/lib/sessionDateRange';
 
 async function validateFloodSessionDate(connection, sessionId, floodStartDate) {
-    if (!sessionId) {
-        return { ok: false, status: 400, error: 'กรุณาระบุ EOC Session' };
-    }
-
-    const [sessions] = await connection.execute(
-        `SELECT id, opened_at, closed_at, status
-         FROM eoc_sessions
-         WHERE id = ? AND eoc_type = 'flood'
-         LIMIT 1`,
-        [sessionId]
-    );
-
-    if (sessions.length === 0) {
-        return { ok: false, status: 404, error: 'ไม่พบ EOC Session อุทกภัยน้ำท่วม' };
-    }
-
-    const dateKey = toDateKey(floodStartDate);
-    if (!dateKey) {
-        return { ok: false, status: 400, error: 'กรุณาระบุวันที่เริ่มอุทกภัยน้ำท่วม' };
-    }
-
-    const openedKey = toDateKey(sessions[0].opened_at);
-    const closedKey = toDateKey(sessions[0].closed_at) || toDateKey(new Date());
-
-    if (openedKey && dateKey < openedKey) {
-        return { ok: false, status: 400, error: 'วันที่บันทึกต้องไม่ก่อนวันเปิด EOC' };
-    }
-
-    if (closedKey && dateKey > closedKey) {
-        return { ok: false, status: 400, error: 'วันที่บันทึกต้องไม่เกินวันปิด EOC' };
-    }
-
-    return { ok: true, session: sessions[0] };
+    if (!floodStartDate) return { ok: false, status: 400, error: 'กรุณาระบุวันที่เริ่มอุทกภัยน้ำท่วม' };
+    return validateSessionDates(connection.execute.bind(connection), sessionId, [floodStartDate], { eocType: 'flood', label: 'EOC อุทกภัยน้ำท่วม' });
 }
 
 export async function GET(request) {
@@ -69,7 +24,7 @@ export async function GET(request) {
         const status = searchParams.get('status');
         const privileged = ['admin', 'commander'].includes(auth.user.role);
         if (!sessionId && !privileged) {
-            return NextResponse.json({ success: false, message: 'กรุณาระบุ EOC Session' }, { status: 400 });
+            return NextResponse.json({ success: false, message: 'กรุณาระบุเหตุการณ์ EOC' }, { status: 400 });
         }
         if (sessionId) {
             const access = await getSessionTeamAccessByCode(auth.user, sessionId, 'sat');
@@ -78,7 +33,7 @@ export async function GET(request) {
             }
         }
 
-        const connection = await mysql.createConnection(dbConfig);
+        const connection = getPool();
 
         let query = `
             SELECT 
@@ -121,7 +76,6 @@ export async function GET(request) {
         query += ' ORDER BY f.created_at DESC';
 
         const [rows] = await connection.execute(query, params);
-        await connection.end();
 
         return NextResponse.json({
             success: true,
@@ -144,12 +98,11 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: access.message }, { status: access.status });
         }
         if (!access.canOperate) {
-            return NextResponse.json({ success: false, message: 'Session นี้ไม่เปิดให้บันทึกข้อมูลปฏิบัติการ' }, { status: 409 });
+            return NextResponse.json({ success: false, message: 'เหตุการณ์นี้ไม่เปิดให้บันทึกข้อมูลปฏิบัติการ' }, { status: 409 });
         }
-        const connection = await mysql.createConnection(dbConfig);
+        const connection = getPool();
         const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
         if (!validation.ok) {
-            await connection.end();
             return NextResponse.json({ success: false, error: validation.error }, { status: validation.status });
         }
 
@@ -184,7 +137,6 @@ export async function POST(request) {
         ];
 
         const [result] = await connection.execute(query, params);
-        await connection.end();
 
         return NextResponse.json({
             success: true,
@@ -207,12 +159,11 @@ export async function PUT(request) {
             return NextResponse.json({ success: false, message: access.message }, { status: access.status });
         }
         if (!access.canOperate) {
-            return NextResponse.json({ success: false, message: 'Session นี้ไม่เปิดให้แก้ไขข้อมูลปฏิบัติการ' }, { status: 409 });
+            return NextResponse.json({ success: false, message: 'เหตุการณ์นี้ไม่เปิดให้แก้ไขข้อมูลปฏิบัติการ' }, { status: 409 });
         }
-        const connection = await mysql.createConnection(dbConfig);
+        const connection = getPool();
         const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
         if (!validation.ok) {
-            await connection.end();
             return NextResponse.json({ success: false, error: validation.error }, { status: validation.status });
         }
 
@@ -248,7 +199,6 @@ export async function PUT(request) {
         ];
 
         const [result] = await connection.execute(query, params);
-        await connection.end();
 
         return NextResponse.json({
             success: true,
@@ -275,9 +225,8 @@ export async function DELETE(request) {
             }, { status: 400 });
         }
 
-        const connection = await mysql.createConnection(dbConfig);
+        const connection = getPool();
         const [result] = await connection.execute('DELETE FROM flood_records WHERE id = ?', [id]);
-        await connection.end();
 
         return NextResponse.json({
             success: true,

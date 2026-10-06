@@ -152,7 +152,7 @@ export default function UploadInfographics() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อัปโหลด Infographics</h1>
-                            <p className="text-gray-600">สำหรับฝ่าย Risk Communication</p>
+                            <p className="text-gray-600">สำหรับฝ่าย สื่อสารความเสี่ยง</p>
                         </div>
                         <button
                             onClick={() => router.push('/dashboard')}
@@ -165,7 +165,7 @@ export default function UploadInfographics() {
 
                 {/* Upload Form */}
                 <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">อัปโหลดรูปภาพ Infographic</h2>
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">อัปโหลดรูปภาพอินโฟกราฟิก</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* EOC Type Selection */}
@@ -227,7 +227,7 @@ export default function UploadInfographics() {
 
                 {/* Existing Files */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">ไฟล์ Infographic ที่มีอยู่</h2>
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">ไฟล์อินโฟกราฟิกที่มีอยู่</h2>
 
                     {Object.keys(existingFiles).length === 0 ? (
                         <p className="text-gray-500 text-center py-8">ยังไม่มีไฟล์</p>

@@ -136,7 +136,7 @@ export async function POST(request) {
     if (!config || !sessionId) return NextResponse.json({ success: false, message: "ข้อมูลคำขอไม่ถูกต้อง" }, { status: 400 });
     const access = await getOperationalSessionAccess(auth.user, sessionId, "flood");
     if (!access.ok) return NextResponse.json({ success: false, message: access.message }, { status: access.status });
-    if (!access.canOperate) return NextResponse.json({ success: false, message: "Session ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว" }, { status: 403 });
+    if (!access.canOperate) return NextResponse.json({ success: false, message: "เหตุการณ์ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว" }, { status: 403 });
     const values = normalizeJsonFields(body.type, pickValues(config, body));
     const validationError = validateResource(body.type, config, values);
     if (validationError) return NextResponse.json({ success: false, message: validationError }, { status: 400 });
@@ -203,7 +203,7 @@ export async function POST(request) {
     return NextResponse.json({ success: true, ...created }, { status: 201 });
   } catch (error) {
     if (["INVALID_LINKED_DECISION", "INVALID_LINKED_MISSION"].includes(error.message)) {
-      return NextResponse.json({ success: false, message: "ข้อมูล Decision หรือ Mission ที่เชื่อมโยงไม่ครบถ้วน" }, { status: 400 });
+      return NextResponse.json({ success: false, message: "ข้อมูลการตัดสินใจหรือ ภารกิจ ที่เชื่อมโยงไม่ครบถ้วน" }, { status: 400 });
     }
     console.error("Operational resource POST error:", error);
     return publicInternalError("ไม่สามารถบันทึกข้อมูลได้");

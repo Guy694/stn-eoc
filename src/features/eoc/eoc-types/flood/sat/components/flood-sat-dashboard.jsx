@@ -29,7 +29,7 @@ export default function FloodSatDashboard({ eocType = "flood", teamCode = "sat" 
   return (
     <TeamPageShell eocType={eocType} teamCode={teamCode} activeSection="dashboard">
       <div className="flex flex-wrap items-end justify-between gap-3 border border-slate-200 bg-white p-4 shadow-sm">
-        <div><h2 className="text-lg font-black text-slate-900">สรุปสถานการณ์อุทกภัย</h2><p className="text-sm text-slate-600">Dashboard เฉพาะกลุ่มภารกิจ SAT</p></div>
+        <div><h2 className="text-lg font-black text-slate-900">สรุปสถานการณ์อุทกภัย</h2><p className="text-sm text-slate-600">แดชบอร์ดเฉพาะกลุ่มภารกิจ SAT</p></div>
         <label className="text-sm font-bold text-slate-700">วันที่
           <input type="date" value={date} onChange={(event) => { setState((current) => ({ ...current, loading: true, error: "" })); setDate(event.target.value); }} className="ml-2 border border-slate-300 px-3 py-2" />
         </label>

@@ -94,7 +94,7 @@ export default function SessionStats({ session, year }) {
         return (
             <div className="bg-white shadow-md rounded-lg p-6 mb-6">
                 <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b border-teal-500 mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
                     <p className="text-gray-600 text-sm">กำลังโหลดสถิติ...</p>
                 </div>
             </div>
@@ -110,10 +110,10 @@ export default function SessionStats({ session, year }) {
     }
 
     return (
-        <div className="bg-linear-to-r from-teal-50 to-blue-50 shadow-md rounded-lg p-6 mb-6 border border-teal-200">
+        <div className="bg-linear-to-r from-teal-50 to-blue-50 shadow-md rounded-lg p-6 mb-6 border border-[#c9dcee]">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <AppIcon icon="barChart" className="h-5 w-5 text-teal-700" />
-                สถิติสรุป - EOC Session #{session.session_number} (พ.ศ. {year + 543})
+                <AppIcon icon="barChart" className="h-5 w-5 text-[#0b4c86]" />
+                สถิติสรุป - เหตุการณ์ EOC #{session.session_number} (พ.ศ. {year + 543})
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -162,7 +162,7 @@ export default function SessionStats({ session, year }) {
                 />
             </div>
 
-            <div className="mt-4 pt-4 border-t border-teal-200">
+            <div className="mt-4 pt-4 border-t border-[#c9dcee]">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                     <div className="flex items-center gap-4">
                         <span>
@@ -192,9 +192,9 @@ export default function SessionStats({ session, year }) {
 
 function StatsCard({ label, value, icon, color, subLabel = '' }) {
     const colorClasses = {
-        blue: 'bg-blue-100 border-blue-300 text-blue-700',
+        blue: 'bg-[#dbeaf7] border-[#c9dcee] text-[#0b4c86]',
         green: 'bg-green-100 border-green-300 text-green-700',
-        purple: 'bg-teal-100 border-teal-300 text-teal-700',
+        purple: 'bg-[#dbeaf7] border-[#c9dcee] text-[#0b4c86]',
         orange: 'bg-orange-100 border-orange-300 text-orange-700',
         red: 'bg-red-100 border-red-300 text-red-700',
         yellow: 'bg-yellow-100 border-yellow-300 text-yellow-700',

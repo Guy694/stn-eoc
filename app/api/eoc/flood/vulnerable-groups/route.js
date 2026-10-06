@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
+import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
 
 const pool = getPool();
 
@@ -202,6 +203,11 @@ export async function POST(request) {
                 existing[0].id
             ]);
 
+            await recordChange({
+                request, user: auth.user, action: 'data_update', table: 'vulnerable_groups', id: existing[0].id,
+                sessionId: data.session_id || null, description: `แก้ไขกลุ่มเปราะบางในเหตุการณ์: ${[data.village, `ต.${data.tambon}`, `อ.${data.district}`].filter(Boolean).join(" ")}`, newValues: data
+            });
+
             return NextResponse.json({
                 success: true,
                 data: { id: existing[0].id, updated: true }
@@ -230,6 +236,11 @@ export async function POST(request) {
                 data.needs || null,
                 auth.user.username
             ]);
+
+            await recordChange({
+                request, user: auth.user, action: 'data_create', table: 'vulnerable_groups', id: result.insertId,
+                sessionId: data.session_id || null, description: `เพิ่มกลุ่มเปราะบางในเหตุการณ์: ${[data.village, `ต.${data.tambon}`, `อ.${data.district}`].filter(Boolean).join(" ")}`, newValues: data
+            });
 
             return NextResponse.json({
                 success: true,
@@ -287,6 +298,11 @@ export async function PUT(request) {
             data.id
         ]);
 
+        await recordChange({
+            request, user: auth.user, action: 'data_update', table: 'vulnerable_groups', id: data.id,
+            sessionId: data.session_id || null, description: `แก้ไขกลุ่มเปราะบางในเหตุการณ์: ${[data.village, `ต.${data.tambon}`, `อ.${data.district}`].filter(Boolean).join(" ")}`, newValues: data
+        });
+
         return NextResponse.json({
             success: true,
             data: { id: data.id }
@@ -300,40 +316,9 @@ export async function PUT(request) {
     }
 }
 
-// DELETE - ลบข้อมูล
+// DELETE - ย้ายไปถังขยะ (กู้คืนได้) พร้อมบันทึกเหตุผล
 export async function DELETE(request) {
-    let connection;
-
-    try {
-        const auth = await requireAuth(request, ['admin']);
-        if (!auth.success) return auth.response;
-
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
-
-        if (!id) {
-            return NextResponse.json({
-                success: false,
-                error: 'ID is required'
-            }, { status: 400 });
-        }
-
-        connection = await pool.getConnection();
-
-        const [result] = await connection.execute(
-            'DELETE FROM vulnerable_groups WHERE id = ?',
-            [id]
-        );
-
-        return NextResponse.json({
-            success: true,
-            data: { affectedRows: result.affectedRows }
-        });
-
-    } catch (error) {
-        console.error('Error deleting vulnerable group data:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลกลุ่มเปราะบาง');
-    } finally {
-        if (connection) connection.release();
-    }
+    const auth = await requireAuth(request, ['admin']);
+    if (!auth.success) return auth.response;
+    return handleArchiveDelete(request, auth.user, { table: 'vulnerable_groups' });
 }

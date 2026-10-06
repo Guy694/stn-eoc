@@ -504,7 +504,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
                       }}
                       disabled={contextOptions.length === 0}
                     >
-                      {contextOptions.length === 0 && <option value="">ไม่มี session</option>}
+                      {contextOptions.length === 0 && <option value="">ไม่มีเหตุการณ์</option>}
                       {activeContextOptions.length > 0 && (
                         <optgroup label="เหตุการณ์ปัจจุบัน (เปิดอยู่)">
                           {activeContextOptions.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}

@@ -44,7 +44,7 @@ export async function GET(request) {
             return NextResponse.json({
                 success: true,
                 comparisons: [],
-                message: 'ไม่พบ session สำหรับเปรียบเทียบ'
+                message: 'ไม่พบเหตุการณ์สำหรับเปรียบเทียบ'
             });
         }
 

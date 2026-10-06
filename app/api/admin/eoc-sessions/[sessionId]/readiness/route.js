@@ -52,6 +52,6 @@ export async function GET(request, { params }) {
     });
   } catch (error) {
     console.error("Session readiness error:", error);
-    return publicInternalError("ไม่สามารถตรวจความพร้อมของ Session ได้");
+    return publicInternalError("ไม่สามารถตรวจความพร้อมของเหตุการณ์ได้");
   }
 }

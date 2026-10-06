@@ -13,7 +13,7 @@ export async function POST(request) {
 
         if (!userSession) {
             return NextResponse.json(
-                { success: false, message: 'ไม่พบข้อมูล session' },
+                { success: false, message: 'ไม่พบข้อมูลการเข้าสู่ระบบ' },
                 { status: 401 }
             );
         }
@@ -26,7 +26,7 @@ export async function POST(request) {
                 ip: getClientIp(request),
                 path: '/api/auth/thaiid/register'
             });
-            return NextResponse.json({ success: false, message: 'Session ไม่ถูกต้อง กรุณายืนยันตัวตนใหม่' }, { status: 401 });
+            return NextResponse.json({ success: false, message: 'การเข้าสู่ระบบไม่ถูกต้อง กรุณายืนยันตัวตนใหม่' }, { status: 401 });
         }
         const { position, department, requested_role, phone, email } = await request.json();
 

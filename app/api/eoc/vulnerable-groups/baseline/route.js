@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
+import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
 
 const pool = getPool();
 
@@ -158,6 +159,12 @@ export async function POST(request) {
             auth.user.username
         ]);
 
+        await recordChange({
+            request, user: auth.user, action: result.affectedRows > 1 ? 'data_update' : 'data_create',
+            table: 'vulnerable_group_baselines', id: result.insertId,
+            description: `บันทึกฐานข้อมูลกลุ่มเปราะบาง: ${[data.village, `ต.${data.tambon}`, `อ.${data.district}`].filter(Boolean).join(" ")}`, newValues: data
+        });
+
         return NextResponse.json({
             success: true,
             data: { id: result.insertId, updated: result.affectedRows > 1 }
@@ -203,6 +210,11 @@ export async function PATCH(request) {
             'SELECT * FROM vulnerable_group_baselines WHERE id = ?',
             [id]
         );
+
+        await recordChange({
+            request, user: auth.user, action: 'data_update', table: 'vulnerable_group_baselines', id,
+            description: `ปรับจำนวนกลุ่มเปราะบาง (${field} ${delta > 0 ? '+' : ''}${delta})`, newValues: rows[0] || null
+        });
 
         return NextResponse.json({
             success: true,
@@ -268,6 +280,11 @@ export async function PUT(request) {
             data.id
         ]);
 
+        await recordChange({
+            request, user: auth.user, action: 'data_update', table: 'vulnerable_group_baselines', id: data.id,
+            description: `แก้ไขฐานข้อมูลกลุ่มเปราะบาง: ${[data.village, `ต.${data.tambon}`, `อ.${data.district}`].filter(Boolean).join(" ")}`, newValues: data
+        });
+
         return NextResponse.json({ success: true, data: { id: data.id } });
     } catch (error) {
         console.error('Error updating vulnerable group baseline:', error);
@@ -277,36 +294,9 @@ export async function PUT(request) {
     }
 }
 
+// DELETE - ย้ายไปถังขยะ (กู้คืนได้) พร้อมบันทึกเหตุผล
 export async function DELETE(request) {
-    let connection;
-
-    try {
-        const auth = await requireAuth(request, ['admin']);
-        if (!auth.success) return auth.response;
-
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
-        if (!id) {
-            return NextResponse.json(
-                { success: false, message: 'ไม่พบ ID' },
-                { status: 400 }
-            );
-        }
-
-        connection = await pool.getConnection();
-        const [result] = await connection.execute(
-            'DELETE FROM vulnerable_group_baselines WHERE id = ?',
-            [id]
-        );
-
-        return NextResponse.json({
-            success: true,
-            data: { affectedRows: result.affectedRows }
-        });
-    } catch (error) {
-        console.error('Error deleting vulnerable group baseline:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการลบฐานข้อมูลกลุ่มเปราะบาง');
-    } finally {
-        if (connection) connection.release();
-    }
+    const auth = await requireAuth(request, ['admin']);
+    if (!auth.success) return auth.response;
+    return handleArchiveDelete(request, auth.user, { table: 'vulnerable_group_baselines' });
 }

@@ -81,7 +81,7 @@ export default function BaseTeamMembers({ eocType, teamCode }) {
           </div>
         </>
       ) : (
-        <EmptyState title="ไม่พบข้อมูลสมาชิกที่มอบหมาย" description="Session นี้ยังไม่มีสมาชิก active ในกลุ่มภารกิจ" />
+        <EmptyState title="ไม่พบข้อมูลสมาชิกที่มอบหมาย" description="เหตุการณ์นี้ยังไม่มีสมาชิก active ในกลุ่มภารกิจ" />
       )}
     </TeamPageShell>
   );

@@ -272,7 +272,7 @@ export default function FloodRecordsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!activeSession) {
-            showError('ไม่พบ EOC Session ที่เปิดอยู่');
+            showError('ไม่พบเหตุการณ์ EOC ที่เปิดอยู่');
             return;
         }
 
@@ -525,7 +525,7 @@ export default function FloodRecordsPage() {
 
     const handleCopyData = async () => {
         if (!activeSession) {
-            showError('ไม่พบ EOC Session ที่เปิดอยู่');
+            showError('ไม่พบเหตุการณ์ EOC ที่เปิดอยู่');
             return;
         }
 
@@ -654,7 +654,7 @@ export default function FloodRecordsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="bg-white rounded-lg shadow p-8 text-center">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b border-blue-500 mx-auto mb-3"></div>
+                        <div className="animate-spin rounded-full h-10 w-10 border-b border-[#0b4c86] mx-auto mb-3"></div>
                         <p className="text-gray-600">กำลังโหลดข้อมูล EOC อุทกภัยน้ำท่วม...</p>
                     </div>
                 </div>
@@ -668,9 +668,9 @@ export default function FloodRecordsPage() {
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มี EOC Session อุทกภัยน้ำท่วม</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มีเหตุการณ์ EOC อุทกภัยน้ำท่วม</h3>
                         <p className="text-gray-600">
-                            กรุณาสร้างหรือเปิด EOC Session อุทกภัยน้ำท่วมก่อนบันทึกข้อมูลพื้นที่อุทกภัยน้ำท่วม
+                            กรุณาสร้างหรือเปิด เหตุการณ์ EOC อุทกภัยน้ำท่วมก่อนบันทึกข้อมูลพื้นที่อุทกภัยน้ำท่วม
                         </p>
                     </div>
                 </div>
@@ -684,12 +684,12 @@ export default function FloodRecordsPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
                             <span className="text-4xl"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกพื้นที่อุทกภัยน้ำท่วม
                         </h1>
                         <p className="text-gray-600">
-                            EOC Session #{activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
+                            เหตุการณ์ EOC #{activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
                             {activeSession.closed_at && ` ถึง ${new Date(activeSession.closed_at).toLocaleDateString('th-TH')}`}
                             <span className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${activeSession.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
                                 {selectedSessionStatusLabel}
@@ -706,7 +706,7 @@ export default function FloodRecordsPage() {
                             }));
                             setShowModal(true);
                         }}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                        className="bg-[#0b4c86] text-white px-6 py-3 rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
                     >
                         <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มข้อมูลใหม่
@@ -714,7 +714,7 @@ export default function FloodRecordsPage() {
                 </div>
 
                 {/* Session Selector */}
-                <div className="bg-white border border-blue-100 rounded-lg shadow p-4 mb-6">
+                <div className="bg-white border border-[#c9dcee] rounded-lg shadow p-4 mb-6">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
                         <label className="block">
                             <span className="block text-sm font-medium text-gray-700 mb-1">ปี EOC</span>
@@ -734,7 +734,7 @@ export default function FloodRecordsPage() {
                             </select>
                         </label>
                         <label className="block">
-                            <span className="block text-sm font-medium text-gray-700 mb-1">เลือก EOC Session</span>
+                            <span className="block text-sm font-medium text-gray-700 mb-1">เลือกเหตุการณ์ EOC</span>
                             <select
                                 value={activeSession?.id || ''}
                                 onChange={(e) => {
@@ -746,7 +746,7 @@ export default function FloodRecordsPage() {
                                 className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg"
                                 disabled={sessions.length === 0}
                             >
-                                {sessions.length === 0 && <option value="">ไม่พบ session ในปีนี้</option>}
+                                {sessions.length === 0 && <option value="">ไม่พบเหตุการณ์ในปีนี้</option>}
                                 {sessions.map((session) => (
                                     <option key={session.id} value={session.id}>
                                         Session #{session.session_number} - {new Date(session.opened_at).toLocaleDateString('th-TH')}
@@ -758,14 +758,14 @@ export default function FloodRecordsPage() {
                         </label>
                     </div>
                     {activeSession?.status === 'closed' && (
-                        <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-800">
-                            Session นี้ปิด EOC แล้ว ข้อมูลปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่รายงานกลุ่มภารกิจยังจัดทำย้อนหลังได้
+                        <div className="mt-3 rounded-lg border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]">
+                            เหตุการณ์นี้ปิด EOC แล้ว ข้อมูลปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่รายงานกลุ่มภารกิจยังจัดทำย้อนหลังได้
                         </div>
                     )}
                 </div>
 
                 {/* Date Picker for Backdating */}
-                <div className="bg-gradient-to-r from-teal-50 to-sky-50 border-2 border-teal-200 rounded-lg p-4 mb-6">
+                <div className="bg-gradient-to-r from-teal-50 to-sky-50 border-2 border-[#c9dcee] rounded-lg p-4 mb-6">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <span className="text-2xl"><AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
@@ -802,7 +802,7 @@ export default function FloodRecordsPage() {
                                 min={selectedSessionStartDate}
                                 max={selectedSessionEndDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="px-4 py-2 border-2 border-teal-300 rounded-lg text-gray-700 font-medium bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                className="px-4 py-2 border-2 border-[#c9dcee] rounded-lg text-gray-700 font-medium bg-white focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-[#0b4c86]"
                             />
 
                             {/* Next Day */}
@@ -827,8 +827,8 @@ export default function FloodRecordsPage() {
                             <button
                                 onClick={() => setSelectedDate(selectedSessionEndDate)}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedDate === selectedSessionEndDate
-                                    ? 'bg-teal-600 text-white'
-                                    : 'bg-white border border-teal-300 text-teal-700 hover:bg-teal-50'
+                                    ? 'bg-[#0b4c86] text-white'
+                                    : 'bg-white border border-[#c9dcee] text-[#0b4c86] hover:bg-[#edf5fc]'
                                     }`}
                             >
                                 <AppIcon icon="calendarDays" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {activeSession.status === 'active' ? 'วันนี้' : 'วันปิด EOC'}
@@ -840,7 +840,7 @@ export default function FloodRecordsPage() {
                                     setCopyConfig({ sourceDate: '', overwrite: false });
                                     setShowCopyModal(true);
                                 }}
-                                className="px-4 py-2 bg-sky-600 text-white rounded-lg font-medium hover:bg-sky-700 transition-colors flex items-center gap-2"
+                                className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg font-medium hover:bg-[#083865] transition-colors flex items-center gap-2"
                                 title="คัดลอกข้อมูลจากวันอื่น"
                             >
                                 <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> คัดลอกข้อมูล
@@ -848,8 +848,8 @@ export default function FloodRecordsPage() {
                         </div>
 
                         {/* Selected Date Display */}
-                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-teal-200">
-                            <span className={`font-bold text-lg ${selectedDate === getTodayDate() ? 'text-green-600' : 'text-teal-600'}`}>
+                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-[#c9dcee]">
+                            <span className={`font-bold text-lg ${selectedDate === getTodayDate() ? 'text-green-600' : 'text-[#0b4c86]'}`}>
                                 {new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH', {
                                     weekday: 'long',
                                     year: 'numeric',
@@ -889,7 +889,7 @@ export default function FloodRecordsPage() {
                     </div>
 
                     {/* Debug Info */}
-                    {/* <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-4 text-xs">
+                    {/* <div className="bg-[#edf5fc] border border-[#c9dcee] rounded p-2 mb-4 text-xs">
                         <div className="font-mono">
                             Debug: Records={records.length}, Polygons={polygons.length},
                             Complete={getCompletedTambons().length},
@@ -1020,7 +1020,7 @@ export default function FloodRecordsPage() {
 
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b border-blue-500 mx-auto mb-2"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
                             <p className="text-gray-600 text-sm">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : records.length === 0 ? (
@@ -1083,7 +1083,7 @@ export default function FloodRecordsPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 {canOperate && <button
                                                     onClick={() => handleEdit(record)}
-                                                    className="text-blue-600 hover:text-blue-800 mr-3 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
+                                                    className="text-[#0b4c86] hover:text-[#083865] mr-3 px-3 py-1 rounded hover:bg-[#edf5fc] transition-colors"
                                                     title="แก้ไขข้อมูล"
                                                 >
                                                     <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
@@ -1121,14 +1121,14 @@ export default function FloodRecordsPage() {
                                 </h2>
 
                                 {isTambonMode && !editingRecord && (
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                                        <p className="text-sm text-blue-800">
+                                    <div className="bg-[#edf5fc] border border-[#c9dcee] rounded-lg p-3 mb-4">
+                                        <p className="text-sm text-[#083865]">
                                             <AppIcon icon="statusBlue" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โหมดบันทึกทั้งตำบล - ข้อมูลจะถูกบันทึกให้กับทุกหมู่บ้านในตำบล{formData.tambon} พร้อมกัน
                                         </p>
                                         <button
                                             type="button"
                                             onClick={() => setIsTambonMode(false)}
-                                            className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                                            className="mt-2 text-sm text-[#0b4c86] hover:text-[#083865] underline"
                                         >
                                             เปลี่ยนเป็นโหมดบันทึกรายหมู่บ้าน
                                         </button>
@@ -1299,21 +1299,21 @@ export default function FloodRecordsPage() {
                 {/* Copy Data Modal */}
                 {showCopyModal && (
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                        <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-sky-200">
+                        <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border-2 border-[#c9dcee]">
                             <div className="p-6">
                                 <h2 className="text-gray-700 text-2xl font-bold mb-4 flex items-center gap-2">
                                     <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> คัดลอกข้อมูลอุทกภัยน้ำท่วม
                                 </h2>
 
-                                <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">
-                                    <p className="text-sm text-sky-800 mb-2">
+                                <div className="bg-[#edf5fc] border border-[#c9dcee] rounded-lg p-4 mb-4">
+                                    <p className="text-sm text-[#083865] mb-2">
                                         <span className="font-bold">วันที่ปลายทาง:</span> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH', {
                                             year: 'numeric',
                                             month: 'long',
                                             day: 'numeric'
                                         })}
                                     </p>
-                                    <p className="text-xs text-sky-600">
+                                    <p className="text-xs text-[#0b4c86]">
                                         ระบบจะคัดลอกข้อมูลจากวันที่ต้นทางไปยังวันที่ปลายทาง
                                     </p>
                                 </div>
@@ -1329,7 +1329,7 @@ export default function FloodRecordsPage() {
                                             min={selectedSessionStartDate}
                                             max={selectedSessionEndDate}
                                             onChange={(e) => setCopyConfig({ ...copyConfig, sourceDate: e.target.value })}
-                                            className="text-gray-600 w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-sky-500"
+                                            className="text-gray-600 w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-[#0b4c86]"
                                         />
                                     </div>
 
@@ -1365,7 +1365,7 @@ export default function FloodRecordsPage() {
                                         type="button"
                                         onClick={handleCopyData}
                                         disabled={!copyConfig.sourceDate}
-                                        className="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         คัดลอกข้อมูล
                                     </button>

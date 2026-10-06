@@ -66,7 +66,7 @@ export async function GET(req) {
                 data: {},
                 availableYears: [],
                 rawData: [],
-                message: "ไม่พบข้อมูล EOC Sessions"
+                message: "ไม่พบข้อมูลเหตุการณ์ EOC"
             });
         }
 

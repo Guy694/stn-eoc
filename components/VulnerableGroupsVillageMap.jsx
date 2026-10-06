@@ -221,7 +221,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
         }, { total: 0, elderly: 0, children: 0, disabled: 0, bedridden: 0, pregnant: 0, chronic_illness: 0 });
     }, [records]);
     const maxTotal = Math.max(...mappedPolygons.map((poly) => poly.vulnerableInfo?.total || 0), 0);
-    const sourceLabel = source === "baseline" ? "ฐานข้อมูลกลาง" : "ข้อมูลใน Session";
+    const sourceLabel = source === "baseline" ? "ฐานข้อมูลกลาง" : "ข้อมูลในเหตุการณ์";
 
     if (!session) {
         return null;

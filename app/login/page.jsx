@@ -26,11 +26,7 @@ function ThaiDErrorHandler({ setError }) {
             switch (errorType) {
                 case 'thaiid_auth_failed':
                     if (errorMessage && decodeURIComponent(errorMessage).includes('unauthorized_client')) {
-<<<<<<< Updated upstream
                         setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n• ยืนยันว่า ThaiD console อนุญาต client_id นี้\n• ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n• รีสตาร์ต server หลังแก้ .env');
-=======
-                        setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiD console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
->>>>>>> Stashed changes
                         break;
                     }
                     setError(`การยืนยันตัวตนผ่าน ThaiD ล้มเหลว: ${errorMessage || 'ไม่ทราบสาเหตุ'}`);
@@ -48,21 +44,13 @@ function ThaiDErrorHandler({ setError }) {
                     const decodedMessage = errorMessage ? decodeURIComponent(errorMessage) : 'การเข้าสู่ระบบผ่าน ThaiD ล้มเหลว';
 
                     if (decodedMessage.includes('unauthorized_client')) {
-<<<<<<< Updated upstream
-                        setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n• ยืนยันว่า ThaiD console อนุญาต client_id นี้\n• ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n• รีสตาร์ต server หลังแก้ .env');
-=======
                         setError('ThaiD ยังไม่อนุญาต client นี้หรือ redirect URI นี้\n\nสาเหตุที่พบบ่อย:\n• client_id ยังไม่ได้รับสิทธิ์จาก DOPA\n• redirect URI ที่ลงทะเบียนไม่ตรงกับที่ระบบส่งไป\n• แอป ThaiD ตัวนี้ยังไม่ได้ผูกกับ environment ปัจจุบัน\n\nสิ่งที่ควรตรวจสอบ:\n✓ ยืนยันว่า ThaiD console อนุญาต client_id นี้\n✓ ตรวจว่า redirect URI ตรงกับค่าที่ลงทะเบียนกับ DOPA แบบตัวต่อตัว\n✓ รีสตาร์ต server หลังแก้ .env');
->>>>>>> Stashed changes
                         break;
                     }
 
                     // ตรวจสอบว่าเป็น timeout error หรือไม่
                     if (decodedMessage.includes('timeout') || decodedMessage.includes('ETIMEDOUT')) {
-<<<<<<< Updated upstream
-                        setError('การเชื่อมต่อ ThaiD หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiD ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiD API\n\nคำแนะนำ:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ลองใหม่อีกครั้งในอีกสักครู่\n• หรือใช้ username/password แทน');
-=======
-                        setError('การเชื่อมต่อ ThaiD หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiD ไม่สามารถเข้าถึงได้ชั่วคราว\n• Server ไม่สามารถเชื่อมต่อกับ ThaiD API\n\nคำแนะนำ:\n✓ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n✓ ลองใหม่อีกครั้งในอีกสักครู่\n✓ หรือใช้ username/password แทน');
->>>>>>> Stashed changes
+                        setError('การเชื่อมต่อ ThaiD หมดเวลา\n\nสาเหตุที่เป็นไปได้:\n• เครือข่ายอินเทอร์เน็ตไม่เสถียร\n• บริการ ThaiD ไม่สามารถเข้าถึงได้ชั่วคราว\n• เซิร์ฟเวอร์ไม่สามารถเชื่อมต่อกับ ThaiD API\n\nคำแนะนำ:\n✓ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n✓ ลองใหม่อีกครั้งในอีกสักครู่\n✓ หรือใช้ username/password แทน');
                     } else {
                         setError(`เกิดข้อผิดพลาด: ${decodedMessage}`);
                     }
@@ -140,7 +128,7 @@ function LoginForm() {
                     </div>
 
                     <div className="relative my-10 max-w-xl">
-                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-100">Officer Command Access</p>
+                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-100">ช่องทางเข้าระบบสำหรับเจ้าหน้าที่</p>
                         <h1 className="text-4xl font-black leading-tight sm:text-5xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
                         <p className="mt-4 text-base leading-7 text-blue-50">
                             ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
@@ -150,12 +138,12 @@ function LoginForm() {
                     <div className="relative grid gap-3 text-sm text-blue-50 sm:grid-cols-3">
                         <div className="rounded-xl border border-white/15 bg-white/10 p-4">
                             <ShieldCheck className="mb-2 h-5 w-5" />
-                            <div className="font-black">Secure</div>
+                            <div className="font-black">ปลอดภัย</div>
                             <div className="mt-1 text-xs text-blue-100">ตรวจสอบสิทธิ์ตามบทบาท</div>
                         </div>
                         <div className="rounded-xl border border-white/15 bg-white/10 p-4">
                             <MapPinned className="mb-2 h-5 w-5" />
-                            <div className="font-black">Situation</div>
+                            <div className="font-black">สถานการณ์</div>
                             <div className="mt-1 text-xs text-blue-100">ข้อมูลเหตุการณ์แบบรวมศูนย์</div>
                         </div>
                         <div className="rounded-xl border border-white/15 bg-white/10 p-4">

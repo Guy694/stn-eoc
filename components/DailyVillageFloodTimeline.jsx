@@ -361,11 +361,11 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     // ตรวจสอบว่ามี session หรือไม่
     if (!session) {
         return (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 text-center">
+            <div className="bg-[#edf5fc] border-2 border-[#c9dcee] rounded-lg p-6 text-center">
                 <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือก EOC Session</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
                 <p className="text-gray-600">
-                    เลือกปีและ EOC Session จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
+                    เลือกปีและ เหตุการณ์ EOC จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
                     <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
@@ -397,7 +397,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                 <select
                                     value={baseMap}
                                     onChange={(e) => setBaseMap(e.target.value)}
-                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-blue-400"
+                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-[#0b4c86]"
                                 >
                                     {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
                                         <option key={key} value={key}>{layer.label}</option>
@@ -410,7 +410,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                 type="checkbox"
                                 checked={showFacilities}
                                 onChange={(e) => setShowFacilities(e.target.checked)}
-                                className="w-4 h-4 text-blue-600 rounded"
+                                className="w-4 h-4 text-[#0b4c86] rounded"
                             />
                             แสดงสถานพยาบาล
                         </label>
@@ -419,7 +419,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                 type="checkbox"
                                 checked={showWaterways}
                                 onChange={(e) => setShowWaterways(e.target.checked)}
-                                className="w-4 h-4 text-sky-600 rounded"
+                                className="w-4 h-4 text-[#0b4c86] rounded"
                             />
                             เส้นทางน้ำ/คลอง
                         </label>
@@ -443,7 +443,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                         </button>
                         <button
                             onClick={downloadMap}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
+                            className="bg-[#0b4c86] hover:bg-[#083865] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -462,7 +462,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                     key={index}
                                     onClick={() => setSelectedDate(date)}
                                     className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium transition-all ${isSelected
-                                        ? 'bg-blue-600 text-white shadow-lg'
+                                        ? 'bg-[#0b4c86] text-white shadow-lg'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
@@ -501,7 +501,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 {loading ? (
                     <div className="flex items-center justify-center h-96">
                         <div className="text-center">
-                            <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
+                            <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
                             <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                         </div>
                     </div>
@@ -680,7 +680,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                             >
                                                 <Popup>
                                                     <div className="text-sm">
-                                                        <strong className="text-teal-700">ตำบล{tambon.tambname}</strong><br />
+                                                        <strong className="text-[#0b4c86]">ตำบล{tambon.tambname}</strong><br />
                                                         อำเภอ: {tambon.distname}<br />
                                                         จำนวนหมู่บ้าน: {tambon.villages} หมู่บ้าน
                                                     </div>
@@ -701,8 +701,8 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                             >
                                                 <Popup>
                                                     <div className="text-sm">
-                                                        <strong className="text-blue-700">{facility.name}</strong><br />
-                                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                                        <strong className="text-[#0b4c86]">{facility.name}</strong><br />
+                                                        <span className="text-xs bg-[#dbeaf7] text-[#083865] px-2 py-0.5 rounded">
                                                             {facility.typecode}
                                                         </span><br />
                                                         อำเภอ: {facility.district}<br />
@@ -741,7 +741,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                             <div className="mb-4">
                                 <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-1 border-2 border-teal-500" style={{ borderStyle: 'dashed' }}></div>
+                                    <div className="w-12 h-1 border-2 border-[#0b4c86]" style={{ borderStyle: 'dashed' }}></div>
                                     <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
                                 </div>
                             </div>
@@ -790,7 +790,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                     <StatBox
                                         label="ผู้ได้รับผลกระทบ"
                                         value={(floodData.summary?.totalPopulation || 0).toLocaleString()}
-                                        color="bg-blue-100 text-blue-700"
+                                        color="bg-[#dbeaf7] text-[#0b4c86]"
                                         unit="คน"
                                     />
                                 </div>

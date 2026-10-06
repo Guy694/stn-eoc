@@ -41,7 +41,7 @@ export async function GET(request) {
   } catch (error) {
     console.error("Flood daily-risk API error:", error);
     if (error.message === "FLOOD_SESSION_NOT_FOUND") {
-      return NextResponse.json({ success: false, message: "ไม่พบ EOC Session อุทกภัย" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "ไม่พบเหตุการณ์ EOC อุทกภัย" }, { status: 404 });
     }
     return publicInternalError("เกิดข้อผิดพลาดในการดึงข้อมูลสรุปความเสี่ยงอุทกภัยรายวัน");
   }

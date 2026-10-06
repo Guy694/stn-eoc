@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
         if (!Array.isArray(session) || session.length === 0) {
             return NextResponse.json({
                 success: false,
-                message: 'ไม่พบ Session นี้'
+                message: 'ไม่พบเหตุการณ์นี้'
             }, { status: 404 });
         }
 
@@ -117,6 +117,6 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Error fetching session teams:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลทีมใน session');
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลทีมในเหตุการณ์');
     }
 }

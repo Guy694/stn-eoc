@@ -45,11 +45,7 @@ export default function OfficersManagementPage() {
 
     const registrationStatusLabels = {
         pending: 'รอ ThaiD',
-<<<<<<< Updated upstream
         verified: 'ยืนยัน ThaiD แล้ว',
-=======
-        verified: 'ยืนยัน ThaID แล้ว',
->>>>>>> Stashed changes
         approved: 'อนุมัติแล้ว',
         rejected: 'ปฏิเสธ'
     };
@@ -446,8 +442,8 @@ export default function OfficersManagementPage() {
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อ-นามสกุล</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อผู้ใช้</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อีเมล</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">เบอร์โทร</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">บทบาท</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานะ</th>
@@ -664,12 +660,12 @@ export default function OfficersManagementPage() {
                             <div className="border border-blue-200 bg-blue-50 p-4">
                                 <div className="mb-3">
                                     <h3 className="font-bold text-blue-950">กลุ่มภารกิจ EOC</h3>
-                                    <p className="mt-1 text-xs text-blue-800">เลือกได้หลายกลุ่มภารกิจจากทุก Session ที่เปิดอยู่ พร้อมกำหนดบทบาทในแต่ละทีม</p>
+                                    <p className="mt-1 text-xs text-blue-800">เลือกได้หลายกลุ่มภารกิจจากทุกเหตุการณ์ที่เปิดอยู่ พร้อมกำหนดบทบาทในแต่ละทีม</p>
                                 </div>
                                 {loadingTeamAssignments ? (
                                     <p className="text-sm text-blue-800">กำลังโหลดกลุ่มภารกิจ...</p>
                                 ) : availableTeamAssignments.length === 0 ? (
-                                    <p className="text-sm text-blue-800">ยังไม่มีทีมใน EOC Session ที่เปิดใช้งาน</p>
+                                    <p className="text-sm text-blue-800">ยังไม่มีทีมในเหตุการณ์ EOC ที่เปิดใช้งาน</p>
                                 ) : (
                                     <div className="space-y-2">
                                         {availableTeamAssignments.map((team) => {

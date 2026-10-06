@@ -21,6 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
 import { showDeleteConfirm, showError, showSuccess } from "@/lib/sweetAlert";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
+import { OfficerMultiPicker, OfficerPicker } from "@/components/admin/OfficerPicker";
 
 const COMMAND_ROLES = {
     incident_commander: "ผู้บัญชาการเหตุการณ์",
@@ -39,8 +40,15 @@ const emptyTeamForm = {
     teamId: "",
     sessionTeamId: "",
     teamLeadOfficerId: "",
-    notes: ""
+    notes: "",
+    memberOfficerIds: []
 };
+
+// สมาชิกทั่วไปของทีม (ไม่รวมหัวหน้าทีม) ที่ active อยู่
+function regularMembers(team) {
+    return (Array.isArray(team?.members) ? team.members : [])
+        .filter((member) => member.role_in_team !== "หัวหน้าทีม" && String(member.officer_id) !== String(team?.team_lead_officer_id || ""));
+}
 
 function personName(person) {
     const parts = [person?.title, person?.given_name, person?.family_name].filter(Boolean);
@@ -323,7 +331,8 @@ export default function FloodOperationsTeamPage() {
             teamId: team.team_id || "",
             sessionTeamId: team.session_team_id || "",
             teamLeadOfficerId: team.team_lead_officer_id || "",
-            notes: team.notes || ""
+            notes: team.notes || "",
+            memberOfficerIds: regularMembers(team).map((member) => String(member.officer_id))
         });
         setShowTeamModal(true);
     };
@@ -332,6 +341,36 @@ export default function FloodOperationsTeamPage() {
         setShowTeamModal(false);
         setEditingTeam(null);
         setTeamForm(emptyTeamForm);
+    };
+
+    // เพิ่ม/ถอดสมาชิกให้ตรงกับที่เลือกในฟอร์ม (ใช้ API สมาชิกเดิม จึงบันทึกประวัติการใช้งานครบ)
+    const syncTeamMembers = async (sessionTeamId) => {
+        const leadId = String(teamForm.teamLeadOfficerId || "");
+        const wanted = new Set(teamForm.memberOfficerIds.map(String).filter((id) => id && id !== leadId));
+        const current = editingTeam ? regularMembers(editingTeam) : [];
+        const currentIds = new Set(current.map((member) => String(member.officer_id)));
+        const errors = [];
+        const nameOf = (officerId) => {
+            const officer = officerOptions.find((item) => String(item.id) === String(officerId));
+            return officer ? personName(officer) : `#${officerId}`;
+        };
+        for (const officerId of wanted) {
+            if (currentIds.has(officerId)) continue;
+            const response = await fetch(`/stn-eoc/api/admin/eoc-teams/${sessionTeamId}/members`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ officerId: Number(officerId), roleInTeam: "สมาชิกทีม" })
+            }).catch(() => null);
+            const json = await response?.json().catch(() => null);
+            if (!json?.success) errors.push(`${nameOf(officerId)} (${json?.message || "เพิ่มไม่สำเร็จ"})`);
+        }
+        for (const member of current) {
+            if (wanted.has(String(member.officer_id))) continue;
+            const response = await fetch(`/stn-eoc/api/admin/eoc-teams/${sessionTeamId}/members?memberId=${member.id}`, { method: "DELETE" }).catch(() => null);
+            const json = await response?.json().catch(() => null);
+            if (!json?.success) errors.push(`${memberName(member)} (${json?.message || "ถอดไม่สำเร็จ"})`);
+        }
+        return errors;
     };
 
     const saveTeam = async (event) => {
@@ -357,8 +396,14 @@ export default function FloodOperationsTeamPage() {
             });
             const result = await response.json();
             if (result.success) {
+                const sessionTeamId = editingTeam ? teamForm.sessionTeamId : result.sessionTeamId;
+                const memberErrors = sessionTeamId ? await syncTeamMembers(sessionTeamId) : [];
                 closeTeamModal();
-                showSuccess(editingTeam ? "แก้ไขทีมแล้ว" : "เพิ่มทีมใน Session แล้ว");
+                if (memberErrors.length) {
+                    showError(`บันทึกทีมแล้ว แต่จัดการสมาชิกไม่สำเร็จ ${memberErrors.length} รายการ: ${memberErrors.join(", ")}`);
+                } else {
+                    showSuccess(editingTeam ? "แก้ไขทีมแล้ว" : "เพิ่มทีมในเหตุการณ์แล้ว");
+                }
                 await loadTeams(selectedSessionId);
                 await loadAvailableTeams();
             } else {
@@ -383,7 +428,7 @@ export default function FloodOperationsTeamPage() {
             });
             const result = await response.json();
             if (result.success) {
-                showSuccess("ถอดทีมออกจาก Session แล้ว");
+                showSuccess("ถอดทีมออกจากเหตุการณ์แล้ว");
                 await loadTeams(selectedSessionId);
                 await loadAvailableTeams();
             } else {
@@ -398,10 +443,10 @@ export default function FloodOperationsTeamPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-[1500px] space-y-5">
-                <section className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+                <section className="rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm">
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
                         <div>
-                            <div className="flex items-center gap-2 text-sm font-black text-blue-700">
+                            <div className="flex items-center gap-2 text-sm font-black text-[#0b4c86]">
                                 <Network className="h-4 w-4" />
                                 EOC อุทกภัยน้ำท่วม
                             </div>
@@ -418,7 +463,7 @@ export default function FloodOperationsTeamPage() {
                                     value={selectedSessionId}
                                     onChange={(event) => setSelectedSessionId(event.target.value)}
                                     disabled={loadingSessions || sessions.length === 0}
-                                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 disabled:bg-slate-100"
+                                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0b4c86] disabled:bg-slate-100"
                                 >
                                     {sessions.length === 0 && <option value="">ไม่มีเหตุการณ์</option>}
                                     {sessions.map((session) => (
@@ -431,7 +476,7 @@ export default function FloodOperationsTeamPage() {
                             <button
                                 type="button"
                                 onClick={refreshAll}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-bold text-blue-700 hover:bg-blue-100"
+                                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#c9dcee] bg-[#edf5fc] px-4 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]"
                             >
                                 <RefreshCw className="h-4 w-4" />
                                 รีเฟรชข้อมูล
@@ -463,7 +508,7 @@ export default function FloodOperationsTeamPage() {
                     <SummaryCard icon={Users} label="ทีม / บุคลากร" value={`${teams.length.toLocaleString("th-TH")} ทีม / ${totalMembers.toLocaleString("th-TH")} คน`} />
                 </section>
 
-                <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
+                <section className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <h2 className="text-lg font-black text-slate-900">หัวหน้าผังบัญชาการ</h2>
@@ -475,7 +520,7 @@ export default function FloodOperationsTeamPage() {
                                     <button
                                         type="button"
                                         onClick={() => openCreateCommander("incident_commander")}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800"
+                                        className="inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]"
                                     >
                                         <Plus className="h-4 w-4" />
                                         เพิ่มผู้บัญชาการ
@@ -484,7 +529,7 @@ export default function FloodOperationsTeamPage() {
                                 <button
                                     type="button"
                                     onClick={() => openCreateCommander("deputy_incident_commander")}
-                                    className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 hover:bg-blue-100"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-[#c9dcee] bg-[#edf5fc] px-4 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]"
                                 >
                                     <Plus className="h-4 w-4" />
                                     เพิ่มรองผู้บัญชาการ
@@ -494,7 +539,7 @@ export default function FloodOperationsTeamPage() {
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
+                <section className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <h2 className="text-lg font-black text-slate-900">ทีมในเหตุการณ์ EOC</h2>
@@ -513,16 +558,16 @@ export default function FloodOperationsTeamPage() {
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-blue-100 bg-[#f8fbff] p-4 shadow-sm">
+                <section className="rounded-xl border border-[#c9dcee] bg-[#f8fbff] p-4 shadow-sm">
                     {loadingSessions || loadingTeams || loadingCommanders ? (
                         <div className="flex min-h-[360px] items-center justify-center rounded-xl bg-white text-slate-500">
                             <div className="text-center">
-                                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+                                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-[#0b4c86] border-t-transparent" />
                                 กำลังโหลดผังทีมปฏิบัติการ...
                             </div>
                         </div>
                     ) : !selectedSessionId ? (
-                        <EmptyState title="ยังไม่มี EOC Session อุทกภัยน้ำท่วม" description="เมื่อเปิด EOC แล้ว ระบบจะแสดงผังทีมปฏิบัติการในหน้านี้" />
+                        <EmptyState title="ยังไม่มีเหตุการณ์ EOC อุทกภัยน้ำท่วม" description="เมื่อเปิด EOC แล้ว ระบบจะแสดงผังทีมปฏิบัติการในหน้านี้" />
                     ) : (
                         <OperationsFlow
                             canManage={canManageCommanders}
@@ -572,9 +617,9 @@ export default function FloodOperationsTeamPage() {
 
 function SummaryCard({ icon: Icon, label, value }) {
     return (
-        <div className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
             <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#edf5fc] text-[#0b4c86]">
                     <Icon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
@@ -588,12 +633,12 @@ function SummaryCard({ icon: Icon, label, value }) {
 
 function EmptyState({ title, description }) {
     return (
-        <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white p-8 text-center">
+        <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed border-[#c9dcee] bg-white p-8 text-center">
             <div>
                 <Users className="mx-auto h-12 w-12 text-blue-300" />
                 <h2 className="mt-3 text-xl font-black text-slate-800">{title}</h2>
                 <p className="mt-1 text-sm text-slate-500">{description}</p>
-                <Link href="/admin/eoc-management" className="mt-4 inline-flex rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
+                <Link href="/admin/eoc-management" className="mt-4 inline-flex rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]">
                     ไปหน้าจัดการ EOC
                 </Link>
             </div>
@@ -648,13 +693,13 @@ function OperationsFlow({
                             ))}
                         </div>
                     ) : (
-                        <div className="mx-auto max-w-lg rounded-xl border border-dashed border-blue-200 bg-white p-4 text-center text-sm text-slate-500">
+                        <div className="mx-auto max-w-lg rounded-xl border border-dashed border-[#c9dcee] bg-white p-4 text-center text-sm text-slate-500">
                             ยังไม่กำหนดรองผู้บัญชาการเหตุการณ์
                             {canManage && (
                                 <button
                                     type="button"
                                     onClick={() => onAddCommander("deputy_incident_commander")}
-                                    className="ml-3 inline-flex rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"
+                                    className="ml-3 inline-flex rounded-lg bg-[#edf5fc] px-3 py-1.5 text-xs font-bold text-[#0b4c86] hover:bg-[#edf5fc]"
                                 >
                                     เพิ่มรองผู้บัญชาการ
                                 </button>
@@ -667,7 +712,7 @@ function OperationsFlow({
                 <div className="mx-12 h-px bg-blue-300" />
 
                 {teams.length === 0 ? (
-                    <div className="mx-auto mt-8 max-w-lg rounded-xl border border-dashed border-blue-200 bg-white p-6 text-center text-slate-500">
+                    <div className="mx-auto mt-8 max-w-lg rounded-xl border border-dashed border-[#c9dcee] bg-white p-6 text-center text-slate-500">
                         ยังไม่มีข้อมูลทีมปฏิบัติการใน session นี้
                     </div>
                 ) : (
@@ -691,11 +736,11 @@ function OperationsFlow({
 function CommanderNode({ commander, featured = false, canManage, onEdit, onDelete, session }) {
     const label = roleLabel(commander.command_role);
     return (
-        <article className={`rounded-2xl border-2 p-5 text-center shadow-lg ${featured ? "border-blue-700 bg-blue-800 text-white" : "border-cyan-200 bg-white text-slate-900"}`}>
-            <div className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full ${featured ? "bg-white/15" : "bg-cyan-50 text-cyan-700"}`}>
+        <article className={`rounded-2xl border-2 p-5 text-center shadow-lg ${featured ? "border-[#0b4c86] bg-blue-800 text-white" : "border-[#c9dcee] bg-white text-slate-900"}`}>
+            <div className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full ${featured ? "bg-white/15" : "bg-[#edf5fc] text-[#0b4c86]"}`}>
                 {featured ? <Crown className="h-7 w-7" /> : <ShieldCheck className="h-7 w-7" />}
             </div>
-            <p className={`text-xs font-black uppercase tracking-[0.18em] ${featured ? "text-blue-100" : "text-cyan-700"}`}>
+            <p className={`text-xs font-black uppercase tracking-[0.18em] ${featured ? "text-blue-100" : "text-[#0b4c86]"}`}>
                 {featured ? "Incident Commander" : "Deputy Incident Commander"}
             </p>
             <h2 className="mt-2 text-2xl font-black">{personName(commander)}</h2>
@@ -703,7 +748,7 @@ function CommanderNode({ commander, featured = false, canManage, onEdit, onDelet
                 {commander.position || label}
             </p>
             <p className={`mt-1 text-xs ${featured ? "text-blue-100" : "text-slate-400"}`}>
-                {commander.department || session?.eoc_name || "EOC อุทกภัยน้ำท่วม"} {session?.session_number ? `Session #${session.session_number}` : ""}
+                {commander.department || session?.eoc_name || "EOC อุทกภัยน้ำท่วม"} {session?.session_number ? `ครั้งที่ ${session.session_number}` : ""}
             </p>
             {commander.notes && (
                 <p className={`mt-3 rounded-lg px-3 py-2 text-sm ${featured ? "bg-white/10 text-blue-50" : "bg-slate-50 text-slate-600"}`}>
@@ -715,7 +760,7 @@ function CommanderNode({ commander, featured = false, canManage, onEdit, onDelet
                     <button
                         type="button"
                         onClick={() => onEdit(commander)}
-                        className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold ${featured ? "bg-white/15 text-white hover:bg-white/25" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}
+                        className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold ${featured ? "bg-white/15 text-white hover:bg-white/25" : "bg-[#edf5fc] text-[#0b4c86] hover:bg-[#edf5fc]"}`}
                     >
                         <Pencil className="h-3.5 w-3.5" />
                         แก้ไข
@@ -736,18 +781,18 @@ function CommanderNode({ commander, featured = false, canManage, onEdit, onDelet
 
 function MissingCommanderNode({ canManage, onAdd }) {
     return (
-        <article className="rounded-2xl border-2 border-dashed border-blue-300 bg-white p-5 text-center shadow-sm">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+        <article className="rounded-2xl border-2 border-dashed border-[#c9dcee] bg-white p-5 text-center shadow-sm">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#edf5fc] text-[#0b4c86]">
                 <Crown className="h-7 w-7" />
             </div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">Incident Commander</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0b4c86]">ผู้บัญชาการเหตุการณ์</p>
             <h2 className="mt-2 text-xl font-black text-slate-900">ยังไม่กำหนดผู้บัญชาการเหตุการณ์</h2>
-            <p className="mt-1 text-sm text-slate-500">head ของผังต้องเลือกจากเจ้าหน้าที่ ไม่ใช่ admin/ผู้เปิด session</p>
+            <p className="mt-1 text-sm text-slate-500">head ของผังต้องเลือกจากเจ้าหน้าที่ ไม่ใช่ admin/ผู้เปิดเหตุการณ์</p>
             {canManage && (
                 <button
                     type="button"
                     onClick={onAdd}
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]"
                 >
                     <Plus className="h-4 w-4" />
                     เพิ่มผู้บัญชาการ
@@ -762,7 +807,7 @@ function TeamNode({ team, canManage, onEdit, onDelete }) {
     const leadName = team.team_lead_name?.trim() || "ยังไม่ระบุหัวหน้าทีม";
 
     return (
-        <article className="relative rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
+        <article className="relative rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
             <div className="absolute -top-8 left-1/2 h-8 w-px -translate-x-1/2 bg-blue-200" />
             <div className="flex items-start gap-3">
                 <div
@@ -772,7 +817,7 @@ function TeamNode({ team, canManage, onEdit, onDelete }) {
                     <AppIcon icon={team.icon || "users"} className="h-8 w-8" />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-xs font-black text-blue-700">{team.team_code || "TEAM"}</p>
+                    <p className="text-xs font-black text-[#0b4c86]">{team.team_code || "TEAM"}</p>
                     <h3 className="mt-0.5 text-base font-black leading-snug text-slate-900">{team.team_name_th || team.team_name_en || "ทีมปฏิบัติการ"}</h3>
                     {team.description && <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{team.description}</p>}
                 </div>
@@ -783,7 +828,7 @@ function TeamNode({ team, canManage, onEdit, onDelete }) {
                     <button
                         type="button"
                         onClick={() => onEdit(team)}
-                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#edf5fc] px-3 py-1.5 text-xs font-bold text-[#0b4c86] hover:bg-[#edf5fc]"
                     >
                         <Pencil className="h-3.5 w-3.5" />
                         แก้ไขทีม
@@ -811,7 +856,7 @@ function TeamNode({ team, canManage, onEdit, onDelete }) {
             <div className="mt-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                     <p className="text-xs font-black text-slate-500">สมาชิกทีม</p>
-                    <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-black text-blue-700">
+                    <span className="rounded-full bg-[#edf5fc] px-2 py-1 text-xs font-black text-[#0b4c86]">
                         {Number(team.member_count || visibleMembers.length || 0).toLocaleString("th-TH")} คน
                     </span>
                 </div>
@@ -865,7 +910,7 @@ function CommanderModal({
                         <select
                             value={form.command_role}
                             onChange={(event) => setForm((current) => ({ ...current, command_role: event.target.value }))}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
+                            className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#0b4c86]"
                         >
                             <option value="incident_commander" disabled={incidentRoleDisabled}>
                                 ผู้บัญชาการเหตุการณ์
@@ -877,22 +922,16 @@ function CommanderModal({
                         )}
                     </label>
 
-                    <label className="block">
+                    <div>
                         <span className="mb-1 block text-sm font-bold text-slate-700">เจ้าหน้าที่</span>
-                        <select
+                        <OfficerPicker
+                            options={officerOptions}
                             value={form.officer_id}
-                            onChange={(event) => setForm((current) => ({ ...current, officer_id: event.target.value }))}
                             required
-                            className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
-                        >
-                            <option value="">เลือกเจ้าหน้าที่</option>
-                            {officerOptions.map((officer) => (
-                                <option key={officer.id} value={officer.id}>
-                                    {personName(officer)} - {officer.position || officer.role}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                            ariaLabel="ค้นหาเจ้าหน้าที่"
+                            onChange={(id) => setForm((current) => ({ ...current, officer_id: id }))}
+                        />
+                    </div>
 
                     <label className="block">
                         <span className="mb-1 block text-sm font-bold text-slate-700">ลำดับแสดงผล</span>
@@ -901,7 +940,7 @@ function CommanderModal({
                             min="0"
                             value={form.sort_order}
                             onChange={(event) => setForm((current) => ({ ...current, sort_order: Number(event.target.value) }))}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
+                            className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#0b4c86]"
                         />
                     </label>
 
@@ -911,7 +950,7 @@ function CommanderModal({
                             value={form.notes}
                             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                             rows={3}
-                            className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400"
+                            className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0b4c86]"
                             placeholder="เช่น รับผิดชอบภาพรวมการบัญชาการ / เวรช่วงเช้า"
                         />
                     </label>
@@ -928,7 +967,7 @@ function CommanderModal({
                     <button
                         type="submit"
                         disabled={saving}
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 disabled:bg-blue-300"
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865] disabled:bg-blue-300"
                     >
                         <Save className="h-4 w-4" />
                         {saving ? "กำลังบันทึก..." : "บันทึก"}
@@ -955,10 +994,10 @@ function TeamModal({
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <h2 className="text-xl font-black text-slate-900">
-                            {editingTeam ? "แก้ไขทีมใน Session" : "เพิ่มทีมเข้า Session"}
+                            {editingTeam ? "แก้ไขทีมในเหตุการณ์" : "เพิ่มทีมเข้าเหตุการณ์"}
                         </h2>
                         <p className="mt-1 text-sm text-slate-500">
-                            {editingTeam ? "แก้ไขหัวหน้าทีมและหมายเหตุของทีมที่เลือก" : "เลือกทีมที่ยังไม่ได้ถูกมอบหมายใน Session นี้"}
+                            {editingTeam ? "แก้ไขหัวหน้าทีม สมาชิก และหมายเหตุของทีม" : "เลือกทีม หัวหน้าทีม และสมาชิก (พิมพ์เพื่อค้นหารายชื่อได้)"}
                         </p>
                     </div>
                     <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100">
@@ -968,8 +1007,8 @@ function TeamModal({
 
                 <div className="mt-5 space-y-4">
                     {editingTeam ? (
-                        <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-                            <p className="text-xs font-bold text-blue-700">ทีมที่แก้ไข</p>
+                        <div className="rounded-lg border border-[#c9dcee] bg-[#edf5fc] p-3">
+                            <p className="text-xs font-bold text-[#0b4c86]">ทีมที่แก้ไข</p>
                             <p className="mt-1 font-black text-slate-900">{editingTeam.team_name_th || editingTeam.team_name_en}</p>
                             <p className="text-xs text-slate-500">{editingTeam.team_code}</p>
                         </div>
@@ -980,7 +1019,7 @@ function TeamModal({
                                 value={form.teamId}
                                 onChange={(event) => setForm((current) => ({ ...current, teamId: event.target.value }))}
                                 required
-                                className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
+                                className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#0b4c86]"
                             >
                                 <option value="">เลือกทีม</option>
                                 {teamOptions.map((team) => (
@@ -990,26 +1029,36 @@ function TeamModal({
                                 ))}
                             </select>
                             {teamOptions.length === 0 && (
-                                <p className="mt-1 text-xs font-semibold text-amber-700">ทุกทีมถูกเพิ่มใน Session นี้แล้ว</p>
+                                <p className="mt-1 text-xs font-semibold text-amber-700">ทุกทีมถูกเพิ่มในเหตุการณ์นี้แล้ว</p>
                             )}
                         </label>
                     )}
 
-                    <label className="block">
+                    <div>
                         <span className="mb-1 block text-sm font-bold text-slate-700">หัวหน้าทีม</span>
-                        <select
+                        <OfficerPicker
+                            options={officerOptions}
                             value={form.teamLeadOfficerId}
-                            onChange={(event) => setForm((current) => ({ ...current, teamLeadOfficerId: event.target.value }))}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-400"
-                        >
-                            <option value="">ยังไม่ระบุหัวหน้าทีม</option>
-                            {officerOptions.map((officer) => (
-                                <option key={officer.id} value={officer.id}>
-                                    {personName(officer)} - {officer.position || officer.role}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                            ariaLabel="ค้นหาหัวหน้าทีม"
+                            placeholder="พิมพ์ชื่อหัวหน้าทีม ตำแหน่ง หรือหน่วยงาน"
+                            onChange={(id) => setForm((current) => ({
+                                ...current,
+                                teamLeadOfficerId: id,
+                                memberOfficerIds: current.memberOfficerIds.filter((memberId) => String(memberId) !== String(id))
+                            }))}
+                        />
+                    </div>
+
+                    <div>
+                        <span className="mb-1 block text-sm font-bold text-slate-700">สมาชิกทีม</span>
+                        <OfficerMultiPicker
+                            options={officerOptions}
+                            value={form.memberOfficerIds}
+                            exclude={form.teamLeadOfficerId ? [form.teamLeadOfficerId] : []}
+                            ariaLabel="ค้นหาสมาชิกทีม"
+                            onChange={(ids) => setForm((current) => ({ ...current, memberOfficerIds: ids }))}
+                        />
+                    </div>
 
                     <label className="block">
                         <span className="mb-1 block text-sm font-bold text-slate-700">หมายเหตุ</span>
@@ -1017,7 +1066,7 @@ function TeamModal({
                             value={form.notes}
                             onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                             rows={3}
-                            className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400"
+                            className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0b4c86]"
                             placeholder="เช่น ภารกิจหลัก พื้นที่รับผิดชอบ หรือช่วงเวลาปฏิบัติงาน"
                         />
                     </label>

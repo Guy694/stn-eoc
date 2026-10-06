@@ -45,7 +45,7 @@ export async function GET(request) {
         if (!sessionRows.length) {
             return NextResponse.json({
                 success: false,
-                message: 'ไม่มี EOC Session อุทกภัยน้ำท่วมที่เปิดอยู่'
+                message: 'ไม่มีเหตุการณ์ EOC อุทกภัยน้ำท่วมที่เปิดอยู่'
             }, { status: 404 });
         }
 

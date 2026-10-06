@@ -27,13 +27,14 @@ const ISSUE_LABELS = {
   male_population_invalid: "ประชากรชายผิดช่วง",
   female_population_invalid: "ประชากรหญิงผิดช่วง",
   population_scope_missing: "ไม่มีขอบเขตประชากร",
-  report_context_missing: "รายงานไม่มี Session/วันที่",
+  report_context_missing: "รายงานไม่มีเหตุการณ์/วันที่",
+  date_outside_session: "วันที่รายงานอยู่นอกช่วงเหตุการณ์",
   duplicate_report: "รายงานซ้ำ",
   report_not_approved: "รายงานยังไม่อนุมัติ",
   mission_value_invalid: "ข้อมูลภารกิจผิดช่วง",
   file_missing: "ไม่พบไฟล์จริง",
   invalid_storage_path: "เส้นทางไฟล์ไม่ปลอดภัย",
-  checksum_mismatch: "Checksum ไม่ตรง",
+  checksum_mismatch: "ค่าตรวจสอบความถูกต้องไม่ตรง",
   file_size_mismatch: "ขนาดไฟล์ไม่ตรง",
   file_unreadable: "อ่านไฟล์ไม่ได้",
 };
@@ -157,7 +158,7 @@ export default function DataManagementPage() {
       <header className="border-b-4 border-cyan-700 bg-white p-5 shadow-sm">
         <p className="text-xs font-black text-cyan-700">ADMIN · DATABASE SOURCE OF TRUTH</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-          <div><h1 className="text-2xl font-black text-slate-900">ศูนย์จัดการและตรวจคุณภาพข้อมูล</h1><p className="mt-1 text-sm text-slate-600">จัดการ Master Data พร้อม Audit และตรวจข้อมูลผิดปกติก่อนนำไปใช้</p></div>
+          <div><h1 className="text-2xl font-black text-slate-900">ศูนย์จัดการและตรวจคุณภาพข้อมูล</h1><p className="mt-1 text-sm text-slate-600">จัดการข้อมูลหลักพร้อม การตรวจสอบ และตรวจข้อมูลผิดปกติก่อนนำไปใช้</p></div>
           <button type="button" onClick={load} className="inline-flex h-10 items-center gap-2 border border-slate-300 px-3 text-sm font-bold"><RefreshCw className="h-4 w-4" />รีเฟรช</button>
         </div>
       </header>

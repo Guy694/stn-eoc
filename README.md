@@ -50,6 +50,7 @@ npm run dev                     # http://localhost:3000/stn-eoc
 | `npm run db:migrate:baseline -- --through <ไฟล์>` | บันทึกว่าฐานข้อมูลเดิมมี migration ถึงไฟล์ที่ระบุแล้ว (ทำครั้งแรกครั้งเดียว) |
 | `npm run backup:eoc` / `npm run restore:test` | สำรองแบบเข้ารหัส / ทดสอบกู้คืน ([docs/backup-recovery.md](docs/backup-recovery.md)) |
 | `npm run security:weak-passwords` | ค้นหาและรีเซ็ตบัญชีที่ใช้รหัสผ่านเดาง่าย |
+| `npm run test:e2e` | เทสต์เปิดเบราว์เซอร์จริง (หน้าสาธารณะ, สิทธิ์เข้าหลังบ้าน, หน้าเจ้าหน้าที่) บนจอคอมและมือถือ — ติดตั้งครั้งแรกด้วย `npm i -D @playwright/test && npx playwright install chromium`; ชุดที่ต้องล็อกอินใช้บัญชีทดสอบจาก `E2E_USERNAME` / `E2E_PASSWORD` |
 
 ## กติกาสำหรับนักพัฒนา
 

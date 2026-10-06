@@ -18,8 +18,8 @@ export async function POST(request, { params }) {
     const copyFromSessionId = Number(body.copyFromSessionId) || null;
     const result = await transaction(async (execute) => {
       const sessions = await execute(`SELECT id, status FROM eoc_sessions WHERE id = ? LIMIT 1 FOR UPDATE`, [sessionId]);
-      if (!sessions.length) throw Object.assign(new Error("ไม่พบ Session"), { status: 404 });
-      if (sessions[0].status !== "active") throw Object.assign(new Error("เพิ่มแม่แบบได้เฉพาะ Session ที่เปิดอยู่"), { status: 409 });
+      if (!sessions.length) throw Object.assign(new Error("ไม่พบเหตุการณ์"), { status: 404 });
+      if (sessions[0].status !== "active") throw Object.assign(new Error("เพิ่มแม่แบบได้เฉพาะเหตุการณ์ที่เปิดอยู่"), { status: 409 });
       const created = [];
       for (const team of teams) {
         const databaseTeams = await execute(`SELECT id FROM eoc_teams WHERE LOWER(team_code) = LOWER(?) AND is_active = 1 LIMIT 1`, [team.legacyCode]);
@@ -56,7 +56,7 @@ export async function POST(request, { params }) {
           INSERT INTO eoc_session_teams
             (eoc_session_id, team_id, team_lead_officer_id, assigned_by, notes)
           VALUES (?, ?, ?, ?, ?)
-        `, [sessionId, databaseTeams[0].id, leadId, auth.user.id, copyFromSessionId ? `คัดลอกจาก Session #${copyFromSessionId}` : "สร้างจากแม่แบบ"]);
+        `, [sessionId, databaseTeams[0].id, leadId, auth.user.id, copyFromSessionId ? `คัดลอกจาก ครั้งที่ ${copyFromSessionId}` : "สร้างจากแม่แบบ"]);
         for (const member of sourceMembers) {
           await execute(`
             INSERT INTO eoc_team_members

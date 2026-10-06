@@ -116,7 +116,7 @@ export default function CitizenFestivalReportPage() {
             return;
         }
         if (!festivalSession) {
-            showWarning("ไม่มี EOC Session ที่เปิดอยู่ ไม่สามารถส่งรายงานได้");
+            showWarning("ไม่มีเหตุการณ์ EOC ที่เปิดอยู่ ไม่สามารถส่งรายงานได้");
             return;
         }
 
@@ -218,7 +218,7 @@ export default function CitizenFestivalReportPage() {
                         {/* Session Badge */}
                         <div className={`${c.bg} border ${c.border} rounded-xl p-3 mb-4 flex items-center gap-2 text-sm`}>
                             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block"></span>
-                            <span className={`font-medium ${c.text}`}><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> EOC เปิดอยู่: {festivalLabel} — {festivalSession.open_reason || `Session #${festivalSession.session_number}`}</span>
+                            <span className={`font-medium ${c.text}`}><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> EOC เปิดอยู่: {festivalLabel} — {festivalSession.open_reason || `ครั้งที่ ${festivalSession.session_number}`}</span>
                         </div>
 
                         {submitError && (

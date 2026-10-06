@@ -1,19 +1,12 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
-
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-};
+import { getPool } from '@/lib/db';
 
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
 
-        const connection = await mysql.createConnection(dbConfig);
+        const connection = getPool();
 
         // ดึงข้อมูลสถิติอุทกภัยน้ำท่วมจาก flood_records
         let baseQuery = 'FROM flood_records WHERE 1=1';
@@ -66,7 +59,6 @@ export async function GET(request) {
             sheltersCount = 0;
         }
 
-        await connection.end();
 
         return NextResponse.json({
             success: true,

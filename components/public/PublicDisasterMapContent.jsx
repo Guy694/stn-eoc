@@ -134,7 +134,7 @@ export function buildContextOptions(activeEocs, sessions, disasterType) {
       disease_name: session.disease_name,
       session_number: session.session_number,
       status: session.status,
-      label: `${formatEocDisplayName(session)} #${session.session_number || session.id}`,
+      label: `${formatEocDisplayName(session)} ครั้งที่ ${session.session_number || session.id}`,
       opened_at: normalizeDateKey(session.opened_at),
       closed_at: normalizeDateKey(session.closed_at),
       latest_data_date: normalizeDateKey(session.latest_flood_record_date),
@@ -703,7 +703,7 @@ export function PublicDisasterMapContent({ initialDisasterType = "flood", lockDi
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400"
                   disabled={contextOptions.length === 0}
                 >
-                  {contextOptions.length === 0 && <option value="">ไม่มี session</option>}
+                  {contextOptions.length === 0 && <option value="">ไม่มีเหตุการณ์</option>}
                   {contextOptions.map((item) => (
                     <option key={item.key} value={item.key}>
                       {item.mode === "active" ? "ปัจจุบัน: " : "ย้อนหลัง: "}{item.label}

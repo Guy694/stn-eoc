@@ -114,7 +114,7 @@ export default function GistdaFloodMapPage() {
                 <div className="bg-white shadow-md p-4">
                     <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">
+                            <h1 className="text-2xl font-black text-slate-900">
                                 <AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่อุทกภัยน้ำท่วม GISTDA
                             </h1>
                             <p className="text-sm text-gray-600">
@@ -126,7 +126,7 @@ export default function GistdaFloodMapPage() {
                             <select
                                 value={selectedDays}
                                 onChange={(e) => setSelectedDays(e.target.value)}
-                                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40"
                             >
                                 <option value="1">1 วันล่าสุด</option>
                                 <option value="7">7 วันล่าสุด</option>
@@ -135,7 +135,7 @@ export default function GistdaFloodMapPage() {
 
                             <button
                                 onClick={fetchFloodData}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors"
                             >
                                 <AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รีเฟรช
                             </button>
@@ -149,7 +149,7 @@ export default function GistdaFloodMapPage() {
                         <div className="max-w-7xl mx-auto grid grid-cols-3 gap-4">
                             <div className="bg-white p-3 rounded-lg shadow">
                                 <div className="text-sm text-gray-600">พื้นที่อุทกภัยน้ำท่วมทั้งหมด</div>
-                                <div className="text-2xl font-bold text-blue-600">
+                                <div className="text-2xl font-bold text-[#0b4c86]">
                                     {floodData.summary?.totalAreas || 0}
                                 </div>
                             </div>
@@ -174,7 +174,7 @@ export default function GistdaFloodMapPage() {
                     {loading ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                             <div className="text-center">
-                                <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-600 mx-auto mb-4"></div>
+                                <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
                                 <div className="text-gray-600">กำลังโหลดข้อมูล...</div>
                             </div>
                         </div>
@@ -338,15 +338,15 @@ export default function GistdaFloodMapPage() {
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#DC2626' }}></div>
-                                    <span className="text-sm">รุนแรงมาก (Severe)</span>
+                                    <span className="text-sm">รุนแรงมาก</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#F59E0B' }}></div>
-                                    <span className="text-sm">ปานกลาง (Moderate)</span>
+                                    <span className="text-sm">ปานกลาง</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
-                                    <span className="text-sm">เล็กน้อย (Mild)</span>
+                                    <span className="text-sm">เล็กน้อย</span>
                                 </div>
                             </div>
                         </div>

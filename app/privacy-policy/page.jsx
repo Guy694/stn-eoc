@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
                                     <li>ชื่อ-นามสกุล</li>
                                     <li>เบอร์โทรศัพท์</li>
                                     <li>ที่อยู่ (หมู่บ้าน ตำบล อำเภอ)</li>
-                                    <li>พิกัดทางภูมิศาสตร์ (GPS Coordinates)</li>
+                                    <li>พิกัดทางภูมิศาสตร์</li>
                                 </ul>
                             </div>
                             <div>
@@ -62,7 +62,7 @@ export default function PrivacyPolicyPage() {
                             <div>
                                 <h3 className="font-semibold text-gray-800 mb-2">3. ข้อมูลการใช้งาน</h3>
                                 <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
-                                    <li>IP Address</li>
+                                    <li>ที่อยู่ไอพี</li>
                                     <li>ประเภทและเวอร์ชันของเบราว์เซอร์</li>
                                     <li>Cookies และ Local Storage</li>
                                     <li>ประวัติการเข้าใช้งานระบบ</li>
@@ -114,10 +114,10 @@ export default function PrivacyPolicyPage() {
                             เราใช้มาตรการรักษาความปลอดภัยที่เหมาะสม ได้แก่:
                         </p>
                         <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                            <li>การเข้ารหัสข้อมูล (Encryption)</li>
-                            <li>การควบคุมการเข้าถึงข้อมูล (Access Control)</li>
-                            <li>การสำรองข้อมูล (Backup) อย่างสม่ำเสมอ</li>
-                            <li>การตรวจสอบและบันทึกการเข้าถึงระบบ (Audit Log)</li>
+                            <li>การเข้ารหัสข้อมูล </li>
+                            <li>การควบคุมการเข้าถึงข้อมูล </li>
+                            <li>การสำรองข้อมูล  อย่างสม่ำเสมอ</li>
+                            <li>การตรวจสอบและบันทึกการเข้าถึงระบบ (บันทึกการตรวจสอบ)</li>
                             <li>การอบรมเจ้าหน้าที่เกี่ยวกับการคุ้มครองข้อมูล</li>
                         </ul>
                     </section>

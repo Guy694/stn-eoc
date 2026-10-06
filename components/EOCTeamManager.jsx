@@ -91,7 +91,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             if (data.success) {
                 await loadSessionTeams();
                 setShowAddTeamModal(false);
-                showSuccess('เพิ่มทีมใน Session สำเร็จ');
+                showSuccess('เพิ่มทีมในเหตุการณ์สำเร็จ');
                 if (onTeamUpdated) onTeamUpdated();
             } else {
                 showError(data.message || 'ไม่สามารถเพิ่มทีมได้');
@@ -103,7 +103,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     };
 
     const handleRemoveTeam = async (teamId) => {
-        if (!await showDeleteConfirm('ต้องการถอดทีมนี้ออกจาก Session หรือไม่?')) return;
+        if (!await showDeleteConfirm('ต้องการถอดทีมนี้ออกจากเหตุการณ์หรือไม่?')) return;
 
         try {
             const response = await fetch(
@@ -114,7 +114,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             const data = await response.json();
             if (data.success) {
                 await loadSessionTeams();
-                showSuccess('ถอดทีมออกจาก Session สำเร็จ');
+                showSuccess('ถอดทีมออกจากเหตุการณ์สำเร็จ');
                 if (onTeamUpdated) onTeamUpdated();
             } else {
                 showError(data.message || 'ไม่สามารถถอดทีมได้');
@@ -181,13 +181,13 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     if (loading) {
         return (
             <div className="flex justify-center items-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b border-[#0b4c86]"></div>
             </div>
         );
     }
 
     if (!session) {
-        return <div className="text-center p-8">ไม่พบข้อมูล Session</div>;
+        return <div className="text-center p-8">ไม่พบข้อมูลเหตุการณ์</div>;
     }
 
     // Filter available teams (exclude already assigned)
@@ -209,7 +209,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
                     </div>
                     <button
                         onClick={() => setShowAddTeamModal(true)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition"
                         disabled={session.status !== 'active'}
                     >
                         <span className="inline-flex items-center gap-2">
@@ -282,7 +282,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
             <div className="p-4 border-b">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="flex min-w-0 items-center space-x-3">
-                        <AppIcon icon={team.icon || 'users'} className="h-8 w-8 text-blue-600" />
+                        <AppIcon icon={team.icon || 'users'} className="h-8 w-8 text-[#0b4c86]" />
                         <div className="min-w-0">
                             <h3 className="text-lg font-bold text-gray-800">
                                 {team.team_name_th}
@@ -373,7 +373,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                                     <thead>
                                         <tr className="border-b">
                                             <th className="text-left py-2">ชื่อ-สกุล</th>
-                                            <th className="text-left py-2">Username</th>
+                                            <th className="text-left py-2">ชื่อผู้ใช้</th>
                                             <th className="text-left py-2">บทบาทในทีม</th>
                                             <th className="text-left py-2">สถานะ</th>
                                             <th className="text-left py-2">เข้าร่วมเมื่อ</th>
@@ -451,7 +451,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
     return (
         <AppDialogFrame open onOpenChange={(open) => { if (!open) onClose(); }}>
             <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md sm:p-6">
-                <h3 className="text-gray-600 text-xl font-bold mb-4">เพิ่มทีมเข้า Session</h3>
+                <h3 className="text-gray-600 text-xl font-bold mb-4">เพิ่มทีมเข้าเหตุการณ์</h3>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
@@ -461,7 +461,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                             <select
                                 value={selectedTeam}
                                 onChange={(e) => setSelectedTeam(e.target.value)}
-                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                 required
                             >
                                 <option value="">-- เลือกทีม --</option>
@@ -480,7 +480,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                             <select
                                 value={selectedLead}
                                 onChange={(e) => setSelectedLead(e.target.value)}
-                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                             >
                                 <option value="">-- ไม่ระบุ --</option>
                                 {Array.isArray(availableOfficers) && availableOfficers.map((officer) => (
@@ -502,7 +502,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                            className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
                         >
                             เพิ่มทีม
                         </button>
@@ -547,7 +547,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                             <select
                                 value={selectedOfficer}
                                 onChange={(e) => setSelectedOfficer(e.target.value)}
-                                className="text-gray-600  w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600  w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                 required
                             >
                                 <option value="">-- เลือกเจ้าหน้าที่ --</option>
@@ -566,7 +566,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                             <select
                                 value={roleInTeam}
                                 onChange={(e) => setRoleInTeam(e.target.value)}
-                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                             >
                                 <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
                                 {/* <option value="รองหัวหน้าทีม">รองหัวหน้าทีม</option>

@@ -161,9 +161,9 @@ function EOCModulesContent() {
             if (result.success) {
                 setShowModal(false);
                 await loadModules();
-                showSuccess(result.message || (editingModule ? 'แก้ไข Module สำเร็จ' : 'เพิ่ม Module สำเร็จ'));
+                showSuccess(result.message || (editingModule ? 'แก้ไขโมดูลสำเร็จ' : 'เพิ่มโมดูลสำเร็จ'));
             } else {
-                showError(result.error || 'ไม่สามารถบันทึก Module ได้');
+                showError(result.error || 'ไม่สามารถบันทึกโมดูลได้');
             }
         } catch (error) {
             console.error("Error saving module:", error);
@@ -173,7 +173,7 @@ function EOCModulesContent() {
 
     const handleDeleteModule = async (moduleId) => {
         try {
-            if (!await showDeleteConfirm('คุณต้องการลบ Module นี้หรือไม่?')) return;
+            if (!await showDeleteConfirm('คุณต้องการลบโมดูลนี้หรือไม่?')) return;
 
             const response = await fetch(`/stn-eoc/api/admin/eoc-modules?id=${moduleId}`, {
                 method: 'DELETE'
@@ -183,9 +183,9 @@ function EOCModulesContent() {
 
             if (result.success) {
                 await loadModules();
-                showSuccess('ลบ Module สำเร็จ');
+                showSuccess('ลบโมดูลสำเร็จ');
             } else {
-                showError(result.error || 'ไม่สามารถลบ Module ได้');
+                showError(result.error || 'ไม่สามารถลบโมดูลได้');
             }
         } catch (error) {
             console.error("Error deleting module:", error);

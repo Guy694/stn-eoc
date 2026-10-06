@@ -213,7 +213,7 @@ function AnnouncementsContent() {
         }
 
         if (!formData.session_id) {
-            showError('กรุณาเลือก EOC Session');
+            showError('กรุณาเลือกเหตุการณ์ EOC');
             return;
         }
 
@@ -407,7 +407,7 @@ function AnnouncementsContent() {
                         <div className="text-2xl font-bold text-green-600">{stats.active}</div>
                     </div>
                     <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
-                        <div className="text-sm text-gray-600 mb-1">แสดง Popup</div>
+                        <div className="text-sm text-gray-600 mb-1">แสดงหน้าต่างแจ้งเตือน</div>
                         <div className="text-2xl font-bold text-blue-600">{stats.popup}</div>
                     </div>
                     <div className="bg-white rounded-lg shadow p-4 border border-gray-500">
@@ -453,7 +453,7 @@ function AnnouncementsContent() {
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                EOC Session
+                                เหตุการณ์ EOC
                             </label>
                             <select
                                 value={filters.session_id}
@@ -530,7 +530,7 @@ function AnnouncementsContent() {
                                             ประเภท EOC
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            EOC Session
+                                            เหตุการณ์ EOC
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             สถานะ
@@ -599,7 +599,7 @@ function AnnouncementsContent() {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-400">ไม่ระบุ session</span>
+                                                    <span className="text-gray-400">ไม่ระบุเหตุการณ์</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -744,7 +744,7 @@ function AnnouncementsContent() {
                                     {/* EOC Session */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            EOC Session *
+                                            เหตุการณ์ EOC *
                                         </label>
                                         <select
                                             value={formData.session_id}
@@ -857,7 +857,7 @@ function AnnouncementsContent() {
                                                 onChange={(e) => setFormData({ ...formData, show_popup: e.target.checked })}
                                                 className="mr-2"
                                             />
-                                            <span className="text-sm text-gray-700">แสดงเป็น Popup หน้าแรก</span>
+                                            <span className="text-sm text-gray-700">แสดงเป็นหน้าต่างแจ้งเตือนหน้าแรก</span>
                                         </label>
                                     </div>
 

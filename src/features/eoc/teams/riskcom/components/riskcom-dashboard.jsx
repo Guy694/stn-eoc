@@ -35,7 +35,7 @@ export default function RiskcomDashboard({ eocType, teamCode = "riskcom" }) {
       {state.loading ? <div className="bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : state.error ? <div className="border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800">{state.error}</div> : <>
         <div className="grid gap-4 md:grid-cols-3">
           <SummaryCard label="ข่าวที่เผยแพร่" value={state.items.length.toLocaleString()} />
-          <SummaryCard label="ประกาศแบบ Popup" value={popupCount.toLocaleString()} />
+          <SummaryCard label="ประกาศแบบหน้าต่างแจ้งเตือน" value={popupCount.toLocaleString()} />
           <SummaryCard label="ประกาศลำดับความสำคัญ" value={highPriorityCount.toLocaleString()} />
         </div>
         <article className="border border-slate-200 bg-white p-5 shadow-sm">

@@ -17,7 +17,7 @@ export async function GET(request) {
     const limit = Math.min(Math.max(Number(searchParams.get("limit")) || 100, 1), 500);
     const issues = [];
 
-    const [populations, orphanReports, duplicateReports, unverifiedReports, invalidMissions, invalidFlood, duplicateFlood, unmatchedAreas, missingSources, files] = await Promise.all([
+    const [populations, orphanReports, duplicateReports, unverifiedReports, invalidMissions, invalidFlood, duplicateFlood, unmatchedAreas, missingSources, files, outOfRange] = await Promise.all([
       query(`SELECT * FROM area_population WHERE is_active = 1 ORDER BY district_name, id`),
       query(`
         SELECT r.id, r.title
@@ -79,6 +79,17 @@ export async function GET(request) {
         LIMIT 500
       `),
       query(`SELECT id, original_filename, storage_path, file_size, checksum_sha256 FROM eoc_file_assets ORDER BY created_at DESC LIMIT 500`),
+      // รายงานที่ลงวันที่นอกช่วงเปิด–ปิดของเหตุการณ์ (ทำให้ตัวเลขสรุปเพี้ยน)
+      query(`
+        SELECT 'disease_reports' AS table_name, dr.id, dr.report_date AS record_date, dr.disease_name AS label, s.session_number, s.opened_at, s.closed_at
+        FROM disease_reports dr JOIN eoc_sessions s ON s.id = dr.session_id
+        WHERE dr.report_date < DATE(s.opened_at) OR (s.closed_at IS NOT NULL AND dr.report_date > DATE(s.closed_at))
+        UNION ALL
+        SELECT 'flood_records', f.id, f.flood_start_date, CONCAT_WS(' / ', f.district, f.tambon, f.village), s.session_number, s.opened_at, s.closed_at
+        FROM flood_records f JOIN eoc_sessions s ON s.id = f.session_id
+        WHERE f.flood_start_date < DATE(s.opened_at) OR (s.closed_at IS NOT NULL AND f.flood_start_date > DATE(s.closed_at))
+        LIMIT 500
+      `).catch(() => []),
     ]);
 
     for (const row of populations) {
@@ -93,14 +104,19 @@ export async function GET(request) {
         }));
       }
     }
-    orphanReports.forEach((row) => issues.push(issue({ type: "report_context_missing", table: "eoc_team_reports", id: row.id, label: row.title, detail: "รายงานไม่มี Session หรือวันที่ที่ถูกต้อง", editUrl: "/eoc/staff" })));
-    duplicateReports.forEach((row) => issues.push(issue({ type: "duplicate_report", table: "eoc_team_reports", id: row.id, label: `Session ${row.eoc_session_id}`, detail: `พบ ${row.duplicate_count} รายการซ้ำในทีมและวันเดียวกัน`, editUrl: "/eoc/staff" })));
+    orphanReports.forEach((row) => issues.push(issue({ type: "report_context_missing", table: "eoc_team_reports", id: row.id, label: row.title, detail: "รายงานไม่มีเหตุการณ์หรือวันที่ที่ถูกต้อง", editUrl: "/eoc/staff" })));
+    duplicateReports.forEach((row) => issues.push(issue({ type: "duplicate_report", table: "eoc_team_reports", id: row.id, label: `เหตุการณ์ ${row.eoc_session_id}`, detail: `พบ ${row.duplicate_count} รายการซ้ำในทีมและวันเดียวกัน`, editUrl: "/eoc/staff" })));
     unverifiedReports.forEach((row) => issues.push(issue({ type: "report_not_approved", table: "eoc_team_reports", id: row.id, label: row.title, detail: `สถานะ ${row.status}`, editUrl: "/eoc/staff" })));
     invalidMissions.forEach((row) => issues.push(issue({ type: "mission_value_invalid", table: "missions", id: row.id, label: row.mission_code, detail: "สถานะหรือความคืบหน้าไม่ถูกต้อง", editUrl: "/eoc/flood/management/missions" })));
-    invalidFlood.forEach((row) => issues.push(issue({ type: "flood_value_invalid", table: "flood_records", id: row.id, label: [row.district, row.tambon, row.village].filter(Boolean).join(" / "), detail: "Session วันที่ หรือค่าตัวเลขไม่ถูกต้อง", editUrl: "/admin/flood-records" })));
-    duplicateFlood.forEach((row) => issues.push(issue({ type: "duplicate_flood_record", table: "flood_records", id: row.id, label: [row.district, row.tambon, row.village].filter(Boolean).join(" / "), detail: `พบ ${row.duplicate_count} รายการใน Session และวันเดียวกัน`, editUrl: "/admin/flood-records" })));
+    invalidFlood.forEach((row) => issues.push(issue({ type: "flood_value_invalid", table: "flood_records", id: row.id, label: [row.district, row.tambon, row.village].filter(Boolean).join(" / "), detail: "เหตุการณ์วันที่ หรือค่าตัวเลขไม่ถูกต้อง", editUrl: "/admin/flood-records" })));
+    duplicateFlood.forEach((row) => issues.push(issue({ type: "duplicate_flood_record", table: "flood_records", id: row.id, label: [row.district, row.tambon, row.village].filter(Boolean).join(" / "), detail: `พบ ${row.duplicate_count} รายการในเหตุการณ์และวันเดียวกัน`, editUrl: "/admin/flood-records" })));
     unmatchedAreas.forEach((row) => issues.push(issue({ type: "geography_not_in_master", table: "flood_records", id: row.id, label: [row.district, row.tambon, row.village].filter(Boolean).join(" / "), detail: "พื้นที่ไม่ตรงกับ Master Geography", editUrl: "/admin/flood-records" })));
-    missingSources.forEach((row) => issues.push(issue({ type: "source_name_missing", table: row.table_name, id: row.id, label: row.label, detail: "Master Data ไม่มีแหล่งข้อมูล", editUrl: row.table_name === "health_facilities" ? "/admin/health-facilities" : row.table_name === "satun_village_polygon" ? "/admin/village-polygons" : "/admin/master-data/agencies" })));
+    outOfRange.forEach((row) => issues.push(issue({
+      type: "date_outside_session", table: row.table_name, id: row.id, label: row.label,
+      detail: `ลงวันที่ ${String(row.record_date).slice(0, 10)} อยู่นอกช่วงเหตุการณ์ครั้งที่ ${row.session_number}`,
+      editUrl: row.table_name === "disease_reports" ? "/eoc/disease/records" : "/eoc/flood/records"
+    })));
+    missingSources.forEach((row) => issues.push(issue({ type: "source_name_missing", table: row.table_name, id: row.id, label: row.label, detail: "ข้อมูลหลักไม่มีแหล่งข้อมูล", editUrl: row.table_name === "health_facilities" ? "/admin/health-facilities" : row.table_name === "satun_village_polygon" ? "/admin/village-polygons" : "/admin/master-data/agencies" })));
 
     const fileResults = await Promise.all(files.map((row) => inspectFileAsset(row)));
     fileResults.filter(Boolean).forEach((row) => issues.push(issue({

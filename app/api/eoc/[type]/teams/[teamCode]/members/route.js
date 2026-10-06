@@ -65,7 +65,7 @@ export async function GET(request, { params }) {
     `, sessionParams);
 
     if (!sessionTeams.length) {
-      return NextResponse.json({ success: false, message: "ไม่พบกลุ่มภารกิจหรือสมาชิกใน Session ที่ระบุ" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "ไม่พบกลุ่มภารกิจหรือสมาชิกในเหตุการณ์ที่ระบุ" }, { status: 404 });
     }
 
     const selected = sessionTeams[0];

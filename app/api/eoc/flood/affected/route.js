@@ -375,7 +375,7 @@ export async function POST(request) {
         if (error.code === 'ER_DUP_ENTRY') {
             errorMessage = 'มีข้อมูลรายงานนี้อยู่แล้วในวันเดียวกัน';
         } else if (error.code === 'ER_NO_REFERENCED_ROW' || error.code === 'ER_NO_REFERENCED_ROW_2') {
-            errorMessage = 'ไม่พบ EOC Session ที่เลือก';
+            errorMessage = 'ไม่พบเหตุการณ์ EOC ที่เลือก';
         } else if (error.code === 'ER_NO_SUCH_TABLE') {
             errorMessage = 'ยังไม่ได้สร้างตาราง affected_persons ในฐานข้อมูล กรุณารัน SQL script ก่อน';
         }

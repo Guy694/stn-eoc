@@ -142,7 +142,7 @@ export default function DashboardPage() {
         const selectedSession = sessions.find((item) => Number(item.id) === Number(selectedSessionId));
 
         if (!selectedSession) {
-            setEntryError(`กรุณาเลือก EOC Session ของ${module.name}ก่อนเข้าสู่หน้าปฏิบัติการ`);
+            setEntryError(`กรุณาเลือกเหตุการณ์ EOC ของ${module.name}ก่อนเข้าสู่หน้าปฏิบัติการ`);
             return;
         }
 
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                             <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                                 <div>
                                     <h2 className="text-xl font-bold text-slate-900">เลือกประเภทเหตุการณ์</h2>
-                                    <p className="text-sm text-slate-500">ระบบจะแสดงเฉพาะหน้าปฏิบัติการที่พร้อมใช้งาน และสำหรับเจ้าหน้าที่จะต้องเลือก session ก่อนเข้าใช้งาน</p>
+                                    <p className="text-sm text-slate-500">ระบบจะแสดงเฉพาะหน้าปฏิบัติการที่พร้อมใช้งาน และสำหรับเจ้าหน้าที่จะต้องเลือกเหตุการณ์ก่อนเข้าใช้งาน</p>
                                 </div>
                             </div>
                             {entryError && (
@@ -359,7 +359,7 @@ function EventModuleCard({
                 <div className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-sm">
                     {isActive && sessionInfo?.session_number ? (
                         <>
-                            <InfoRow label="เหตุการณ์" value={`#${sessionInfo.session_number}`} />
+                            <InfoRow label="เหตุการณ์" value={`ครั้งที่ ${sessionInfo.session_number}`} />
                             {sessionInfo.activated_at && (
                                 <InfoRow label="เปิดเมื่อ" value={new Date(sessionInfo.activated_at).toLocaleDateString('th-TH')} />
                             )}
@@ -382,7 +382,7 @@ function EventModuleCard({
                             {isOperationalUser && (
                                 <div className="mb-3">
                                     <label className="mb-1 block text-xs font-semibold text-slate-600">
-                                        เลือก EOC Session ก่อนเข้าปฏิบัติการ
+                                        เลือกเหตุการณ์ EOC ก่อนเข้าปฏิบัติการ
                                     </label>
                                     <select
                                         value={selectedSessionId}
@@ -390,8 +390,8 @@ function EventModuleCard({
                                         className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700"
                                         disabled={loadingSessions || sessions.length === 0}
                                     >
-                                        {loadingSessions && <option value="">กำลังโหลด session...</option>}
-                                        {!loadingSessions && sessions.length === 0 && <option value="">ไม่พบ session</option>}
+                                        {loadingSessions && <option value="">กำลังโหลดเหตุการณ์...</option>}
+                                        {!loadingSessions && sessions.length === 0 && <option value="">ไม่พบเหตุการณ์</option>}
                                         {sessions.map((item) => (
                                             <option key={item.id} value={item.id}>
                                                 #{item.session_number || item.id} · {item.status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว'} เวลา {item.opened_at ? new Date(item.opened_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'} ถึง {item.closed_at ? new Date(item.closed_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'}

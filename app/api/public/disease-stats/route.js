@@ -1,19 +1,12 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
-
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-};
+import { getPool } from '@/lib/db';
 
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
 
-        const connection = await mysql.createConnection(dbConfig);
+        const connection = getPool();
 
         // หา session_id ถ้าไม่ได้ระบุ ให้ใช้ active session
         let activeSessionId = sessionId;
@@ -29,7 +22,6 @@ export async function GET(request) {
         }
 
         if (!activeSessionId) {
-            await connection.end();
             return NextResponse.json({
                 success: true,
                 data: {
@@ -84,7 +76,6 @@ export async function GET(request) {
             }
         }
 
-        await connection.end();
 
         return NextResponse.json({
             success: true,

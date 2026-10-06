@@ -239,7 +239,7 @@ async function createDengueDistrictRankingResponse() {
         return Response.json({
             success: true,
             data: {
-                answer: `พบ EOC โรคไข้เลือดออก session ${session.session_number || session.id} แต่ยังไม่มีรายงานผู้ป่วยในระบบครับ`,
+                answer: `พบ EOC โรคไข้เลือดออกเหตุการณ์ ${session.session_number || session.id} แต่ยังไม่มีรายงานผู้ป่วยในระบบครับ`,
                 sql: null,
                 results: [],
                 resultCount: 0,
@@ -259,7 +259,7 @@ async function createDengueDistrictRankingResponse() {
 
     const answer = [
         `อำเภอที่มีผู้ป่วยไข้เลือดออกมากที่สุดคือ อำเภอ${topDistrict.district_name} ${formatThaiNumber(topDistrict.patient_count)} รายครับ`,
-        `อ้างอิงข้อมูล EOC โรคไข้เลือดออก session ${session.session_number || session.id}${openedDate ? ` เปิดเมื่อ ${openedDate}` : ''} รวมทั้งหมด ${formatThaiNumber(totalPatients)} ราย`,
+        `อ้างอิงข้อมูล EOC โรคไข้เลือดออกเหตุการณ์ ${session.session_number || session.id}${openedDate ? ` เปิดเมื่อ ${openedDate}` : ''} รวมทั้งหมด ${formatThaiNumber(totalPatients)} ราย`,
         `อันดับผู้ป่วยสะสมสูงสุด:\n${topList}`
     ].join('\n');
 
@@ -325,11 +325,11 @@ async function createDengueSummaryResponse() {
 
     const answer = totalPatients > 0
         ? [
-            `EOC โรคไข้เลือดออก session ${session.session_number || session.id} มีผู้ป่วยรวม ${formatThaiNumber(totalPatients)} ราย จาก ${formatThaiNumber(rankedDistricts.length)} อำเภอครับ`,
+            `EOC โรคไข้เลือดออกเหตุการณ์ ${session.session_number || session.id} มีผู้ป่วยรวม ${formatThaiNumber(totalPatients)} ราย จาก ${formatThaiNumber(rankedDistricts.length)} อำเภอครับ`,
             firstReport && latestReport ? `ช่วงข้อมูลรายงาน ${formatThaiDate(firstReport)} - ${formatThaiDate(latestReport)}` : null,
             `อำเภอที่มีผู้ป่วยสูงสุด:\n${topList}`
         ].filter(Boolean).join('\n')
-        : `พบ EOC โรคไข้เลือดออก session ${session.session_number || session.id} แต่ยังไม่มีรายงานผู้ป่วยในระบบครับ`;
+        : `พบ EOC โรคไข้เลือดออกเหตุการณ์ ${session.session_number || session.id} แต่ยังไม่มีรายงานผู้ป่วยในระบบครับ`;
 
     return Response.json({
         success: true,
@@ -471,11 +471,11 @@ async function createFloodStatusResponse() {
     const sessionStatusText = session.status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว';
     const answer = totalVillages > 0
         ? [
-            `ข้อมูลน้ำท่วมล่าสุดวันที่ ${latestDateText} จาก EOC session ${session.session_number || session.id} (${sessionStatusText}) พบพื้นที่ได้รับผลกระทบ ${formatThaiNumber(totalVillages)} หมู่บ้าน ใน ${formatThaiNumber(normalizedDistricts.length)} อำเภอ${totalPeople ? ` รวมประชาชน ${formatThaiNumber(totalPeople)} คน` : ''}ครับ`,
+            `ข้อมูลน้ำท่วมล่าสุดวันที่ ${latestDateText} จาก EOC เหตุการณ์ ${session.session_number || session.id} (${sessionStatusText}) พบพื้นที่ได้รับผลกระทบ ${formatThaiNumber(totalVillages)} หมู่บ้าน ใน ${formatThaiNumber(normalizedDistricts.length)} อำเภอ${totalPeople ? ` รวมประชาชน ${formatThaiNumber(totalPeople)} คน` : ''}ครับ`,
             `สรุปรายอำเภอ:\n${districtList}`,
             villageList ? `พื้นที่ตัวอย่างที่มีระดับน้ำท่วม:\n${villageList}` : null
         ].filter(Boolean).join('\n')
-        : `ข้อมูลน้ำท่วมล่าสุดวันที่ ${latestDateText} จาก EOC session ${session.session_number || session.id} (${sessionStatusText}) ไม่พบพื้นที่ที่มีระดับน้ำท่วมในวันดังกล่าวครับ`;
+        : `ข้อมูลน้ำท่วมล่าสุดวันที่ ${latestDateText} จาก EOC เหตุการณ์ ${session.session_number || session.id} (${sessionStatusText}) ไม่พบพื้นที่ที่มีระดับน้ำท่วมในวันดังกล่าวครับ`;
 
     return Response.json({
         success: true,

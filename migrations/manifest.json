@@ -28,6 +28,11 @@
     "enhance_officer_data_management.sql",
     "extend_area_population_gender.sql",
     "reconcile_eoc_team_registry.sql",
-    "20260930_security_hardening.sql"
+    "20260930_security_hardening.sql",
+    "create_site_statistics.sql",
+    "add_announcement_view_count.sql",
+    "20261005_deleted_records.sql",
+    "20261006_vulnerable_event_status.sql",
+    "20261006_daily_directives.sql"
   ]
 }

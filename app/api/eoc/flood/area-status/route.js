@@ -106,7 +106,7 @@ export async function GET(request) {
             return NextResponse.json({
                 success: false,
                 hasActiveSession: false,
-                message: sessionId ? 'ไม่พบ EOC Session อุทกภัยน้ำท่วมที่เลือก' : 'ไม่มี EOC Session ที่เปิดอยู่',
+                message: sessionId ? 'ไม่พบเหตุการณ์ EOC อุทกภัยน้ำท่วมที่เลือก' : 'ไม่มีเหตุการณ์ EOC ที่เปิดอยู่',
                 debug: { allFloodSessions }
             });
         }

@@ -109,7 +109,7 @@ export default function AnalyticsPage() {
                                 <Activity className="h-6 w-6" />
                             </span>
                             <div>
-                                <p className="text-sm font-semibold text-emerald-300">Decision Intelligence</p>
+                                <p className="text-sm font-semibold text-emerald-300">ข้อมูลสนับสนุนการตัดสินใจ</p>
                                 <h1 className="mt-1 text-2xl font-black sm:text-3xl">วิเคราะห์สถานการณ์ EOC</h1>
                                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
                                     รวมตัวชี้วัด ทีมปฏิบัติการ เวชภัณฑ์ และแนวโน้มโรคเพื่อสนับสนุนการตัดสินใจของ Incident Commander

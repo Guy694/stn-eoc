@@ -24,7 +24,7 @@ const FIELD_LABELS = {
   is_active: "ใช้งาน", description: "รายละเอียด", type_code: "รหัสประเภท",
   name_th: "ชื่อภาษาไทย", name_en: "ชื่อภาษาอังกฤษ", district_name: "อำเภอ",
   hazard_type: "ประเภทภัย", susceptibility_score: "คะแนนความเสี่ยง", model_version: "รุ่นแบบจำลอง",
-  corridor_key: "รหัสเส้นทาง", corridor_name: "ชื่อเส้นทาง", district_names: "อำเภอ (JSON Array)",
+  corridor_key: "รหัสเส้นทาง", corridor_name: "ชื่อเส้นทาง", district_names: "อำเภอ",
   route_hint: "คำแนะนำเส้นทาง",
 };
 
@@ -52,7 +52,7 @@ export default function MasterDataCatalogPage() {
       const query = appliedSearch ? `?search=${encodeURIComponent(appliedSearch)}` : "";
       const response = await fetch(`/stn-eoc/api/admin/master-data/catalog/${type}${query}`);
       const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.message || "ไม่สามารถโหลด Master Data ได้");
+      if (!response.ok || !result.success) throw new Error(result.message || "ไม่สามารถโหลดข้อมูลหลักได้");
       setState({ loading: false, rows: result.data || [], fields: result.fields || [], required: result.required || [], label: result.label, total: Number(result.pagination?.total || 0), error: "" });
     } catch (error) {
       setState((current) => ({ ...current, loading: false, error: error.message }));
@@ -80,7 +80,7 @@ export default function MasterDataCatalogPage() {
       const response = await fetch(url, { method: editingId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || "บันทึกไม่สำเร็จ");
-      showSuccess(editingId ? "แก้ไข Master Data แล้ว" : "เพิ่ม Master Data แล้ว");
+      showSuccess(editingId ? "แก้ไขข้อมูลหลักแล้ว" : "เพิ่มข้อมูลหลักแล้ว");
       reset(); await load();
     } catch (error) {
       showError(error.message);
@@ -89,10 +89,10 @@ export default function MasterDataCatalogPage() {
   const archive = async (row) => {
     if (!await showConfirm("ยืนยันการเก็บเข้าคลัง", "เก็บรายการนี้เข้าคลังหรือไม่?", "เก็บเข้าคลัง")) return;
     try {
-      const response = await fetch(`/stn-eoc/api/admin/master-data/catalog/${type}/${row.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: "เก็บเข้าคลังจากหน้า Master Data" }) });
+      const response = await fetch(`/stn-eoc/api/admin/master-data/catalog/${type}/${row.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: "เก็บเข้าคลังจากหน้าข้อมูลหลัก" }) });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || "เก็บข้อมูลเข้าคลังไม่สำเร็จ");
-      showSuccess("เก็บ Master Data เข้าคลังแล้ว");
+      showSuccess("เก็บข้อมูลหลักเข้าคลังแล้ว");
       load();
     } catch (error) {
       showError(error.message);
@@ -102,8 +102,8 @@ export default function MasterDataCatalogPage() {
   if (authLoading || !user) return <div className="grid min-h-screen place-items-center text-sm text-slate-500">กำลังตรวจสอบสิทธิ์...</div>;
   if (user.role !== "admin") return null;
   return <EOCLayout><section className="mx-auto max-w-7xl space-y-5">
-    <header className="border-b-4 border-cyan-700 bg-white p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-black text-cyan-700">MASTER DATA</p><h1 className="mt-1 text-2xl font-black">{state.label || "จัดการ Master Data"}</h1><p className="mt-1 text-sm text-slate-600">ข้อมูลจากฐานข้อมูล พร้อม Source, วันที่อ้างอิง, Duplicate Check และ Audit Log</p></div><button type="button" onClick={load} className="inline-flex items-center gap-2 border border-slate-300 px-3 py-2 text-sm font-bold"><RefreshCw className="h-4 w-4" />รีเฟรช</button></div></header>
-    <nav className="flex overflow-x-auto bg-white shadow-sm"><Link href="/admin/data-management" className="shrink-0 px-4 py-3 text-sm font-bold text-slate-600">ประชากร/Data Quality</Link>{TYPES.map(([key, label]) => <Link key={key} href={`/admin/master-data/${key}`} className={`shrink-0 px-4 py-3 text-sm font-bold ${key === type ? "bg-cyan-700 text-white" : "text-slate-600"}`}>{label}</Link>)}<Link href="/admin/health-facilities" className="shrink-0 px-4 py-3 text-sm font-bold text-slate-600">สถานพยาบาล</Link><Link href="/admin/village-polygons" className="shrink-0 px-4 py-3 text-sm font-bold text-slate-600">พื้นที่</Link></nav>
+    <header className="border-b-4 border-cyan-700 bg-white p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-black text-cyan-700">MASTER DATA</p><h1 className="mt-1 text-2xl font-black">{state.label || "จัดการข้อมูลหลัก"}</h1><p className="mt-1 text-sm text-slate-600">ข้อมูลจากฐานข้อมูล พร้อมแหล่งที่มา, วันที่อ้างอิง, ตรวจข้อมูลซ้ำ และบันทึกการตรวจสอบ</p></div><button type="button" onClick={load} className="inline-flex items-center gap-2 border border-slate-300 px-3 py-2 text-sm font-bold"><RefreshCw className="h-4 w-4" />รีเฟรช</button></div></header>
+    <nav className="flex overflow-x-auto bg-white shadow-sm"><Link href="/admin/data-management" className="shrink-0 px-4 py-3 text-sm font-bold text-slate-600">ประชากร/คุณภาพข้อมูล</Link>{TYPES.map(([key, label]) => <Link key={key} href={`/admin/master-data/${key}`} className={`shrink-0 px-4 py-3 text-sm font-bold ${key === type ? "bg-cyan-700 text-white" : "text-slate-600"}`}>{label}</Link>)}<Link href="/admin/health-facilities" className="shrink-0 px-4 py-3 text-sm font-bold text-slate-600">สถานพยาบาล</Link><Link href="/admin/village-polygons" className="shrink-0 px-4 py-3 text-sm font-bold text-slate-600">พื้นที่</Link></nav>
     {state.error ? <div className="border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{state.error}</div> : null}
     <div className="flex flex-wrap gap-3 bg-white p-4 shadow-sm"><form onSubmit={(event) => { event.preventDefault(); setAppliedSearch(search); }} className="flex min-w-0 flex-1 gap-2"><label className="relative min-w-0 flex-1"><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="h-10 w-full border border-slate-300 pl-9 pr-3 text-sm" placeholder="ค้นหา" /></label><button className="bg-slate-800 px-4 text-sm font-bold text-white">ค้นหา</button></form><button type="button" onClick={openCreate} className="inline-flex items-center gap-2 bg-cyan-700 px-4 text-sm font-bold text-white"><Plus className="h-4 w-4" />เพิ่มข้อมูล</button></div>
     {showForm ? <form onSubmit={save} className="space-y-4 border border-cyan-200 bg-white p-5 shadow-sm"><div className="flex justify-between"><h2 className="text-lg font-black">{editingId ? "แก้ไขข้อมูล" : "เพิ่มข้อมูล"}</h2><button type="button" onClick={reset}><X className="h-5 w-5" /></button></div><div className="grid gap-4 md:grid-cols-2">{state.fields.map((field) => BOOLEAN_FIELDS.has(field) ? <label key={field} className="flex items-center gap-2 self-end py-3 text-sm font-bold"><input type="checkbox" checked={Boolean(form[field])} onChange={(event) => setForm((current) => ({ ...current, [field]: event.target.checked }))} />{FIELD_LABELS[field] || field}</label> : <label key={field} className="text-sm font-bold">{FIELD_LABELS[field] || field}<textarea rows={["description", "role_description", "route_hint"].includes(field) ? 3 : 1} required={state.required.includes(field)} value={form[field] ?? ""} onChange={(event) => setForm((current) => ({ ...current, [field]: event.target.value }))} className="mt-1 w-full border border-slate-300 px-3 py-2 font-normal" /></label>)}</div><div className="flex justify-end"><button disabled={saving} className="inline-flex items-center gap-2 bg-cyan-700 px-4 py-2 text-sm font-bold text-white"><Save className="h-4 w-4" />{saving ? "กำลังบันทึก..." : "บันทึก"}</button></div></form> : null}

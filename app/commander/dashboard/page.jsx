@@ -83,13 +83,13 @@ export default function CommanderDashboard() {
         return (
             <EOCLayout>
                 <div className="max-w-7xl mx-auto p-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-6"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Dashboard ผู้บัญชาการ</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-6"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แดชบอร์ดผู้บัญชาการ</h1>
                     <div className="bg-yellow-50 border border-yellow-400 p-6 rounded-lg">
                         <div className="flex items-center">
                             <div className="text-4xl mr-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <div>
-                                <h3 className="text-lg font-semibold text-yellow-800">ไม่มี EOC Session ที่เปิดอยู่</h3>
-                                <p className="text-yellow-700">กรุณารอให้ Admin เปิด EOC Session หรือติดต่อผู้ดูแลระบบ</p>
+                                <h3 className="text-lg font-semibold text-yellow-800">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                                <p className="text-yellow-700">กรุณารอให้ผู้ดูแลระบบเปิดเหตุการณ์ EOC หรือติดต่อผู้ดูแลระบบ</p>
                             </div>
                         </div>
                     </div>
@@ -107,7 +107,7 @@ export default function CommanderDashboard() {
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Dashboard ผู้บัญชาการ</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แดชบอร์ดผู้บัญชาการ</h1>
                     <p className="text-gray-600">ภาพรวมสถานการณ์ EOC แบบเรียลไทม์</p>
                 </div>
 
@@ -115,7 +115,7 @@ export default function CommanderDashboard() {
                 {activeSessions.length > 1 && (
                     <div className="bg-white rounded-lg shadow p-4 mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            เลือก EOC Session:
+                            เลือกเหตุการณ์ EOC:
                         </label>
                         <select
                             value={selectedSession}
@@ -232,11 +232,11 @@ export default function CommanderDashboard() {
 
                 {/* IT Resources */}
                 <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ทรัพยากร IT Support</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ทรัพยากร งานสนับสนุน IT</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-700">Server</h4>
+                                <h4 className="font-semibold text-gray-700">เซิร์ฟเวอร์</h4>
                                 <div className="text-2xl"><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
@@ -257,7 +257,7 @@ export default function CommanderDashboard() {
 
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-700">Internet</h4>
+                                <h4 className="font-semibold text-gray-700">อินเทอร์เน็ต</h4>
                                 <div className="text-2xl"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
@@ -278,7 +278,7 @@ export default function CommanderDashboard() {
 
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-700">Network</h4>
+                                <h4 className="font-semibold text-gray-700">เครือข่าย</h4>
                                 <div className="text-2xl"><AppIcon icon="wifi" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
@@ -299,7 +299,7 @@ export default function CommanderDashboard() {
 
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-700">Hardware</h4>
+                                <h4 className="font-semibold text-gray-700">ฮาร์ดแวร์</h4>
                                 <div className="text-2xl"><AppIcon icon="wrench" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             </div>
                             <div className="space-y-1 text-sm">
@@ -328,19 +328,19 @@ export default function CommanderDashboard() {
                                 <p className="text-2xl font-bold text-gray-800">{resources.summary.total_items}</p>
                             </div>
                             <div className="text-center p-3 bg-green-50 rounded-lg">
-                                <p className="text-sm text-green-600">Online</p>
+                                <p className="text-sm text-green-600">ออนไลน์</p>
                                 <p className="text-2xl font-bold text-green-600">{resources.summary.online_count}</p>
                             </div>
                             <div className="text-center p-3 bg-red-50 rounded-lg">
-                                <p className="text-sm text-red-600">Offline</p>
+                                <p className="text-sm text-red-600">ออฟไลน์</p>
                                 <p className="text-2xl font-bold text-red-600">{resources.summary.offline_count}</p>
                             </div>
                             <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                                <p className="text-sm text-yellow-600">Maintenance</p>
+                                <p className="text-sm text-yellow-600">ซ่อมบำรุง</p>
                                 <p className="text-2xl font-bold text-yellow-600">{resources.summary.maintenance_count}</p>
                             </div>
                             <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-600">Unknown</p>
+                                <p className="text-sm text-gray-600">ไม่ทราบ</p>
                                 <p className="text-2xl font-bold text-gray-600">{resources.summary.unknown_count}</p>
                             </div>
                         </div>

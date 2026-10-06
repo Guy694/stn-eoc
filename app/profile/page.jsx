@@ -197,7 +197,7 @@ export default function ProfilePage() {
                                     <h3 className="text-xl font-bold text-gray-800 mb-4"><AppIcon icon="lock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สิทธิ์การเข้าถึง</h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         {user.permissions?.dashboard && (
-                                            <PermissionBadge label="Dashboard" />
+                                            <PermissionBadge label="แดชบอร์ด" />
                                         )}
                                         {user.permissions?.eoc?.view && (
                                             <PermissionBadge label="ดูข้อมูล EOC" />
@@ -249,7 +249,7 @@ export default function ProfilePage() {
 
                                     <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
                                         <label className="block">
-                                            <span className="mb-2 block text-sm font-bold text-slate-700">Telegram Chat ID</span>
+                                            <span className="mb-2 block text-sm font-bold text-slate-700">รหัสแชต Telegram</span>
                                             <input
                                                 type="text"
                                                 value={telegramSettings.telegramChatId || ""}

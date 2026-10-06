@@ -16,6 +16,6 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('Validate session error:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการตรวจสอบ session');
+        return publicInternalError('เกิดข้อผิดพลาดในการตรวจสอบการเข้าสู่ระบบ');
     }
 }

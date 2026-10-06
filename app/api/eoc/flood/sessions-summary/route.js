@@ -188,7 +188,7 @@ export async function GET(request) {
         console.error('Database error:', error);
         return NextResponse.json({
             success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุป sessions ของอุทกภัยน้ำท่วม'
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุปเหตุการณ์ของอุทกภัยน้ำท่วม'
         }, { status: 500 });
     } finally {
         if (connection) connection.release();

@@ -24,10 +24,12 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { getOperationSessionLockByType } from "@/lib/eocSessionLock";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import ReasonDialog from "@/components/ui/reason-dialog";
+import DailyDirectivesBoard from "@/components/eoc/directives/DailyDirectivesBoard";
 
 export const FLOOD_EOC_BASE_PATH = "/eoc/flood/management";
 
 const VIEWS = [
+  { key: "directives", label: "สถานการณ์/ข้อสั่งการ รายวัน", href: `${FLOOD_EOC_BASE_PATH}/directives`, icon: ClipboardList },
   { key: "overview", label: "ภาพรวมเหตุการณ์", href: FLOOD_EOC_BASE_PATH, icon: MonitorCog },
   { key: "daily", label: "สรุปรายวัน", href: `${FLOOD_EOC_BASE_PATH}/daily`, icon: BarChart3 },
   { key: "command", label: "ศูนย์บัญชาการ", href: `${FLOOD_EOC_BASE_PATH}/command-room`, icon: Gauge },
@@ -98,6 +100,7 @@ export default function FloodEocManagementDashboard({ view = "overview" }) {
 
   const content = useMemo(() => {
     if (!state.data) return null;
+    if (view === "directives") return <DailyDirectivesBoard sessionId={state.data.session.id} />;
     if (["overview", "daily", "command"].includes(view)) return <DailyView data={state.data} compact={view === "overview"} />;
     if (["workspace", "completeness"].includes(view)) return <TeamStatusView data={state.data} />;
     if (view === "forms") return <ActionView data={state.data} mode="forms" />;
@@ -118,7 +121,7 @@ export default function FloodEocManagementDashboard({ view = "overview" }) {
               <h1 className="mt-1 text-2xl font-black">{state.data?.session?.session_name || "ระบบจัดการ EOC อุทกภัย"}</h1>
               <p className="mt-2 text-sm text-slate-300">{viewMeta.label} · ข้อมูลแยกตาม Session และวันที่รายงาน</p>
             </div>
-            <div className="flex flex-wrap items-end gap-2">
+            <div className={`flex flex-wrap items-end gap-2 ${view === "directives" ? "hidden" : ""}`}>
               <label className="text-xs font-bold text-slate-200">วันที่รายงาน
                 <input type="date" value={date || todayKey()} onChange={(event) => setDate(event.target.value)} className="ml-2 h-10 bg-white px-3 text-slate-900" />
               </label>
@@ -128,16 +131,16 @@ export default function FloodEocManagementDashboard({ view = "overview" }) {
             </div>
           </div>
           {state.data?.session?.status === "closed" ? (
-            <p className="mt-4 border border-cyan-300/40 bg-cyan-900/40 p-3 text-sm text-cyan-100">
+            <p className="mt-4 border border-[#c9dcee]/40 bg-cyan-900/40 p-3 text-sm text-cyan-100">
               Session ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่ยังสามารถจัดทำ แก้ไข ส่ง และตรวจรายงานย้อนหลังได้
             </p>
           ) : null}
         </header>
 
-        <nav className="grid grid-cols-2 gap-2 md:grid-cols-5 xl:grid-cols-10" aria-label="เมนูจัดการ EOC อุทกภัย">
+        <nav className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6" aria-label="เมนูจัดการ EOC อุทกภัย">
           {VIEWS.map((item) => {
             const Icon = item.icon;
-            return <Link key={item.key} href={item.href} className={`flex min-h-14 items-center gap-2 border px-3 py-2 text-xs font-black ${item.key === view ? "border-cyan-700 bg-cyan-700 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}><Icon className="h-4 w-4" />{item.label}</Link>;
+            return <Link key={item.key} href={item.href} className={`flex min-h-14 items-center gap-2 border px-3 py-2 text-xs font-black ${item.key === view ? "border-[#0b4c86] bg-[#0b4c86] text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}><Icon className="h-4 w-4" />{item.label}</Link>;
           })}
         </nav>
 
@@ -162,9 +165,9 @@ function DailyView({ data, compact }) {
     ["ความครบถ้วน", `${summary.data_completeness_score}%`, ClipboardCheck],
   ];
   return <div className="space-y-4">
-    <div className="border border-cyan-200 bg-cyan-50 p-4 text-sm font-bold text-cyan-900">ประจำวันที่ {formatDate(summary.report_date)} · พบข้อมูล {data.current_flood_reports.length} รายการ</div>
+    <div className="border border-[#c9dcee] bg-[#edf5fc] p-4 text-sm font-bold text-[#083865]">ประจำวันที่ {formatDate(summary.report_date)} · พบข้อมูล {data.current_flood_reports.length} รายการ</div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map(([label, value, Icon]) => <article key={label} className="border border-slate-200 bg-white p-4 shadow-sm"><Icon className="h-5 w-5 text-cyan-700" /><p className="mt-3 text-xs font-bold text-slate-500">{label}</p><p className="mt-1 text-2xl font-black text-slate-900">{typeof value === "number" ? formatNumber(value) : value}</p></article>)}
+      {cards.map(([label, value, Icon]) => <article key={label} className="border border-slate-200 bg-white p-4 shadow-sm"><Icon className="h-5 w-5 text-[#0b4c86]" /><p className="mt-3 text-xs font-bold text-slate-500">{label}</p><p className="mt-1 text-2xl font-black text-slate-900">{typeof value === "number" ? formatNumber(value) : value}</p></article>)}
     </div>
     {!compact ? <DistrictTable rows={data.district_summary} /> : null}
   </div>;
@@ -186,7 +189,7 @@ function TeamStatusView({ data }) {
       <tbody>{data.teams.map((team) => {
         const input = data.current_team_inputs.find((item) => item.team_code === team.team_code);
         const teamCode = String(team.team_code).toLowerCase();
-        return <tr key={team.session_team_id} className="border-t border-slate-100"><td className="px-4 py-3"><p className="font-black">{team.team_code}</p><p className="text-xs text-slate-500">{team.team_name_th}</p></td><td className="px-4 py-3">{team.lead || "ยังไม่กำหนด"}</td><td className="px-4 py-3 text-right">{formatNumber(team.member_count)}</td><td className="px-4 py-3 font-bold text-cyan-700">{input?.raw_status || "Not Started"}</td><td className="px-4 py-3"><Link href={`/eoc/flood/teams/${teamCode}/records?sessionId=${data.session.id}`} className="font-bold text-cyan-700 underline">เปิดรายงานทีม</Link></td></tr>;
+        return <tr key={team.session_team_id} className="border-t border-slate-100"><td className="px-4 py-3"><p className="font-black">{team.team_code}</p><p className="text-xs text-slate-500">{team.team_name_th}</p></td><td className="px-4 py-3">{team.lead || "ยังไม่กำหนด"}</td><td className="px-4 py-3 text-right">{formatNumber(team.member_count)}</td><td className="px-4 py-3 font-bold text-[#0b4c86]">{input?.raw_status || "Not Started"}</td><td className="px-4 py-3"><Link href={`/eoc/flood/teams/${teamCode}/records?sessionId=${data.session.id}`} className="font-bold text-[#0b4c86] underline">เปิดรายงานทีม</Link></td></tr>;
       })}</tbody>
     </table>
   </div>;
@@ -196,10 +199,10 @@ function ActionView({ data, mode }) {
   const isForms = mode === "forms";
   return <div className="border border-slate-200 bg-white p-6 shadow-sm">
     <h2 className="text-xl font-black text-slate-900">{isForms ? "แบบบันทึกสถานการณ์อุทกภัย" : "รายงานกลุ่มภารกิจ"}</h2>
-    <p className="mt-2 text-sm text-slate-600">{isForms ? "ใช้แบบบันทึกหลักที่เชื่อมกับ flood_records โดยตรง เพื่อลดแบบฟอร์มและ API ที่ซ้ำกัน" : "รายงานทั้งหมดผูกกับ Session และกลุ่มภารกิจ พร้อม workflow ส่งและตรวจรายงาน"}</p>
+    <p className="mt-2 text-sm text-slate-600">{isForms ? "ใช้แบบบันทึกหลักที่เชื่อมกับ flood_records โดยตรง เพื่อลดแบบฟอร์มและ API ที่ซ้ำกัน" : "รายงานทั้งหมดผูกกับเหตุการณ์และกลุ่มภารกิจ พร้อมขั้นตอนการทำงานส่งและตรวจรายงาน"}</p>
     <div className="mt-5 flex flex-wrap gap-3">
-      {isForms ? <Link href="/eoc/flood/records" className="bg-cyan-700 px-4 py-3 text-sm font-bold text-white">เปิดแบบบันทึกหลัก</Link> : null}
-      <Link href="/eoc/staff" className="border border-cyan-700 px-4 py-3 text-sm font-bold text-cyan-800">เปิดศูนย์งานเจ้าหน้าที่</Link>
+      {isForms ? <Link href="/eoc/flood/records" className="bg-[#0b4c86] px-4 py-3 text-sm font-bold text-white">เปิดแบบบันทึกหลัก</Link> : null}
+      <Link href="/eoc/staff" className="border border-[#0b4c86] px-4 py-3 text-sm font-bold text-[#083865]">เปิดศูนย์งานเจ้าหน้าที่</Link>
       <Link href={`/eoc/flood/daily-risk?sessionId=${data.session.id}`} className="border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700">ดูรายละเอียดรายวัน</Link>
     </div>
   </div>;
@@ -297,11 +300,11 @@ function OperationalResourceView({ view, sessionId }) {
   return <div className="space-y-4">
     {resource.error ? <div className="border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{resource.error}</div> : null}
     <div className="flex flex-wrap items-center justify-between gap-3 border border-slate-200 bg-white p-4 shadow-sm">
-      <div><h2 className="text-lg font-black text-slate-900">{labels[view]}</h2><p className="text-xs text-slate-500">ข้อมูลจากฐานข้อมูลตาม Session ที่เลือก</p></div>
-      {resource.permissions.canOperate ? <button type="button" onClick={() => setShowForm((value) => !value)} className="bg-cyan-700 px-4 py-2 text-sm font-bold text-white">{showForm ? "ปิดแบบฟอร์ม" : `เพิ่ม${labels[view]}`}</button> : null}
+      <div><h2 className="text-lg font-black text-slate-900">{labels[view]}</h2><p className="text-xs text-slate-500">ข้อมูลจากฐานข้อมูลตามเหตุการณ์ที่เลือก</p></div>
+      {resource.permissions.canOperate ? <button type="button" onClick={() => setShowForm((value) => !value)} className="bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white">{showForm ? "ปิดแบบฟอร์ม" : `เพิ่ม${labels[view]}`}</button> : null}
     </div>
     {showForm ? <ResourceForm view={view} form={form} setForm={setForm} submit={submit} saving={saving} /> : null}
-    {!resource.rows.length ? <div className="border border-slate-200 bg-white p-10 text-center shadow-sm"><CalendarClock className="mx-auto h-8 w-8 text-slate-400" /><h2 className="mt-3 text-lg font-black text-slate-900">{labels[view]}</h2><p className="mt-2 text-sm text-slate-500">ยังไม่มีข้อมูลจริงใน Session นี้ ระบบไม่แสดงข้อมูลจำลอง</p></div> :
+    {!resource.rows.length ? <div className="border border-slate-200 bg-white p-10 text-center shadow-sm"><CalendarClock className="mx-auto h-8 w-8 text-slate-400" /><h2 className="mt-3 text-lg font-black text-slate-900">{labels[view]}</h2><p className="mt-2 text-sm text-slate-500">ยังไม่มีข้อมูลจริงในเหตุการณ์นี้ ระบบไม่แสดงข้อมูลจำลอง</p></div> :
       <div className="overflow-x-auto border border-slate-200 bg-white shadow-sm"><table className="min-w-full text-left text-sm">
         <thead className="bg-slate-900 text-white"><tr>{columns.map(([, label]) => <th key={label} className="px-4 py-3">{label}</th>)}{view === "missions" ? <th className="px-4 py-3">Workflow</th> : null}</tr></thead>
         <tbody>{resource.rows.map((row) => <tr key={row.id} className="border-t border-slate-100">{columns.map(([key]) => <td key={key} className="max-w-xs px-4 py-3">{key === "progress_percent" ? `${row[key] ?? 0}%` : row[key] ?? "-"}</td>)}{view === "missions" ? <td className="px-4 py-3"><MissionActions row={row} canVerify={resource.permissions.canVerify} onMove={moveMission} /></td> : null}</tr>)}</tbody>
@@ -360,14 +363,14 @@ function normalizeResourceForm(view, form) {
 function ResourceForm({ view, form, setForm, submit, saving }) {
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const field = (key, label, options = {}) => <label className={`text-sm font-bold text-slate-700 ${options.wide ? "md:col-span-2" : ""}`}>{label}{options.textarea ? <textarea required={options.required} rows="3" value={form[key] || ""} onChange={(event) => update(key, event.target.value)} className="mt-1 w-full border border-slate-300 px-3 py-2 font-normal" /> : <input type={options.type || "text"} required={options.required} min={options.min} max={options.max} value={form[key] ?? ""} onChange={(event) => update(key, event.target.value)} className="mt-1 w-full border border-slate-300 px-3 py-2 font-normal" />}</label>;
-  return <form onSubmit={submit} className="space-y-4 border border-cyan-200 bg-white p-5 shadow-sm">
+  return <form onSubmit={submit} className="space-y-4 border border-[#c9dcee] bg-white p-5 shadow-sm">
     <h3 className="text-lg font-black">บันทึกข้อมูลจากการปฏิบัติงานจริง</h3>
     <div className="grid gap-4 md:grid-cols-2">
       {view === "missions" ? <>{field("mission_code", "รหัสภารกิจ", { required: true })}{field("mission_type", "ประเภทภารกิจ", { required: true })}{field("mission_name", "ชื่อภารกิจ", { required: true, wide: true })}{field("area", "พื้นที่")}{field("assigned_team", "ทีมรับผิดชอบ")}{field("responsible_agency", "หน่วยงานรับผิดชอบ")}{field("responsible_person", "ผู้รับผิดชอบ")}{field("due_at", "กำหนดเสร็จ", { type: "datetime-local" })}{field("progress_percent", "ความคืบหน้า 0–100", { type: "number", min: 0, max: 100 })}{field("remarks", "หมายเหตุ", { textarea: true, wide: true })}</> : null}
-      {view === "meetings" ? <>{field("meeting_date", "วันที่ประชุม", { type: "date", required: true })}{field("meeting_time", "เวลาประชุม", { type: "time", required: true })}{field("chairperson", "ประธาน")}{field("attendees", "ผู้เข้าร่วม (คั่นด้วย ,)")}{field("agenda", "วาระ", { textarea: true, wide: true })}{field("situation_summary", "สรุปสถานการณ์", { textarea: true, wide: true })}{field("key_issues", "ประเด็นสำคัญ", { textarea: true })}{field("decisions", "มติ", { textarea: true })}{field("orders", "ข้อสั่งการ", { textarea: true, wide: true })}{field("responsible_team", "ทีมรับผิดชอบ")}{field("due_date", "กำหนดติดตาม", { type: "date" })}<label className="flex items-center gap-2 text-sm font-bold md:col-span-2"><input type="checkbox" checked={form.create_linked_work} onChange={(event) => update("create_linked_work", event.target.checked)} />สร้าง Decision และ Mission ที่เชื่อมโยงใน Transaction เดียว</label>{form.create_linked_work ? <>{field("mission_code", "รหัสภารกิจ", { required: true })}{field("mission_name", "ชื่อภารกิจ", { required: true })}</> : null}</> : null}
+      {view === "meetings" ? <>{field("meeting_date", "วันที่ประชุม", { type: "date", required: true })}{field("meeting_time", "เวลาประชุม", { type: "time", required: true })}{field("chairperson", "ประธาน")}{field("attendees", "ผู้เข้าร่วม (คั่นด้วย ,)")}{field("agenda", "วาระ", { textarea: true, wide: true })}{field("situation_summary", "สรุปสถานการณ์", { textarea: true, wide: true })}{field("key_issues", "ประเด็นสำคัญ", { textarea: true })}{field("decisions", "มติ", { textarea: true })}{field("orders", "ข้อสั่งการ", { textarea: true, wide: true })}{field("responsible_team", "ทีมรับผิดชอบ")}{field("due_date", "กำหนดติดตาม", { type: "date" })}<label className="flex items-center gap-2 text-sm font-bold md:col-span-2"><input type="checkbox" checked={form.create_linked_work} onChange={(event) => update("create_linked_work", event.target.checked)} />สร้างการตัดสินใจและ ภารกิจ ที่เชื่อมโยงใน Transaction เดียว</label>{form.create_linked_work ? <>{field("mission_code", "รหัสภารกิจ", { required: true })}{field("mission_name", "ชื่อภารกิจ", { required: true })}</> : null}</> : null}
       {view === "decisions" ? <>{field("decision_datetime", "วันเวลา", { type: "datetime-local", required: true })}{field("decision_maker", "ผู้ตัดสินใจ")}{field("issue", "ประเด็น", { textarea: true, required: true })}{field("supporting_data", "ข้อมูลประกอบ", { textarea: true })}{field("decision", "ข้อสั่งการ", { textarea: true, required: true, wide: true })}{field("assigned_team", "ทีมรับผิดชอบ")}{field("followup_due", "กำหนดติดตาม", { type: "datetime-local" })}</> : null}
     </div>
-    <div className="flex justify-end"><button disabled={saving} className="bg-cyan-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{saving ? "กำลังบันทึก..." : "บันทึก"}</button></div>
+    <div className="flex justify-end"><button disabled={saving} className="bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{saving ? "กำลังบันทึก..." : "บันทึก"}</button></div>
   </form>;
 }
 
@@ -381,5 +384,5 @@ function MissionActions({ row, canVerify, onMove }) {
     verified: canVerify ? [["closed", "ปิดภารกิจ"]] : [],
     closed: [],
   }[row.status] || [];
-  return <div className="flex min-w-36 flex-wrap gap-2">{next.map(([status, label]) => <button key={status} type="button" onClick={() => onMove(row, status)} className="whitespace-nowrap text-xs font-bold text-cyan-700 underline">{label}</button>)}</div>;
+  return <div className="flex min-w-36 flex-wrap gap-2">{next.map(([status, label]) => <button key={status} type="button" onClick={() => onMove(row, status)} className="whitespace-nowrap text-xs font-bold text-[#0b4c86] underline">{label}</button>)}</div>;
 }

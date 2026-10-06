@@ -40,28 +40,28 @@ export default function FloodSheltersPage() {
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <div className="w-14 h-14 rounded-xl bg-[#dbeaf7] flex items-center justify-center">
                                 <span className="text-3xl"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-800">ศูนย์พักพิงชั่วคราว</h1>
+                                <h1 className="text-2xl font-black text-slate-900">ศูนย์พักพิงชั่วคราว</h1>
                                 <p className="text-gray-600">แผนที่และข้อมูลศูนย์พักพิงสำหรับผู้ประสบภัยอุทกภัยน้ำท่วม</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
                             {isActive && isAdmin && (
                                 <Link
-                                    href="/eoc/flood/shelters/manage"
+                                    href="/eoc/shelters?eoc=flood"
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                                 >
                                     <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                                    <span>เลือกศูนย์สำหรับ Session นี้</span>
+                                    <span>เลือกศูนย์สำหรับเหตุการณ์นี้</span>
                                 </Link>
                             )}
                             {isAdmin && (
                                 <Link
-                                    href="/admin/shelter-center"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                    href="/eoc/shelters?tab=registry"
+                                    className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
                                 >
                                     <span><AppIcon icon="settings" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <span>จัดการข้อมูลหลัก</span>
@@ -88,7 +88,7 @@ export default function FloodSheltersPage() {
 
                 {/* Info Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white">
+                    <div className="bg-gradient-to-br from-[#0b4c86] to-[#11466e] rounded-xl p-5 text-white">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-blue-100 text-sm">สถานะ EOC</p>

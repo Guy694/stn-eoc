@@ -79,14 +79,14 @@ export async function POST(request, { params }) {
     const { sessionId, sessionTeamId } = await params;
     const access = await getSessionTeamAccess(auth.user, sessionId, sessionTeamId);
     if (!access.ok) return NextResponse.json({ success: false, message: access.message }, { status: access.status });
-    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถสร้างรายงานใน Session นี้ได้" }, { status: 409 });
+    if (!access.canReport) return NextResponse.json({ success: false, message: "ไม่สามารถสร้างรายงานในเหตุการณ์นี้ได้" }, { status: 409 });
     const body = await request.json();
     const teamCode = normalizeTeamCode(access.context.team_code);
     const validation = validateTeamReportPayload(teamCode, body.payload);
     if (!body.title?.trim() || !validation.success) return NextResponse.json({ success: false, message: validation.message || "กรุณาระบุหัวข้อรายงาน", fieldErrors: validation.fieldErrors }, { status: 400 });
     const reportDate = parseReportDate(body.reportDate);
     if (!reportDate) return NextResponse.json({ success: false, message: "วันเวลารายงานไม่ถูกต้อง" }, { status: 400 });
-    if (!isReportDateWithinSession(access.context, reportDate)) return NextResponse.json({ success: false, message: "วันเวลารายงานต้องอยู่ในช่วงเปิด–ปิด Session" }, { status: 400 });
+    if (!isReportDateWithinSession(access.context, reportDate)) return NextResponse.json({ success: false, message: "วันเวลารายงานต้องอยู่ในช่วงเปิด–ปิดเหตุการณ์" }, { status: 400 });
     const reportId = await transaction(async (execute) => {
       const result = await execute(`
         INSERT INTO eoc_team_reports

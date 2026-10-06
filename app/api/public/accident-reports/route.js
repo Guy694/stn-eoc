@@ -72,7 +72,7 @@ export async function POST(request) {
         if (sessions.length === 0) {
             return NextResponse.json({
                 success: false,
-                message: 'ไม่มี EOC Session ที่เปิดอยู่ ไม่สามารถส่งรายงานได้'
+                message: 'ไม่มีเหตุการณ์ EOC ที่เปิดอยู่ ไม่สามารถส่งรายงานได้'
             }, { status: 400 });
         }
 

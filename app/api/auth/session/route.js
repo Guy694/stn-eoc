@@ -38,7 +38,7 @@ export async function GET(request) {
     } catch (error) {
         console.error('Session Error:', error);
         return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาดในการอ่านข้อมูล session' },
+            { success: false, message: 'เกิดข้อผิดพลาดในการอ่านข้อมูลการเข้าสู่ระบบ' },
             { status: 500 }
         );
     }

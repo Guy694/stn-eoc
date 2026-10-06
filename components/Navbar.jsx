@@ -42,7 +42,7 @@ export default function Navbar() {
                     <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="p-2 rounded-lg hover:bg-[#083865] transition-colors"
-                        aria-label="Toggle menu"
+                        aria-label="เปิด/ปิดเมนู"
                     >
                         <AppIcon icon={isOpen ? "x" : "menu"} className="h-6 w-6" />
                     </button>

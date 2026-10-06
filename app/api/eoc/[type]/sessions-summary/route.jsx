@@ -125,7 +125,7 @@ export async function GET(request, { params }) {
         console.error('Database error:', error);
         return NextResponse.json({
             success: false,
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุป sessions'
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสรุปเหตุการณ์'
         }, { status: 500 });
     } finally {
         if (connection) connection.release();

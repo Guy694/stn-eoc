@@ -248,7 +248,7 @@ export default function ShelterCenterMap({
                 {/* Layer Controls */}
                 {showLayerControls && (
                 <div className={`${embedded ? 'mb-3 rounded-lg border border-slate-100 bg-white p-3' : 'mb-4 bg-white p-4 rounded-lg shadow'}`}>
-                    <label className="text-sm font-medium block mb-3"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดง Layer พื้นที่:</label>
+                    <label className="text-sm font-medium block mb-3"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดงชั้นข้อมูลพื้นที่:</label>
                     <div className="flex flex-wrap gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setShowDistrictLayer(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />

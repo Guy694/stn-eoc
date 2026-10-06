@@ -109,7 +109,7 @@ export default function RegisterPage() {
                     </Link>
 
                     <div className="relative my-10 max-w-lg">
-                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-100">Account Registration</p>
+                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-100">ลงทะเบียนบัญชีผู้ใช้</p>
                         <h1 className="text-4xl font-black leading-tight sm:text-5xl">ลงทะเบียนเข้าใช้งานระบบ</h1>
                         <p className="mt-4 text-base leading-7 text-cyan-50">
                             เลือกประเภทผู้ใช้งาน กรอกข้อมูลตามจริง และยืนยันตัวตนผ่าน ThaiD เพื่อป้องกันการลงทะเบียนด้วยข้อมูลไม่ถูกต้อง

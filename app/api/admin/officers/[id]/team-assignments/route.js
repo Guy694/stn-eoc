@@ -106,7 +106,7 @@ export async function PUT(request, { params }) {
 
             if (validTeams.length !== selectedIds.length) {
                 await connection.rollback();
-                return NextResponse.json({ success: false, message: "เลือกกลุ่มภารกิจที่ไม่ได้เปิดใช้งานหรืออยู่ใน Session ที่ปิดแล้ว" }, { status: 400 });
+                return NextResponse.json({ success: false, message: "เลือกกลุ่มภารกิจที่ไม่ได้เปิดใช้งานหรืออยู่ในเหตุการณ์ที่ปิดแล้ว" }, { status: 400 });
             }
         }
 

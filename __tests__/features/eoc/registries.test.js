@@ -54,7 +54,7 @@ describe("EOC registries and resolvers", () => {
     const sections = createOfficerTeamSections({ pathname: "/eoc/disease/overview", assignments: [{ eoc_type: "disease", team_code: "SAT" }] });
     expect(sections).toHaveLength(1);
     expect(sections[0].title).toBe("กลุ่มภารกิจ SAT");
-    expect(sections[0].items.map((item) => item.name)).toEqual(["Dashboard", "รายงานผู้ป่วย"]);
+    expect(sections[0].items.map((item) => item.name)).toEqual(["แดชบอร์ด", "รายงานผู้ป่วย"]);
   });
 
   test("builds assigned-team menus only for the current EOC", () => {

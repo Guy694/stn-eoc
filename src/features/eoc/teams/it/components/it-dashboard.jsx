@@ -21,7 +21,7 @@ export default function ItDashboard({ eocType, teamCode = "it" }) {
   return (
     <TeamPageShell eocType={eocType} teamCode={teamCode} activeSection="dashboard">
       <div className="flex flex-wrap items-center justify-between gap-3 border border-slate-200 bg-white p-5 shadow-sm">
-        <div><h2 className="text-lg font-black text-slate-900">สถานะระบบและทรัพย์สินไอที</h2><p className="text-sm text-slate-600">ภาพรวม Server, Internet, Network และ Hardware</p></div>
+        <div><h2 className="text-lg font-black text-slate-900">สถานะระบบและทรัพย์สินไอที</h2><p className="text-sm text-slate-600">ภาพรวมเซิร์ฟเวอร์, อินเทอร์เน็ต, เครือข่ายและฮาร์ดแวร์</p></div>
         <Link href="/admin/it-resources" className="bg-cyan-700 px-4 py-2 text-sm font-bold text-white hover:bg-cyan-800">จัดการทรัพย์สินไอที</Link>
       </div>
       {state.loading ? <div className="bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : state.error ? <div className="border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800">{state.error}</div> : (

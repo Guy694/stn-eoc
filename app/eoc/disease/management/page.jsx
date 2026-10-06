@@ -20,17 +20,17 @@ import { formatEocDisplayName } from "@/lib/eocDisplay";
 const ACTIONS = [
     {
         title: "ภาพรวม EOC",
-        description: "ดูสรุปจำนวนผู้ป่วย หน่วยบริการ และชนิดโรคของ session",
+        description: "ดูสรุปจำนวนผู้ป่วย หน่วยบริการ และชนิดโรคของเหตุการณ์",
         href: "/eoc/disease/overview",
         icon: BarChart3,
-        tone: "border-teal-200 bg-teal-50 text-teal-800"
+        tone: "border-[#c9dcee] bg-[#edf5fc] text-[#083865]"
     },
     {
         title: "แผนที่และสถานการณ์",
         description: "ติดตามพื้นที่ที่มีรายงานโรคและเหตุการณ์จากประชาชน",
         href: "/eoc/disease/map",
         icon: Map,
-        tone: "border-cyan-200 bg-cyan-50 text-cyan-800"
+        tone: "border-[#c9dcee] bg-[#edf5fc] text-[#083865]"
     },
     {
         title: "สรุปสถานการณ์รายวัน",
@@ -49,7 +49,7 @@ const ACTIONS = [
     {
         title: "ข้อมูลกลุ่มเปราะบาง",
         description: "ใช้ฐานข้อมูลกลางประกอบการติดตามและช่วยเหลือผู้เสี่ยง",
-        href: "/eoc/vulnerable-groups",
+        href: "/eoc/disease/vulnerable-groups",
         icon: Users,
         tone: "border-violet-200 bg-violet-50 text-violet-800"
     },
@@ -58,7 +58,7 @@ const ACTIONS = [
         description: "ตรวจสอบและจัดการโรงพยาบาล/สถานีอนามัยที่รายงานข้อมูล",
         href: "/admin/health-facilities",
         icon: BriefcaseMedical,
-        tone: "border-blue-200 bg-blue-50 text-blue-800"
+        tone: "border-[#c9dcee] bg-[#edf5fc] text-[#083865]"
     },
     {
         title: "ประกาศข่าวสาร",
@@ -70,7 +70,7 @@ const ACTIONS = [
     {
         title: "รายงานโรคระบาด",
         description: "จัดการรายงานโรคระบาดจากหน่วยบริการแบบละเอียด",
-        href: "/admin/disease-reports",
+        href: "/eoc/disease/records?tab=facility",
         icon: Activity,
         tone: "border-slate-200 bg-slate-50 text-slate-800"
     }
@@ -126,7 +126,7 @@ export default function DiseaseManagementPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-7xl space-y-5">
-                <section className="rounded-xl border border-teal-200 bg-gradient-to-r from-teal-700 to-rose-600 p-5 text-white shadow-sm">
+                <section className="rounded-xl border border-[#c9dcee] bg-gradient-to-r from-[#0b4c86] to-rose-600 p-5 text-white shadow-sm">
                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
                         <div>
                             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-teal-100">

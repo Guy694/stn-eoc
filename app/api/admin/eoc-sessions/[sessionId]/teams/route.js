@@ -80,7 +80,7 @@ export async function GET(request, { params }) {
         if (session.length === 0) {
             return NextResponse.json({
                 success: false,
-                message: 'ไม่พบ Session นี้'
+                message: 'ไม่พบเหตุการณ์นี้'
             }, { status: 404 });
         }
 
@@ -151,7 +151,7 @@ export async function GET(request, { params }) {
 
     } catch (error) {
         console.error('Error fetching session teams:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลทีมใน session');
+        return publicInternalError('เกิดข้อผิดพลาดในการดึงข้อมูลทีมในเหตุการณ์');
     }
 }
 
@@ -177,7 +177,7 @@ export async function POST(request, { params }) {
         if (session.length === 0) {
             return NextResponse.json({
                 success: false,
-                message: 'ไม่พบ Session นี้'
+                message: 'ไม่พบเหตุการณ์นี้'
             }, { status: 404 });
         }
 
@@ -295,7 +295,7 @@ export async function PUT(request, { params }) {
         if (sessionTeams.length === 0) {
             return NextResponse.json({
                 success: false,
-                message: 'ไม่พบทีมใน Session นี้'
+                message: 'ไม่พบทีมในเหตุการณ์นี้'
             }, { status: 404 });
         }
 
@@ -371,7 +371,7 @@ export async function PUT(request, { params }) {
 
         return NextResponse.json({
             success: true,
-            message: 'แก้ไขทีมใน Session สำเร็จ'
+            message: 'แก้ไขทีมในเหตุการณ์สำเร็จ'
         });
     } catch (error) {
         await conn.rollback();
@@ -451,7 +451,7 @@ export async function DELETE(request, { params }) {
 
         return NextResponse.json({
             success: true,
-            message: 'ถอดทีมออกจาก Session สำเร็จ'
+            message: 'ถอดทีมออกจากเหตุการณ์สำเร็จ'
         });
 
     } catch (error) {

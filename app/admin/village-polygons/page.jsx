@@ -149,7 +149,7 @@ export default function VillagePolygonsPage() {
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
                         <AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการข้อมูลหมู่บ้าน
                     </h1>
-                    <p className="text-gray-600">ระบบจัดการข้อมูล Polygon และพิกัดหมู่บ้าน</p>
+                    <p className="text-gray-600">ระบบจัดการข้อมูลขอบเขตพื้นที่และพิกัดหมู่บ้าน</p>
                 </div>
 
 
@@ -252,7 +252,7 @@ export default function VillagePolygonsPage() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">หมู่</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ตำบล</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พิกัด Polygon</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พิกัดขอบเขตพื้นที่</th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
                                     </tr>
                                 </thead>

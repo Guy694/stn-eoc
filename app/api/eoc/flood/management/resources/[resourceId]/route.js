@@ -18,7 +18,7 @@ export async function PATCH(request, { params }) {
     if (!id || !config || !sessionId) return NextResponse.json({ success: false, message: "ข้อมูลคำขอไม่ถูกต้อง" }, { status: 400 });
     const access = await getOperationalSessionAccess(auth.user, sessionId, "flood");
     if (!access.ok) return NextResponse.json({ success: false, message: access.message }, { status: access.status });
-    if (!access.canOperate) return NextResponse.json({ success: false, message: "Session ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว" }, { status: 403 });
+    if (!access.canOperate) return NextResponse.json({ success: false, message: "เหตุการณ์ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว" }, { status: 403 });
     const rows = await query(`SELECT * FROM ${config.table} WHERE id = ? AND session_id = ? LIMIT 1`, [id, sessionId]);
     if (!rows.length) return NextResponse.json({ success: false, message: "ไม่พบข้อมูล" }, { status: 404 });
     const old = rows[0];

@@ -52,7 +52,7 @@ export async function GET(request) {
 
         if (!sessionId) {
             return NextResponse.json(
-                { success: false, error: 'กรุณาระบุ EOC Session ID' },
+                { success: false, error: 'กรุณาระบุเหตุการณ์ EOC ID' },
                 { status: 400 }
             );
         }
@@ -70,7 +70,7 @@ export async function GET(request) {
 
         if (sessions.length === 0) {
             return NextResponse.json(
-                { success: false, error: 'ไม่พบ EOC Session' },
+                { success: false, error: 'ไม่พบเหตุการณ์ EOC' },
                 { status: 404 }
             );
         }
@@ -422,18 +422,12 @@ export async function GET(request) {
             `SELECT COUNT(DISTINCT id) as total FROM health_facilities`
         );
 
-        // 10. สถิติกลุ่มเปราะบาง
-        const vulnerableSessionCount = await pool.query(
-            `SELECT COUNT(*) as count
-             FROM vulnerable_groups
-             WHERE session_id = ?`,
-            [sessionId]
+        // 10. สถิติกลุ่มเปราะบาง "ในเหตุการณ์นี้" เท่านั้น (ไม่ใช้ทะเบียนทั้งจังหวัดแทน เพื่อไม่ให้ดูเหมือนได้รับผลกระทบทั้งหมด)
+        const careColumnRows = await pool.query(
+            `SELECT COUNT(*) AS count FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'vulnerable_groups' AND COLUMN_NAME IN ('cared_count', 'moved_count')`
         );
-        const useVulnerableBaseline = (parseInt(vulnerableSessionCount[0]?.count) || 0) === 0
-            && await tableExists('vulnerable_group_baselines');
-        const vulnerableTable = useVulnerableBaseline ? 'vulnerable_group_baselines' : 'vulnerable_groups';
-        const vulnerableWhere = useVulnerableBaseline ? '1=1' : 'session_id = ?';
-        const vulnerableParams = useVulnerableBaseline ? [] : [sessionId];
+        const hasCareColumns = Number(careColumnRows[0]?.count) === 2;
 
         const vulnerableGroups = await pool.query(
             `SELECT 
@@ -444,22 +438,25 @@ export async function GET(request) {
                 SUM(disabled) as disabled,
                 SUM(pregnant) as pregnant,
                 SUM(bedridden) as bedridden
-             FROM ${vulnerableTable}
-             WHERE ${vulnerableWhere}
+             FROM vulnerable_groups
+             WHERE session_id = ?
              GROUP BY district, tambon`,
-            vulnerableParams
+            [sessionId]
         );
 
         const vulnerableTotal = await pool.query(
             `SELECT 
+                COUNT(*) as villages,
                 SUM(elderly) as total_elderly,
                 SUM(children) as total_children,
                 SUM(disabled) as total_disabled,
                 SUM(pregnant) as total_pregnant,
-                SUM(bedridden) as total_bedridden
-             FROM ${vulnerableTable}
-             WHERE ${vulnerableWhere}`,
-            vulnerableParams
+                SUM(bedridden) as total_bedridden,
+                SUM(chronic_illness) as total_chronic_illness
+                ${hasCareColumns ? ', SUM(cared_count) as total_cared, SUM(moved_count) as total_moved' : ''}
+             FROM vulnerable_groups
+             WHERE session_id = ?`,
+            [sessionId]
         );
 
         // 11. สถิติโรคในศูนย์พักพิง
@@ -567,25 +564,15 @@ export async function GET(request) {
         const hasMedicalInventoryTables = await tableExists('medical_inventory_events')
             && await tableExists('medical_inventory_stock');
         if (hasMedicalInventoryTables) {
-            let inventoryEvents = await pool.query(
+            // ใช้เฉพาะบัญชีคลังของเหตุการณ์ครั้งนี้ (ไม่ดึงของครั้งก่อนมาแสดงแทน เพื่อไม่ให้ตัวเลขในห้องประชุมผิดเหตุการณ์)
+            const inventoryEvents = await pool.query(
                 `SELECT id, event_name, eoc_type, session_number, source_file, created_at
                  FROM medical_inventory_events
-                 WHERE eoc_type = ? AND (session_number = ? OR session_number IS NULL)
-                 ORDER BY CASE WHEN session_number = ? THEN 0 ELSE 1 END, created_at DESC
-                 LIMIT 5`,
-                [session.eoc_type, session.session_number, session.session_number]
+                 WHERE eoc_type = ? AND session_number = ?
+                 ORDER BY created_at DESC
+                 LIMIT 1`,
+                [session.eoc_type, session.session_number]
             );
-
-            if (inventoryEvents.length === 0) {
-                inventoryEvents = await pool.query(
-                    `SELECT id, event_name, eoc_type, session_number, source_file, created_at
-                     FROM medical_inventory_events
-                     WHERE eoc_type = ?
-                     ORDER BY created_at DESC
-                     LIMIT 1`,
-                    [session.eoc_type]
-                );
-            }
 
             const inventoryEventIds = inventoryEvents.map(event => event.id);
             if (inventoryEventIds.length > 0) {
@@ -652,7 +639,9 @@ export async function GET(request) {
             + asNumber(vulnerableSummary.total_children)
             + asNumber(vulnerableSummary.total_disabled)
             + asNumber(vulnerableSummary.total_pregnant)
-            + asNumber(vulnerableSummary.total_bedridden);
+            + asNumber(vulnerableSummary.total_bedridden)
+            + asNumber(vulnerableSummary.total_chronic_illness);
+        const vulnerablePending = Math.max(totalVulnerable - asNumber(vulnerableSummary.total_cared), 0);
         const totalDiseasePatients = diseaseByType.reduce((sum, item) => sum + asNumber(item.cumulative_total), 0);
         const meetingFocus = [];
         if (asNumber(floodMap.stats.severe_count) > 0) {
@@ -669,6 +658,12 @@ export async function GET(request) {
         }
         if (asNumber(medicalInventory.summary.not_recorded_rows) > 0) {
             meetingFocus.push(`ติดตามหน่วยบริการที่ยังไม่บันทึกเวชภัณฑ์ ${asNumber(medicalInventory.summary.not_recorded_rows).toLocaleString('th-TH')} รายการ`);
+        }
+        if (vulnerablePending > 0) {
+            meetingFocus.push(`กลุ่มเปราะบางที่ได้รับผลกระทบยังไม่ได้ดูแล ${vulnerablePending.toLocaleString('th-TH')} คน`);
+        }
+        if (asNumber(medicalInventory.summary.zero_balance_rows) > 0) {
+            meetingFocus.push(`เวชภัณฑ์หมดคลัง ${asNumber(medicalInventory.summary.zero_balance_rows).toLocaleString('th-TH')} รายการ ควรจัดสรรเพิ่ม`);
         }
         if (asNumber(totalITResources[0]?.offline_count) > 0) {
             meetingFocus.push(`แก้ไขทรัพยากร IT offline ${asNumber(totalITResources[0]?.offline_count).toLocaleString('th-TH')} รายการ`);
@@ -768,7 +763,7 @@ export async function GET(request) {
                 },
                 vulnerable_groups: {
                     by_location: vulnerableGroups,
-                    source: useVulnerableBaseline ? 'baseline' : 'session',
+                    source: 'session',
                     summary: vulnerableTotal[0] || {
                         total_elderly: 0,
                         total_children: 0,

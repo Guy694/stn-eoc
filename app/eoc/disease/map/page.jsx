@@ -9,7 +9,7 @@ import { formatEocDisplayName } from "@/lib/eocDisplay";
 const PublicIncidentMap = dynamic(() => import("@/components/PublicIncidentMap"), {
     ssr: false,
     loading: () => (
-        <div className="flex h-[620px] items-center justify-center rounded-xl border border-teal-100 bg-white text-slate-500">
+        <div className="flex h-[620px] items-center justify-center rounded-xl border border-[#c9dcee] bg-white text-slate-500">
             กำลังโหลดแผนที่...
         </div>
     )
@@ -81,16 +81,16 @@ export default function DiseaseMapPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-[1600px] space-y-4">
-                <section className="rounded-xl border border-teal-100 bg-white p-4 shadow-sm">
+                <section className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <p className="text-sm font-bold text-teal-700">{eocName}</p>
+                            <p className="text-sm font-bold text-[#0b4c86]">{eocName}</p>
                             <h1 className="text-2xl font-black text-slate-900 md:text-3xl">แผนที่และสถานการณ์โรคระบาด</h1>
                             <p className="mt-1 text-sm text-slate-600">
                                 ติดตามรายงานโรคระบาดจากหน่วยบริการร่วมกับรายงานเหตุการณ์จากประชาชน
                             </p>
                             <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
-                                <span className="rounded-full bg-teal-50 px-3 py-1 text-teal-700">
+                                <span className="rounded-full bg-[#edf5fc] px-3 py-1 text-[#0b4c86]">
                                     {activeSession ? "เปิด EOC อยู่" : loadingSession ? "กำลังตรวจสอบสถานะ" : "ยังไม่มี EOC ที่เปิดอยู่"}
                                 </span>
                                 {activeSession && (
@@ -108,17 +108,17 @@ export default function DiseaseMapPage() {
                                     type="date"
                                     value={selectedDate}
                                     onChange={(event) => setSelectedDate(event.target.value)}
-                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-teal-400"
+                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#0b4c86]"
                                 />
                             </label>
-                            <Link href="/eoc/disease/records" className="flex h-10 items-center justify-center rounded-lg bg-teal-600 px-4 text-sm font-bold text-white hover:bg-teal-700 sm:self-end">
+                            <Link href="/eoc/disease/records" className="flex h-10 items-center justify-center rounded-lg bg-[#0b4c86] px-4 text-sm font-bold text-white hover:bg-[#083865] sm:self-end">
                                 บันทึกรายงานผู้ป่วย
                             </Link>
                         </div>
                     </div>
                 </section>
 
-                <section className="overflow-hidden rounded-xl border border-teal-100 bg-white shadow-sm">
+                <section className="overflow-hidden rounded-xl border border-[#c9dcee] bg-white shadow-sm">
                     <PublicIncidentMap
                         disasterType="disease"
                         sessionId={activeSession?.id || null}

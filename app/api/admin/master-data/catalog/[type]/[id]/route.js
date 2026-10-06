@@ -33,7 +33,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ success: true, id });
   } catch (error) {
     console.error("Master catalog PUT error:", error);
-    return publicInternalError("ไม่สามารถแก้ไข Master Data ได้");
+    return publicInternalError("ไม่สามารถแก้ไขข้อมูลหลักได้");
   }
 }
 
@@ -55,6 +55,6 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Master catalog DELETE error:", error);
-    return publicInternalError("ไม่สามารถเก็บ Master Data เข้าคลังได้");
+    return publicInternalError("ไม่สามารถเก็บข้อมูลหลักเข้าคลังได้");
   }
 }

@@ -18,7 +18,8 @@
     "db:migrate:check": "node scripts/migrate.mjs check",
     "security:weak-passwords": "node --env-file=.env scripts/revoke-weak-passwords.js",
     "import:area-population": "node --env-file=.env scripts/import-area-population-csv.js",
-    "reset-dev-admin": "node scripts/reset-dev-admin.js"
+    "reset-dev-admin": "node scripts/reset-dev-admin.js",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

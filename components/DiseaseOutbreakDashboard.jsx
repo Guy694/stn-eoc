@@ -205,7 +205,7 @@ export default function DiseaseOutbreakDashboard({
                         <div>
                             <div className="mb-2 flex flex-wrap items-center gap-2">
                                 <span className="rounded-full bg-rose-500 px-3 py-1 text-xs font-black">EOC โรคระบาด</span>
-                                <span className="rounded-full bg-cyan-500/20 px-3 py-1 text-xs font-bold text-cyan-100">Communicable Disease</span>
+                                <span className="rounded-full bg-[#0b4c86]/20 px-3 py-1 text-xs font-bold text-cyan-100">โรคติดต่อ</span>
                                 <span className={`rounded-full border px-3 py-1 text-xs font-black ${getRiskClass(dashboardData.outbreak_level)}`}>{dashboardData.outbreak_level}</span>
                             </div>
                             <h2 className="text-2xl font-black md:text-3xl">EOC โรคไข้เลือดออก จังหวัดสตูล</h2>
@@ -236,7 +236,7 @@ export default function DiseaseOutbreakDashboard({
                         <select className="rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold outline-none">
                             <option>สัปดาห์ที่ {dashboardData.weeklyTrend?.[0]?.epi_week || "-"}-{dashboardData.latest_epi_week || "-"}</option>
                         </select>
-                        <button type="button" className="rounded-lg bg-white px-4 py-2 text-sm font-black text-slate-950 hover:bg-cyan-50">
+                        <button type="button" className="rounded-lg bg-white px-4 py-2 text-sm font-black text-slate-950 hover:bg-[#edf5fc]">
                             Export CSV
                         </button>
                     </div>
@@ -298,7 +298,7 @@ export default function DiseaseOutbreakDashboard({
             </div>
 
             <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-                <ChartPanel title="Heatmap การระบาดรายสัปดาห์ แยกรายอำเภอ">
+                <ChartPanel title="แผนที่ความร้อนการระบาดรายสัปดาห์ แยกรายอำเภอ">
                     <div className="-mx-3 overflow-x-auto px-3 pb-2 sm:mx-0 sm:px-0">
                         <div className="min-w-[640px] sm:min-w-[720px]">
                             <div
@@ -436,7 +436,7 @@ export default function DiseaseOutbreakDashboard({
                         onPageChange={setCodePage}
                         onPageSizeChange={setCodePageSize}
                     />
-                    <div className="mt-3 rounded-lg bg-cyan-50 p-3 text-xs font-semibold leading-5 text-cyan-800">
+                    <div className="mt-3 rounded-lg bg-[#edf5fc] p-3 text-xs font-semibold leading-5 text-[#083865]">
                         กลุ่มโรค: {dashboardData.disease_group} • แหล่งข้อมูล: {dashboardData.source || "ฐานข้อมูล EOC"} • หน่วยรายงาน: สถานพยาบาล / ระบบเฝ้าระวังโรค / งานควบคุมโรค
                     </div>
                 </ChartPanel>
@@ -604,9 +604,9 @@ function MobileMetric({ label, value }) {
 
 function PublicAdvicePanel({ topDistrict, lastUpdated }) {
     return (
-        <aside className="min-w-0 rounded-lg border border-cyan-200 bg-cyan-50 p-3 shadow-sm sm:rounded-xl sm:p-4">
+        <aside className="min-w-0 rounded-lg border border-[#c9dcee] bg-[#edf5fc] p-3 shadow-sm sm:rounded-xl sm:p-4">
             <div className="mb-3 flex items-center gap-2">
-                <AppIcon icon="megaphone" className="h-5 w-5 text-cyan-700" />
+                <AppIcon icon="megaphone" className="h-5 w-5 text-[#0b4c86]" />
                 <h3 className="text-sm font-black text-cyan-950 sm:text-lg">คำแนะนำประชาชน</h3>
             </div>
             <div className="space-y-3 text-sm leading-6 text-cyan-950">
@@ -614,7 +614,7 @@ function PublicAdvicePanel({ topDistrict, lastUpdated }) {
                     จังหวัดสตูลอยู่ระหว่างเฝ้าระวังสถานการณ์โรคไข้เลือดออก ขอให้ประชาชนช่วยกันกำจัดแหล่งเพาะพันธุ์ยุงลาย ปิดภาชนะเก็บน้ำ เปลี่ยนน้ำแจกัน และรีบพบแพทย์เมื่อมีไข้สูง ปวดเมื่อย หรือมีจุดเลือดออก
                 </p>
                 <div className="rounded-lg bg-white/70 p-3">
-                    <div className="text-xs font-black text-cyan-700">พื้นที่ควรเฝ้าระวัง</div>
+                    <div className="text-xs font-black text-[#0b4c86]">พื้นที่ควรเฝ้าระวัง</div>
                     <div className="mt-1 font-black">{topDistrict?.district_name || "ทุกอำเภอ"} ({formatNumber(topDistrict?.total_cases)} ราย)</div>
                 </div>
                 <ul className="space-y-2 font-semibold">
@@ -623,7 +623,7 @@ function PublicAdvicePanel({ topDistrict, lastUpdated }) {
                     <li className="rounded-lg bg-white/60 px-3 py-2">หลีกเลี่ยงการซื้อยากลุ่ม NSAIDs รับประทานเองเมื่อสงสัยไข้เลือดออก</li>
                     <li className="rounded-lg bg-white/60 px-3 py-2">ติดต่อหน่วยบริการใกล้บ้านหรือสายด่วน 1669 เมื่อมีอาการรุนแรง</li>
                 </ul>
-                <div className="rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-bold text-cyan-800">
+                <div className="rounded-lg border border-[#c9dcee] bg-white px-3 py-2 text-xs font-bold text-[#083865]">
                     อัปเดตประกาศล่าสุด {formatDateTime(lastUpdated)}
                 </div>
             </div>

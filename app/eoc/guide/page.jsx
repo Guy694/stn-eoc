@@ -6,7 +6,7 @@ import AppIcon from "@/components/icons/AppIcon";
 export default function EOCGuidePage() {
     const modules = [
         {
-            title: "Dashboard & สถิติ",
+            title: "แดชบอร์ด & สถิติ",
             icon: "barChart",
             features: [
                 "ดูภาพรวมรายงานทั้งหมด",
@@ -52,9 +52,9 @@ export default function EOCGuidePage() {
             title: "1. เข้าสู่ระบบ",
             steps: [
                 "เข้าไปที่ /login",
-                "กรอก Username และ Password",
+                "กรอกชื่อผู้ใช้และรหัสผ่าน",
                 "คลิก 'เข้าสู่ระบบ'",
-                "ระบบจะนำไปยัง Dashboard"
+                "ระบบจะนำไปยังแดชบอร์ด"
             ]
         },
         {

@@ -73,7 +73,7 @@ export default function FestivalCompare() {
     const comparisonChartData = {
         labels: ['อุบัติเหตุ', 'เสียชีวิต', 'บาดเจ็บ', 'เมาแล้วขับ', 'ไม่สวมหมวก', 'ขับเร็ว'],
         datasets: comparisons.map((c, idx) => ({
-            label: c.session.openReason || `Session #${c.session.sessionNumber}`,
+            label: c.session.openReason || `ครั้งที่ ${c.session.sessionNumber}`,
             data: [
                 c.stats.totalAccidents,
                 c.stats.totalDeaths,
@@ -93,7 +93,7 @@ export default function FestivalCompare() {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#0b4c86] border-t-transparent mx-auto mb-4"></div>
                     <p className="text-gray-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
@@ -103,7 +103,7 @@ export default function FestivalCompare() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-500 rounded-2xl p-6 text-white shadow-xl">
+            <div className="bg-gradient-to-r from-[#0b4c86] via-indigo-500 to-[#11466e] rounded-2xl p-6 text-white shadow-xl">
                 <h1 className="text-3xl font-bold flex items-center gap-3">
                     <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปรียบเทียบสถิติอุบัติเหตุช่วงเทศกาล
                 </h1>
@@ -116,7 +116,7 @@ export default function FestivalCompare() {
                     <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลือก Session ที่ต้องการเปรียบเทียบ
                 </h3>
                 {sessions.length === 0 ? (
-                    <p className="text-gray-500">ไม่พบ session สำหรับเปรียบเทียบ</p>
+                    <p className="text-gray-500">ไม่พบเหตุการณ์สำหรับเปรียบเทียบ</p>
                 ) : (
                     <div className="flex flex-wrap gap-2">
                         {sessions.map(s => (
@@ -126,7 +126,7 @@ export default function FestivalCompare() {
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
                                     selectedIds.includes(s.id)
                                         ? s.festival_type === 'newyear'
-                                            ? 'bg-blue-100 border-blue-500 text-blue-700'
+                                            ? 'bg-[#dbeaf7] border-[#0b4c86] text-[#0b4c86]'
                                             : s.festival_type === 'songkran'
                                                 ? 'bg-orange-100 border-orange-500 text-orange-700'
                                                 : 'bg-gray-100 border-gray-500 text-gray-700'
@@ -134,7 +134,7 @@ export default function FestivalCompare() {
                                 }`}
                             >
                                 <AppIcon icon={s.festival_type === 'newyear' ? "treePalm" : s.festival_type === 'songkran' ? "droplets" : "barChart"} className="inline-block h-5 w-5" />
-                                {' '}{s.open_reason || `Session #${s.session_number}`}
+                                {' '}{s.open_reason || `ครั้งที่ ${s.session_number}`}
                                 {' '}(<AppIcon icon={s.status === 'active' ? "statusGreen" : "statusRed"} className="inline-block h-3 w-3" />)
                             </button>
                         ))}
@@ -145,7 +145,7 @@ export default function FestivalCompare() {
             {/* Comparing Indicator */}
             {comparing && (
                 <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b border-blue-500 mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
                     <p className="text-gray-500 text-sm">กำลังเปรียบเทียบ...</p>
                 </div>
             )}
@@ -185,8 +185,8 @@ export default function FestivalCompare() {
                                                 <div className="text-2xl font-bold text-amber-600">{c.stats.totalInjuries}</div>
                                                 <div className="text-xs text-amber-500"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บาดเจ็บ</div>
                                             </div>
-                                            <div className="bg-teal-50 rounded-lg p-3 text-center">
-                                                <div className="text-2xl font-bold text-teal-600">{c.stats.drunkCases}</div>
+                                            <div className="bg-[#edf5fc] rounded-lg p-3 text-center">
+                                                <div className="text-2xl font-bold text-[#0b4c86]">{c.stats.drunkCases}</div>
                                                 <div className="text-xs text-teal-500"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</div>
                                             </div>
                                         </div>
@@ -238,8 +238,8 @@ export default function FestivalCompare() {
             {comparisons.length === 0 && !comparing && (
                 <div className="bg-gray-50 rounded-xl p-12 text-center">
                     <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                    <h3 className="text-xl font-bold text-gray-700 mb-2">เลือก Session เพื่อเปรียบเทียบ</h3>
-                    <p className="text-gray-500">คลิกที่ Session ด้านบนเพื่อเริ่มเปรียบเทียบข้อมูล</p>
+                    <h3 className="text-xl font-bold text-gray-700 mb-2">เลือกเหตุการณ์เพื่อเปรียบเทียบ</h3>
+                    <p className="text-gray-500">คลิกที่เหตุการณ์ด้านบนเพื่อเริ่มเปรียบเทียบข้อมูล</p>
                 </div>
             )}
         </div>

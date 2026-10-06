@@ -225,7 +225,7 @@ export async function DELETE(req) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: `ไม่สามารถลบได้ เนื่องจากมี EOC Sessions ที่เชื่อมโยงกับ EOC Type นี้อยู่ ${usageCount} รายการ`,
+                    error: `ไม่สามารถลบได้ เนื่องจากมีเหตุการณ์ EOC ที่เชื่อมโยงกับ EOC Type นี้อยู่ ${usageCount} รายการ`,
                     canDelete: false,
                     usageCount: usageCount
                 },

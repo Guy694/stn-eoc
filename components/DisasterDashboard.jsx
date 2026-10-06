@@ -120,7 +120,7 @@ export default function DisasterDashboard() {
                                             <span className="font-bold text-lg">{sessionData.active}</span>
                                         </div>
                                         <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">
-                                            <span className="text-sm">Sessions ปีนี้</span>
+                                            <span className="text-sm">เหตุการณ์ปีนี้</span>
                                             <span className="font-bold">{sessionData.total}</span>
                                         </div>
                                         <div className="flex items-center justify-between bg-white/10 rounded p-2 backdrop-blur-sm">

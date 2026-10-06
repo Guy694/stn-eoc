@@ -58,7 +58,7 @@ export default function UserEOCDashboard() {
                     ยังไม่มีการมอบหมายงาน
                 </h3>
                 <p className="text-yellow-700">
-                    คุณยังไม่ได้รับมอบหมายให้ปฏิบัติงานใน EOC Session ใด
+                    คุณยังไม่ได้รับมอบหมายให้ปฏิบัติงานใน เหตุการณ์ EOC ใด
                     <br />
                     กรุณาติดต่อผู้ดูแลระบบเพื่อรับมอบหมายทีมงาน
                 </p>
@@ -114,10 +114,10 @@ export default function UserEOCDashboard() {
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
                         <h3 className="flex items-center gap-2 text-xl font-bold">
                             <AppIcon icon={getEOCIcon(session.eoc_type)} className="h-6 w-6" />
-                            {session.eoc_name} #{session.session_number}
+                            {session.eoc_name} ครั้งที่ {session.session_number}
                         </h3>
                         <p className="text-blue-100 text-sm mt-1">
-                            Session ID: {session.session_id} • Status: Active
+                            รหัสเหตุการณ์: {session.session_id} • สถานะ: กำลังดำเนินการ
                         </p>
                     </div>
 

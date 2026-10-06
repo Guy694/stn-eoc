@@ -60,7 +60,7 @@ export default function FestivalDashboard() {
         try {
             const rows = [
                 ['สถิติอุบัติเหตุช่วงเทศกาล - สรุปข้อมูล'],
-                ['Session', data.activeSession.open_reason || `Session #${data.activeSession.session_number}`],
+                ['Session', data.activeSession.open_reason || `ครั้งที่ ${data.activeSession.session_number}`],
                 [''],
                 ['รายการ', 'จำนวน'],
                 ['อุบัติเหตุทั้งหมด', data.stats?.totalAccidents || 0],
@@ -200,7 +200,7 @@ export default function FestivalDashboard() {
                                     window.history.replaceState({}, '', `?festival_type=${tab.key}`);
                                 }}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${festivalType === tab.key
-                                    ? tab.key === 'newyear' ? 'bg-blue-600 text-white shadow-md'
+                                    ? tab.key === 'newyear' ? 'bg-[#0b4c86] text-white shadow-md'
                                         : tab.key === 'songkran' ? 'bg-orange-500 text-white shadow-md'
                                             : 'bg-gray-700 text-white shadow-md'
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -218,7 +218,7 @@ export default function FestivalDashboard() {
                             onChange={(e) => setSelectedSession(e.target.value)}
                             className="text-gray-700 px-4 py-2 border border-gray-300 rounded-lg text-sm flex-1 max-w-xs"
                         >
-                            <option value="">-- Session ล่าสุด --</option>
+                            <option value="">-- เหตุการณ์ล่าสุด --</option>
                             {data.sessions.map(s => (
                                 <option key={s.id} value={s.id}>
                                     #{s.session_number} - {s.open_reason || 'ไม่ระบุ'} ({s.status === 'active' ? "เปิด" : "ปิด"})
@@ -234,8 +234,8 @@ export default function FestivalDashboard() {
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
                     <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                     <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีข้อมูลเทศกาล</h3>
-                    <p className="text-gray-600">ยังไม่มี EOC Session สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
-                    <p className="text-gray-500 text-sm mt-1">กรุณาเปิด EOC Session ประเภท &quot;festival-accidents&quot; จากหน้าจัดการ EOC</p>
+                    <p className="text-gray-600">ยังไม่มีเหตุการณ์ EOC สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
+                    <p className="text-gray-500 text-sm mt-1">กรุณาเปิดเหตุการณ์ EOC ประเภท &quot;festival-accidents&quot; จากหน้าจัดการ EOC</p>
                 </div>
             )}
 
@@ -251,7 +251,7 @@ export default function FestivalDashboard() {
                                 {data.activeSession?.status === 'active' ? "กำลังดำเนินการ" : "ปิดแล้ว"}
                             </span>
                             <span className="text-gray-700 font-medium">
-                                {data.activeSession?.open_reason || `Session #${data.activeSession?.session_number}`}
+                                {data.activeSession?.open_reason || `ครั้งที่ ${data.activeSession?.session_number}`}
                             </span>
                         </div>
                         <span className="text-gray-500 text-sm">
@@ -378,7 +378,7 @@ export default function FestivalDashboard() {
                                     {data.stats?.totalAccidents > 0 && (
                                         <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                                             <div
-                                                className={`h-2 rounded-full transition-all duration-500 ${c.color === 'purple' ? 'bg-teal-500' :
+                                                className={`h-2 rounded-full transition-all duration-500 ${c.color === 'purple' ? 'bg-[#0b4c86]' :
                                                     c.color === 'orange' ? 'bg-orange-500' :
                                                         c.color === 'yellow' ? 'bg-yellow-500' :
                                                             'bg-red-500'
@@ -484,7 +484,7 @@ export default function FestivalDashboard() {
                                                 </div>
                                             </div>
                                             <div className="flex gap-1 mt-2">
-                                                {a.drunk_driving ? <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded text-xs"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมา</span> : null}
+                                                {a.drunk_driving ? <span className="px-1.5 py-0.5 bg-[#dbeaf7] text-[#0b4c86] rounded text-xs"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมา</span> : null}
                                                 {a.no_helmet ? <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-xs"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก</span> : null}
                                                 {a.speeding ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เร็ว</span> : null}
                                             </div>
@@ -528,7 +528,7 @@ function StatCard({ icon, label, value, color, unit }) {
         red: 'from-red-500 to-red-600 border-red-300',
         gray: 'from-gray-700 to-gray-800 border-gray-400',
         yellow: 'from-amber-500 to-amber-600 border-amber-300',
-        purple: 'from-teal-500 to-teal-600 border-teal-300',
+        purple: 'from-[#0b4c86] to-[#11466e] border-[#c9dcee]',
         green: 'from-emerald-500 to-emerald-600 border-emerald-300',
     };
 

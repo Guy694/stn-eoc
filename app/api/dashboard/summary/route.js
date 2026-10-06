@@ -590,7 +590,7 @@ export async function GET(request) {
                         period: { first_date: diseaseSession.first_date, last_date: diseaseSession.last_date },
                         links: [
                             { label: 'เปิดแผนที่โรค', href: '/eoc/disease' },
-                            { label: 'รายงานโรค', href: '/admin/disease-reports' }
+                            { label: 'รายงานโรค', href: '/eoc/disease/records?tab=facility' }
                         ]
                     };
                 }
@@ -618,7 +618,7 @@ export async function GET(request) {
                     ...base,
                     description: 'ยังไม่มีข้อมูลสรุปเฉพาะประเภทภัยนี้',
                     summary: [
-                        { key: 'sessions', label: 'Session', value: eoc.session_id ? 1 : 0, unit: 'ครั้ง' }
+                        { key: 'sessions', label: 'เหตุการณ์', value: eoc.session_id ? 1 : 0, unit: 'ครั้ง' }
                     ],
                     links: []
                 };

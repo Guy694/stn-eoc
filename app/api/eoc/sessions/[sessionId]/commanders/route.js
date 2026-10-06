@@ -141,7 +141,7 @@ export async function GET(request, { params }) {
 
         const session = await getSession(sessionId);
         if (!session) {
-            return NextResponse.json({ success: false, message: "ไม่พบ EOC Session" }, { status: 404 });
+            return NextResponse.json({ success: false, message: "ไม่พบเหตุการณ์ EOC" }, { status: 404 });
         }
 
         const [commanders, officerOptions] = await Promise.all([
@@ -175,7 +175,7 @@ export async function POST(request, { params }) {
 
         const session = await getSession(sessionId);
         if (!session) {
-            return NextResponse.json({ success: false, message: "ไม่พบ EOC Session" }, { status: 404 });
+            return NextResponse.json({ success: false, message: "ไม่พบเหตุการณ์ EOC" }, { status: 404 });
         }
 
         const { officerId, commandRole, sortOrder, notes } = validation.value;

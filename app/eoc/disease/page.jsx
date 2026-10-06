@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import DiseaseOutbreakDashboard from "@/components/DiseaseOutbreakDashboard";
+import ReportingCompleteness from "@/components/eoc/ReportingCompleteness";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 function formatDateTime(value) {
@@ -53,44 +54,45 @@ export default function DiseasePage() {
 
     return (
         <EOCLayout>
-            <div className="container mx-auto p-4 md:p-6">
+            <div className="mx-auto max-w-7xl">
                 <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <p className="text-sm font-bold text-teal-700">{activeDiseaseEocName}</p>
-                        <h1 className="text-2xl font-black text-gray-900 md:text-3xl">ภาพรวมสถานการณ์{activeDiseaseEocName}</h1>
+                        <h1 className="text-2xl font-black text-slate-900">ภาพรวมสถานการณ์</h1>
                         <p className="mt-1 text-sm text-gray-600">
-                            ติดตามข้อมูลผู้ป่วย รายงานจากหน่วยบริการ และชนิดโรคของ EOC Session
+                            ติดตามข้อมูลผู้ป่วย รายงานจากหน่วยบริการ และชนิดโรคของเหตุการณ์ EOC
                         </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                        <Link href="/eoc/disease/daily-risk" className="rounded-lg border border-teal-200 bg-white px-4 py-2 text-center text-sm font-bold text-teal-700 hover:bg-teal-50">
+                        <Link href="/eoc/disease/daily-risk" className="rounded-lg border border-[#c9dcee] bg-white px-4 py-2 text-center text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]">
                             สรุปรายวัน
                         </Link>
                     </div>
                 </div>
 
+                <ReportingCompleteness eocType="disease" />
+
                 {loading ? (
                     <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-                        <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-teal-500 border-t-transparent"></div>
+                        <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-[#0b4c86] border-t-transparent"></div>
                         <p className="text-gray-600">กำลังโหลดข้อมูลโรคระบาด...</p>
                     </div>
                 ) : !data?.success ? (
-                    <div className="rounded-xl border border-dashed border-teal-200 bg-teal-50 p-6 text-center">
-                        <h2 className="text-xl font-black text-teal-900">พร้อมใช้งานเมื่อเปิด EOC โรคระบาด</h2>
-                        <p className="mt-2 text-sm text-teal-800">
-                            {data?.message || "ยังไม่มี EOC Session โรคระบาดที่เปิดอยู่"}
+                    <div className="rounded-xl border border-dashed border-[#c9dcee] bg-[#edf5fc] p-6 text-center">
+                        <h2 className="text-xl font-black text-[#083865]">พร้อมใช้งานเมื่อเปิด EOC โรคระบาด</h2>
+                        <p className="mt-2 text-sm text-[#0b4c86]">
+                            {data?.message || "ยังไม่มีเหตุการณ์ EOC โรคระบาดที่เปิดอยู่"}
                         </p>
-                        <Link href="/admin/eoc-management" className="mt-4 inline-block rounded-lg bg-teal-600 px-4 py-2 text-sm font-bold text-white hover:bg-teal-700">
+                        <Link href="/admin/eoc-management" className="mt-4 inline-block rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#0b4c86]">
                             ไปหน้าเปิด EOC
                         </Link>
                     </div>
                 ) : (
                     <>
                         {activeSession && (
-                            <section className="mb-6 rounded-xl bg-gradient-to-r from-teal-600 to-rose-500 p-5 text-white shadow-sm">
+                            <section className="mb-6 rounded-xl bg-gradient-to-r from-[#0b4c86] to-[#11466e] p-5 text-white shadow-sm">
                                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px] md:items-center">
                                     <div>
-                                        <div className="text-sm font-semibold text-white/85">Session #{activeSession.session_number}</div>
+                                        <div className="text-sm font-semibold text-white/85">ครั้งที่ {activeSession.session_number}</div>
                                         <h2 className="mt-1 text-2xl font-black">
                                             {activeDiseaseEocName}
                                         </h2>
@@ -127,7 +129,7 @@ export default function DiseasePage() {
                                     type="date"
                                     value={selectedDate}
                                     onChange={(event) => setSelectedDate(event.target.value)}
-                                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:outline-none"
+                                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-[#0b4c86] focus:outline-none"
                                 />
                             </div>
                             <div className="grid gap-4 lg:grid-cols-2">
@@ -182,9 +184,9 @@ function MiniStat({ label, value }) {
 
 function StatCard({ label, value, strong = false }) {
     return (
-        <div className="rounded-xl border border-teal-100 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
             <div className="text-xs font-bold text-gray-500">{label}</div>
-            <div className={`mt-2 text-3xl font-black ${strong ? "text-rose-600" : "text-teal-700"}`}>
+            <div className={`mt-2 text-3xl font-black ${strong ? "text-rose-600" : "text-[#0b4c86]"}`}>
                 {Number(value || 0).toLocaleString()}
             </div>
         </div>

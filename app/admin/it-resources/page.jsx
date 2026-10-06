@@ -40,17 +40,17 @@ export default function ITResourcesPage() {
     const [healthFacilities, setHealthFacilities] = useState([]);
 
     const resourceTypes = [
-        { value: 'server', label: "Server", color: 'bg-blue-100 text-blue-800' },
-        { value: 'internet', label: "Internet", color: 'bg-green-100 text-green-800' },
-        { value: 'network', label: "Network", color: 'bg-teal-100 text-teal-800' },
-        { value: 'hardware', label: "Hardware", color: 'bg-orange-100 text-orange-800' }
+        { value: 'server', label: "เซิร์ฟเวอร์", color: 'bg-blue-100 text-blue-800' },
+        { value: 'internet', label: "อินเทอร์เน็ต", color: 'bg-green-100 text-green-800' },
+        { value: 'network', label: "เครือข่าย", color: 'bg-teal-100 text-teal-800' },
+        { value: 'hardware', label: "ฮาร์ดแวร์", color: 'bg-orange-100 text-orange-800' }
     ];
 
     const statusTypes = [
-        { value: 'online', label: "Online", color: 'bg-green-100 text-green-800' },
-        { value: 'offline', label: "Offline", color: 'bg-red-100 text-red-800' },
-        { value: 'maintenance', label: "Maintenance", color: 'bg-yellow-100 text-yellow-800' },
-        { value: 'unknown', label: "Unknown", color: 'bg-gray-100 text-gray-800' }
+        { value: 'online', label: "ออนไลน์", color: 'bg-green-100 text-green-800' },
+        { value: 'offline', label: "ออฟไลน์", color: 'bg-red-100 text-red-800' },
+        { value: 'maintenance', label: "ซ่อมบำรุง", color: 'bg-yellow-100 text-yellow-800' },
+        { value: 'unknown', label: "ไม่ทราบ", color: 'bg-gray-100 text-gray-800' }
     ];
 
     const ispProviders = ['AIS', 'TRUE', 'DTAC', 'TOT', '3BB', 'CAT', 'NT', 'อื่นๆ'];
@@ -209,7 +209,7 @@ export default function ITResourcesPage() {
                     <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
                         <AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการทรัพยากร IT Support
                     </h1>
-                    <p className="text-gray-600 mt-1">ข้อมูล Server, Internet และอุปกรณ์ IT ของหน่วยบริการ</p>
+                    <p className="text-gray-600 mt-1">ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ</p>
                 </div>
 
                 {/* Stats Cards */}
@@ -220,19 +220,19 @@ export default function ITResourcesPage() {
                     </div>
                     <div className="bg-green-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-green-600">{stats.online}</div>
-                        <div className="text-sm text-green-700"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Online</div>
+                        <div className="text-sm text-green-700"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ออนไลน์</div>
                     </div>
                     <div className="bg-red-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-red-600">{stats.offline}</div>
-                        <div className="text-sm text-red-700"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Offline</div>
+                        <div className="text-sm text-red-700"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ออฟไลน์</div>
                     </div>
                     <div className="bg-yellow-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-yellow-600">{stats.maintenance}</div>
-                        <div className="text-sm text-yellow-700"><AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Maintenance</div>
+                        <div className="text-sm text-yellow-700"><AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ซ่อมบำรุง</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-gray-600">{stats.unknown}</div>
-                        <div className="text-sm text-gray-700"><AppIcon icon="statusGray" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> Unknown</div>
+                        <div className="text-sm text-gray-700"><AppIcon icon="statusGray" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่ทราบ</div>
                     </div>
                 </div>
 
@@ -280,7 +280,7 @@ export default function ITResourcesPage() {
 
                     {/* ISP Providers Bar Chart */}
                     <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการ Internet (ISP)</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการอินเทอร์เน็ต (ISP)</h3>
                         <div className="h-64">
                             {stats.byIsp && stats.byIsp.length > 0 ? (
                                 <Bar
@@ -288,14 +288,14 @@ export default function ITResourcesPage() {
                                         labels: stats.byIsp.map(item => item.isp_provider),
                                         datasets: [
                                             {
-                                                label: 'Online',
+                                                label: 'ออนไลน์',
                                                 data: stats.byIsp.map(item => item.online || 0),
                                                 backgroundColor: 'rgba(34, 197, 94, 0.8)',
                                                 borderColor: 'rgb(34, 197, 94)',
                                                 borderWidth: 1
                                             },
                                             {
-                                                label: 'Offline',
+                                                label: 'ออฟไลน์',
                                                 data: stats.byIsp.map(item => item.offline || 0),
                                                 backgroundColor: 'rgba(239, 68, 68, 0.8)',
                                                 borderColor: 'rgb(239, 68, 68)',
@@ -573,7 +573,7 @@ export default function ITResourcesPage() {
                                     {/* Internet Fields */}
                                     {formData.resource_type === 'internet' && (
                                         <div className="bg-green-50 p-4 rounded-lg space-y-4">
-                                            <h3 className="font-medium text-green-800"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูล Internet</h3>
+                                            <h3 className="font-medium text-green-800"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลอินเทอร์เน็ต</h3>
                                             <div className="grid grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">ผู้ให้บริการ (ISP)</label>

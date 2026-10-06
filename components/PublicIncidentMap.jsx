@@ -615,7 +615,7 @@ export default function PublicIncidentMap({
             {chrome !== 'full' && (
             <div className="relative rounded-t-xl border border-b-0 border-gray-200 bg-white p-4 md:p-5">
                 <div className="pr-12">
-                    <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Verified Public Reports</p>
+                    <p className="text-xs font-bold uppercase tracking-wide text-blue-700">รายงานจากประชาชนที่ตรวจสอบแล้ว</p>
                     <h3 className="flex items-center gap-2 text-xl md:text-2xl font-bold text-gray-900">
                         <AppIcon icon="mapPin" className="h-6 w-6 text-blue-700" />
                         รายงานจากประชาชนที่ยืนยันแล้ว
@@ -650,7 +650,7 @@ export default function PublicIncidentMap({
                     </summary>
                     <div className="grid gap-3 border-t border-gray-200 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
                         <div>
-                            <p className="text-sm font-semibold text-gray-800 mb-2">แสดง Layer พื้นที่</p>
+                            <p className="text-sm font-semibold text-gray-800 mb-2">แสดงชั้นข้อมูลพื้นที่</p>
                             <label className="mb-3 block max-w-xs">
                                 <span className="mb-1 block text-xs font-bold text-gray-500">แผนที่พื้นหลัง</span>
                                 <select

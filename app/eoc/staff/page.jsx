@@ -45,7 +45,7 @@ export default function StaffEocOverviewPage() {
         try {
             const response = await fetch(`/stn-eoc/api/eoc/sessions?type=${moduleType}&limit=100`);
             const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.message || "ไม่สามารถโหลด EOC Session ได้");
+            if (!response.ok || !result.success) throw new Error(result.message || "ไม่สามารถโหลดเหตุการณ์ EOC ได้");
             const rows = Array.isArray(result.data) ? result.data : [];
             setSessions(rows);
             const defaultSession = rows.find((item) => item.status === "active") || rows[0];
@@ -55,7 +55,7 @@ export default function StaffEocOverviewPage() {
                 setTeams([]);
             }
         } catch (loadError) {
-            setError(loadError.message || "ไม่สามารถโหลด EOC Session ได้");
+            setError(loadError.message || "ไม่สามารถโหลดเหตุการณ์ EOC ได้");
             setSessions([]);
             setSession(null);
             setTeams([]);
@@ -108,7 +108,7 @@ export default function StaffEocOverviewPage() {
                     <div className=" mt-1 flex flex-wrap items-end justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-black text-slate-900">ศูนย์ปฏิบัติงานเจ้าหน้าที่ EOC</h1>
-                            <p className="mt-1 text-sm text-slate-600">เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมายเพื่อดู Dashboard และรายงานผล</p>
+                            <p className="mt-1 text-sm text-slate-600">เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมายเพื่อดูแดชบอร์ดและรายงานผล</p>
                         </div>
                         <button type="button" onClick={loadSessions} className="inline-flex h-10 items-center gap-2 border border-slate-300 px-3 text-sm font-bold text-slate-700 hover:bg-slate-50">
                             <RefreshCw className="h-4 w-4" /> รีเฟรช
@@ -122,9 +122,9 @@ export default function StaffEocOverviewPage() {
                             {MODULES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
                         </select>
                     </label>
-                    <label className="rounded-lg grid gap-1 text-sm font-bold text-slate-700">EOC Session
+                    <label className="rounded-lg grid gap-1 text-sm font-bold text-slate-700">เหตุการณ์ EOC
                         <select value={selectedSessionId} onChange={(event) => setSelectedSessionId(event.target.value)} disabled={!sessions.length} className="h-11 border border-slate-300 bg-white px-3 font-medium disabled:bg-slate-100">
-                            {!sessions.length && <option value="">ไม่พบ Session</option>}
+                            {!sessions.length && <option value="">ไม่พบเหตุการณ์</option>}
                             {sessions.map((item) => <option key={item.id} value={item.id}>#{item.session_number || item.id} · {item.status === "active" ? "เปิดอยู่" : "ปิดแล้ว"} · {formatDate(item.opened_at)}</option>)}
                         </select>
                     </label>
@@ -140,16 +140,16 @@ export default function StaffEocOverviewPage() {
                 </div>}
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div><h2 className="text-lg font-black text-slate-900">กลุ่มภารกิจที่เปิดใช้งาน</h2><p className="text-sm text-slate-600">แสดงตามสิทธิ์และการเป็นสมาชิกใน EOC Session นี้</p></div>
+                    <div><h2 className="text-lg font-black text-slate-900">กลุ่มภารกิจที่เปิดใช้งาน</h2><p className="text-sm text-slate-600">แสดงตามสิทธิ์และการเป็นสมาชิกในเหตุการณ์ EOC นี้</p></div>
                     <label className="relative block"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ค้นหากลุ่มภารกิจ" className="h-10 border border-slate-300 pl-9 pr-3 text-sm" /></label>
                 </div>
 
-                {loading ? <div className="bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : !session ? <div className="bg-white p-10 text-center text-sm text-slate-500">เลือก EOC Session เพื่อเริ่มทำงาน</div> : !visibleTeams.length ? <div className="bg-white p-10 text-center text-sm text-slate-500">ยังไม่มีกลุ่มภารกิจที่คุณเข้าถึงได้ใน Session นี้</div> : <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {loading ? <div className="bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : !session ? <div className="bg-white p-10 text-center text-sm text-slate-500">เลือกเหตุการณ์ EOC เพื่อเริ่มทำงาน</div> : !visibleTeams.length ? <div className="bg-white p-10 text-center text-sm text-slate-500">ยังไม่มีกลุ่มภารกิจที่คุณเข้าถึงได้ในเหตุการณ์นี้</div> : <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {visibleTeams.map((team) => <Link key={team.session_team_id} href={`/eoc/staff/${session.id}/teams/${team.session_team_id}`} className={`group border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${COLOR_STYLES[team.color] || "border-slate-200 bg-white text-slate-800"}`}>
                         <div className="flex items-start justify-between gap-3"><span className="text-2xl">{team.icon || "ทีม"}</span><ChevronRight className="h-5 w-5 transition group-hover:translate-x-1" /></div>
                         <p className="mt-4 text-xs font-black">{team.team_code}</p><h3 className="mt-1 text-base font-black">{team.team_name_th}</h3>
                         <p className="mt-3 text-sm">หัวหน้าทีม: {team.team_lead_name || "ยังไม่กำหนด"}</p><p className="mt-1 text-sm">สมาชิก {team.member_count || 0} คน</p>
-                        <div className="mt-4 border-t border-current/20 pt-3 text-xs font-bold">Dashboard · รายงานผล · ประวัติ</div>
+                        <div className="mt-4 border-t border-current/20 pt-3 text-xs font-bold">แดชบอร์ด · รายงานผล · ประวัติ</div>
                     </Link>)}
                 </div>}
             </section>

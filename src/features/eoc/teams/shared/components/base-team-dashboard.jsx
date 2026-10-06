@@ -30,9 +30,9 @@ export default function BaseTeamDashboard({ eocType, teamCode }) {
   const summary = state.reports?.summary || {};
   return (
     <TeamPageShell eocType={eocType} teamCode={teamCode} activeSection="dashboard">
-      {state.loading ? <div className="rounded-xl bg-white p-10 text-center text-sm text-slate-500">กำลังโหลด Dashboard...</div> : state.error ? <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800">{state.error}</div> : <>
+      {state.loading ? <div className="rounded-xl bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดแดชบอร์ด...</div> : state.error ? <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800">{state.error}</div> : <>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard label="รายงานทั้งหมด" value={summary.total || 0} detail={`Session #${state.context?.session.session_number}`} />
+          <SummaryCard label="รายงานทั้งหมด" value={summary.total || 0} detail={`ครั้งที่ ${state.context?.session.session_number}`} />
           <SummaryCard label="ฉบับร่าง" value={summary.draft || 0} />
           <SummaryCard label="รอตรวจสอบ" value={summary.submitted || 0} />
           <SummaryCard label="อนุมัติแล้ว" value={summary.approved || 0} />

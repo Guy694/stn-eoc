@@ -122,7 +122,7 @@ export default function PublicAgenciesPage() {
 
   return (
     <PublicOpsScaffold
-      title="หน่วยงาน / Agencies"
+      title="หน่วยงาน"
       subtitle="ข้อมูลหน่วยงานที่เกี่ยวข้องกับการปฏิบัติการฉุกเฉิน จังหวัดสตูล"
       activeMenu="agencies"
       eocIsOpen={eocIsOpen}

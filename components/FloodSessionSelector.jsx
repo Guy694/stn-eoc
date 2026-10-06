@@ -112,7 +112,7 @@ export default function FloodSessionSelector({
         const activeSessions = sessions.filter(s => s.status === 'active');
 
         return (
-            <div className="bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="bg-linear-to-r from-[#0b4c86] to-[#11466e] text-white rounded-lg shadow-lg p-6 mb-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-semibold mb-1"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์ปัจจุบัน (เรียลไทม์)</h3>
@@ -191,7 +191,7 @@ export default function FloodSessionSelector({
                     <select
                         value={selectedYear || ''}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-transparent text-gray-700"
                     >
                         <option value="">-- เลือกปี --</option>
                         {years.map(year => (
@@ -214,7 +214,7 @@ export default function FloodSessionSelector({
                                 const session = sessions.find(s => s.id === parseInt(e.target.value));
                                 handleSessionChange(session);
                             }}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-transparent text-gray-700"
                         >
                             <option value="">-- เลือกเหตุการณ์ --</option>
                             {sessions.map(session => (
@@ -238,12 +238,12 @@ export default function FloodSessionSelector({
             {/* แสดงสรุปของปี */}
             {loading ? (
                 <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b border-teal-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b border-[#0b4c86] mx-auto mb-4"></div>
                     <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : yearSummary && (
-                <div className="bg-teal-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-teal-800 mb-3">
+                <div className="bg-[#edf5fc] rounded-lg p-4">
+                    <h4 className="font-semibold text-[#083865] mb-3">
                         สรุปข้อมูลปี {selectedYear + 543}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -315,7 +315,7 @@ export default function FloodSessionSelector({
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-center ml-4">
                             <div className="bg-white rounded p-2 border border-gray-200">
-                                <p className="text-lg font-bold text-blue-600">{selectedSession.total_activities || 0}</p>
+                                <p className="text-lg font-bold text-[#0b4c86]">{selectedSession.total_activities || 0}</p>
                                 <p className="text-xs text-gray-600">กิจกรรม</p>
                             </div>
                             <div className="bg-white rounded p-2 border border-gray-200">
@@ -340,12 +340,12 @@ export default function FloodSessionSelector({
 // Helper component
 function SummaryItem({ label, value, icon, subtext }) {
     return (
-        <div className="bg-white rounded p-3 border border-teal-200">
+        <div className="bg-white rounded p-3 border border-[#c9dcee]">
             <div className="flex items-center gap-2 mb-1">
                 <AppIcon icon={icon} className="h-5 w-5" />
                 <span className="text-xs text-gray-600">{label}</span>
             </div>
-            <p className="text-lg font-bold text-teal-700">{value}</p>
+            <p className="text-lg font-bold text-[#0b4c86]">{value}</p>
             {subtext && (
                 <p className="text-xs text-gray-500 mt-1">{subtext}</p>
             )}

@@ -81,7 +81,7 @@ export async function GET(request) {
 
         const session = await resolveDiseaseSession(auth.user, requestedSessionId);
         if (!session) {
-            return NextResponse.json({ success: false, message: "ไม่พบ EOC Session โรคระบาดที่เข้าถึงได้" }, { status: 404 });
+            return NextResponse.json({ success: false, message: "ไม่พบเหตุการณ์ EOC โรคระบาดที่เข้าถึงได้" }, { status: 404 });
         }
 
         const availableDateRows = await query(`
@@ -108,7 +108,7 @@ export async function GET(request) {
                     source_type: "database",
                     source_name: "disease_reports",
                     record_count: 0,
-                    data_quality_warning: "ยังไม่มีข้อมูลสำหรับ Session ที่เลือก"
+                    data_quality_warning: "ยังไม่มีข้อมูลสำหรับเหตุการณ์ที่เลือก"
                 }
             });
         }
@@ -190,7 +190,7 @@ export async function GET(request) {
                 report_date: date,
                 record_count: details.length,
                 generated_at: new Date().toISOString(),
-                data_quality_warning: details.length ? null : "ยังไม่มีข้อมูลสำหรับ Session และวันที่ที่เลือก"
+                data_quality_warning: details.length ? null : "ยังไม่มีข้อมูลสำหรับเหตุการณ์และวันที่ที่เลือก"
             }
         });
     } catch (error) {

@@ -206,7 +206,7 @@ export default function AIChatbot({ showLauncher = true }) {
                                 <AppIcon icon="bot" className="h-6 w-6 text-white" />
                             </div>
                             <div className="min-w-0">
-                                <h3 className="truncate font-bold text-lg">EOC Assistant</h3>
+                                <h3 className="truncate font-bold text-lg">ผู้ช่วย EOC</h3>
                                 <p className="truncate text-xs text-green-100">ผู้ช่วยตอบคำถามข้อมูล EOC</p>
                             </div>
                         </div>

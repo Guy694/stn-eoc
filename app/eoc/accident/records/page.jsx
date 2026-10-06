@@ -109,7 +109,7 @@ export default function AccidentRecordsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!activeSession) {
-            showError('ไม่พบ EOC Session ที่เปิดอยู่');
+            showError('ไม่พบเหตุการณ์ EOC ที่เปิดอยู่');
             return;
         }
 
@@ -214,8 +214,8 @@ export default function AccidentRecordsPage() {
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มี EOC Session ที่เปิดอยู่</h3>
-                        <p className="text-gray-600">กรุณาเปิด EOC Session ก่อนบันทึกข้อมูล</p>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                        <p className="text-gray-600">กรุณาเปิดเหตุการณ์ EOC ก่อนบันทึกข้อมูล</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -228,12 +228,12 @@ export default function AccidentRecordsPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
                             <span className="text-4xl"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกอุบัติเหตุ
                         </h1>
                         <p className="text-gray-600">
-                            EOC Session #{activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}
+                            เหตุการณ์ EOC #{activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}
                         </p>
                     </div>
                     <button
@@ -258,8 +258,8 @@ export default function AccidentRecordsPage() {
                         <div className="text-3xl font-bold text-yellow-600">{stats.injuries}</div>
                         <div className="text-sm text-gray-600"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บาดเจ็บ</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-teal-500">
-                        <div className="text-3xl font-bold text-teal-600">{stats.drunk}</div>
+                    <div className="bg-white rounded-lg p-4 shadow border border-[#0b4c86]">
+                        <div className="text-3xl font-bold text-[#0b4c86]">{stats.drunk}</div>
                         <div className="text-sm text-gray-600"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</div>
                     </div>
                 </div>
@@ -349,13 +349,13 @@ export default function AccidentRecordsPage() {
                                             </td>
                                             <td className="px-4 py-3 text-xs">
                                                 <div className="flex flex-wrap gap-1">
-                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-teal-100 text-teal-700 rounded"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมา</span>}
+                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-[#dbeaf7] text-[#0b4c86] rounded"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมา</span>}
                                                     {r.no_helmet && <span className="px-1 py-0.5 bg-orange-100 text-orange-700 rounded"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก</span>}
                                                     {r.speeding && <span className="px-1 py-0.5 bg-red-100 text-red-700 rounded"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เร็ว</span>}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-center">
-                                                <button onClick={() => handleEdit(r)} className="text-blue-600 hover:text-blue-800 mr-2"><AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></button>
+                                                <button onClick={() => handleEdit(r)} className="text-[#0b4c86] hover:text-[#083865] mr-2"><AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></button>
                                                 <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:text-red-800"><AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></button>
                                             </td>
                                         </tr>

@@ -1,54 +1,13 @@
 import { NextResponse } from 'next/server';
-import mysql from 'mysql2/promise';
+import { getPool } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { validateSessionDates } from '@/lib/sessionDateRange';
 import { publicInternalError } from '@/lib/apiResponse';
 
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'stneoc',
-};
-
-function toDateKey(value) {
-    if (!value) return '';
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+function validateSessionDateRange(connection, sessionId, dates) {
+    return validateSessionDates(connection.execute.bind(connection), sessionId, dates, { eocType: 'flood', label: 'EOC อุทกภัยน้ำท่วม' });
 }
 
-async function validateSessionDateRange(connection, sessionId, dates) {
-    const [sessions] = await connection.execute(
-        `SELECT opened_at, closed_at
-         FROM eoc_sessions
-         WHERE id = ? AND eoc_type = 'flood'
-         LIMIT 1`,
-        [sessionId]
-    );
-
-    if (sessions.length === 0) {
-        return { ok: false, status: 404, error: 'ไม่พบ EOC Session อุทกภัยน้ำท่วม' };
-    }
-
-    const openedKey = toDateKey(sessions[0].opened_at);
-    const closedKey = toDateKey(sessions[0].closed_at) || toDateKey(new Date());
-
-    for (const date of dates) {
-        const dateKey = toDateKey(date);
-        if (!dateKey) return { ok: false, status: 400, error: 'วันที่ไม่ถูกต้อง' };
-        if (openedKey && dateKey < openedKey) {
-            return { ok: false, status: 400, error: 'วันที่ต้องไม่ก่อนวันเปิด EOC' };
-        }
-        if (closedKey && dateKey > closedKey) {
-            return { ok: false, status: 400, error: 'วันที่ต้องไม่เกินวันปิด EOC' };
-        }
-    }
-
-    return { ok: true };
-}
-
-// API สำหรับคัดลอกข้อมูลอุทกภัยน้ำท่วมจากวันหนึ่งไปยังอีกวันหนึ่ง
 export async function POST(request) {
     try {
         const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
@@ -73,10 +32,9 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const connection = await mysql.createConnection(dbConfig);
+        const connection = getPool();
         const validation = await validateSessionDateRange(connection, session_id, [source_date, target_date]);
         if (!validation.ok) {
-            await connection.end();
             return NextResponse.json({ success: false, error: validation.error }, { status: validation.status });
         }
 
@@ -108,7 +66,6 @@ export async function POST(request) {
         const [sourceRecords] = await connection.execute(sourceQuery, sourceParams);
 
         if (sourceRecords.length === 0) {
-            await connection.end();
             return NextResponse.json({
                 success: false,
                 error: `ไม่พบข้อมูลในวันที่ ${source_date}`
@@ -189,7 +146,6 @@ export async function POST(request) {
             copiedCount++;
         }
 
-        await connection.end();
 
         return NextResponse.json({
             success: true,

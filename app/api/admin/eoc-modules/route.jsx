@@ -99,7 +99,7 @@ export async function POST(req) {
 
         if (Array.isArray(checkRows) && checkRows.length > 0) {
             return NextResponse.json(
-                { success: false, error: "Module นี้มีอยู่ในระบบแล้วสำหรับ EOC Type นี้" },
+                { success: false, error: "โมดูลนี้มีอยู่ในระบบแล้วสำหรับ EOC Type นี้" },
                 { status: 400 }
             );
         }
@@ -118,11 +118,11 @@ export async function POST(req) {
 
         return NextResponse.json({
             success: true,
-            message: "เพิ่ม Module สำเร็จ"
+            message: "เพิ่มโมดูลสำเร็จ"
         });
     } catch (error) {
         console.error("Error creating EOC module:", error);
-        return publicInternalError("เกิดข้อผิดพลาดในการเพิ่ม EOC Module");
+        return publicInternalError("เกิดข้อผิดพลาดในการเพิ่ม โมดูล EOC");
     }
 }
 
@@ -150,7 +150,7 @@ export async function PUT(req) {
 
         if (!id) {
             return NextResponse.json(
-                { success: false, error: "กรุณาระบุ ID ของ Module" },
+                { success: false, error: "กรุณาระบุ ID ของโมดูล" },
                 { status: 400 }
             );
         }
@@ -187,11 +187,11 @@ export async function PUT(req) {
 
         return NextResponse.json({
             success: true,
-            message: "แก้ไข Module สำเร็จ"
+            message: "แก้ไขโมดูลสำเร็จ"
         });
     } catch (error) {
         console.error("Error updating EOC module:", error);
-        return publicInternalError("เกิดข้อผิดพลาดในการแก้ไข EOC Module");
+        return publicInternalError("เกิดข้อผิดพลาดในการแก้ไข โมดูล EOC");
     }
 }
 
@@ -206,7 +206,7 @@ export async function DELETE(req) {
 
         if (!id) {
             return NextResponse.json(
-                { success: false, error: "กรุณาระบุ ID ของ Module" },
+                { success: false, error: "กรุณาระบุ ID ของโมดูล" },
                 { status: 400 }
             );
         }
@@ -218,10 +218,10 @@ export async function DELETE(req) {
 
         return NextResponse.json({
             success: true,
-            message: "ลบ Module สำเร็จ"
+            message: "ลบโมดูลสำเร็จ"
         });
     } catch (error) {
         console.error("Error deleting EOC module:", error);
-        return publicInternalError("เกิดข้อผิดพลาดในการลบ EOC Module");
+        return publicInternalError("เกิดข้อผิดพลาดในการลบ โมดูล EOC");
     }
 }

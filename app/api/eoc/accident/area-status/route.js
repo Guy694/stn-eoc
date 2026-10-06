@@ -49,7 +49,7 @@ export async function GET(request) {
             return NextResponse.json({
                 success: true,
                 hasActiveSession: false,
-                message: 'ไม่มี EOC Session ที่เปิดอยู่',
+                message: 'ไม่มีเหตุการณ์ EOC ที่เปิดอยู่',
                 accidents: [],
                 servicePoints: [],
                 stats: {}
