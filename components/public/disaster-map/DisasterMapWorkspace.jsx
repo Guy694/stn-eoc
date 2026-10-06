@@ -27,7 +27,9 @@ import {
   Waves,
   X
 } from "lucide-react";
+import Link from "next/link";
 import AIChatbot from "@/components/AIChatbot";
+import useHelpAvailability from "@/components/public/useHelpAvailability";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import { MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
@@ -174,6 +176,7 @@ function Legend({ disasterType, onClose }) {
 }
 
 export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) {
+  const { helpOpen } = useHelpAvailability();
   const [activeEocs, setActiveEocs] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loadingContext, setLoadingContext] = useState(true);
@@ -563,6 +566,14 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
               >
                 <List className="h-4 w-4" aria-hidden="true" /> ดูรายการเหตุการณ์
               </button>
+              {helpOpen !== false ? (
+                <Link
+                  href="/public/report-problem"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-black text-[#083865] hover:bg-sky-50"
+                >
+                  <MapPinned className="h-4 w-4" aria-hidden="true" /> แจ้งจุดปัญหา (น้ำท่วม ถนน ไฟดับ)
+                </Link>
+              ) : null}
           </div>
         </div>
 

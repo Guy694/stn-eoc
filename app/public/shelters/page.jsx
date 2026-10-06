@@ -1,13 +1,11 @@
 "use client";
 
-import { Noto_Sans_Thai_Looped } from "next/font/google";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LocateFixed, MapPin, Navigation, Phone, Search, Tent } from "lucide-react";
 import ShelterCenterMap from "@/components/ShelterCenterMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
-const bodyFont = Noto_Sans_Thai_Looped({ subsets: ["thai", "latin"], weight: ["400", "500", "600"], display: "swap" });
 const NO_DATA_MESSAGE = "ยังไม่มีข้อมูลการเปิดศูนย์พักพิง";
 const HEADING = "font-[family-name:var(--font-kanit)]";
 
@@ -291,7 +289,7 @@ export default function PublicSheltersPage() {
       showPageHeader={false}
       mainClassName="p-0!"
     >
-      <div className={`${bodyFont.className} bg-[#eef2f1] text-[#15232e]`}>
+      <div className="bg-[#eef2f1] text-[#15232e]">
         {/* ── หัวหน้า: บอกสถานการณ์ + ปุ่มหลักปุ่มเดียว ── */}
         <section className="bg-[#0c2f4a] text-white" aria-labelledby="shelter-title">
           <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:pb-20 lg:pt-10">

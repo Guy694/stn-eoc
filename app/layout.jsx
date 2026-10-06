@@ -1,11 +1,9 @@
-import { Kanit, Geist } from "next/font/google";
+import { Kanit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { EOCProvider } from "@/context/EOCContext";
-import { cn } from "@/lib/utils";
 import AppToaster from "@/components/providers/AppToaster";
-
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+import { getSiteUrl } from "@/lib/siteUrl";
 
 const kanit = Kanit({
   variable: "--font-kanit",
@@ -15,8 +13,18 @@ const kanit = Kanit({
 });
 
 export const metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: "ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข - ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
   description: "Satun Provincial Emergency Operations Center (Satun Geo-EOC) - ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
+  openGraph: {
+    type: "website",
+    locale: "th_TH",
+    siteName: "Satun Geo-EOC",
+    title: "Satun Geo-EOC | ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล",
+    description: "ติดตามสถานการณ์ สภาพอากาศ ศูนย์พักพิง และประกาศฉุกเฉินของจังหวัดสตูล",
+    images: [{ url: "/stn-eoc/img/eoc-icon.png", width: 512, height: 512, alt: "Satun Geo-EOC" }]
+  },
+  twitter: { card: "summary", title: "Satun Geo-EOC" },
   icons: {
     icon: '/stn-eoc/img/eoc-icon.png',
     shortcut: '/stn-eoc/img/eoc-icon.png',
@@ -26,7 +34,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+    <html lang="th" suppressHydrationWarning>
       <body
         className={`${kanit.variable} antialiased`}
         suppressHydrationWarning

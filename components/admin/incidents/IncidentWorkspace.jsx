@@ -9,6 +9,8 @@ import {
 } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { useUrlState } from "@/components/admin/useUrlState";
+import { REPORT_TYPE_LABELS, categoryMeta } from "@/lib/incidentPublishing";
+import PublishPanel from "@/components/admin/incidents/PublishPanel";
 
 const API = "/stn-eoc/api/admin/incident-reports";
 const EDITORS = ["admin", "commander", "MCATT", "SAT"];
@@ -16,8 +18,8 @@ const EDITORS = ["admin", "commander", "MCATT", "SAT"];
 export const INCIDENT_STATUSES = [
   { value: "pending", label: "รอตรวจสอบ", tone: "amber", hint: "ยังไม่มีใครรับเรื่อง" },
   { value: "reviewing", label: "กำลังดำเนินการ", tone: "blue", hint: "รับเรื่องแล้ว กำลังติดต่อ/ส่งทีม" },
-  { value: "verified", label: "ยืนยันแล้ว", tone: "green", hint: "ตรวจสอบแล้วว่าเกิดเหตุจริง" },
-  { value: "resolved", label: "ช่วยเหลือแล้ว", tone: "gray", hint: "ปิดเรื่อง" },
+  { value: "verified", label: "ยืนยันแล้ว", tone: "green", hint: "เกิดจริง ใช้ในงานศูนย์ได้ (ยังไม่ขึ้นแผนที่จนกว่าจะกดเผยแพร่)" },
+  { value: "resolved", label: "ช่วยเหลือแล้ว", tone: "gray", hint: "ปิดเรื่อง และถอดออกจากแผนที่สาธารณะ" },
   { value: "rejected", label: "ไม่ดำเนินการ", tone: "red", hint: "ซ้ำ ข้อมูลไม่จริง หรือไม่อยู่ในพื้นที่" }
 ];
 const statusMeta = (value) => INCIDENT_STATUSES.find((item) => item.value === value) || { label: value, tone: "gray" };
@@ -40,6 +42,11 @@ function photoUrls(report) {
   return list.filter(Boolean).map((path) => (/^https?:\/\//.test(path) || path.startsWith("/stn-eoc/") ? path : `/stn-eoc${path.startsWith("/") ? "" : "/"}${path}`));
 }
 
+function typeLabel(report) {
+  if (report.report_type === "problem_point") return `จุดปัญหา: ${categoryMeta(report.problem_category).label}`;
+  return REPORT_TYPE_LABELS[report.report_type] || REPORT_TYPE_LABELS.help_request;
+}
+
 function areaText(report) {
   return [report.village && `บ.${report.village}`, report.sub_district && `ต.${report.sub_district}`, report.district && `อ.${report.district}`].filter(Boolean).join(" ") || "-";
 }
@@ -48,9 +55,11 @@ export default function IncidentWorkspace() {
   const { user } = useAuth();
   const canEdit = EDITORS.includes(user?.role);
   const isAdmin = user?.role === "admin";
-  const [status, setStatus] = useUrlState("status", "pending", ["pending", "reviewing", "verified", "resolved", "rejected", "all"]);
+  const [status, setStatus] = useUrlState("status", "pending", ["pending", "reviewing", "verified", "resolved", "rejected", "published", "all"]);
   const [rows, setRows] = useState([]);
   const [stats, setStats] = useState({});
+  const [publishStats, setPublishStats] = useState({});
+  const [publishingReady, setPublishingReady] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
@@ -62,10 +71,13 @@ export default function IncidentWorkspace() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ limit: "500" });
-      if (status !== "all") params.set("status", status);
+      if (status === "published") params.set("publish", "published");
+      else if (status !== "all") params.set("status", status);
       const json = await apiRequest(`${API}?${params}`);
       setRows(json.data || []);
       setStats(json.stats || {});
+      setPublishStats(json.publishStats || {});
+      setPublishingReady(json.publishingReady !== false);
       setLoadError("");
     } catch (error) {
       setLoadError(error.message);
@@ -79,9 +91,11 @@ export default function IncidentWorkspace() {
     const query = search.trim().toLowerCase();
     return rows
       .filter((row) => (type === "all" || row.report_type === type) && (urgency === "all" || row.urgency === urgency))
-      .filter((row) => !query || `${row.first_name} ${row.last_name} ${row.phone} ${areaText(row)} ${row.description}`.toLowerCase().includes(query))
+      .filter((row) => !query || `${row.first_name} ${row.last_name} ${row.phone} ${areaText(row)} ${row.description} ${row.public_title || ""}`.toLowerCase().includes(query))
       // งานค้าง: เร่งด่วนก่อน แล้วเก่าก่อน / สถานะอื่น: ล่าสุดก่อน
-      .sort((a, b) => status === "pending"
+      .sort((a, b) => status === "published"
+        ? Number(b.normal_reports || 0) - Number(a.normal_reports || 0) || new Date(a.expires_at) - new Date(b.expires_at)
+        : status === "pending"
         ? (URGENCY_ORDER[a.urgency] ?? 9) - (URGENCY_ORDER[b.urgency] ?? 9) || new Date(a.created_at) - new Date(b.created_at)
         : new Date(b.created_at) - new Date(a.created_at));
   }, [rows, search, status, type, urgency]);
@@ -135,15 +149,27 @@ export default function IncidentWorkspace() {
   };
 
   const photos = photoUrls(selected);
+  const publishable = selected && publishingReady && selected.report_type && selected.report_type !== "help_request";
+  const onPublishChanged = (message, action) => {
+    success(message);
+    if (["publish", "withdraw", "merge"].includes(action)) setSelected(null);
+    load();
+  };
 
   return (
     <AdminPage
       context="งานรอดำเนินการ"
       title="คำขอจากประชาชน"
-      description="คำขอความช่วยเหลือและรายงานสภาพเส้นทางที่ประชาชนส่งผ่านเว็บไซต์ รับเรื่อง → ดำเนินการ → ปิดเรื่อง ทุกการเปลี่ยนสถานะถูกบันทึกประวัติ"
+      description="คำขอความช่วยเหลือ รายงานเส้นทาง และจุดปัญหาที่ประชาชนแจ้ง ตรวจว่าเกิดจริง → เลือกว่าจะเผยแพร่บนแผนที่หรือไม่ (คำขอความช่วยเหลือไม่เผยแพร่) ทุกการเปลี่ยนแปลงถูกบันทึกประวัติ"
     >
+      {!publishingReady ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+          ยังไม่ได้ติดตั้งระบบเผยแพร่ (รัน <code>npm run db:migrate</code>) — ระหว่างนี้แผนที่สาธารณะจะไม่แสดงจุดจากประชาชน
+        </p>
+      ) : null}
       <Tabs value={status} onChange={setStatus} items={[
         ...INCIDENT_STATUSES.map((item) => ({ value: item.value, label: item.label, count: Number(stats[item.value] || 0) })),
+        ...(publishingReady ? [{ value: "published", label: "เผยแพร่อยู่", count: Number(publishStats.published || 0) }] : []),
         { value: "all", label: "ทั้งหมด", count: totalAll }
       ]} />
 
@@ -151,7 +177,7 @@ export default function IncidentWorkspace() {
 
       <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อ เบอร์โทร พื้นที่ รายละเอียด">
         <FilterSelect label="ประเภท" value={type} onChange={setType} options={[
-          { value: "all", label: "ทุกประเภท" }, { value: "help_request", label: "ขอความช่วยเหลือ" }, { value: "traffic_report", label: "รายงานเส้นทาง" }
+          { value: "all", label: "ทุกประเภท" }, { value: "help_request", label: "ขอความช่วยเหลือ" }, { value: "problem_point", label: "แจ้งจุดปัญหา" }, { value: "traffic_report", label: "รายงานเส้นทาง" }
         ]} />
         <FilterSelect label="ความเร่งด่วน" value={urgency} onChange={setUrgency} options={[
           { value: "all", label: "ทุกระดับ" }, ...Object.entries(URGENCY).map(([value, item]) => ({ value, label: item.label }))
@@ -162,7 +188,7 @@ export default function IncidentWorkspace() {
         caption="คำขอจากประชาชน"
         loading={loading}
         rows={filtered}
-        emptyText={status === "pending" ? "ไม่มีเรื่องค้างตรวจสอบ" : "ไม่มีรายการในสถานะนี้"}
+        emptyText={status === "pending" ? "ไม่มีเรื่องค้างตรวจสอบ" : status === "published" ? "ยังไม่มีจุดที่เผยแพร่อยู่" : "ไม่มีรายการในสถานะนี้"}
         columns={[
           { key: "who", label: "ผู้แจ้ง", render: (row) => (
             <div>
@@ -172,8 +198,14 @@ export default function IncidentWorkspace() {
           ) },
           { key: "what", label: "เรื่อง", className: "max-w-sm", render: (row) => (
             <div>
-              <div className="text-xs font-semibold text-slate-500">{row.report_type === "traffic_report" ? "รายงานเส้นทาง" : "ขอความช่วยเหลือ"} • {areaText(row)}</div>
+              <div className="text-xs font-semibold text-slate-500">{typeLabel(row)} • {areaText(row)}</div>
               <p className="line-clamp-2 whitespace-pre-line text-slate-700">{row.description}</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {row.publish_status === "published" ? <StatusPill tone="green">เผยแพร่: {row.public_title}</StatusPill> : null}
+                {row.publish_status === "expired" ? <StatusPill tone="amber">หมดอายุบนแผนที่</StatusPill> : null}
+                {Number(row.merged_count) > 0 ? <StatusPill tone="blue">แจ้ง {Number(row.merged_count) + 1} ราย</StatusPill> : null}
+                {Number(row.normal_reports) > 0 ? <StatusPill tone="amber">ประชาชนแจ้งว่าปกติแล้ว {row.normal_reports}</StatusPill> : null}
+              </div>
             </div>
           ) },
           { key: "urgency", label: "เร่งด่วน", render: (row) => <StatusPill tone={URGENCY[row.urgency]?.tone}>{URGENCY[row.urgency]?.label || row.urgency || "-"}</StatusPill> },
@@ -192,7 +224,7 @@ export default function IncidentWorkspace() {
       <FormDialog
         open={Boolean(selected)}
         onOpenChange={(value) => !value && setSelected(null)}
-        title={selected ? `${selected.report_type === "traffic_report" ? "รายงานเส้นทาง" : "คำขอความช่วยเหลือ"} #${selected.id}` : ""}
+        title={selected ? `${typeLabel(selected)} #${selected.id}` : ""}
         description={selected ? `แจ้งเมื่อ ${formatDateTime(selected.created_at)}` : ""}
         onSubmit={save}
         busy={busy}
@@ -238,6 +270,12 @@ export default function IncidentWorkspace() {
                   </a>
                 ))}
               </section>
+            ) : null}
+
+            {publishable ? (
+              <PublishPanel report={selected} canEdit={canEdit} onChanged={onPublishChanged} />
+            ) : selected.report_type === "help_request" || !selected.report_type ? (
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">คำขอความช่วยเหลือเป็นข้อมูลส่วนบุคคล ใช้ภายในศูนย์เท่านั้น ไม่แสดงบนแผนที่สาธารณะ</p>
             ) : null}
 
             {canEdit ? (

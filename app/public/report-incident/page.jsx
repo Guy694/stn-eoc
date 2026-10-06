@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
 import { showWarning } from "@/lib/sweetAlert";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
+import { trackPublicUsage } from "@/lib/publicUsage";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -283,6 +284,7 @@ export default function ReportIncidentPage() {
             }
 
             setSubmitSuccess(true);
+            trackPublicUsage("help_request_submitted", "/public/report-incident");
             setFormData({
                 firstName: "",
                 lastName: "",
@@ -337,6 +339,10 @@ export default function ReportIncidentPage() {
                     <div>
                         <p className="text-sm font-bold text-red-700">ขอความช่วยเหลือจาก EOC</p>
                         <h1 className="text-2xl font-black text-slate-900 md:text-3xl">แจ้งขอความช่วยเหลือ</h1>
+                        <p className="mt-1 text-sm text-slate-600">
+                            ไม่มีใครต้องการความช่วยเหลือ แค่อยากแจ้งน้ำท่วม ถนนขาด ไฟดับ?{" "}
+                            <Link href="/public/report-problem" className="font-bold text-[#0b4c86] underline">แจ้งจุดปัญหา</Link>
+                        </p>
                     </div>
                     <Link href="/" className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100">
                         กลับหน้าหลัก

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
-import { Noto_Sans_Thai_Looped } from "next/font/google";
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
@@ -19,13 +18,11 @@ import {
 } from "lucide-react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import SatunRiskMap from "@/components/public/home/SatunRiskMap";
+import HomeSplashScreen from "@/components/public/home/HomeSplashScreen";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 
 // หน้าแรกสำหรับประชาชน
 // จุดเด่นเดียวของหน้า: แผนที่ 7 อำเภอที่ระบายสีตามความเสี่ยงวันนี้ แตะแล้วเห็น "พื้นที่ของฉัน" ทันที
-// ตัวหนังสือเนื้อหาใช้ฟอนต์ไทยแบบมีหัว (Noto Sans Thai Looped) อ่านง่ายสำหรับผู้สูงอายุ
-
-const bodyFont = Noto_Sans_Thai_Looped({ subsets: ["thai", "latin"], weight: ["400", "500", "600"], display: "swap" });
 const MY_DISTRICT_KEY = "stn-eoc:my-district";
 
 const EVENT_META = {
@@ -327,6 +324,8 @@ export default function PublicHome() {
   const myRisk = riskMeta(myDistrict?.risk_level);
 
   return (
+    <>
+    <HomeSplashScreen />
     <PublicOpsScaffold
       title="หน้าหลัก"
       activeMenu="home"
@@ -336,7 +335,7 @@ export default function PublicHome() {
       showPageHeader={false}
       mainClassName="p-0!"
     >
-      <div className={`${bodyFont.className} bg-[#eef2f1] text-[#15232e]`}>
+      <div className="bg-[#eef2f1] text-[#15232e]">
         {/* ── Hero: พาดหัว + แผนที่ความเสี่ยงรายอำเภอ ── */}
         <section className="relative overflow-hidden bg-[#0c2f4a] text-white" aria-labelledby="home-headline">
           {/* มือถือ: พาดหัว → แผนที่ → พื้นที่ของฉัน / จอใหญ่: ซ้าย (พาดหัว + พื้นที่ของฉัน) ขวา (แผนที่) */}
@@ -559,5 +558,6 @@ export default function PublicHome() {
         </p>
       </div>
     </PublicOpsScaffold>
+    </>
   );
 }

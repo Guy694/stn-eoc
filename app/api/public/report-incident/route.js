@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
-import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
+import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getPrivateUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
+import { stripImageMetadata } from '@/lib/imageSanitize';
+import { isValidCategory } from '@/lib/incidentPublishing';
 import { publicInternalError } from '@/lib/apiResponse';
 import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage, sendTelegramPhoto } from '@/lib/telegram';
 import { enforceIpRateLimit } from "@/lib/rateLimit";
-import { HELP_CLOSED_MESSAGE, hasOpenEoc } from '@/lib/eocOpen';
+import { HELP_CLOSED_MESSAGE, PROBLEM_CLOSED_MESSAGE, getOpenEocSessions, hasOpenEoc } from '@/lib/eocOpen';
 
 const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const HELP_CATEGORY_LABELS = {
@@ -122,6 +124,7 @@ export async function POST(request) {
         const latitude = formData.get('latitude');
         const longitude = formData.get('longitude');
         const photo = formData.get('photo');
+        const problemCategory = formData.get('problemCategory') || null;
 
         // Validate required fields
         if (!firstName || !lastName || !phone || !latitude || !longitude) {
@@ -132,7 +135,7 @@ export async function POST(request) {
         }
 
         // Validate report_type
-        if (reportType !== 'help_request' && reportType !== 'traffic_report') {
+        if (!['help_request', 'traffic_report', 'problem_point'].includes(reportType)) {
             return NextResponse.json({
                 success: false,
                 message: 'ประเภทรายงานไม่ถูกต้อง'
@@ -146,6 +149,23 @@ export async function POST(request) {
                 code: 'EOC_NOT_OPEN',
                 message: HELP_CLOSED_MESSAGE
             }, { status: 403 });
+        }
+
+        // แจ้งจุดปัญหาเปิดรับเฉพาะช่วงที่มี EOC เปิด และผูกกับประเภทภัยของ EOC ที่เปิดอยู่
+        let resolvedDisasterType = disasterType;
+        if (reportType === 'problem_point') {
+            const openSessions = await getOpenEocSessions();
+            if (!openSessions.length) {
+                return NextResponse.json({ success: false, code: 'EOC_NOT_OPEN', message: PROBLEM_CLOSED_MESSAGE }, { status: 403 });
+            }
+            if (!isValidCategory(problemCategory)) {
+                return NextResponse.json({ success: false, message: 'กรุณาเลือกประเภทปัญหา' }, { status: 400 });
+            }
+            if (!description || String(description).trim().length < 3) {
+                return NextResponse.json({ success: false, message: 'กรุณาเล่าสั้น ๆ ว่าเกิดอะไรขึ้น' }, { status: 400 });
+            }
+            const types = openSessions.map((session) => session.eoc_type);
+            resolvedDisasterType = types.includes('flood') ? 'flood' : types[0];
         }
 
         if (reportType === 'help_request' && (!helpCategory || !helpReason)) {
@@ -192,19 +212,18 @@ export async function POST(request) {
                     }, { status: 400 });
                 }
 
-                // Create upload directory if not exists
-                const uploadDir = getUploadDir('incidents');
+                // เก็บนอก public (เปิดได้เฉพาะเจ้าหน้าที่) และล้างพิกัด GPS/EXIF ออกก่อนบันทึก
+                const uploadDir = getPrivateUploadDir('incidents');
                 await mkdir(uploadDir, { recursive: true });
 
-                // Generate unique filename
+                const cleanBuffer = await stripImageMetadata(validation.buffer, validation.extension);
                 const filename = createRandomFilename(validation.extension);
                 const filepath = resolveInside(uploadDir, filename);
 
-                // Write file
-                await writeFile(filepath, validation.buffer);
+                await writeFile(filepath, cleanBuffer);
                 photoPath = `/uploads/incidents/${filename}`;
                 telegramPhoto = {
-                    buffer: validation.buffer,
+                    buffer: cleanBuffer,
                     filename,
                     contentType: photo.type
                 };
@@ -228,8 +247,8 @@ export async function POST(request) {
             `INSERT INTO public_incident_reports
             (first_name, last_name, phone, village, sub_district, district, 
              description, water_level, affected_people, urgency, travel_status, report_type, disaster_type, occurred_at, 
-             latitude, longitude, photo_path, verified_by_thaiid, citizen_id, citizen_pid_hash, status, reported_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+             latitude, longitude, photo_path, verified_by_thaiid, citizen_id, citizen_pid_hash, status, reported_at${reportType === 'problem_point' ? ', problem_category' : ''})
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW()${reportType === 'problem_point' ? ', ?' : ''})`,
             [
                 firstName,
                 lastName,
@@ -243,14 +262,15 @@ export async function POST(request) {
                 urgency,
                 travelStatus,
                 reportType,
-                disasterType,
+                resolvedDisasterType,
                 occurredAt,
                 latitude,
                 longitude,
                 photoPath,
                 false,
                 null,
-                null
+                null,
+                ...(reportType === 'problem_point' ? [problemCategory] : [])
             ]
         );
 
@@ -273,7 +293,9 @@ export async function POST(request) {
 
         return NextResponse.json({
             success: true,
-            message: 'ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว เจ้าหน้าที่จะตรวจสอบและติดต่อกลับโดยเร็วที่สุด',
+            message: reportType === 'problem_point'
+                ? 'ส่งข้อมูลจุดปัญหาแล้ว เจ้าหน้าที่จะตรวจสอบก่อนแสดงบนแผนที่'
+                : 'ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว เจ้าหน้าที่จะตรวจสอบและติดต่อกลับโดยเร็วที่สุด',
             reportId: result.insertId
         });
 

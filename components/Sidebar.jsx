@@ -37,7 +37,8 @@ import {
     UserRoundPlus,
     Users,
     Waves,
-    X
+    X,
+    KeyRound
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
@@ -75,6 +76,7 @@ const ICONS = {
     trash: Trash2,
     profile: UserCog,
     settings: Settings,
+    lock: KeyRound,
     guide: BookOpen,
     dashboard: BarChart3,
     assets: HardDrive,
@@ -164,7 +166,7 @@ export default function Sidebar() {
 
     const accountItems = [
         { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
-        { name: "ตั้งค่า", path: "/settings", iconKey: "settings" },
+        { name: "ตั้งค่าบัญชี", path: "/settings", iconKey: "lock" },
         { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", iconKey: "guide" }
     ];
 

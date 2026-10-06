@@ -11,6 +11,20 @@ async function readTotalVisits() {
     return Number(rows[0]?.metric_value || 0);
 }
 
+async function recordVisit() {
+    // นับทั้งยอดสะสมและยอดรายวัน โดยไม่เก็บ IP, cookie หรือข้อมูลระบุตัวบุคคล
+    await query(
+        `INSERT INTO site_statistics (metric_key, metric_value)
+         VALUES ('total_visits', 1)
+         ON DUPLICATE KEY UPDATE metric_value = metric_value + 1`
+    );
+    await query(
+        `INSERT INTO site_visit_daily (visit_date, visit_count)
+         VALUES (CURDATE(), 1)
+         ON DUPLICATE KEY UPDATE visit_count = visit_count + 1`
+    );
+}
+
 export async function GET() {
     try {
         return NextResponse.json({ success: true, data: { total_visits: await readTotalVisits() } });
@@ -22,11 +36,7 @@ export async function GET() {
 
 export async function POST() {
     try {
-        await query(
-            `INSERT INTO site_statistics (metric_key, metric_value)
-             VALUES ('total_visits', 1)
-             ON DUPLICATE KEY UPDATE metric_value = metric_value + 1`
-        );
+        await recordVisit();
         return NextResponse.json({ success: true, data: { total_visits: await readTotalVisits() } });
     } catch (error) {
         console.error('Record site view error:', error);

@@ -27,3 +27,18 @@ describe("meetingBrief", () => {
     expect(buildAgenda({ supplies: { opened: false } })[0].title).toContain("บัญชีคลัง");
   });
 });
+
+describe("buildAgenda — รายงานจากประชาชน", () => {
+  it("เตือนคำขอความช่วยเหลือที่ค้าง และจุดปัญหาที่รอตรวจนาน", () => {
+    const items = buildAgenda({ citizen: { pendingHelp: 2, oldestHelpMinutes: 45, pendingPoints: 3, oldestPointMinutes: 90, published: 4, flaggedNormal: 1 } });
+    const titles = items.map((item) => item.title);
+    expect(items[0]).toMatchObject({ level: "critical", href: "/admin/incident-reports?status=pending" });
+    expect(items[0].detail).toBe("รอนานสุด 45 นาที");
+    expect(titles).toContain("จุดปัญหาจากประชาชนรอตรวจ 3 เรื่อง");
+    expect(titles).toContain("ประชาชนแจ้งว่าปกติแล้ว 1 จุด");
+  });
+  it("ไม่เตือนจุดปัญหาที่เพิ่งเข้ามาไม่ถึง 30 นาที", () => {
+    const items = buildAgenda({ citizen: { pendingHelp: 0, pendingPoints: 2, oldestPointMinutes: 10, flaggedNormal: 0 } });
+    expect(items).toHaveLength(0);
+  });
+});

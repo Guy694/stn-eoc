@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { getMapBaseLayer, getMapOverlayLayer, MAP_BASE_LAYERS } from '@/lib/mapBaseLayers';
 import AppIcon from './icons/AppIcon';
+import CitizenPointPopup from './public/map/CitizenPointPopup';
+import { problemStyle } from './public/problemCategoryIcons';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -408,17 +409,20 @@ export default function PublicIncidentMap({
         if (showVillageLayer && villagePolygons.length === 0) fetchPolygons('village');
     }, [fetchPolygons, showVillageLayer, villagePolygons.length]);
 
-    const formatDate = (dateString) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('th-TH', {
-            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    // จุดปัญหาจากประชาชน (ตรวจสอบแล้ว): สี่เหลี่ยมมุมมน แยกจากหมุดของเจ้าหน้าที่ให้รู้แหล่งที่มา
+    const createProblemIcon = (category) => {
+        if (typeof window === 'undefined') return null;
+        const L = require('leaflet');
+        const style = problemStyle(category);
+        const svg = renderToStaticMarkup(<style.icon className="h-4 w-4" color="white" strokeWidth={2.5} aria-hidden="true" />);
+        return L.divIcon({
+            className: 'public-problem-icon',
+            html: `<div style="width:32px;height:32px;border-radius:10px;border:2px solid white;background:${style.color};box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">${svg}</div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -16]
         });
     };
-
-    const getUrgencyLabel = (urgency) => ({ low: 'ไม่เร่งด่วน', medium: 'ปานกลาง', high: 'เร่งด่วน', critical: 'เร่งด่วนมาก' }[urgency] || urgency);
-    const getUrgencyColor = (urgency) => ({ low: 'text-blue-600', medium: 'text-yellow-600', high: 'text-orange-600', critical: 'text-red-600' }[urgency] || 'text-gray-600');
-    const getReportTypeLabel = (reportType) => ({ help_request: 'แจ้งความช่วยเหลือ', traffic_report: 'แจ้งเส้นทางการจราจร' }[reportType] || reportType);
-    const getReportTypeIcon = (reportType) => ({ help_request: 'siren', traffic_report: 'route' }[reportType] || 'mapPin');
 
     const createShelterIcon = () => {
         if (typeof window === 'undefined') return null;
@@ -504,18 +508,13 @@ export default function PublicIncidentMap({
         });
     };
 
-    // แปลง photo_path ให้มี basePath
-    const getPhotoUrl = (photoPath) => {
-        if (!photoPath) return null;
-        if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) return photoPath;
-        if (photoPath.startsWith('/stn-eoc/')) return photoPath;
-        if (photoPath.startsWith('/uploads/')) return `/stn-eoc${photoPath}`;
-        return `/stn-eoc/uploads/incidents/${photoPath}`;
-    };
-
     // สร้าง icon key จาก report_type และ urgency
     const getMarkerIcon = (incident) => {
         const reportType = incident.report_type || 'help_request';
+
+        if (reportType === 'problem_point') {
+            return createProblemIcon(incident.problem_category);
+        }
 
         // ถ้าเป็น traffic report ให้ใช้ icon ตามสถานะการสัญจร
         if (reportType === 'traffic_report') {
@@ -795,7 +794,6 @@ export default function PublicIncidentMap({
                 </details>
                 )}
 
-
                 {/* Map */}
                 <div className={`${isFullscreen ? 'h-screen' : heightClass || 'h-[460px] md:h-[560px]'} overflow-visible`}>
                     <MapContainer center={[6.6238, 100.0673]} zoom={10} zoomControl={zoomControlPosition === 'topleft'} style={{ height: '100%', width: '100%' }}>
@@ -958,37 +956,8 @@ export default function PublicIncidentMap({
                                 position={[parseFloat(incident.latitude), parseFloat(incident.longitude)]}
                                 icon={getMarkerIcon(incident)}
                             >
-                                <Popup maxWidth={200} maxHeight={200}>
-                                    <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <AppIcon icon={getReportTypeIcon(incident.report_type)} className="h-6 w-6 text-red-600" />
-                                            <h4 className="font-bold text-gray-800">{getReportTypeLabel(incident.report_type)}</h4>
-                                        </div>
-                                        <h5 className="font-semibold text-gray-700 mb-2">รายงานที่ยืนยันแล้วจากเจ้าหน้าที่</h5>
-                                        <div className="text-sm">
-                                            <p><strong>สถานที่:</strong> {incident.village || '-'}, ต.{incident.sub_district || '-'}, อ.{incident.district || '-'}</p>
-                                            <p className={getUrgencyColor(incident.urgency)}><strong>ความเร่งด่วน:</strong> {getUrgencyLabel(incident.urgency)}</p>
-                                            {incident.water_level && <p><strong>ระดับน้ำ:</strong> {incident.water_level} ซม.</p>}
-                                            {incident.affected_people > 0 && <p><strong>ผู้ได้รับผลกระทบ:</strong> {incident.affected_people} คน</p>}
-                                            {incident.travel_status && (
-                                                <p className="inline-flex items-center gap-1">
-                                                    <strong>สถานะการสัญจร:</strong>
-                                                    <AppIcon
-                                                        icon={incident.travel_status === 'passable' ? 'checkCircle' : incident.travel_status === 'difficult' ? 'alert' : 'xCircle'}
-                                                        className={`h-4 w-4 ${incident.travel_status === 'passable' ? 'text-green-600' : incident.travel_status === 'difficult' ? 'text-yellow-600' : 'text-red-600'}`}
-                                                    />
-                                                    {incident.travel_status === 'passable' ? 'สัญจรได้ปกติ' : incident.travel_status === 'difficult' ? 'สัญจรได้ยากลำบาก' : 'ไม่สามารถสัญจรได้'}
-                                                </p>
-                                            )}
-                                            <p><strong>เวลาเกิดเหตุ:</strong> {formatDate(incident.occurred_at)}</p>
-                                            <p className="pt-2 border-t"><strong>รายละเอียด:</strong><br />{incident.description}</p>
-                                            {incident.photo_path && (
-                                                <div className="pt-2 border-t">
-                                                    <Image src={getPhotoUrl(incident.photo_path)} alt="รูปภาพ" width={360} height={240} className="w-full h-auto rounded mt-2" unoptimized />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                <Popup maxWidth={260}>
+                                    <CitizenPointPopup incident={incident} />
                                 </Popup>
                             </Marker>
                         ))}

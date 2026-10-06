@@ -105,7 +105,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       section: "pending",
       title: "งานรอดำเนินการ",
       items: [
-        { name: "คำขอจากประชาชน", path: "/admin/incident-reports", iconKey: "inbox", badge: "pendingReports", description: "คำขอความช่วยเหลือและรายงานเส้นทาง" },
+        { name: "คำขอจากประชาชน", path: "/admin/incident-reports", iconKey: "inbox", badge: "pendingReports", description: "คำขอความช่วยเหลือ จุดปัญหา และรายงานเส้นทาง — ตรวจก่อนเผยแพร่" },
         { name: "คำขอสมัครเจ้าหน้าที่", path: "/admin/officers", iconKey: "userCheck", badge: "pendingRegistrations" }
       ]
     },
@@ -138,6 +138,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       collapsible: true,
       defaultExpanded: false,
       items: [
+        { name: "ตั้งค่าระบบ", path: "/admin/settings", iconKey: "settings", description: "สถานะระบบ แจ้งเตือน การเชื่อมต่อ ความปลอดภัย สำรองข้อมูล" },
         { name: "เปิด/ปิด EOC", path: "/admin/eoc-management", iconKey: "power" },
         { name: "ประวัติเหตุการณ์", path: "/admin/eoc-sessions", iconKey: "history" },
         { name: "เจ้าหน้าที่และสิทธิ์", path: "/admin/officers", iconKey: "users" },
@@ -152,7 +153,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       title: "บัญชีของฉัน",
       items: [
         { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
-        { name: "ตั้งค่า", path: "/settings", iconKey: "settings" },
+        { name: "ตั้งค่าบัญชี", path: "/settings", iconKey: "lock" },
         { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", iconKey: "guide" }
       ]
     }

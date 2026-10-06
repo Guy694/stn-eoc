@@ -37,27 +37,20 @@ export async function GET(request) {
         let rows;
         if (level === "district") {
             rows = await query(`
-                SELECT MIN(id) AS id, distname AS name, distname AS district_name,
-                       COUNT(*) AS village_count,
-                       ST_AsGeoJSON(ST_Collect(
-                           ST_SwapXY(ST_GeomFromWKB(ST_AsWKB(geom), 0))
-                       )) AS geojson
-                FROM satun_village_polygon
-                WHERE geom IS NOT NULL
-                GROUP BY distname
-                ORDER BY distname
+                SELECT id, dis_name AS name, dis_name AS district_name,
+                       dis_code AS code, ST_AsGeoJSON(geometry) AS geojson
+                FROM districts_polygon
+                WHERE pro_code = '91' AND geometry IS NOT NULL
+                ORDER BY dis_code
             `);
         } else if (level === "tambon") {
             rows = await query(`
-                SELECT MIN(id) AS id, subdistnam AS name, subdistnam AS tambon_name,
-                       distname AS district_name, COUNT(*) AS village_count,
-                       ST_AsGeoJSON(ST_Collect(
-                           ST_SwapXY(ST_GeomFromWKB(ST_AsWKB(geom), 0))
-                       )) AS geojson
-                FROM satun_village_polygon
-                WHERE geom IS NOT NULL
-                GROUP BY distname, subdistnam
-                ORDER BY distname, subdistnam
+                SELECT id, tam_name AS name, tam_name AS tambon_name,
+                       dis_name AS district_name, tum_code AS code,
+                       ST_AsGeoJSON(geometry) AS geojson
+                FROM tambons_polygon
+                WHERE pro_code = '91' AND geometry IS NOT NULL
+                ORDER BY dis_code, tam_name
             `);
         } else {
             rows = await query(`
@@ -80,7 +73,11 @@ export async function GET(request) {
             total: data.length,
             meta: {
                 source_type: "database",
-                source_name: "satun_village_polygon",
+                source_name: level === "district"
+                    ? "districts_polygon"
+                    : level === "tambon"
+                        ? "tambons_polygon"
+                        : "satun_village_polygon",
                 generated_at: new Date().toISOString()
             }
         });

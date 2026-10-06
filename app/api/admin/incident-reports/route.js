@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getPool } from "@/lib/db";
 import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
+import { removePublicPhotoCopy } from '@/lib/incidentPhotos';
+import { expireOverduePublications, hasPublishingColumns } from '@/lib/incidentPublishingDb';
 
 const pool = getPool();
 
@@ -27,6 +29,8 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status'); // pending, approved, rejected
+        const publish = searchParams.get('publish'); // published | expired | withdrawn
+        const reportType = searchParams.get('report_type');
         const disasterType = searchParams.get('disaster_type');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
@@ -34,6 +38,22 @@ export async function GET(request) {
 
         let whereConditions = [];
         let params = [];
+
+        const publishing = await hasPublishingColumns(connection);
+        if (publishing) {
+            await expireOverduePublications(connection);
+            // เรื่องที่รวมเข้ากับเรื่องหลักแล้ว แสดงอยู่ใต้เรื่องหลัก ไม่นับซ้ำในรายการ
+            whereConditions.push('merged_into_id IS NULL');
+            if (publish && ['published', 'expired', 'withdrawn'].includes(publish)) {
+                whereConditions.push('publish_status = ?');
+                params.push(publish);
+            }
+        }
+
+        if (reportType && ['help_request', 'traffic_report', 'problem_point'].includes(reportType)) {
+            whereConditions.push('report_type = ?');
+            params.push(reportType);
+        }
 
         if (status) {
             whereConditions.push('status = ?');
@@ -94,6 +114,9 @@ export async function GET(request) {
                 occurred_at,
                 photo_path,
                 status,
+                ${publishing ? `problem_category, publish_status, public_title, public_detail, public_photo_path,
+                published_at, published_by, expires_at, normal_reports, normal_reported_at,
+                (SELECT COUNT(*) FROM public_incident_reports m WHERE m.merged_into_id = public_incident_reports.id) AS merged_count,` : ''}
                 reviewed_by,
                 reviewed_at,
                 admin_notes,
@@ -121,8 +144,20 @@ export async function GET(request) {
                 status,
                 COUNT(*) as count
             FROM public_incident_reports
+            ${publishing ? 'WHERE merged_into_id IS NULL' : ''}
             GROUP BY status`
         );
+
+        let publishStats = {};
+        if (publishing) {
+            const [rows] = await connection.execute(
+                `SELECT publish_status, COUNT(*) AS count
+                 FROM public_incident_reports
+                 WHERE merged_into_id IS NULL
+                 GROUP BY publish_status`
+            );
+            publishStats = Object.fromEntries(rows.map((row) => [row.publish_status, Number(row.count)]));
+        }
 
         return NextResponse.json({
             success: true,
@@ -136,7 +171,9 @@ export async function GET(request) {
             stats: stats.reduce((acc, stat) => {
                 acc[stat.status] = stat.count;
                 return acc;
-            }, {})
+            }, {}),
+            publishStats,
+            publishingReady: publishing
         });
 
     } catch (error) {
@@ -175,6 +212,15 @@ export async function PUT(request) {
             );
         }
 
+        const publishing = await hasPublishingColumns(connection);
+        const [beforeRows] = await connection.execute(
+            `SELECT ${publishing ? 'publish_status, public_photo_path' : 'id'} FROM public_incident_reports WHERE id = ?`,
+            [reportId]
+        );
+        if (!beforeRows.length) {
+            return NextResponse.json({ success: false, message: 'ไม่พบเรื่องนี้' }, { status: 404 });
+        }
+
         // อัปเดตสถานะ
         await connection.execute(
             `UPDATE public_incident_reports 
@@ -185,6 +231,17 @@ export async function PUT(request) {
             WHERE id = ?`,
             [status, auth.user.id, adminNotes || null, reportId]
         );
+
+        // ปิดเรื่องหรือไม่ดำเนินการ → ถอดออกจากแผนที่สาธารณะทันที
+        let withdrawn = false;
+        if (publishing && ['resolved', 'rejected'].includes(status) && beforeRows[0].publish_status === 'published') {
+            await connection.execute(
+                `UPDATE public_incident_reports SET publish_status = 'withdrawn', public_photo_path = NULL WHERE id = ?`,
+                [reportId]
+            );
+            await removePublicPhotoCopy(beforeRows[0].public_photo_path);
+            withdrawn = true;
+        }
 
         // ดึงข้อมูลที่อัปเดตแล้ว
         const [updatedReport] = await connection.execute(
@@ -200,7 +257,7 @@ export async function PUT(request) {
 
         return NextResponse.json({
             success: true,
-            message: 'อัปเดตสถานะสำเร็จ',
+            message: withdrawn ? 'อัปเดตสถานะแล้ว และถอดจุดนี้ออกจากแผนที่สาธารณะ' : 'อัปเดตสถานะสำเร็จ',
             data: updatedReport[0]
         });
 

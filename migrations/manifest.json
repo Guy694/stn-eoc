@@ -35,6 +35,9 @@
     "20261006_vulnerable_event_status.sql",
     "20261006_daily_directives.sql",
     "20261006_eoc_it_tickets.sql",
-    "20261006_eoc_alert_log.sql"
+    "20261006_eoc_alert_log.sql",
+    "20261006_add_daily_site_visit_statistics.sql",
+    "20261006_add_public_usage_analytics.sql",
+    "20261007_incident_publishing.sql"
   ]
 }

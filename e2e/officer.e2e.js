@@ -10,7 +10,7 @@ test('หน้าหลังบ้านต้องล็อกอินก�
 });
 
 test('API หลังบ้านปฏิเสธเมื่อไม่ได้ล็อกอิน', async ({ request }) => {
-  for (const path of ['/api/eoc/reporting-completeness?eoc=flood', '/api/admin/deleted-records', '/api/admin/data-quality', '/api/eoc/situation-board?eoc=flood', '/api/eoc/meeting-brief?eoc=flood', '/api/eoc/alerts?eoc=flood']) {
+  for (const path of ['/api/eoc/reporting-completeness?eoc=flood', '/api/admin/deleted-records', '/api/admin/data-quality', '/api/eoc/situation-board?eoc=flood', '/api/eoc/meeting-brief?eoc=flood', '/api/eoc/alerts?eoc=flood', '/api/admin/system-status']) {
     const response = await request.get(`${BASE}${path}`);
     expect(response.status(), path).toBe(401);
   }
@@ -38,7 +38,7 @@ test.describe('เจ้าหน้าที่ล็อกอินแล้�
     await page.waitForURL((url) => !url.pathname.endsWith('/login'));
   });
 
-  for (const path of ['/eoc/flood/overview', '/eoc/disease', '/eoc/disease/records', '/eoc/flood/records', '/eoc/flood/health', '/eoc/flood/health?tab=community', '/eoc/flood/supplies', '/eoc/flood/management/directives', '/eoc/flood/it-support', '/eoc/flood/vulnerable-groups', '/eoc/disease/vulnerable-groups', '/eoc/shelters', '/eoc/shelters?tab=map', '/eoc/vulnerable-groups', '/eoc/flood/meeting-brief', '/eoc/flood/management/missions', '/admin/incident-reports', '/admin/trash']) {
+  for (const path of ['/eoc/flood/overview', '/eoc/disease', '/eoc/disease/records', '/eoc/flood/records', '/eoc/flood/health', '/eoc/flood/health?tab=community', '/eoc/flood/supplies', '/eoc/flood/management/directives', '/eoc/flood/it-support', '/eoc/flood/vulnerable-groups', '/eoc/disease/vulnerable-groups', '/eoc/shelters', '/eoc/shelters?tab=map', '/eoc/vulnerable-groups', '/eoc/flood/meeting-brief', '/eoc/flood/management/missions', '/admin/incident-reports', '/admin/trash', '/admin/settings', '/admin/settings?section=security', '/settings']) {
     test(`เปิดหน้า ${path} ได้`, async ({ page }) => {
       const errors = watchPageErrors(page);
       const response = await page.goto(`${BASE}${path}`);
