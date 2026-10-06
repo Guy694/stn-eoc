@@ -29,7 +29,8 @@ import {
   Tornado,
   Umbrella,
   Waves,
-  Wind
+  Wind,
+  Cctv
 } from "lucide-react";
 import AIChatbot from "@/components/AIChatbot";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
@@ -147,6 +148,8 @@ function Stat({ icon: Icon, label, value }) {
     </div>
   );
 }
+
+const DDPM_CCTV_URL = "https://cctv.disaster.go.th/dashboard";
 
 export default function WeatherWatchWorkspace() {
   const [data, setData] = useState(null);
@@ -456,6 +459,27 @@ export default function WeatherWatchWorkspace() {
                   <p className="mt-1 text-[13px] font-semibold text-white">{marine.advice}</p>
                 </div>
               )}
+
+              {/* กล้อง CCTV และระดับน้ำของ ปภ. — เว็บต้นทางไม่อนุญาตให้ฝัง (frame-ancestors 'self') จึงเปิดในแท็บใหม่ */}
+              <a
+                href={DDPM_CCTV_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block rounded-xl bg-gradient-to-br from-sky-500/25 to-cyan-400/10 p-3 ring-1 ring-sky-300/40 transition hover:from-sky-500/35 hover:ring-sky-300/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+              >
+                <span className="flex items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-sky-500 text-white"><Cctv className="h-5 w-5" aria-hidden="true" /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1 text-sm font-black text-white">
+                      ดูกล้องและระดับน้ำ (ปภ.) <ExternalLink className="h-3.5 w-3.5 opacity-70 transition group-hover:opacity-100" aria-hidden="true" />
+                    </span>
+                    <span className="mt-0.5 block text-[12px] leading-snug text-white/80">
+                      ภาพกล้อง CCTV และระดับน้ำเทียบตลิ่งแบบสด จากกรมป้องกันและบรรเทาสาธารณภัย รวมสถานีในสตูล เช่น คลองโทน และฝายดุสน
+                    </span>
+                    <span className="mt-1 block text-[11px] text-white/55">เปิดในแท็บใหม่ · เลือก &quot;สตูล&quot; ในตัวกรองจังหวัด</span>
+                  </span>
+                </span>
+              </a>
 
               <div>
                 <p className="mb-1.5 flex items-center gap-1.5 text-xs font-black text-white/70">
