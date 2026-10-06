@@ -33,6 +33,8 @@
     "add_announcement_view_count.sql",
     "20261005_deleted_records.sql",
     "20261006_vulnerable_event_status.sql",
-    "20261006_daily_directives.sql"
+    "20261006_daily_directives.sql",
+    "20261006_eoc_it_tickets.sql",
+    "20261006_eoc_alert_log.sql"
   ]
 }

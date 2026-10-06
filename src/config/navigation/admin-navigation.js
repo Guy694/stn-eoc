@@ -8,6 +8,7 @@ export const EVENT_MODULES = {
     label: "อุทกภัย",
     pathPrefixes: ["/eoc/flood"],
     items: (ctx) => [
+      { key: "brief", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
       { key: "overview", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
       { key: "command", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
       { key: "records", name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", iconKey: "flood" },
@@ -16,6 +17,7 @@ export const EVENT_MODULES = {
       { key: "affected", name: "ผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", iconKey: "people" },
       { key: "health", name: "โรคและสุขภาพ", path: "/eoc/flood/health", iconKey: "health", description: "ผู้ป่วยในศูนย์พักพิงและในชุมชนช่วงน้ำท่วม" },
       { key: "supplies", name: "เวชภัณฑ์และคลังยา", path: "/eoc/flood/supplies", iconKey: "inventory", description: "คงคลัง รับเข้า เบิกจ่าย รายการใกล้หมด" },
+      { key: "it-support", name: "รายงาน IT support", path: "/eoc/flood/it-support", iconKey: "server", description: "ปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการแก้ไข" },
       { key: "team", name: "ทีมปฏิบัติการ", path: "/eoc/flood/operations-team", iconKey: "team" }
     ]
   },
@@ -29,7 +31,8 @@ export const EVENT_MODULES = {
       { key: "facility-reports", name: "รายงานจากหน่วยบริการ", path: "/eoc/disease/records?tab=facility", iconKey: "health" },
       { key: "daily", name: "สรุปรายวัน", path: "/eoc/disease/daily-risk", iconKey: "daily" },
       { key: "map", name: "แผนที่", path: "/eoc/disease/map", iconKey: "map" },
-      { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-groups", iconKey: "vulnerable", description: "ได้รับผลกระทบ ดูแลแล้ว เคลื่อนย้ายแล้ว" }
+      { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-groups", iconKey: "vulnerable", description: "ได้รับผลกระทบ ดูแลแล้ว เคลื่อนย้ายแล้ว" },
+      { key: "it-support", name: "รายงาน IT support", path: "/eoc/disease/it-support", iconKey: "server", description: "ปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการแก้ไข" }
     ]
   },
   "festival-accidents": {

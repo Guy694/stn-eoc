@@ -233,7 +233,7 @@ export default function AccidentRecordsPage() {
                             บันทึกอุบัติเหตุ
                         </h1>
                         <p className="text-gray-600">
-                            เหตุการณ์ EOC #{activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}
+                            เหตุการณ์ครั้งที่ {activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}
                         </p>
                     </div>
                     <button

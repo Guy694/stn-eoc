@@ -168,7 +168,7 @@ export default function FloodMapPage() {
                         {user && (
                             <button
                                 onClick={() => router.push('/eoc/flood/records')}
-                                className="self-start rounded-lg bg-green-600 px-5 py-3 font-medium text-white transition-colors hover:bg-green-700"
+                                className="self-start rounded-lg bg-[#0b4c86] px-5 py-3 font-medium text-white transition-colors hover:bg-[#083865]"
                             >
                                 <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก/แก้ไขพื้นที่อุทกภัยน้ำท่วม
                             </button>
@@ -184,7 +184,7 @@ export default function FloodMapPage() {
                             <span className="text-2xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             ทีมงาน EOC ที่ปฏิบัติงาน
                             <span className="text-sm font-normal text-[#0b4c86] ml-2">
-                                (Session #{activeSessionData.session_number})
+                                (ครั้งที่ {activeSessionData.session_number})
                             </span>
                         </h2>
 
@@ -286,7 +286,7 @@ export default function FloodMapPage() {
                         <button
                             onClick={() => setMode("realtime")}
                             className={`px-6 py-3 rounded-lg font-medium transition-all ${mode === "realtime"
-                                ? "bg-green-600 text-white shadow-lg"
+                                ? "bg-[#0b4c86] text-white shadow-lg"
                                 : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                                 }`}
                         >
@@ -295,7 +295,7 @@ export default function FloodMapPage() {
                         <button
                             onClick={() => setMode("historical")}
                             className={`px-6 py-3 rounded-lg font-medium transition-all ${mode === "historical"
-                                ? "bg-green-600 text-white shadow-lg"
+                                ? "bg-[#0b4c86] text-white shadow-lg"
                                 : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                                 }`}
                         >
@@ -361,7 +361,7 @@ export default function FloodMapPage() {
                                     <span className="text-2xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     ทีมงาน EOC ในช่วงเวลานี้
                                     <span className="text-sm font-normal text-amber-700 ml-2">
-                                        (Session #{selectedSession.session_number})
+                                        (ครั้งที่ {selectedSession.session_number})
                                     </span>
                                 </h2>
 

@@ -642,7 +642,10 @@ export async function GET(request) {
             + asNumber(vulnerableSummary.total_bedridden)
             + asNumber(vulnerableSummary.total_chronic_illness);
         const vulnerablePending = Math.max(totalVulnerable - asNumber(vulnerableSummary.total_cared), 0);
-        const totalDiseasePatients = diseaseByType.reduce((sum, item) => sum + asNumber(item.cumulative_total), 0);
+        const communityDiseasePatients = diseaseByType.reduce((sum, item) => sum + asNumber(item.cumulative_total), 0);
+        // ผู้ป่วยสะสม = ในชุมชน + ในศูนย์พักพิง (ให้ตรงกับหน้าโรคและสุขภาพ)
+        const shelterDiseasePatients = asNumber(shelterDiseases.summary?.total_new_cases);
+        const totalDiseasePatients = communityDiseasePatients + shelterDiseasePatients;
         const meetingFocus = [];
         if (asNumber(floodMap.stats.severe_count) > 0) {
             meetingFocus.push(`ติดตามพื้นที่อุทกภัยน้ำท่วมระดับสูง/สูงมาก ${asNumber(floodMap.stats.severe_count).toLocaleString('th-TH')} จุด`);
@@ -682,6 +685,8 @@ export async function GET(request) {
                 active_shelters: asNumber(shelterSessionStats.active_session_shelters) || asNumber(shelters[0]?.active_shelters),
                 shelter_occupancy: asNumber(shelterSessionStats.session_occupancy) || asNumber(shelters[0]?.current_occupancy_total),
                 disease_patients: totalDiseasePatients,
+                disease_patients_community: communityDiseasePatients,
+                disease_patients_shelter: shelterDiseasePatients,
                 shelter_new_cases: asNumber(shelterDiseases.summary.total_new_cases),
                 vulnerable_people: totalVulnerable,
                 medical_item_types: asNumber(medicalInventory.summary.item_types),

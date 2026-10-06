@@ -124,7 +124,7 @@ export default function CommanderDashboard() {
                         >
                             {activeSessions.map(s => (
                                 <option key={s.id} value={s.id}>
-                                    {s.eoc_type_name} - Session #{s.session_number} ({new Date(s.open_time).toLocaleDateString('th-TH')})
+                                    {s.eoc_type_name} - ครั้งที่ {s.session_number} ({new Date(s.open_time).toLocaleDateString('th-TH')})
                                 </option>
                             ))}
                         </select>
@@ -136,7 +136,7 @@ export default function CommanderDashboard() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold mb-2">{session.eoc_type_name}</h2>
-                            <p className="opacity-90">Session #{session.session_number} | เปิดโดย: {session.opened_by_name}</p>
+                            <p className="opacity-90">ครั้งที่ {session.session_number} | เปิดโดย: {session.opened_by_name}</p>
                             <p className="text-sm opacity-75">เปิดเมื่อ: {new Date(session.open_time).toLocaleString('th-TH')}</p>
                         </div>
                         <div className="text-5xl"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>

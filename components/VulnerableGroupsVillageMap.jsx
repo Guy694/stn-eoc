@@ -236,7 +236,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                         แผนที่ข้อมูลกลุ่มเปราะบาง (ระดับหมู่บ้าน)
                     </h2>
                     <p className="text-gray-600">
-                        Session #{session.session_number} • แสดงจำนวนกลุ่มเปราะบางจาก{sourceLabel}
+                        ครั้งที่ {session.session_number} • แสดงจำนวนกลุ่มเปราะบางจาก{sourceLabel}
                     </p>
                 </div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">

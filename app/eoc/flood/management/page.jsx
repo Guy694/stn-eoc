@@ -1,5 +1,6 @@
-import FloodEocManagementDashboard from "@/components/eoc/FloodEocManagementDashboard";
+import { redirect } from "next/navigation";
 
+// หน้าแรกของเมนู "ภารกิจและข้อสั่งการ" คือสถานการณ์/ข้อสั่งการรายวัน (ภาพรวมอยู่ที่หน้าภาพรวมสถานการณ์)
 export default function FloodEocManagementPage() {
-  return <FloodEocManagementDashboard view="overview" />;
+  redirect("/eoc/flood/management/directives");
 }

@@ -143,7 +143,7 @@ export default function DiseaseManagementPage() {
                                 </span>
                                 {activeSession && (
                                     <>
-                                        <span className="rounded-full bg-white/15 px-3 py-1">Session #{activeSession.session_number || activeSession.id}</span>
+                                        <span className="rounded-full bg-white/15 px-3 py-1">ครั้งที่ {activeSession.session_number || activeSession.id}</span>
                                         <span className="rounded-full bg-white/15 px-3 py-1">เปิดเมื่อ {formatDateTime(activeSession.opened_at)}</span>
                                     </>
                                 )}

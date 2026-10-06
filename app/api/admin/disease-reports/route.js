@@ -3,6 +3,7 @@ import { validateSessionDates } from '@/lib/sessionDateRange';
 import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { normalizeDiseaseName } from '@/lib/diseaseNames';
 
 async function getVillageLocation(pool, villagePolygonId) {
     if (!villagePolygonId) return null;
@@ -226,6 +227,8 @@ export async function POST(request) {
 
         const pool = await getConnection();
         const body = await request.json();
+        // ชื่อโรคมาตรฐานเดียวกันทุกช่องทาง (เช่น "เลปโตสไปโรซิส" → "โรคฉี่หนู (เลปโตสไปโรซิส)")
+        if (body && typeof body === 'object' && body.disease_name) body.disease_name = normalizeDiseaseName(body.disease_name);
         const {
             session_id,
             report_date,
@@ -361,6 +364,8 @@ export async function PUT(request) {
         }
 
         const body = await request.json();
+        // ชื่อโรคมาตรฐานเดียวกันทุกช่องทาง (เช่น "เลปโตสไปโรซิส" → "โรคฉี่หนู (เลปโตสไปโรซิส)")
+        if (body && typeof body === 'object' && body.disease_name) body.disease_name = normalizeDiseaseName(body.disease_name);
         const {
             session_id,
             report_date,

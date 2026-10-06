@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { triggerEventAlerts } from '@/lib/eocAlertRunner';
+import { normalizeDiseaseName } from '@/lib/diseaseNames';
 
 // GET - ดึงรายงานโรคในศูนย์พักพิง
 export async function GET(request) {
@@ -104,6 +106,8 @@ export async function POST(request) {
         if (!auth.success) return auth.response;
 
         const body = await request.json();
+        // ชื่อโรคมาตรฐานเดียวกันทุกช่องทาง (เช่น "เลปโตสไปโรซิส" → "โรคฉี่หนู (เลปโตสไปโรซิส)")
+        if (body && typeof body === 'object' && body.disease_type) body.disease_type = normalizeDiseaseName(body.disease_type);
         const {
             shelter_id,
             session_id,
@@ -150,6 +154,7 @@ export async function POST(request) {
                 ]
             );
 
+            triggerEventAlerts(session_id);
             return NextResponse.json({
                 success: true,
                 message: 'อัพเดทรายงานสำเร็จ',
@@ -170,6 +175,7 @@ export async function POST(request) {
             ]
         );
 
+        triggerEventAlerts(session_id);
         return NextResponse.json({
             success: true,
             message: 'บันทึกรายงานสำเร็จ',

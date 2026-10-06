@@ -113,7 +113,7 @@ export default function SessionStats({ session, year }) {
         <div className="bg-linear-to-r from-teal-50 to-blue-50 shadow-md rounded-lg p-6 mb-6 border border-[#c9dcee]">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <AppIcon icon="barChart" className="h-5 w-5 text-[#0b4c86]" />
-                สถิติสรุป - เหตุการณ์ EOC #{session.session_number} (พ.ศ. {year + 543})
+                สถิติสรุป - เหตุการณ์ครั้งที่ {session.session_number} (พ.ศ. {year + 543})
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">

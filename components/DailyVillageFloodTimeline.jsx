@@ -381,7 +381,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                     <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
                 </h2>
                 <p className="text-gray-600">
-                    Session #{session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
+                    ครั้งที่ {session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
                     {session.closed_at && ` ถึง ${new Date(session.closed_at).toLocaleDateString('th-TH')}`}
                     {' '}({dates.length} วัน)
                 </p>

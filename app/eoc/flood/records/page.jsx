@@ -342,7 +342,7 @@ export default function FloodRecordsPage() {
                         } else {
                             failedCount++;
                             if (failedMessages.length < 3) {
-                                failedMessages.push(`${village.villname}: ${data.error || 'บันทึกไม่สำเร็จ'}`);
+                                failedMessages.push(`${village.villname}: ${data.error || data.message || 'บันทึกไม่สำเร็จ'}`);
                             }
                         }
                     } catch (error) {
@@ -457,7 +457,7 @@ export default function FloodRecordsPage() {
                     setEditingRecord(null);
                     resetForm();
                 } else {
-                    showError('เกิดข้อผิดพลาด: ' + data.error);
+                    showError('เกิดข้อผิดพลาด: ' + (data.error || data.message || 'ไม่สามารถบันทึกข้อมูลได้'));
                 }
             } catch (error) {
                 console.error('Error saving record:', error);
@@ -499,7 +499,7 @@ export default function FloodRecordsPage() {
                 fetchRecords();
                 showSuccess('ลบข้อมูลสำเร็จ');
             } else {
-                showError('เกิดข้อผิดพลาด: ' + data.error);
+                showError('เกิดข้อผิดพลาด: ' + (data.error || data.message || 'ไม่สามารถบันทึกข้อมูลได้'));
             }
         } catch (error) {
             console.error('Error deleting record:', error);
@@ -553,7 +553,7 @@ export default function FloodRecordsPage() {
                 setShowCopyModal(false);
                 setCopyConfig({ sourceDate: '', overwrite: false });
             } else {
-                showError('เกิดข้อผิดพลาด: ' + result.error);
+                showError('เกิดข้อผิดพลาด: ' + (result.error || result.message || 'ไม่สามารถคัดลอกข้อมูลได้'));
             }
         } catch (error) {
             console.error('Error copying data:', error);
@@ -689,7 +689,7 @@ export default function FloodRecordsPage() {
                             บันทึกพื้นที่อุทกภัยน้ำท่วม
                         </h1>
                         <p className="text-gray-600">
-                            เหตุการณ์ EOC #{activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
+                            เหตุการณ์ครั้งที่ {activeSession.session_number} - {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
                             {activeSession.closed_at && ` ถึง ${new Date(activeSession.closed_at).toLocaleDateString('th-TH')}`}
                             <span className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${activeSession.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
                                 {selectedSessionStatusLabel}
@@ -749,7 +749,7 @@ export default function FloodRecordsPage() {
                                 {sessions.length === 0 && <option value="">ไม่พบเหตุการณ์ในปีนี้</option>}
                                 {sessions.map((session) => (
                                     <option key={session.id} value={session.id}>
-                                        Session #{session.session_number} - {new Date(session.opened_at).toLocaleDateString('th-TH')}
+                                        ครั้งที่ {session.session_number} - {new Date(session.opened_at).toLocaleDateString('th-TH')}
                                         {session.closed_at ? ` ถึง ${new Date(session.closed_at).toLocaleDateString('th-TH')}` : ''}
                                         {session.status === 'active' ? ' (กำลังเปิดใช้งาน)' : ' (ปิดแล้ว)'}
                                     </option>
@@ -1285,7 +1285,7 @@ export default function FloodRecordsPage() {
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                            className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
                                         >
                                             {editingRecord ? 'บันทึกการแก้ไข' : 'บันทึก'}
                                         </button>

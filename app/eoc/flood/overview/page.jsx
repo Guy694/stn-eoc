@@ -4,27 +4,16 @@ import { useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import AppIcon from "@/components/icons/AppIcon";
 import ReportingCompleteness from '@/components/eoc/ReportingCompleteness';
-import OverviewTeams from '@/components/eoc/flood-overview/OverviewTeams';
-import MeetingSummary from '@/components/eoc/flood-overview/MeetingSummary';
-import ImpactSection from '@/components/eoc/flood-overview/ImpactSection';
+import SituationBoard from '@/components/eoc/flood-overview/SituationBoard';
 import FloodMapSection from '@/components/eoc/flood-overview/FloodMapSection';
-import ResourcesSection from '@/components/eoc/flood-overview/ResourcesSection';
-import HealthSection from '@/components/eoc/flood-overview/HealthSection';
-import VulnerableSection from '@/components/eoc/flood-overview/VulnerableSection';
-import SuppliesSection from '@/components/eoc/flood-overview/SuppliesSection';
 import { getOperationSessionLockByType } from '@/lib/eocSessionLock';
+import { getEocTypeLabel } from '@/lib/eocDisplay';
 
 const SECTION_LINKS = [
-    { id: 'sec-completeness', label: 'ความครบรายงาน' },
-    { id: 'sec-teams', label: 'กลุ่มภารกิจ' },
-    { id: 'sec-meeting', label: 'สรุปประชุม' },
-    { id: 'sec-casualties', label: 'ผู้ประสบภัย' },
-    { id: 'sec-areas', label: 'พื้นที่ผลกระทบ' },
-    { id: 'sec-map', label: 'แผนที่' },
-    { id: 'sec-shelters', label: 'ศูนย์พักพิง' },
-    { id: 'sec-health', label: 'สุขภาพและโรค' },
-    { id: 'sec-vulnerable', label: 'กลุ่มเปราะบาง' },
-    { id: 'sec-supplies', label: 'เวชภัณฑ์และคลังยา' }
+    { id: 'sec-situation', label: 'สรุปสถานการณ์' },
+    { id: 'sec-districts', label: 'รายอำเภอ' },
+    { id: 'sec-map', label: 'แผนที่และรายวัน' },
+    { id: 'sec-completeness', label: 'ความครบรายงาน' }
 ];
 
 export default function EOCOverview() {
@@ -34,8 +23,6 @@ export default function EOCOverview() {
     const [selectedSession, setSelectedSession] = useState(null);
     const [viewMode, setViewMode] = useState('cumulative');
     const [selectedDate, setSelectedDate] = useState('');
-    const [missionTeams, setMissionTeams] = useState([]);
-    const [loadingTeams, setLoadingTeams] = useState(false);
 
     async function fetchSessions() {
         try {
@@ -96,33 +83,8 @@ export default function EOCOverview() {
         }
     }, [selectedDate, selectedSession, viewMode]);
 
-    useEffect(() => {
-        if (!selectedSession) {
-            return;
-        }
 
-        const loadTeams = async () => {
-            setLoadingTeams(true);
-            try {
-                const response = await fetch(`/stn-eoc/api/eoc/sessions/${selectedSession}/teams`);
-                const result = await response.json();
-                if (result.success) {
-                    setMissionTeams(Array.isArray(result.teams) ? result.teams : []);
-                } else {
-                    setMissionTeams([]);
-                }
-            } catch (error) {
-                console.error('Error loading mission teams:', error);
-                setMissionTeams([]);
-            } finally {
-                setLoadingTeams(false);
-            }
-        };
-
-        loadTeams();
-    }, [selectedSession]);
-
-    if (loading) {
+    if (loading && !dashboardData) {
         return (
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
@@ -156,20 +118,7 @@ export default function EOCOverview() {
 
     if (!dashboardData) return null;
 
-    const {
-        session,
-        casualties,
-        affected_areas,
-        resources,
-        teams,
-        shelters,
-        diseases,
-        vulnerable_groups,
-        flood_map,
-        shelter_diseases,
-        medical_inventory,
-        meeting_summary
-    } = dashboardData;
+    const { session, affected_areas, shelters, diseases, flood_map } = dashboardData;
     const isDailyMode = dashboardData.filters?.mode === 'daily';
     const formatNumber = (value) => Number(value || 0).toLocaleString('th-TH');
     const formatDateKey = (value) => {
@@ -179,9 +128,6 @@ export default function EOCOverview() {
     const effectiveDateLabel = dashboardData.filters?.effective_date
         ? new Date(`${dashboardData.filters.effective_date}T00:00:00`).toLocaleDateString('th-TH')
         : 'วันที่เลือก';
-    const diseaseLatestDateLabel = diseases?.latest_report_date
-        ? new Date(`${String(diseases.latest_report_date).split('T')[0]}T00:00:00`).toLocaleDateString('th-TH')
-        : 'วันล่าสุด';
     const impactScopeLabel = isDailyMode ? `ประจำวันที่ ${effectiveDateLabel}` : 'สะสมทั้งเหตุการณ์';
     const mapStartDate = flood_map?.start_date || (session.open_time ? String(session.open_time).slice(0, 10) : '');
     const mapEndDate = flood_map?.end_date || (session.close_time ? String(session.close_time).slice(0, 10) : mapStartDate);
@@ -189,59 +135,14 @@ export default function EOCOverview() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-7xl">
-                {/* หัวหน้า: สถานะเหตุการณ์ + ตัวควบคุมมุมมอง */}
-                <header className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b4c86] to-[#11466e] text-white shadow-sm">
-                    <div className="flex flex-wrap items-start justify-between gap-4 p-5 sm:p-6">
-                        <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${session.status === 'active' ? 'bg-emerald-400 text-emerald-950' : 'bg-white/20 text-white'}`}>
-                                    <span className={`h-2 w-2 rounded-full ${session.status === 'active' ? 'bg-emerald-900' : 'bg-slate-300'}`} aria-hidden="true" />
-                                    {session.status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว'}
-                                </span>
-                                <span className="text-sm text-blue-100">ครั้งที่ {session.session_number}</span>
-                            </div>
-                            <h1 className="mt-2 text-2xl font-black sm:text-3xl">ภาพรวมสถานการณ์{session.eoc_type_name ? ` ${session.eoc_type_name}` : ''}</h1>
-                            <p className="mt-1 text-sm text-blue-100">
-                                เปิดโดย {session.opened_by_name || '-'} เมื่อ {new Date(session.open_time).toLocaleString('th-TH')}
-                                {session.close_time ? ` · ปิดเมื่อ ${new Date(session.close_time).toLocaleString('th-TH')}` : ''}
-                            </p>
-                        </div>
-                        <div className="w-full sm:w-auto">
-                            <p className="mb-1.5 text-xs font-semibold text-blue-100">มุมมองข้อมูล</p>
-                            <div className="inline-flex w-full overflow-hidden rounded-lg bg-white/10 p-1 sm:w-auto" role="group" aria-label="มุมมองข้อมูล">
-                                <button type="button" onClick={() => setViewMode('cumulative')} aria-pressed={viewMode === 'cumulative'}
-                                    className={`flex-1 rounded-md px-4 py-1.5 text-sm font-bold transition-colors ${viewMode === 'cumulative' ? 'bg-white text-[#0b4c86]' : 'text-white hover:bg-white/10'}`}>
-                                    สะสมทั้งเหตุการณ์
-                                </button>
-                                <button type="button" onClick={() => setViewMode('daily')} aria-pressed={viewMode === 'daily'}
-                                    className={`flex-1 rounded-md px-4 py-1.5 text-sm font-bold transition-colors ${viewMode === 'daily' ? 'bg-white text-[#0b4c86]' : 'text-white hover:bg-white/10'}`}>
-                                    รายวัน
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    {viewMode === 'daily' && (
-                        <div className="flex flex-wrap items-center gap-3 border-t border-white/15 bg-black/10 px-5 py-3 sm:px-6">
-                            <label htmlFor="overview-date" className="text-sm font-semibold">วันที่รายงาน</label>
-                            <input
-                                id="overview-date"
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                list="overview-report-dates"
-                                className="rounded-lg border border-white/30 bg-white px-3 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-white/60"
-                            />
-                            <datalist id="overview-report-dates">
-                                {(dashboardData.filters?.available_dates || []).map(date => (
-                                    <option key={date} value={date} />
-                                ))}
-                            </datalist>
-                            <button type="button" onClick={() => setSelectedDate(dashboardData.filters?.available_dates?.[0] || '')}
-                                className="rounded-lg bg-white/15 px-3 py-1.5 text-sm font-bold hover:bg-white/25">
-                                ดูวันล่าสุดที่มีข้อมูล
-                            </button>
-                        </div>
-                    )}
+                {/* หัวเรื่อง — สถานะเหตุการณ์แสดงอยู่แล้วในแถบเหตุการณ์ด้านบน จึงไม่ซ้ำ */}
+                <header className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">ภาพรวมสถานการณ์ {getEocTypeLabel(session.eoc_type || 'flood')} ครั้งที่ {session.session_number}</h1>
+                    <p className="text-sm text-slate-600">
+                        {session.status === 'active' ? 'เปิดอยู่ · ' : 'ปิดแล้ว · '}
+                        {session.opened_by_name ? `เปิดโดย ${session.opened_by_name} ` : 'เปิด'}เมื่อ {new Date(session.open_time).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}
+                        {session.close_time ? ` · ปิดเมื่อ ${new Date(session.close_time).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}` : ''}
+                    </p>
                 </header>
 
                 {/* ทางลัดไปยังหัวข้อในหน้า */}
@@ -253,37 +154,61 @@ export default function EOCOverview() {
                     ))}
                 </nav>
 
-                <ReportingCompleteness id="sec-completeness" eocType="flood" sessionId={session.id} />
+                <SituationBoard sessionId={session.id} eocType="flood" />
 
-                <OverviewTeams session={session} teams={teams} missionTeams={missionTeams} loadingTeams={loadingTeams} />
-
-                <MeetingSummary meeting_summary={meeting_summary} isDailyMode={isDailyMode} formatNumber={formatNumber} formatDateKey={formatDateKey} effectiveDateLabel={effectiveDateLabel} />
-
-                <ImpactSection casualties={casualties} affected_areas={affected_areas} impactScopeLabel={impactScopeLabel} />
+                {/* แผนที่และบันทึกรายวัน — ส่วนที่แผงสรุปด้านบนไม่มี (ดูย้อนหลังเป็นรายวันได้)
+                    ตัวเลขผู้ประสบภัย/ศูนย์พักพิง/โรค/กลุ่มเปราะบาง/เวชภัณฑ์/IT อยู่ในแผงสรุปด้านบน และหน้าของแต่ละเมนูแล้ว จึงไม่แสดงซ้ำที่นี่ */}
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-t border-[#c9dcee] pt-6">
+                    <div>
+                        <h2 className="text-xl font-black text-slate-900">แผนที่และบันทึกรายวัน</h2>
+                        <p className="text-sm text-slate-600">{impactScopeLabel} · เลือก &ldquo;รายวัน&rdquo; เพื่อดูย้อนหลังว่าแต่ละวันเกิดอะไรขึ้นบ้าง{loading ? ' · กำลังโหลด…' : ''}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="inline-flex overflow-hidden rounded-lg border border-[#c9dcee] bg-white p-1" role="group" aria-label="ช่วงข้อมูลของรายละเอียด">
+                            <button type="button" onClick={() => setViewMode('cumulative')} aria-pressed={viewMode === 'cumulative'}
+                                className={`rounded-md px-3 py-1.5 text-sm font-bold ${viewMode === 'cumulative' ? 'bg-[#0b4c86] text-white' : 'text-slate-700 hover:bg-[#edf5fc]'}`}>
+                                สะสมทั้งเหตุการณ์
+                            </button>
+                            <button type="button" onClick={() => setViewMode('daily')} aria-pressed={viewMode === 'daily'}
+                                className={`rounded-md px-3 py-1.5 text-sm font-bold ${viewMode === 'daily' ? 'bg-[#0b4c86] text-white' : 'text-slate-700 hover:bg-[#edf5fc]'}`}>
+                                รายวัน
+                            </button>
+                        </div>
+                        {viewMode === 'daily' && (
+                            <>
+                                <label htmlFor="overview-date" className="sr-only">วันที่รายงาน</label>
+                                <input id="overview-date" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} list="overview-report-dates"
+                                    className="rounded-lg border border-[#c9dcee] bg-white px-3 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]" />
+                                <datalist id="overview-report-dates">
+                                    {(dashboardData.filters?.available_dates || []).map(date => <option key={date} value={date} />)}
+                                </datalist>
+                                <button type="button" onClick={() => setSelectedDate(dashboardData.filters?.available_dates?.[0] || '')}
+                                    className="rounded-lg border border-[#c9dcee] bg-white px-3 py-1.5 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]">
+                                    วันล่าสุดที่มีข้อมูล
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
 
                 <FloodMapSection session={session} affected_areas={affected_areas} shelters={shelters} diseases={diseases} flood_map={flood_map} isDailyMode={isDailyMode} formatNumber={formatNumber} formatDateKey={formatDateKey} effectiveDateLabel={effectiveDateLabel} mapStartDate={mapStartDate} mapEndDate={mapEndDate} dashboardData={dashboardData} />
 
-                <ResourcesSection resources={resources} teams={teams} shelters={shelters} formatNumber={formatNumber} />
-
-                <HealthSection diseases={diseases} shelter_diseases={shelter_diseases} isDailyMode={isDailyMode} formatNumber={formatNumber} effectiveDateLabel={effectiveDateLabel} diseaseLatestDateLabel={diseaseLatestDateLabel} impactScopeLabel={impactScopeLabel} />
-
-                <VulnerableSection vulnerable_groups={vulnerable_groups} formatNumber={formatNumber} />
-
-                <SuppliesSection medical_inventory={medical_inventory} formatNumber={formatNumber} />
-
-                {/* Info Box */}
-                <div className="bg-[#edf5fc] border border-[#0b4c86] p-4 rounded-lg">
-                    <div className="flex items-start">
-                        <div className="text-2xl mr-3"><AppIcon icon="info" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <div>
-                            <h4 className="font-semibold text-[#083865] mb-1">หมายเหตุ</h4>
-                            <p className="text-sm text-[#0b4c86]">
-                                หน้านี้แสดงข้อมูลภาพรวมสถานการณ์ EOC แบบเรียลไทม์
-                                ข้อมูลจะอัปเดตอัตโนมัติตามการบันทึกของทีมปฏิบัติการ
-                            </p>
-                        </div>
+                {/* ความครบของรายงาน: ตัวเลขอยู่ในแผงสรุปและตารางรายอำเภอแล้ว — เก็บไว้แบบพับเพื่อใช้ "ส่งเตือนทาง Telegram" และดูรายชื่อตำบลที่ยังไม่ส่ง
+                    (กลุ่มภารกิจย้ายไปดูที่เมนูทีมปฏิบัติการ ไม่แสดงที่หน้านี้แล้ว) */}
+                <details id="sec-completeness" className="group mb-6 scroll-mt-20 rounded-xl border border-[#c9dcee] bg-white shadow-sm">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 [&::-webkit-details-marker]:hidden">
+                        <span>
+                            <span className="block font-black text-slate-900">ตำบลที่ยังไม่ส่งรายงาน และส่งเตือนทาง Telegram</span>
+                            <span className="block text-sm text-slate-600">ดูรายชื่อตำบลรายวัน แล้วส่งรายชื่อเตือนเข้ากลุ่มของศูนย์ในคลิกเดียว</span>
+                        </span>
+                        <span className="shrink-0 text-sm font-bold text-[#0b4c86] group-open:hidden">แสดง</span>
+                        <span className="hidden shrink-0 text-sm font-bold text-[#0b4c86] group-open:inline">ซ่อน</span>
+                    </summary>
+                    <div className="border-t border-slate-100 p-3">
+                        <ReportingCompleteness eocType="flood" sessionId={session.id} />
                     </div>
-                </div>
+                </details>
+
             </div>
         </EOCLayout>
     );

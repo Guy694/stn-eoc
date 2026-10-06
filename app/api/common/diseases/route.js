@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { normalizeDiseaseName, sameDisease } from '@/lib/diseaseNames';
 
 // GET - ดึงรายการโรคทั้งหมด
 export async function GET(request) {
@@ -55,33 +56,37 @@ export async function POST(request) {
         }
 
         const pool = await getConnection();
+        const cleanName = normalizeDiseaseName(name);
 
-        // ตรวจสอบว่ามีโรคนี้อยู่แล้วหรือไม่
-        const [existing] = await pool.query(
-            'SELECT id, name FROM common_diseases WHERE name = ? OR name LIKE ?',
-            [name.trim(), `%${name.trim()}%`]
-        );
+        // ตรวจว่ามีโรคเดียวกันอยู่แล้วหรือไม่ (รวมชื่อเรียกอื่นของโรคเดียวกัน เช่น โรคฉี่หนู = เลปโตสไปโรซิส)
+        // เดิมใช้ LIKE '%ชื่อ%' ซึ่งบล็อกโรคที่ต่างกันจริง เช่น เพิ่ม "ไข้หวัด" ไม่ได้เพราะมี "ไข้หวัดใหญ่"
+        const [rows] = await pool.query('SELECT id, name, is_active FROM common_diseases');
+        const existing = rows.find((row) => row.name === cleanName) || rows.find((row) => sameDisease(row.name, cleanName));
 
-        if (existing.length > 0) {
+        if (existing) {
+            if (!existing.is_active) {
+                await pool.query('UPDATE common_diseases SET is_active = 1 WHERE id = ?', [existing.id]);
+            }
             return NextResponse.json({
                 success: false,
-                message: `มีโรค "${existing[0].name}" ในระบบแล้ว`,
-                existing_id: existing[0].id,
-                existing_name: existing[0].name
+                message: `มีโรค "${cleanName}" ในระบบแล้ว`,
+                existing_id: existing.id,
+                // ส่งชื่อมาตรฐานกลับไปเสมอ (แถวเดิมอาจเป็นชื่อเรียกอื่นที่ยังไม่ได้ปรับ)
+                existing_name: cleanName
             }, { status: 409 });
         }
 
-        // เพิ่มโรคใหม่
+        // เพิ่มโรคใหม่ (ชื่อมาตรฐาน)
         const [result] = await pool.query(
             'INSERT INTO common_diseases (name, description) VALUES (?, ?)',
-            [name.trim(), description || null]
+            [cleanName, description || null]
         );
 
         return NextResponse.json({
             success: true,
             message: 'เพิ่มโรคใหม่สำเร็จ',
             id: result.insertId,
-            name: name.trim()
+            name: cleanName
         });
     } catch (error) {
         console.error('Add disease error:', error);

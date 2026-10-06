@@ -1,5 +1,6 @@
-import FloodEocManagementDashboard from "@/components/eoc/FloodEocManagementDashboard";
+import { redirect } from "next/navigation";
 
-export default function DataCompletenessMatrixPage() {
-  return <FloodEocManagementDashboard view="completeness" />;
+// ความครบของรายงานอยู่ในหน้าภาพรวมสถานการณ์
+export default function Page() {
+  redirect("/eoc/flood/overview#sec-completeness");
 }

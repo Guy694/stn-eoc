@@ -549,7 +549,7 @@ export default function FloodOperationsTeamPage() {
                             <button
                                 type="button"
                                 onClick={openAddTeam}
-                                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
+                                className="inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]"
                             >
                                 <Plus className="h-4 w-4" />
                                 เพิ่มทีม
@@ -787,7 +787,7 @@ function MissingCommanderNode({ canManage, onAdd }) {
             </div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0b4c86]">ผู้บัญชาการเหตุการณ์</p>
             <h2 className="mt-2 text-xl font-black text-slate-900">ยังไม่กำหนดผู้บัญชาการเหตุการณ์</h2>
-            <p className="mt-1 text-sm text-slate-500">head ของผังต้องเลือกจากเจ้าหน้าที่ ไม่ใช่ admin/ผู้เปิดเหตุการณ์</p>
+            <p className="mt-1 text-sm text-slate-500">หัวหน้าของผังต้องเลือกจากเจ้าหน้าที่ ไม่ใช่ผู้ดูแลระบบหรือผู้เปิดเหตุการณ์</p>
             {canManage && (
                 <button
                     type="button"
@@ -1083,7 +1083,7 @@ function TeamModal({
                     <button
                         type="submit"
                         disabled={saving || (!editingTeam && teamOptions.length === 0)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:bg-emerald-300"
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865] disabled:bg-[#0b4c86]/40"
                     >
                         <Save className="h-4 w-4" />
                         {saving ? "กำลังบันทึก..." : "บันทึก"}

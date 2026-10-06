@@ -20,28 +20,8 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                     วันที่มีข้อมูล {formatNumber(flood_map?.available_dates?.length)} วัน
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4 lg:grid-cols-5">
-                <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-4">
-                    <p className="text-xs text-gray-500">บันทึกอุทกภัยน้ำท่วม</p>
-                    <p className="text-2xl font-bold text-[#0b4c86]">{formatNumber(flood_map?.stats?.total_records)}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-4">
-                    <p className="text-xs text-gray-500">พื้นที่ระดับสูง</p>
-                    <p className="text-2xl font-bold text-red-700">{formatNumber(flood_map?.stats?.severe_count)}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-4">
-                    <p className="text-xs text-gray-500">พื้นที่ระดับปานกลาง</p>
-                    <p className="text-2xl font-bold text-amber-700">{formatNumber(flood_map?.stats?.moderate_count)}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-4">
-                    <p className="text-xs text-gray-500">ครัวเรือนกระทบ</p>
-                    <p className="text-2xl font-bold text-[#0b4c86]">{formatNumber(flood_map?.stats?.affected_households)}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-4">
-                    <p className="text-xs text-gray-500">ประชาชนกระทบ</p>
-                    <p className="text-2xl font-bold text-emerald-700">{formatNumber(flood_map?.stats?.affected_people)}</p>
-                </div>
-            </div>
+            {/* เดิมมีการ์ดตัวเลข 5 ใบตรงนี้ แต่เป็นยอดรวมทุกวันของเหตุการณ์ (หมู่บ้านเดียวกันถูกนับซ้ำทุกวันที่รายงาน)
+                และซ้ำกับแผงสรุปด้านบนซึ่งใช้รายงานวันล่าสุด จึงเอาออกเพื่อไม่ให้ตัวเลขขัดกัน */}
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="h-[560px] overflow-hidden rounded-lg border border-[#c9dcee] bg-white shadow">
                     <PublicIncidentMap

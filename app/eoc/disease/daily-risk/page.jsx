@@ -200,7 +200,7 @@ export default function DiseaseDailyRiskPage() {
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div className="min-w-0">
                                 <h3 className="text-lg font-bold mb-2 md:text-xl">
-                                    <AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {activeDiseaseEocName} Session #{data.activeSession.session_number}/2026 - กำลังดำเนินการ
+                                    <AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {activeDiseaseEocName} ครั้งที่ {data.activeSession.session_number}/2026 - กำลังดำเนินการ
                                 </h3>
                                 <p className="opacity-90 mb-1">
                                     เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {

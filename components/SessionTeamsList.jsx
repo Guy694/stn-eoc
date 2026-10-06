@@ -90,7 +90,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
                     </h3>
                     {session && (
                         <p className="text-sm mt-1 opacity-90">
-                            {session.eoc_name} - Session #{session.session_number}
+                            {session.eoc_name} - ครั้งที่ {session.session_number}
                         </p>
                     )}
                 </div>

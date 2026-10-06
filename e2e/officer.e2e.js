@@ -10,7 +10,7 @@ test('หน้าหลังบ้านต้องล็อกอินก�
 });
 
 test('API หลังบ้านปฏิเสธเมื่อไม่ได้ล็อกอิน', async ({ request }) => {
-  for (const path of ['/api/eoc/reporting-completeness?eoc=flood', '/api/admin/deleted-records', '/api/admin/data-quality']) {
+  for (const path of ['/api/eoc/reporting-completeness?eoc=flood', '/api/admin/deleted-records', '/api/admin/data-quality', '/api/eoc/situation-board?eoc=flood', '/api/eoc/meeting-brief?eoc=flood', '/api/eoc/alerts?eoc=flood']) {
     const response = await request.get(`${BASE}${path}`);
     expect(response.status(), path).toBe(401);
   }
@@ -38,7 +38,7 @@ test.describe('เจ้าหน้าที่ล็อกอินแล้�
     await page.waitForURL((url) => !url.pathname.endsWith('/login'));
   });
 
-  for (const path of ['/eoc/flood/overview', '/eoc/disease', '/eoc/disease/records', '/eoc/flood/records', '/eoc/flood/health', '/eoc/flood/health?tab=community', '/eoc/flood/supplies', '/eoc/flood/management/directives', '/eoc/flood/vulnerable-groups', '/eoc/disease/vulnerable-groups', '/eoc/shelters', '/eoc/vulnerable-groups', '/admin/incident-reports', '/admin/trash']) {
+  for (const path of ['/eoc/flood/overview', '/eoc/disease', '/eoc/disease/records', '/eoc/flood/records', '/eoc/flood/health', '/eoc/flood/health?tab=community', '/eoc/flood/supplies', '/eoc/flood/management/directives', '/eoc/flood/it-support', '/eoc/flood/vulnerable-groups', '/eoc/disease/vulnerable-groups', '/eoc/shelters', '/eoc/shelters?tab=map', '/eoc/vulnerable-groups', '/eoc/flood/meeting-brief', '/eoc/flood/management/missions', '/admin/incident-reports', '/admin/trash']) {
     test(`เปิดหน้า ${path} ได้`, async ({ page }) => {
       const errors = watchPageErrors(page);
       const response = await page.goto(`${BASE}${path}`);
@@ -56,4 +56,26 @@ test.describe('เจ้าหน้าที่ล็อกอินแล้�
       await expect(page.locator('#sec-completeness')).toContainText('ความครบของรายงานรายวัน');
     }
   });
+
+  test('ภาพรวมมีแผงสรุปสถานการณ์และตารางรายอำเภอ', async ({ page }) => {
+    await page.goto(`${BASE}/eoc/flood/overview`);
+    await expect(page.locator('#sec-situation')).toBeVisible();
+    await expect(page.locator('#sec-districts')).toContainText('สถานการณ์รายอำเภอ');
+  });
+
+  // หน้าที่ซ้ำกันถูกรวมแล้ว — ลิงก์เก่า/บุ๊กมาร์กต้องพาไปหน้าที่ถูกต้อง ไม่ใช่ 404 หรือหน้าซ้ำ
+  for (const [from, to] of [
+    ['/eoc/flood/shelters', /\/eoc\/shelters\/?\?.*tab=map/],
+    ['/eoc/flood/management', /\/eoc\/flood\/management\/directives/],
+    ['/eoc/flood/management/daily', /\/eoc\/flood\/overview/],
+    ['/eoc/flood/management/command-room', /\/eoc\/flood\/overview/],
+    ['/eoc/flood/management/forms', /\/eoc\/flood\/records/],
+    ['/eoc/flood/shelters/disease-reports', /\/eoc\/flood\/health/]
+  ]) {
+    test(`ลิงก์เก่า ${from} พาไปหน้าใหม่`, async ({ page }) => {
+      await page.goto(`${BASE}${from}`);
+      await expect(page).toHaveURL(to);
+    });
+  }
 });
+

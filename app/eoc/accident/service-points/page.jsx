@@ -230,7 +230,7 @@ export default function ServicePointsPage() {
                             จุดบริการชั่วคราว
                         </h1>
                         <p className="text-gray-600">
-                            เหตุการณ์ EOC #{activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย
+                            เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย
                         </p>
                     </div>
                     <button

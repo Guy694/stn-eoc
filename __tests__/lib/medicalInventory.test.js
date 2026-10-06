@@ -33,3 +33,11 @@ describe("medicalInventory", () => {
     expect(normalizeItemCode(" para 500 ", "x")).toBe("PARA_500");
   });
 });
+
+describe("displayItemCode", () => {
+  const { displayItemCode } = require("@/lib/medicalInventory");
+  it("ซ่อนรหัสที่ระบบสร้างจากชื่อ แสดงเฉพาะรหัสที่กรอกเอง", () => {
+    expect(displayItemCode({ item_name: "ผงเกลือแร่ ORS", item_code: "ผงเกลือแร่_ORS" })).toBe("");
+    expect(displayItemCode({ item_name: "ผงเกลือแร่ ORS", item_code: "TMT-1234" })).toBe("TMT-1234");
+  });
+});

@@ -38,7 +38,7 @@ export default function MeetingSummary({ meeting_summary, isDailyMode, formatNum
                     <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5 border border-rose-100">
                         <p className="text-xs font-semibold text-gray-500">ผู้ป่วยสะสม</p>
                         <p className="mt-2 text-3xl font-bold text-rose-700">{formatNumber(meeting_summary.kpis?.disease_patients)}</p>
-                        <p className="text-xs text-gray-500">ราย</p>
+                        <p className="text-xs text-gray-500">ราย{meeting_summary.kpis?.disease_patients_shelter !== undefined ? ` · ชุมชน ${formatNumber(meeting_summary.kpis?.disease_patients_community)} · ศูนย์พักพิง ${formatNumber(meeting_summary.kpis?.disease_patients_shelter)}` : ""}</p>
                     </div>
                     <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5 border border-emerald-100">
                         <p className="text-xs font-semibold text-gray-500">รายการเวชภัณฑ์</p>

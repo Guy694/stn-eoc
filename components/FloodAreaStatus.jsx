@@ -356,6 +356,8 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     };
 
     const polygonGroups = getPolygonsByLevel();
+    // ขอบเขตระดับอำเภอยังไม่มีข้อมูลแยก (ตัวเลือก showDistrictBoundaries ยังไม่เปิดใช้) — กันไม่ให้หน้าพังถ้าเปิดภายหลัง
+    const polygonGroupsByDistrict = { severe: [], moderate: [], mild: [], safe: [], nodata: [] };
 
     // สร้างไอคอนสำหรับสถานพยาบาล
     const createFacilityIcon = (typecode) => {
@@ -582,7 +584,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                         </h3>
                         <p className="text-sm text-gray-600">
-                            Session #{activeSession.session_number} - ตั้งแต่ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
+                            ครั้งที่ {activeSession.session_number} - ตั้งแต่ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
                             {activeSession.closed_at && ` ถึง ${new Date(activeSession.closed_at).toLocaleDateString('th-TH')}`}
                             {' '}(รวม {dates.length} วัน)
                         </p>

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import EventBar from "@/components/admin/EventBar";
 import Footer from "@/components/Footer";
+import OfflineSyncBar from "@/components/admin/OfflineSyncBar";
 
 import { useAuth } from "@/context/AuthContext";
 
@@ -16,19 +17,19 @@ export default function EOCLayout({ children }) {
 
     return (
         <div className="flex flex-col min-h-screen">
-            <Header />
-            <Navbar />
+            <div className="print:hidden"><Header /><Navbar /></div>
             <div className="flex flex-1 relative">
-                {showSidebar && <Sidebar />}
-                <main data-ui-rounded className="flex-1 bg-[#edf5fc] overflow-auto w-full lg:w-auto">
+                {showSidebar && <div className="contents print:hidden"><Sidebar /></div>}
+                <main data-ui-rounded className="flex-1 bg-[#edf5fc] overflow-auto w-full lg:w-auto print:overflow-visible print:bg-white">
                     {/* <Breadcrumb /> */}
-                    <div className="p-4 sm:p-6">
-                        {showSidebar && <EventBar />}
+                    <div className="p-4 sm:p-6 print:p-0">
+                        {showSidebar && <div className="print:hidden"><EventBar /></div>}
+                        {showSidebar && <OfflineSyncBar />}
                         {children}
                     </div>
                 </main>
             </div>
-            <Footer />
+            <div className="print:hidden"><Footer /></div>
         </div>
     );
 }

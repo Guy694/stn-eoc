@@ -3,6 +3,8 @@ import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { recordChange } from '@/lib/recordArchive';
+import { triggerEventAlerts } from '@/lib/eocAlertRunner';
+import { canonicalDisease } from '@/lib/healthDashboard';
 
 // คอลัมน์ updated_at เพิ่มใน migration 20261005 — ตรวจก่อนใช้ เพื่อให้ระบบยังทำงานได้ก่อนรัน migration
 let activationUpdatedAtColumn = null;
@@ -86,8 +88,8 @@ export async function GET(request) {
                 [sessionId]
             );
             const [byDisease] = await pool.query(
-                `SELECT disease_type, SUM(new_cases) AS new_cases, SUM(hospitalized) AS hospitalized, COUNT(DISTINCT shelter_id) AS shelters
-                 FROM shelter_disease_reports WHERE session_id = ? GROUP BY disease_type ORDER BY new_cases DESC LIMIT 8`,
+                `SELECT disease_type, shelter_id, SUM(new_cases) AS new_cases, SUM(hospitalized) AS hospitalized
+                 FROM shelter_disease_reports WHERE session_id = ? GROUP BY disease_type, shelter_id`,
                 [sessionId]
             );
             const severityNames = [null, 'low', 'medium', 'high', 'critical'];
@@ -100,7 +102,20 @@ export async function GET(request) {
                 for (const key of ['new_cases', 'hospitalized', 'deaths', 'recovered', 'today_new_cases']) health.totals[key] += Number(row[key]) || 0;
                 if (!health.totals.latest_report_date || row.latest_report_date > health.totals.latest_report_date) health.totals.latest_report_date = row.latest_report_date;
             }
-            health.by_disease = byDisease.map((row) => ({ disease_type: row.disease_type, new_cases: Number(row.new_cases) || 0, hospitalized: Number(row.hospitalized) || 0, shelters: Number(row.shelters) || 0 }));
+            // รวมชื่อโรคที่เขียนต่างกัน (เช่น "โรคฉี่หนู" กับ "โรคฉี่หนู (เลปโตสไปโรซิส)") ให้เป็นแถวเดียว
+            const diseaseMap = new Map();
+            for (const row of byDisease) {
+                const name = canonicalDisease(row.disease_type);
+                if (!diseaseMap.has(name)) diseaseMap.set(name, { disease_type: name, new_cases: 0, hospitalized: 0, shelterIds: new Set() });
+                const entry = diseaseMap.get(name);
+                entry.new_cases += Number(row.new_cases) || 0;
+                entry.hospitalized += Number(row.hospitalized) || 0;
+                entry.shelterIds.add(row.shelter_id);
+            }
+            health.by_disease = [...diseaseMap.values()]
+                .map(({ shelterIds, ...entry }) => ({ ...entry, shelters: shelterIds.size }))
+                .sort((a, b) => b.new_cases - a.new_cases)
+                .slice(0, 8);
         } catch (healthError) {
             if (healthError.code !== 'ER_NO_SUCH_TABLE') throw healthError;
         }
@@ -231,6 +246,7 @@ export async function PUT(request) {
             request, user: auth.user, action: 'data_update', table: 'shelter_session_activations', id: shelter_id,
             sessionId: session_id, description: `ปรับยอดผู้พักพิงศูนย์ #${shelter_id} เป็น ${current_occupancy ?? '-'} คน`, newValues: body
         });
+        triggerEventAlerts(session_id);
 
         return NextResponse.json({
             success: true,

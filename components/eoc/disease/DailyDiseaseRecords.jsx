@@ -5,6 +5,7 @@ import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
+import { buildDiseaseChoices } from '@/lib/diseaseNames';
 
 // eocType: เหตุการณ์ที่ใช้ผูกข้อมูล ("disease" = EOC โรคระบาด, "flood" = โรคในชุมชนช่วงน้ำท่วม)
 // priorityDiseases: โรคที่ให้ขึ้นก่อนในรายการ (เช่น โรคที่มักตามมาหลังน้ำท่วม)
@@ -70,16 +71,13 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                 const response = await fetch('/stn-eoc/api/common/diseases');
                 const result = await response.json();
                 if (result.success && result.data) {
-                    // เพิ่ม "อื่นๆ" ไว้ท้ายสุด
-                    const names = result.data.map(d => d.name).filter(d => d !== 'อื่นๆ');
-                    const diseases = [...new Set([...(priorityKey ? priorityKey.split('|') : []), ...names])];
-                    diseases.push('อื่นๆ');
-                    setCommonDiseases(diseases);
+                    // ชื่อมาตรฐานไม่ซ้ำ โรคที่ให้ขึ้นก่อนอยู่บนสุด และ "อื่นๆ" ท้ายสุด
+                    setCommonDiseases(buildDiseaseChoices(result.data, priorityKey ? priorityKey.split('|') : []));
                 }
             } catch (error) {
                 console.error('Error fetching diseases:', error);
                 // ใช้รายการ default
-                setCommonDiseases(['ไข้เลือดออก', 'โควิด-19', 'มือเท้าปาก', 'ไข้หวัดใหญ่', 'อุจจาระร่วง', 'โรคผิวหนัง', 'อื่นๆ']);
+                setCommonDiseases(buildDiseaseChoices(['ไข้เลือดออก', 'โควิด-19', 'มือเท้าปาก', 'ไข้หวัดใหญ่', 'อุจจาระร่วง', 'โรคผิวหนัง'], priorityKey ? priorityKey.split('|') : []));
             }
         };
         fetchDiseases();
@@ -216,13 +214,12 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                     });
                     const addResult = await addRes.json();
                     if (addResult.success) {
+                        diseaseName = addResult.name || diseaseName; // ชื่อมาตรฐานที่ระบบบันทึก
                         // รีเฟรช dropdown
                         const dRes = await fetch('/stn-eoc/api/common/diseases');
                         const dResult = await dRes.json();
                         if (dResult.success) {
-                            const diseases = dResult.data.map(d => d.name).filter(d => d !== 'อื่นๆ');
-                            diseases.push('อื่นๆ');
-                            setCommonDiseases(diseases);
+                            setCommonDiseases(buildDiseaseChoices(dResult.data, priorityKey ? priorityKey.split('|') : []));
                         }
                     } else if (addResult.existing_name) {
                         diseaseName = addResult.existing_name;
@@ -924,7 +921,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                            className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
                                         >
                                             {editingRecord ? 'บันทึกการแก้ไข' : 'บันทึก'}
                                         </button>

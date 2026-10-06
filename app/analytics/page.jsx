@@ -221,7 +221,7 @@ function OverviewTab({ data }) {
                             <div key={session.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
                                 <div>
                                     <p className="font-bold text-slate-800">{session.eoc_type}</p>
-                                    <p className="text-xs text-slate-500">Session #{session.session_number}</p>
+                                    <p className="text-xs text-slate-500">ครั้งที่ {session.session_number}</p>
                                 </div>
                                 <span className="text-sm font-semibold text-emerald-700">เปิด {dateLabel(session.opened_at)}</span>
                             </div>

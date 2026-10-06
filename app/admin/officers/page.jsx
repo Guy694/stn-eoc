@@ -673,7 +673,7 @@ export default function OfficersManagementPage() {
                                             return <div key={team.session_team_id} className="flex flex-col gap-2 border border-blue-100 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
                                                 <label className="flex min-w-0 items-start gap-3 text-sm text-gray-800">
                                                     <input type="checkbox" checked={Boolean(assignment)} onChange={() => toggleTeamAssignment(team.session_team_id)} className="mt-1 h-4 w-4" />
-                                                    <span><span className="font-bold">{team.team_code}</span> - {team.team_name_th}<span className="mt-0.5 block text-xs text-gray-500">EOC {team.eoc_type} · Session #{team.session_number}</span></span>
+                                                    <span><span className="font-bold">{team.team_code}</span> - {team.team_name_th}<span className="mt-0.5 block text-xs text-gray-500">EOC {team.eoc_type} · ครั้งที่ {team.session_number}</span></span>
                                                 </label>
                                                 {assignment && <select value={assignment.roleInTeam} onChange={(event) => changeTeamAssignmentRole(team.session_team_id, event.target.value)} className="border border-gray-300 px-2 py-1 text-sm text-gray-800 sm:w-36"><option value="สมาชิกทีม">สมาชิกทีม</option><option value="รองหัวหน้าทีม">รองหัวหน้าทีม</option><option value="หัวหน้าทีม">หัวหน้าทีม</option></select>}
                                             </div>;

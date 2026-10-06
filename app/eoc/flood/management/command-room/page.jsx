@@ -1,5 +1,6 @@
-import FloodEocManagementDashboard from "@/components/eoc/FloodEocManagementDashboard";
+import { redirect } from "next/navigation";
 
-export default function CommandRoomDailyBriefingPage() {
-  return <FloodEocManagementDashboard view="command" />;
+// ซ้ำกับหน้าภาพรวมสถานการณ์ — รวมไปที่นั่น
+export default function Page() {
+  redirect("/eoc/flood/overview");
 }

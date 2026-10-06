@@ -1,0 +1,26 @@
+-- รายงาน IT support ในเหตุการณ์ EOC: บันทึกปัญหาระบบ/อุปกรณ์/การสื่อสาร และการแก้ไข (1 แถว = 1 เรื่อง)
+CREATE TABLE IF NOT EXISTS eoc_it_tickets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    eoc_session_id BIGINT NOT NULL,
+    ticket_no VARCHAR(40) NOT NULL,
+    reported_at DATETIME NOT NULL,
+    unit_name VARCHAR(255) NOT NULL COMMENT 'หน่วยงาน/จุดที่เกิดปัญหา',
+    it_resource_id INT NULL COMMENT 'อ้างอิงทรัพยากร IT ในทะเบียน (ถ้ามี)',
+    category ENUM('internet','server','network','hardware','software','radio','power','other') NOT NULL DEFAULT 'other',
+    title VARCHAR(255) NOT NULL,
+    detail TEXT NULL,
+    severity ENUM('low','medium','high','critical') NOT NULL DEFAULT 'medium',
+    status ENUM('open','in_progress','resolved','closed') NOT NULL DEFAULT 'open',
+    assignee VARCHAR(255) NULL,
+    workaround TEXT NULL COMMENT 'การแก้ไขชั่วคราว',
+    resolution TEXT NULL COMMENT 'การแก้ไขถาวร/ผลการแก้ไข',
+    resolved_at DATETIME NULL,
+    reporter_name VARCHAR(255) NULL,
+    reporter_phone VARCHAR(50) NULL,
+    created_by INT NULL,
+    updated_by INT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_eoc_it_ticket_no (eoc_session_id, ticket_no),
+    KEY idx_eoc_it_tickets_status (eoc_session_id, status, severity)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

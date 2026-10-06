@@ -12,13 +12,14 @@ import {
 } from "@/components/admin/crud";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
-import { VULNERABLE_TYPES, affectedOf, validateEventRecord } from "@/lib/vulnerableEvent";
+import { VULNERABLE_TYPES, affectedOf, areaLabel, validateEventRecord } from "@/lib/vulnerableEvent";
+import { sendOrQueue } from "@/lib/offlineQueue";
 
 const API = "/stn-eoc/api/eoc/vulnerable-event";
 const EMPTY_STATUS = { cared_count: 0, moved_count: 0, moved_to: "", needs: "", notes: "" };
 
 function areaName(row) {
-  return { main: row.village || `ต.${row.tambon}`, sub: [row.village && `ต.${row.tambon}`, `อ.${row.district}`].filter(Boolean).join(" ") };
+  return areaLabel(row);
 }
 
 function Meter({ value, max, tone = "bg-[#0b4c86]", label }) {
@@ -181,7 +182,7 @@ function AddVillagesDialog({ open, onOpenChange, registry, taken, onSubmit, busy
                       <label className={`flex items-center gap-3 px-3 py-2 text-sm ${already ? "text-slate-400" : "cursor-pointer hover:bg-slate-50"}`}>
                         <input type="checkbox" className="h-4 w-4 accent-[#0b4c86]" disabled={already} checked={already || picked.has(key)} onChange={() => toggle(key)} />
                         <span className="min-w-0 flex-1">
-                          <span className="font-semibold text-slate-900">{row.village || `ต.${row.tambon} (ทั้งตำบล)`}</span>
+                          <span className="font-semibold text-slate-900">{areaLabel(row).main}</span>
                           <span className="block text-xs text-slate-500">ต.{row.tambon}{already ? " · อยู่ในเหตุการณ์แล้ว" : ""}</span>
                         </span>
                         <span className="tabular-nums text-slate-700">{formatNumber(affectedOf(row))} คน</span>
@@ -272,7 +273,7 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
   const saveStatus = () => {
     const invalid = validateEventRecord({ ...editRow, ...statusForm });
     if (invalid) { setFormError(invalid); return; }
-    return run(() => apiRequest(API, { method: "PATCH", body: { id: editRow.id, ...statusForm } }), () => setEditRow(null));
+    return run(() => sendOrQueue(API, { method: "PATCH", label: `สถานะกลุ่มเปราะบาง ${areaName(editRow).main}`, body: { id: editRow.id, ...statusForm } }), () => setEditRow(null));
   };
   const confirmDelete = (reason) => run(() => apiRequest(`${API}?id=${deleting.id}`, { method: "DELETE", body: { reason } }), () => setDeleting(null));
 

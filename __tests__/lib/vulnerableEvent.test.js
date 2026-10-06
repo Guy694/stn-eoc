@@ -56,3 +56,12 @@ describe("registry helpers", () => {
     expect(differsFromRegistry({ district: "x", tambon: "y", elderly: 1 }, registry)).toBe(false);
   });
 });
+
+describe("areaLabel", () => {
+  const { areaLabel } = require("@/lib/vulnerableEvent");
+  it("แถวยอดรวมทั้งอำเภอแสดงเป็นชื่ออำเภอ ไม่ใช่คำว่า รวม", () => {
+    expect(areaLabel({ district: "ควนโดน", tambon: "รวมทั้งอำเภอ", village: "รวม" }).main).toBe("อ.ควนโดน (ทั้งอำเภอ)");
+    expect(areaLabel({ district: "ละงู", tambon: "กำแพง", village: "" }).main).toBe("ต.กำแพง (ทั้งตำบล)");
+    expect(areaLabel({ district: "ละงู", tambon: "กำแพง", village: "ม.3 บ้านนา" })).toEqual({ main: "ม.3 บ้านนา", sub: "ต.กำแพง อ.ละงู" });
+  });
+});

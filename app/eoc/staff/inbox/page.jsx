@@ -44,7 +44,7 @@ export default function OfficerInboxPage() {
 
   const result = state.data;
   return <EOCLayout><section className="mx-auto max-w-7xl space-y-5">
-    <header className="border-b-4 border-cyan-700 bg-white p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-black text-cyan-700">OFFICER WORK INBOX</p><h1 className="mt-1 text-2xl font-black text-slate-900">กล่องงานของฉัน</h1><p className="mt-1 text-sm text-slate-600">งาน รายงาน ข้อสั่งการ การประชุม และการแจ้งเตือนตามสิทธิ์ของคุณ</p></div><button type="button" onClick={load} className="inline-flex h-10 items-center gap-2 border border-slate-300 px-3 text-sm font-bold"><RefreshCw className="h-4 w-4" />รีเฟรช</button></div></header>
+    <header className="border-b-4 border-cyan-700 bg-white p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-black text-cyan-700">งานที่ได้รับมอบหมาย</p><h1 className="mt-1 text-2xl font-black text-slate-900">กล่องงานของฉัน</h1><p className="mt-1 text-sm text-slate-600">งาน รายงาน ข้อสั่งการ การประชุม และการแจ้งเตือนตามสิทธิ์ของคุณ</p></div><button type="button" onClick={load} className="inline-flex h-10 items-center gap-2 border border-slate-300 px-3 text-sm font-bold"><RefreshCw className="h-4 w-4" />รีเฟรช</button></div></header>
     {state.error ? <div className="border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{state.error}</div> : null}
     {state.loading ? <div className="bg-white p-12 text-center text-slate-500">กำลังโหลดข้อมูลจากฐานข้อมูล...</div> : result ? <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">

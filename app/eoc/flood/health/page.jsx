@@ -6,6 +6,7 @@ import { useUrlState } from "@/components/admin/useUrlState";
 import ShelterDiseaseReports from "@/components/eoc/flood-health/ShelterDiseaseReports";
 import DailyDiseaseRecords from "@/components/eoc/disease/DailyDiseaseRecords";
 import HealthDashboard from "@/components/eoc/flood-health/HealthDashboard";
+import { FLOOD_DISEASE_CHOICES } from "@/lib/diseaseNames";
 
 // โรคและสุขภาพช่วงน้ำท่วม: ในศูนย์พักพิง + ในชุมชน/พื้นที่ (ผูกกับเหตุการณ์อุทกภัยเดียวกัน)
 const TABS = [
@@ -15,7 +16,6 @@ const TABS = [
 ];
 
 // โรคที่มักตามมาหลังน้ำท่วม ให้ขึ้นก่อนในรายการ
-const POST_FLOOD_DISEASES = ["โรคฉี่หนู (เลปโตสไปโรซิส)", "อุจจาระร่วง", "โรคผิวหนัง/น้ำกัดเท้า", "ตาแดง", "ไข้หวัด/ไข้หวัดใหญ่", "ไข้เลือดออก"];
 
 export default function FloodHealthPage() {
   const [tab, setTab] = useUrlState("tab", "overview", TABS.map((item) => item.value));
@@ -31,7 +31,7 @@ export default function FloodHealthPage() {
           eocType="flood"
           title="โรคในชุมชนช่วงน้ำท่วม"
           subtitle="ผู้ป่วยนอกศูนย์พักพิง รายหมู่บ้าน"
-          priorityDiseases={POST_FLOOD_DISEASES}
+          priorityDiseases={FLOOD_DISEASE_CHOICES}
         />
       ) : (
         <ShelterDiseaseReports />

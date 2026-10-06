@@ -17,15 +17,15 @@ export default function ResourcesSection({ resources, teams, shelters, formatNum
                     </div>
                     <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-green-600">● Online:</span>
+                            <span className="text-green-600">● ออนไลน์:</span>
                             <span className="font-semibold">{resources.by_type.server.online}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-red-600">● Offline:</span>
+                            <span className="text-red-600">● ออฟไลน์:</span>
                             <span className="font-semibold">{resources.by_type.server.offline}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-yellow-600">● Maintenance:</span>
+                            <span className="text-yellow-600">● ซ่อมบำรุง:</span>
                             <span className="font-semibold">{resources.by_type.server.maintenance}</span>
                         </div>
                     </div>
@@ -38,15 +38,15 @@ export default function ResourcesSection({ resources, teams, shelters, formatNum
                     </div>
                     <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-green-600">● Online:</span>
+                            <span className="text-green-600">● ออนไลน์:</span>
                             <span className="font-semibold">{resources.by_type.internet.online}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-red-600">● Offline:</span>
+                            <span className="text-red-600">● ออฟไลน์:</span>
                             <span className="font-semibold">{resources.by_type.internet.offline}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-yellow-600">● Maintenance:</span>
+                            <span className="text-yellow-600">● ซ่อมบำรุง:</span>
                             <span className="font-semibold">{resources.by_type.internet.maintenance}</span>
                         </div>
                     </div>
@@ -59,15 +59,15 @@ export default function ResourcesSection({ resources, teams, shelters, formatNum
                     </div>
                     <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-green-600">● Online:</span>
+                            <span className="text-green-600">● ออนไลน์:</span>
                             <span className="font-semibold">{resources.by_type.network.online}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-red-600">● Offline:</span>
+                            <span className="text-red-600">● ออฟไลน์:</span>
                             <span className="font-semibold">{resources.by_type.network.offline}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-yellow-600">● Maintenance:</span>
+                            <span className="text-yellow-600">● ซ่อมบำรุง:</span>
                             <span className="font-semibold">{resources.by_type.network.maintenance}</span>
                         </div>
                     </div>
@@ -80,15 +80,15 @@ export default function ResourcesSection({ resources, teams, shelters, formatNum
                     </div>
                     <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-green-600">● Online:</span>
+                            <span className="text-green-600">● ออนไลน์:</span>
                             <span className="font-semibold">{resources.by_type.hardware.online}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-red-600">● Offline:</span>
+                            <span className="text-red-600">● ออฟไลน์:</span>
                             <span className="font-semibold">{resources.by_type.hardware.offline}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-yellow-600">● Maintenance:</span>
+                            <span className="text-yellow-600">● ซ่อมบำรุง:</span>
                             <span className="font-semibold">{resources.by_type.hardware.maintenance}</span>
                         </div>
                     </div>

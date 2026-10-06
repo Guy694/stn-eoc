@@ -95,7 +95,7 @@ export default function DiseaseMapPage() {
                                 </span>
                                 {activeSession && (
                                     <span className="rounded-full bg-slate-100 px-3 py-1">
-                                        Session #{activeSession.session_number || activeSession.id} เปิดเมื่อ {formatDateTime(activeSession.opened_at)}
+                                        ครั้งที่ {activeSession.session_number || activeSession.id} เปิดเมื่อ {formatDateTime(activeSession.opened_at)}
                                     </span>
                                 )}
                             </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppIcon from "@/components/icons/AppIcon";
 import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/sweetAlert';
+import { FLOOD_DISEASE_CHOICES, buildDiseaseChoices } from '@/lib/diseaseNames';
 
 export default function ShelterDiseaseReports() {
     const { eocStatus } = useEOC();
@@ -55,23 +56,13 @@ export default function ShelterDiseaseReports() {
                 const response = await fetch('/stn-eoc/api/common/diseases');
                 const result = await response.json();
                 if (result.success && result.data) {
-                    // เพิ่ม "อื่นๆ" ไว้ท้ายสุด
-                    const diseases = result.data.filter(d => d.name !== 'อื่นๆ');
-                    diseases.push({ name: 'อื่นๆ' });
-                    setCommonDiseases(diseases);
+                    // รายการเดียวกับฟอร์มในชุมชน: โรคหลังน้ำท่วมขึ้นก่อน ชื่อมาตรฐานไม่ซ้ำ "อื่นๆ" ท้ายสุด
+                    setCommonDiseases(buildDiseaseChoices(result.data, FLOOD_DISEASE_CHOICES).map((name) => ({ name })));
                 }
             } catch (error) {
                 console.error('Error fetching diseases:', error);
                 // ใช้รายการ default
-                setCommonDiseases([
-                    { name: 'ไข้เลือดออก' },
-                    { name: 'โควิด-19' },
-                    { name: 'มือเท้าปาก' },
-                    { name: 'ไข้หวัดใหญ่' },
-                    { name: 'อุจจาระร่วง' },
-                    { name: 'โรคผิวหนัง' },
-                    { name: 'อื่นๆ' }
-                ]);
+                setCommonDiseases(buildDiseaseChoices([], FLOOD_DISEASE_CHOICES).map((name) => ({ name })));
             }
         };
         fetchDiseases();
@@ -231,7 +222,7 @@ export default function ShelterDiseaseReports() {
                             />
                             <button
                                 onClick={() => setShowForm(!showForm)}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                                className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
                             >
                                 <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 <span>เพิ่มรายงาน</span>
@@ -356,7 +347,7 @@ export default function ShelterDiseaseReports() {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                    className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors disabled:opacity-50"
                                 >
                                     {saving ? "กำลังบันทึก..." : "บันทึก"}
                                 </button>

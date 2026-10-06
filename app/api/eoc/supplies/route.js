@@ -5,6 +5,7 @@ import { publicInternalError } from "@/lib/apiResponse";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { recordChange } from "@/lib/recordArchive";
 import { MOVEMENT_TYPES, applyMovement, normalizeItemCode, stockLevel, summarizeStock } from "@/lib/medicalInventory";
+import { triggerEventAlerts } from "@/lib/eocAlertRunner";
 
 // คลังเวชภัณฑ์ของ "เหตุการณ์ EOC ครั้งนี้" (ผูกกับ eoc_type + ครั้งที่ ผ่าน medical_inventory_events)
 const SUPPORTED = ["flood", "disease"];
@@ -208,6 +209,7 @@ async function move(auth, ctx, body) {
     description: `${MOVEMENT_TYPES[type]} ${stock.item_name} ${result.movementQty} ${stock.unit || ""} (${stock.agency_name}) คงเหลือ ${result.after}${team ? ` → ${team}` : ""}`,
     oldValues: { balance_qty: result.before }, newValues: { balance_qty: result.after }
   });
+  triggerEventAlerts(ctx.session.id);
   return NextResponse.json({ success: true, message: `${MOVEMENT_TYPES[type]}แล้ว คงเหลือ ${result.after.toLocaleString("th-TH")} ${stock.unit || ""}`.trim() });
 }
 

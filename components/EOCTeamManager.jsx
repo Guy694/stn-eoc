@@ -204,7 +204,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
                             จัดการทีมงาน EOC {session.eoc_name}
                         </h2>
                         <p className="text-gray-600">
-                            Session #{session.session_number} • เปิดเมื่อ: {new Date(session.opened_at).toLocaleString('th-TH')}
+                            ครั้งที่ {session.session_number} • เปิดเมื่อ: {new Date(session.opened_at).toLocaleString('th-TH')}
                         </p>
                     </div>
                     <button

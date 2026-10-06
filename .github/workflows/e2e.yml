@@ -1,0 +1,43 @@
+name: E2E (manual)
+
+# รันเทสต์เปิดเบราว์เซอร์กับเซิร์ฟเวอร์ทดสอบ (ไม่ใช่ production) — กดรันเองจากแท็บ Actions
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # ถ้ายังไม่ได้เพิ่ม @playwright/test ใน devDependencies ให้ติดตั้งชั่วคราว (ไม่แก้ lock file)
+      - name: Install Playwright
+        run: |
+          node -e "require.resolve('@playwright/test')" 2>/dev/null || npm i --no-save @playwright/test@^1.51.1
+          npx playwright install --with-deps chromium
+
+      - name: Run e2e
+        run: npx playwright test --project=desktop
+        env:
+          CI: "1"
+          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

@@ -1,5 +1,6 @@
-import FloodEocManagementDashboard from "@/components/eoc/FloodEocManagementDashboard";
+import { redirect } from "next/navigation";
 
-export default function TeamFormsPage() {
-  return <FloodEocManagementDashboard view="forms" />;
+// แบบบันทึกหลักคือหน้าบันทึกพื้นที่น้ำท่วม
+export default function Page() {
+  redirect("/eoc/flood/records");
 }

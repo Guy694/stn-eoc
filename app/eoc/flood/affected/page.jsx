@@ -358,7 +358,7 @@ export default function AffectedPersonsPage() {
                             resetForm();
                             setShowModal(true);
                         }}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        className="px-6 py-3 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
                     >
                         <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มรายงาน
@@ -563,14 +563,14 @@ export default function AffectedPersonsPage() {
                                         <button
                                             type="button"
                                             onClick={() => setViewMode('range')}
-                                            className={`flex-1 px-3 py-2 text-sm font-medium ${viewMode === 'range' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                            className={`flex-1 px-3 py-2 text-sm font-medium ${viewMode === 'range' ? 'bg-[#0b4c86] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                                         >
                                             ช่วง
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setViewMode('daily')}
-                                            className={`flex-1 px-3 py-2 text-sm font-medium border-l border-gray-300 ${viewMode === 'daily' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                            className={`flex-1 px-3 py-2 text-sm font-medium border-l border-gray-300 ${viewMode === 'daily' ? 'bg-[#0b4c86] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                                         >
                                             รายวัน
                                         </button>
@@ -888,7 +888,7 @@ export default function AffectedPersonsPage() {
                                                 </button>
                                                 <button
                                                     type="submit"
-                                                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                                    className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
                                                 >
                                                     {editingReport ? 'บันทึกการแก้ไข' : 'บันทึก'}
                                                 </button>

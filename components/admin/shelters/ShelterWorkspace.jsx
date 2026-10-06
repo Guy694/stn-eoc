@@ -1,11 +1,13 @@
 "use client";
 
-// ศูนย์พักพิง (หน้าเดียว 2 แท็บ)
+// ศูนย์พักพิง (หน้าเดียว 3 แท็บ — เป็นทางเข้าเดียวของเรื่องศูนย์พักพิงทั้งระบบ)
 //  - ในเหตุการณ์: เปิด/ปิดใช้ศูนย์ในเหตุการณ์ที่เปิดอยู่ และอัปเดตยอดผู้พักพิง (ข้อมูลที่ใช้ในห้องประชุม)
+//  - แผนที่: ตำแหน่งศูนย์ (ศูนย์ที่เปิดในเหตุการณ์เด่นขึ้น)
 //  - ทะเบียนกลาง: รายชื่อศูนย์ทั้งหมดของจังหวัด เพิ่ม/แก้ไข/ปิดใช้งาน/ลบ
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Map as MapIcon, Power, Users } from "lucide-react";
+import { Power, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import {
@@ -19,6 +21,13 @@ import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { readQuery, useUrlState } from "@/components/admin/useUrlState";
 import ShelterSessionDashboard from "@/components/admin/shelters/ShelterSessionDashboard";
 import { summarizeShelters } from "@/lib/shelterDashboard";
+import { sendOrQueue } from "@/lib/offlineQueue";
+
+// แผนที่ใช้ Leaflet (ทำงานเฉพาะในเบราว์เซอร์) — โหลดเมื่อเปิดแท็บแผนที่เท่านั้น
+const ShelterCenterMap = dynamic(() => import("@/components/ShelterCenterMap"), {
+  ssr: false,
+  loading: () => <div className="flex h-96 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-500">กำลังโหลดแผนที่…</div>
+});
 
 const REGISTRY_API = "/stn-eoc/api/admin/shelter-center";
 const ACTIVATION_API = "/stn-eoc/api/eoc/shelter-activations";
@@ -58,7 +67,7 @@ function OccupancyBar({ occupancy, capacity }) {
 export default function ShelterWorkspace() {
   const { user } = useAuth();
   const { eocStatus } = useEOC();
-  const [tab, setTab] = useUrlState("tab", "session", ["session", "registry"]);
+  const [tab, setTab] = useUrlState("tab", "session", ["session", "map", "registry"]);
   const canEdit = EDITOR_ROLES.includes(user?.role);
   const isAdmin = user?.role === "admin";
   const { notice, success, fail } = useNotice();
@@ -158,8 +167,8 @@ export default function ShelterWorkspace() {
     if (!Number.isInteger(value) || value < 0) { setFormError("จำนวนผู้พักพิงต้องเป็นจำนวนเต็มตั้งแต่ 0"); return; }
     setBusy(true);
     try {
-      await apiRequest(ACTIVATION_API, { method: "PUT", body: { shelter_id: occupancyRow.id, session_id: currentEvent.sessionId, current_occupancy: value, notes: occupancyForm.notes || null } });
-      success(`อัปเดตยอดผู้พักพิง ${occupancyRow.sheltername} แล้ว`);
+      const result = await sendOrQueue(ACTIVATION_API, { method: "PUT", label: `ยอดผู้พักพิง ${occupancyRow.sheltername} = ${value} คน`, body: { shelter_id: occupancyRow.id, session_id: currentEvent.sessionId, current_occupancy: value, notes: occupancyForm.notes || null } });
+      success(result.queued ? result.message : `อัปเดตยอดผู้พักพิง ${occupancyRow.sheltername} แล้ว`);
       setOccupancyRow(null);
       loadActivations();
     } catch (error) {
@@ -248,12 +257,11 @@ export default function ShelterWorkspace() {
       title="ศูนย์พักพิง"
       description={tab === "session"
         ? "เปิดใช้ศูนย์ในเหตุการณ์ และอัปเดตยอดผู้พักพิงให้เป็นปัจจุบัน ตัวเลขนี้แสดงในห้องบัญชาการและหน้าเว็บประชาชน"
-        : "รายชื่อศูนย์พักพิงทั้งหมดของจังหวัด ใช้ร่วมกันทุกเหตุการณ์"}
+        : tab === "map"
+          ? "ตำแหน่งศูนย์พักพิงบนแผนที่ คลิกจุดเพื่อดูรายละเอียด — ศูนย์ที่ยังไม่มีพิกัดแก้ได้ที่แท็บทะเบียนกลาง"
+          : "รายชื่อศูนย์พักพิงทั้งหมดของจังหวัด ใช้ร่วมกันทุกเหตุการณ์"}
       actions={(
         <>
-          <Link href="/eoc/flood/shelters" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
-            <MapIcon className="h-4 w-4" aria-hidden="true" /> ดูแผนที่
-          </Link>
           {tab === "registry" && canEdit ? <AddButton onClick={() => openForm()}>เพิ่มศูนย์พักพิง</AddButton> : null}
         </>
       )}
@@ -263,6 +271,7 @@ export default function ShelterWorkspace() {
         onChange={setTab}
         items={[
           { value: "session", label: "ในเหตุการณ์", count: currentEvent ? sessionStats.count : undefined },
+          { value: "map", label: "แผนที่" },
           { value: "registry", label: "ทะเบียนกลาง", count: registry.length }
         ]}
       />
@@ -327,6 +336,10 @@ export default function ShelterWorkspace() {
             />
           </>
         )
+      ) : tab === "map" ? (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <ShelterCenterMap eocType={currentEvent?.type || readQuery("eoc") || "flood"} sessionId={currentEvent?.sessionId || null} />
+        </div>
       ) : (
         <>
           <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อศูนย์ ตำบล อำเภอ">

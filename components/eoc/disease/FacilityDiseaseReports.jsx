@@ -17,6 +17,7 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import AppIcon from "@/components/icons/AppIcon";
+import { buildDiseaseChoices } from '@/lib/diseaseNames';
 
 ChartJS.register(
     CategoryScale,
@@ -58,37 +59,33 @@ export default function FacilityDiseaseReports() {
     });
 
     // รวมรายการโรคจาก database + อื่นๆ
-    const allDiseases = (() => {
-        const diseases = diseaseList.map(d => d.name || d);
-        // ลบ "อื่นๆ" ออกก่อน แล้วเพิ่มไว้ท้ายสุด
-        const filtered = diseases.filter(d => d !== 'อื่นๆ');
-        return [...filtered, 'อื่นๆ'];
-    })();
+    const allDiseases = buildDiseaseChoices(diseaseList);
 
-    // ดึงรายการโรคจาก database
-    useEffect(() => {
-        const fetchDiseases = async () => {
-            try {
-                const response = await fetch('/stn-eoc/api/common/diseases');
-                const result = await response.json();
-                if (result.success) {
-                    setDiseaseList(result.data || []);
-                }
-            } catch (error) {
-                console.error('Fetch diseases error:', error);
-                // ใช้รายการ default ถ้าดึงไม่ได้
-                setDiseaseList([
-                    { name: 'ไข้เลือดออก' },
-                    { name: 'โควิด-19' },
-                    { name: 'มือเท้าปาก' },
-                    { name: 'ไข้หวัดใหญ่' },
-                    { name: 'อุจจาระร่วง' },
-                    { name: 'โรคผิวหนัง' }
-                ]);
+    // ดึงรายการโรคจาก database (ใช้ซ้ำหลังเพิ่มชื่อโรคใหม่ จึงต้องอยู่นอก useEffect)
+    const fetchDiseases = useCallback(async () => {
+        try {
+            const response = await fetch('/stn-eoc/api/common/diseases');
+            const result = await response.json();
+            if (result.success) {
+                setDiseaseList(result.data || []);
             }
-        };
-        fetchDiseases();
+        } catch (error) {
+            console.error('Fetch diseases error:', error);
+            // ใช้รายการ default ถ้าดึงไม่ได้
+            setDiseaseList([
+                { name: 'ไข้เลือดออก' },
+                { name: 'โควิด-19' },
+                { name: 'มือเท้าปาก' },
+                { name: 'ไข้หวัดใหญ่' },
+                { name: 'อุจจาระร่วง' },
+                { name: 'โรคผิวหนัง' }
+            ]);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchDiseases();
+    }, [fetchDiseases]);
 
     const fetchSessions = useCallback(async () => {
         try {
@@ -179,6 +176,7 @@ export default function FacilityDiseaseReports() {
                 });
                 const addResult = await addDiseaseRes.json();
                 if (addResult.success) {
+                    diseaseName = addResult.name || diseaseName; // ชื่อมาตรฐานที่ระบบบันทึก
                     fetchDiseases(); // รีเฟรชรายการโรค
                 } else if (addResult.existing_name) {
                     diseaseName = addResult.existing_name; // ใช้ชื่อที่มีอยู่แล้ว
@@ -250,7 +248,7 @@ export default function FacilityDiseaseReports() {
 
     const handleEdit = (report) => {
         setEditingReport(report);
-        const isOther = !commonDiseases.includes(report.disease_name) && report.disease_name !== 'อื่นๆ';
+        const isOther = !allDiseases.includes(report.disease_name) && report.disease_name !== 'อื่นๆ';
 
         setFormData({
             report_date: report.report_date,
@@ -448,7 +446,7 @@ export default function FacilityDiseaseReports() {
                             resetForm();
                             setShowModal(true);
                         }}
-                        className="px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        className="px-2 py-1 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
                     >
                         <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มรายงานโรค
@@ -973,7 +971,7 @@ export default function FacilityDiseaseReports() {
                                             <div className="flex gap-3 pt-4">
                                                 <button
                                                     type="submit"
-                                                    className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold"
+                                                    className="flex-1 bg-[#0b4c86] text-white px-6 py-3 rounded-lg hover:bg-[#083865] font-semibold"
                                                 >
                                                     {editingReport ? "บันทึกการแก้ไข" : "บันทึก"}
                                                 </button>

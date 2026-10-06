@@ -8,8 +8,9 @@ import {
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
-import { MOVEMENT_TYPES, STOCK_LEVEL_LABELS } from "@/lib/medicalInventory";
+import { MOVEMENT_TYPES, STOCK_LEVEL_LABELS, displayItemCode } from "@/lib/medicalInventory";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
+import { sendOrQueue } from "@/lib/offlineQueue";
 
 const TABS = [
   { value: "stock", label: "คงคลัง" },
@@ -92,8 +93,23 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   };
 
   const submitMove = async () => {
-    const ok = await post({ action: "movement", stock_id: moveDialog.row.id, movement_type: moveDialog.type, ...moveForm });
-    if (ok) setMoveDialog(null);
+    setBusy(true);
+    setFormError("");
+    try {
+      const result = await sendOrQueue(url, {
+        method: "POST",
+        label: `${MOVEMENT_TYPES[moveDialog.type]} ${moveDialog.row.item_name} ${moveForm.qty} ${moveDialog.row.unit || ""}`.trim(),
+        body: { action: "movement", stock_id: moveDialog.row.id, movement_type: moveDialog.type, ...moveForm }
+      });
+      success(result.message || "บันทึกแล้ว");
+      setMoveDialog(null);
+      if (!result.queued) await load();
+    } catch (error) {
+      setFormError(error.message);
+      fail(error.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const submitItem = async () => {
@@ -108,7 +124,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   const context = session ? `${getEocTypeLabel(eocType)} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : null;
 
   const columns = [
-    { key: "item_name", label: "รายการ", render: (row) => <span><span className="font-bold text-slate-900">{row.item_name}</span><span className="block text-xs text-slate-500">{row.item_code}</span></span> },
+    { key: "item_name", label: "รายการ", render: (row) => <span><span className="font-bold text-slate-900">{row.item_name}</span>{displayItemCode(row) ? <span className="block text-xs text-slate-500">รหัส {displayItemCode(row)}</span> : null}</span> },
     { key: "agency_name", label: "หน่วยบริการ/คลัง", render: (row) => <span>{row.agency_name}{row.district_name ? <span className="block text-xs text-slate-500">อ.{row.district_name}</span> : null}</span> },
     { key: "level", label: "สถานะ", render: (row) => <LevelPill level={row.level} /> },
     { key: "balance_qty", label: "คงเหลือ", className: "text-right", render: (row) => <span className="font-black tabular-nums">{formatNumber(row.balance_qty)} <span className="text-xs font-normal text-slate-500">{row.unit}</span></span> },

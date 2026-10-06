@@ -1,5 +1,6 @@
-import FloodEocManagementDashboard from "@/components/eoc/FloodEocManagementDashboard";
+import { redirect } from "next/navigation";
 
-export default function ReportGeneratorPage() {
-  return <FloodEocManagementDashboard view="reports" />;
+// รายงานของกลุ่มภารกิจรวมอยู่ในแท็บเดียว
+export default function Page() {
+  redirect("/eoc/flood/management/team-workspace");
 }

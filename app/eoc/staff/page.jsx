@@ -104,7 +104,7 @@ export default function StaffEocOverviewPage() {
         <EOCLayout>
             <section className=" mx-auto max-w-7xl space-y-5">
                 <header className="rounded-lg border-b-4 border-cyan-600 bg-white px-5 py-6 shadow-sm">
-                    <p className="text-sm font-bold text-cyan-700">STAFF WORKSPACE</p>
+                    <p className="text-sm font-bold text-cyan-700">ศูนย์งานเจ้าหน้าที่</p>
                     <div className=" mt-1 flex flex-wrap items-end justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-black text-slate-900">ศูนย์ปฏิบัติงานเจ้าหน้าที่ EOC</h1>
