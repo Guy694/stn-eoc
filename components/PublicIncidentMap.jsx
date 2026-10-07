@@ -45,6 +45,8 @@ export default function PublicIncidentMap({
     onBaseMapChange,
     onDataChange,
     includeAllShelters = false,
+    // หน้าเจ้าหน้าที่ส่ง '/stn-eoc/api/eoc/shelter-centers' (เห็นทุกศูนย์) — หน้าประชาชนใช้ API สาธารณะ (เฉพาะช่วงเปิด EOC)
+    shelterApiPath = '/stn-eoc/api/public/shelter-centers',
     // ชั้นข้อมูล tile เพิ่มเติมที่ซ้อนบนแผนที่ (เช่น เรดาร์ฝน) [{ key, url, attribution, opacity, maxNativeZoom, zIndex }]
     extraTileLayers = [],
     // ตำแหน่งปุ่มซูม: ค่าเริ่มต้นของ Leaflet (topleft) หรือกำหนดเอง เช่น 'bottomright'
@@ -344,14 +346,14 @@ export default function PublicIncidentMap({
             if (sessionId) params.append('session_id', sessionId);
             if (!sessionId && includeAllShelters) params.append('include_all', '1');
 
-            const response = await fetch(`/stn-eoc/api/public/shelter-centers?${params}`);
+            const response = await fetch(`${shelterApiPath}?${params}`);
             const data = await response.json();
             if (data.success) setShelters(data.data || []);
         } catch (error) {
             console.error('Error fetching shelter layer:', error);
             setShelters([]);
         }
-    }, [disasterType, includeAllShelters, sessionId]);
+    }, [disasterType, includeAllShelters, sessionId, shelterApiPath]);
 
     useEffect(() => {
         setShelters([]);

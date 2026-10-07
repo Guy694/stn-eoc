@@ -46,6 +46,8 @@ export default function useHelpAvailability() {
     loading: open === null,
     // null (ยังไม่รู้/เช็กไม่ได้) ถือว่าเปิด
     helpOpen: open === null || open.help,
-    floodOpen: open === null || open.flood
+    floodOpen: open === null || open.flood,
+    // ศูนย์พักพิงแสดงเฉพาะเมื่อรู้แน่ว่ามี EOC เปิด (ไม่ใช่เรื่องที่ต้องกดทันที จึงซ่อนไว้ก่อนระหว่างโหลด)
+    sheltersOpen: open !== null && open.help
   };
 }

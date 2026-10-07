@@ -1,3 +1,5 @@
+import { startTracking } from '@/lib/incidentTrackingDb';
+import { formatTrackingCode } from '@/lib/helpTracking';
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
@@ -42,7 +44,7 @@ function buildTelegramHelpMessage(report, { compact = false } = {}) {
 
     return [
         '<b>คำขอความช่วยเหลือใหม่</b>',
-        `เลขที่: #${escapeTelegramHtml(report.id)}`,
+        `เลขที่: #${escapeTelegramHtml(report.id)}${report.trackingCode ? ` (ติดตาม ${escapeTelegramHtml(formatTrackingCode(report.trackingCode))})` : ''}`,
         `ประเภท: ${escapeTelegramHtml(report.helpCategoryLabel)}`,
         `ผู้แจ้ง: ${escapeTelegramHtml(`${report.firstName} ${report.lastName}`)}`,
         `โทร: ${escapeTelegramHtml(report.phone)}`,
@@ -185,10 +187,12 @@ async function handleWaterReport({ firstName, lastName, phone, village, subDistr
         ]
     );
 
+    const trackingCode = await startTracking(pool, result.insertId);
     return NextResponse.json({
         success: true,
         message: 'ได้รับรายงานระดับน้ำแล้ว เจ้าหน้าที่จะตรวจสอบก่อนแสดงบนแผนที่',
-        reportId: result.insertId
+        reportId: result.insertId,
+        trackingCode
     });
 }
 
@@ -383,9 +387,12 @@ export async function POST(request) {
             ]
         );
 
+        const trackingCode = await startTracking(pool, result.insertId);
+
         if (reportType === 'help_request') {
             await notifyTelegramOfficers(pool, {
                 id: result.insertId,
+                trackingCode,
                 firstName,
                 lastName,
                 phone,
@@ -405,7 +412,8 @@ export async function POST(request) {
             message: reportType === 'problem_point'
                 ? 'ส่งข้อมูลจุดปัญหาแล้ว เจ้าหน้าที่จะตรวจสอบก่อนแสดงบนแผนที่'
                 : 'ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว เจ้าหน้าที่จะตรวจสอบและติดต่อกลับโดยเร็วที่สุด',
-            reportId: result.insertId
+            reportId: result.insertId,
+            trackingCode
         });
 
     } catch (error) {

@@ -1,6 +1,7 @@
 "use client";
 
 // คำขอจากประชาชน: คัดกรอง → ดำเนินการ → ปิดเรื่อง (หนึ่งรายการ = หนึ่งเรื่องที่ต้องติดตาม)
+import { formatTrackingCode } from "@/lib/helpTracking";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, Eye, Phone } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -112,6 +113,7 @@ export default function IncidentWorkspace() {
   const [selected, setSelected] = useState(null);
   const [nextStatus, setNextStatus] = useState("pending");
   const [notes, setNotes] = useState("");
+  const [citizenMessage, setCitizenMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [deleting, setDeleting] = useState(null);
@@ -121,6 +123,7 @@ export default function IncidentWorkspace() {
     setSelected(row);
     setNextStatus(row.status === "pending" ? "reviewing" : row.status);
     setNotes(row.admin_notes || "");
+    setCitizenMessage(row.citizen_message || "");
     setFormError("");
   };
   const save = async () => {
@@ -130,7 +133,7 @@ export default function IncidentWorkspace() {
     }
     setBusy(true);
     try {
-      await apiRequest(API, { method: "PUT", body: { reportId: selected.id, status: nextStatus, adminNotes: notes.trim() || null } });
+      await apiRequest(API, { method: "PUT", body: { reportId: selected.id, status: nextStatus, adminNotes: notes.trim() || null, ...(selected.tracking_code ? { citizenMessage } : {}) } });
       success(`อัปเดตเรื่อง #${selected.id} เป็น "${statusMeta(nextStatus).label}" แล้ว`);
       setSelected(null);
       load();
@@ -232,7 +235,7 @@ export default function IncidentWorkspace() {
       <FormDialog
         open={Boolean(selected)}
         onOpenChange={(value) => !value && setSelected(null)}
-        title={selected ? `${typeLabel(selected)} #${selected.id}` : ""}
+        title={selected ? `${typeLabel(selected)} #${selected.id}${selected.tracking_code ? ` • ${formatTrackingCode(selected.tracking_code)}` : ""}` : ""}
         description={selected ? `แจ้งเมื่อ ${formatDateTime(selected.created_at)}` : ""}
         onSubmit={save}
         busy={busy}
@@ -302,6 +305,11 @@ export default function IncidentWorkspace() {
                 <Field label="บันทึกเจ้าหน้าที่" hint="เช่น ส่งทีม MCATT แล้ว 14:20 น. / ประสาน อบต. ส่งเรือ">
                   <textarea rows={3} className={inputClass} value={notes} onChange={(event) => setNotes(event.target.value)} />
                 </Field>
+                {selected.tracking_code ? (
+                  <Field label="ข้อความถึงผู้แจ้ง" hint={`ผู้แจ้งเห็นข้อความนี้ในหน้าติดตามคำขอ (เลข ${formatTrackingCode(selected.tracking_code)}) • อย่าใส่ข้อมูลภายในหรือชื่อเจ้าหน้าที่`}>
+                    <textarea rows={2} maxLength={500} className={inputClass} value={citizenMessage} onChange={(event) => setCitizenMessage(event.target.value)} placeholder="เช่น ทีมกู้ภัย อบต. กำลังเดินทางไป ประมาณ 30 นาที" />
+                  </Field>
+                ) : null}
                 {selected.reviewed_at ? <p className="text-xs text-slate-500">อัปเดตสถานะล่าสุด {formatDateTime(selected.reviewed_at)}</p> : null}
               </section>
             ) : (

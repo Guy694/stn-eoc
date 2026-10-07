@@ -14,6 +14,7 @@ import {
   Droplets,
   ExternalLink,
   Gauge,
+  HousePlus,
   Layers,
   LocateFixed,
   Map as MapIcon,
@@ -24,6 +25,7 @@ import {
   Satellite,
   ShieldCheck,
   Siren,
+  Sun,
   Tent,
   Thermometer,
   Tornado,
@@ -34,6 +36,7 @@ import {
 } from "lucide-react";
 import AIChatbot from "@/components/AIChatbot";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
+import useHelpAvailability from "@/components/public/useHelpAvailability";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import { GLASS, MenuToggle, SectionTitle, SidebarItem, WindyFrame } from "@/components/public/map/WindyStyleControls";
 import {
@@ -190,6 +193,7 @@ function MediaThumb({ item, label }) {
 
 export default function WeatherWatchWorkspace() {
   const [data, setData] = useState(null);
+  const { sheltersOpen } = useHelpAvailability();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -642,9 +646,15 @@ export default function WeatherWatchWorkspace() {
                   <HelpRequestLink className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20" disabledClassName="cursor-not-allowed opacity-50 hover:bg-white/10">
                     <Siren className="h-4 w-4" aria-hidden="true" /> ขอความช่วยเหลือ
                   </HelpRequestLink>
-                  <Link href="/public/shelters" className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20">
-                    <Tent className="h-4 w-4" aria-hidden="true" /> ศูนย์พักพิง
-                  </Link>
+                  {sheltersOpen ? (
+                    <Link href="/public/shelters" className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20">
+                      <Tent className="h-4 w-4" aria-hidden="true" /> ศูนย์พักพิง
+                    </Link>
+                  ) : (
+                    <Link href="/public/my-risk" className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20">
+                      <HousePlus className="h-4 w-4" aria-hidden="true" /> บ้านฉันเสี่ยงไหม
+                    </Link>
+                  )}
                   <Link href="/public/announcements" className="flex flex-col items-center gap-1 rounded-lg bg-white/10 px-1 py-2 text-center hover:bg-white/20">
                     <Megaphone className="h-4 w-4" aria-hidden="true" /> ประกาศเตือนภัย
                   </Link>
@@ -761,6 +771,17 @@ export default function WeatherWatchWorkspace() {
         {/* ล่าง: พยากรณ์ 7 วันของอำเภอที่เลือก */}
         {!isWindy && dailyForecast.length > 0 && (
           <div className="absolute bottom-3 right-3 z-[650] max-md:hidden md:left-[384px]">
+            <style>{`
+              .day-rain-bar { transform-origin: bottom; animation: day-rain-grow .7s cubic-bezier(.2,.8,.2,1) both; }
+              @keyframes day-rain-grow { from { transform: scaleY(0); } }
+              .day-icon--rain, .day-icon--storm { animation: day-icon-bob 2.4s ease-in-out infinite; }
+              .day-icon--sun { animation: day-icon-spin 18s linear infinite; }
+              .day-icon--cloud { animation: day-icon-drift 4s ease-in-out infinite alternate; }
+              @keyframes day-icon-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+              @keyframes day-icon-spin { to { transform: rotate(360deg); } }
+              @keyframes day-icon-drift { from { transform: translateX(-1.5px); } to { transform: translateX(1.5px); } }
+              @media (prefers-reduced-motion: reduce) { .day-rain-bar, .day-icon--rain, .day-icon--storm, .day-icon--sun, .day-icon--cloud { animation: none; } }
+            `}</style>
             <div className={`ml-auto flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-xl p-1 [scrollbar-width:none] ${GLASS}`}>
               <span className="hidden shrink-0 px-1.5 text-[10px] font-bold text-white/70 xl:block">7 วัน อ.{selectedDistrict?.district_name}</span>
               {dailyForecast.map((day, index) => {
@@ -777,11 +798,24 @@ export default function WeatherWatchWorkspace() {
                     className={`w-[72px] shrink-0 rounded-lg px-1 py-1 text-center transition ${active ? "bg-white text-slate-900" : "hover:bg-white/10"}`}
                   >
                     <span className="block text-[11px] font-black leading-4">{formatDay(day.forecast_datetime, index)}</span>
+                    {(() => {
+                      const text = String(day.weather_condition || "");
+                      const Icon = /ฟ้าคะนอง/.test(text) ? CloudLightning : /ฝน/.test(text) ? CloudRain : /เมฆ/.test(text) ? Cloud : Sun;
+                      const kind = Icon === CloudLightning ? "storm" : Icon === CloudRain ? "rain" : Icon === Sun ? "sun" : "cloud";
+                      return <Icon className={`day-icon day-icon--${kind} mx-auto my-0.5 h-5 w-5 ${active ? "text-[#0b4c86]" : "text-sky-100"}`} style={{ animationDelay: `${index * 120}ms` }} aria-hidden="true" />;
+                    })()}
                     <span className={`block whitespace-nowrap text-[10px] leading-4 ${active ? "text-slate-600" : "text-white/70"}`}>{day.temperature_min}–{day.temperature_max}°C</span>
                     <span className={`block whitespace-nowrap text-[10px] font-bold leading-4 ${active ? "text-sky-700" : "text-sky-200"}`}>ฝน ~{day.rainfall_median ?? day.rainfall_forecast} มม.</span>
                     {day.prob_heavy >= 20 && (
                       <span className={`block whitespace-nowrap text-[10px] font-black leading-4 ${active ? "text-red-700" : "text-amber-300"}`}>หนัก {day.prob_heavy}%</span>
                     )}
+                    {/* แท่งฝน: เต็มที่ 40 มม. */}
+                    <span className="mx-auto mt-1 flex h-6 w-3 items-end overflow-hidden rounded-sm bg-white/10" aria-hidden="true">
+                      <span
+                        className="day-rain-bar block w-full rounded-sm bg-sky-400"
+                        style={{ height: `${Math.min(100, Math.max(6, ((day.rainfall_median ?? day.rainfall_forecast ?? 0) / 40) * 100))}%`, animationDelay: `${index * 80}ms` }}
+                      />
+                    </span>
                     <span className="mx-auto mt-0.5 block h-1 w-7 rounded-full" style={{ backgroundColor: meta.color }} aria-label={meta.label} />
                   </button>
                 );

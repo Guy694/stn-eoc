@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AnnouncementHub from '@/components/announcements/AnnouncementHub';
+import PublicAnnouncementList from '@/components/public/announcements/PublicAnnouncementList';
 import PublicOpsScaffold from '@/components/public/PublicOpsScaffold';
 import { formatEocDisplayName } from '@/lib/eocDisplay';
 
@@ -26,8 +26,9 @@ export default function PublicAnnouncementsPage() {
       eocStatus={activeEocs.length > 0 ? 'open' : 'closed'}
       eocLabel={latestEoc ? formatEocDisplayName(latestEoc) : 'ไม่มีเหตุการณ์ฉุกเฉิน'}
       showPageHeader={false}
+      mainClassName="p-0!"
     >
-      <AnnouncementHub detailBasePath="/public/announcements" />
+      <PublicAnnouncementList />
     </PublicOpsScaffold>
   );
 }

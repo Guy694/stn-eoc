@@ -1,360 +1,437 @@
 "use client";
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import AppIcon from './icons/AppIcon';
-import HelpRequestLink from '@/components/public/HelpRequestLink';
 
-const CHATBOT_HISTORY_KEY = 'chatbot_history';
-const CHATBOT_LAUNCHER_HIDDEN_KEY = 'chatbot_launcher_hidden';
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  Bot,
+  CloudRain,
+  Database,
+  Hospital,
+  MapPin,
+  Phone,
+  SearchCheck,
+  SendHorizontal,
+  ShieldAlert,
+  Siren,
+  Sparkles,
+  Tent,
+  Trash2,
+  Umbrella,
+  Waves,
+  X
+} from "lucide-react";
+import HelpRequestLink from "@/components/public/HelpRequestLink";
+
+// ผู้ช่วย EOC: ตอบเรื่องสถานการณ์ตอนนี้จากข้อมูลจริง (น้ำ ฝน ความเสี่ยง ศูนย์พักพิง) และความรู้ทั่วไปเรื่องน้ำท่วม/โรค
+const HISTORY_KEY = "chatbot_history";
+const LAUNCHER_HIDDEN_KEY = "chatbot_launcher_hidden";
+const DISTRICT_KEY = "stn-eoc:my-district"; // ใช้ร่วมกับ "พื้นที่ของฉัน" ในหน้าแรก
+const MAX_HISTORY = 40;
+
+const DISTRICTS = ["เมืองสตูล", "ควนโดน", "ควนกาหลง", "ท่าแพ", "ละงู", "ทุ่งหว้า", "มะนัง"];
+
+const QUICK_QUESTIONS = [
+  { icon: Waves, text: "ระดับน้ำในคลองตอนนี้" },
+  { icon: CloudRain, text: "ฝนตอนนี้เป็นยังไง" },
+  { icon: Umbrella, text: "พรุ่งนี้ฝนจะตกหนักไหม" },
+  { icon: ShieldAlert, text: "วันนี้อำเภอไหนเสี่ยงบ้าง" },
+  { icon: Tent, text: "ศูนย์พักพิงที่เปิดอยู่" },
+  { icon: Hospital, text: "โรงพยาบาลใกล้ฉันเปิดไหม" }
+];
+
+const SOURCE_STYLE = {
+  database: { label: "ข้อมูลจริงจากระบบ", icon: Database, className: "bg-[#e3f1f4] text-[#11466e]" },
+  calculated: { label: "คำนวณจากข้อมูลในระบบ", icon: Database, className: "bg-[#e3f1f4] text-[#11466e]" },
+  ai_grounded: { label: "AI ตอบจากข้อมูลของระบบ", icon: Sparkles, className: "bg-[#efeafb] text-[#5b3a9e]" },
+  general_guidance: { label: "คำแนะนำทั่วไปจาก AI", icon: Sparkles, className: "bg-slate-100 text-slate-600" }
+};
+
+function readStorage(key, fallback) {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value === null ? fallback : value;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    if (value === null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, value);
+  } catch {
+    // โหมดส่วนตัว: ใช้งานต่อได้ แค่ไม่จำ
+  }
+}
+
+/** แสดงข้อความหลายบรรทัด: บรรทัดที่ขึ้นต้นด้วย • / ตัวเลข เป็นรายการ */
+function MessageText({ text }) {
+  const lines = String(text || "").split("\n");
+  return (
+    <div className="space-y-1.5 text-[15px] leading-7">
+      {lines.map((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={index} className="h-1" aria-hidden="true" />;
+        const bullet = trimmed.match(/^(•|\d+\.)\s*(.*)$/);
+        if (bullet) {
+          return (
+            <div key={index} className="flex gap-2">
+              <span className="mt-[0.7rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[#2a9db0]" aria-hidden="true" />
+              <span>{bullet[2]}</span>
+            </div>
+          );
+        }
+        return <p key={index}>{trimmed}</p>;
+      })}
+    </div>
+  );
+}
+
+function ActionLink({ action, onNavigate }) {
+  const base = "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors";
+  const tone = action.tone === "danger"
+    ? "bg-[#c81e1e] text-white hover:bg-[#a51818]"
+    : "bg-[#0b4c86] text-white hover:bg-[#083865]";
+  if (action.href.startsWith("tel:")) {
+    return <a href={action.href} className={`${base} ${tone}`}><Phone className="h-3.5 w-3.5" aria-hidden="true" />{action.label}</a>;
+  }
+  return <Link href={action.href} onClick={onNavigate} className={`${base} ${tone}`}>{action.label}</Link>;
+}
 
 export default function AIChatbot({ showLauncher = true }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [isLauncherHidden, setIsLauncherHidden] = useState(false);
-    const [messages, setMessages] = useState([]);
-    const [inputMessage, setInputMessage] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const messagesEndRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [launcherHidden, setLauncherHidden] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [district, setDistrict] = useState("");
+  const endRef = useRef(null);
+  const inputRef = useRef(null);
 
-    // Sample questions
-    const sampleQuestions = [
-        "น้ำท่วมควรเตรียมตัวอย่างไร?",
-        "ช่วงฝนตกหนักควรเฝ้าระวังอะไรบ้าง?",
-        "ตอนนี้อยู่อำเภอเมือง จะไปอำเภอละงูได้หรือไม่?"
-    ];
-    const emergencyNumbers = [
-        { number: '1669', label: 'แพทย์ฉุกเฉิน' },
-        { number: '1784', label: 'ปภ.' },
-        { number: '191', label: 'ตำรวจ' },
-        { number: '199', label: 'ดับเพลิง' }
-    ];
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(readStorage(HISTORY_KEY, "[]"));
+      if (Array.isArray(saved)) setMessages(saved.slice(-MAX_HISTORY));
+    } catch {
+      // ประวัติเสีย: เริ่มใหม่
+    }
+    setLauncherHidden(readStorage(LAUNCHER_HIDDEN_KEY, "false") === "true");
+    setDistrict(readStorage(DISTRICT_KEY, ""));
+  }, []);
 
-    // Scroll to bottom when new messages arrive
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+  useEffect(() => {
+    if (messages.length) writeStorage(HISTORY_KEY, JSON.stringify(messages.slice(-MAX_HISTORY)));
+  }, [messages]);
 
-    // Load conversation history from localStorage
-    useEffect(() => {
-        const saved = localStorage.getItem(CHATBOT_HISTORY_KEY);
-        if (saved) {
-            try {
-                setMessages(JSON.parse(saved));
-            } catch (e) {
-                console.error('Failed to load chat history:', e);
-            }
-        }
-        setIsLauncherHidden(localStorage.getItem(CHATBOT_LAUNCHER_HIDDEN_KEY) === 'true');
-    }, []);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, loading, isOpen]);
 
-    // Save conversation history to localStorage
-    useEffect(() => {
-        if (messages.length > 0) {
-            localStorage.setItem(CHATBOT_HISTORY_KEY, JSON.stringify(messages));
-        }
-    }, [messages]);
-
-    // Allow other public UI controls to open the assistant directly.
-    useEffect(() => {
-        const handleOpen = () => {
-            setIsLauncherHidden(false);
-            localStorage.setItem(CHATBOT_LAUNCHER_HIDDEN_KEY, 'false');
-            setIsOpen(true);
-        };
-        window.addEventListener('eoc-assistant:open', handleOpen);
-        return () => window.removeEventListener('eoc-assistant:open', handleOpen);
-    }, []);
-
-    const hideLauncher = () => {
-        setIsOpen(false);
-        setIsLauncherHidden(true);
-        localStorage.setItem(CHATBOT_LAUNCHER_HIDDEN_KEY, 'true');
+  // ปุ่ม "ถามผู้ช่วย" ในหน้าอื่นเปิดหน้าต่างนี้ได้
+  useEffect(() => {
+    const open = () => {
+      setLauncherHidden(false);
+      writeStorage(LAUNCHER_HIDDEN_KEY, "false");
+      setDistrict(readStorage(DISTRICT_KEY, ""));
+      setIsOpen(true);
     };
+    window.addEventListener("eoc-assistant:open", open);
+    return () => window.removeEventListener("eoc-assistant:open", open);
+  }, []);
 
-    const sendMessage = async (text = inputMessage) => {
-        if (!text.trim() || isLoading) return;
-
-        const userMessage = {
-            role: 'user',
-            content: text,
-            timestamp: new Date().toISOString()
-        };
-
-        setMessages(prev => [...prev, userMessage]);
-        setInputMessage('');
-        setIsLoading(true);
-
-        try {
-            const response = await fetch('/stn-eoc/api/chatbot/query', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: text,
-                    conversationHistory: messages.slice(-5) // Send last 5 messages for context
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                const aiMessage = {
-                    role: 'assistant',
-                    content: data.data.answer,
-                    sql: data.data.sql,
-                    resultCount: data.data.resultCount,
-                    sourceType: data.data.source_type || (String(data.data.source || '').startsWith('database') ? 'database' : null),
-                    sourceLabel: data.data.source_label || null,
-                    generatedAt: data.data.generated_at || null,
-                    timestamp: new Date().toISOString()
-                };
-                setMessages(prev => [...prev, aiMessage]);
-            } else {
-                const errorMessage = {
-                    role: 'assistant',
-                    content: `เกิดข้อผิดพลาด: ${data.message || data.error}`,
-                    timestamp: new Date().toISOString(),
-                    isError: true
-                };
-                setMessages(prev => [...prev, errorMessage]);
-            }
-        } catch (error) {
-            console.error('Chatbot error:', error);
-            const errorMessage = {
-                role: 'assistant',
-                content: 'ไม่สามารถเชื่อมต่อกับ AI ได้ กรุณาลองใหม่อีกครั้ง',
-                timestamp: new Date().toISOString(),
-                isError: true
-            };
-            setMessages(prev => [...prev, errorMessage]);
-        } finally {
-            setIsLoading(false);
-        }
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 50);
+    const onKey = (event) => { if (event.key === "Escape") setIsOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("keydown", onKey);
     };
+  }, [isOpen]);
 
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    };
+  const changeDistrict = (value) => {
+    setDistrict(value);
+    writeStorage(DISTRICT_KEY, value || null);
+  };
 
-    const clearHistory = () => {
-        setMessages([]);
-        localStorage.removeItem(CHATBOT_HISTORY_KEY);
-    };
+  const send = useCallback(async (text) => {
+    const question = String(text || "").trim();
+    if (!question || loading) return;
+    const history = messages.slice(-6).map((item) => ({ role: item.role, content: item.content }));
+    setMessages((current) => [...current, { role: "user", content: question, timestamp: new Date().toISOString() }]);
+    setInput("");
+    setLoading(true);
+    try {
+      const response = await fetch("/stn-eoc/api/chatbot/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: question, conversationHistory: history, userDistrict: district || null })
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok || !json.success) {
+        throw new Error(json.message || json.error || "ตอบไม่ได้ในขณะนี้");
+      }
+      const data = json.data || {};
+      setMessages((current) => [...current, {
+        role: "assistant",
+        content: data.answer,
+        sourceType: data.source_type || null,
+        sourceLabel: data.source_label || null,
+        actions: Array.isArray(data.actions) ? data.actions.slice(0, 3) : [],
+        suggestions: Array.isArray(data.suggestions) ? data.suggestions.slice(0, 3) : [],
+        timestamp: new Date().toISOString()
+      }]);
+    } catch (error) {
+      setMessages((current) => [...current, {
+        role: "assistant",
+        content: error.message === "Failed to fetch" ? "เชื่อมต่อไม่ได้ กรุณาลองใหม่อีกครั้งครับ" : `${error.message} กรุณาลองใหม่อีกครั้งครับ`,
+        isError: true,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [district, loading, messages]);
 
-    return (
-        <>
-            {/* Speech Bubble Tooltip - "Ask Me" */}
-            {!isOpen && !isLauncherHidden && showLauncher && (
-                <div className="fixed bottom-20 right-24 z-[1100] hidden animate-float-subtle sm:block">
-                    <div className="relative bg-white rounded-2xl shadow-xl px-4 py-3 border-2 border-green-500">
-                        <div className="flex items-center gap-2">
-                            <AppIcon icon="message" className="h-5 w-5 text-green-600 animate-wiggle" />
-                            <p className="text-green-700 font-semibold text-sm whitespace-nowrap">
-                                ถามฉันสิ!
-                            </p>
-                        </div>
-                        {/* Speech bubble arrow */}
-                        <div className="absolute -right-2 bottom-4 w-4 h-4 bg-white border-r-2 border-b border-green-500 transform rotate-45"></div>
-                    </div>
+  const onKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      send(input);
+    }
+  };
+
+  const clearHistory = () => {
+    setMessages([]);
+    writeStorage(HISTORY_KEY, null);
+  };
+
+  const hideLauncher = () => {
+    setIsOpen(false);
+    setLauncherHidden(true);
+    writeStorage(LAUNCHER_HIDDEN_KEY, "true");
+  };
+
+  const lastAssistantIndex = messages.map((item) => item.role).lastIndexOf("assistant");
+
+  return (
+    <>
+      {showLauncher && !launcherHidden && !isOpen && (
+        <div className="fixed bottom-5 right-5 z-[1100] flex items-center gap-2 lg:bottom-6">
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0c2f4a] shadow-lg ring-1 ring-[#d6e3ea] hover:bg-[#f3f7f8] sm:block"
+          >
+            ถามผู้ช่วย EOC
+          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="group flex h-14 w-14 items-center justify-center rounded-full bg-[#0c2f4a] text-white shadow-[0_12px_30px_-8px_rgba(12,47,74,.7)] ring-4 ring-white transition-transform hover:-translate-y-0.5 motion-reduce:transition-none sm:h-16 sm:w-16"
+              aria-label="เปิดผู้ช่วย EOC"
+            >
+              <Bot className="h-8 w-8" aria-hidden="true" />
+              <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#2fd0a8] ring-2 ring-[#0c2f4a]" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={hideLauncher}
+              className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white hover:bg-slate-900"
+              aria-label="ซ่อนปุ่มผู้ช่วย EOC (เปิดได้จากเมนู ถามผู้ช่วย)"
+              title="ซ่อนปุ่มนี้"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isOpen && (
+        <section
+          role="dialog"
+          aria-label="ผู้ช่วย EOC"
+          className="eoc-assistant fixed inset-x-2 bottom-2 top-16 z-[1100] flex flex-col overflow-hidden rounded-[1.5rem] bg-[#eef2f1] shadow-[0_30px_60px_-20px_rgba(12,47,74,.55)] ring-1 ring-[#c9dcee] sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[640px] sm:max-h-[calc(100dvh-7rem)] sm:w-[25rem]"
+        >
+          {/* หัว */}
+          <header className="bg-[#0c2f4a] px-4 pb-3 pt-4 text-white">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/10">
+                  <Bot className="h-6 w-6" aria-hidden="true" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-[#2fd0a8] ring-2 ring-[#0c2f4a]" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">ผู้ช่วย EOC</h2>
+                  <p className="truncate text-xs text-[#9fc9d6]">ตอบจากข้อมูลน้ำ ฝน และศูนย์ช่วยเหลือของสตูล</p>
                 </div>
-            )}
+              </div>
+              <div className="flex shrink-0 items-center">
+                {messages.length > 0 && (
+                  <button type="button" onClick={clearHistory} className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label="ล้างการสนทนา" title="ล้างการสนทนา">
+                    <Trash2 className="h-4.5 w-4.5" />
+                  </button>
+                )}
+                <button type="button" onClick={() => setIsOpen(false)} className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label="ปิดผู้ช่วย EOC">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <label className="mt-3 flex items-center gap-2 rounded-full bg-white/10 py-1 pl-3 pr-1 text-sm">
+              <MapPin className="h-4 w-4 shrink-0 text-[#9fc9d6]" aria-hidden="true" />
+              <span className="shrink-0 text-[#d5e7ec]">พื้นที่ของฉัน</span>
+              <select
+                value={district}
+                onChange={(event) => changeDistrict(event.target.value)}
+                className="min-w-0 flex-1 rounded-full bg-transparent py-1 pr-2 font-semibold text-white outline-none [&>option]:text-slate-900"
+                aria-label="เลือกอำเภอของฉัน เพื่อให้ผู้ช่วยตอบตามพื้นที่"
+              >
+                <option value="">ทั้งจังหวัด</option>
+                {DISTRICTS.map((name) => <option key={name} value={name}>อ.{name}</option>)}
+              </select>
+            </label>
+          </header>
 
-            {/* Floating Bubble Button */}
-            {!isLauncherHidden && showLauncher && (
-                <div className="fixed bottom-5 right-5 z-[1100] lg:bottom-6">
-                    {!isOpen && (
-                        <button
-                            type="button"
-                            onClick={hideLauncher}
-                            className="absolute -right-1 -top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-slate-800 text-sm font-black leading-none text-white shadow-lg transition-colors hover:bg-slate-950"
-                            aria-label="ซ่อน EOC Assistant"
-                            title="ซ่อน EOC Assistant"
-                        >
-                            <AppIcon icon="x" className="h-4 w-4" />
-                        </button>
-                    )}
+          {/* ข้อความ */}
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 [scrollbar-width:thin]" aria-live="polite">
+            {messages.length === 0 && (
+              <div>
+                <div className="rounded-2xl bg-white p-4">
+                  <p className="font-[family-name:var(--font-kanit)] text-lg font-semibold text-[#0c2f4a]">สวัสดีครับ อยากรู้อะไรเกี่ยวกับสตูลตอนนี้</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    ผมดูระดับน้ำในคลอง ฝนที่วัดได้ ความเสี่ยงรายอำเภอ ศูนย์พักพิง และสถานพยาบาลให้ได้ทันที
+                    {district ? ` โดยตอบตามพื้นที่ อ.${district}` : " เลือกพื้นที่ของคุณด้านบนเพื่อให้ตอบตรงจุดขึ้น"}
+                  </p>
+                </div>
+                <p className="mb-2 mt-4 text-sm font-semibold text-slate-600">ถามเรื่องสำคัญตอนนี้</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {QUICK_QUESTIONS.map(({ icon: Icon, text }) => (
                     <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className={`h-14 w-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 group sm:h-16 sm:w-16 ${isOpen
-                            ? 'bg-red-600 hover:bg-red-700'
-                            : 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 hover:scale-110'
-                            }`}
-                        aria-label={isOpen ? 'ปิด chatbot' : 'เปิด chatbot'}
+                      key={text}
+                      type="button"
+                      onClick={() => send(text)}
+                      className="flex items-start gap-2 rounded-2xl bg-white p-3 text-left text-sm font-semibold leading-snug text-[#0c2f4a] ring-1 ring-transparent transition hover:ring-[#2a9db0]"
                     >
-                        {isOpen ? (
-                            <AppIcon icon="x" className="h-8 w-8 text-white transition-transform duration-300 rotate-90" />
-                        ) : (
-                            <div className="relative">
-                                <AppIcon icon="bot" className="h-9 w-9 text-white transition-transform duration-300 group-hover:scale-110" />
-                                <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping-slow"></div>
-                            </div>
-                        )}
+                      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#2a9db0]" aria-hidden="true" />
+                      {text}
                     </button>
+                  ))}
                 </div>
+                <div className="mt-4 rounded-2xl bg-white p-3">
+                  <p className="text-sm font-semibold text-[#b91c1c]">เหตุด่วน ไม่ต้องรอพิมพ์</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <a href="tel:1669" className="inline-flex items-center gap-1.5 rounded-full bg-[#c81e1e] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#a51818]"><Phone className="h-3.5 w-3.5" aria-hidden="true" /> 1669</a>
+                    <a href="tel:1784" className="inline-flex items-center gap-1.5 rounded-full bg-[#c81e1e] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#a51818]"><Phone className="h-3.5 w-3.5" aria-hidden="true" /> 1784</a>
+                    <HelpRequestLink
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#c81e1e] px-3 py-1.5 text-sm font-semibold text-[#b91c1c] hover:bg-red-50"
+                      disabledClassName="cursor-not-allowed opacity-50"
+                    >
+                      <Siren className="h-3.5 w-3.5" aria-hidden="true" /> ขอความช่วยเหลือ
+                    </HelpRequestLink>
+                    <Link href="/public/track" onClick={() => setIsOpen(false)} className="inline-flex items-center gap-1.5 rounded-full border border-[#0b4c86] px-3 py-1.5 text-sm font-semibold text-[#0b4c86] hover:bg-sky-50">
+                      <SearchCheck className="h-3.5 w-3.5" aria-hidden="true" /> ติดตามคำขอ
+                    </Link>
+                  </div>
+                </div>
+              </div>
             )}
 
-            {/* Chat Interface */}
-            {isOpen && (
-                <div className="fixed inset-x-3 bottom-3 top-16 z-[1100] flex flex-col rounded-2xl border border-gray-200 bg-white shadow-2xl sm:inset-auto sm:bottom-24 sm:right-6 sm:h-[600px] sm:max-h-[calc(100vh-8rem)] sm:w-96 sm:max-w-[calc(100vw-3rem)]">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
-                        <div className="flex min-w-0 items-center gap-3">
-                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                                <AppIcon icon="bot" className="h-6 w-6 text-white" />
-                            </div>
-                            <div className="min-w-0">
-                                <h3 className="truncate font-bold text-lg">ผู้ช่วย EOC</h3>
-                                <p className="truncate text-xs text-green-100">ผู้ช่วยตอบคำถามข้อมูล EOC</p>
-                            </div>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-1">
-                            <button
-                                onClick={clearHistory}
-                                className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10 transition-colors"
-                                title="ล้างประวัติการสนทนา"
-                            >
-                                <AppIcon icon="trash" className="h-5 w-5" />
-                            </button>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10 transition-colors"
-                                title="ปิด"
-                            >
-                                <AppIcon icon="x" className="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                        {messages.length === 0 && (
-                            <div className="text-center py-8">
-                                <AppIcon icon="message" className="mx-auto mb-4 h-14 w-14 text-emerald-600" />
-                                <p className="text-gray-600 mb-4">สวัสดีครับ! ผมช่วยตอบข้อมูล EOC โรค น้ำท่วม และสภาพฟ้าฝนได้</p>
-                                <div className="mb-4 grid gap-2">
-                                    <HelpRequestLink
-                                        className="rounded-xl bg-red-600 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-red-700"
-                                        disabledClassName="cursor-not-allowed bg-slate-200! text-slate-500! shadow-none! hover:bg-slate-200!"
-                                    >
-                                        {({ helpOpen }) => helpOpen ? 'แจ้งขอความช่วยเหลือ' : 'แจ้งขอความช่วยเหลือ (เปิดเมื่อมีเหตุการณ์ฉุกเฉิน)'}
-                                    </HelpRequestLink>
-                                    <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-left">
-                                        <p className="mb-2 text-sm font-black text-red-900">เบอร์โทรฉุกเฉิน</p>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {emergencyNumbers.map((item) => (
-                                                <a
-                                                    key={item.number}
-                                                    href={`tel:${item.number}`}
-                                                    className="rounded-lg bg-white px-2 py-2 text-center text-xs font-bold text-red-800 shadow-sm hover:bg-red-100"
-                                                >
-                                                    <span className="block text-lg font-black">{item.number}</span>
-                                                    {item.label}
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <p className="text-sm text-gray-500 font-semibold">ตัวอย่างคำถาม:</p>
-                                    {sampleQuestions.map((q, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => sendMessage(q)}
-                                            className="block w-full text-left text-sm bg-white hover:bg-emerald-50 text-emerald-900 px-3 py-2 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors"
-                                        >
-                                            <span className="inline-flex items-center gap-2">
-                                                <AppIcon icon="message" className="h-4 w-4" />
-                                                {q}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {messages.map((msg, idx) => (
-                            <div
-                                key={idx}
-                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div
-                                    className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[80%] ${msg.role === 'user'
-                                        ? 'bg-green-600 text-white rounded-br-none'
-                                        : msg.isError
-                                            ? 'bg-red-50 text-red-800 border border-red-200 rounded-bl-none'
-                                            : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
-                                        }`}
-                                >
-                                    <div className="whitespace-pre-wrap break-words">{msg.content}</div>
-                                    {msg.role === 'assistant' && msg.sourceType ? (
-                                        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
-                                            แหล่งข้อมูล: {msg.sourceLabel || ({
-                                                database: 'ฐานข้อมูล EOC',
-                                                external_provider: 'ผู้ให้บริการภายนอก',
-                                                calculated: 'ผลคำนวณจากข้อมูลที่ระบุ',
-                                                general_guidance: 'คำแนะนำทั่วไปจาก AI ไม่ใช่สถานการณ์ปัจจุบัน'
-                                            }[msg.sourceType] || msg.sourceType)}
-                                        </div>
-                                    ) : null}
-                                    <div className="text-xs opacity-60 mt-1">
-                                        {new Date(msg.timestamp).toLocaleTimeString('th-TH', {
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-
-                        {isLoading && (
-                            <div className="flex justify-start">
-                                <div className="bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex gap-1">
-                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
-                                            <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
-                                        </div>
-                                        <span className="text-sm text-gray-600">กำลังคิด...</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Input Area */}
-                    <div className="p-4 bg-white border-t border-gray-200 rounded-b-2xl">
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={inputMessage}
-                                onChange={(e) => setInputMessage(e.target.value)}
-                                onKeyPress={handleKeyPress}
-                                placeholder="พิมพ์คำถามของคุณ..."
-                                disabled={isLoading}
-                                className="min-w-0 flex-1 px-3 py-3 text-gray-600 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed sm:px-4"
-                            />
-                            <button
-                                onClick={() => sendMessage()}
-                                disabled={!inputMessage.trim() || isLoading}
-                                className="flex shrink-0 items-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-100 disabled:text-green-900 sm:px-6"
-                            >
-                                <span className="hidden sm:inline">ส่ง</span>
-                                <AppIcon icon="send" className="h-4 w-4" />
-                            </button>
-                        </div>
-                        <p className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-500">
-                            <AppIcon icon="lightbulb" className="h-3.5 w-3.5" />
-                            <span>ลองถามเกี่ยวกับข้อมูล EOC, โรค/การระบาด, อุทกภัยน้ำท่วม, ฟ้าฝน หรือเส้นทาง</span>
+            {messages.map((message, index) => {
+              if (message.role === "user") {
+                return (
+                  <div key={index} className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[#0b4c86] px-4 py-2.5 text-[15px] leading-7 text-white">{message.content}</div>
+                  </div>
+                );
+              }
+              const source = SOURCE_STYLE[message.sourceType];
+              const SourceIcon = source?.icon;
+              return (
+                <div key={index} className="flex gap-2">
+                  <span className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0c2f4a] text-white" aria-hidden="true"><Bot className="h-4 w-4" /></span>
+                  <div className="min-w-0 max-w-[88%]">
+                    <div className={`rounded-2xl rounded-tl-md px-4 py-3 ${message.isError ? "bg-red-50 text-red-900 ring-1 ring-red-200" : "bg-white text-[#15232e]"}`}>
+                      <MessageText text={message.content} />
+                      {source ? (
+                        <p className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${source.className}`} title={message.sourceLabel || source.label}>
+                          <SourceIcon className="h-3 w-3" aria-hidden="true" /> {message.sourceLabel || source.label}
                         </p>
+                      ) : null}
                     </div>
+                    {message.actions?.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {message.actions.map((action) => <ActionLink key={`${action.href}-${action.label}`} action={action} onNavigate={() => setIsOpen(false)} />)}
+                      </div>
+                    )}
+                    {index === lastAssistantIndex && !loading && message.suggestions?.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5" aria-label="คำถามที่เกี่ยวข้อง">
+                        {message.suggestions.map((text) => (
+                          <button key={text} type="button" onClick={() => send(text)} className="rounded-full bg-white px-3 py-1.5 text-sm text-[#11466e] ring-1 ring-[#c9dcee] hover:bg-[#e3f1f4]">
+                            {text}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+              );
+            })}
+
+            {loading && (
+              <div className="flex gap-2" role="status">
+                <span className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0c2f4a] text-white" aria-hidden="true"><Bot className="h-4 w-4" /></span>
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-md bg-white px-4 py-3 text-sm text-slate-500">
+                  <span className="flex gap-1" aria-hidden="true">
+                    <span className="eoc-assistant__dot h-2 w-2 rounded-full bg-[#2a9db0]" />
+                    <span className="eoc-assistant__dot h-2 w-2 rounded-full bg-[#2a9db0] [animation-delay:150ms]" />
+                    <span className="eoc-assistant__dot h-2 w-2 rounded-full bg-[#2a9db0] [animation-delay:300ms]" />
+                  </span>
+                  กำลังดูข้อมูลล่าสุด…
+                </div>
+              </div>
             )}
-        </>
-    );
+            <div ref={endRef} />
+          </div>
+
+          {/* ช่องพิมพ์ */}
+          <form
+            onSubmit={(event) => { event.preventDefault(); send(input); }}
+            className="border-t border-[#d6e3ea] bg-white px-3 pb-3 pt-2"
+          >
+            <div className="flex items-end gap-2 rounded-2xl bg-[#f3f7f8] p-1.5 ring-1 ring-[#d6e3ea] focus-within:ring-2 focus-within:ring-[#2a9db0]">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={onKeyDown}
+                rows={1}
+                maxLength={500}
+                placeholder="พิมพ์คำถาม เช่น คลองละงูน้ำขึ้นไหม"
+                aria-label="พิมพ์คำถามถึงผู้ช่วย EOC"
+                className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-[15px] text-[#15232e] outline-none placeholder:text-slate-400 [field-sizing:content]"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || loading}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#0b4c86] text-white transition-colors hover:bg-[#083865] disabled:bg-slate-300"
+                aria-label="ส่งคำถาม"
+              >
+                <SendHorizontal className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mt-1.5 text-center text-[11px] text-slate-500">ประเมินอัตโนมัติ ไม่ใช่ประกาศทางราชการ • เหตุฉุกเฉินโทร 1669</p>
+          </form>
+
+          <style>{`
+            .eoc-assistant { animation: eoc-assistant-in .22s cubic-bezier(.2,.8,.2,1) both; }
+            @keyframes eoc-assistant-in { from { transform: translateY(16px); opacity: 0; } }
+            .eoc-assistant__dot { animation: eoc-assistant-dot 1s ease-in-out infinite; }
+            @keyframes eoc-assistant-dot { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+            @media (prefers-reduced-motion: reduce) { .eoc-assistant, .eoc-assistant__dot { animation: none; } }
+          `}</style>
+        </section>
+      )}
+    </>
+  );
 }

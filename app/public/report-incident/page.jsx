@@ -9,6 +9,7 @@ import PublicLayout from "@/components/layouts/PublicLayout";
 import { showWarning } from "@/lib/sweetAlert";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { trackPublicUsage } from "@/lib/publicUsage";
+import TrackingCodeCard from "@/components/public/TrackingCodeCard";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -67,6 +68,7 @@ export default function ReportIncidentPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [consentGiven, setConsentGiven] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [tracking, setTracking] = useState(null);
     const [submitError, setSubmitError] = useState("");
     const [markerPosition, setMarkerPosition] = useState(null);
     const [gpsStatus, setGpsStatus] = useState("idle");
@@ -295,6 +297,7 @@ export default function ReportIncidentPage() {
             }
 
             setSubmitSuccess(true);
+            setTracking({ code: result.trackingCode || null, firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone });
             trackPublicUsage("help_request_submitted", "/public/report-incident");
             setFormData({
                 firstName: "",
@@ -333,7 +336,7 @@ export default function ReportIncidentPage() {
                             เหตุฉุกเฉินโทร 1669
                         </a>
                         <div className="mt-4 flex flex-wrap justify-center gap-2 text-sm font-bold">
-                            <Link href="/public/shelters" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">ศูนย์พักพิง</Link>
+                            <Link href="/public/my-risk" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">บ้านฉันเสี่ยงไหม</Link>
                             <Link href="/public/announcements" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">ประกาศ</Link>
                             <Link href="/" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">กลับหน้าหลัก</Link>
                         </div>
@@ -368,6 +371,7 @@ export default function ReportIncidentPage() {
                     <section className="mb-5 rounded-2xl border border-emerald-200 bg-white p-4 text-emerald-800" role="status">
                         <h2 className="flex items-center gap-2 text-lg font-black"><CircleCheck className="h-5 w-5" aria-hidden="true" /> ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว</h2>
                         <p className="mt-1 text-sm">เจ้าหน้าที่ได้รับข้อมูลและจะตรวจสอบเพื่อประสานความช่วยเหลือต่อไป</p>
+                        {tracking ? <TrackingCodeCard code={tracking.code} firstName={tracking.firstName} lastName={tracking.lastName} phone={tracking.phone} /> : null}
                     </section>
                 )}
 

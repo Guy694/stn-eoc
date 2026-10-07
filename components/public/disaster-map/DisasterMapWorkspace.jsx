@@ -118,13 +118,14 @@ function ViewModeBanner({ viewMode, context, selectedDate, disasterLabel, onBack
   );
 }
 
-function getEocLayerItems(disasterType) {
+function getEocLayerItems(disasterType, sheltersOpen = true) {
   return [
     ...(disasterType === "flood" ? [{ key: "floodAreas", label: "พื้นที่น้ำท่วม", icon: Waves, tone: "from-sky-500 to-blue-700" }] : []),
     ...(disasterType === "disease" ? [{ key: "diseaseReports", label: "รายงานโรคระบาด", icon: Activity, tone: "from-teal-400 to-emerald-600" }] : []),
     { key: "incidents", label: "เหตุการณ์/ขอความช่วยเหลือ", icon: TriangleAlert, tone: "from-orange-400 to-red-500" },
     { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600" },
-    { key: "shelters", label: "ศูนย์พักพิง", icon: Tent, tone: "from-violet-400 to-purple-600" },
+    // ศูนย์พักพิงมีข้อมูลเฉพาะช่วงเปิด EOC
+    ...(sheltersOpen ? [{ key: "shelters", label: "ศูนย์พักพิง", icon: Tent, tone: "from-violet-400 to-purple-600" }] : []),
     { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-emerald-400 to-green-600" },
     { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "from-cyan-400 to-sky-600" },
     { key: "district", label: "ขอบเขตอำเภอ", icon: Landmark, tone: "from-slate-400 to-slate-700" },
@@ -238,7 +239,7 @@ function Legend({ disasterType, onClose, showElevation = false, showWaterStation
 }
 
 export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) {
-  const { helpOpen, floodOpen } = useHelpAvailability();
+  const { helpOpen, floodOpen, sheltersOpen } = useHelpAvailability();
   const [activeEocs, setActiveEocs] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loadingContext, setLoadingContext] = useState(true);
@@ -461,7 +462,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
   );
 
   const extraTileLayers = useMemo(() => (radarEnabled && radarLayer ? [radarLayer] : []), [radarEnabled, radarLayer]);
-  const layerItems = useMemo(() => getEocLayerItems(disasterType), [disasterType]);
+  const layerItems = useMemo(() => getEocLayerItems(disasterType, sheltersOpen), [disasterType, sheltersOpen]);
   const toggleEocLayer = (key) => {
     setMapLayers((current) => ({ ...current, [key]: !current[key] }));
   };

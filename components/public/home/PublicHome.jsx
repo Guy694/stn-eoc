@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
-import { useEffect, useMemo, useState } from "react";
+import useHelpAvailability from "@/components/public/useHelpAvailability";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowRight,
@@ -14,11 +15,21 @@ import {
   Phone,
   Siren,
   Tent,
-  Waves
+  Waves,
+  HousePlus,
+  SearchCheck
 } from "lucide-react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import SatunRiskMap from "@/components/public/home/SatunRiskMap";
 import HomeSplashScreen from "@/components/public/home/HomeSplashScreen";
+import CanalStrip from "@/components/public/home/CanalStrip";
+import WarningRibbon from "@/components/public/home/WarningRibbon";
+import HomePopup from "@/components/public/home/HomePopup";
+import HeroWeatherFx from "@/components/public/home/HeroWeatherFx";
+import { weatherScene } from "@/lib/weatherFx";
+import { choosePopup, loadSeenPopups, markPopupsSeen, urgentAlerts } from "@/lib/homePopups";
+import { OpsTodayCard, RoadAlerts } from "@/components/public/home/OpsToday";
+import { roadAlerts, shelterSummary } from "@/lib/homeSignals";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 
 // หน้าแรกสำหรับประชาชน
@@ -232,10 +243,52 @@ function buildHeadline(current, events) {
   return `สตูลวันนี้${weather ? ` ${weather}` : ""} ไม่มีภาวะฉุกเฉิน`;
 }
 
+function clock(value) {
+  const date = new Date(value || 0);
+  return Number.isNaN(date.getTime()) || date.getTime() <= 0 ? null : `${date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`;
+}
+
+/** ที่มาของข้อมูลและเวลาอัปเดตของแต่ละแหล่ง */
+function SourceTimes({ weather, water }) {
+  const rainAt = (weather?.district_weather || []).map((item) => item.rain_gauge?.observed_at).filter(Boolean).sort().pop();
+  const waterAt = water.stations.map((item) => item.observedAt).filter(Boolean).sort().pop();
+  const sources = [
+    ["ระดับน้ำในคลอง", "ThaiWater (สสน.)", clock(waterAt)],
+    ["ฝนที่วัดได้", "ThaiWater (สสน.)", clock(rainAt)],
+    ["พยากรณ์และโอกาสฝนหนัก", "ECMWF", clock(weather?.weather_current?.observed_at)],
+    ["เหตุการณ์และศูนย์พักพิง", "ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล", "อัปเดตตามที่เจ้าหน้าที่บันทึก"]
+  ];
+  return (
+    <footer className="mx-auto max-w-6xl px-4 py-8 sm:px-6" aria-label="ที่มาของข้อมูล">
+      <dl className="grid gap-x-6 gap-y-3 border-t border-slate-300/70 pt-6 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        {sources.map(([label, source, time]) => (
+          <div key={label}>
+            <dt className="font-semibold text-slate-700">{label}</dt>
+            <dd className="text-slate-500">{source}{time ? ` • ${time}` : ""}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-5 text-sm text-slate-500">ประเมินและอัปเดตอัตโนมัติ ไม่ใช่ประกาศทางราชการ โปรดยึดประกาศของหน่วยงานราชการเป็นหลัก</p>
+    </footer>
+  );
+}
+
 export default function PublicHome() {
+  const { sheltersOpen } = useHelpAvailability();
   const [situation, setSituation] = useState(null);
   const [weather, setWeather] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
+  const [water, setWater] = useState({ loading: true, stations: [], fetchedAt: null });
+  const [ops, setOps] = useState(null);
+  const [roads, setRoads] = useState([]);
+  const [shelters, setShelters] = useState([]);
+  const [popupAnnouncement, setPopupAnnouncement] = useState(undefined);
+  const [popup, setPopup] = useState(null);
+  // ?fx=rain|heavy|storm|wind|cloudy|clear|night ใช้ดูตัวอย่างฉากพื้นหลัง
+  const [fxPreset, setFxPreset] = useState(null);
+  useEffect(() => {
+    setFxPreset(new URLSearchParams(window.location.search).get("fx"));
+  }, []);
   const [loading, setLoading] = useState(true);
   const [districtName, setDistrictName] = useState("");
   const [userPoint, setUserPoint] = useState(null);
@@ -266,10 +319,50 @@ export default function PublicHome() {
       setAnnouncements((announcementJson?.data || []).slice(0, 6));
       setLoading(false);
     });
+    // ข้อมูลประกอบ: โหลดแยก ไม่ให้หน้าแรกรอ
+    load("/stn-eoc/api/public/water-levels").then((json) => {
+      if (!controller.signal.aborted) setWater({ loading: false, stations: json?.stations || [], fetchedAt: json?.fetchedAt || null });
+    });
+    load("/stn-eoc/api/public/ops-today").then((json) => {
+      if (!controller.signal.aborted) setOps(json?.open ? json.data : null);
+    });
+    load("/stn-eoc/api/public/verified-incidents").then((json) => {
+      if (!controller.signal.aborted) setRoads(roadAlerts(json?.data || []));
+    });
+    load("/stn-eoc/api/public/announcements/popup").then((json) => {
+      if (!controller.signal.aborted) setPopupAnnouncement(json?.data || null);
+    });
+    load("/stn-eoc/api/public/shelter-centers").then((json) => {
+      if (!controller.signal.aborted) setShelters(json?.data || []);
+    });
     return () => controller.abort();
   }, []);
 
   const events = useMemo(() => situation?.events || [], [situation]);
+  const scene = useMemo(
+    () => (weather || fxPreset ? weatherScene({ current: weather?.weather_current, districts: weather?.district_weather || [], preset: fxPreset }) : null),
+    [fxPreset, weather]
+  );
+
+  // popup ตอนเข้าหน้า: เตือนด่วนมาก่อน แล้วค่อยประกาศ — เด้งหลังหน้าจอโลโก้ และเรื่องเดิมเด้งครั้งเดียวต่อเครื่อง
+  useEffect(() => {
+    if (loading || popupAnnouncement === undefined) return undefined;
+    const chosen = choosePopup({
+      urgent: urgentAlerts(weather?.weather_warnings || []),
+      announcement: popupAnnouncement,
+      seen: loadSeenPopups()
+    });
+    if (!chosen) return undefined;
+    const timer = window.setTimeout(() => setPopup(chosen), 1600);
+    return () => window.clearTimeout(timer);
+  }, [loading, popupAnnouncement, weather]);
+
+  const closePopup = useCallback(() => {
+    setPopup((current) => {
+      if (current) markPopupsSeen(current.ids);
+      return null;
+    });
+  }, []);
   const districts = useMemo(() => weather?.district_weather || [], [weather]);
   const current = weather?.weather_current || null;
 
@@ -326,6 +419,7 @@ export default function PublicHome() {
   return (
     <>
     <HomeSplashScreen />
+    <HomePopup popup={popup} onClose={closePopup} />
     <PublicOpsScaffold
       title="หน้าหลัก"
       activeMenu="home"
@@ -336,18 +430,26 @@ export default function PublicHome() {
       mainClassName="p-0!"
     >
       <div className="bg-[#eef2f1] text-[#15232e]">
+        <WarningRibbon warnings={weather?.weather_warnings || []} />
         {/* ── Hero: พาดหัว + แผนที่ความเสี่ยงรายอำเภอ ── */}
         <section className="relative overflow-hidden bg-[#0c2f4a] text-white" aria-labelledby="home-headline">
+          <HeroWeatherFx scene={scene} />
           {/* มือถือ: พาดหัว → แผนที่ → พื้นที่ของฉัน / จอใหญ่: ซ้าย (พาดหัว + พื้นที่ของฉัน) ขวา (แผนที่) */}
-          <div className="mx-auto grid max-w-6xl gap-6 px-4 pb-24 pt-8 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:pb-28 lg:pt-12">
+          <div className="relative mx-auto grid max-w-6xl gap-6 px-4 pb-24 pt-8 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:pb-28 lg:pt-12">
             <div className="lg:col-start-1 lg:row-start-1">
               <p className="text-sm text-[#9fc9d6]">{todayLine(current?.observed_at)}</p>
+              {scene ? (
+                <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm text-[#d5e7ec] backdrop-blur-sm">
+                  <span className={`h-2 w-2 rounded-full ${scene.rain ? "bg-[#7cc7e8]" : "bg-[#ffd166]"}`} aria-hidden="true" />
+                  {scene.preview ? "ตัวอย่างฉาก: " : "ตอนนี้: "}{scene.label}
+                </p>
+              ) : null}
               <h1 id="home-headline" className="mt-3 font-[family-name:var(--font-kanit)] text-[1.9rem] font-bold leading-[1.25] tracking-[-0.01em] sm:text-[2.5rem] lg:text-[2.9rem]">
                 {loading ? "กำลังดูสถานการณ์ของสตูลวันนี้…" : buildHeadline(current, events)}
               </h1>
               {!loading && districts.length > 0 && (
                 <p className="mt-4 max-w-[34rem] text-[1.05rem] leading-8 text-[#d5e7ec]">
-                  {watchCount > 0 ? `${watchCount} จาก ${districts.length} อำเภอต้องเฝ้าระวังเรื่องฝน` : "ทุกอำเภออากาศอยู่ในเกณฑ์ปกติ"}
+                  {watchCount > 0 ? `${watchCount} จาก ${districts.length} อำเภอต้องเฝ้าระวังน้ำท่วม` : "ทุกอำเภอยังไม่มีสัญญาณน้ำท่วม"}
                   {" "}แตะอำเภอของคุณบนแผนที่ เพื่อดูว่าวันนี้ต้องระวังอะไร
                 </p>
               )}
@@ -400,7 +502,7 @@ export default function PublicHome() {
                       {riskMeta(level).label}
                     </li>
                   ))}
-                  <li className="text-[#9fc9d6]">สีตามความเสี่ยงจากฝนและลมวันนี้</li>
+                  <li className="text-[#9fc9d6]">สีตามความเสี่ยงน้ำท่วมวันนี้ (ฝนที่วัดได้ ระดับน้ำในคลอง และโอกาสฝนหนัก) • ตัวเลขคือฝนที่วัดได้ 24 ชม.</li>
                 </ul>
               </div>
             </div>
@@ -443,30 +545,45 @@ export default function PublicHome() {
                 </>
               )}
             </HelpRequestLink>
-            <Link href="/public/shelters?near=1" className="flex items-center gap-3 bg-white p-5 hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1">
-              <Tent className="h-7 w-7 shrink-0 text-[#6d3fc4]" aria-hidden="true" />
-              <span className="font-[family-name:var(--font-kanit)] text-lg font-semibold">ศูนย์พักพิงใกล้ฉัน</span>
+            <Link href="/public/my-risk" className="group flex items-center gap-3 bg-white p-5 hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1">
+              <HousePlus className="h-7 w-7 shrink-0 text-[#0b4c86] transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none" aria-hidden="true" />
+              <span>
+                <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">บ้านฉันเสี่ยงไหม</span>
+                <span className="block text-sm text-slate-500">คลองใกล้บ้าน ที่พึ่งใกล้สุด</span>
+              </span>
             </Link>
-            <a href="tel:1669" className="flex items-center gap-3 bg-white p-5 hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1">
-              <Phone className="h-7 w-7 shrink-0 text-[#c81e1e]" aria-hidden="true" />
+            <Link href="/public/track" className="group flex items-center gap-3 bg-white p-5 hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1">
+              <SearchCheck className="h-7 w-7 shrink-0 text-[#2a9db0] transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none" aria-hidden="true" />
               <span>
-                <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">โทร 1669</span>
-                <span className="block text-sm text-slate-500">เจ็บป่วยฉุกเฉิน</span>
+                <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">ติดตามคำขอ</span>
+                <span className="block text-sm text-slate-500">เจ้าหน้าที่ทำถึงไหนแล้ว</span>
               </span>
-            </a>
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("eoc-assistant:open"))}
-              className="flex items-center gap-3 bg-white p-5 text-left hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1"
-            >
-              <Bot className="h-7 w-7 shrink-0 text-[#2a9db0]" aria-hidden="true" />
-              <span>
-                <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">ถามผู้ช่วย</span>
-                <span className="block text-sm text-slate-500">ถามเรื่องอากาศ โรค เส้นทาง</span>
-              </span>
-            </button>
+            </Link>
+            {sheltersOpen && shelters.length > 0 ? (() => {
+              const summary = shelterSummary(shelters);
+              return (
+                <Link href="/public/shelters?near=1" className="group flex items-center gap-3 bg-[#f4effc] p-5 hover:bg-[#ebe2fa] sm:col-span-2 xl:col-span-1">
+                  <Tent className="h-7 w-7 shrink-0 text-[#6d3fc4] transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none" aria-hidden="true" />
+                  <span>
+                    <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">ศูนย์พักพิงเปิด {formatNumber(summary.open)} แห่ง</span>
+                    <span className="block text-sm text-[#5b3a9e]">รับได้อีก {formatNumber(summary.vacancy)} คน • หาที่ใกล้ฉัน</span>
+                  </span>
+                </Link>
+              );
+            })() : (
+              <a href="tel:1669" className="flex items-center gap-3 bg-white p-5 hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1">
+                <Phone className="h-7 w-7 shrink-0 text-[#c81e1e]" aria-hidden="true" />
+                <span>
+                  <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">โทร 1669</span>
+                  <span className="block text-sm text-slate-500">เจ็บป่วยฉุกเฉิน</span>
+                </span>
+              </a>
+            )}
           </div>
         </nav>
+
+        {/* ── น้ำในคลองตอนนี้ ── */}
+        <CanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} />
 
         {/* ── สถานการณ์ที่ดำเนินการอยู่ + สิ่งที่ควรทำ ── */}
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
@@ -498,6 +615,9 @@ export default function PublicHome() {
                 </article>
               );
             })}
+
+            <OpsTodayCard ops={ops} />
+            <RoadAlerts roads={roads} />
 
             {primaryEvent && (
               <div className="mt-8 rounded-3xl bg-white p-5 sm:p-6">
@@ -570,9 +690,7 @@ export default function PublicHome() {
           </section>
         )}
 
-        <p className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-slate-500 sm:px-6">
-          ตัวเลขจากศูนย์ปฏิบัติการภาวะฉุกเฉินจังหวัดสตูล และพยากรณ์อากาศจาก Open-Meteo อัปเดตอัตโนมัติ โปรดยึดประกาศของหน่วยงานราชการเป็นหลัก
-        </p>
+        <SourceTimes weather={weather} water={water} />
       </div>
     </PublicOpsScaffold>
     </>

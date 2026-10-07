@@ -17,41 +17,11 @@ import {
 import { floodAreaMapMeta } from "@/lib/floodMapLevels";
 import { waterReportSummary, timeAgoText } from "@/lib/waterReportMap";
 import { situationMeta, bankText } from "@/lib/thaiWater";
-import { ELEVATION_MAX_ZOOM, ELEVATION_TILE_URL, bandFor, decodeTerrarium, elevationText, tilePixelAt } from "@/lib/elevation";
+import { bandFor, elevationText } from "@/lib/elevation";
+import { loadElevation } from "@/lib/elevationClient";
 
 const WATER_REPORT_RADIUS_KM = 1;
 const STATION_RADIUS_KM = 10;
-const elevationCache = new Map();
-
-// อ่านความสูงจากภาพ Terrain Tiles ที่ zoom สูงสุด (ข้อมูล ~30 ม. ใช้ประกอบ ไม่ใช่ค่ารังวัด)
-function loadElevation(lat, lng) {
-  const { key, px, py } = tilePixelAt(lat, lng, ELEVATION_MAX_ZOOM);
-  const cacheKey = `${key}/${px}/${py}`;
-  if (elevationCache.has(cacheKey)) return elevationCache.get(cacheKey);
-  const [z, x, y] = key.split("/");
-  const promise = new Promise((resolve) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = 1;
-        canvas.height = 1;
-        const context = canvas.getContext("2d");
-        context.drawImage(image, px, py, 1, 1, 0, 0, 1, 1);
-        const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
-        resolve(decodeTerrarium(r, g, b));
-      } catch {
-        resolve(null);
-      }
-    };
-    image.onerror = () => resolve(null);
-    image.src = ELEVATION_TILE_URL.replace("{z}", z).replace("{x}", x).replace("{y}", y);
-  });
-  elevationCache.set(cacheKey, promise);
-  return promise;
-}
-
 function formatUpdated(value) {
   const date = new Date(value || 0);
   if (Number.isNaN(date.getTime()) || date.getTime() <= 0) return "";

@@ -5,6 +5,7 @@ import { getPool } from "@/lib/db";
 import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
 import { removePublicPhotoCopy } from '@/lib/incidentPhotos';
 import { expireOverduePublications, hasConfirmationColumns, hasPublishingColumns } from '@/lib/incidentPublishingDb';
+import { hasTrackingColumns, recordStatusEvent } from '@/lib/incidentTrackingDb';
 
 const pool = getPool();
 
@@ -122,6 +123,7 @@ export async function GET(request) {
                 reviewed_by,
                 reviewed_at,
                 admin_notes,
+                ${await hasTrackingColumns(connection) ? 'tracking_code, citizen_message,' : ''}
                 ${diseaseSessionSelect}
                 created_at,
                 updated_at
@@ -196,6 +198,9 @@ export async function PUT(request) {
     try {
         const body = await request.json();
         const { reportId, status, adminNotes } = body;
+        // ข้อความถึงผู้แจ้ง: แสดงในหน้าติดตามคำขอ (ไม่ใช่บันทึกภายใน)
+        const citizenMessage = typeof body.citizenMessage === 'string' ? body.citizenMessage.trim().slice(0, 500) || null : undefined;
+        const tracking = await hasTrackingColumns(connection);
 
         // Validate input
         if (!reportId || !status) {
@@ -216,7 +221,7 @@ export async function PUT(request) {
 
         const publishing = await hasPublishingColumns(connection);
         const [beforeRows] = await connection.execute(
-            `SELECT ${publishing ? 'publish_status, public_photo_path' : 'id'} FROM public_incident_reports WHERE id = ?`,
+            `SELECT status, ${publishing ? 'publish_status, public_photo_path' : 'id'}${await hasTrackingColumns(connection) ? ', citizen_message' : ''} FROM public_incident_reports WHERE id = ?`,
             [reportId]
         );
         if (!beforeRows.length) {
@@ -229,10 +234,19 @@ export async function PUT(request) {
             SET status = ?, 
                 reviewed_by = ?, 
                 reviewed_at = NOW(), 
-                admin_notes = ?
+                admin_notes = ?${tracking && citizenMessage !== undefined ? ', citizen_message = ?' : ''}
             WHERE id = ?`,
-            [status, auth.user.id, adminNotes || null, reportId]
+            [status, auth.user.id, adminNotes || null, ...(tracking && citizenMessage !== undefined ? [citizenMessage] : []), reportId]
         );
+        // ประวัติที่ผู้แจ้งเห็น: บันทึกเมื่อสถานะเปลี่ยน หรือมีข้อความใหม่ถึงผู้แจ้ง
+        if (tracking && (beforeRows[0].status !== status || (citizenMessage && citizenMessage !== beforeRows[0].citizen_message))) {
+            await recordStatusEvent(connection, {
+                reportId,
+                status,
+                citizenMessage: citizenMessage && citizenMessage !== beforeRows[0].citizen_message ? citizenMessage : null,
+                userId: auth.user.id
+            });
+        }
 
         // ปิดเรื่องหรือไม่ดำเนินการ → ถอดออกจากแผนที่สาธารณะทันที
         let withdrawn = false;

@@ -5,6 +5,22 @@ import { notifySecurityEvent } from '@/lib/telegram';
 import { requireAuth } from '@/lib/auth';
 import { getClientIp } from '@/lib/clientIp';
 import { consumeRateLimit, tooManyRequestsResponse } from '@/lib/rateLimit';
+import { actionsForTopic, answerLive, buildSnapshot, detectDistrict, detectLiveIntent } from '@/lib/assistantLive';
+import { loadAssistantData } from '@/lib/assistantData';
+
+// คำถามต่อเนื่องที่แนะนำหลังคำตอบแต่ละแบบ (ชวนถามเรื่องที่เกี่ยวข้องกันต่อ)
+const FOLLOW_UPS = {
+    water: ['ฝนตอนนี้เป็นยังไง', 'พรุ่งนี้ฝนจะตกหนักไหม', 'บ้านฉันเสี่ยงน้ำท่วมไหม'],
+    rain: ['ระดับน้ำในคลองตอนนี้', 'พรุ่งนี้ฝนจะตกหนักไหม', 'มีประกาศเตือนไหม'],
+    risk: ['ระดับน้ำในคลองตอนนี้', 'พรุ่งนี้ฝนจะตกหนักไหม', 'ศูนย์พักพิงที่เปิดอยู่'],
+    forecast: ['ระดับน้ำในคลองตอนนี้', 'น้ำท่วมควรเตรียมตัวอย่างไร', 'มีประกาศเตือนไหม'],
+    warning: ['ระดับน้ำในคลองตอนนี้', 'ศูนย์พักพิงที่เปิดอยู่', 'น้ำท่วมควรเตรียมตัวอย่างไร'],
+    shelter: ['ควรเตรียมของอะไรไปศูนย์พักพิง', 'โรงพยาบาลใกล้ฉันเปิดไหม', 'ระดับน้ำในคลองตอนนี้'],
+    health: ['ศูนย์พักพิงที่เปิดอยู่', 'น้ำกัดเท้าดูแลยังไง', 'มีประกาศเตือนไหม'],
+    track: ['ขอความช่วยเหลือต้องทำอย่างไร', 'ศูนย์พักพิงที่เปิดอยู่'],
+    help: ['ติดตามคำขอได้อย่างไร', 'ศูนย์พักพิงที่เปิดอยู่'],
+    general: ['ระดับน้ำในคลองตอนนี้', 'วันนี้อำเภอไหนเสี่ยงบ้าง', 'พรุ่งนี้ฝนจะตกหนักไหม']
+};
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -84,6 +100,8 @@ const WEATHER_KNOWLEDGE_PATTERNS = [
 
 function detectAllowedKnowledgeDomain(message) {
     const text = String(message || '');
+    // หัวข้อที่ระบบมีข้อมูลจริง (ศูนย์พักพิง สถานพยาบาล ติดตามคำขอ ฯลฯ) อยู่ในขอบเขตเสมอ
+    if (detectLiveIntent(text)) return 'flood_and_weather';
     const isFlood = FLOOD_KNOWLEDGE_PATTERNS.some((pattern) => pattern.test(text));
     const isDisease = DISEASE_KNOWLEDGE_PATTERNS.some((pattern) => pattern.test(text));
     const isWeather = WEATHER_KNOWLEDGE_PATTERNS.some((pattern) => pattern.test(text));
@@ -100,6 +118,7 @@ function getKnowledgeDomainLabel(domain) {
     if (domain === 'flood') return 'อุทกภัยน้ำท่วม';
     if (domain === 'disease') return 'โรคและการระบาด';
     if (domain === 'weather') return 'สภาพฟ้าฝนและอากาศ';
+    if (domain === 'flood_and_weather') return 'อุทกภัยน้ำท่วม สภาพฟ้าฝน และบริการช่วยเหลือในจังหวัดสตูล';
     return 'โรค/การระบาด อุทกภัยน้ำท่วม และสภาพฟ้าฝน/อากาศ';
 }
 
@@ -119,19 +138,19 @@ function buildConversationContext(conversationHistory) {
 }
 
 function buildScopeAnswer() {
-    return 'ขออภัยครับ ตอนนี้ EOC Assistant ตอบข้อมูลนอกฐานข้อมูลเฉพาะเรื่องโรค/การระบาด อุทกภัยน้ำท่วม และสภาพฟ้าฝน/อากาศเท่านั้น หากต้องการถามข้อมูลในระบบ EOC กรุณาถามเป็นข้อมูลสถานการณ์ เหตุการณ์ หรือสถิติภาพรวมที่เกี่ยวข้องกับระบบครับ';
+    return 'ขออภัยครับ เรื่องนี้อยู่นอกสิ่งที่ผู้ช่วย EOC ตอบได้\nผมช่วยได้เรื่อง น้ำท่วม ฝนและพยากรณ์ ระดับน้ำในคลอง ความเสี่ยงรายอำเภอ ศูนย์พักพิง สถานพยาบาล โรคและการระบาด การขอความช่วยเหลือ และการติดตามคำขอ ลองเลือกคำถามด้านล่างได้เลยครับ';
 }
 
-function buildAssistantUnavailableAnswer(domain) {
-    const label = domain ? getKnowledgeDomainLabel(domain) : 'ข้อมูล EOC';
-    return `คำถามนี้อยู่ในขอบเขต${label}ครับ แต่ขณะนี้ระบบ AI สำหรับแปลงคำถามเป็นข้อมูลเชิงลึกยังไม่พร้อมใช้งาน จึงยังตอบคำถามแบบอิสระจากฐานข้อมูลไม่ได้ชั่วคราว\nหากถามเป็นคำถามที่ระบบรองรับโดยตรง เช่น อำเภอไหนมีไข้เลือดออกมากที่สุด ระบบจะตอบจากฐานข้อมูลให้ทันทีครับ`;
+function buildAssistantUnavailableAnswer() {
+    return 'ตอนนี้ส่วนที่ใช้ AI ตอบคำถามทั่วไปขัดข้องชั่วคราวครับ ลองถามใหม่อีกครั้งในอีกสักครู่\nระหว่างนี้ผมยังตอบเรื่องสถานการณ์จากข้อมูลจริงได้ทันที เช่น ระดับน้ำในคลอง ฝนตอนนี้ พยากรณ์ฝนหนัก ความเสี่ยงรายอำเภอ และศูนย์พักพิง';
 }
 
 function createAssistantUnavailableResponse({ domain = null, reason = 'ai_unavailable' } = {}) {
     return Response.json({
         success: true,
         data: {
-            answer: buildAssistantUnavailableAnswer(domain),
+            answer: buildAssistantUnavailableAnswer(),
+            suggestions: ['ระดับน้ำในคลองตอนนี้', 'ฝนตอนนี้เป็นยังไง', 'วันนี้อำเภอไหนเสี่ยงบ้าง'],
             sql: null,
             results: null,
             resultCount: 0,
@@ -509,8 +528,11 @@ async function createDeterministicDataResponse({ message }) {
     return null;
 }
 
-async function generateKnowledgeAnswer({ model, message, conversationHistory, domain }) {
-    const prompt = `คุณเป็น EOC Assistant สำหรับ Satun Geo-EOC จังหวัดสตูล
+async function generateKnowledgeAnswer({ model, message, conversationHistory, domain, snapshot }) {
+    const prompt = `คุณเป็น "ผู้ช่วย EOC" ของ Satun Geo-EOC จังหวัดสตูล พูดสุภาพ เป็นกันเอง ตรงประเด็น
+
+ข้อมูลสถานการณ์จริงจากระบบ (ใช้เป็นข้อเท็จจริงเรื่อง "ตอนนี้" ได้ และบอกเวลาของข้อมูลเมื่ออ้างถึง):
+${snapshot || 'ไม่มีข้อมูลสถานการณ์ในขณะนี้'}
 
 ขอบเขตคำถามที่อนุญาต: ${getKnowledgeDomainLabel(domain)}
 
@@ -526,7 +548,9 @@ ${message}
 3. หากเป็นเรื่องโรค ให้ให้คำแนะนำเชิงสาธารณสุขทั่วไป ไม่วินิจฉัยโรค ไม่สั่งยา และแนะนำพบแพทย์/โทร 1669 เมื่อมีอาการรุนแรง
 4. หากเป็นเรื่องน้ำท่วม ให้ให้คำแนะนำด้านความปลอดภัย การเตรียมพร้อม การอพยพ และการเดินทางอย่างระมัดระวัง
 5. หากเป็นเรื่องสภาพฟ้าฝน/อากาศ ให้ตอบความหมายของสัญญาณเตือน การเตรียมตัว การอ่านพยากรณ์ และผลกระทบต่อความปลอดภัย
-6. ห้ามอ้างว่ารู้ข้อมูลสถานการณ์จริงแบบปัจจุบัน เช่น ถนนปิด จำนวนผู้ป่วย ระดับน้ำ ฝนกำลังตก อุณหภูมิล่าสุด หรือประกาศราชการ เว้นแต่มีข้อมูลจากฐานข้อมูลในคำถามนี้
+6. ข้อมูลปัจจุบัน (ฝน ระดับน้ำ ความเสี่ยง ศูนย์พักพิง สถานพยาบาล ประกาศเตือน) ให้ใช้เฉพาะจาก "ข้อมูลสถานการณ์จริงจากระบบ" ด้านบนเท่านั้น ห้ามแต่งตัวเลขหรือสถานที่เพิ่ม ถ้าไม่มีในข้อมูลให้บอกตรง ๆ ว่ายังไม่มีข้อมูล
+6.0 ไม่ต้องทักทายหรือแนะนำตัว เริ่มที่คำตอบเลย
+6.1 ถ้าผู้ใช้ถามถึงพื้นที่ของตัวเอง ให้ใช้ "ผู้ใช้สนใจพื้นที่" เป็นค่าเริ่มต้น และเชื่อมคำแนะนำทั่วไปกับสถานการณ์จริงของพื้นที่นั้น
 7. หากต้องใช้ข้อมูลปัจจุบัน ให้บอกว่าควรตรวจสอบจากศูนย์ EOC จังหวัด หน่วยงานท้องถิ่น กรมอุตุนิยมวิทยา หรือช่องทางราชการล่าสุด
 8. หากคำถามหลุดจากเรื่องโรค/การระบาด/น้ำท่วม/สภาพอากาศ ให้ปฏิเสธสั้น ๆ และชวนถามในขอบเขตที่รองรับ
 9. ไม่ขอหรือเปิดเผยข้อมูลส่วนบุคคล
@@ -536,17 +560,19 @@ ${message}
 ตอบกลับเป็นภาษาไทยเท่านั้น:`;
 
     const result = await model.generateContent(prompt);
-    return result.response.text().trim();
+    // หน้าจอแชทแสดงข้อความธรรมดา: ตัดเครื่องหมาย Markdown ที่หลุดมา
+    return result.response.text().trim().replace(/\*\*(.+?)\*\*/g, '$1').replace(/^\s*[-*]\s+/gm, '• ');
 }
 
-async function createKnowledgeResponse({ model, message, conversationHistory, domain }) {
+async function createKnowledgeResponse({ model, message, conversationHistory, domain, snapshot }) {
     let answer;
     try {
         answer = await generateKnowledgeAnswer({
             model,
             message,
             conversationHistory,
-            domain
+            domain,
+            snapshot
         });
     } catch (knowledgeError) {
         console.error('Failed to generate knowledge response:', knowledgeError);
@@ -564,10 +590,12 @@ async function createKnowledgeResponse({ model, message, conversationHistory, do
             results: null,
             resultCount: 0,
             source: 'general_knowledge',
-            source_type: 'general_guidance',
-            source_label: 'คำแนะนำทั่วไปจาก AI ไม่ใช่ข้อมูลสถานการณ์จาก EOC',
+            source_type: snapshot ? 'ai_grounded' : 'general_guidance',
+            source_label: snapshot ? 'AI ตอบจากข้อมูลสถานการณ์ของระบบ ร่วมกับความรู้ทั่วไป' : 'คำแนะนำทั่วไปจาก AI ไม่ใช่ข้อมูลสถานการณ์จาก EOC',
             generated_at: new Date().toISOString(),
-            domain
+            domain,
+            actions: actionsForTopic(message),
+            suggestions: FOLLOW_UPS[detectLiveIntent(message) || 'general']
         }
     });
 }
@@ -578,7 +606,7 @@ async function createKnowledgeResponse({ model, message, conversationHistory, do
  */
 export async function POST(request) {
     try {
-        const { message, conversationHistory = [], analyticsContext = false } = await request.json();
+        const { message, conversationHistory = [], analyticsContext = false, userDistrict = null } = await request.json();
         const clientIp = getClientIp(request);
         if (analyticsContext) {
             const auth = await requireAuth(request, ['admin', 'commander', 'staff']);
@@ -638,6 +666,31 @@ export async function POST(request) {
             return deterministicDataResponse;
         }
 
+        // คำถามสถานการณ์ "ตอนนี้" (น้ำ ฝน ความเสี่ยง ศูนย์พักพิง ฯลฯ) ตอบจากข้อมูลจริงทันที ไม่ต้องรอ AI
+        const assistantData = analyticsContext ? null : await loadAssistantData().catch(() => null);
+        const district = detectDistrict(message, userDistrict);
+        if (assistantData) {
+            const live = answerLive(message, assistantData, { district: userDistrict });
+            if (live) {
+                return Response.json({
+                    success: true,
+                    data: {
+                        answer: live.answer,
+                        sql: null,
+                        results: null,
+                        resultCount: 0,
+                        source: `live_${live.intent}`,
+                        source_type: 'database',
+                        source_label: live.sourceLabel,
+                        generated_at: new Date().toISOString(),
+                        actions: live.actions || [],
+                        suggestions: FOLLOW_UPS[live.intent] || FOLLOW_UPS.general,
+                        district: live.district
+                    }
+                });
+            }
+        }
+
         // Database access is deliberately limited to the deterministic query
         // templates above. Free-form AI-generated SQL must never be executed.
         if (allowedKnowledgeDomain) {
@@ -655,7 +708,8 @@ export async function POST(request) {
                 model: knowledgeModel,
                 message,
                 conversationHistory,
-                domain: allowedKnowledgeDomain
+                domain: allowedKnowledgeDomain,
+                snapshot: assistantData ? buildSnapshot(assistantData, { district }) : null
             });
         }
 
@@ -666,7 +720,8 @@ export async function POST(request) {
                 sql: null,
                 results: null,
                 resultCount: 0,
-                source: 'out_of_scope'
+                source: 'out_of_scope',
+                suggestions: FOLLOW_UPS.general
             }
         });
 

@@ -11,6 +11,7 @@ import useHelpAvailability from "@/components/public/useHelpAvailability";
 import WaterLevelFigure from "@/components/public/water/WaterLevelFigure";
 import { WATER_LEVELS, WATER_PASSABILITY, WATER_TRENDS, parseLatLng, waterLevelMeta } from "@/lib/waterReport";
 import { trackPublicUsage } from "@/lib/publicUsage";
+import TrackingCodeCard from "@/components/public/TrackingCodeCard";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -73,6 +74,7 @@ export default function ReportWaterPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [tracking, setTracking] = useState(null);
   const searchRef = useRef(null);
   const searchTimer = useRef(null);
 
@@ -106,6 +108,17 @@ export default function ReportWaterPage() {
     setShowMap(true);
     setError("");
   };
+
+  // เปิดจากหน้า "บ้านฉันเสี่ยงไหม" (?lat=&lng=) → ปักหมุดให้เลย
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lat = Number(params.get("lat"));
+    const lng = Number(params.get("lng"));
+    if (Number.isFinite(lat) && Number.isFinite(lng) && lat && lng) {
+      setPosition({ lat, lng, source: "link" });
+      setShowMap(true);
+    }
+  }, []);
 
   const locate = () => {
     if (!navigator.geolocation) {
@@ -202,6 +215,7 @@ export default function ReportWaterPage() {
       const json = await response.json();
       if (!json.success) { setError(json.message || "ส่งไม่สำเร็จ กรุณาลองใหม่"); return; }
       trackPublicUsage("water_level_submitted", "/public/report-water");
+      setTracking(json.trackingCode ? { code: json.trackingCode, firstName: form.firstName, lastName: form.lastName || "", phone: form.phone } : null);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
@@ -250,6 +264,7 @@ export default function ReportWaterPage() {
           {level ? `ระดับ${level.label} (${level.range}) ` : ""}เจ้าหน้าที่จะตรวจสอบก่อนแสดงบนแผนที่สถานการณ์ ขอบคุณที่ช่วยให้ทุกคนรู้สถานการณ์จริง
         </p>
         <p className="mt-2 text-sm text-slate-600">ถ้าระดับน้ำเปลี่ยน รายงานซ้ำจากจุดเดิมได้เลย</p>
+        {tracking ? <TrackingCodeCard code={tracking.code} firstName={tracking.firstName} lastName={tracking.lastName} phone={tracking.phone} /> : null}
         <div className="mt-5 flex flex-wrap gap-2 text-sm font-bold">
           <Link href="/public/disaster-map" className="rounded-lg bg-[#0b4c86] px-4 py-3 text-white hover:bg-[#083865]">ดูแผนที่สถานการณ์</Link>
           <button type="button" onClick={reportAnother} className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">รายงานจุดเดิมอีกครั้ง</button>

@@ -44,6 +44,7 @@
     "20261007_water_level_alerts.sql",
     "20261007_rain_alerts.sql",
     "20261007_incident_confirmations.sql",
-    "20261007_health_facility_status.sql"
+    "20261007_health_facility_status.sql",
+    "20261007_incident_tracking.sql"
   ]
 }

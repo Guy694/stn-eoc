@@ -47,6 +47,7 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                         }}
                         baseMap="street"
                         includeAllShelters
+                        shelterApiPath="/stn-eoc/api/eoc/shelter-centers"
                     />
                 </div>
                 <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5">

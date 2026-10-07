@@ -4,14 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
+import useHelpAvailability from "@/components/public/useHelpAvailability";
 import {
   Bell,
   Bot,
   Building2,
   CloudSun,
   Home,
+  HousePlus,
   Map,
   Menu,
+  SearchCheck,
   Siren,
   Tent,
   Waves,
@@ -24,6 +27,7 @@ import {
 export default function PublicTopNavigation({ activeMenu }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { sheltersOpen } = useHelpAvailability();
 
   useEffect(() => setIsOpen(false), [pathname]);
 
@@ -33,13 +37,16 @@ export default function PublicTopNavigation({ activeMenu }) {
   };
 
   const items = [
-    { href: "/", label: "หน้าหลัก", icon: Home, key: "home" },
+    { href: "/", label: "หน้าหลัก", shortLabel: "หน้าแรก", icon: Home, key: "home" },
     // แผนที่ 2 หน้าแบ่งตามคำถาม: "ตอนนี้เกิดอะไรขึ้น" (สถานการณ์) กับ "จะเกิดอะไรขึ้น" (พยากรณ์และความเสี่ยง)
     { href: "/public/disaster-map", label: "แผนที่สถานการณ์", shortLabel: "สถานการณ์", icon: Map, key: "map" },
     { href: "/public/weather-watch", label: "พยากรณ์และความเสี่ยง", shortLabel: "พยากรณ์", icon: CloudSun, key: "weather" },
-    { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
+    { href: "/public/my-risk", label: "บ้านฉันเสี่ยงไหม", shortLabel: "เสี่ยงไหม", icon: HousePlus, key: "myrisk" },
+    // ศูนย์พักพิงแสดงเฉพาะช่วงที่เปิดศูนย์ปฏิบัติการ (EOC)
+    ...(sheltersOpen ? [{ href: "/public/shelters", label: "ศูนย์พักพิง", shortLabel: "พักพิง", icon: Tent, key: "shelters" }] : []),
     { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
-    { label: "ถามผู้ช่วย", icon: Bot, key: "assistant", action: openAssistant },
+    { label: "ถามผู้ช่วย", shortLabel: "ผู้ช่วย", icon: Bot, key: "assistant", action: openAssistant },
+    { href: "/public/track", label: "ติดตามคำขอความช่วยเหลือ", shortLabel: "ติดตาม", icon: SearchCheck, key: "track" },
     { href: "/public/report-water", label: "รายงานระดับน้ำ", shortLabel: "ระดับน้ำ", icon: Waves, key: "water", emphasis: "water" },
     { href: "/public/report-incident", label: "ขอความช่วยเหลือ", icon: Siren, key: "help", emphasis: "help" }
   ];
@@ -53,9 +60,9 @@ export default function PublicTopNavigation({ activeMenu }) {
   const renderItem = (item, mobile = false) => {
     const Icon = item.icon;
     const active = isActive(item);
-    const className = `flex items-center gap-2 rounded-lg font-bold transition-colors ${mobile
+    const className = `flex items-center gap-1.5 xl:gap-2 rounded-lg font-bold transition-colors ${mobile
       ? "w-full px-3 py-3 text-sm"
-      : "shrink-0 px-3 py-2.5 text-sm xl:px-4"
+      : `shrink-0 px-2 py-2.5 text-sm xl:px-4${item.wide ? " max-xl:hidden" : ""}`
     } ${active
       ? "bg-white text-[#083865] shadow-sm"
       : item.emphasis === "water"
