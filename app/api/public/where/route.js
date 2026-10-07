@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
 import { pointInGeometry } from "@/lib/healthFacilityStatus";
+import { enforceIpRateLimit } from "@/lib/rateLimit";
 
 // พิกัด → หมู่บ้าน/ตำบล/อำเภอ (ทำที่เซิร์ฟเวอร์ เพื่อไม่ต้องส่งขอบเขตทั้งจังหวัด ~1.6 MB ไปมือถือ)
 const CACHE_MS = 24 * 60 * 60 * 1000;
@@ -73,10 +74,13 @@ function find(list, lat, lng) {
     && pointInGeometry(lat, lng, item.geometry)) || null;
 }
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const lat = Number(searchParams.get("lat"));
-  const lng = Number(searchParams.get("lng"));
+// POST: พิกัดบ้านเป็นข้อมูลส่วนบุคคล ไม่ใส่ใน URL (จะไปค้างใน access log / cache กลาง)
+export async function POST(request) {
+  const limited = await enforceIpRateLimit(request, "geoLookup", { store: "memory" });
+  if (limited) return limited;
+  const body = await request.json().catch(() => ({}));
+  const lat = Number(body?.lat);
+  const lng = Number(body?.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
     return NextResponse.json({ success: false, message: "พิกัดไม่ถูกต้อง" }, { status: 400 });
   }
@@ -90,7 +94,7 @@ export async function GET(request) {
       : tambon
         ? { village: null, moo: null, tambon: tambon.tambon, district: tambon.district, in_satun: true }
         : { village: null, moo: null, tambon: null, district: null, in_satun: false };
-    return NextResponse.json({ success: true, data }, { headers: { "Cache-Control": "public, max-age=3600" } });
+    return NextResponse.json({ success: true, data }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Where API error:", error);
     return publicInternalError("ระบุพื้นที่ไม่สำเร็จ");

@@ -186,7 +186,7 @@ function TrackContent() {
               />
             </label>
           </div>
-          <p className="mt-2 text-xs text-slate-500">ใช้ชื่อ นามสกุล และเบอร์โทรเดียวกับที่กรอกตอนแจ้ง</p>
+          <p className="mt-2 text-xs text-slate-500">ใช้ชื่อ นามสกุล และเบอร์โทรเดียวกับที่กรอกตอนแจ้ง ข้อมูลนี้ใช้ค้นหาเรื่องของคุณเท่านั้น ศูนย์ไม่ได้บันทึกเก็บไว้ (<Link href="/privacy-policy" target="_blank" className="font-bold text-[#0b4c86] underline">นโยบายความเป็นส่วนตัว</Link>)</p>
           <button
             type="submit"
             disabled={state.status === "loading"}

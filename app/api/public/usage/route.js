@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/rateLimit";
+import { getClientIp } from "@/lib/clientIp";
 
-const EVENT_KEYS = new Set(["page_view", "help_request_opened", "help_request_submitted"]);
+const EVENT_KEYS = new Set([
+    "page_view", "help_request_opened", "help_request_submitted",
+    "problem_point_submitted", "water_level_submitted", "my_risk_checked"
+]);
 const DEVICE_TYPES = new Set(["mobile", "tablet", "desktop", "other"]);
 const PUBLIC_PATHS = new Set([
     "/", "/privacy-policy", "/public/agencies", "/public/announcements", "/public/disaster-map",
     "/public/disease-map", "/public/festival-accidents", "/public/festival-accidents/report", "/public/flood-map",
     "/public/help", "/public/help/citizen-guide", "/public/help/faq", "/public/insights", "/public/report-incident",
-    "/public/shelters", "/public/weather-watch"
+    "/public/shelters", "/public/weather-watch",
+    "/public/report-problem", "/public/report-water", "/public/my-risk", "/public/track"
 ]);
 
 function publicPath(value) {
@@ -28,6 +34,9 @@ export async function POST(request) {
         if (!EVENT_KEYS.has(eventKey) || !pagePath) {
             return NextResponse.json({ success: false, message: "ข้อมูลสถิติไม่ถูกต้อง" }, { status: 400 });
         }
+        // ยิงถี่ผิดปกติ: ตอบสำเร็จแต่ไม่นับ (ไม่ให้ผู้ปั่นรู้ว่าถูกกรอง และไม่เขียนฐานข้อมูล)
+        const limit = await consumeRateLimit("publicUsage", getClientIp(request), { store: "memory" });
+        if (!limit.allowed) return NextResponse.json({ success: true }, { status: 202 });
 
         await query(
             `INSERT INTO site_analytics_daily (event_date, event_key, page_path, source_path, device_type, event_count)

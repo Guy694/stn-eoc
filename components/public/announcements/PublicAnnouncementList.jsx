@@ -5,19 +5,20 @@ import Link from "next/link";
 import { ArrowRight, Megaphone, Paperclip, Search, X } from "lucide-react";
 import { formatAnnouncementDate, getAnnouncementAsset } from "@/components/announcements/announcementUtils";
 import { TOPIC_STYLE, cleanTitle, relativeThai, topicKey, topicOf } from "./announcementTopics";
+import { optimizedImage, responsiveImage } from "@/lib/imageUrl";
 
 const PAGE = 9;
 
-function Poster({ src, alt = "", className = "" }) {
+function Poster({ src, alt = "", className = "", sizes = "(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" }) {
   // อินโฟกราฟิกส่วนใหญ่เป็นภาพแนวตั้ง/จัตุรัส: แสดงทั้งภาพ บนพื้นที่เบลอจากภาพเดียวกัน แทนการครอปทิ้ง
   return (
     <div className={`relative overflow-hidden bg-[#dfe9ee] ${className}`}>
       {src ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl" />
+          <img src={optimizedImage(src, 64)} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} loading="lazy" className="poster-img absolute inset-0 h-full w-full object-contain" />
+          <img {...responsiveImage(src, [640, 1080], sizes)} alt={alt} loading="lazy" className="poster-img absolute inset-0 h-full w-full object-contain" />
         </>
       ) : (
         <div className="flex h-full items-center justify-center text-[#11466e]/40"><Megaphone className="h-14 w-14" aria-hidden="true" /></div>
@@ -167,7 +168,7 @@ export default function PublicAnnouncementList() {
                 href={`/public/announcements/${featured.id}`}
                 className="announce-card group mt-6 grid overflow-hidden rounded-[2rem] bg-white ring-1 ring-[#d6e3ea] transition hover:shadow-[0_24px_50px_-28px_rgba(12,47,74,.7)] md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]"
               >
-                <Poster src={getAnnouncementAsset(featured.image_path)} alt={featured.title} className="aspect-[4/3] md:aspect-auto md:min-h-[22rem]" />
+                <Poster src={getAnnouncementAsset(featured.image_path)} alt={featured.title} sizes="(min-width: 768px) 40vw, 100vw" className="aspect-[4/3] md:aspect-auto md:min-h-[22rem]" />
                 <div className="flex flex-col p-6 sm:p-8">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[#0c2f4a] px-2.5 py-0.5 text-xs font-semibold text-white">{featured.display_status === "current" ? "ประกาศล่าสุด" : "เรื่องล่าสุด"}</span>

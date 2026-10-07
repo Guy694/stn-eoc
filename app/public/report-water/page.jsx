@@ -12,6 +12,7 @@ import WaterLevelFigure from "@/components/public/water/WaterLevelFigure";
 import { WATER_LEVELS, WATER_PASSABILITY, WATER_TRENDS, parseLatLng, waterLevelMeta } from "@/lib/waterReport";
 import { trackPublicUsage } from "@/lib/publicUsage";
 import TrackingCodeCard from "@/components/public/TrackingCodeCard";
+import { loadTrackingIdentity } from "@/lib/myReports";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -40,7 +41,7 @@ const SATUN_CENTER = [6.6238, 100.075];
 const MAX_NOTE = 300;
 const PLACE_ICONS = { village: MapPin, health: Hospital, shelter: Tent };
 const SOURCE_TEXT = { gps: "จากตำแหน่งปัจจุบัน", map: "ปักบนแผนที่", search: "จากการค้นหา", link: "จากลิงก์ที่วาง" };
-const emptyForm = { level: "", trend: "", passability: "", note: "", firstName: "", phone: "" };
+const emptyForm = { level: "", trend: "", passability: "", note: "", firstName: "", lastName: "", phone: "" };
 
 function localNow() {
   const now = new Date();
@@ -108,6 +109,12 @@ export default function ReportWaterPage() {
     setShowMap(true);
     setError("");
   };
+
+  // เคยแจ้งเรื่องจากเครื่องนี้แล้ว: เติมชื่อ-นามสกุลให้ (ผู้ใช้แก้ได้)
+  useEffect(() => {
+    const saved = loadTrackingIdentity();
+    if (saved?.firstName) setForm((current) => ({ ...current, firstName: current.firstName || saved.firstName, lastName: current.lastName || saved.lastName || "" }));
+  }, []);
 
   // เปิดจากหน้า "บ้านฉันเสี่ยงไหม" (?lat=&lng=) → ปักหมุดให้เลย
   useEffect(() => {
@@ -203,6 +210,7 @@ export default function ReportWaterPage() {
       if (form.passability) payload.append("passability", form.passability);
       payload.append("description", form.note.trim());
       payload.append("firstName", form.firstName.trim());
+      payload.append("lastName", form.lastName.trim());
       payload.append("phone", form.phone.replace(/[\s-]/g, ""));
       payload.append("village", place?.village || "");
       payload.append("subDistrict", place?.tambon || "");
@@ -215,7 +223,7 @@ export default function ReportWaterPage() {
       const json = await response.json();
       if (!json.success) { setError(json.message || "ส่งไม่สำเร็จ กรุณาลองใหม่"); return; }
       trackPublicUsage("water_level_submitted", "/public/report-water");
-      setTracking(json.trackingCode ? { code: json.trackingCode, firstName: form.firstName, lastName: form.lastName || "", phone: form.phone } : null);
+      setTracking(json.trackingCode ? { code: json.trackingCode, firstName: form.firstName, lastName: form.lastName, phone: form.phone } : null);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
@@ -226,7 +234,7 @@ export default function ReportWaterPage() {
   };
 
   const reportAnother = () => {
-    setForm(emptyForm);
+    setForm((current) => ({ ...emptyForm, firstName: current.firstName, lastName: current.lastName, phone: current.phone }));
     setPhoto(null);
     setPreview("");
     setDone(false);
@@ -488,19 +496,28 @@ export default function ReportWaterPage() {
           </div>
         </fieldset>
 
-        <details className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
-          <summary className="cursor-pointer font-bold text-slate-800">ให้เจ้าหน้าที่ติดต่อกลับได้ (ไม่บังคับ)</summary>
+        <details className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5" open={Boolean(form.firstName || form.lastName || form.phone) || undefined}>
+          <summary className="cursor-pointer font-bold text-slate-800">ให้เจ้าหน้าที่ติดต่อกลับ และติดตามผลได้ (ไม่บังคับ)</summary>
           <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#0b4c86]" aria-hidden="true" /> ใช้เมื่อเจ้าหน้าที่ต้องสอบถามเพิ่ม ไม่แสดงบนแผนที่หรือหน้าสาธารณะ</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1.5 block text-sm font-bold text-slate-800">ชื่อ</span>
-              <input value={form.firstName} onChange={(event) => set("firstName", event.target.value)} autoComplete="given-name" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-[#0b4c86]" />
+              <input value={form.firstName} onChange={(event) => set("firstName", event.target.value)} autoComplete="given-name" maxLength={100} className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-[#0b4c86]" />
             </label>
             <label className="block">
+              <span className="mb-1.5 block text-sm font-bold text-slate-800">นามสกุล</span>
+              <input value={form.lastName} onChange={(event) => set("lastName", event.target.value)} autoComplete="family-name" maxLength={100} className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-[#0b4c86]" />
+            </label>
+            <label className="block sm:col-span-2">
               <span className="mb-1.5 block text-sm font-bold text-slate-800">เบอร์โทร</span>
-              <input type="tel" inputMode="tel" value={form.phone} onChange={(event) => set("phone", event.target.value)} autoComplete="tel" placeholder="08xxxxxxxx" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-[#0b4c86]" />
+              <input type="tel" inputMode="tel" value={form.phone} onChange={(event) => set("phone", event.target.value)} autoComplete="tel" placeholder="08xxxxxxxx" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-[#0b4c86] sm:max-w-[calc(50%-0.375rem)]" />
             </label>
           </div>
+          <p className={`mt-3 rounded-lg px-3 py-2 text-sm ${form.firstName.trim() && form.lastName.trim() && form.phone.replace(/\D/g, "").length >= 9 ? "bg-emerald-50 font-semibold text-emerald-800" : "bg-slate-50 text-slate-600"}`}>
+            {form.firstName.trim() && form.lastName.trim() && form.phone.replace(/\D/g, "").length >= 9
+              ? "กรอกครบแล้ว ดูผลการตรวจสอบได้ที่เมนู \"ติดตามคำขอ\""
+              : "กรอกชื่อ นามสกุล และเบอร์โทรครบ จะดูผลการตรวจสอบได้ที่เมนู \"ติดตามคำขอ\""}
+          </p>
         </details>
 
         {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800" role="alert">{error}</p> : null}
@@ -509,7 +526,7 @@ export default function ReportWaterPage() {
           {busy ? "กำลังส่ง…" : "ส่งรายงานระดับน้ำ"}
         </button>
         <p className="text-center text-xs text-slate-500">
-          ตำแหน่ง ระดับน้ำ และรูปใช้เพื่อตรวจสอบและแสดงสถานการณ์บนแผนที่ (แสดงตำแหน่งโดยประมาณ) ·{" "}
+          ตำแหน่ง ระดับน้ำ และรูปใช้ตรวจสอบและแสดงสถานการณ์บนแผนที่ (แสดงตำแหน่งโดยประมาณ) ส่วนชื่อและเบอร์โทรใช้ติดต่อกลับและติดตามเรื่องเท่านั้น ไม่แสดงต่อสาธารณะ ·{" "}
           <Link href="/privacy-policy" target="_blank" className="font-bold text-[#0b4c86] underline">นโยบายความเป็นส่วนตัว</Link>
         </p>
       </form>

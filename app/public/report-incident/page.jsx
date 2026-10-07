@@ -558,7 +558,7 @@ export default function ReportIncidentPage() {
                             />
                             <span>
                                 <span className="mb-1 flex items-center gap-1.5 font-bold text-slate-900"><ShieldCheck className="h-4 w-4 text-[#0b4c86]" aria-hidden="true" /> การใช้ข้อมูลส่วนบุคคล</span>
-                                ยินยอมให้เจ้าหน้าที่ใช้ชื่อ เบอร์โทรศัพท์ ตำแหน่ง และรูปภาพที่แจ้ง เพื่อติดต่อกลับและประสานความช่วยเหลือเท่านั้น
+                                ยินยอมให้เจ้าหน้าที่ใช้ชื่อ เบอร์โทรศัพท์ ตำแหน่ง และรูปภาพที่แจ้ง เพื่อติดต่อกลับ ประสานความช่วยเหลือ และให้ท่านติดตามสถานะเรื่องได้เท่านั้น
                                 (<Link href="/privacy-policy" target="_blank" className="font-bold text-[#0b4c86] underline">อ่านนโยบายความเป็นส่วนตัว</Link>)
                             </span>
                         </label>

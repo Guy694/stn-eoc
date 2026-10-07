@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
+import { consumeRateLimit } from '@/lib/rateLimit';
+import { getClientIp } from '@/lib/clientIp';
 
 const pool = getPool();
 
@@ -149,6 +151,19 @@ export async function POST(request) {
                 { success: false, message: 'รหัสประกาศไม่ถูกต้อง' },
                 { status: 400 }
             );
+        }
+
+        // นับ 1 ครั้งต่อ IP ต่อประกาศต่อชั่วโมง: เปิดซ้ำ/รีเฟรชไม่ปั่นยอด
+        const viewLimit = await consumeRateLimit('announcementView', `${getClientIp(request)}:${announcementId}`, { store: 'memory' });
+        if (!viewLimit.allowed) {
+            const [current] = await connection.execute(
+                `SELECT view_count FROM announcements WHERE id = ? AND is_active = 1 LIMIT 1`,
+                [announcementId]
+            );
+            if (current.length === 0) {
+                return NextResponse.json({ success: false, message: 'ไม่พบประกาศนี้' }, { status: 404 });
+            }
+            return NextResponse.json({ success: true, data: { view_count: Number(current[0]?.view_count || 0) } });
         }
 
         const [columns] = await connection.execute(

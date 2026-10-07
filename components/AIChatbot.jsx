@@ -420,7 +420,7 @@ export default function AIChatbot({ showLauncher = true }) {
                 <SendHorizontal className="h-5 w-5" />
               </button>
             </div>
-            <p className="mt-1.5 text-center text-[11px] text-slate-500">ประเมินอัตโนมัติ ไม่ใช่ประกาศทางราชการ • เหตุฉุกเฉินโทร 1669</p>
+            <p className="mt-1.5 text-center text-[11px] text-slate-500">ไม่ต้องพิมพ์ชื่อหรือเบอร์โทร • คำตอบประเมินอัตโนมัติ ไม่ใช่ประกาศทางราชการ • เหตุฉุกเฉินโทร 1669</p>
           </form>
 
           <style>{`

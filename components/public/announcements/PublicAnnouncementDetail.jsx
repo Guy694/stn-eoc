@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Check, Download, FileText, Maximize2, Share2, X } from "lucide-react";
 import { formatAnnouncementDate, getAnnouncementAsset } from "@/components/announcements/announcementUtils";
 import { cleanTitle, relativeThai, topicKey, topicOf } from "./announcementTopics";
+import { optimizedImage, responsiveImage } from "@/lib/imageUrl";
 
 function ImageLightbox({ src, alt, onClose }) {
   useEffect(() => {
@@ -61,9 +62,9 @@ export default function PublicAnnouncementDetail({ item, related = [] }) {
           <div className="mx-auto max-w-5xl px-4 pb-0 pt-4 sm:px-6">
             <button type="button" onClick={() => setZoom(true)} className="group relative block w-full overflow-hidden rounded-t-[2rem] bg-[#11466e]" aria-label="ดูภาพเต็ม">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={image} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl" />
+              <img src={optimizedImage(image, 64)} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={image} alt={item.title} className="relative mx-auto max-h-[70vh] w-auto object-contain" />
+              <img {...responsiveImage(image, [640, 1080, 1920], "(min-width: 1024px) 60rem, 100vw")} alt={item.title} className="relative mx-auto max-h-[70vh] w-auto object-contain" />
               <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-sm text-white backdrop-blur">
                 <Maximize2 className="h-4 w-4" aria-hidden="true" /> ดูภาพเต็ม
               </span>
@@ -115,7 +116,7 @@ export default function PublicAnnouncementDetail({ item, related = [] }) {
                     <span className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#dfe9ee]">
                       {other.image_path ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={getAnnouncementAsset(other.image_path)} alt="" loading="lazy" className="h-full w-full object-cover" />
+                        <img src={optimizedImage(getAnnouncementAsset(other.image_path), 256)} alt="" loading="lazy" className="h-full w-full object-cover" />
                       ) : null}
                     </span>
                     <span className="min-w-0">

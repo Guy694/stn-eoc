@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
+import { consumeRateLimit } from '@/lib/rateLimit';
+import { getClientIp } from '@/lib/clientIp';
 
 // ยอดเข้าชมรวมของเว็บไซต์ (ไม่เก็บ IP หรือข้อมูลส่วนบุคคล)
 // ตาราง site_statistics สร้างจาก migrations/create_site_statistics.sql
@@ -34,9 +36,10 @@ export async function GET() {
     }
 }
 
-export async function POST() {
+export async function POST(request) {
     try {
-        await recordVisit();
+        const limit = await consumeRateLimit('siteView', getClientIp(request), { store: 'memory' });
+        if (limit.allowed) await recordVisit();
         return NextResponse.json({ success: true, data: { total_visits: await readTotalVisits() } });
     } catch (error) {
         console.error('Record site view error:', error);

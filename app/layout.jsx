@@ -22,7 +22,7 @@ export const metadata = {
     siteName: "Satun Geo-EOC",
     title: "Satun Geo-EOC | ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล",
     description: "ติดตามสถานการณ์ สภาพอากาศ ศูนย์พักพิง และประกาศฉุกเฉินของจังหวัดสตูล",
-    images: [{ url: "/stn-eoc/img/eoc-icon.png", width: 512, height: 512, alt: "Satun Geo-EOC" }]
+    images: [{ url: "/img/eoc-icon.png" /* metadataBase มี /stn-eoc แล้ว */, width: 512, height: 512, alt: "Satun Geo-EOC" }]
   },
   twitter: { card: "summary", title: "Satun Geo-EOC" },
   icons: {

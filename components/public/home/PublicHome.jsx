@@ -31,6 +31,7 @@ import { choosePopup, loadSeenPopups, markPopupsSeen, urgentAlerts } from "@/lib
 import { OpsTodayCard, RoadAlerts } from "@/components/public/home/OpsToday";
 import { roadAlerts, shelterSummary } from "@/lib/homeSignals";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
+import { responsiveImage } from "@/lib/imageUrl";
 
 // หน้าแรกสำหรับประชาชน
 // จุดเด่นเดียวของหน้า: แผนที่ 7 อำเภอที่ระบายสีตามความเสี่ยงวันนี้ แตะแล้วเห็น "พื้นที่ของฉัน" ทันที
@@ -310,7 +311,7 @@ export default function PublicHome() {
     };
     Promise.all([
       load("/stn-eoc/api/public/situation"),
-      load("/stn-eoc/api/public/weather-watch"),
+      load("/stn-eoc/api/public/weather-watch?view=home"),
       load("/stn-eoc/api/public/announcements?limit=6")
     ]).then(([situationJson, weatherJson, announcementJson]) => {
       if (controller.signal.aborted) return;
@@ -675,7 +676,7 @@ export default function PublicHome() {
                       <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-[#e3f1f4]">
                         {item.image_path ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={`/stn-eoc${item.image_path}`} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                          <img {...responsiveImage(`/stn-eoc${item.image_path}`, [384, 640], "(min-width: 640px) 30vw, 78vw")} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                         ) : (
                           <div className="flex h-full items-center justify-center font-[family-name:var(--font-kanit)] text-lg text-[#11466e]">ประกาศจากหน่วยงาน</div>
                         )}

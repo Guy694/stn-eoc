@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { HousePlus, Megaphone, Siren, TriangleAlert, X } from "lucide-react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
+import { responsiveImage } from "@/lib/imageUrl";
 
 const URGENT_ADVICE = [
   "อยู่ห่างคลองและทางน้ำไหล ไม่ขับรถหรือเดินลุยน้ำที่ไหลเชี่ยว",
@@ -111,7 +112,7 @@ export default function HomePopup({ popup, onClose }) {
           <>
             {announcement.image_path ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={`/stn-eoc${announcement.image_path}`} alt="" className="max-h-[50dvh] w-full bg-[#e3f1f4] object-contain" />
+              <img {...responsiveImage(`/stn-eoc${announcement.image_path}`, [640, 1080], "(min-width: 640px) 32rem, 100vw")} alt="" className="max-h-[50dvh] w-full bg-[#e3f1f4] object-contain" />
             ) : (
               <div className="flex items-center gap-2 bg-[#0c2f4a] px-6 pb-4 pt-6 text-white">
                 <Megaphone className="h-6 w-6" aria-hidden="true" />

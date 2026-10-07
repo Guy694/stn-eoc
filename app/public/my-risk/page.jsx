@@ -62,9 +62,9 @@ const HOME_KEY = "stn-eoc:home-location";
 const toLocalDate = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
 const normalizeName = (value) => String(value || "").replace(/^อ(\.|ำเภอ)\s*/, "").replace(/\s+/g, "");
 
-async function getJson(url) {
+async function getJson(url, init = {}) {
   try {
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(url, { cache: "no-store", ...init });
     return response.ok ? await response.json() : null;
   } catch {
     return null;
@@ -173,7 +173,7 @@ function MyRiskContent() {
     };
     const today = toLocalDate();
     const [where, weather, water, rain, health, status, elevation] = await Promise.all([
-      getJson(`/stn-eoc/api/public/where?lat=${point.lat}&lng=${point.lng}`).then(mark("where")),
+      getJson("/stn-eoc/api/public/where", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lat: point.lat, lng: point.lng }) }).then(mark("where")),
       getJson("/stn-eoc/api/public/weather-watch").then(mark("risk")),
       getJson("/stn-eoc/api/public/water-levels").then(mark("water")),
       getJson("/stn-eoc/api/public/rain-stations").then(mark("rain")),

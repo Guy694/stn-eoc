@@ -4,11 +4,18 @@ import { publicInternalError } from "@/lib/apiResponse";
 import { getOpenEocSessions } from "@/lib/eocOpen";
 
 // งานของศูนย์วันนี้ (นับจำนวนอย่างเดียว ไม่มีข้อมูลบุคคล) — แสดงเฉพาะช่วงเปิด EOC
+const CACHE_MS = 60 * 1000;
+let cache = null;
+
 export async function GET() {
+  if (cache && Date.now() - cache.at < CACHE_MS) {
+    return NextResponse.json(cache.body, { headers: { "Cache-Control": "public, max-age=60" } });
+  }
   try {
     const sessions = await getOpenEocSessions();
     if (sessions.length === 0) {
-      return NextResponse.json({ success: true, open: false }, { headers: { "Cache-Control": "public, max-age=60" } });
+      cache = { at: Date.now(), body: { success: true, open: false } };
+      return NextResponse.json(cache.body, { headers: { "Cache-Control": "public, max-age=60" } });
     }
     const rows = await query(
       `SELECT
@@ -22,7 +29,7 @@ export async function GET() {
          AND reported_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)`
     );
     const row = rows[0] || {};
-    return NextResponse.json({
+    cache = { at: Date.now(), body: {
       success: true,
       open: true,
       data: {
@@ -32,7 +39,8 @@ export async function GET() {
         resolved_today: Number(row.resolved_today || 0),
         last_received_at: row.last_received_at || null
       }
-    }, { headers: { "Cache-Control": "public, max-age=60" } });
+    } };
+    return NextResponse.json(cache.body, { headers: { "Cache-Control": "public, max-age=60" } });
   } catch (error) {
     console.error("Ops today API error:", error);
     return publicInternalError("ไม่สามารถดึงสรุปงานของศูนย์ได้");

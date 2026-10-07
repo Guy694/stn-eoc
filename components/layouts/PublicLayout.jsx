@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import PublicHeader from "@/components/public/PublicHeader";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import Footer from "@/components/Footer";
 import AIChatbot from "@/components/AIChatbot";
@@ -6,7 +6,7 @@ import AIChatbot from "@/components/AIChatbot";
 export default function PublicLayout({ children }) {
     return (
         <div className="flex flex-col min-h-screen">
-            <Header />
+            <PublicHeader />
             <PublicTopNavigation />
             <main className="flex-1 bg-gray-50">
                 {children}

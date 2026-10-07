@@ -7,8 +7,6 @@ export default function PublicFestivalAccidentsPage() {
         <PublicOpsScaffold
             title="อุบัติเหตุช่วงเทศกาล"
             activeMenu="map"
-            eocStatus="watch"
-            eocLabel="อุบัติเหตุช่วงเทศกาล"
             showPageHeader={false}
         >
             <div className="mx-auto w-full max-w-6xl">
