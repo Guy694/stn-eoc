@@ -3,9 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { CircleMarker, GeoJSON, MapContainer, Marker, TileLayer, Tooltip, ZoomControl, useMap } from "react-leaflet";
+import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, TileLayer, Tooltip, ZoomControl, useMap } from "react-leaflet";
 import { getMapBaseLayer } from "@/lib/mapBaseLayers";
 import { RISK_META } from "@/lib/weatherRiskConfig";
+import WaterStationLayer from "@/components/weather/WaterStationLayer";
+import RainStationLayer from "@/components/weather/RainStationLayer";
+import WaterReportMarker from "@/components/public/map/WaterReportMarker";
+import ElevationLayer from "@/components/public/map/ElevationLayer";
 
 const CENTER = [6.86, 99.98];
 
@@ -28,7 +32,7 @@ function districtLabelIcon(district, selected) {
     iconSize: [0, 0],
     html: `<div style="transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;font-family:var(--font-kanit, sans-serif)">
       <span style="white-space:nowrap;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800;color:#fff;background:${meta.color};box-shadow:0 2px 6px rgba(0,0,0,.35);${selected ? "outline:2px solid #fff;" : ""}">${escapeHtml(district.district_name)} ${Number(district.temperature)}°</span>
-      <span style="white-space:nowrap;border-radius:6px;padding:0 6px;font-size:11px;font-weight:700;color:#0f172a;background:rgba(255,255,255,.9)">ฝน 24 ชม. ${Number(district.rainfall_24h)} มม.</span>
+      <span style="white-space:nowrap;border-radius:6px;padding:0 6px;font-size:11px;font-weight:700;color:#0f172a;background:rgba(255,255,255,.9)">${district.rain_source === "gauge" ? `ฝนวัด 24 ชม. ${Number(district.rainfall_24h)} มม.` : `ฝน 24 ชม. ~${Number(district.rainfall_24h)} มม.`}</span>
     </div>`
   });
 }
@@ -50,7 +54,11 @@ export default function WeatherRiskMap({
   baseMap = "street",
   extraTileLayers = [],
   userLocation,
-  flyTarget
+  flyTarget,
+  waterStations = [],
+  rainStations = [],
+  waterReports = [],
+  elevationEnabled = false
 }) {
   const [boundaries, setBoundaries] = useState([]);
   const baseLayer = getMapBaseLayer(baseMap);
@@ -86,6 +94,8 @@ export default function WeatherRiskMap({
         />
       ))}
 
+      {elevationEnabled ? <ElevationLayer /> : null}
+
       {boundaries.map((item, index) => {
         if (!item.geojson) return null;
         const district = districtByName.get(normalizeName(item.name));
@@ -93,7 +103,7 @@ export default function WeatherRiskMap({
         const selected = district && String(district.district_id) === String(selectedDistrictId);
         return (
           <GeoJSON
-            key={`risk-${item.code || item.name || index}-${district?.risk_level || "none"}-${selected ? "sel" : ""}`}
+            key={`risk-${item.code || item.name || index}-${district?.risk_level || "none"}-${selected ? "sel" : ""}-${elevationEnabled ? "elev" : ""}`}
             data={item.geojson}
             style={{
               // ข้อมูลอำเภอประกอบจากขอบเขตหมู่บ้าน จึงใช้เส้นบางเพื่อไม่ให้แผนที่รก
@@ -101,7 +111,8 @@ export default function WeatherRiskMap({
               weight: selected ? 2.5 : 0.6,
               opacity: selected ? 0.95 : 0.45,
               fillColor: district ? meta.color : "#94a3b8",
-              fillOpacity: selected ? 0.42 : 0.28
+              // เปิดชั้นความสูงพื้นที่: ลดสีความเสี่ยงลงให้เห็นสีความสูง (ยังเห็นขอบอำเภอและคลิกเลือกได้)
+              fillOpacity: elevationEnabled ? (selected ? 0.12 : 0.05) : selected ? 0.42 : 0.28
             }}
             eventHandlers={{
               click: () => district && onSelectDistrict?.(district.district_id)
@@ -118,6 +129,17 @@ export default function WeatherRiskMap({
           interactive={false}
         />
       ))}
+
+      {/* pane แยกเหนือขอบเขตอำเภอ (overlay 400) — ไม่งั้นเลือกอำเภอแล้ว polygon ถูกวาดใหม่ทับจุดฝนจนกดไม่ได้ */}
+      <Pane name="rain-stations" style={{ zIndex: 450 }}>
+        {rainStations.length > 0 && <RainStationLayer stations={rainStations} />}
+      </Pane>
+      <Pane name="water-reports" style={{ zIndex: 460 }}>
+        {waterReports.map((incident) => (
+          <WaterReportMarker key={`wr-${incident.id}`} incident={incident} panPadding={typeof window !== "undefined" && window.innerWidth >= 768 ? [392, 80] : [16, 70]} />
+        ))}
+      </Pane>
+      {waterStations.length > 0 && <WaterStationLayer stations={waterStations} />}
 
       {userLocation && (
         <CircleMarker

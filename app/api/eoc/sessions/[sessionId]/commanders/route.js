@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { modulePermissions, requireModuleEdit } from '@/lib/eocModuleAccess';
 import { query, getConnection } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
+import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 
 const VALID_ROLES = new Set(["incident_commander", "deputy_incident_commander"]);
@@ -153,7 +154,8 @@ export async function GET(request, { params }) {
             success: true,
             session,
             commanders,
-            officerOptions
+            officerOptions,
+            permissions: await modulePermissions(auth.user, sessionId, 'team')
         });
     } catch (error) {
         console.error("Error fetching session commanders:", error);
@@ -162,11 +164,14 @@ export async function GET(request, { params }) {
 }
 
 export async function POST(request, { params }) {
-    const auth = await requireAuth(request, ["admin", "commander"]);
+    const auth = await requireAuth(request, OFFICER_ROLES);
     if (!auth.success) return auth.response;
 
     try {
         const { sessionId } = await params;
+        // จัดการทีมได้เฉพาะผู้บัญชาการ/กลุ่มภารกิจ EOC MGMT ของเหตุการณ์นี้ และแอดมิน
+        const teamGate = await requireModuleEdit(auth.user, sessionId, 'team');
+        if (teamGate.response) return teamGate.response;
         const body = await request.json();
         const validation = validatePayload(body);
         if (validation.error) {
@@ -206,11 +211,14 @@ export async function POST(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-    const auth = await requireAuth(request, ["admin", "commander"]);
+    const auth = await requireAuth(request, OFFICER_ROLES);
     if (!auth.success) return auth.response;
 
     try {
         const { sessionId } = await params;
+        // จัดการทีมได้เฉพาะผู้บัญชาการ/กลุ่มภารกิจ EOC MGMT ของเหตุการณ์นี้ และแอดมิน
+        const teamGate = await requireModuleEdit(auth.user, sessionId, 'team');
+        if (teamGate.response) return teamGate.response;
         const body = await request.json();
         const validation = validatePayload(body, true);
         if (validation.error) {
@@ -255,7 +263,7 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-    const auth = await requireAuth(request, ["admin", "commander"]);
+    const auth = await requireAuth(request, OFFICER_ROLES);
     if (!auth.success) return auth.response;
 
     const pool = await getConnection();
@@ -263,6 +271,9 @@ export async function DELETE(request, { params }) {
 
     try {
         const { sessionId } = await params;
+        // จัดการทีมได้เฉพาะผู้บัญชาการ/กลุ่มภารกิจ EOC MGMT ของเหตุการณ์นี้ และแอดมิน
+        const teamGate = await requireModuleEdit(auth.user, sessionId, 'team');
+        if (teamGate.response) return teamGate.response;
         const { searchParams } = new URL(request.url);
         const id = Number(searchParams.get("id") || 0);
         if (!id) {

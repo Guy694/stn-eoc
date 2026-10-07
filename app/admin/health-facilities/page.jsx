@@ -5,6 +5,15 @@ import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
+import HealthFacilityStatusModal from '@/components/admin/HealthFacilityStatusModal';
+import { SERVICE_STATUSES, UNKNOWN_SERVICE, floodStatusMeta, isStatusStale, serviceStatusMeta } from '@/lib/healthFacilityStatus';
+
+function formatUpdated(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
 
 export default function HealthFacilitiesPage() {
     const [facilities, setFacilities] = useState([]);
@@ -16,6 +25,8 @@ export default function HealthFacilitiesPage() {
     const [pageSize, setPageSize] = useState(20);
     const [showModal, setShowModal] = useState(false);
     const [editingFacility, setEditingFacility] = useState(null);
+    const [statusFacility, setStatusFacility] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         typecode: '',
@@ -65,11 +76,20 @@ export default function HealthFacilitiesPage() {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterType, searchTerm]);
+    }, [filterType, searchTerm, statusFilter]);
 
+    const serviceCounts = useMemo(() => facilities.reduce((acc, facility) => {
+        const key = facility.service_status || 'unknown';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+    }, {}), [facilities]);
+    const visibleFacilities = useMemo(
+        () => (statusFilter ? facilities.filter((facility) => (facility.service_status || 'unknown') === statusFilter) : facilities),
+        [facilities, statusFilter]
+    );
     const paginatedFacilities = useMemo(
-        () => paginateRows(facilities, currentPage, pageSize),
-        [facilities, currentPage, pageSize]
+        () => paginateRows(visibleFacilities, currentPage, pageSize),
+        [visibleFacilities, currentPage, pageSize]
     );
 
     const handleSubmit = async (e) => {
@@ -110,7 +130,7 @@ export default function HealthFacilitiesPage() {
             name: facility.name,
             typecode: facility.typecode,
             address: facility.address || '',
-            district: facility.district || '',
+            district: facility.district_name || facility.district || '',
             tambon: facility.tambon || '',
             lat: facility.lat || '',
             lon: facility.lon || '',
@@ -185,6 +205,32 @@ export default function HealthFacilitiesPage() {
 
 
 
+                {/* สถานะการให้บริการ (แสดงบนแผนที่สถานการณ์) */}
+                <div className="mb-6 rounded-lg bg-white p-4 shadow text-gray-800">
+                    <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 className="font-bold">สถานะการให้บริการวันนี้</h2>
+                        <p className="text-xs text-gray-500">ประชาชนเห็นสถานะนี้ในแผนที่สถานการณ์ • เกิน 24 ชม. จะขึ้นว่าอาจไม่เป็นปัจจุบัน</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {[...SERVICE_STATUSES, UNKNOWN_SERVICE].map((status) => {
+                            const active = statusFilter === status.value;
+                            return (
+                                <button
+                                    key={status.value}
+                                    type="button"
+                                    onClick={() => setStatusFilter(active ? '' : status.value)}
+                                    aria-pressed={active}
+                                    className="flex items-center gap-2 rounded-lg border-2 px-3 py-1.5 text-sm font-semibold"
+                                    style={{ borderColor: active ? status.color : 'transparent', background: status.bg, color: status.color }}
+                                >
+                                    {status.label}
+                                    <span className="rounded-md bg-white/80 px-1.5 text-xs">{serviceCounts[status.value] || 0}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 {/* Search and Filter */}
                 <div className="bg-white p-4 rounded-lg shadow mb-6 text-gray-800">
                     <div className="flex flex-wrap gap-4 ">
@@ -225,7 +271,7 @@ export default function HealthFacilitiesPage() {
                         <div className="p-8 text-center text-gray-500">
                             กำลังโหลดข้อมูล...
                         </div>
-                    ) : facilities.length === 0 ? (
+                    ) : visibleFacilities.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
                             ไม่พบข้อมูลสถานพยาบาล
                         </div>
@@ -240,6 +286,8 @@ export default function HealthFacilitiesPage() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ที่อยู่</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ/ตำบล</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พิกัด</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">โทรศัพท์</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานะวันนี้</th>
 
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
                                     </tr>
@@ -273,6 +321,29 @@ export default function HealthFacilitiesPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {facility.phone || '-'}
                                             </td>
+                                            <td className="px-6 py-4 text-sm">
+                                                {(() => {
+                                                    const service = serviceStatusMeta(facility.service_status);
+                                                    const flood = floodStatusMeta(facility.flood_status);
+                                                    const stale = facility.service_status && isStatusStale(facility.status_updated_at);
+                                                    return (
+                                                        <div className="flex min-w-[11rem] flex-col items-start gap-1">
+                                                            <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: service.bg, color: service.color }}>{service.label}</span>
+                                                            {flood && flood.value !== 'normal' && (
+                                                                <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: flood.bg, color: flood.color }}>{flood.label}</span>
+                                                            )}
+                                                            {facility.status_updated_at && (
+                                                                <span className={`text-[11px] ${stale ? 'font-semibold text-amber-700' : 'text-gray-500'}`}>
+                                                                    อัปเดต {formatUpdated(facility.status_updated_at)}{stale ? ' (เกิน 24 ชม.)' : ''}
+                                                                </span>
+                                                            )}
+                                                            <button type="button" onClick={() => setStatusFacility(facility)} className="text-xs font-semibold text-[#0b4c86] underline-offset-2 hover:underline">
+                                                                อัปเดตสถานะ
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <button
                                                     onClick={() => handleEdit(facility)}
@@ -296,7 +367,7 @@ export default function HealthFacilitiesPage() {
                     <PaginationControls
                         page={currentPage}
                         pageSize={pageSize}
-                        totalItems={facilities.length}
+                        totalItems={visibleFacilities.length}
                         onPageChange={setCurrentPage}
                         onPageSizeChange={setPageSize}
                         itemLabel="แห่ง"
@@ -411,6 +482,20 @@ export default function HealthFacilitiesPage() {
                                         placeholder="100.xxxxx"
                                     />
                                 </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        เบอร์โทรติดต่อ
+                                    </label>
+                                    <input
+                                        type="text"
+                                        maxLength={80}
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="เช่น 074-711-010"
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex gap-3 pt-4">
@@ -434,6 +519,16 @@ export default function HealthFacilitiesPage() {
                         </form>
                     </div>
                 </div>
+            )}
+            {statusFacility && (
+                <HealthFacilityStatusModal
+                    facility={statusFacility}
+                    onClose={() => setStatusFacility(null)}
+                    onSaved={(updated) => {
+                        setFacilities((rows) => rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)));
+                        setStatusFacility(null);
+                    }}
+                />
             )}
         </EOCLayout>
     );

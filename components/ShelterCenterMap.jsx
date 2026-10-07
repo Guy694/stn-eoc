@@ -1,7 +1,9 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { renderToStaticMarkup } from 'react-dom/server';
 import AppIcon from "@/components/icons/AppIcon";
+import ShelterPopup from "@/components/public/map/ShelterPopup";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -16,8 +18,6 @@ const EOC_TYPES = [
     { value: 'earthquake', label: "แผ่นดินไหว", color: 'orange', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png' },
     { value: 'disease', label: "โรคระบาด", color: 'red', markerUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png' }
 ];
-
-const SHELTER_ICON_SRC = '/stn-eoc/img/shelter.png';
 
 export default function ShelterCenterMap({
     eocType = null,
@@ -56,49 +56,15 @@ export default function ShelterCenterMap({
             const L = require('leaflet');
             const icons = {};
 
-            // สร้าง icon สำหรับแต่ละประเภท EOC โดยใช้รูปศูนย์พักพิง
-            const shelterIconColors = {
-                'flood': { bg: '#3B82F6', border: '#1D4ED8' },      // น้ำเงิน
-                'drought': { bg: '#EAB308', border: '#CA8A04' },    // เหลือง
-                'tsunami': { bg: '#8B5CF6', border: '#7C3AED' },    // ม่วง
-                'earthquake': { bg: '#F97316', border: '#EA580C' }, // ส้ม
-                'disease': { bg: '#EF4444', border: '#DC2626' }     // แดง
-            };
-
-            eocTypes.forEach(type => {
-                const colors = shelterIconColors[type.value] || { bg: '#6B7280', border: '#4B5563' };
-                icons[type.value] = L.divIcon({
-                    className: 'shelter-custom-icon',
-                    html: `
-                        <div style="
-                            background-color: ${colors.bg};
-                            border: 3px solid ${colors.border};
-                            border-radius: 50%;
-                            width: 40px;
-                            height: 40px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 20px;
-                            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-                            cursor: pointer;
-                        ">
-                            <img
-                                src="${SHELTER_ICON_SRC}"
-                                alt=""
-                                style="
-                                    width: 24px;
-                                    height: 24px;
-                                    object-fit: contain;
-                                    display: block;
-                                "
-                            />
-                        </div>
-                    `,
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20],
-                    popupAnchor: [0, -20]
-                });
+            const shelterSvg = renderToStaticMarkup(
+                <AppIcon icon="shelter" className="h-5 w-5 text-white" strokeWidth={2.5} />
+            );
+            icons.shelter = L.divIcon({
+                className: 'public-shelter-icon',
+                html: `<div style="width:38px;height:38px;border-radius:50%;border:3px solid #7C3AED;background:#8B5CF6;box-shadow:0 3px 10px rgba(0,0,0,0.32);display:flex;align-items:center;justify-content:center;">${shelterSvg}</div>`,
+                iconSize: [38, 38],
+                iconAnchor: [19, 19],
+                popupAnchor: [0, -19]
             });
             setCustomIcons(icons);
         }
@@ -146,28 +112,12 @@ export default function ShelterCenterMap({
 
     useEffect(() => { fetchShelters(); }, [fetchShelters]);
 
-    const getEocTypeLabel = (eocTypeValue) => eocTypes.find(t => t.value === eocTypeValue)?.label || eocTypeValue;
-
     const sheltersWithCoordinates = shelters.filter((shelter) => {
         const lat = Number.parseFloat(shelter.lat);
         const lon = Number.parseFloat(shelter.lon);
         return Number.isFinite(lat) && Number.isFinite(lon);
     });
     const sheltersWithoutCoordinates = shelters.length - sheltersWithCoordinates.length;
-
-    const getOccupancyBadge = (shelter) => {
-        if (!shelter.current_occupancy && shelter.current_occupancy !== 0) return null;
-        const occupancyPercent = (shelter.current_occupancy / shelter.shelter_capacity) * 100;
-        let badgeClass = 'bg-green-100 text-green-800';
-        let statusText = 'ว่าง';
-        if (occupancyPercent >= 100) { badgeClass = 'bg-red-100 text-red-800'; statusText = 'เต็ม'; }
-        else if (occupancyPercent >= 80) { badgeClass = 'bg-yellow-100 text-yellow-800'; statusText = 'ใกล้เต็ม'; }
-        return (
-            <div className={`inline-block px-2 py-1 rounded text-xs font-bold ${badgeClass} mt-2`}>
-                {statusText}: {shelter.current_occupancy}/{shelter.shelter_capacity} ({occupancyPercent.toFixed(0)}%)
-            </div>
-        );
-    };
 
     // Create label icon
     const createLabelIcon = (text, type = 'district') => {
@@ -327,37 +277,10 @@ export default function ShelterCenterMap({
                             <Marker
                                 key={shelter.id}
                                 position={[parseFloat(shelter.lat), parseFloat(shelter.lon)]}
-                                icon={customIcons?.[shelter.eoc_type] || undefined}
+                                icon={customIcons?.shelter || undefined}
                             >
-                                <Popup maxWidth={300}>
-                                    <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
-                                        <h4 className="font-bold text-gray-800 mb-2">{shelter.sheltername}</h4>
-                                        <div className="space-y-1 text-sm">
-                                            <p><strong>ประเภท:</strong> {getEocTypeLabel(shelter.eoc_type)}</p>
-                                            <p><strong>ที่อยู่:</strong> {shelter.address || '-'}</p>
-                                            <p><strong>พื้นที่:</strong> ต.{shelter.tambon}, อ.{shelter.district_name || '-'}</p>
-                                            <p><strong>ความจุ:</strong> {shelter.shelter_capacity} คน</p>
-                                            {shelter.contact_phone && (
-                                                <p className="flex items-center gap-1">
-                                                    <strong>โทรศัพท์:</strong>
-                                                    <a href={`tel:${shelter.contact_phone}`} className="text-blue-600 hover:text-blue-800 hover:underline">
-                                                        {shelter.contact_phone}
-                                                    </a>
-                                                </p>
-                                            )}
-                                            <div className="mt-2 pt-2  border-t border-gray-100">
-                                                <a
-                                                    href={`https://www.google.com/maps/dir/?api=1&destination=${shelter.lat},${shelter.lon}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="w-full bg-green-600 text-white text-center py-2 rounded-lg text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <span style={{ color: 'white' }} className='p-1'>นำทางไปยังศูนย์พักพิง</span>
-                                                </a>
-                                            </div>
-                                            {getOccupancyBadge(shelter)}
-                                        </div>
-                                    </div>
+                                <Popup maxWidth={270} minWidth={240}>
+                                    <ShelterPopup shelter={shelter} />
                                 </Popup>
                             </Marker>
                         ))}

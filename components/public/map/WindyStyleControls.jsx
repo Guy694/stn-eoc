@@ -57,8 +57,10 @@ export function MenuToggle({ open, onToggle, label = "ชั้นข้อม�
       className="pointer-events-auto flex items-center gap-2"
       aria-expanded={open}
       aria-controls={controls}
+      aria-label={label}
     >
-      <span className="rounded-full bg-slate-900/70 px-3 py-1 text-sm font-black text-white shadow">{label}</span>
+      {/* จอมือถือซ่อนป้ายข้อความ (ทับช่องค้นหา) เหลือปุ่มกลม */}
+      <span className="rounded-full bg-slate-900/70 px-3 py-1 text-sm font-black text-white shadow max-md:hidden">{label}</span>
       <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#b91c1c] text-white shadow-lg ring-2 ring-white/80">
         {open ? (
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>

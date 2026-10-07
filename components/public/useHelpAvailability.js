@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 // - ระหว่างโหลดหรือถ้าเช็กไม่ได้ ให้ถือว่า "เปิด" (fail-open) เพราะเป็นเรื่องฉุกเฉิน
 //   และเซิร์ฟเวอร์ยังตรวจซ้ำตอนรับคำขออยู่แล้ว
 export const HELP_CLOSED_HINT = "เปิดให้ใช้เมื่อมีเหตุการณ์ฉุกเฉิน (EOC เปิด) • เหตุด่วนโทร 1669";
+export const WATER_CLOSED_HINT = "เปิดรับรายงานเมื่อเปิดศูนย์ปฏิบัติการด้านอุทกภัย • เหตุด่วนโทร 1669";
 
 let cached = null;
 let inflight = null;
@@ -17,7 +18,7 @@ function loadAvailability() {
     inflight = fetch("/stn-eoc/api/public/help-availability", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((json) => {
-        const open = json?.success ? Boolean(json.open) : null;
+        const open = json?.success ? { help: Boolean(json.open), flood: Boolean(json.floodOpen) } : null;
         if (open !== null) cached = { open, at: Date.now() };
         return open;
       })
@@ -44,6 +45,7 @@ export default function useHelpAvailability() {
   return {
     loading: open === null,
     // null (ยังไม่รู้/เช็กไม่ได้) ถือว่าเปิด
-    helpOpen: open !== false
+    helpOpen: open === null || open.help,
+    floodOpen: open === null || open.flood
   };
 }

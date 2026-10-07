@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
+import { modulePermissions, requireModuleEdit } from '@/lib/eocModuleAccess';
 import { publicInternalError } from '@/lib/apiResponse';
 import { triggerEventAlerts } from '@/lib/eocAlertRunner';
 import { normalizeDiseaseName } from '@/lib/diseaseNames';
@@ -80,7 +81,8 @@ export async function GET(request) {
         return NextResponse.json({
             success: true,
             data: rows,
-            stats
+            stats,
+            permissions: await modulePermissions(auth.user, sessionId, 'health')
         });
     } catch (error) {
         console.error('Get shelter disease reports error:', error);
@@ -102,7 +104,8 @@ export async function GET(request) {
 // POST - เพิ่มรายงานโรค
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // บันทึกได้เฉพาะกลุ่มภารกิจเจ้าของเมนูโรคและสุขภาพ (CASE MGMT, SAT)
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const body = await request.json();
@@ -129,6 +132,8 @@ export async function POST(request) {
                 { status: 400 }
             );
         }
+        const gate = await requireModuleEdit(auth.user, session_id, 'health');
+        if (gate.response) return gate.response;
 
         const pool = await getConnection();
 

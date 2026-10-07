@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { validateSessionDates } from '@/lib/sessionDateRange';
 import { getConnection } from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
+import { modulePermissions, requireModuleEdit } from '@/lib/eocModuleAccess';
 import { publicInternalError } from '@/lib/apiResponse';
 import { normalizeDiseaseName } from '@/lib/diseaseNames';
 
@@ -17,6 +18,12 @@ async function getVillageLocation(pool, villagePolygonId) {
     );
 
     return rows[0] || null;
+}
+
+// รายงานผู้ป่วยใช้ทั้งเหตุการณ์อุทกภัย (เมนูโรคและสุขภาพ) และโรคระบาด (เมนูบันทึกรายงานผู้ป่วย)
+async function diseaseModuleKey(pool, sessionId) {
+    const [rows] = await pool.query('SELECT eoc_type FROM eoc_sessions WHERE id = ? LIMIT 1', [sessionId]);
+    return rows[0]?.eoc_type === 'flood' ? 'health' : 'records';
 }
 
 function buildManualVillageSourceKey({ sessionId, reportDate, diseaseName, villagePolygonId, districtName, tambonName, moo }) {
@@ -198,6 +205,7 @@ export async function GET(request) {
 
         return NextResponse.json({
             success: true,
+            permissions: sessionId ? await modulePermissions(auth.user, sessionId, await diseaseModuleKey(pool, sessionId)) : undefined,
             data: Array.isArray(reports) ? reports : [],
             diseaseList: Array.isArray(diseaseList) ? diseaseList.map(d => d.disease_name) : [],
             summary: {
@@ -222,7 +230,8 @@ export async function GET(request) {
 // POST - บันทึกรายงานโรค
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // บันทึกได้เฉพาะกลุ่มภารกิจเจ้าของเมนู — ตรวจด้วย requireModuleEdit หลังทราบเหตุการณ์
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
@@ -270,6 +279,9 @@ export async function POST(request) {
                 { status: 400 }
             );
         }
+
+        const gate = await requireModuleEdit(auth.user, session_id, await diseaseModuleKey(pool, session_id));
+        if (gate.response) return gate.response;
 
         const dateCheck = await validateSessionDates(pool.query.bind(pool), session_id, [report_date], { label: 'EOC' });
         if (!dateCheck.ok) {
@@ -349,7 +361,8 @@ export async function POST(request) {
 // PUT - แก้ไขรายงานโรค
 export async function PUT(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // บันทึกได้เฉพาะกลุ่มภารกิจเจ้าของเมนู — ตรวจด้วย requireModuleEdit หลังทราบเหตุการณ์
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
@@ -394,6 +407,9 @@ export async function PUT(request) {
                 { status: 400 }
             );
         }
+
+        const gate = await requireModuleEdit(auth.user, session_id, await diseaseModuleKey(pool, session_id));
+        if (gate.response) return gate.response;
 
         const dateCheck = await validateSessionDates(pool.query.bind(pool), session_id, [report_date], { label: 'EOC' });
         if (!dateCheck.ok) {

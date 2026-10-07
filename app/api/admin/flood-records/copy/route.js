@@ -3,6 +3,7 @@ import { getPool } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { validateSessionDates } from '@/lib/sessionDateRange';
 import { publicInternalError } from '@/lib/apiResponse';
+import { requireModuleEdit } from '@/lib/eocModuleAccess';
 
 function validateSessionDateRange(connection, sessionId, dates) {
     return validateSessionDates(connection.execute.bind(connection), sessionId, dates, { eocType: 'flood', label: 'EOC อุทกภัยน้ำท่วม' });
@@ -31,6 +32,10 @@ export async function POST(request) {
                 error: 'วันที่ต้นทางและวันที่ปลายทางต้องไม่เหมือนกัน'
             }, { status: 400 });
         }
+
+        // ต้องเป็นทีมเจ้าของเมนูบันทึกพื้นที่น้ำท่วม และเหตุการณ์ยังเปิดอยู่ (เหมือนการบันทึกปกติ)
+        const gate = await requireModuleEdit(auth.user, session_id, 'records');
+        if (gate.response) return gate.response;
 
         const connection = getPool();
         const validation = await validateSessionDateRange(connection, session_id, [source_date, target_date]);

@@ -4,7 +4,7 @@ import { publicInternalError } from "@/lib/apiResponse";
 import { getPool } from "@/lib/db";
 import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
 import { removePublicPhotoCopy } from '@/lib/incidentPhotos';
-import { expireOverduePublications, hasPublishingColumns } from '@/lib/incidentPublishingDb';
+import { expireOverduePublications, hasConfirmationColumns, hasPublishingColumns } from '@/lib/incidentPublishingDb';
 
 const pool = getPool();
 
@@ -40,6 +40,7 @@ export async function GET(request) {
         let params = [];
 
         const publishing = await hasPublishingColumns(connection);
+        const confirmations = publishing && await hasConfirmationColumns(connection);
         if (publishing) {
             await expireOverduePublications(connection);
             // เรื่องที่รวมเข้ากับเรื่องหลักแล้ว แสดงอยู่ใต้เรื่องหลัก ไม่นับซ้ำในรายการ
@@ -116,6 +117,7 @@ export async function GET(request) {
                 status,
                 ${publishing ? `problem_category, publish_status, public_title, public_detail, public_photo_path,
                 published_at, published_by, expires_at, normal_reports, normal_reported_at,
+                ${confirmations ? 'still_reports, still_reported_at, wrong_reports, wrong_reported_at,' : ''}
                 (SELECT COUNT(*) FROM public_incident_reports m WHERE m.merged_into_id = public_incident_reports.id) AS merged_count,` : ''}
                 reviewed_by,
                 reviewed_at,

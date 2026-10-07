@@ -14,6 +14,7 @@ import {
   Menu,
   Siren,
   Tent,
+  Waves,
   X
 } from "lucide-react";
 
@@ -33,12 +34,14 @@ export default function PublicTopNavigation({ activeMenu }) {
 
   const items = [
     { href: "/", label: "หน้าหลัก", icon: Home, key: "home" },
-    { href: "/public/disaster-map", label: "แผนที่", icon: Map, key: "map" },
-    { href: "/public/weather-watch", label: "สภาพอากาศและความเสี่ยง", icon: CloudSun, key: "weather" },
+    // แผนที่ 2 หน้าแบ่งตามคำถาม: "ตอนนี้เกิดอะไรขึ้น" (สถานการณ์) กับ "จะเกิดอะไรขึ้น" (พยากรณ์และความเสี่ยง)
+    { href: "/public/disaster-map", label: "แผนที่สถานการณ์", shortLabel: "สถานการณ์", icon: Map, key: "map" },
+    { href: "/public/weather-watch", label: "พยากรณ์และความเสี่ยง", shortLabel: "พยากรณ์", icon: CloudSun, key: "weather" },
     { href: "/public/shelters", label: "ศูนย์พักพิง", icon: Tent, key: "shelters" },
     { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
     { label: "ถามผู้ช่วย", icon: Bot, key: "assistant", action: openAssistant },
-    { href: "/public/report-incident", label: "ขอความช่วยเหลือ", icon: Siren, key: "help", emphasis: true }
+    { href: "/public/report-water", label: "รายงานระดับน้ำ", shortLabel: "ระดับน้ำ", icon: Waves, key: "water", emphasis: "water" },
+    { href: "/public/report-incident", label: "ขอความช่วยเหลือ", icon: Siren, key: "help", emphasis: "help" }
   ];
 
   const isActive = (item) => {
@@ -55,14 +58,21 @@ export default function PublicTopNavigation({ activeMenu }) {
       : "shrink-0 px-3 py-2.5 text-sm xl:px-4"
     } ${active
       ? "bg-white text-[#083865] shadow-sm"
-      : item.emphasis
+      : item.emphasis === "water"
+        ? "bg-sky-500 text-white shadow-sm ring-1 ring-white/30 hover:bg-sky-400"
+        : item.emphasis
         ? "bg-red-600 text-white shadow-sm ring-1 ring-white/30 hover:bg-red-500"
         : "text-blue-50 hover:bg-white/10 hover:text-white"
     }`;
     const content = (
       <>
         <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-        <span>{item.label}</span>
+        {item.shortLabel && !mobile ? (
+          <>
+            <span className="xl:hidden">{item.shortLabel}</span>
+            <span className="hidden xl:inline">{item.label}</span>
+          </>
+        ) : <span>{item.label}</span>}
       </>
     );
 
@@ -70,10 +80,10 @@ export default function PublicTopNavigation({ activeMenu }) {
       return <button key={item.key} type="button" onClick={item.action} className={className}>{content}</button>;
     }
 
-    // ปุ่มขอความช่วยเหลือ: ใช้ได้เฉพาะเมื่อมี EOC เปิดอยู่
+    // ปุ่มขอความช่วยเหลือ: ใช้ได้เฉพาะเมื่อมี EOC เปิดอยู่ / รายงานระดับน้ำ: เฉพาะเมื่อเปิด EOC ด้านอุทกภัย
     if (item.emphasis) {
       return (
-        <HelpRequestLink key={item.key} onClick={() => setIsOpen(false)} className={className} disabledClassName="cursor-not-allowed bg-white/15! text-white/60! ring-0! shadow-none! hover:bg-white/15!">
+        <HelpRequestLink key={item.key} kind={item.emphasis} onClick={() => setIsOpen(false)} className={className} disabledClassName="cursor-not-allowed bg-white/15! text-white/60! ring-0! shadow-none! hover:bg-white/15!">
           {content}
         </HelpRequestLink>
       );
@@ -87,7 +97,7 @@ export default function PublicTopNavigation({ activeMenu }) {
       <div className="mx-auto max-w-[1600px] px-3 sm:px-5">
         <div className="hidden min-h-14 items-center gap-1 overflow-x-auto py-1.5 lg:flex">
           {items.filter(item => !item.emphasis).map(item => renderItem(item))}
-          <div className="ml-auto">{items.filter(item => item.emphasis).map(item => renderItem(item))}</div>
+          <div className="ml-auto flex items-center gap-1.5">{items.filter(item => item.emphasis).map(item => renderItem(item))}</div>
         </div>
 
         <div className="flex min-h-14 items-center justify-between lg:hidden">
@@ -96,6 +106,9 @@ export default function PublicTopNavigation({ activeMenu }) {
             <span className="hidden text-sm font-black sm:inline">ข้อมูลสาธารณะ</span>
           </div>
           <div className="flex items-center gap-2">
+          <HelpRequestLink kind="water" className="flex items-center gap-1.5 rounded-lg bg-sky-500 px-2.5 py-2 text-sm font-black text-white hover:bg-sky-400" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! hover:bg-white/15!">
+            <Waves className="h-4 w-4" aria-hidden="true" /><span className="sm:hidden">ระดับน้ำ</span><span className="hidden sm:inline">รายงานระดับน้ำ</span>
+          </HelpRequestLink>
           <HelpRequestLink className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-sm font-black text-white hover:bg-red-500" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! hover:bg-white/15!">
             <Siren className="h-4 w-4" aria-hidden="true" /> ขอความช่วยเหลือ
           </HelpRequestLink>

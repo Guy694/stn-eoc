@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import html2canvas from "html2canvas";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import AppIcon from "@/components/icons/AppIcon";
+import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
 
 export default function DailyFloodTimeline({ startDate, polygons }) {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -50,28 +51,9 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
         };
 
         fetchFloodData();
-    }, [selectedDate]);    // สีตามระดับอุทกภัยน้ำท่วม (เหมือนภาพตัวอย่าง)
-    const getFloodColor = (level) => {
-        const colors = {
-            'severe': '#DC2626', // แดงเข้ม - อุทกภัยน้ำท่วมหนัก
-            'moderate': '#FBBF24', // เหลือง - อุทกภัยน้ำท่วมปานกลาง
-            'mild': '#34D399', // เขียวอ่อน - อุทกภัยน้ำท่วมเล็กน้อย
-            'safe': '#10B981', // เขียว - ปลอดภัย
-            'nodata': '#E5E7EB', // เทา - ไม่มีข้อมูล
-        };
-        return colors[level] || colors.nodata;
-    };
-
-    const getFloodLabel = (level) => {
-        const labels = {
-            'severe': 'อุทกภัยน้ำท่วมสูง',
-            'moderate': 'อุทกภัยน้ำท่วมปานกลาง',
-            'mild': 'อุทกภัยน้ำท่วมต่ำ',
-            'safe': 'ปลอดภัย',
-            'nodata': 'ไม่มีข้อมูล',
-        };
-        return labels[level] || labels.nodata;
-    };
+    }, [selectedDate]);
+    const getFloodColor = (level) => (LEGACY_FLOOD_LEVELS[level] || LEGACY_FLOOD_LEVELS.nodata).color;
+    const getFloodLabel = (level) => (LEGACY_FLOOD_LEVELS[level] || LEGACY_FLOOD_LEVELS.nodata).label;
 
     // ดาวน์โหลดเป็นภาพ
     const downloadMap = async () => {
@@ -308,11 +290,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
 
                 {/* Legend */}
                 <div className="flex justify-center gap-4 flex-wrap">
-                    <LegendItem color="#DC2626" label="อุทกภัยน้ำท่วมสูง" />
-                    <LegendItem color="#FBBF24" label="อุทกภัยน้ำท่วมปานกลาง" />
-                    <LegendItem color="#34D399" label="อุทกภัยน้ำท่วมต่ำ" />
-                    <LegendItem color="#10B981" label="ปลอดภัย" />
-                    <LegendItem color="#E5E7EB" label="ไม่มีข้อมูล" />
+                    {Object.entries(LEGACY_FLOOD_LEVELS).map(([key, meta]) => <LegendItem key={key} color={meta.color} label={meta.label} />)}
                 </div>
 
                 {/* Statistics */}

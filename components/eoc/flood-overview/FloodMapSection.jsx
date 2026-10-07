@@ -2,6 +2,7 @@
 
 import AppIcon from "@/components/icons/AppIcon";
 import PublicIncidentMap from './PublicIncidentMapLazy';
+import { floodAreaMapMeta } from '@/lib/floodMapLevels';
 
 // ส่วนหนึ่งของหน้าภาพรวม EOC อุทกภัย (แยกจาก app/eoc/flood/overview/page.jsx)
 export default function FloodMapSection({ session, affected_areas, shelters, diseases, flood_map, isDailyMode, formatNumber, formatDateKey, effectiveDateLabel, mapStartDate, mapEndDate, dashboardData }) {
@@ -52,12 +53,14 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                     <h4 className="font-semibold text-gray-800 mb-3">พื้นที่สำคัญจากบันทึกอุทกภัยน้ำท่วม</h4>
                     {flood_map?.events?.length > 0 ? (
                         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                            {flood_map.events.slice(0, 12).map((event) => (
+                            {flood_map.events.slice(0, 12).map((event) => {
+                                const level = floodAreaMapMeta({ flood_level: event.severity, water_level: Number(event.water_depth_cm || 0) / 100 });
+                                return (
                                 <div key={event.id} className="rounded-lg border border-gray-100 p-3">
                                     <div className="flex items-center justify-between gap-3">
                                         <p className="font-semibold text-gray-800">ต.{event.tambon || '-'} อ.{event.district || '-'}</p>
-                                        <span className={`rounded-full px-2 py-1 text-xs font-semibold ${event.severity === 'severe' ? 'bg-red-100 text-red-700' : event.severity === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-cyan-100 text-cyan-700'}`}>
-                                            {event.severity_label}
+                                        <span className="rounded-full px-2 py-1 text-xs font-semibold" style={{ color: level.color, backgroundColor: `${level.color}1f` }}>
+                                            {level.description}
                                         </span>
                                     </div>
                                     <p className="mt-1 text-sm text-gray-600">{event.village || '-'}</p>
@@ -67,7 +70,8 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                                         {event.water_depth_cm > 0 && <span>น้ำ {formatNumber(event.water_depth_cm)} ซม.</span>}
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <p className="text-sm text-gray-500">ยังไม่มีบันทึกอุทกภัยน้ำท่วมในช่วงเหตุการณ์นี้</p>

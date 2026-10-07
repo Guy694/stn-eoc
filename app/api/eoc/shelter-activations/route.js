@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
+import { modulePermissions, requireModuleEdit } from '@/lib/eocModuleAccess';
 import { publicInternalError } from '@/lib/apiResponse';
 import { recordChange } from '@/lib/recordArchive';
 import { triggerEventAlerts } from '@/lib/eocAlertRunner';
@@ -124,7 +125,8 @@ export async function GET(request) {
             success: true,
             data: rows,
             stats,
-            health
+            health,
+            permissions: await modulePermissions(auth.user, sessionId, 'shelters')
         });
     } catch (error) {
         console.error('Get shelter activations error:', error);
@@ -146,7 +148,8 @@ export async function GET(request) {
 // POST - Activate/Toggle shelter สำหรับ session
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // เปิดใช้ศูนย์/ปรับยอดผู้พักพิง: เฉพาะกลุ่มภารกิจเจ้าของเมนู (LOGISTICS) — ตรวจด้วย requireModuleEdit
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const body = await request.json();
@@ -158,6 +161,8 @@ export async function POST(request) {
                 { status: 400 }
             );
         }
+        const gate = await requireModuleEdit(auth.user, session_id, 'shelters');
+        if (gate.response) return gate.response;
 
         const pool = await getConnection();
 
@@ -219,7 +224,8 @@ export async function POST(request) {
 // PUT - Update occupancy สำหรับ shelter ที่ activate แล้ว
 export async function PUT(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // เปิดใช้ศูนย์/ปรับยอดผู้พักพิง: เฉพาะกลุ่มภารกิจเจ้าของเมนู (LOGISTICS) — ตรวจด้วย requireModuleEdit
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const body = await request.json();
@@ -231,6 +237,8 @@ export async function PUT(request) {
                 { status: 400 }
             );
         }
+        const gate = await requireModuleEdit(auth.user, session_id, 'shelters');
+        if (gate.response) return gate.response;
 
         const pool = await getConnection();
 

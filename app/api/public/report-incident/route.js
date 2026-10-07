@@ -7,7 +7,9 @@ import { isValidCategory } from '@/lib/incidentPublishing';
 import { publicInternalError } from '@/lib/apiResponse';
 import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage, sendTelegramPhoto } from '@/lib/telegram';
 import { enforceIpRateLimit } from "@/lib/rateLimit";
-import { HELP_CLOSED_MESSAGE, PROBLEM_CLOSED_MESSAGE, getOpenEocSessions, hasOpenEoc } from '@/lib/eocOpen';
+import { HELP_CLOSED_MESSAGE, PROBLEM_CLOSED_MESSAGE, WATER_CLOSED_MESSAGE, getOpenEocSessions, hasOpenEoc } from '@/lib/eocOpen';
+import { hasWaterTrendColumn } from '@/lib/incidentPublishingDb';
+import { WATER_PASSABILITY, isWaterLevel, travelForPassability, waterLevelMeta, waterTrendMeta } from '@/lib/waterReport';
 
 const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const HELP_CATEGORY_LABELS = {
@@ -96,6 +98,100 @@ async function notifyTelegramOfficers(pool, report) {
     }
 }
 
+async function savePhoto(photo) {
+    if (!photo || !photo.size) return { photoPath: null };
+    const validation = await validateImageFile(photo, { maxSizeBytes: MAX_PHOTO_SIZE_BYTES });
+    if (!validation.ok) return { error: validation.error, status: 400 };
+    try {
+        const uploadDir = getPrivateUploadDir('incidents');
+        await mkdir(uploadDir, { recursive: true });
+        const cleanBuffer = await stripImageMetadata(validation.buffer, validation.extension);
+        const filename = createRandomFilename(validation.extension);
+        await writeFile(resolveInside(uploadDir, filename), cleanBuffer);
+        return { photoPath: `/uploads/incidents/${filename}` };
+    } catch (uploadError) {
+        console.error('Photo upload error:', uploadError);
+        return { error: 'ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่อีกครั้ง', status: 500 };
+    }
+}
+
+function clean(value, max) {
+    return String(value || '').trim().slice(0, max);
+}
+
+// รายงานระดับน้ำจากประชาชน → เก็บเป็น "จุดปัญหา" ประเภทน้ำท่วม เพื่อเข้าคิวตรวจสอบ/เผยแพร่เดิมของเจ้าหน้าที่
+async function handleWaterReport({ firstName, lastName, phone, village, subDistrict, district, notes, waterLevel, waterTrend, passability, latitude, longitude, photo, occurredAt }) {
+    const openSessions = await getOpenEocSessions();
+    if (!openSessions.some((session) => session.eoc_type === 'flood')) {
+        return NextResponse.json({ success: false, code: 'EOC_NOT_OPEN', message: WATER_CLOSED_MESSAGE }, { status: 403 });
+    }
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    if (!latitude || !longitude || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+        return NextResponse.json({ success: false, message: 'กรุณาระบุตำแหน่งที่พบน้ำท่วม' }, { status: 400 });
+    }
+    if (!isWaterLevel(waterLevel)) {
+        return NextResponse.json({ success: false, message: 'กรุณาเลือกระดับน้ำ' }, { status: 400 });
+    }
+    if (waterTrend && !waterTrendMeta(waterTrend)) {
+        return NextResponse.json({ success: false, message: 'แนวโน้มน้ำไม่ถูกต้อง' }, { status: 400 });
+    }
+    if (passability && !WATER_PASSABILITY.some((item) => item.value === passability)) {
+        return NextResponse.json({ success: false, message: 'สถานะการสัญจรไม่ถูกต้อง' }, { status: 400 });
+    }
+    const contactPhone = clean(phone, 20);
+    if (contactPhone && !/^[0-9+\-\s]{9,20}$/.test(contactPhone)) {
+        return NextResponse.json({ success: false, message: 'เบอร์โทรไม่ถูกต้อง' }, { status: 400 });
+    }
+
+    const saved = await savePhoto(photo);
+    if (saved.error) return NextResponse.json({ success: false, message: saved.error }, { status: saved.status });
+
+    const level = waterLevelMeta(waterLevel);
+    const trend = waterTrendMeta(waterTrend);
+    const travel = travelForPassability(passability) || level.travel;
+    const noteText = clean(notes, 1000);
+    const description = [
+        `รายงานระดับน้ำ: ${level.label} (${level.range})`,
+        trend ? `แนวโน้ม: ${trend.label}` : null,
+        passability ? `การสัญจร: ${WATER_PASSABILITY.find((item) => item.value === passability).label}` : null,
+        noteText ? `หมายเหตุ: ${noteText}` : null
+    ].filter(Boolean).join('\n');
+
+    const pool = await getConnection();
+    const withTrend = await hasWaterTrendColumn(pool);
+    const [result] = await pool.execute(
+        `INSERT INTO public_incident_reports
+        (first_name, last_name, phone, village, sub_district, district,
+         description, water_level, affected_people, urgency, travel_status, report_type, disaster_type, occurred_at,
+         latitude, longitude, photo_path, verified_by_thaiid, citizen_id, citizen_pid_hash, status, reported_at, problem_category${withTrend ? ', water_trend' : ''})
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 'problem_point', 'flood', ?, ?, ?, ?, 0, NULL, NULL, 'pending', NOW(), 'flood'${withTrend ? ', ?' : ''})`,
+        [
+            clean(firstName, 100),
+            clean(lastName, 100),
+            contactPhone,
+            village || null,
+            subDistrict || null,
+            district || null,
+            description,
+            level.value,
+            level.urgency,
+            travel,
+            occurredAt,
+            lat,
+            lng,
+            saved.photoPath,
+            ...(withTrend ? [trend ? trend.value : null] : [])
+        ]
+    );
+
+    return NextResponse.json({
+        success: true,
+        message: 'ได้รับรายงานระดับน้ำแล้ว เจ้าหน้าที่จะตรวจสอบก่อนแสดงบนแผนที่',
+        reportId: result.insertId
+    });
+}
+
 export async function POST(request) {
     // กันการส่งข้อมูลขยะ/สแปมจาก IP เดียวกัน
     const rateLimited = await enforceIpRateLimit(request, 'publicReport');
@@ -125,6 +221,19 @@ export async function POST(request) {
         const longitude = formData.get('longitude');
         const photo = formData.get('photo');
         const problemCategory = formData.get('problemCategory') || null;
+        // รายงานระดับน้ำ: ไม่บังคับชื่อ/เบอร์ (ให้ประชาชนรายงานได้เร็ว) แต่ต้องมีตำแหน่งและระดับน้ำ
+        const isWaterReport = formData.get('reportSource') === 'water_level';
+        const waterTrend = formData.get('waterTrend') || null;
+        const passability = formData.get('passability') || null;
+
+        if (isWaterReport) {
+            return handleWaterReport({
+                formData,
+                firstName, lastName, phone, village, subDistrict, district,
+                notes: description, waterLevel, waterTrend, passability,
+                latitude, longitude, photo, occurredAt
+            });
+        }
 
         // Validate required fields
         if (!firstName || !lastName || !phone || !latitude || !longitude) {

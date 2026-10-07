@@ -7,6 +7,7 @@ import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import AppIcon from "@/components/icons/AppIcon";
+import { FLOOD_LEVEL_LEGEND, floodAreaMapMeta } from "@/lib/floodMapLevels";
 
 const EOC_TYPE_LABELS = {
   flood: "อุทกภัยน้ำท่วม",
@@ -33,7 +34,10 @@ export const DEFAULT_LAYERS = {
   shelters: true,
   hospitals: true,
   waterways: true,
-  hillshade: false
+  // สถานการณ์น้ำ/ฝนตอนนี้จาก ThaiWater
+  waterStations: true,
+  rainStations: true,
+  elevation: false
 };
 
 const DISEASE_DEFAULT_LAYERS = {
@@ -42,7 +46,9 @@ const DISEASE_DEFAULT_LAYERS = {
   diseaseReports: true,
   waterways: false,
   shelters: false,
-  hospitals: true
+  hospitals: true,
+  waterStations: false,
+  rainStations: false
 };
 
 export function getDefaultLayers(disasterType) {
@@ -210,7 +216,7 @@ function getUrgencyMeta(urgency) {
 }
 
 export function getEventMeta(item) {
-  if (item?.event_kind === "flood_record") return getFloodSeverityMeta(item.flood_level);
+  if (item?.event_kind === "flood_record") return getFloodSeverityMeta(item.flood_level, item.water_level);
   if (item?.event_kind === "disease_report") return getDiseaseSeverityMeta(item.severity_level);
   return getUrgencyMeta(item?.urgency);
 }
@@ -221,14 +227,15 @@ export function getEventTypeLabel(item) {
   return getIncidentTypeLabel(item);
 }
 
-export function getFloodSeverityMeta(level) {
+export function getFloodSeverityMeta(level, waterLevel = 0) {
+  const area = floodAreaMapMeta({ flood_level: level, water_level: waterLevel });
   const map = {
-    severe: { label: "อุทกภัยน้ำท่วมสูง", urgency: "critical", className: "bg-red-100 text-red-700" },
-    moderate: { label: "อุทกภัยน้ำท่วมปานกลาง", urgency: "high", className: "bg-orange-100 text-orange-700" },
-    mild: { label: "อุทกภัยน้ำท่วมต่ำ", urgency: "medium", className: "bg-sky-100 text-sky-700" },
-    safe: { label: "ไม่มีอุทกภัยน้ำท่วม", urgency: "low", className: "bg-emerald-100 text-emerald-700" }
+    severe: { urgency: "critical" },
+    moderate: { urgency: "high" },
+    mild: { urgency: "medium" },
+    safe: { urgency: "low" }
   };
-  return map[level] || map.mild;
+  return { label: area.description, urgency: (map[level] || map.mild).urgency, className: "bg-slate-100 text-slate-700", color: area.color };
 }
 
 export function getFloodLevelRank(level) {
@@ -315,7 +322,7 @@ export function buildFloodEventItems(floodAreas, { urgencyFilter = "all", report
     current.recorded_day = area.recorded_day || current.recorded_day;
     current.occurred_at = current.recorded_day;
     current.updated_at = area.updated_at || current.updated_at;
-    const meta = getFloodSeverityMeta(current.flood_level);
+    const meta = getFloodSeverityMeta(current.flood_level, current.water_level);
     current.urgency = meta.urgency;
     current.description = `พื้นที่อุทกภัยน้ำท่วม ต.${current.sub_district} อ.${current.district} (${current.village_count} หมู่บ้าน)`;
     grouped.set(key, current);
@@ -919,7 +926,7 @@ export function PublicDisasterMapContent({ initialDisasterType = "flood", lockDi
                         <p className="truncate font-semibold text-slate-800">{item.description || getEventTypeLabel(item)}</p>
                         <p className="truncate text-xs text-slate-500">{areaText}</p>
                       </div>
-                      <span className={`self-center rounded-full px-2 py-1 text-center text-xs font-bold ${meta.className}`}>{meta.label}</span>
+                      <span className={`self-center rounded-full px-2 py-1 text-center text-xs font-bold ${meta.className}`} style={meta.color ? { color: meta.color, backgroundColor: `${meta.color}1f` } : undefined}>{meta.label}</span>
                     </article>
                   );
                 })}
@@ -999,21 +1006,19 @@ function MapStatCard({ icon, label, value, unit, subText, tone }) {
 
 function MapLegend({ disasterType, onClose }) {
   const floodItems = [
-    ["bg-red-600", "อุทกภัยน้ำท่วมสูง/สูงมาก"],
-    ["bg-amber-400", "อุทกภัยน้ำท่วมปานกลาง"],
-    ["bg-sky-400", "อุทกภัยน้ำท่วมต่ำ"],
+    ...FLOOD_LEVEL_LEGEND.map((level) => [level.color, level.description, true]),
     ["bg-red-600", "เส้นทางปิด"],
     ["bg-sky-700", "เส้นทางน้ำ/คลองหลัก"],
     ["bg-orange-500", "เหตุการณ์กำลังเกิด"],
     ["bg-violet-600", "ศูนย์พักพิง"],
-    ["bg-emerald-600", "โรงพยาบาล"],
+    ["bg-emerald-600", "สถานพยาบาล"],
     ["bg-blue-500", "จุดเฝ้าระวัง / ระดับน้ำ"]
   ];
   const diseaseItems = [
     ["bg-red-600", "ระบาดหนัก"],
     ["bg-amber-400", "ระบาดปานกลาง"],
     ["bg-teal-500", "เฝ้าระวัง"],
-    ["bg-emerald-600", "โรงพยาบาล/หน่วยบริการ"],
+    ["bg-emerald-600", "สถานพยาบาล"],
     ["bg-orange-500", "เหตุการณ์กำลังเกิด"],
     ["bg-violet-600", "ศูนย์พักพิง"],
     ["bg-slate-900", "ขอบเขตอำเภอ"],
@@ -1025,13 +1030,14 @@ function MapLegend({ disasterType, onClose }) {
     <aside className="rounded-xl border border-blue-100 bg-white/95 p-3 text-xs shadow-lg backdrop-blur">
       <h3 className="mb-2 text-sm font-black text-blue-900">คำอธิบายสัญลักษณ์</h3>
       <div className="space-y-2">
-        {items.map(([color, label]) => (
+        {items.map(([color, label, customColor]) => (
           <div key={label} className="flex items-center gap-2 font-semibold text-slate-700">
-            <span className={`h-3.5 w-3.5 rounded-full ${color}`} aria-hidden="true"></span>
+            <span className={`h-3.5 w-3.5 rounded-full ${customColor ? "" : color}`} style={customColor ? { backgroundColor: color } : undefined} aria-hidden="true"></span>
             <span>{label}</span>
           </div>
         ))}
       </div>
+      {disasterType === "flood" && <p className="mt-2 text-[11px] text-slate-500">พื้นที่ที่ไม่มีค่าความลึกใช้ระดับประเมินเดิม ระบุรายละเอียดเมื่อแตะพื้นที่</p>}
       <button type="button" onClick={onClose} className="mt-3 w-full rounded-lg border border-blue-100 px-3 py-1.5 text-xs font-black text-blue-700">
         ซ่อน legend
       </button>
@@ -1049,9 +1055,8 @@ function MapLayerPanel({ layers, setLayers, baseMap, setBaseMap, showLegend, set
     ["incidents", "เหตุการณ์"],
     ["traffic", "เส้นทาง/ถนน"],
     ["waterways", "เส้นทางน้ำ/คลอง"],
-    ["hillshade", "เงาภูมิประเทศ/ความสูง"],
     ["shelters", "ศูนย์พักพิง"],
-    ["hospitals", "โรงพยาบาล"],
+    ["hospitals", "สถานพยาบาล"],
     ["village", "ขอบเขตหมู่บ้าน"]
   ];
 

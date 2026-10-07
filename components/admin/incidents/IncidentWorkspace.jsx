@@ -10,6 +10,7 @@ import {
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { useUrlState } from "@/components/admin/useUrlState";
 import { REPORT_TYPE_LABELS, categoryMeta } from "@/lib/incidentPublishing";
+import { waterLevelText } from "@/lib/waterReport";
 import PublishPanel from "@/components/admin/incidents/PublishPanel";
 
 const API = "/stn-eoc/api/admin/incident-reports";
@@ -49,6 +50,11 @@ function typeLabel(report) {
 
 function areaText(report) {
   return [report.village && `บ.${report.village}`, report.sub_district && `ต.${report.sub_district}`, report.district && `อ.${report.district}`].filter(Boolean).join(" ") || "-";
+}
+
+// รายงานระดับน้ำไม่บังคับชื่อ → แสดง "ไม่ระบุชื่อ"
+function reporterName(row) {
+  return `${row.first_name || ""} ${row.last_name || ""}`.trim() || "ไม่ระบุชื่อ";
 }
 
 export default function IncidentWorkspace() {
@@ -94,7 +100,7 @@ export default function IncidentWorkspace() {
       .filter((row) => !query || `${row.first_name} ${row.last_name} ${row.phone} ${areaText(row)} ${row.description} ${row.public_title || ""}`.toLowerCase().includes(query))
       // งานค้าง: เร่งด่วนก่อน แล้วเก่าก่อน / สถานะอื่น: ล่าสุดก่อน
       .sort((a, b) => status === "published"
-        ? Number(b.normal_reports || 0) - Number(a.normal_reports || 0) || new Date(a.expires_at) - new Date(b.expires_at)
+        ? (Number(b.normal_reports || 0) + Number(b.wrong_reports || 0)) - (Number(a.normal_reports || 0) + Number(a.wrong_reports || 0)) || new Date(a.expires_at) - new Date(b.expires_at)
         : status === "pending"
         ? (URGENCY_ORDER[a.urgency] ?? 9) - (URGENCY_ORDER[b.urgency] ?? 9) || new Date(a.created_at) - new Date(b.created_at)
         : new Date(b.created_at) - new Date(a.created_at));
@@ -125,7 +131,7 @@ export default function IncidentWorkspace() {
     setBusy(true);
     try {
       await apiRequest(API, { method: "PUT", body: { reportId: selected.id, status: nextStatus, adminNotes: notes.trim() || null } });
-      success(`อัปเดตเรื่องของ ${selected.first_name} เป็น "${statusMeta(nextStatus).label}" แล้ว`);
+      success(`อัปเดตเรื่อง #${selected.id} เป็น "${statusMeta(nextStatus).label}" แล้ว`);
       setSelected(null);
       load();
     } catch (error) {
@@ -192,8 +198,8 @@ export default function IncidentWorkspace() {
         columns={[
           { key: "who", label: "ผู้แจ้ง", render: (row) => (
             <div>
-              <div className="font-semibold text-slate-900">{row.first_name} {row.last_name}</div>
-              <a href={`tel:${row.phone}`} className="text-xs text-[#0b4c86] hover:underline">{row.phone}</a>
+              <div className="font-semibold text-slate-900">{reporterName(row)}</div>
+              {row.phone ? <a href={`tel:${row.phone}`} className="text-xs text-[#0b4c86] hover:underline">{row.phone}</a> : null}
             </div>
           ) },
           { key: "what", label: "เรื่อง", className: "max-w-sm", render: (row) => (
@@ -205,6 +211,8 @@ export default function IncidentWorkspace() {
                 {row.publish_status === "expired" ? <StatusPill tone="amber">หมดอายุบนแผนที่</StatusPill> : null}
                 {Number(row.merged_count) > 0 ? <StatusPill tone="blue">แจ้ง {Number(row.merged_count) + 1} ราย</StatusPill> : null}
                 {Number(row.normal_reports) > 0 ? <StatusPill tone="amber">ประชาชนแจ้งว่าปกติแล้ว {row.normal_reports}</StatusPill> : null}
+                {Number(row.wrong_reports) > 0 ? <StatusPill tone="red">แจ้งข้อมูลผิด {row.wrong_reports}</StatusPill> : null}
+                {Number(row.still_reports) > 0 ? <StatusPill tone="blue">ยืนยันยังท่วม {row.still_reports}</StatusPill> : null}
               </div>
             </div>
           ) },
@@ -236,8 +244,8 @@ export default function IncidentWorkspace() {
             <section className="grid gap-3 sm:grid-cols-2">
               <div>
                 <div className="text-xs text-slate-500">ผู้แจ้ง</div>
-                <div className="font-bold text-slate-900">{selected.first_name} {selected.last_name}</div>
-                <a href={`tel:${selected.phone}`} className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-[#0b4c86] hover:underline"><Phone className="h-4 w-4" aria-hidden="true" /> โทร {selected.phone}</a>
+                <div className="font-bold text-slate-900">{reporterName(selected)}</div>
+                {selected.phone ? <a href={`tel:${selected.phone}`} className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-[#0b4c86] hover:underline"><Phone className="h-4 w-4" aria-hidden="true" /> โทร {selected.phone}</a> : <div className="mt-1 text-sm text-slate-500">ไม่ได้ให้เบอร์ติดต่อ</div>}
               </div>
               <div>
                 <div className="text-xs text-slate-500">พื้นที่</div>
@@ -251,7 +259,7 @@ export default function IncidentWorkspace() {
               <div className="flex flex-wrap gap-2 sm:col-span-2">
                 <StatusPill tone={URGENCY[selected.urgency]?.tone}>ความเร่งด่วน: {URGENCY[selected.urgency]?.label || "-"}</StatusPill>
                 {selected.affected_people ? <StatusPill>ผู้ได้รับผลกระทบ {selected.affected_people} คน</StatusPill> : null}
-                {selected.water_level ? <StatusPill tone="blue">ระดับน้ำ {selected.water_level} ซม.</StatusPill> : null}
+                {selected.water_level ? <StatusPill tone="blue">ระดับน้ำ {waterLevelText(selected.water_level)}</StatusPill> : null}
                 {selected.occurred_at ? <StatusPill>เกิดเหตุ {formatDateTime(selected.occurred_at)}</StatusPill> : null}
               </div>
             </section>
@@ -307,7 +315,7 @@ export default function IncidentWorkspace() {
         open={Boolean(deleting)}
         onOpenChange={(value) => !value && setDeleting(null)}
         itemType="คำขอจากประชาชน"
-        itemLabel={deleting ? `#${deleting.id} ${deleting.first_name} ${deleting.last_name}` : ""}
+        itemLabel={deleting ? `#${deleting.id} ${reporterName(deleting)}` : ""}
         onConfirm={confirmDelete}
         busy={busy}
         error={deleteError}

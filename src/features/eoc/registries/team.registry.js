@@ -1,6 +1,6 @@
+// แท็บในหน้ากลุ่มภารกิจ (แดชบอร์ดทีมเลิกใช้แล้ว — ตัวเลขสรุปอยู่ในหน้าภาพรวม/หน้างานของแต่ละเมนู)
 const DEFAULT_MENUS = Object.freeze([
-  { key: "dashboard", label: "แดชบอร์ด" },
-  { key: "records", label: "รายงานผล" },
+  { key: "records", label: "รายงานประจำวัน" },
   { key: "members", label: "สมาชิก" },
 ]);
 

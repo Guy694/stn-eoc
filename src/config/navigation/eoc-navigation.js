@@ -27,36 +27,24 @@ export function getActiveOfficerEocType(pathname) {
   return null;
 }
 
-function createTeamWorkItems(eocType, teamCode) {
+// งานของกลุ่มภารกิจ 1 ทีม: รายงานประจำวัน (ทุกทีม) + งานเฉพาะที่ยังไม่มีในเมนูเหตุการณ์
+export function createTeamWorkItems(eocType, teamCode) {
   const routeEocType = eocType === "dengue" ? "disease" : eocType;
-  const dashboard = {
-    key: "dashboard",
-    name: "แดชบอร์ด",
-    path: `/eoc/${routeEocType}/teams/${teamCode}/dashboard`,
-    iconKey: "dashboard",
-    description: `แดชบอร์ดกลุ่มภารกิจ ${getTeam(teamCode)?.shortName || teamCode}`,
-  };
-
-  const workItemByTeam = {
-    sat: eocType === "flood"
-      ? { key: "records", name: "รายงานสถานการณ์น้ำท่วม", path: "/eoc/flood/records", iconKey: "records" }
-      : { key: "records", name: "รายงานผู้ป่วย", path: "/eoc/disease/records", iconKey: "records" },
-    it: { key: "it-assets", name: "รายงานทรัพย์สินไอที", path: "/admin/it-resources", iconKey: "assets" },
-    riskcom: {
-      key: "announcements",
-      name: "ข่าวประกาศ",
-      path: `/admin/announcements?eoc=${routeEocType}`,
-      iconKey: "announcements",
-    },
-  };
-
-  const defaultWorkItem = {
-    key: "records",
-    name: getTeamReportDefinition(teamCode)?.title || "รายงานผล",
+  const team = getTeam(teamCode);
+  const items = [{
+    key: `team-report-${teamCode}`,
+    name: `รายงานประจำวัน ${team?.shortName || teamCode}`,
     path: `/eoc/${routeEocType}/teams/${teamCode}/records`,
     iconKey: "records",
+    description: `${getTeamReportDefinition(teamCode)?.title || "รายงานผล"} — ส่งให้ผู้บัญชาการตรวจและอนุมัติ`,
+    teamWork: true,
+  }];
+
+  const extraByTeam = {
+    riskcom: { key: "team-riskcom-announcements", name: "ข่าวประกาศ", path: `/admin/announcements?eoc=${routeEocType}`, iconKey: "megaphone" },
   };
-  return [dashboard, workItemByTeam[teamCode] || defaultWorkItem];
+  if (extraByTeam[teamCode]) items.push({ ...extraByTeam[teamCode], teamWork: true });
+  return items;
 }
 
 /**

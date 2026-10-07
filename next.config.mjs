@@ -51,6 +51,13 @@ const nextConfig = {
         permanent: false,
         basePath: false,
       },
+      // พิมพ์ที่อยู่โดยไม่มี /stn-eoc (เช่น /settings/) ให้พาไปหน้าเดียวกันใต้ /stn-eoc แทนการขึ้น 404
+      {
+        source: '/:path((?!stn-eoc(?:/|$)).+)',
+        destination: '/stn-eoc/:path',
+        permanent: false,
+        basePath: false,
+      },
     ];
   },
 };

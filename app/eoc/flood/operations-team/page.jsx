@@ -106,7 +106,9 @@ export default function FloodOperationsTeamPage() {
     const [teamForm, setTeamForm] = useState(emptyTeamForm);
     const [savingTeam, setSavingTeam] = useState(false);
 
-    const canManageCommanders = user?.role === "admin" || user?.role === "commander";
+    // จัดการทีมได้เฉพาะผู้บัญชาการ / กลุ่มภารกิจ EOC MGMT และแอดมิน (สิทธิ์จากเซิร์ฟเวอร์)
+    const [teamPermissions, setTeamPermissions] = useState({ can_edit: false, read_only_message: null });
+    const canManageCommanders = teamPermissions.can_edit === true;
     const selectedSession = useMemo(
         () => sessions.find((session) => String(session.id) === String(selectedSessionId)) || null,
         [selectedSessionId, sessions]
@@ -189,6 +191,7 @@ export default function FloodOperationsTeamPage() {
             if (result.success) {
                 setCommanders(Array.isArray(result.commanders) ? result.commanders : []);
                 setOfficerOptions(Array.isArray(result.officerOptions) ? result.officerOptions : []);
+                if (result.permissions) setTeamPermissions(result.permissions);
             } else {
                 setCommanderMessage(result.message || "โหลดข้อมูลผู้บัญชาการเหตุการณ์ไม่สำเร็จ");
                 setCommanders([]);
@@ -514,6 +517,9 @@ export default function FloodOperationsTeamPage() {
                             <h2 className="text-lg font-black text-slate-900">หัวหน้าผังบัญชาการ</h2>
                             <p className="mt-1 text-sm text-slate-500">เลือกจากเจ้าหน้าที่ที่ไม่ใช่ผู้ดูแลระบบ และผูกกับเหตุการณ์ EOC ที่เลือก</p>
                         </div>
+                        {!canManageCommanders && teamPermissions.read_only_message ? (
+                            <p className="rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{teamPermissions.read_only_message}</p>
+                        ) : null}
                         {canManageCommanders && selectedSessionId && (
                             <div className="flex flex-wrap gap-2">
                                 {!incidentCommander && (

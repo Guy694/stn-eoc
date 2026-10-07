@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { hasFacilityStatusColumns } from '@/lib/healthFacilityDb';
 
 // GET - ดึงข้อมูลสถานพยาบาลตาม ID
 export async function GET(request, { params }) {
@@ -9,7 +10,7 @@ export async function GET(request, { params }) {
         const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
         if (!auth.success) return auth.response;
 
-        const { id } = params;
+        const { id } = await params;
 
         const facilities = await query(
             'SELECT * FROM health_facilities WHERE id = ?',
@@ -40,7 +41,7 @@ export async function PUT(request, { params }) {
         const auth = await requireAuth(request, ['admin']);
         if (!auth.success) return auth.response;
 
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
         const { name, typecode, address, district, tambon, lat, lon, phone } = body;
 
@@ -52,19 +53,24 @@ export async function PUT(request, { params }) {
             );
         }
 
-        // Update facility
+        // Update facility (ตารางใช้ district_name; phone มีหลัง migration 20261007_health_facility_status)
+        const withPhone = await hasFacilityStatusColumns();
         await query(`
-            UPDATE health_facilities 
-            SET name = ?, 
-                typecode = ?, 
-                address = ?, 
-                district = ?, 
-                tambon = ?, 
-                lat = ?, 
-                lon = ?, 
-                phone = ?
+            UPDATE health_facilities
+            SET name = ?,
+                typecode = ?,
+                address = ?,
+                district_name = ?,
+                tambon = ?,
+                lat = ?,
+                lon = ?
+                ${withPhone ? ', phone = ?' : ''}
             WHERE id = ?
-        `, [name, typecode, address, district, tambon, lat || null, lon || null, phone, id]);
+        `, [
+            name, typecode, address || '', district || null, tambon || '', lat || null, lon || null,
+            ...(withPhone ? [String(phone || '').trim().slice(0, 80) || null] : []),
+            id
+        ]);
 
         // ดึงข้อมูลที่อัปเดต
         const updatedFacility = await query(
@@ -97,7 +103,7 @@ export async function DELETE(request, { params }) {
         const auth = await requireAuth(request, ['admin']);
         if (!auth.success) return auth.response;
 
-        const { id } = params;
+        const { id } = await params;
 
         // ตรวจสอบว่ามีข้อมูลอยู่หรือไม่
         const existing = await query(

@@ -2,8 +2,59 @@ import { NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
-import { getSessionTeamAccessByCode } from '@/lib/eocTeamAccess';
 import { validateSessionDates } from '@/lib/sessionDateRange';
+import { ArchiveError, handleArchiveDelete } from '@/lib/recordArchive';
+import { getModuleAccess, requireModuleEdit } from '@/lib/eocModuleAccess';
+
+const INSERT_SQL = `
+    INSERT INTO flood_records 
+    (session_id, year, polygon_id, province, district, tambon, village, flood_level, 
+     flood_start_date, water_depth_cm, affected_area_sqm,
+     affected_households, affected_people, description, damage_amount, 
+     relief_amount, status, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+const MAX_BULK = 60;
+
+async function insertBulk(pool, data, user) {
+    const rows = data.records.slice(0, MAX_BULK).filter((row) => row && row.village);
+    if (!rows.length) {
+        return NextResponse.json({ success: false, message: 'ไม่พบหมู่บ้านที่จะบันทึก' }, { status: 400 });
+    }
+    const connection = await pool.getConnection();
+    let inserted = 0;
+    const skipped = [];
+    try {
+        await connection.beginTransaction();
+        for (const row of rows) {
+            const [existing] = await connection.execute(
+                `SELECT id FROM flood_records
+                 WHERE session_id = ? AND flood_start_date = ? AND district = ? AND tambon = ? AND village = ?
+                 LIMIT 1`,
+                [data.session_id, data.flood_start_date, data.district, data.tambon, row.village]
+            );
+            if (existing.length) {
+                skipped.push(row.village);
+                continue;
+            }
+            await connection.execute(INSERT_SQL, [
+                data.session_id, data.year, row.polygon_id || null, data.province || 'สตูล', data.district, data.tambon, row.village,
+                data.flood_level || 'ไม่มี', data.flood_start_date, data.water_depth_cm || null, data.affected_area_sqm || null,
+                Number(row.affected_households ?? data.affected_households) || 0, Number(row.affected_people ?? data.affected_people) || 0,
+                data.description || null, 0, 0, data.status || 'กำลังดำเนินการ', user.username
+            ]);
+            inserted += 1;
+        }
+        await connection.commit();
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+    return NextResponse.json({ success: true, data: { inserted, skipped } });
+}
 
 async function validateFloodSessionDate(connection, sessionId, floodStartDate) {
     if (!floodStartDate) return { ok: false, status: 400, error: 'กรุณาระบุวันที่เริ่มอุทกภัยน้ำท่วม' };
@@ -26,11 +77,14 @@ export async function GET(request) {
         if (!sessionId && !privileged) {
             return NextResponse.json({ success: false, message: 'กรุณาระบุเหตุการณ์ EOC' }, { status: 400 });
         }
+        // ทีมเจ้าของเมนู (ค่าเริ่มต้น SAT — ตั้งได้ที่ ตั้งค่าระบบ → สิทธิ์กลุ่มภารกิจ) บันทึกได้ ทีมอื่นในเหตุการณ์ดูได้อย่างเดียว
+        let permissions = { can_edit: privileged, read_only_message: null };
         if (sessionId) {
-            const access = await getSessionTeamAccessByCode(auth.user, sessionId, 'sat');
+            const access = await getModuleAccess(auth.user, sessionId, 'records');
             if (!access.ok) {
                 return NextResponse.json({ success: false, message: access.message }, { status: access.status });
             }
+            permissions = access.permissions;
         }
 
         const connection = getPool();
@@ -38,6 +92,7 @@ export async function GET(request) {
         let query = `
             SELECT 
                 f.*,
+                DATE_FORMAT(f.flood_start_date, '%Y-%m-%d') AS flood_start_date,
                 v.villname,
                 v.villcode,
                 v.distname,
@@ -79,7 +134,8 @@ export async function GET(request) {
 
         return NextResponse.json({
             success: true,
-            data: rows
+            data: rows,
+            permissions
         });
     } catch (error) {
         console.error('Error fetching flood records:', error);
@@ -93,27 +149,18 @@ export async function POST(request) {
         if (!auth.success) return auth.response;
 
         const data = await request.json();
-        const access = await getSessionTeamAccessByCode(auth.user, data.session_id, 'sat');
-        if (!access.ok) {
-            return NextResponse.json({ success: false, message: access.message }, { status: access.status });
-        }
-        if (!access.canOperate) {
-            return NextResponse.json({ success: false, message: 'เหตุการณ์นี้ไม่เปิดให้บันทึกข้อมูลปฏิบัติการ' }, { status: 409 });
-        }
+        const gate = await requireModuleEdit(auth.user, data.session_id, 'records');
+        if (gate.response) return gate.response;
         const connection = getPool();
         const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
         if (!validation.ok) {
             return NextResponse.json({ success: false, error: validation.error }, { status: validation.status });
         }
 
-        const query = `
-            INSERT INTO flood_records 
-            (session_id, year, polygon_id, province, district, tambon, village, flood_level, 
-             flood_start_date, water_depth_cm, affected_area_sqm,
-             affected_households, affected_people, description, damage_amount, 
-             relief_amount, status, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+        // บันทึกทั้งตำบล: ส่ง records หลายหมู่บ้านพร้อมกัน บันทึกใน transaction เดียว และข้ามหมู่บ้านที่มีข้อมูลวันนั้นแล้ว
+        if (Array.isArray(data.records)) {
+            return insertBulk(connection, data, auth.user);
+        }
 
         const params = [
             data.session_id || null,
@@ -136,7 +183,7 @@ export async function POST(request) {
             auth.user.username
         ];
 
-        const [result] = await connection.execute(query, params);
+        const [result] = await connection.execute(INSERT_SQL, params);
 
         return NextResponse.json({
             success: true,
@@ -154,13 +201,11 @@ export async function PUT(request) {
         if (!auth.success) return auth.response;
 
         const data = await request.json();
-        const access = await getSessionTeamAccessByCode(auth.user, data.session_id, 'sat');
-        if (!access.ok) {
-            return NextResponse.json({ success: false, message: access.message }, { status: access.status });
+        if (!data.id) {
+            return NextResponse.json({ success: false, message: 'ไม่พบรหัสข้อมูลที่ต้องการแก้ไข' }, { status: 400 });
         }
-        if (!access.canOperate) {
-            return NextResponse.json({ success: false, message: 'เหตุการณ์นี้ไม่เปิดให้แก้ไขข้อมูลปฏิบัติการ' }, { status: 409 });
-        }
+        const gate = await requireModuleEdit(auth.user, data.session_id, 'records');
+        if (gate.response) return gate.response;
         const connection = getPool();
         const validation = await validateFloodSessionDate(connection, data.session_id, data.flood_start_date);
         if (!validation.ok) {
@@ -174,7 +219,7 @@ export async function PUT(request) {
                 water_depth_cm = ?, affected_area_sqm = ?, affected_households = ?,
                 affected_people = ?, description = ?, damage_amount = ?, 
                 relief_amount = ?, status = ?
-            WHERE id = ?
+            WHERE id = ? AND session_id = ?
         `;
 
         const params = [
@@ -194,11 +239,15 @@ export async function PUT(request) {
             data.description || null,
             data.damage_amount || 0,
             data.relief_amount || 0,
-            data.status,
-            data.id
+            data.status || 'กำลังดำเนินการ',
+            data.id,
+            data.session_id
         ];
 
         const [result] = await connection.execute(query, params);
+        if (!result.affectedRows) {
+            return NextResponse.json({ success: false, message: 'ไม่พบข้อมูลนี้ในเหตุการณ์ที่เลือก (อาจถูกลบไปแล้ว)' }, { status: 404 });
+        }
 
         return NextResponse.json({
             success: true,
@@ -210,30 +259,16 @@ export async function PUT(request) {
     }
 }
 
+// DELETE - ย้ายไปถังขยะ (กู้คืนได้) ทีม SAT ของเหตุการณ์ที่ยังเปิดอยู่ลบได้ ต้องระบุเหตุผล
 export async function DELETE(request) {
-    try {
-        const auth = await requireAuth(request, ['admin']);
-        if (!auth.success) return auth.response;
-
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
-
-        if (!id) {
-            return NextResponse.json({
-                success: false,
-                error: 'ID is required'
-            }, { status: 400 });
+    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+    if (!auth.success) return auth.response;
+    return handleArchiveDelete(request, auth.user, {
+        table: 'flood_records',
+        beforeDelete: async (row) => {
+            const access = await getModuleAccess(auth.user, row.session_id, 'records');
+            if (!access.ok) throw new ArchiveError(access.message, access.status);
+            if (!access.canEdit) throw new ArchiveError(access.readOnlyMessage, access.reason === 'closed' ? 409 : 403);
         }
-
-        const connection = getPool();
-        const [result] = await connection.execute('DELETE FROM flood_records WHERE id = ?', [id]);
-
-        return NextResponse.json({
-            success: true,
-            data: { affectedRows: result.affectedRows }
-        });
-    } catch (error) {
-        console.error('Error deleting flood record:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการลบข้อมูลอุทกภัยน้ำท่วม');
-    }
+    });
 }

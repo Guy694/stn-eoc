@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
+import { FACILITY_STATUS_SELECT, hasFacilityStatusColumns } from '@/lib/healthFacilityDb';
 
 // GET - ดึงรายการสถานพยาบาลทั้งหมด
 export async function GET(request) {
@@ -12,6 +13,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type');
         const search = searchParams.get('search');
+        const withStatus = await hasFacilityStatusColumns();
 
         let sql = `
             SELECT 
@@ -24,7 +26,7 @@ export async function GET(request) {
                 tambon as tambon_name,
                 lat, 
                 lon
-               
+                ${withStatus ? `, ${FACILITY_STATUS_SELECT}` : ''}
             FROM health_facilities
             WHERE 1=1
         `;
@@ -77,7 +79,7 @@ export async function POST(request) {
         if (!auth.success) return auth.response;
 
         const body = await request.json();
-        const { name, typecode, address, district_name, tambon, lat, lon } = body;
+        const { name, typecode, address, district_name, district, tambon, lat, lon, phone } = body;
 
         // Validate required fields
         if (!name || !typecode) {
@@ -87,11 +89,15 @@ export async function POST(request) {
             );
         }
 
-        // Insert new facility
+        // Insert new facility (ฟอร์มส่ง district; ตารางใช้ district_name, address/tambon ห้ามว่างเป็น NULL)
+        const withPhone = await hasFacilityStatusColumns();
         const result = await query(`
-            INSERT INTO health_facilities (name, typecode, address, district_name, tambon, lat, lon)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [name, typecode, address, district_name, tambon, lat || null, lon || null]);
+            INSERT INTO health_facilities (name, typecode, address, district_name, tambon, lat, lon${withPhone ? ', phone' : ''})
+            VALUES (?, ?, ?, ?, ?, ?, ?${withPhone ? ', ?' : ''})
+        `, [
+            name, typecode, address || '', district_name || district || null, tambon || '', lat || null, lon || null,
+            ...(withPhone ? [String(phone || '').trim().slice(0, 80) || null] : [])
+        ]);
 
         // ดึงข้อมูลที่เพิ่งสร้าง
         const newFacility = await query(

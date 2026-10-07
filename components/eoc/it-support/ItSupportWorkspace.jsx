@@ -3,7 +3,7 @@
 // รายงาน IT support ในเหตุการณ์: สถานะระบบ/อุปกรณ์ + เรื่องแจ้งปัญหาและการแก้ไข
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertOctagon, CheckCircle2, Clock3, Server, TimerReset, Wrench } from "lucide-react";
+import { AlertOctagon, CheckCircle2, Clock3, Eye, Server, TimerReset, Wrench } from "lucide-react";
 import {
   AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, FormSection, RowActions,
   StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
@@ -153,6 +153,11 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
     >
       {notice}
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}
+      {perms.read_only_message ? (
+        <p className="flex items-center gap-2 rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">
+          <Eye className="h-4 w-4 shrink-0" aria-hidden="true" /> {perms.read_only_message}
+        </p>
+      ) : null}
       {data?.migration_needed ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">ยังไม่มีตารางรายงาน IT support ให้ผู้ดูแลระบบรัน <code>npm run db:migrate</code></p> : null}
 
       {summary ? (

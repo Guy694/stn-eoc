@@ -13,6 +13,9 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
     const satunDistricts = useSatunDistricts();
     const priorityKey = priorityDiseases.join('|');
     const [records, setRecords] = useState([]);
+    // สิทธิ์จากเซิร์ฟเวอร์: ทีมเจ้าของเมนูบันทึกได้ ทีมอื่นดูอย่างเดียว
+    const [permissions, setPermissions] = useState({ can_edit: false, read_only_message: null });
+    const canEdit = permissions.can_edit === true;
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
@@ -154,6 +157,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
 
             if (data.success) {
                 setRecords(data.data || []);
+                if (data.permissions) setPermissions(data.permissions);
 
                 // อัพเดทตำบลที่บันทึกแล้ววันนี้
                 const now = new Date();
@@ -490,7 +494,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                             </p>
                         )}
                     </div>
-                    <button
+                    {canEdit && <button
                         onClick={() => {
                             setEditingRecord(null);
                             resetForm();
@@ -500,8 +504,11 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                     >
                         <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มข้อมูลใหม่
-                    </button>
+                    </button>}
                 </div>
+                {!canEdit && permissions.read_only_message ? (
+                    <p className="mb-6 rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{permissions.read_only_message}</p>
+                ) : null}
 
                 {/* สถานะการบันทึกตำบลวันนี้ */}
                 <div className="mb-6">
@@ -558,6 +565,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                 {getUnrecordedTambons().map((item) => (
                                     <button
                                         key={item.key}
+                                        disabled={!canEdit}
                                         onClick={() => {
                                             setEditingRecord(null);
                                             const now = new Date();
@@ -656,14 +664,14 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                             <p className="mx-auto max-w-md text-sm text-slate-500">
                                 บันทึกจำนวนผู้ป่วยรายหมู่บ้านจากหน่วยบริการหรือทีมลงพื้นที่ ตัวเลขจะขึ้นในหน้าภาพรวมและสรุปการประชุมทันที
                             </p>
-                            <button
+                            {canEdit && <button
                                 type="button"
                                 onClick={() => { setEditingRecord(null); resetForm(); setShowModal(true); }}
                                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#083865]"
                             >
                                 <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
                                 บันทึกรายงานแรก
-                            </button>
+                            </button>}
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -720,6 +728,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                {canEdit && <>
                                                 <button
                                                     onClick={() => handleEdit(record)}
                                                     className="text-[#0b4c86] hover:text-[#083865] mr-3 px-3 py-1 rounded hover:bg-[#edf5fc] transition-colors"
@@ -734,6 +743,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                 >
                                                     <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
                                                 </button>
+                                                </>}
                                             </td>
                                         </tr>
                                     ))}

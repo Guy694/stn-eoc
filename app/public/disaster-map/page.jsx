@@ -2,7 +2,7 @@ import DisasterMapWorkspace from "@/components/public/disaster-map/DisasterMapWo
 
 export const metadata = {
   title: "แผนที่สถานการณ์ | Satun Geo-EOC",
-  description: "แผนที่สถานการณ์ภัยพิบัติจังหวัดสตูล: พื้นที่น้ำท่วม โรคระบาด อุบัติเหตุ ศูนย์พักพิง และเรดาร์ฝน"
+  description: "แผนที่สถานการณ์ตอนนี้ของจังหวัดสตูล: พื้นที่น้ำท่วม ระดับน้ำในคลอง ฝนที่วัดได้ รายงานจากประชาชน ศูนย์พักพิง โรคระบาด และเรดาร์ฝน"
 };
 
 const MAP_TYPES = new Set(["flood", "disease", "accident"]);

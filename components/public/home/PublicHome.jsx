@@ -368,7 +368,7 @@ export default function PublicHome() {
                     </span>
                   </div>
                   <p className="mt-2 text-[15px] leading-7">
-                    {myDistrict.weather_condition} {myDistrict.temperature}°C • ฝน 24 ชม. {myDistrict.rainfall_24h} มม. • โอกาสฝน {myDistrict.rain_probability_24h}%
+                    {myDistrict.weather_condition} {myDistrict.temperature}°C • {myDistrict.rain_source === "gauge" ? `ฝนวัดได้ 24 ชม. ${myDistrict.rainfall_24h} มม.` : `ฝน 24 ชม. ~${myDistrict.rainfall_24h} มม.`}{myDistrict.heavy_rain_today ? ` • โอกาสฝนหนักวันนี้ ${myDistrict.heavy_rain_today.prob_heavy}%` : ""}
                   </p>
                   <ul className="mt-1 space-y-0.5 text-[15px] leading-7 text-slate-700">
                     {(myDistrict.risk_reasons || []).slice(0, 2).map((reason) => <li key={reason}>• {reason}</li>)}
@@ -409,9 +409,9 @@ export default function PublicHome() {
 
         {/* ── แถบทางลัด: ซ้อนขอบล่างของ hero ── */}
         <nav aria-label="ทางลัดที่สำคัญ" className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 sm:px-6">
-          <div className="grid overflow-hidden rounded-3xl bg-white shadow-[0_20px_45px_-25px_rgba(12,47,74,.55)] sm:grid-cols-[1.3fr_1fr_1fr_1fr]">
+          <div className="grid gap-px overflow-hidden rounded-3xl bg-slate-100 shadow-[0_20px_45px_-25px_rgba(12,47,74,.55)] sm:grid-cols-6 xl:grid-cols-[1.25fr_1.25fr_1fr_1fr_1fr]">
             <HelpRequestLink
-              className="flex items-center gap-3 bg-[#c81e1e] p-5 text-white hover:bg-[#a51818] focus-visible:outline-offset-[-4px]"
+              className="flex items-center gap-3 bg-[#c81e1e] p-5 text-white hover:bg-[#a51818] focus-visible:outline-offset-[-4px] sm:col-span-3 xl:col-span-1"
               disabledClassName="cursor-not-allowed bg-slate-200! text-slate-600! hover:bg-slate-200!"
             >
               {({ helpOpen }) => (
@@ -426,11 +426,28 @@ export default function PublicHome() {
                 </>
               )}
             </HelpRequestLink>
-            <Link href="/public/shelters?near=1" className="flex items-center gap-3 border-t border-slate-100 p-5 hover:bg-[#f3f7f8] sm:border-l sm:border-t-0">
+            <HelpRequestLink
+              kind="water"
+              className="flex items-center gap-3 bg-[#0b5fa5] p-5 text-white hover:bg-[#084a82] focus-visible:outline-offset-[-4px] sm:col-span-3 xl:col-span-1"
+              disabledClassName="cursor-not-allowed bg-slate-200! text-slate-600! hover:bg-slate-200!"
+            >
+              {({ helpOpen }) => (
+                <>
+                  <Waves className="h-8 w-8 shrink-0" aria-hidden="true" />
+                  <span>
+                    <span className="block font-[family-name:var(--font-kanit)] text-xl font-bold">รายงานระดับน้ำ</span>
+                    <span className={`block text-sm ${helpOpen ? "text-sky-50" : "text-slate-600"}`}>
+                      {helpOpen ? "บอกว่าน้ำสูงแค่ไหน ใช้เวลาไม่ถึงนาที" : "เปิดเมื่อเปิดศูนย์ด้านอุทกภัย"}
+                    </span>
+                  </span>
+                </>
+              )}
+            </HelpRequestLink>
+            <Link href="/public/shelters?near=1" className="flex items-center gap-3 bg-white p-5 hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1">
               <Tent className="h-7 w-7 shrink-0 text-[#6d3fc4]" aria-hidden="true" />
               <span className="font-[family-name:var(--font-kanit)] text-lg font-semibold">ศูนย์พักพิงใกล้ฉัน</span>
             </Link>
-            <a href="tel:1669" className="flex items-center gap-3 border-t border-slate-100 p-5 hover:bg-[#f3f7f8] sm:border-l sm:border-t-0">
+            <a href="tel:1669" className="flex items-center gap-3 bg-white p-5 hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1">
               <Phone className="h-7 w-7 shrink-0 text-[#c81e1e]" aria-hidden="true" />
               <span>
                 <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">โทร 1669</span>
@@ -440,7 +457,7 @@ export default function PublicHome() {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("eoc-assistant:open"))}
-              className="flex items-center gap-3 border-t border-slate-100 p-5 text-left hover:bg-[#f3f7f8] sm:border-l sm:border-t-0"
+              className="flex items-center gap-3 bg-white p-5 text-left hover:bg-[#f3f7f8] sm:col-span-2 xl:col-span-1"
             >
               <Bot className="h-7 w-7 shrink-0 text-[#2a9db0]" aria-hidden="true" />
               <span>

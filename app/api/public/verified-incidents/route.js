@@ -12,7 +12,7 @@ async function getColumns(connection) {
          FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
            AND TABLE_NAME = 'public_incident_reports'
-           AND COLUMN_NAME IN ('session_id', 'publish_status')`
+           AND COLUMN_NAME IN ('session_id', 'publish_status', 'water_trend', 'still_reports')`
     );
     return new Set(columns.map((column) => column.COLUMN_NAME));
 }
@@ -62,8 +62,10 @@ export async function GET(request) {
         const [rows] = await connection.execute(`
             SELECT
                 r.id, r.village, r.sub_district, r.district, r.latitude, r.longitude,
-                r.urgency, r.travel_status, r.report_type, r.problem_category, r.occurred_at, r.disaster_type,
+                r.urgency, r.travel_status, r.water_level, ${columns.has('water_trend') ? 'r.water_trend' : 'NULL AS water_trend'}, r.report_type, r.problem_category, r.occurred_at, r.disaster_type,
                 r.public_title, r.public_detail, r.public_photo_path, r.published_at, r.reviewed_at, r.expires_at,
+                r.normal_reports, r.normal_reported_at,
+                ${columns.has('still_reports') ? 'r.still_reports, r.still_reported_at' : '0 AS still_reports, NULL AS still_reported_at'},
                 1 + (SELECT COUNT(*) FROM public_incident_reports m WHERE m.merged_into_id = r.id) AS report_count
             FROM public_incident_reports r
             WHERE ${whereClause}

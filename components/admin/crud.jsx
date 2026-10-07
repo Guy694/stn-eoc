@@ -383,6 +383,14 @@ export function DeleteDialog({ open, onOpenChange, itemType = "ข้อมู�
 }
 
 /** แจ้งผลสั้นๆ ที่มุมจอ (แทน SweetAlert สำหรับการบันทึกปกติ) */
+/** แถบบอกว่าเมนูนี้ดูได้อย่างเดียว (และใครบันทึกได้) — ข้อความมาจากเซิร์ฟเวอร์ */
+export function ReadOnlyNotice({ message }) {
+  if (!message) return null;
+  return (
+    <p className="rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{message}</p>
+  );
+}
+
 export function useNotice() {
   const [notice, setNotice] = useState(null);
   useEffect(() => {

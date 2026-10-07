@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, ArrowUpFromLine, PackageOpen, Scale } from "lucide-react";
-import {
+import { ReadOnlyNotice,
   AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
@@ -184,6 +184,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
     >
       {notice}
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
+      <ReadOnlyNotice message={perms.read_only_message} />
       {summary ? (
         <StatStrip items={[
           { label: "ชนิดเวชภัณฑ์", value: formatNumber(summary.items) },

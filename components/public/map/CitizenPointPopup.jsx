@@ -4,6 +4,7 @@
 // แสดงเฉพาะข้อความที่เจ้าหน้าที่เขียน + แหล่งที่มา + เวลาตรวจ และให้ประชาชนแจ้งว่า "ตอนนี้ปกติแล้ว"
 import { useState } from "react";
 import { problemStyle } from "@/components/public/problemCategoryIcons";
+import { waterLevelMeta, waterTrendMeta } from "@/lib/waterReport";
 
 function timeText(value) {
   if (!value) return "";
@@ -19,6 +20,8 @@ export default function CitizenPointPopup({ incident }) {
   const [message, setMessage] = useState("");
   const style = problemStyle(incident.report_type === "traffic_report" ? "road_cut" : incident.problem_category);
   const Icon = style.icon;
+  const level = waterLevelMeta(incident.water_level);
+  const trend = waterTrendMeta(incident.water_trend);
   const area = [incident.sub_district && `ต.${incident.sub_district}`, incident.district && `อ.${incident.district}`].filter(Boolean).join(" ");
 
   const reportNormal = async () => {
@@ -49,6 +52,12 @@ export default function CitizenPointPopup({ incident }) {
           <p className="text-xs text-slate-500">{[incident.category_label, area, "พิกัดโดยประมาณ"].filter(Boolean).join(" · ")}</p>
         </div>
       </div>
+      {level ? (
+        <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+          <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundColor: level.color, color: ["dry", "ankle_knee", "knee_waist"].includes(level.value) ? "#111827" : "#ffffff" }}>ระดับน้ำ {level.short} ({level.range})</span>
+          {trend ? <span className="text-xs font-semibold text-slate-600">{trend.arrow} {trend.label}</span> : null}
+        </p>
+      ) : null}
       {incident.detail ? <p className="mt-2 text-sm text-slate-700">{incident.detail}</p> : null}
       {incident.photo_path ? (
         // eslint-disable-next-line @next/next/no-img-element

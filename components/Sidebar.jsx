@@ -13,6 +13,7 @@ import {
     ChevronDown,
     ClipboardList,
     Database,
+    Eye,
     FileChartColumn,
     Gauge,
     HardDrive,
@@ -42,8 +43,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
-import { createOfficerTeamSections } from "@/src/config/navigation/eoc-navigation";
-import { buildAdminMenu, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
+import { buildAdminMenu, buildOfficerEventSections, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
 
 // ไอคอนตาม iconKey ของเมนู (โครงเมนูอยู่ที่ src/config/navigation/admin-navigation.js)
 const ICONS = {
@@ -101,6 +101,7 @@ export default function Sidebar() {
     const [pendingReportsCount, setPendingReportsCount] = useState(0);
     const [pendingRegistrationsCount, setPendingRegistrationsCount] = useState(0);
     const [teamAssignments, setTeamAssignments] = useState([]);
+    const [ownerOverrides, setOwnerOverrides] = useState({});
     const [expandedSections, setExpandedSections] = useState({});
     const { user } = useAuth();
     const { eocStatus } = useEOC();
@@ -149,6 +150,12 @@ export default function Sidebar() {
     useEffect(() => {
         if (!user) return undefined;
         let active = true;
+        if (user.role !== "admin") {
+            fetch("/stn-eoc/api/eoc/module-permissions/")
+                .then((response) => (response.ok ? response.json() : null))
+                .then((result) => { if (active && result?.success) setOwnerOverrides(result.overrides || {}); })
+                .catch(() => {});
+        }
         fetch("/stn-eoc/api/user/my-assignments/")
             .then((response) => response.json())
             .then((result) => { if (active && result.success) setTeamAssignments(result.assignments || []); })
@@ -183,8 +190,9 @@ export default function Sidebar() {
         }
     ];
 
-    // เจ้าหน้าที่ทีม/ผู้บัญชาการ: เห็นเฉพาะงานของกลุ่มภารกิจที่ได้รับมอบหมาย
-    const officerTeamSections = createOfficerTeamSections({ pathname, userRole: user.role, assignments: teamAssignments });
+    // เจ้าหน้าที่ทีม/ผู้บัญชาการ: เห็นเมนูเหตุการณ์ที่เปิดอยู่เหมือนแอดมิน (เมนูของกลุ่มภารกิจอื่นเปิดดูได้อย่างเดียว)
+    // และงานเฉพาะของกลุ่มภารกิจที่ได้รับมอบหมาย
+    const officerEventSections = buildOfficerEventSections({ eocStatus, assignments: teamAssignments, role: user.role, overrides: ownerOverrides });
     const teamMenu = [
         {
             section: "team-main",
@@ -195,7 +203,7 @@ export default function Sidebar() {
                 { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" }
             ]
         },
-        ...officerTeamSections,
+        ...(officerEventSections.length ? [{ section: "events-heading", title: "เหตุการณ์ที่เปิดอยู่", group: "events-heading", items: [] }, ...officerEventSections] : []),
         { section: "team-account", title: "บัญชีของฉัน", items: accountItems }
     ];
 
@@ -217,7 +225,7 @@ export default function Sidebar() {
                     href={item.path}
                     onClick={() => setIsOpen(false)}
                     aria-current={active ? "page" : undefined}
-                    title={item.description || item.name}
+                    title={item.readOnly ? `${item.description || item.name} (ดูได้อย่างเดียว)` : (item.description || item.name)}
                     className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${active
                         ? "bg-[#0b4c86] font-semibold text-white"
                         : badgeCount > 0
@@ -227,6 +235,9 @@ export default function Sidebar() {
                 >
                     <MenuIcon item={item} className={`h-4 w-4 shrink-0 ${active ? "text-white" : badgeCount > 0 ? "text-red-600" : "text-slate-500"}`} />
                     <span className="flex-1 leading-snug">{item.name}</span>
+                    {item.readOnly && (
+                        <Eye className={`h-3.5 w-3.5 shrink-0 ${active ? "text-white/80" : "text-slate-400"}`} aria-label="ดูได้อย่างเดียว" />
+                    )}
                     {badgeCount > 0 && (
                         <span className={`rounded-full px-2 py-0.5 text-xs font-black ${active ? "bg-white text-red-700" : "bg-red-600 text-white"}`}>{badgeCount}</span>
                     )}
@@ -270,7 +281,21 @@ export default function Sidebar() {
                         </span>
                         <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
                     </button>
-                    {expanded && <ul className="space-y-0.5 px-1.5 pb-2">{section.items.map((item) => renderItem(item, true))}</ul>}
+                    {expanded && (() => {
+                        const shared = section.items.filter((item) => !item.teamWork);
+                        const mine = section.items.filter((item) => item.teamWork);
+                        return (
+                            <div className="px-1.5 pb-2">
+                                <ul className="space-y-0.5">{shared.map((item) => renderItem(item, true))}</ul>
+                                {mine.length ? (
+                                    <>
+                                        <h4 className="mt-2 border-t border-emerald-200/70 px-3 pb-1 pt-2 text-[11px] font-bold text-slate-500">งานของกลุ่มภารกิจ</h4>
+                                        <ul className="space-y-0.5">{mine.map((item) => renderItem(item, true))}</ul>
+                                    </>
+                                ) : null}
+                            </div>
+                        );
+                    })()}
                 </div>
             );
         }

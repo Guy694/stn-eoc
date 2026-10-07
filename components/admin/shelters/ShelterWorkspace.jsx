@@ -88,6 +88,9 @@ export default function ShelterWorkspace() {
   // ข้อมูล
   const [registry, setRegistry] = useState([]);
   const [activations, setActivations] = useState([]);
+  // สิทธิ์ในเหตุการณ์ (เปิดใช้ศูนย์/ปรับยอด) มาจากเซิร์ฟเวอร์: LOGISTICS บันทึกได้ ทีมอื่นดูอย่างเดียว
+  const [sessionPerms, setSessionPerms] = useState({ can_edit: false, read_only_message: null });
+  const canEditSession = sessionPerms.can_edit === true;
   const [health, setHealth] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -100,6 +103,7 @@ export default function ShelterWorkspace() {
     if (!currentEvent) { setActivations([]); setHealth({}); return; }
     const json = await apiRequest(`${ACTIVATION_API}?session_id=${currentEvent.sessionId}&eoc_type=${currentEvent.type}`);
     setActivations(json.data || []);
+    if (json.permissions) setSessionPerms(json.permissions);
     setHealth(json.health || {});
   }, [currentEvent]);
 
@@ -290,6 +294,9 @@ export default function ShelterWorkspace() {
           </div>
         ) : (
           <>
+            {!canEditSession && sessionPerms.read_only_message ? (
+              <p className="rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{sessionPerms.read_only_message}</p>
+            ) : null}
             <ShelterSessionDashboard summary={dashboard} onShowShelter={(name) => { setSessionFilter("all"); setDistrict("all"); setSearch(name); }} />
             <h3 className="pt-2 text-base font-black text-slate-900">รายชื่อศูนย์ในเหตุการณ์</h3>
             <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อศูนย์ ตำบล อำเภอ">
@@ -306,7 +313,7 @@ export default function ShelterWorkspace() {
               loading={loading}
               rows={sessionRows}
               emptyText={sessionFilter === "active" ? "ยังไม่ได้เปิดใช้ศูนย์ใดในเหตุการณ์นี้ เลือก \"ยังไม่เปิดใช้\" เพื่อเปิดใช้ศูนย์" : "ไม่พบศูนย์ตามเงื่อนไข"}
-              emptyAction={sessionFilter === "active" && canEdit ? <Button variant="secondary" onClick={() => setSessionFilter("inactive")}>ดูศูนย์ที่ยังไม่เปิดใช้</Button> : null}
+              emptyAction={sessionFilter === "active" && canEditSession ? <Button variant="secondary" onClick={() => setSessionFilter("inactive")}>ดูศูนย์ที่ยังไม่เปิดใช้</Button> : null}
               columns={[
                 { key: "sheltername", label: "ศูนย์พักพิง", render: (row) => (<div><div className="font-semibold text-slate-900">{row.sheltername}</div><div className="text-xs text-slate-500">{area(row)}</div></div>) },
                 { key: "state", label: "สถานะ", render: (row) => Number(row.is_activated_for_session) === 1 ? <StatusPill tone="green">เปิดใช้</StatusPill> : <StatusPill>ยังไม่เปิดใช้</StatusPill> },
@@ -323,7 +330,7 @@ export default function ShelterWorkspace() {
                 } },
                 { key: "notes", label: "หมายเหตุ", className: "max-w-[14rem] text-slate-600", render: (row) => row.activation_notes || "-", mobile: false }
               ]}
-              rowActions={canEdit ? (row) => Number(row.is_activated_for_session) === 1 ? (
+              rowActions={canEditSession ? (row) => Number(row.is_activated_for_session) === 1 ? (
                 <RowActions>
                   <Button className="min-h-9 px-3" onClick={() => openOccupancy(row)}><Users className="h-4 w-4" aria-hidden="true" /> อัปเดตยอด</Button>
                   <Button variant="ghost" className="min-h-9 px-3" onClick={() => setToggleRow(row)}>ปิดใช้</Button>

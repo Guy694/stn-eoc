@@ -4,9 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
+  ChevronUp,
   CloudSun,
   Download,
+  Gauge,
   History,
   Hospital,
   Info,
@@ -14,7 +17,7 @@ import {
   List,
   Map as MapIcon,
   MapPinned,
-  Mountain,
+  MountainSnow,
   Pause,
   Play,
   Radar,
@@ -24,6 +27,7 @@ import {
   Tag,
   Tent,
   TriangleAlert,
+  Umbrella,
   Waves,
   X
 } from "lucide-react";
@@ -31,6 +35,7 @@ import Link from "next/link";
 import AIChatbot from "@/components/AIChatbot";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import PublicIncidentMap from "@/components/PublicIncidentMap";
+import { FLOOD_LEVEL_LEGEND } from "@/lib/floodMapLevels";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import { MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import {
@@ -53,6 +58,9 @@ import {
 } from "@/components/public/PublicDisasterMapContent";
 import { fetchLatestRadarLayer } from "@/components/public/disaster-map/windyLayers";
 import { GLASS, MenuToggle, SectionTitle, SidebarItem } from "@/components/public/map/WindyStyleControls";
+import ElevationLegend from "@/components/public/map/ElevationLegend";
+import { SITUATION_LEVELS } from "@/lib/thaiWater";
+import { RAIN_CATEGORIES } from "@/lib/thaiWaterRain";
 
 // แถบบอกสถานะข้อมูลที่กำลังดู: เหตุการณ์ปัจจุบัน / ข้อมูลย้อนหลังของเหตุการณ์ปัจจุบัน / เหตุการณ์ย้อนหลัง
 function ViewModeBanner({ viewMode, context, selectedDate, disasterLabel, onBackToToday, onShowActive }) {
@@ -117,13 +125,13 @@ function getEocLayerItems(disasterType) {
     { key: "incidents", label: "เหตุการณ์/ขอความช่วยเหลือ", icon: TriangleAlert, tone: "from-orange-400 to-red-500" },
     { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600" },
     { key: "shelters", label: "ศูนย์พักพิง", icon: Tent, tone: "from-violet-400 to-purple-600" },
-    { key: "hospitals", label: "โรงพยาบาล", icon: Hospital, tone: "from-emerald-400 to-green-600" },
+    { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-emerald-400 to-green-600" },
     { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "from-cyan-400 to-sky-600" },
     { key: "district", label: "ขอบเขตอำเภอ", icon: Landmark, tone: "from-slate-400 to-slate-700" },
     { key: "tambon", label: "ขอบเขตตำบล", icon: MapPinned, tone: "from-emerald-300 to-teal-600" },
     { key: "village", label: "ขอบเขตหมู่บ้าน", icon: MapIcon, tone: "from-stone-300 to-stone-600" },
     { key: "labels", label: "ชื่อพื้นที่", icon: Tag, tone: "from-amber-300 to-amber-600" },
-    { key: "hillshade", label: "ภูมิประเทศ", icon: Mountain, tone: "from-lime-400 to-green-700" }
+    { key: "elevation", label: "ความสูงพื้นที่", icon: MountainSnow, tone: "from-blue-800 to-amber-700" }
   ];
 }
 
@@ -151,10 +159,17 @@ function GlassSelect({ label, value, onChange, children, disabled }) {
   );
 }
 
-function Legend({ disasterType, onClose }) {
+const HEALTH_LEGEND = [
+  ["#15803d", "เปิดปกติ"],
+  ["#b45309", "จำกัดบริการ/ถนนน้ำท่วม"],
+  ["#b91c1c", "ปิดหรือน้ำท่วม"],
+  ["#475569", "ยังไม่มีรายงาน"]
+];
+
+function Legend({ disasterType, onClose, showElevation = false, showWaterStations = false, showRainStations = false, showHealth = false }) {
   const items = disasterType === "disease"
-    ? [["bg-red-600", "ระบาดหนัก"], ["bg-amber-400", "ระบาดปานกลาง"], ["bg-teal-500", "เฝ้าระวัง"], ["bg-emerald-600", "หน่วยบริการ"], ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"]]
-    : [["bg-red-600", "น้ำท่วมสูง/สูงมาก"], ["bg-amber-400", "น้ำท่วมปานกลาง"], ["bg-sky-400", "น้ำท่วมต่ำ"], ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"], ["bg-emerald-600", "โรงพยาบาล"], ["bg-sky-700", "เส้นทางน้ำ"]];
+    ? [["bg-red-600", "ระบาดหนัก"], ["bg-amber-400", "ระบาดปานกลาง"], ["bg-teal-500", "เฝ้าระวัง"], ["bg-emerald-600", "สถานพยาบาล"], ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"]]
+    : [...FLOOD_LEVEL_LEGEND.map((level) => [level.color, level.description, true]), ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"], ["bg-emerald-600", "สถานพยาบาล"], ["bg-sky-700", "เส้นทางน้ำ"]];
   return (
     <div className={`rounded-xl p-3 text-xs ${GLASS}`}>
       <div className="mb-2 flex items-center justify-between gap-4">
@@ -164,19 +179,66 @@ function Legend({ disasterType, onClose }) {
         </button>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-        {items.map(([color, label]) => (
+        {items.map(([color, label, customColor]) => (
           <span key={label} className="flex items-center gap-2 font-semibold text-white/90">
-            <span className={`h-3 w-3 shrink-0 rounded-full ${color}`} aria-hidden="true" />
+            <span className={`h-3 w-3 shrink-0 rounded-full ${customColor ? "" : color}`} style={customColor ? { backgroundColor: color } : undefined} aria-hidden="true" />
             {label}
           </span>
         ))}
       </div>
+      {showHealth ? (
+        <div className="mt-3 border-t border-white/15 pt-2">
+          <div className="mb-1 font-black">สถานพยาบาล (สีตามสถานะที่เจ้าหน้าที่รายงาน)</div>
+          <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+            {HEALTH_LEGEND.map(([color, label]) => (
+              <span key={label} className="flex items-center gap-1.5 font-semibold text-white/90">
+                <span className="h-3 w-3 shrink-0 rounded-[4px] ring-1 ring-white/70" style={{ backgroundColor: color }} aria-hidden="true" />
+                {label}
+              </span>
+            ))}
+          </div>
+          <p className="mt-1 text-[11px] text-white/70">หมุดใหญ่มีชื่อ = โรงพยาบาล, หมุดเล็ก = รพ.สต./หน่วยบริการ</p>
+        </div>
+      ) : null}
+      {showWaterStations ? (
+        <div className="mt-3 border-t border-white/15 pt-2">
+          <div className="mb-1 font-black">ระดับน้ำในคลอง (สถานี ThaiWater)</div>
+          <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+            {SITUATION_LEVELS.map((item) => (
+              <span key={item.level} className="flex items-center gap-1.5 font-semibold text-white/90" title={`ความจุลำน้ำ ${item.range}`}>
+                <span className="h-3 w-3 shrink-0 rounded-[3px] ring-1 ring-white/70" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                {item.label}
+              </span>
+            ))}
+          </div>
+          <p className="mt-1 text-[11px] text-white/70">ตัวเลขข้างหมุด = ระยะจากตลิ่ง (ติดลบ = ต่ำกว่าตลิ่ง)</p>
+        </div>
+      ) : null}
+      {showRainStations ? (
+        <div className="mt-3 border-t border-white/15 pt-2">
+          <div className="mb-1 font-black">ฝนวัดได้ 24 ชม. (สถานี ThaiWater)</div>
+          <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+            {RAIN_CATEGORIES.slice(1).map((item) => (
+              <span key={item.key} className="flex items-center gap-1.5 font-semibold text-white/90">
+                <span className="h-2.5 w-2.5 shrink-0 -rotate-45 rounded-[50%_0_50%_50%] ring-1 ring-white/70" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                {item.label.replace("ฝน", "")}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {showElevation ? <ElevationLegend className="mt-3 border-t border-white/15 pt-2" /> : null}
+      {disasterType === "flood" && (
+        <p className="mt-2 text-[11px] leading-4 text-white/70">
+          วงกลม = ระดับน้ำที่ประชาชนรายงาน (ตรวจโดยเจ้าหน้าที่) · จางลงเมื่อเกิน 12 และ 24 ชม. · ขอบประ = มีผู้แจ้งว่าน้ำลดแล้ว · แตะจุดเพื่อยืนยันว่ายังท่วมอยู่หรือน้ำลดแล้ว
+        </p>
+      )}
     </div>
   );
 }
 
 export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) {
-  const { helpOpen } = useHelpAvailability();
+  const { helpOpen, floodOpen } = useHelpAvailability();
   const [activeEocs, setActiveEocs] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loadingContext, setLoadingContext] = useState(true);
@@ -199,6 +261,8 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // จอมือถือ: พับแผงสรุป/ตัวกรองให้เหลือแถบเดียว (จอใหญ่แสดงเต็มเสมอ)
+  const [panelOpen, setPanelOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -208,6 +272,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
     if (window.matchMedia("(max-width: 767px)").matches) {
       setSidebarOpen(false);
       setLegendOpen(false);
+      setPanelOpen(false);
     }
   }, []);
 
@@ -264,6 +329,12 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
   const viewMode = useMemo(
     () => describeViewMode(selectedContext, selectedDate, contextOptions),
     [contextOptions, selectedContext, selectedDate]
+  );
+  // ThaiWater ให้เฉพาะค่าล่าสุด จึงแสดงได้เมื่อดูวันนี้เท่านั้น (ไม่ปะปนกับข้อมูลย้อนหลัง)
+  const stationsAvailable = viewMode.kind === "live" || viewMode.kind === "none";
+  const visibleLayers = useMemo(
+    () => (stationsAvailable ? mapLayers : { ...mapLayers, rainStations: false, waterStations: false }),
+    [mapLayers, stationsAvailable]
   );
   const activeContextOptions = contextOptions.filter((item) => item.mode === "active");
   const historyContextOptions = contextOptions.filter((item) => item.mode !== "active");
@@ -419,7 +490,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
             endDate={selectedDate}
             chrome="full"
             heightClass="h-full"
-            layers={mapLayers}
+            layers={visibleLayers}
             onLayersChange={setMapLayers}
             urgencyFilter={urgencyFilter}
             reportTypeFilter={reportTypeFilter}
@@ -452,7 +523,45 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
               )}
             </div>
 
-          <div className={`pointer-events-auto rounded-2xl p-3 ${GLASS}`}>
+          <div className={`pointer-events-auto rounded-2xl ${panelOpen ? "p-3" : "max-md:px-3 max-md:py-2 md:p-3"} ${GLASS}`}>
+              {!panelOpen && (
+                <button
+                  type="button"
+                  onClick={() => setPanelOpen(true)}
+                  className="flex w-full items-center gap-2.5 text-left md:hidden"
+                  aria-expanded="false"
+                  aria-controls="map-summary-panel"
+                >
+                  <span
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${viewMode.kind === "live" ? "bg-red-500" : viewMode.kind === "activePast" ? "bg-amber-400" : "bg-slate-300"}`}
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-black">
+                      {DISASTER_OPTIONS.find((item) => item.value === disasterType)?.label || "แผนที่สถานการณ์"}
+                      {viewMode.kind === "live" ? " • ปัจจุบัน" : viewMode.kind === "activePast" ? " • ย้อนหลัง" : viewMode.kind === "history" ? " • เหตุการณ์ที่ปิดแล้ว" : ""}
+                    </span>
+                    <span className="block truncate text-xs text-white/70">
+                      {formatNumber(eventItems.length)} เหตุการณ์ • {affectedDistricts}/7 อำเภอ{selectedDate ? ` • ${formatThaiDate(selectedDate)}` : ""}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold">
+                    แสดง <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                  </span>
+                </button>
+              )}
+              <div id="map-summary-panel" className={panelOpen ? "" : "max-md:hidden"}>
+              <div className="mb-2 flex justify-end md:hidden">
+                <button
+                  type="button"
+                  onClick={() => { setPanelOpen(false); setFiltersOpen(false); }}
+                  className="flex items-center gap-0.5 rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold hover:bg-white/20"
+                  aria-expanded="true"
+                  aria-controls="map-summary-panel"
+                >
+                  ย่อแผงนี้ <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </div>
               {!loadingContext && (
                 <div className="mb-3">
                   <ViewModeBanner
@@ -574,6 +683,21 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
                   <MapPinned className="h-4 w-4" aria-hidden="true" /> แจ้งจุดปัญหา (น้ำท่วม ถนน ไฟดับ)
                 </Link>
               ) : null}
+              {floodOpen !== false ? (
+                <Link
+                  href="/public/report-water"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b5fa5] px-3 py-2 text-xs font-black text-white hover:bg-[#084a82]"
+                >
+                  <Waves className="h-4 w-4" aria-hidden="true" /> รายงานระดับน้ำ
+                </Link>
+              ) : null}
+              <Link
+                href="/public/weather-watch"
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-sky-100 underline-offset-2 hover:bg-white/10 hover:underline"
+              >
+                <CloudSun className="h-4 w-4" aria-hidden="true" /> ดูพยากรณ์ฝน 7 วันและความเสี่ยงรายอำเภอ →
+              </Link>
+              </div>
           </div>
         </div>
 
@@ -583,7 +707,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
 
           {sidebarOpen && (
             <nav id="map-layer-menu" aria-label="ชั้นข้อมูลแผนที่" className="pointer-events-auto mt-3 min-h-0 w-[250px] overflow-y-auto overscroll-contain pb-2 pl-2 pr-0.5 [scrollbar-width:thin]">
-              <SectionTitle>สภาพอากาศ</SectionTitle>
+              <SectionTitle>ฝนและน้ำตอนนี้</SectionTitle>
               <div className="space-y-1.5">
                 <SidebarItem
                   label={radarEnabled && radarLayer?.time ? `เรดาร์ฝน ${formatTime(radarLayer.time)}` : "เรดาร์ฝน (RainViewer)"}
@@ -592,14 +716,42 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
                   active={radarEnabled}
                   onClick={() => setRadarEnabled((enabled) => !enabled)}
                 />
+                {radarEnabled && radarError && <p className="text-right text-[11px] font-bold text-amber-200 drop-shadow">{radarError}</p>}
+                {stationsAvailable ? (
+                  <>
+                    <SidebarItem
+                      label="ฝนวัดจริง (ThaiWater)"
+                      icon={Umbrella}
+                      tone="from-sky-300 to-indigo-600"
+                      active={Boolean(mapLayers.rainStations)}
+                      onClick={() => toggleEocLayer("rainStations")}
+                    />
+                    <SidebarItem
+                      label="ระดับน้ำ–ตลิ่ง (ThaiWater)"
+                      icon={Gauge}
+                      tone="from-sky-400 to-blue-700"
+                      active={Boolean(mapLayers.waterStations)}
+                      onClick={() => toggleEocLayer("waterStations")}
+                    />
+                  </>
+                ) : (
+                  <div className="rounded-xl bg-amber-400/95 px-3 py-2 text-slate-950 shadow" role="status">
+                    <p className="text-xs font-black leading-tight">สถานีฝน/ระดับน้ำ ThaiWater แสดงเฉพาะค่าปัจจุบัน</p>
+                    <p className="mt-0.5 text-[11px] font-semibold">ซ่อนไว้เพราะกำลังดูข้อมูลย้อนหลัง</p>
+                    {(viewMode.kind === "activePast" || viewMode.hasActive) && (
+                    <button type="button" onClick={() => { setSelectedDate(getTodayDateKey()); if (viewMode.kind === "history" && activeContextOptions[0]) setSelectedContextKey(activeContextOptions[0].key); }} className="mt-1.5 rounded-lg bg-slate-950 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-slate-800">
+                      กลับไปดูวันนี้
+                    </button>
+                    )}
+                  </div>
+                )}
                 <SidebarItem
-                  label="พยากรณ์อากาศ (Windy)"
+                  label="พยากรณ์และความเสี่ยง →"
                   icon={CloudSun}
                   tone="from-sky-400 to-amber-400"
                   href="/stn-eoc/public/weather-watch/"
-                  title="เปิดหน้าสภาพอากาศ: แผนที่ Windy และเช็คความเสี่ยงพื้นที่"
+                  title="เปิดหน้าพยากรณ์และความเสี่ยง: พยากรณ์ 7 วัน ความเสี่ยงรายอำเภอ และแผนที่ Windy"
                 />
-                {radarEnabled && radarError && <p className="text-right text-[11px] font-bold text-amber-200 drop-shadow">{radarError}</p>}
               </div>
 
               <SectionTitle>ข้อมูล EOC</SectionTitle>
@@ -639,8 +791,8 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
 
         {/* ซ้ายล่าง: คำอธิบายสัญลักษณ์ */}
         {legendOpen && (
-          <div className="absolute bottom-24 left-3 z-[650] w-[270px] max-md:hidden">
-            <Legend disasterType={disasterType} onClose={() => setLegendOpen(false)} />
+          <div className="absolute bottom-24 left-3 z-[650] max-h-[calc(100%-31rem)] min-h-[9rem] w-[270px] overflow-y-auto rounded-xl [scrollbar-width:thin] max-md:hidden">
+            <Legend disasterType={disasterType} onClose={() => setLegendOpen(false)} showElevation={Boolean(mapLayers.elevation)} showWaterStations={Boolean(visibleLayers.waterStations)} showRainStations={Boolean(visibleLayers.rainStations)} showHealth={Boolean(visibleLayers.hospitals)} />
           </div>
         )}
 

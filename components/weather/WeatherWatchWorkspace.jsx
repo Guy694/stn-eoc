@@ -18,8 +18,8 @@ import {
   LocateFixed,
   Map as MapIcon,
   Megaphone,
+  MountainSnow,
   Phone,
-  Radar,
   RefreshCw,
   Satellite,
   ShieldCheck,
@@ -40,10 +40,11 @@ import {
   WINDY_OVERLAYS,
   WINDY_PRODUCTS,
   buildWindyEmbedUrl,
-  buildWindyWebsiteUrl,
-  fetchLatestRadarLayer
+  buildWindyWebsiteUrl
 } from "@/components/public/disaster-map/windyLayers";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
+import ElevationLegend from "@/components/public/map/ElevationLegend";
+import { DISCHARGE_LEVELS } from "@/lib/forecastSignals";
 
 const WeatherRiskMap = dynamic(() => import("@/components/weather/WeatherRiskMap"), {
   ssr: false,
@@ -151,6 +152,42 @@ function Stat({ icon: Icon, label, value }) {
 
 const DDPM_CCTV_URL = "https://cctv.disaster.go.th/dashboard";
 
+const WATER_STATE = {
+  overflow: { label: "ล้นตลิ่ง", className: "text-red-300" },
+  near: { label: "ใกล้ตลิ่ง", className: "text-amber-300" },
+  normal: { label: "ต่ำกว่าตลิ่ง", className: "text-emerald-300" }
+};
+
+const RIVER_TONE = { normal: "text-emerald-300", high: "text-amber-300", very_high: "text-red-300" };
+
+function SourceTag({ children }) {
+  return <span className="rounded bg-white/10 px-1.5 py-px text-[10px] font-bold text-white/70">{children}</span>;
+}
+
+function formatThaiDateShort(value) {
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00+07:00`);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" });
+}
+
+// ภาพจาก สสน.: เวลาของเรดาร์เป็น UTC ส่วนภาพพยากรณ์เป็นเวลาไทย
+function mediaTime(item) {
+  if (!item?.datetime) return "";
+  const iso = `${item.datetime.replace(" ", "T")}:00${item.timezone === "UTC" ? "Z" : "+07:00"}`;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? item.datetime : date.toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+function MediaThumb({ item, label }) {
+  if (!item?.url) return null;
+  return (
+    <a href={item.url} target="_blank" rel="noopener noreferrer" className="group block overflow-hidden rounded-lg bg-white ring-1 ring-white/15 hover:ring-sky-300">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={item.thumb || item.url} alt={label} loading="lazy" className="aspect-[4/3] w-full object-cover object-left-bottom" />
+      <span className="block bg-slate-900/90 px-1.5 py-1 text-[10px] font-bold leading-tight text-white">{label}</span>
+    </a>
+  );
+}
+
 export default function WeatherWatchWorkspace() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -160,14 +197,15 @@ export default function WeatherWatchWorkspace() {
   const [windyOverlay, setWindyOverlay] = useState("rain");
   const [windyProduct, setWindyProduct] = useState("ecmwf");
   const [baseMap, setBaseMap] = useState("street");
-  const [radarEnabled, setRadarEnabled] = useState(false);
-  const [radarLayer, setRadarLayer] = useState(null);
 
   const [selectedDistrictId, setSelectedDistrictId] = useState("");
   const [userLocation, setUserLocation] = useState(null);
   const [locationMessage, setLocationMessage] = useState("");
   const [flyTarget, setFlyTarget] = useState(null);
   const [selectedDay, setSelectedDay] = useState(0);
+
+  // หน้านี้ = พยากรณ์และความเสี่ยง (สิ่งที่จะเกิด) — สถานการณ์ตอนนี้ (ระดับน้ำ ฝนวัดจริง รายงานประชาชน เรดาร์) อยู่ที่แผนที่สถานการณ์
+  const [elevationEnabled, setElevationEnabled] = useState(false);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -200,25 +238,17 @@ export default function WeatherWatchWorkspace() {
     return () => window.clearInterval(timer);
   }, [loadWeather]);
 
-  useEffect(() => {
-    if (!radarEnabled) return undefined;
-    let controller = new AbortController();
-    const load = () => {
-      controller.abort();
-      controller = new AbortController();
-      fetchLatestRadarLayer(controller.signal).then(setRadarLayer).catch(() => {});
-    };
-    load();
-    const timer = window.setInterval(load, 10 * 60 * 1000);
-    return () => {
-      controller.abort();
-      window.clearInterval(timer);
-    };
-  }, [radarEnabled]);
+
+
+
 
   const districts = useMemo(() => data?.district_weather || [], [data?.district_weather]);
   const current = data?.weather_current || {};
   const marine = data?.marine || null;
+  const warnings = data?.weather_warnings || [];
+  const riverOutlook = data?.river_outlook || [];
+  const hiiMedia = data?.hii_media || null;
+  const [mediaTab, setMediaTab] = useState("rain");
 
   // เริ่มต้นเลือกอำเภอที่เสี่ยงที่สุด
   useEffect(() => {
@@ -234,10 +264,10 @@ export default function WeatherWatchWorkspace() {
   const dayForecast = dailyForecast[selectedDay] || null;
   const hourlyForecast = selectedDistrict?.forecast_hourly || [];
   const advice = useMemo(() => adviceFor(selectedDistrict), [selectedDistrict]);
+  const districtRivers = riverOutlook.filter((item) => selectedDistrict && String(item.amphoe || "").replace(/^อ(\.|ำเภอ)\s*/, "").replace(/\s+/g, "") === String(selectedDistrict.district_name).replace(/\s+/g, ""));
 
   const isWindy = viewMode === "windy";
   const windyUrl = useMemo(() => buildWindyEmbedUrl({ overlay: windyOverlay, product: windyProduct }), [windyOverlay, windyProduct]);
-  const extraTileLayers = useMemo(() => (radarEnabled && radarLayer ? [radarLayer] : []), [radarEnabled, radarLayer]);
 
   const selectDistrict = useCallback((districtId) => {
     setSelectedDistrictId(String(districtId));
@@ -280,16 +310,16 @@ export default function WeatherWatchWorkspace() {
     <div className="flex h-dvh flex-col overflow-hidden bg-slate-900">
       <PublicTopNavigation activeMenu="weather" showWeatherMenu />
 
-      <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่สภาพอากาศและความเสี่ยง">
+      <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่พยากรณ์และความเสี่ยง">
         <div className={`absolute inset-0 ${isWindy ? "invisible" : ""}`} aria-hidden={isWindy}>
           <WeatherRiskMap
             districts={districts}
             selectedDistrictId={selectedDistrictId}
             onSelectDistrict={selectDistrict}
             baseMap={baseMap}
-            extraTileLayers={extraTileLayers}
             userLocation={userLocation}
             flyTarget={flyTarget}
+            elevationEnabled={elevationEnabled}
           />
         </div>
         {isWindy && <WindyFrame src={windyUrl} />}
@@ -298,7 +328,7 @@ export default function WeatherWatchWorkspace() {
         <div className="pointer-events-none absolute left-1/2 top-3 z-[690] hidden -translate-x-1/2 lg:block">
           <div className={`pointer-events-auto flex items-center gap-3 rounded-full py-1.5 pl-2 pr-2 text-sm ${GLASS}`}>
             <RiskBadge level={provinceLevel} />
-            <span className="font-bold">จ.สตูล: {current.weather_condition || "-"} {current.temperature ?? "-"}°C</span>
+            <span className="font-bold">จ.สตูล ตอนนี้: {current.weather_condition || "-"} {current.temperature ?? "-"}°C</span>
             <span className="text-white/60">|</span>
             <span className="font-semibold text-white/85">พื้นที่ต้องเฝ้าระวัง {districtsAtRisk}/{districts.length || 7} อำเภอ</span>
             <span className="text-white/60">|</span>
@@ -361,6 +391,18 @@ export default function WeatherWatchWorkspace() {
               </div>
               {locationMessage && <p className="text-xs font-semibold text-sky-200">{locationMessage}</p>}
 
+              {warnings.length > 0 && (
+                <div className="space-y-1.5" role="alert">
+                  {warnings.slice(0, 4).map((warning) => (
+                    <div key={`${warning.issued_at}-${warning.message}`} className={`rounded-lg px-3 py-2 text-[12px] font-semibold leading-snug ${warning.level === "high" ? "bg-red-600/85" : "bg-amber-400/90 text-slate-950"}`}>
+                      <span className="flex items-center gap-1.5 font-black"><AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" /> ประกาศเตือน{warning.issued_at ? ` • ${formatTime(String(warning.issued_at).replace(" ", "T"))} น.` : ""}</span>
+                      <span className="mt-0.5 block">{warning.message}</span>
+                      <span className="mt-0.5 block text-[10px] opacity-80">ที่มา: {warning.source}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {error && (
                 <p className="rounded-lg bg-red-500/20 p-3 text-sm font-bold text-red-100">
                   {error} — ระบบจะไม่แสดงข้อมูลจำลอง
@@ -390,26 +432,79 @@ export default function WeatherWatchWorkspace() {
                   </div>
 
                   <div>
-                    <p className="mb-1.5 text-xs font-black text-white/70">ขณะนี้ • {selectedDistrict.weather_condition}</p>
+                    <p className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">
+                      ขณะนี้ • {selectedDistrict.weather_condition}
+                      <SourceTag>{selectedDistrict.condition_source === "gauge" ? "วัดจากสถานี" : "แบบจำลอง"}</SourceTag>
+                    </p>
                     <div className="grid grid-cols-3 gap-2">
+                      <Stat icon={CloudRain} label="ฝน 1 ชม." value={selectedDistrict.rain_now?.stations ? `${selectedDistrict.rainfall_1h} มม.` : "ไม่มีสถานี"} />
+                      <Stat icon={Umbrella} label={selectedDistrict.rain_source === "gauge" ? "ฝนวัดได้ 24 ชม." : "ฝน 24 ชม. (ประมาณ)"} value={`${selectedDistrict.rainfall_24h} มม.`} />
+                      <Stat
+                        icon={Waves}
+                        label="น้ำในคลอง"
+                        value={selectedDistrict.water_status
+                          ? <span className={WATER_STATE[selectedDistrict.water_status.state]?.className}>{WATER_STATE[selectedDistrict.water_status.state]?.label}</span>
+                          : "ไม่มีสถานี"}
+                      />
                       <Stat icon={Thermometer} label="อุณหภูมิ" value={`${selectedDistrict.temperature}°C`} />
-                      <Stat icon={CloudRain} label="ฝน 1 ชม." value={`${selectedDistrict.rainfall_1h} มม.`} />
-                      <Stat icon={Umbrella} label="ฝน 24 ชม." value={`${selectedDistrict.rainfall_24h} มม.`} />
                       <Stat icon={Droplets} label="ความชื้น" value={`${selectedDistrict.humidity}%`} />
                       <Stat icon={Wind} label={`ลม${selectedDistrict.wind_direction && selectedDistrict.wind_direction !== "-" ? ` (${selectedDistrict.wind_direction})` : ""}`} value={`${selectedDistrict.wind_speed} กม./ชม.`} />
-                      <Stat icon={Cloud} label="โอกาสฝน" value={`${selectedDistrict.rain_probability_24h}%`} />
                     </div>
+                    <p className="mt-1.5 text-[11px] leading-4 text-white/60">
+                      {selectedDistrict.rain_source === "gauge" && selectedDistrict.rain_gauge
+                        ? `ฝนวัดจริงจาก ${selectedDistrict.rain_gauge.count} สถานีของ ThaiWater (สูงสุดที่${selectedDistrict.rain_gauge.max_station} • เฉลี่ย ${selectedDistrict.rain_gauge.mean} มม.)${selectedDistrict.rain_now_text ? ` • ตอนนี้: ${selectedDistrict.rain_now_text}` : ""}`
+                        : "อำเภอนี้ไม่มีสถานีวัดฝนที่ส่งข้อมูล ตัวเลขฝนเป็นค่าประมาณจากแบบจำลอง ECMWF"}
+                      {selectedDistrict.water_status ? ` • ระดับน้ำ: สถานี${selectedDistrict.water_status.station} ${selectedDistrict.water_status.bank_diff >= 0 ? "สูงกว่า" : "ต่ำกว่า"}ตลิ่ง ${Math.abs(selectedDistrict.water_status.bank_diff)} ม.` : ""}
+                      {" "}• อุณหภูมิ ความชื้น ลม จากแบบจำลอง ECMWF
+                    </p>
                   </div>
+
+                  {(selectedDistrict.heavy_rain_today || selectedDistrict.heavy_rain_tomorrow) && (
+                    <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
+                      <p className="flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">
+                        โอกาสฝนหนัก (เกิน 35 มม./วัน) <SourceTag>ECMWF 51 ชุด</SourceTag>
+                      </p>
+                      <div className="mt-1.5 grid grid-cols-2 gap-2">
+                        {[["วันนี้", selectedDistrict.heavy_rain_today], ["พรุ่งนี้", selectedDistrict.heavy_rain_tomorrow]].map(([label, item]) => item && (
+                          <div key={label}>
+                            <div className="text-[11px] font-bold text-white/60">{label}</div>
+                            <div className={`text-lg font-black leading-tight ${item.prob_heavy >= 50 ? "text-red-300" : item.prob_heavy >= 20 ? "text-amber-300" : "text-white"}`}>{item.prob_heavy}%</div>
+                            <div className="text-[11px] text-white/65">ฝนน่าจะได้ ~{item.median_mm} มม. (มากสุด ~{item.p90_mm})</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {districtRivers.length > 0 && (
+                    <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
+                      <p className="flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">
+                        แนวโน้มน้ำในคลอง 7 วัน <SourceTag>GloFAS</SourceTag>
+                      </p>
+                      <ul className="mt-1.5 space-y-1">
+                        {districtRivers.map((river) => (
+                          <li key={river.station} className="flex items-baseline justify-between gap-2 text-[12px]">
+                            <span className="min-w-0 truncate font-semibold">{river.station}</span>
+                            <span className={`shrink-0 font-black ${RIVER_TONE[river.level] || ""}`}>
+                              {DISCHARGE_LEVELS[river.level]?.label}
+                              {river.change_pct !== null && river.change_pct >= 20 ? ` • เพิ่ม ${river.change_pct}% ช่วง${formatThaiDateShort(river.peak_date)}` : ""}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-1 text-[10px] leading-4 text-white/55">เทียบปริมาณน้ำที่คาดกับสถิติ 20 ปีของจุดเดียวกัน (แบบจำลองละเอียด 5 กม. ดูแนวโน้มได้ แต่ไม่ใช่ระดับน้ำจริง)</p>
+                    </div>
+                  )}
 
                   {hourlyForecast.length > 0 && (
                     <div>
-                      <p className="mb-1.5 text-xs font-black text-white/70">ฝน 24 ชั่วโมงข้างหน้า (ทุก 3 ชม.)</p>
+                      <p className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">ฝน 24 ชั่วโมงข้างหน้า (รวมทุก 3 ชม.) <SourceTag>ECMWF</SourceTag></p>
                       <div className="grid grid-cols-8 gap-1">
                         {hourlyForecast.map((item) => {
                           const rain = Number(item.rainfall_forecast || 0);
                           const height = Math.min(100, Math.max(6, rain * 8));
                           return (
-                            <div key={item.forecast_datetime} className="flex flex-col items-center gap-1" title={`${formatTime(item.forecast_datetime)} • ${item.weather_condition} • ฝน ${rain} มม. • โอกาส ${item.rain_probability}%`}>
+                            <div key={item.forecast_datetime} className="flex flex-col items-center gap-1" title={`${formatTime(item.forecast_datetime)} • ${item.weather_condition} • ฝน ${rain} มม.`}>
                               <span className="text-[10px] font-bold text-white/80">{rain > 0 ? rain : "-"}</span>
                               <div className="flex h-12 w-full items-end rounded bg-white/5">
                                 <div className="w-full rounded bg-sky-400" style={{ height: `${height}%` }} />
@@ -429,7 +524,12 @@ export default function WeatherWatchWorkspace() {
                         <RiskBadge level={dayForecast.risk_level} />
                       </div>
                       <p className="mt-1 text-[13px] text-white/85">
-                        {dayForecast.weather_condition} • {dayForecast.temperature_min}–{dayForecast.temperature_max}°C • ฝน {dayForecast.rainfall_forecast} มม. (โอกาส {dayForecast.rain_probability}%) • ลมสูงสุด {dayForecast.wind_speed} กม./ชม.
+                        {dayForecast.weather_condition} • {dayForecast.temperature_min}–{dayForecast.temperature_max}°C • ฝนน่าจะได้ ~{dayForecast.rainfall_median ?? dayForecast.rainfall_forecast} มม.{dayForecast.rainfall_p90 !== null && dayForecast.rainfall_p90 !== undefined ? ` (มากสุด ~${dayForecast.rainfall_p90})` : ""} • ลมสูงสุด {dayForecast.wind_speed} กม./ชม.
+                      </p>
+                      <p className="mt-1 text-[12px] text-white/70">
+                        {dayForecast.prob_heavy !== null && dayForecast.prob_heavy !== undefined ? `โอกาสฝนหนัก ${dayForecast.prob_heavy}%` : ""}
+                        {dayForecast.prob_very_heavy ? ` • หนักมาก ${dayForecast.prob_very_heavy}%` : ""}
+                        {dayForecast.river_level && dayForecast.river_level !== "normal" ? ` • น้ำในคลอง${DISCHARGE_LEVELS[dayForecast.river_level]?.label}` : ""}
                       </p>
                     </div>
                   )}
@@ -459,6 +559,51 @@ export default function WeatherWatchWorkspace() {
                   <p className="mt-1 text-[13px] font-semibold text-white">{marine.advice}</p>
                 </div>
               )}
+
+              {hiiMedia && (hiiMedia.rain_forecast?.length > 0 || hiiMedia.radar?.length > 0) && (
+                <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
+                  <p className="flex flex-wrap items-center gap-1.5 text-sm font-black">แผนที่จากสถาบันสารสนเทศทรัพยากรน้ำ (สสน.)</p>
+                  <div className="mt-2 flex gap-1" role="tablist" aria-label="ประเภทแผนที่">
+                    {[["rain", "ฝน 3 วัน"], ["radar", "เรดาร์ฝน"], ["wave", "คลื่น 7 วัน"]].map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        role="tab"
+                        aria-selected={mediaTab === key}
+                        onClick={() => setMediaTab(key)}
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-black ${mediaTab === key ? "bg-white text-slate-900" : "bg-white/10 text-white hover:bg-white/20"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-1.5">
+                    {mediaTab === "rain" && hiiMedia.rain_forecast.map((item, index) => (
+                      <MediaThumb key={item.url} item={item} label={`${formatDay(item.datetime ? item.datetime.replace(" ", "T") : "", index)} (07:00–07:00)`} />
+                    ))}
+                    {mediaTab === "radar" && hiiMedia.radar.map((item) => (
+                      <MediaThumb key={item.url} item={item} label={`${String(item.name || "").replace(" รัศมี 240 กม.", "")} ${mediaTime(item)}`} />
+                    ))}
+                    {mediaTab === "wave" && hiiMedia.wave_forecast.map((item) => (
+                      <MediaThumb key={item.url} item={item} label={mediaTime(item)} />
+                    ))}
+                  </div>
+                  <p className="mt-1.5 text-[10px] leading-4 text-white/55">
+                    {mediaTab === "rain" ? "แบบจำลอง WRF-ROMS ละเอียด 3 กม. สตูลอยู่มุมล่างซ้ายของภาพ แตะเพื่อดูภาพเต็ม" : mediaTab === "radar" ? "เรดาร์กรมอุตุนิยมวิทยา ผ่าน ThaiWater สตูลอยู่ในรัศมีของทั้งสองสถานี" : "แบบจำลองคลื่น SWAN ของ สสน. ดูฝั่งทะเลอันดามันด้านซ้ายของภาพ"}
+                  </p>
+                </div>
+              )}
+
+              <Link
+                href="/public/disaster-map"
+                className="group flex items-start gap-3 rounded-xl bg-white/5 p-3 ring-1 ring-white/10 hover:bg-white/10"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#0b5fa5] text-white"><Waves className="h-5 w-5" aria-hidden="true" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-black text-white">ดูน้ำท่วมตอนนี้ → แผนที่สถานการณ์</span>
+                  <span className="mt-0.5 block text-[12px] leading-snug text-white/75">ระดับน้ำในคลองเทียบตลิ่ง ฝนที่วัดได้จริง พื้นที่น้ำท่วม รายงานจากประชาชน และศูนย์พักพิง</span>
+                </span>
+              </Link>
 
               {/* กล้อง CCTV และระดับน้ำของ ปภ. — เว็บต้นทางไม่อนุญาตให้ฝัง (frame-ancestors 'self') จึงเปิดในแท็บใหม่ */}
               <a
@@ -507,9 +652,9 @@ export default function WeatherWatchWorkspace() {
               </div>
 
               <p className="text-[11px] leading-4 text-white/50">
-                ประเมินอัตโนมัติจากข้อมูล {data?.provider || "Open-Meteo"}
-                {marine ? " และ Open-Meteo Marine" : ""} ไม่ใช่ประกาศทางราชการ
-                โปรดยึดประกาศของกรมอุตุนิยมวิทยาและจังหวัดสตูลเป็นหลัก
+                ระดับความเสี่ยงคิดจากฝนและระดับน้ำที่วัดได้จริง (ThaiWater สสน.) เป็นหลัก
+                ร่วมกับโอกาสฝนหนักจาก ECMWF 51 ชุด และแนวโน้มน้ำในคลองจาก GloFAS
+                ประเมินอัตโนมัติ ไม่ใช่ประกาศทางราชการ โปรดยึดประกาศของกรมอุตุนิยมวิทยาและจังหวัดสตูลเป็นหลัก
               </p>
             </div>
           )}
@@ -530,13 +675,13 @@ export default function WeatherWatchWorkspace() {
                   onClick={() => setViewMode("risk")}
                 />
                 <SidebarItem
-                  label={radarEnabled && radarLayer?.time ? `เรดาร์ฝน ${formatTime(radarLayer.time)}` : "เรดาร์ฝน"}
-                  icon={Radar}
-                  tone="from-green-400 to-yellow-400"
-                  active={!isWindy && radarEnabled}
+                  label="ความสูงพื้นที่"
+                  icon={MountainSnow}
+                  tone="from-blue-800 to-amber-700"
+                  active={!isWindy && elevationEnabled}
                   onClick={() => {
                     setViewMode("risk");
-                    setRadarEnabled((enabled) => (isWindy ? true : !enabled));
+                    setElevationEnabled((enabled) => (isWindy ? true : !enabled));
                   }}
                 />
                 {BASE_MAPS.map((item) => (
@@ -600,11 +745,12 @@ export default function WeatherWatchWorkspace() {
 
         {/* ซ้ายล่าง: คำอธิบายสี (โหมดความเสี่ยง) */}
         {!isWindy && (
-          <div className={`absolute bottom-[5.5rem] left-[384px] z-[650] hidden rounded-xl px-3 py-2 text-xs md:block ${GLASS}`}>
-            <div className="flex items-center gap-3">
+          <div className={`absolute bottom-[5.75rem] left-[384px] z-[650] hidden max-h-[calc(100%-13rem)] max-w-[360px] overflow-y-auto rounded-xl px-2.5 py-1.5 text-[11px] [scrollbar-width:thin] md:block ${GLASS}`}>
+            {elevationEnabled && <ElevationLegend className="mb-1.5 max-w-[320px] border-b border-white/10 pb-1.5" />}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {RISK_LEVELS.map((level) => (
-                <span key={level} className="flex items-center gap-1.5 font-bold">
-                  <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: riskMeta(level).color }} aria-hidden="true" />
+                <span key={level} className="flex items-center gap-1 font-bold">
+                  <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: riskMeta(level).color }} aria-hidden="true" />
                   {riskMeta(level).label}
                 </span>
               ))}
@@ -614,9 +760,9 @@ export default function WeatherWatchWorkspace() {
 
         {/* ล่าง: พยากรณ์ 7 วันของอำเภอที่เลือก */}
         {!isWindy && dailyForecast.length > 0 && (
-          <div className="absolute bottom-3 right-14 z-[650] max-md:hidden md:left-[384px]">
-            <div className={`flex items-center gap-1 overflow-x-auto rounded-2xl p-1.5 [scrollbar-width:none] ${GLASS}`}>
-              <span className="hidden shrink-0 px-2 text-xs font-bold text-white/70 xl:block">7 วัน อ.{selectedDistrict?.district_name}</span>
+          <div className="absolute bottom-3 right-3 z-[650] max-md:hidden md:left-[384px]">
+            <div className={`ml-auto flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-xl p-1 [scrollbar-width:none] ${GLASS}`}>
+              <span className="hidden shrink-0 px-1.5 text-[10px] font-bold text-white/70 xl:block">7 วัน อ.{selectedDistrict?.district_name}</span>
               {dailyForecast.map((day, index) => {
                 const meta = riskMeta(day.risk_level);
                 const active = index === selectedDay;
@@ -628,12 +774,15 @@ export default function WeatherWatchWorkspace() {
                       setSelectedDay(index);
                       setPanelOpen(true);
                     }}
-                    className={`min-w-[92px] flex-1 shrink-0 rounded-xl px-2 py-1.5 text-center transition ${active ? "bg-white text-slate-900" : "hover:bg-white/10"}`}
+                    className={`w-[72px] shrink-0 rounded-lg px-1 py-1 text-center transition ${active ? "bg-white text-slate-900" : "hover:bg-white/10"}`}
                   >
-                    <span className="block text-xs font-black">{formatDay(day.forecast_datetime, index)}</span>
-                    <span className={`block whitespace-nowrap text-[11px] ${active ? "text-slate-600" : "text-white/70"}`}>{day.temperature_min}–{day.temperature_max}°C</span>
-                    <span className={`block whitespace-nowrap text-[11px] font-bold ${active ? "text-sky-700" : "text-sky-200"}`}>ฝน {day.rainfall_forecast} มม.</span>
-                    <span className="mx-auto mt-1 block h-1.5 w-10 rounded-full" style={{ backgroundColor: meta.color }} aria-label={meta.label} />
+                    <span className="block text-[11px] font-black leading-4">{formatDay(day.forecast_datetime, index)}</span>
+                    <span className={`block whitespace-nowrap text-[10px] leading-4 ${active ? "text-slate-600" : "text-white/70"}`}>{day.temperature_min}–{day.temperature_max}°C</span>
+                    <span className={`block whitespace-nowrap text-[10px] font-bold leading-4 ${active ? "text-sky-700" : "text-sky-200"}`}>ฝน ~{day.rainfall_median ?? day.rainfall_forecast} มม.</span>
+                    {day.prob_heavy >= 20 && (
+                      <span className={`block whitespace-nowrap text-[10px] font-black leading-4 ${active ? "text-red-700" : "text-amber-300"}`}>หนัก {day.prob_heavy}%</span>
+                    )}
+                    <span className="mx-auto mt-0.5 block h-1 w-7 rounded-full" style={{ backgroundColor: meta.color }} aria-label={meta.label} />
                   </button>
                 );
               })}

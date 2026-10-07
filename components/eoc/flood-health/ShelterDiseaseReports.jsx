@@ -17,6 +17,9 @@ export default function ShelterDiseaseReports() {
     const [saving, setSaving] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [showForm, setShowForm] = useState(false);
+    // สิทธิ์จากเซิร์ฟเวอร์: CASE MGMT / SAT บันทึกได้ ทีมอื่นดูอย่างเดียว
+    const [permissions, setPermissions] = useState({ can_edit: false, read_only_message: null });
+    const canEdit = permissions.can_edit === true;
     const [formData, setFormData] = useState({
         shelter_id: '',
         disease_type: '',
@@ -88,6 +91,7 @@ export default function ShelterDiseaseReports() {
                 if (reportsData.success) {
                     setReports(reportsData.data || []);
                     setStats(reportsData.stats || {});
+                    if (reportsData.permissions) setPermissions(reportsData.permissions);
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -220,16 +224,19 @@ export default function ShelterDiseaseReports() {
                                 onChange={(e) => setSelectedDate(e.target.value)}
                                 className="text-gray-600 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                             />
-                            <button
+                            {canEdit && <button
                                 onClick={() => setShowForm(!showForm)}
                                 className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
                             >
                                 <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 <span>เพิ่มรายงาน</span>
-                            </button>
+                            </button>}
                         </div>
                     </div>
                 </div>
+                {!canEdit && permissions.read_only_message ? (
+                    <p className="mb-4 rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{permissions.read_only_message}</p>
+                ) : null}
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -252,7 +259,7 @@ export default function ShelterDiseaseReports() {
                 </div>
 
                 {/* Add Form */}
-                {showForm && (
+                {showForm && canEdit && (
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">เพิ่มรายงานโรค</h3>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -403,12 +410,12 @@ export default function ShelterDiseaseReports() {
                                                     {severityLabels[report.severity]}
                                                 </span>
                                             </div>
-                                            <button
+                                            {canEdit && <button
                                                 onClick={() => handleDelete(report.id)}
                                                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
                                             >
                                                 <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
-                                            </button>
+                                            </button>}
                                         </div>
                                     </div>
                                     {report.notes && (

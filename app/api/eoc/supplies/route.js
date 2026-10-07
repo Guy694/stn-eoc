@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { modulePermissions, requireModuleEdit } from "@/lib/eocModuleAccess";
 import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { query, transaction } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
@@ -9,8 +10,6 @@ import { triggerEventAlerts } from "@/lib/eocAlertRunner";
 
 // คลังเวชภัณฑ์ของ "เหตุการณ์ EOC ครั้งนี้" (ผูกกับ eoc_type + ครั้งที่ ผ่าน medical_inventory_events)
 const SUPPORTED = ["flood", "disease"];
-const MANAGE_ROLES = ["admin", "commander"];
-const STOCK_ROLES = ["admin", "commander", "MCATT", "SAT", "SeRHT"];
 
 const bad = (message, status = 400) => NextResponse.json({ success: false, message }, { status });
 const num = (value) => {
@@ -85,7 +84,6 @@ export async function GET(request) {
     ]);
 
     const rows = stock.map((row) => ({ ...row, level: stockLevel(row) }));
-    const role = auth.user.role;
     const isActive = ctx.session.status === "active";
     return NextResponse.json({
       success: true,
@@ -96,11 +94,12 @@ export async function GET(request) {
       stock: rows,
       movements,
       facilities,
-      permissions: {
-        can_open: MANAGE_ROLES.includes(role) && isActive,
-        can_add_item: STOCK_ROLES.includes(role) && isActive,
-        can_move: OFFICER_ROLES.includes(role) && isActive
-      }
+      // บันทึกได้เฉพาะกลุ่มภารกิจ LOGISTICS (และแอดมิน/ผู้บัญชาการ) — ทีมอื่นดูคงคลังได้อย่างเดียว
+      permissions: await (async () => {
+        const perms = await modulePermissions(auth.user, ctx.session.id, "supplies");
+        const allowed = isActive && perms.can_edit;
+        return { can_open: allowed, can_add_item: allowed, can_move: allowed, read_only_message: allowed ? null : perms.read_only_message };
+      })()
     });
   } catch (error) {
     console.error("Supplies GET error:", error);
@@ -109,7 +108,6 @@ export async function GET(request) {
 }
 
 async function openEvent(auth, ctx, body) {
-  if (!MANAGE_ROLES.includes(auth.user.role)) return bad("เฉพาะผู้ดูแลระบบหรือผู้บัญชาการ", 403);
   if (ctx.event) return bad("เหตุการณ์นี้เปิดบัญชีคลังแล้ว", 409);
   const previous = body.carry_over ? await findPreviousEvent(ctx.session) : null;
   const name = `${getEocTypeLabel(ctx.eocType)} ครั้งที่ ${ctx.session.session_number}`;
@@ -141,7 +139,6 @@ async function openEvent(auth, ctx, body) {
 }
 
 async function addItem(auth, ctx, body) {
-  if (!STOCK_ROLES.includes(auth.user.role)) return bad("ไม่มีสิทธิ์เพิ่มรายการเวชภัณฑ์", 403);
   if (!ctx.event) return bad("ยังไม่ได้เปิดบัญชีคลังของเหตุการณ์นี้", 409);
   const facilityId = Number(body.health_facility_id);
   const itemName = String(body.item_name || "").trim();
@@ -223,6 +220,8 @@ export async function POST(request) {
     if (ctx.error) return ctx.error;
     if (!ctx.session) return bad("ยังไม่มีเหตุการณ์ EOC", 404);
     if (ctx.session.status !== "active") return bad("เหตุการณ์นี้ปิดแล้ว ดูข้อมูลได้อย่างเดียว", 409);
+    const gate = await requireModuleEdit(auth.user, ctx.session.id, "supplies");
+    if (gate.response) return gate.response;
     ctx.request = request;
     if (body.action === "open_event") return await openEvent(auth, ctx, body);
     if (body.action === "add_item") return await addItem(auth, ctx, body);

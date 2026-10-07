@@ -38,6 +38,12 @@
     "20261006_eoc_alert_log.sql",
     "20261006_add_daily_site_visit_statistics.sql",
     "20261006_add_public_usage_analytics.sql",
-    "20261007_incident_publishing.sql"
+    "20261007_incident_publishing.sql",
+    "20261007_eoc_module_permissions.sql",
+    "20261007_incident_water_report.sql",
+    "20261007_water_level_alerts.sql",
+    "20261007_rain_alerts.sql",
+    "20261007_incident_confirmations.sql",
+    "20261007_health_facility_status.sql"
   ]
 }

@@ -7,13 +7,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity, AlertTriangle, BarChart3, BellRing, CheckCircle2, DatabaseBackup, ExternalLink, Map as MapIcon,
-  PlugZap, RefreshCw, ShieldCheck, Users, XCircle
+  KeyRound, PlugZap, RefreshCw, ShieldCheck, Users, XCircle
 } from "lucide-react";
 import { AdminPage, StatusPill, useNotice } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { useUrlState } from "@/components/admin/useUrlState";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import SiteVisitorStatistics from "@/components/admin/settings/SiteVisitorStatistics";
+import ModulePermissions from "@/components/admin/settings/ModulePermissions";
+import WaterAlertSettings from "@/components/admin/settings/WaterAlertSettings";
 
 const API = "/stn-eoc/api/admin/system-status";
 
@@ -23,6 +25,7 @@ const SECTIONS = [
   { value: "integrations", label: "การเชื่อมต่อภายนอก", hint: "สถานะและทดสอบการเชื่อมต่อ", icon: PlugZap },
   { value: "security", label: "ความปลอดภัย", hint: "นโยบายรหัสผ่านและการเข้าสู่ระบบ", icon: ShieldCheck },
   { value: "roles", label: "สิทธิ์และบทบาท", hint: "แต่ละบทบาททำอะไรได้บ้าง", icon: Users },
+  { value: "modules", label: "สิทธิ์กลุ่มภารกิจ", hint: "ทีมไหนบันทึกเมนูไหนของเหตุการณ์ได้", icon: KeyRound },
   { value: "backup", label: "สำรองข้อมูล", hint: "ไฟล์สำรองและวิธีสำรอง/กู้คืน", icon: DatabaseBackup },
   { value: "visitors", label: "สถิติผู้เข้าชม", hint: "เว็บไซต์สาธารณะ", icon: BarChart3 },
   { value: "data", label: "ข้อมูลพื้นที่และข้อมูลอ้างอิง", hint: "ทางลัดไปหน้าจัดการข้อมูลกลาง", icon: MapIcon }
@@ -334,7 +337,7 @@ export default function SystemSettingsWorkspace() {
   };
 
   const current = SECTIONS.find((item) => item.value === section) || SECTIONS[0];
-  const needsData = section !== "visitors" && section !== "data";
+  const needsData = !["visitors", "data", "modules"].includes(section);
   const problems = state.data?.checks?.filter((check) => check.tone !== "ok").length || 0;
 
   return (
@@ -373,12 +376,14 @@ export default function SystemSettingsWorkspace() {
           <h2 className="sr-only">{current.label}</h2>
           {section === "visitors" ? <SiteVisitorStatistics /> : null}
           {section === "data" ? <DataLinks /> : null}
+          {section === "modules" ? <ModulePermissions /> : null}
           {needsData ? (
             state.error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error} <button type="button" onClick={load} className="ml-2 font-bold underline">ลองใหม่</button></p>
               : !state.data ? <p className="rounded-xl border border-[#c9dcee] bg-white p-10 text-center text-sm text-slate-500">กำลังตรวจสถานะระบบ…</p>
                 : <>
                   {section === "overview" ? <Overview data={state.data} /> : null}
                   {section === "alerts" ? <Alerts data={state.data} onTest={() => setConfirmTest(true)} /> : null}
+                  {section === "alerts" ? <WaterAlertSettings /> : null}
                   {section === "integrations" ? <Integrations data={state.data} /> : null}
                   {section === "security" ? <Security data={state.data} /> : null}
                   {section === "roles" ? <Roles data={state.data} /> : null}

@@ -38,6 +38,9 @@ export default function AffectedPersonsPage() {
         province: {}
     });
     const [showModal, setShowModal] = useState(false);
+    // สิทธิ์บันทึกจากเซิร์ฟเวอร์: ทีม SAT บันทึกได้ ทีมอื่นดูอย่างเดียว
+    const [permissions, setPermissions] = useState({ can_edit: false, read_only_message: null });
+    const canEdit = permissions.can_edit === true;
     const [editingReport, setEditingReport] = useState(null);
     const [viewMode, setViewMode] = useState('range');
     const [filterDate, setFilterDate] = useState('2025-11-30');
@@ -151,6 +154,7 @@ export default function AffectedPersonsPage() {
 
             if (result.success) {
                 setReports(Array.isArray(result.data) ? result.data : []);
+                if (result.permissions) setPermissions(result.permissions);
                 setSummary(result.summary || { today: [], cumulative: [], province: {} });
             } else {
                 showError(result.message);
@@ -353,7 +357,7 @@ export default function AffectedPersonsPage() {
                         </h1>
                         <p className="text-gray-600">บันทึกและติดตามข้อมูลย้อนหลังตามช่วงวันที่รายงาน</p>
                     </div>
-                    <button
+                    {canEdit && <button
                         onClick={() => {
                             resetForm();
                             setShowModal(true);
@@ -362,8 +366,13 @@ export default function AffectedPersonsPage() {
                     >
                         <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มรายงาน
-                    </button>
+                    </button>}
                 </div>
+                {!canEdit && permissions.read_only_message && (
+                    <p className="mb-6 rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">
+                        {permissions.read_only_message}
+                    </p>
+                )}
 
                 {/* Session Selector */}
                 <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg shadow-md p-4 mb-6 border border-[#c9dcee]">
@@ -724,6 +733,7 @@ export default function AffectedPersonsPage() {
                                                         {report.notes || '-'}
                                                     </td>
                                                     <td className="px-6 py-4 text-sm font-medium">
+                                                        {canEdit && <>
                                                         <button
                                                             onClick={() => handleEdit(report)}
                                                             className="text-[#0b4c86] hover:text-[#083865] mr-3"
@@ -736,6 +746,7 @@ export default function AffectedPersonsPage() {
                                                         >
                                                             <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
                                                         </button>
+                                                        </>}
                                                     </td>
                                                 </tr>
                                             ))}

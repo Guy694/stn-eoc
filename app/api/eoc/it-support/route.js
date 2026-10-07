@@ -6,9 +6,12 @@ import { getOperationalSessionAccess } from "@/lib/eocOperationalAccess";
 import { handleArchiveDelete, recordChange } from "@/lib/recordArchive";
 import { IT_STATUSES, RESOURCE_STATUSES, nextTicketNo, sortTickets, summarizeIt, validateTicket } from "@/lib/itSupport";
 import { triggerEventAlerts } from "@/lib/eocAlertRunner";
+import { moduleEditAccess, readOnlyMessage } from "@/lib/eocModulePermissions";
+import { ownersFor } from "@/lib/eocModuleOwners";
 
 // รายงาน IT support ในเหตุการณ์ EOC: ปัญหาระบบ/อุปกรณ์/การสื่อสาร + สถานะทรัพยากร IT
-// ผู้ที่ได้รับมอบหมายในเหตุการณ์ (และผู้ดูแลระบบ/ผู้บัญชาการ) บันทึกและอัปเดตได้ เมื่อปิดเหตุการณ์แล้วอ่านอย่างเดียว
+// ทุกคนที่ได้รับมอบหมายในเหตุการณ์ดูได้ แต่บันทึก/อัปเดตได้เฉพาะกลุ่มภารกิจด้านเทคโนโลยีดิจิทัล (IT) และผู้ดูแลระบบ/ผู้บัญชาการ
+// เมื่อปิดเหตุการณ์แล้วทุกคนอ่านอย่างเดียว
 const bad = (message, status = 400) => NextResponse.json({ success: false, message }, { status });
 const userName = (user) => [user?.givenName, user?.familyName].filter(Boolean).join(" ") || user?.username || null;
 
@@ -17,7 +20,22 @@ async function gate(request, sessionId) {
   if (!auth.success) return { response: auth.response };
   const access = await getOperationalSessionAccess(auth.user, sessionId);
   if (!access.ok) return { response: bad(access.message, access.status) };
-  return { auth, access };
+  const owners = await ownersFor(access.session.eoc_type, "it-support");
+  const edit = moduleEditAccess({
+    role: auth.user.role,
+    memberships: access.memberships,
+    sessionActive: access.canOperate,
+    moduleKey: "it-support",
+    owners
+  });
+  edit.message = readOnlyMessage("it-support", edit.reason, owners);
+  return { auth, access, edit };
+}
+
+// ใช้กับคำสั่งที่เปลี่ยนข้อมูล: คืน response ถ้าไม่มีสิทธิ์บันทึก
+function denyWrite(edit) {
+  if (edit.canEdit) return null;
+  return bad(edit.message, edit.reason === "closed" ? 409 : 403);
 }
 
 async function resolveSessionId(params) {
@@ -61,7 +79,12 @@ export async function GET(request) {
       tickets: sortTickets(tickets),
       resources,
       summary: summarizeIt(tickets, resources),
-      permissions: { can_edit: access.canOperate && !migrationNeeded, can_delete: checked.auth.user.role === "admin" }
+      permissions: {
+        can_edit: checked.edit.canEdit && !migrationNeeded,
+        can_delete: checked.auth.user.role === "admin",
+        read_only_reason: checked.edit.reason,
+        read_only_message: checked.edit.message
+      }
     });
   } catch (error) {
     console.error("IT support GET error:", error);
@@ -81,7 +104,8 @@ export async function POST(request) {
     const checked = await gate(request, body.session_id);
     if (checked.response) return checked.response;
     const { auth, access } = checked;
-    if (!access.canOperate) return bad("เหตุการณ์นี้ปิดแล้ว ดูได้อย่างเดียว", 409);
+    const denied = denyWrite(checked.edit);
+    if (denied) return denied;
     const result = validateTicket(body);
     if (!result.ok) return bad(result.error);
     const ticket = result.ticket;
@@ -119,7 +143,8 @@ export async function PUT(request) {
     const checked = await gate(request, body.session_id);
     if (checked.response) return checked.response;
     const { auth, access } = checked;
-    if (!access.canOperate) return bad("เหตุการณ์นี้ปิดแล้ว ดูได้อย่างเดียว", 409);
+    const denied = denyWrite(checked.edit);
+    if (denied) return denied;
     const rows = await query(`SELECT * FROM eoc_it_tickets WHERE id = ? AND eoc_session_id = ? LIMIT 1`, [Number(body.id) || 0, access.sessionId]);
     if (!rows.length) return bad("ไม่พบเรื่องที่ต้องการแก้ไข", 404);
     const result = validateTicket({ ...rows[0], ...body });
@@ -155,7 +180,8 @@ export async function PATCH(request) {
     const checked = await gate(request, body.session_id);
     if (checked.response) return checked.response;
     const { auth, access } = checked;
-    if (!access.canOperate) return bad("เหตุการณ์นี้ปิดแล้ว ดูได้อย่างเดียว", 409);
+    const denied = denyWrite(checked.edit);
+    if (denied) return denied;
     if (!RESOURCE_STATUSES[body.status]) return bad("สถานะไม่ถูกต้อง");
     const rows = await query(`SELECT id, unit_name, resource_type, status FROM it_resources WHERE id = ? LIMIT 1`, [Number(body.resource_id) || 0]);
     if (!rows.length) return bad("ไม่พบทรัพยากร IT", 404);

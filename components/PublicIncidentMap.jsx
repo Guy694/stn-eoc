@@ -2,9 +2,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { getMapBaseLayer, getMapOverlayLayer, MAP_BASE_LAYERS } from '@/lib/mapBaseLayers';
+import { getMapBaseLayer, MAP_BASE_LAYERS } from '@/lib/mapBaseLayers';
 import AppIcon from './icons/AppIcon';
 import CitizenPointPopup from './public/map/CitizenPointPopup';
+import ShelterPopup from './public/map/ShelterPopup';
+import HealthFacilityPopup from './public/map/HealthFacilityPopup';
+import { facilityTypeInfo, markerTone } from '@/lib/healthFacilityStatus';
+import { FLOOD_LEVEL_LEGEND, floodAreaMapMeta } from '@/lib/floodMapLevels';
+import { waterLevelMeta } from '@/lib/waterReport';
+import { isWaterReport } from '@/lib/waterReportMap';
 import { problemStyle } from './public/problemCategoryIcons';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -13,6 +19,12 @@ const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { 
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
 const ZoomControl = dynamic(() => import('react-leaflet').then(mod => mod.ZoomControl), { ssr: false });
+const Pane = dynamic(() => import('react-leaflet').then(mod => mod.Pane), { ssr: false });
+const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false });
+const WaterReportMarker = dynamic(() => import('./public/map/WaterReportMarker'), { ssr: false });
+const ElevationLayer = dynamic(() => import('./public/map/ElevationLayer'), { ssr: false });
+const WaterStationLayer = dynamic(() => import('./weather/WaterStationLayer'), { ssr: false });
+const RainStationLayer = dynamic(() => import('./weather/RainStationLayer'), { ssr: false });
 
 const renderMapIcon = (icon, className = "h-5 w-5 text-white") => renderToStaticMarkup(<AppIcon icon={icon} className={className} strokeWidth={2.5} />);
 
@@ -43,6 +55,9 @@ export default function PublicIncidentMap({
     const [diseaseReports, setDiseaseReports] = useState([]);
     const [waterways, setWaterways] = useState(null);
     const [shelters, setShelters] = useState([]);
+    // สถานีวัดระดับน้ำ/ฝน ThaiWater (สถานการณ์ปัจจุบัน — ดึงผ่าน API ของระบบ แคชฝั่งเซิร์ฟเวอร์ 10 นาที)
+    const [waterStations, setWaterStations] = useState([]);
+    const [rainStations, setRainStations] = useState([]);
     const [healthFacilities, setHealthFacilities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [customIcon, setCustomIcon] = useState(null);
@@ -61,8 +76,7 @@ export default function PublicIncidentMap({
         traffic: true,
         shelters: false,
         hospitals: false,
-        waterways: false,
-        hillshade: false
+        waterways: false
     });
     const activeLayers = layers || internalLayers;
     const setLayer = (key, value) => {
@@ -79,12 +93,12 @@ export default function PublicIncidentMap({
     const showIncidentLayer = activeLayers.incidents !== false;
     const showTrafficLayer = activeLayers.traffic !== false;
     const showShelterLayer = Boolean(activeLayers.shelters);
+    // กันไม่ให้ popup ไปอยู่ใต้แผงเหตุการณ์ด้านซ้ายและช่องค้นหาด้านบน
+    const popupPanPadding = typeof window !== 'undefined' && window.innerWidth >= 768 ? [400, 90] : [16, 120];
     const showHospitalLayer = Boolean(activeLayers.hospitals);
     const showWaterwayLayer = Boolean(activeLayers.waterways);
-    const showHillshadeLayer = Boolean(activeLayers.hillshade);
     const activeBaseMap = baseMap || internalBaseMap;
     const selectedBaseLayer = getMapBaseLayer(activeBaseMap);
-    const hillshadeLayer = getMapOverlayLayer('hillshade');
     const setBaseMap = (nextBaseMap) => {
         if (onBaseMapChange) onBaseMapChange(nextBaseMap);
         else setInternalBaseMap(nextBaseMap);
@@ -96,16 +110,6 @@ export default function PublicIncidentMap({
     const [villagePolygons, setVillagePolygons] = useState([]);
 
     const districtBoundaryColor = '#111827';
-
-    const floodLevelMeta = {
-        severe: { label: 'สูง/สูงมาก', color: '#DC2626', fillOpacity: 0.5 },
-        moderate: { label: 'ปานกลาง', color: '#F59E0B', fillOpacity: 0.42 },
-        mild: { label: 'ต่ำ', color: '#38BDF8', fillOpacity: 0.38 },
-        safe: { label: 'ไม่มีอุทกภัยน้ำท่วม', color: '#22C55E', fillOpacity: 0.18 },
-        nodata: { label: 'ไม่มีข้อมูล', color: '#CBD5E1', fillOpacity: 0.08 }
-    };
-
-    const getFloodLevelMeta = (level) => floodLevelMeta[level] || floodLevelMeta.nodata;
 
     const diseaseSeverityMeta = {
         severe: { label: 'ระบาดหนัก', color: '#DC2626' },
@@ -367,6 +371,31 @@ export default function PublicIncidentMap({
         if (showShelterLayer && shelters.length === 0) fetchShelters();
     }, [fetchShelters, shelters.length, showShelterLayer]);
 
+    const showWaterStations = Boolean(activeLayers.waterStations);
+    const showRainStations = Boolean(activeLayers.rainStations);
+    useEffect(() => {
+        if (!showWaterStations) return undefined;
+        let alive = true;
+        const load = () => fetch('/stn-eoc/api/public/water-levels')
+            .then((response) => (response.ok ? response.json() : null))
+            .then((json) => { if (alive && json?.success) setWaterStations(json.stations || []); })
+            .catch(() => {});
+        load();
+        const timer = window.setInterval(load, 10 * 60 * 1000);
+        return () => { alive = false; window.clearInterval(timer); };
+    }, [showWaterStations]);
+    useEffect(() => {
+        if (!showRainStations) return undefined;
+        let alive = true;
+        const load = () => fetch('/stn-eoc/api/public/rain-stations')
+            .then((response) => (response.ok ? response.json() : null))
+            .then((json) => { if (alive && json?.success) setRainStations(json.stations || []); })
+            .catch(() => {});
+        load();
+        const timer = window.setInterval(load, 10 * 60 * 1000);
+        return () => { alive = false; window.clearInterval(timer); };
+    }, [showRainStations]);
+
     useEffect(() => {
         if (showHospitalLayer && healthFacilities.length === 0) fetchHealthFacilities();
     }, [fetchHealthFacilities, healthFacilities.length, showHospitalLayer]);
@@ -410,14 +439,16 @@ export default function PublicIncidentMap({
     }, [fetchPolygons, showVillageLayer, villagePolygons.length]);
 
     // จุดปัญหาจากประชาชน (ตรวจสอบแล้ว): สี่เหลี่ยมมุมมน แยกจากหมุดของเจ้าหน้าที่ให้รู้แหล่งที่มา
-    const createProblemIcon = (category) => {
+    const createProblemIcon = (category, waterLevel) => {
         if (typeof window === 'undefined') return null;
         const L = require('leaflet');
         const style = problemStyle(category);
-        const svg = renderToStaticMarkup(<style.icon className="h-4 w-4" color="white" strokeWidth={2.5} aria-hidden="true" />);
+        const level = waterLevelMeta(waterLevel);
+        const iconColor = level && ['dry', 'ankle_knee', 'knee_waist'].includes(level.value) ? '#111827' : 'white';
+        const svg = renderToStaticMarkup(<style.icon className="h-4 w-4" color={iconColor} strokeWidth={2.5} aria-hidden="true" />);
         return L.divIcon({
             className: 'public-problem-icon',
-            html: `<div style="width:32px;height:32px;border-radius:10px;border:2px solid white;background:${style.color};box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">${svg}</div>`,
+            html: `<div style="width:32px;height:32px;border-radius:10px;border:2px solid white;background:${level?.color || style.color};box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">${svg}</div>`,
             iconSize: [32, 32],
             iconAnchor: [16, 16],
             popupAnchor: [0, -16]
@@ -448,28 +479,42 @@ export default function PublicIncidentMap({
         });
     };
 
-    const createHospitalIcon = () => {
+    // หมุดสถานพยาบาล: สีตามสถานะ (เขียว=เปิด, เหลือง=จำกัด/ถนนน้ำท่วม, แดง=ปิด/น้ำท่วม, เทา=ยังไม่มีรายงาน)
+    // โรงพยาบาลแสดงชื่อบนแผนที่เลย ส่วน รพ.สต./สำนักงาน ชี้แล้วเห็นชื่อ (ไม่ให้ชื่อทับกันทั้งจังหวัด)
+    const createHospitalIcon = (facility) => {
         if (typeof window === 'undefined') return null;
         const L = require('leaflet');
+        const type = facilityTypeInfo(facility?.typecode);
+        const tone = type.level === 'office' ? { color: '#64748b' } : markerTone(facility);
+        const size = type.level === 'hospital' ? 34 : type.level === 'office' ? 22 : 26;
+        const iconSize = type.level === 'hospital' ? 'h-5 w-5' : 'h-3.5 w-3.5';
+        const name = String(facility?.name || '').replace(/[<>&"]/g, '');
+        const label = type.level === 'hospital'
+            ? `<div style="position:absolute;left:50%;top:${size + 2}px;transform:translateX(-50%);white-space:nowrap;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.94);color:#0f172a;font:700 11px/1.35 var(--font-kanit),sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);border:1px solid ${tone.color}">${name}</div>`
+            : '';
         return L.divIcon({
             className: 'public-hospital-icon',
             html: `
-                <div style="
-                    width: 34px;
-                    height: 34px;
-                    border-radius: 50%;
-                    border: 3px solid #047857;
-                    background: #059669;
-                    color: white;
-                    box-shadow: 0 3px 10px rgba(0,0,0,0.28);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                ">${renderMapIcon("hospital", "h-5 w-5 text-white")}</div>
+                <div style="position:relative;width:${size}px;height:${size}px">
+                    <div style="
+                        width: ${size}px;
+                        height: ${size}px;
+                        border-radius: ${type.level === 'hospital' ? '10px' : '50%'};
+                        border: ${type.level === 'hospital' ? 3 : 2}px solid white;
+                        background: ${tone.color};
+                        color: white;
+                        box-shadow: 0 3px 10px rgba(0,0,0,0.28);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">${renderMapIcon("hospital", `${iconSize} text-white`)}</div>
+                    ${label}
+                </div>
             `,
-            iconSize: [34, 34],
-            iconAnchor: [17, 17],
-            popupAnchor: [0, -17]
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size / 2],
+            popupAnchor: [0, -size / 2],
+            tooltipAnchor: [0, -size / 2]
         });
     };
 
@@ -513,7 +558,7 @@ export default function PublicIncidentMap({
         const reportType = incident.report_type || 'help_request';
 
         if (reportType === 'problem_point') {
-            return createProblemIcon(incident.problem_category);
+            return createProblemIcon(incident.problem_category, incident.water_level);
         }
 
         // ถ้าเป็น traffic report ให้ใช้ icon ตามสถานะการสัญจร
@@ -691,10 +736,6 @@ export default function PublicIncidentMap({
                                     <input type="checkbox" checked={showWaterwayLayer} onChange={(e) => setLayer('waterways', e.target.checked)} className="w-4 h-4 accent-sky-600" />
                                     <span>เส้นทางน้ำ/คลอง</span>
                                 </label>
-                                <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 cursor-pointer">
-                                    <input type="checkbox" checked={showHillshadeLayer} onChange={(e) => setLayer('hillshade', e.target.checked)} className="w-4 h-4 accent-slate-600" />
-                                    <span>เงาภูมิประเทศ/ความสูง</span>
-                                </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-900 cursor-pointer">
                                     <input type="checkbox" checked={showLabels} onChange={(e) => setLayer('labels', e.target.checked)} className="w-4 h-4 accent-teal-600" />
                                     <span className="inline-flex items-center gap-1.5"><AppIcon icon="info" className="h-4 w-4" /> แสดงชื่อ</span>
@@ -713,7 +754,7 @@ export default function PublicIncidentMap({
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 cursor-pointer">
                                     <input type="checkbox" checked={showHospitalLayer} onChange={(e) => setLayer('hospitals', e.target.checked)} className="w-4 h-4 accent-emerald-600" />
-                                    <span>โรงพยาบาล</span>
+                                    <span>สถานพยาบาล</span>
                                 </label>
                             </div>
                         </div>
@@ -730,18 +771,16 @@ export default function PublicIncidentMap({
                             )}
                             {showFloodAreaLayer && (
                                 <div>
-                                    <p className="font-semibold text-gray-800 mb-2">ระดับพื้นที่อุทกภัยน้ำท่วม</p>
+                                    <p className="font-semibold text-gray-800 mb-2">ระดับน้ำเทียบกับผู้ใหญ่ที่ยืนในน้ำ</p>
                                     <div className="flex flex-wrap gap-2 text-xs">
-                                        {['severe', 'moderate', 'mild', 'safe'].map((level) => {
-                                            const meta = getFloodLevelMeta(level);
-                                            return (
-                                                <div key={level} className="inline-flex items-center gap-1.5">
-                                                    <span className="h-3 w-3 rounded" style={{ backgroundColor: meta.color }} aria-hidden="true"></span>
-                                                    <span>{meta.label}</span>
-                                                </div>
-                                            );
-                                        })}
+                                        {FLOOD_LEVEL_LEGEND.map((level) => (
+                                            <div key={level.value} className="inline-flex items-center gap-1.5">
+                                                <span className="h-3 w-3 rounded" style={{ backgroundColor: level.color }} aria-hidden="true"></span>
+                                                <span>{level.description}</span>
+                                            </div>
+                                        ))}
                                     </div>
+                                    <p className="mt-1 text-xs text-gray-500">พื้นที่ที่ไม่มีค่าความลึกใช้ระดับประเมินเดิม โดยระบุไว้ใน popup</p>
                                 </div>
                             )}
                             {showDiseaseReportLayer && (
@@ -809,14 +848,6 @@ export default function PublicIncidentMap({
                                 zIndex={layer.zIndex ?? 300}
                             />
                         ))}
-                        {showHillshadeLayer && hillshadeLayer && (
-                            <TileLayer
-                                attribution={hillshadeLayer.attribution}
-                                url={hillshadeLayer.url}
-                                opacity={hillshadeLayer.opacity}
-                                zIndex={250}
-                            />
-                        )}
 
                         {/* District Layer */}
                         {showDistrictLayer && districtPolygons.map((item, idx) => {
@@ -876,7 +907,7 @@ export default function PublicIncidentMap({
                         {/* Flood Area Layer */}
                         {showFloodAreaLayer && floodAreas.map((area) => {
                             if (!area.geometry) return null;
-                            const meta = getFloodLevelMeta(area.flood_level);
+                            const meta = floodAreaMapMeta(area);
                             return (
                                 <GeoJSON
                                     key={`flood-area-${area.id || area.vid}`}
@@ -885,14 +916,14 @@ export default function PublicIncidentMap({
                                         color: meta.color,
                                         weight: 2,
                                         fillColor: meta.color,
-                                        fillOpacity: meta.fillOpacity
+                                        fillOpacity: meta.source === 'status' ? 0.18 : meta.source === 'unknown' ? 0.08 : 0.48
                                     }}
                                     onEachFeature={(feature, layer) => {
                                         layer.bindPopup(`
                                             <div style="font-family: var(--font-kanit); min-width: 180px">
                                                 <strong>พื้นที่อุทกภัยน้ำท่วม</strong>
                                                 <p style="margin: 4px 0 0">อ.${area.district || '-'} ต.${area.tambon || '-'} ${area.villname || ''}</p>
-                                                <p style="margin: 4px 0 0"><strong>ระดับ:</strong> ${meta.label}</p>
+                                                <p style="margin: 4px 0 0"><strong>ระดับ:</strong> ${meta.description || meta.label || 'ไม่มีข้อมูลระดับน้ำ'}</p>
                                                 <p style="margin: 4px 0 0"><strong>วันที่:</strong> ${area.recorded_day ? new Date(area.recorded_day).toLocaleDateString('th-TH') : '-'}</p>
                                                 ${area.water_level > 0 ? `<p style="margin: 4px 0 0"><strong>ระดับน้ำ:</strong> ${area.water_level} ม.</p>` : ''}
                                                 ${area.affected_population > 0 ? `<p style="margin: 4px 0 0"><strong>ผู้ได้รับผลกระทบ:</strong> ${Number(area.affected_population).toLocaleString('th-TH')} คน</p>` : ''}
@@ -930,7 +961,7 @@ export default function PublicIncidentMap({
                             const meta = getDiseaseSeverityMeta(severity);
                             return (
                                 <Marker key={`disease-report-${report.id}`} position={[lat, lon]} icon={createDiseaseReportIcon(report)}>
-                                    <Popup maxWidth={260}>
+                                    <Popup maxWidth={260} autoPanPaddingTopLeft={popupPanPadding} autoPanPaddingBottomRight={[72, 90]}>
                                         <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
                                             <h4 className="font-bold text-gray-800">{report.disease_name || 'รายงานโรคระบาด'}</h4>
                                             <p className="mt-1 text-sm text-gray-600">
@@ -949,14 +980,30 @@ export default function PublicIncidentMap({
                             );
                         })}
 
+                        {/* ความสูงพื้นที่ (ระบายสีตามช่วงความสูง + กล่องบอกความสูง ณ จุดที่ชี้) */}
+                        {activeLayers.elevation ? <ElevationLayer /> : null}
+
+                        {/* ฝนวัดจริง (หยดน้ำ) และระดับน้ำ–ตลิ่ง (สี่เหลี่ยม) จาก ThaiWater */}
+                        <Pane name="rain-stations" style={{ zIndex: 450 }}>
+                            {showRainStations && rainStations.length > 0 ? <RainStationLayer stations={rainStations} /> : null}
+                        </Pane>
+                        {showWaterStations && waterStations.length > 0 ? <WaterStationLayer stations={waterStations} /> : null}
+
+                        {/* รายงานระดับน้ำจากประชาชน: วงกลมสีตามระดับน้ำ จางลงตามเวลา (pane แยกเหนือพื้นที่น้ำท่วม/ขอบเขต) */}
+                        <Pane name="water-reports" style={{ zIndex: 460 }}>
+                            {filteredIncidents.filter(isWaterReport).map((incident) => (
+                                <WaterReportMarker key={`wr-${incident.id}`} incident={incident} panPadding={popupPanPadding} />
+                            ))}
+                        </Pane>
+
                         {/* Incident Markers */}
-                        {filteredIncidents.map((incident) => (
+                        {filteredIncidents.filter((incident) => !isWaterReport(incident)).map((incident) => (
                             <Marker
                                 key={incident.id}
                                 position={[parseFloat(incident.latitude), parseFloat(incident.longitude)]}
                                 icon={getMarkerIcon(incident)}
                             >
-                                <Popup maxWidth={260}>
+                                <Popup maxWidth={260} autoPanPaddingTopLeft={popupPanPadding} autoPanPaddingBottomRight={[72, 90]}>
                                     <CitizenPointPopup incident={incident} />
                                 </Popup>
                             </Marker>
@@ -969,32 +1016,34 @@ export default function PublicIncidentMap({
                             if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
                             return (
                                 <Marker key={`shelter-${shelter.id}`} position={[lat, lon]} icon={createShelterIcon()}>
-                                    <Popup maxWidth={260}>
-                                        <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
-                                            <h4 className="font-bold text-gray-800">{shelter.sheltername}</h4>
-                                            <p className="mt-1 text-sm text-gray-600">ต.{shelter.tambon || '-'} อ.{shelter.district_name || '-'}</p>
-                                            <p className="mt-1 text-sm"><strong>ความจุ:</strong> {Number(shelter.shelter_capacity || 0).toLocaleString('th-TH')} คน</p>
-                                            {shelter.contact_phone && <p className="text-sm"><strong>โทร:</strong> {shelter.contact_phone}</p>}
-                                        </div>
+                                    <Popup maxWidth={270} minWidth={240} autoPanPaddingTopLeft={popupPanPadding} autoPanPaddingBottomRight={[72, 90]}>
+                                        <ShelterPopup shelter={shelter} />
                                     </Popup>
                                 </Marker>
                             );
                         })}
 
-                        {/* Hospital Markers */}
+                        {/* Health Facility Markers */}
                         {showHospitalLayer && healthFacilities.map((facility) => {
                             const lat = Number.parseFloat(facility.lat);
                             const lon = Number.parseFloat(facility.lon);
                             if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                            const isHospital = facilityTypeInfo(facility.typecode).level === 'hospital';
                             return (
-                                <Marker key={`hospital-${facility.id}`} position={[lat, lon]} icon={createHospitalIcon()}>
-                                    <Popup maxWidth={240}>
-                                        <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
-                                            <h4 className="font-bold text-gray-800">{facility.name}</h4>
-                                            <p className="mt-1 text-sm text-gray-600">อ.{facility.district || facility.district_name || '-'}</p>
-                                            <p className="mt-1 text-sm"><strong>ประเภท:</strong> {facility.typecode || 'หน่วยบริการสุขภาพ'}</p>
-                                            {facility.risk_level && <p className="text-sm"><strong>ระดับ:</strong> {facility.risk_level}</p>}
-                                        </div>
+                                <Marker
+                                    key={`hospital-${facility.id}-${facility.service_status || ''}-${facility.flood_status || ''}`}
+                                    position={[lat, lon]}
+                                    icon={createHospitalIcon(facility)}
+                                    zIndexOffset={isHospital ? 400 : 0}
+                                >
+                                    {!isHospital && <Tooltip direction="top">{facility.name}</Tooltip>}
+                                    <Popup maxWidth={280} autoPanPaddingTopLeft={popupPanPadding} autoPanPaddingBottomRight={[72, 90]}>
+                                        <HealthFacilityPopup
+                                            facility={facility}
+                                            floodAreas={showFloodAreaLayer ? floodAreas : []}
+                                            waterReports={filteredIncidents.filter(isWaterReport)}
+                                            waterStations={showWaterStations ? waterStations : []}
+                                        />
                                     </Popup>
                                 </Marker>
                             );

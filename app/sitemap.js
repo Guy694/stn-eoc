@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/public/help/faq",
   "/public/report-incident",
   "/public/report-problem",
+  "/public/report-water",
   "/privacy-policy"
 ];
 

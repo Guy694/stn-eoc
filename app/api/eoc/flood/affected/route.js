@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
+import { modulePermissions, requireModuleEdit } from '@/lib/eocModuleAccess';
 import { publicInternalError } from '@/lib/apiResponse';
 
 const IMPACT_FIELDS = [
@@ -256,6 +257,7 @@ export async function GET(request) {
 
         return NextResponse.json({
             success: true,
+            permissions: await modulePermissions(auth.user, sessionId, 'affected'),
             data: Array.isArray(reports) ? reports : [],
             districts: Array.isArray(districts) ? districts.map(d => d.district_name) : [],
             summary: {
@@ -287,7 +289,8 @@ export async function GET(request) {
 // POST - บันทึกข้อมูลผู้ได้รับผลกระทบ
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // บันทึกได้เฉพาะทีมเจ้าของเมนู (SAT) ในเหตุการณ์นั้น — ตรวจด้านล่างด้วย requireModuleEdit
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
@@ -308,6 +311,9 @@ export async function POST(request) {
                 { status: 400 }
             );
         }
+
+        const gate = await requireModuleEdit(auth.user, session_id, 'affected');
+        if (gate.response) return gate.response;
 
         // ตรวจสอบจำนวนไม่เป็นลบ
         const impact = buildImpactValues(body);
@@ -390,7 +396,8 @@ export async function POST(request) {
 // PUT - แก้ไขข้อมูลผู้ได้รับผลกระทบ
 export async function PUT(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // บันทึกได้เฉพาะทีมเจ้าของเมนู (SAT) ในเหตุการณ์นั้น — ตรวจด้านล่างด้วย requireModuleEdit
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const pool = await getConnection();
@@ -419,6 +426,13 @@ export async function PUT(request) {
                 { status: 400 }
             );
         }
+        // แก้ได้เฉพาะแถวของเหตุการณ์ที่ระบุ และผู้แก้ต้องเป็นทีมเจ้าของเมนู
+        const [existingRows] = await pool.query('SELECT session_id FROM affected_persons WHERE id = ?', [id]);
+        if (!existingRows.length || Number(existingRows[0].session_id) !== Number(session_id)) {
+            return NextResponse.json({ success: false, message: 'ไม่พบข้อมูลนี้ในเหตุการณ์ที่เลือก' }, { status: 404 });
+        }
+        const gate = await requireModuleEdit(auth.user, session_id, 'affected');
+        if (gate.response) return gate.response;
 
         const impact = buildImpactValues(body);
 

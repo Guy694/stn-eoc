@@ -2,6 +2,9 @@
 // 1) ภาพรวม  2) เหตุการณ์ที่เปิดอยู่ (แกนหลักของการกรอกข้อมูล)  3) งานรอดำเนินการ
 // 4) ข้อมูลกลาง (ใช้ทุกเหตุการณ์)  5) บริหารระบบ  6) บัญชีของฉัน
 // ไฟล์นี้ไม่ผูกกับ React/ไอคอน (ใช้ iconKey) เพื่อทดสอบได้ง่าย
+import { moduleEditAccess, resolveOwners } from "../../../lib/eocModulePermissions.js";
+import { createTeamWorkItems } from "./eoc-navigation.js";
+import { TEAM_CODES, normalizeTeamCode } from "../../features/eoc/registries/team.registry.js";
 
 export const EVENT_MODULES = {
   flood: {
@@ -74,6 +77,45 @@ export function buildEventSections({ eocStatus = {}, pathname = "" }) {
         collapsible: true,
         defaultExpanded: isActive || onPage,
         items: definition.items({ sessionId: status?.session_id || null })
+      };
+    })
+    .filter(Boolean);
+}
+
+/**
+ * เมนูเหตุการณ์สำหรับเจ้าหน้าที่ (ไม่ใช่แอดมิน): เหมือนของแอดมิน แต่
+ * - แสดงเฉพาะเหตุการณ์ที่เปิดอยู่ซึ่งผู้ใช้ได้รับมอบหมาย
+ * - เมนูของกลุ่มภารกิจอื่นติดป้าย readOnly (เปิดดูได้ บันทึกไม่ได้)
+ */
+export function buildOfficerEventSections({ eocStatus = {}, assignments = [], role = "staff", overrides = {} } = {}) {
+  return Object.entries(EVENT_MODULES)
+    .map(([type, definition]) => {
+      const status = eocStatus[type];
+      if (!status?.is_active) return null;
+      const mine = assignments.filter((item) => item?.eoc_type === type && (!status.session_id || Number(item.session_id ?? item.eoc_session_id) === Number(status.session_id)));
+      if (!mine.length && role !== "commander") return null;
+      // เมนูเหมือนแอดมินทุกข้อ (ลำดับ/ชื่อเดียวกัน) — เมนูที่กำหนดทีมเจ้าของแล้วติดป้ายดูอย่างเดียวสำหรับทีมอื่น
+      const items = definition.items({ sessionId: status.session_id || null })
+        .map((item) => ({ ...item, readOnly: !moduleEditAccess({ role, memberships: mine, moduleKey: item.key, owners: resolveOwners(type, item.key, overrides) }).canEdit }));
+      // งานของกลุ่มภารกิจที่ผู้ใช้สังกัด (รายงานประจำวัน + งานเฉพาะที่ยังไม่อยู่ในเมนูเหตุการณ์)
+      const myTeams = new Set(mine.map((item) => normalizeTeamCode(item.team_code)).filter(Boolean));
+      const shownPaths = new Set(items.map((item) => item.path));
+      const teamItems = TEAM_CODES
+        .filter((code) => myTeams.has(code))
+        .flatMap((code) => createTeamWorkItems(type, code))
+        .filter((item) => !shownPaths.has(item.path));
+      items.push(...teamItems);
+      if (!items.length) return null;
+      return {
+        section: `event-${type}`,
+        key: `event-${type}`,
+        group: "events",
+        title: eventTitle(type, status),
+        eocType: type,
+        eventState: "open",
+        collapsible: true,
+        defaultExpanded: true,
+        items
       };
     })
     .filter(Boolean);

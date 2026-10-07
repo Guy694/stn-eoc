@@ -3,14 +3,14 @@ import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
+import { modulePermissions, requireModuleEdit } from "@/lib/eocModuleAccess";
 import { handleArchiveDelete, recordChange } from "@/lib/recordArchive";
 import { VULNERABLE_TYPES, affectedOf, differsFromRegistry, findBaselineFor, summarizeVulnerableEvent, validateEventRecord } from "@/lib/vulnerableEvent";
 
 // กลุ่มเปราะบาง "ในเหตุการณ์ที่เปิด"
 // - จำนวนแต่ละประเภทดึงจากทะเบียนกลาง (vulnerable_group_baselines) ตอนเพิ่มหมู่บ้าน / กดอัปเดตจากทะเบียน
 // - เจ้าหน้าที่แก้เฉพาะสถานะ: ดูแลแล้ว เคลื่อนย้ายแล้ว ย้ายไปที่ ความต้องการ หมายเหตุ
-const EDIT_ROLES = ["admin", "commander", "MCATT", "SAT", "SeRHT"];
-const CARE_ROLES = OFFICER_ROLES;
+// บันทึกได้เฉพาะกลุ่มภารกิจเจ้าของเมนู (CASE MGMT / MCATT) และแอดมิน/ผู้บัญชาการ — ตรวจด้วย requireModuleEdit
 const SUPPORTED = ["flood", "disease", "festival-accidents"];
 const TYPE_KEYS = VULNERABLE_TYPES.map((type) => type.key);
 
@@ -69,11 +69,15 @@ export async function GET(request) {
       summary: summarizeVulnerableEvent(records, baseline),
       data: records,
       baseline,
-      permissions: {
-        can_edit: active && EDIT_ROLES.includes(auth.user.role),
-        can_update_care: active && ready && CARE_ROLES.includes(auth.user.role),
-        can_delete: auth.user.role === "admin"
-      }
+      permissions: await (async () => {
+        const perms = await modulePermissions(auth.user, session.id, "vulnerable");
+        return {
+          can_edit: active && perms.can_edit,
+          can_update_care: active && ready && perms.can_edit,
+          can_delete: auth.user.role === "admin",
+          read_only_message: perms.can_edit ? null : perms.read_only_message
+        };
+      })()
     });
   } catch (error) {
     console.error("Vulnerable event GET error:", error);
@@ -97,11 +101,13 @@ async function loadRegistry() {
 //  sync = อัปเดตจำนวนของทุกหมู่บ้านในเหตุการณ์ให้ตรงกับทะเบียนล่าสุด
 export async function POST(request) {
   try {
-    const auth = await requireAuth(request, EDIT_ROLES);
+    const auth = await requireAuth(request, OFFICER_ROLES);
     if (!auth.success) return auth.response;
     const body = await request.json().catch(() => ({}));
     const sessionId = Number(body.session_id);
     if (!sessionId) return bad("กรุณาระบุเหตุการณ์");
+    const gate = await requireModuleEdit(auth.user, sessionId, "vulnerable");
+    if (gate.response) return gate.response;
     const blocked = await activeSessionOr409(sessionId);
     if (blocked) return blocked;
     const registry = await loadRegistry();
@@ -160,7 +166,7 @@ export async function POST(request) {
 // แก้ไขสถานะของหมู่บ้าน: ดูแลแล้ว เคลื่อนย้ายแล้ว ย้ายไปที่ ความต้องการ หมายเหตุ (จำนวนตามประเภทมาจากทะเบียน แก้ที่นี่ไม่ได้)
 export async function PATCH(request) {
   try {
-    const auth = await requireAuth(request, CARE_ROLES);
+    const auth = await requireAuth(request, OFFICER_ROLES);
     if (!auth.success) return auth.response;
     if (!(await hasCareColumns())) return bad("ยังไม่ได้อัปเดตฐานข้อมูล (npm run db:migrate)", 409);
     const body = await request.json().catch(() => ({}));
@@ -168,6 +174,8 @@ export async function PATCH(request) {
     if (!rows.length) return bad("ไม่พบข้อมูล", 404);
     const blocked = await activeSessionOr409(rows[0].session_id);
     if (blocked) return blocked;
+    const gate = await requireModuleEdit(auth.user, rows[0].session_id, "vulnerable");
+    if (gate.response) return gate.response;
     const next = { ...rows[0], cared_count: int(body.cared_count), moved_count: int(body.moved_count), moved_to: String(body.moved_to || "").trim().slice(0, 255) || null, needs: String(body.needs || "").trim() || null, notes: String(body.notes || "").trim() || null };
     const invalid = validateEventRecord(next);
     if (invalid) return bad(invalid);

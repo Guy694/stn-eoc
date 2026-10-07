@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import Footer from "@/components/Footer";
+import { Camera, CircleCheck, LocateFixed, MapPin, Phone, ShieldCheck, Siren, X } from "lucide-react";
+import PublicLayout from "@/components/layouts/PublicLayout";
 import { showWarning } from "@/lib/sweetAlert";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { trackPublicUsage } from "@/lib/publicUsage";
@@ -48,6 +49,16 @@ function LocationMarker({ position, setPosition }) {
 function getLocalDateTimeValue() {
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
+function StepTitle({ number, children, hint }) {
+    return (
+        <h2 className="mb-4 flex w-full flex-wrap items-baseline gap-x-2 px-1">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full bg-[#0b4c86] text-sm font-black text-white" aria-hidden="true">{number}</span>
+            <span className="text-lg font-black text-slate-900">{children}</span>
+            {hint ? <span className="text-sm text-slate-500">{hint}</span> : null}
+        </h2>
+    );
 }
 
 export default function ReportIncidentPage() {
@@ -310,9 +321,10 @@ export default function ReportIncidentPage() {
     // ฟอร์มนี้รับคำขอเฉพาะตอนที่ EOC เปิดอยู่ (เซิร์ฟเวอร์ตรวจซ้ำอีกชั้น)
     if (!helpOpen) {
         return (
-            <div className="flex min-h-screen flex-col bg-slate-50">
-                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10">
-                    <section className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm" role="status">
+            <PublicLayout>
+                <div className="min-h-full bg-[#f4f8fc]">
+                <div className="mx-auto flex w-full max-w-2xl flex-col justify-center px-4 py-10">
+                    <section className="rounded-2xl border border-[#c9dcee] bg-white p-6 text-center" role="status">
                         <h1 className="text-2xl font-black text-slate-900">ขณะนี้ยังไม่เปิดรับคำขอความช่วยเหลือ</h1>
                         <p className="mt-3 text-slate-700">
                             เว็บไซต์รับคำขอความช่วยเหลือเฉพาะเมื่อศูนย์ปฏิบัติการ (EOC) เปิดรับมือเหตุการณ์ฉุกเฉิน ขณะนี้ยังไม่มีเหตุการณ์ที่เปิดอยู่
@@ -326,49 +338,50 @@ export default function ReportIncidentPage() {
                             <Link href="/" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-100">กลับหน้าหลัก</Link>
                         </div>
                     </section>
-                </main>
-                <Footer />
-            </div>
+                </div>
+                </div>
+            </PublicLayout>
         );
     }
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
-            <header className="border-b border-red-100 bg-white">
-                <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4">
+        <PublicLayout>
+        <div className="min-h-full bg-[#f4f8fc]">
+            <header>
+                <div className="mx-auto flex max-w-2xl flex-wrap items-start justify-between gap-3 px-4 pb-1 pt-5 md:pt-8">
                     <div>
-                        <p className="text-sm font-bold text-red-700">ขอความช่วยเหลือจาก EOC</p>
-                        <h1 className="text-2xl font-black text-slate-900 md:text-3xl">แจ้งขอความช่วยเหลือ</h1>
-                        <p className="mt-1 text-sm text-slate-600">
-                            ไม่มีใครต้องการความช่วยเหลือ แค่อยากแจ้งน้ำท่วม ถนนขาด ไฟดับ?{" "}
-                            <Link href="/public/report-problem" className="font-bold text-[#0b4c86] underline">แจ้งจุดปัญหา</Link>
-                        </p>
+                        <h1 className="text-2xl font-black text-[#083865] md:text-3xl">ขอความช่วยเหลือ</h1>
+                        <p className="mt-1 text-slate-700">บอกความต้องการและตำแหน่ง เพื่อให้เจ้าหน้าที่ติดต่อกลับและประสานความช่วยเหลือ</p>
                     </div>
-                    <Link href="/" className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100">
-                        กลับหน้าหลัก
-                    </Link>
+                    <a href="tel:1669" className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-red-600 px-3 py-2.5 text-sm font-bold text-white hover:bg-red-700"><Phone className="h-4 w-4" aria-hidden="true" /> โทรกู้ภัย</a>
                 </div>
             </header>
 
-            <main className="mx-auto max-w-6xl flex-1 px-4 py-5 md:py-8">
+            <div className="mx-auto w-full max-w-2xl px-4 pb-8 pt-3">
+                <aside className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+                    <Siren className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 flex-1 font-semibold">หากมีผู้บาดเจ็บหรืออันตรายเร่งด่วน โทร 1669 ทันที</span>
+                    <a href="tel:1669" className="rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-700">โทร 1669</a>
+                </aside>
+                <p className="mb-5 text-sm text-slate-600">ต้องการแจ้งน้ำท่วม ถนนขาด หรือไฟดับโดยไม่มีผู้ขอความช่วยเหลือ? <Link href="/public/report-problem" className="font-bold text-[#0b4c86] underline">แจ้งจุดปัญหา</Link></p>
                 {submitSuccess && (
-                    <section className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-sm">
-                        <h2 className="text-lg font-black">ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว</h2>
+                    <section className="mb-5 rounded-2xl border border-emerald-200 bg-white p-4 text-emerald-800" role="status">
+                        <h2 className="flex items-center gap-2 text-lg font-black"><CircleCheck className="h-5 w-5" aria-hidden="true" /> ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว</h2>
                         <p className="mt-1 text-sm">เจ้าหน้าที่ได้รับข้อมูลและจะตรวจสอบเพื่อประสานความช่วยเหลือต่อไป</p>
                     </section>
                 )}
 
                 {submitError && (
-                    <section className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
+                    <section className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800" role="alert">
                         <h2 className="text-lg font-black">ไม่สามารถส่งคำขอได้</h2>
                         <p className="mt-1 text-sm">{submitError}</p>
                     </section>
                 )}
 
-                <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
-                    <section className="space-y-5">
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-                            <h2 className="mb-4 text-xl font-black text-slate-900">ข้อมูลผู้ขอความช่วยเหลือ</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <section className="space-y-4">
+                        <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
+                            <StepTitle number={1} hint="สำหรับให้เจ้าหน้าที่ติดต่อกลับ">ข้อมูลผู้ขอความช่วยเหลือ</StepTitle>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <TextField label="ชื่อ" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
                                 <TextField label="นามสกุล" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
@@ -380,14 +393,14 @@ export default function ReportIncidentPage() {
                                         name="occurredAt"
                                         value={formData.occurredAt}
                                         onChange={handleInputChange}
-                                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-red-400"
+                                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-[#0b4c86] focus:ring-2 focus:ring-[#c9dcee]"
                                     />
                                 </label>
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-                            <h2 className="mb-4 text-xl font-black text-slate-900">ประเภทและเหตุผล</h2>
+                        <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
+                            <StepTitle number={2}>ประเภทและเหตุผล</StepTitle>
                             <div className="grid gap-3 md:grid-cols-2">
                                 {HELP_CATEGORIES.map((category) => (
                                     <button
@@ -396,8 +409,8 @@ export default function ReportIncidentPage() {
                                         onClick={() => setFormData((current) => ({ ...current, helpCategory: category.value }))}
                                         className={`rounded-xl border p-4 text-left transition ${
                                             formData.helpCategory === category.value
-                                                ? "border-red-500 bg-red-50 text-red-900 shadow-sm"
-                                                : "border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:bg-red-50"
+                                                ? "border-[#0b4c86] bg-[#edf5fc] text-[#083865] shadow-sm"
+                                                : "border-slate-200 bg-white text-slate-700 hover:border-[#c9dcee] hover:bg-[#f7fbff]"
                                         }`}
                                     >
                                         <div className="font-black">{category.label}</div>
@@ -414,25 +427,25 @@ export default function ReportIncidentPage() {
                                     rows={5}
                                     required
                                     placeholder="เช่น ผู้ป่วยติดเตียงต้องการยา, มีผู้สูงอายุติดอยู่ในบ้าน, ต้องการเวชภัณฑ์เร่งด่วน"
-                                    className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-red-400"
+                                    className="w-full resize-none rounded-xl border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-[#0b4c86] focus:ring-2 focus:ring-[#c9dcee]"
                                 />
                             </label>
                         </div>
 
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-                            <h2 className="mb-4 text-xl font-black text-slate-900">พื้นที่โดยประมาณ</h2>
+                        <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
+                            <StepTitle number={3} hint="ช่วยระบุพื้นที่ให้เจ้าหน้าที่">พื้นที่โดยประมาณ</StepTitle>
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="relative md:col-span-1" ref={villageInputRef}>
                                     <TextField label="หมู่บ้าน/ชุมชน" name="village" value={formData.village} onChange={handleInputChange} placeholder="พิมพ์ชื่อหมู่บ้าน" />
                                     {searchingVillage && <span className="absolute right-3 top-10 text-sm text-slate-400">ค้นหา...</span>}
                                     {showVillageDropdown && villages.length > 0 && (
-                                        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-red-200 bg-white shadow-xl">
+                                        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-[#c9dcee] bg-white shadow-xl">
                                             {villages.map((village, index) => (
                                                 <button
                                                     key={`${village.name}-${index}`}
                                                     type="button"
                                                     onClick={() => selectVillage(village)}
-                                                    className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-red-50"
+                                                    className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-[#edf5fc]"
                                                 >
                                                     <div className="font-bold text-slate-800">{village.name}</div>
                                                     <div className="text-slate-500">ต.{village.subDistrict} อ.{village.district}</div>
@@ -446,15 +459,16 @@ export default function ReportIncidentPage() {
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-                            <h2 className="mb-4 text-xl font-black text-slate-900">รูปประกอบ</h2>
-                            <label className="block">
-                                <span className="mb-2 block text-sm font-bold text-slate-700">แนบรูปภาพสถานการณ์ (ถ้ามี)</span>
+                        <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
+                            <StepTitle number={4} hint="ไม่บังคับ">รูปประกอบ</StepTitle>
+                            <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-[#c9dcee] px-4 py-3 text-slate-700 hover:bg-[#edf5fc]">
+                                <Camera className="h-6 w-6 shrink-0 text-[#0b4c86]" aria-hidden="true" />
+                                <span className="text-sm"><span className="font-bold">แนบรูปภาพสถานการณ์</span><span className="block text-slate-500">รูปช่วยให้เจ้าหน้าที่ประเมินสถานการณ์ได้เร็วขึ้น</span></span>
                                 <input
                                     type="file"
                                     accept="image/jpeg,image/png,image/webp"
                                     onChange={handlePhotoChange}
-                                    className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-red-50 file:px-3 file:py-2 file:font-bold file:text-red-700 hover:file:bg-red-100"
+                                    className="sr-only"
                                 />
                             </label>
                             {photoPreviewUrl && (
@@ -472,9 +486,9 @@ export default function ReportIncidentPage() {
                                         <button
                                             type="button"
                                             onClick={clearPhoto}
-                                            className="shrink-0 rounded-lg bg-slate-200 px-3 py-1.5 font-bold text-slate-700 hover:bg-slate-300"
+                                            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 font-bold text-slate-700 hover:bg-slate-50"
                                         >
-                                            ลบรูป
+                                            <X className="h-4 w-4" aria-hidden="true" /> เอารูปออก
                                         </button>
                                     </div>
                                 </div>
@@ -482,26 +496,26 @@ export default function ReportIncidentPage() {
                         </div>
                     </section>
 
-                    <aside className="space-y-5">
-                        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
-                            <div className="mb-3 flex items-start justify-between gap-3">
+                    <aside className="space-y-4">
+                        <section className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
+                            <StepTitle number={5} hint="แตะแผนที่หรือใช้ GPS">ตำแหน่งที่ต้องการความช่วยเหลือ</StepTitle>
+                            <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <h2 className="text-xl font-black text-slate-900">ปักหมุดจุดขอความช่วยเหลือ</h2>
-                                    <p className="mt-1 text-sm text-slate-600">แตะบนแผนที่เพื่อระบุตำแหน่ง หรือใช้ตำแหน่งปัจจุบัน</p>
+                                    <p className="text-sm text-slate-600">ปักหมุดให้ตรงจุดที่เจ้าหน้าที่ควรไปพบ</p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={requestGpsLocation}
-                                    className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-700"
+                                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-[#0b4c86] px-3 py-2 text-sm font-bold text-white hover:bg-[#083865]"
                                 >
-                                    ใช้ GPS
+                                    <LocateFixed className="h-4 w-4" aria-hidden="true" /> ใช้ตำแหน่งปัจจุบัน
                                 </button>
                             </div>
 
                             {gpsStatus === "requesting" && <p className="mb-2 text-sm font-semibold text-slate-500">กำลังขอตำแหน่ง...</p>}
                             {gpsError && <p className="mb-2 rounded-lg bg-amber-50 p-2 text-sm font-semibold text-amber-700">{gpsError}</p>}
 
-                            <div className="h-[380px] overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                            <div className="h-64 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 md:h-72">
                                 {mounted && (
                                     <MapContainer center={markerPosition || [6.6238, 100.0750]} zoom={11} style={{ height: "100%", width: "100%" }}>
                                         <TileLayer
@@ -514,13 +528,13 @@ export default function ReportIncidentPage() {
                             </div>
 
                             {markerPosition && (
-                                <p className="mt-3 rounded-lg bg-red-50 p-2 text-xs font-bold text-red-800">
-                                    พิกัด: {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
+                                <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-[#edf5fc] px-3 py-2 text-sm font-semibold text-[#083865]">
+                                    <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" /> ปักหมุดแล้ว · {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
                                 </p>
                             )}
                         </section>
 
-                        <section className="rounded-xl border border-red-100 bg-red-50 p-4 text-red-900">
+                        <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900">
                             <h3 className="font-black">เบอร์ฉุกเฉิน</h3>
                             <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                                 <EmergencyCall number="1669" label="แพทย์ฉุกเฉิน" />
@@ -530,33 +544,34 @@ export default function ReportIncidentPage() {
                             </div>
                         </section>
 
-                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm">
+                        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#c9dcee] bg-white p-4 text-sm leading-6 text-slate-700">
                             <input
                                 type="checkbox"
                                 checked={consentGiven}
                                 onChange={(event) => setConsentGiven(event.target.checked)}
-                                className="mt-1 h-5 w-5 shrink-0 accent-red-600"
+                                className="mt-1 h-5 w-5 shrink-0 accent-[#0b4c86]"
                                 required
                             />
                             <span>
+                                <span className="mb-1 flex items-center gap-1.5 font-bold text-slate-900"><ShieldCheck className="h-4 w-4 text-[#0b4c86]" aria-hidden="true" /> การใช้ข้อมูลส่วนบุคคล</span>
                                 ยินยอมให้เจ้าหน้าที่ใช้ชื่อ เบอร์โทรศัพท์ ตำแหน่ง และรูปภาพที่แจ้ง เพื่อติดต่อกลับและประสานความช่วยเหลือเท่านั้น
-                                (<Link href="/privacy-policy" target="_blank" className="font-bold text-red-700 underline">อ่านนโยบายความเป็นส่วนตัว</Link>)
+                                (<Link href="/privacy-policy" target="_blank" className="font-bold text-[#0b4c86] underline">อ่านนโยบายความเป็นส่วนตัว</Link>)
                             </span>
                         </label>
 
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full rounded-xl bg-red-600 px-5 py-4 text-lg font-black text-white shadow-lg transition hover:bg-red-700 disabled:bg-red-200 disabled:text-red-900"
+                            className="w-full rounded-xl bg-red-600 px-5 py-4 text-lg font-black text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60"
                         >
                             {isSubmitting ? "กำลังส่งคำขอ..." : "ส่งคำขอความช่วยเหลือ"}
                         </button>
                     </aside>
                 </form>
-            </main>
+            </div>
 
-            <Footer />
         </div>
+        </PublicLayout>
     );
 }
 
@@ -573,7 +588,7 @@ function TextField({ label, name, value, onChange, type = "text", required = fal
                 onChange={onChange}
                 required={required}
                 placeholder={placeholder}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-red-400"
+                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-[#0b4c86] focus:ring-2 focus:ring-[#c9dcee]"
             />
         </label>
     );

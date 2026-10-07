@@ -87,11 +87,18 @@ export default function PublishPanel({ report, canEdit, onChanged }) {
 
       {loadError ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{loadError}</p> : null}
 
-      {Number(report.normal_reports) > 0 ? (
+      {Number(report.normal_reports) > 0 || Number(report.wrong_reports) > 0 ? (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          <span className="min-w-0 flex-1">ประชาชนกด “ตอนนี้ปกติแล้ว” {report.normal_reports} ครั้ง (ล่าสุด {formatDateTime(report.normal_reported_at)}) — ตรวจแล้วถอดออก หรือยืนยันว่ายังมีปัญหา</span>
-          {canEdit ? <Button variant="secondary" className="min-h-8 px-3 text-xs" disabled={Boolean(busy)} onClick={() => run("clear_normal")}>ยังมีปัญหาอยู่</Button> : null}
+          <span className="min-w-0 flex-1">
+            {Number(report.normal_reports) > 0 ? <>ประชาชนกด “น้ำลดแล้ว/ปกติแล้ว” {report.normal_reports} ครั้ง (ล่าสุด {formatDateTime(report.normal_reported_at)}) </> : null}
+            {Number(report.wrong_reports) > 0 ? <>{Number(report.normal_reports) > 0 ? "· " : ""}แจ้งว่าข้อมูลไม่ถูกต้อง {report.wrong_reports} ครั้ง (ล่าสุด {formatDateTime(report.wrong_reported_at)}) </> : null}
+            — ตรวจแล้วถอดออก หรือยืนยันว่ายังถูกต้อง
+          </span>
+          {canEdit ? <Button variant="secondary" className="min-h-8 px-3 text-xs" disabled={Boolean(busy)} onClick={() => run("clear_normal")}>ยังถูกต้อง/ยังมีปัญหา</Button> : null}
         </div>
+      ) : null}
+      {Number(report.still_reports) > 0 ? (
+        <p className="text-xs text-slate-600">ประชาชนยืนยันว่า “ยังท่วมอยู่” {report.still_reports} ครั้ง (ล่าสุด {formatDateTime(report.still_reported_at)})</p>
       ) : null}
 
       {!check.ok ? (

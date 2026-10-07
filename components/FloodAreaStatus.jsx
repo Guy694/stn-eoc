@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 import AppIcon from "@/components/icons/AppIcon";
+import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -286,15 +287,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     // ค้นหาข้อความ
 
 
-    const getFloodColor = (level) => {
-        const colors = {
-            'severe': '#DC2626',
-            'moderate': '#FBBF24',
-            'mild': '#34D399',
-            'safe': '#10B981'
-        };
-        return colors[level] || '#E5E7EB';
-    };
+    const getFloodColor = (level) => (LEGACY_FLOOD_LEVELS[level] || LEGACY_FLOOD_LEVELS.nodata).color;
 
     // สร้าง map ระหว่าง village id กับ flood level
     const villageFloodLevels = {};
@@ -460,16 +453,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             mild: 'bg-yellow-100 text-yellow-800 border-yellow-300',
             safe: 'bg-green-100 text-green-800 border-green-300'
         };
-        const labels = {
-            severe: 'อุทกภัยน้ำท่วมสูง',
-            moderate: 'อุทกภัยน้ำท่วมปานกลาง',
-            mild: 'อุทกภัยน้ำท่วมต่ำ',
-            safe: 'ปกติ'
-        };
-
         return (
             <span className={`px-2 py-1 rounded text-xs font-medium border ${badges[level] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
-                {labels[level] || level}
+                {LEGACY_FLOOD_LEVELS[level]?.label || level}
             </span>
         );
     };
@@ -908,7 +894,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 pathOptions={{
                                                     fillColor: getFloodColor('severe'),
                                                     fillOpacity: 0.7,
-                                                    color: '#DC2626',
+                                                    color: getFloodColor('severe'),
                                                     weight: 1
                                                 }}
                                             >
@@ -944,7 +930,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 pathOptions={{
                                                     fillColor: getFloodColor('moderate'),
                                                     fillOpacity: 0.7,
-                                                    color: '#FBBF24',
+                                                    color: getFloodColor('moderate'),
                                                     weight: 1
                                                 }}
                                             >
@@ -980,7 +966,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 pathOptions={{
                                                     fillColor: getFloodColor('mild'),
                                                     fillOpacity: 0.6,
-                                                    color: '#34D399',
+                                                    color: getFloodColor('mild'),
                                                     weight: 1
                                                 }}
                                             >
@@ -1016,7 +1002,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                 pathOptions={{
                                                     fillColor: getFloodColor('safe'),
                                                     fillOpacity: 0.3,
-                                                    color: '#10B981',
+                                                    color: getFloodColor('safe'),
                                                     weight: 1
                                                 }}
                                             >
@@ -1165,7 +1151,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         pathOptions={{
                                                             fillColor: getFloodColor('severe'),
                                                             fillOpacity: 0.7,
-                                                            color: '#DC2626',
+                                                            color: getFloodColor('severe'),
                                                             weight: 2
                                                         }}
                                                     >
@@ -1203,7 +1189,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         pathOptions={{
                                                             fillColor: getFloodColor('moderate'),
                                                             fillOpacity: 0.7,
-                                                            color: '#FBBF24',
+                                                            color: getFloodColor('moderate'),
                                                             weight: 2
                                                         }}
                                                     >
@@ -1241,7 +1227,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         pathOptions={{
                                                             fillColor: getFloodColor('mild'),
                                                             fillOpacity: 0.6,
-                                                            color: '#34D399',
+                                                            color: getFloodColor('mild'),
                                                             weight: 2
                                                         }}
                                                     >
@@ -1279,7 +1265,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                                         pathOptions={{
                                                             fillColor: getFloodColor('safe'),
                                                             fillOpacity: 0.3,
-                                                            color: '#10B981',
+                                                            color: getFloodColor('safe'),
                                                             weight: 2
                                                         }}
                                                     >
@@ -1340,10 +1326,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         <div className="mb-4 mt-4">
                             <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่อุทกภัยน้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
-                                <LegendItem color="#DC2626" label="ตำบลมีอุทกภัยน้ำท่วมสูง (50+ ซม.)" />
-                                <LegendItem color="#FBBF24" label="ตำบลมีอุทกภัยน้ำท่วมปานกลาง (20-50 ซม.)" />
-                                <LegendItem color="#34D399" label="ตำบลมีอุทกภัยน้ำท่วมต่ำ (0-20 ซม.)" />
-                                <LegendItem color="#10B981" label="ตำบลปกติ" />
+                                {Object.entries(LEGACY_FLOOD_LEVELS).filter(([key]) => key !== 'nodata').map(([key, meta]) => <LegendItem key={key} color={meta.color} label={meta.label} />)}
                                 <div className="flex items-center gap-2">
                                     <div
                                         className="w-6 h-6 rounded border-2 border-black"

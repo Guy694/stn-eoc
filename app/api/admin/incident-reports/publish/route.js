@@ -5,14 +5,14 @@ import { getPool } from "@/lib/db";
 import { recordChange } from "@/lib/recordArchive";
 import { canPublish, findDuplicateCandidates, normalizePublishInput } from "@/lib/incidentPublishing";
 import { createPublicPhotoCopy, parsePhotoPaths, removePublicPhotoCopy } from "@/lib/incidentPhotos";
-import { hasPublishingColumns } from "@/lib/incidentPublishingDb";
+import { hasConfirmationColumns, hasPublishingColumns } from "@/lib/incidentPublishingDb";
 
 const pool = getPool();
 const VIEWERS = ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"];
 const EDITORS = ["admin", "commander", "MCATT", "SAT"];
 
 const SUMMARY_COLUMNS = `id, first_name, last_name, phone, village, sub_district, district, latitude, longitude,
-    description, urgency, travel_status, report_type, problem_category, occurred_at, created_at, photo_path,
+    description, water_level, urgency, travel_status, report_type, problem_category, occurred_at, created_at, photo_path,
     status, publish_status, public_title, public_detail, public_photo_path, published_at, expires_at,
     merged_into_id, normal_reports, normal_reported_at`;
 
@@ -120,6 +120,7 @@ export async function POST(request) {
              published_at = NOW(), published_by = ?,
              expires_at = DATE_ADD(NOW(), INTERVAL ? HOUR),
              normal_reports = 0, normal_reported_at = NULL
+             ${(await hasConfirmationColumns(connection)) ? ", still_reports = 0, still_reported_at = NULL, wrong_reports = 0, wrong_reported_at = NULL" : ""}
          WHERE id = ?`,
         [auth.user.id, input.value.title, input.value.detail, publicPhotoPath, auth.user.id, String(input.value.expiresHours), reportId]
       );
@@ -176,9 +177,13 @@ export async function POST(request) {
     }
 
     if (body.action === "clear_normal") {
-      await connection.execute("UPDATE public_incident_reports SET normal_reports = 0, normal_reported_at = NULL WHERE id = ?", [reportId]);
-      await audit(`ตรวจแล้วว่าจุด #${reportId} ยังมีปัญหาอยู่ (ล้างแจ้งว่าปกติแล้ว)`, { normal_reports: 0 });
-      return NextResponse.json({ success: true, message: "บันทึกว่าจุดนี้ยังมีปัญหาอยู่" });
+      const withWrong = await hasConfirmationColumns(connection);
+      await connection.execute(
+        `UPDATE public_incident_reports SET normal_reports = 0, normal_reported_at = NULL${withWrong ? ", wrong_reports = 0, wrong_reported_at = NULL" : ""} WHERE id = ?`,
+        [reportId]
+      );
+      await audit(`ตรวจแล้วว่าจุด #${reportId} ยังถูกต้อง/ยังมีปัญหาอยู่ (ล้างแจ้งว่าปกติแล้วและแจ้งข้อมูลผิด)`, { normal_reports: 0, ...(withWrong ? { wrong_reports: 0 } : {}) });
+      return NextResponse.json({ success: true, message: "บันทึกว่าจุดนี้ยังถูกต้องและยังมีปัญหาอยู่" });
     }
 
     return NextResponse.json({ success: false, message: "คำสั่งไม่ถูกต้อง" }, { status: 400 });

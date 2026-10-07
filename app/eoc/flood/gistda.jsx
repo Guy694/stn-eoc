@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import AppIcon from "@/components/icons/AppIcon";
 import { renderToStaticMarkup } from 'react-dom/server';
+import { FLOOD_LEVEL_LEGEND, floodAreaMapMeta } from '@/lib/floodMapLevels';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -53,15 +54,9 @@ export default function GistdaFloodMapPage() {
         fetchFloodData();
     }, [fetchFloodData]);
 
-    const getFloodColor = (level) => {
-        const colors = {
-            severe: '#DC2626',
-            moderate: '#F59E0B',
-            mild: '#10B981',
-            safe: '#3B82F6'
-        };
-        return colors[level] || '#6B7280';
-    };
+    const getFloodMeta = (level, depthCm) => floodAreaMapMeta({ flood_level: level, water_level: Number(depthCm) / 100 });
+    const getFloodColor = (level, depthCm) => getFloodMeta(level, depthCm).color;
+    const getFloodTextColor = (level, depthCm) => ['dry', 'ankle_knee', 'knee_waist'].includes(getFloodMeta(level, depthCm).value) || ['mild', 'moderate'].includes(level) ? '#111827' : '#ffffff';
 
     const getFloodRadius = (depth) => {
         // คำนวณรัศมีวงกลมตามความลึก (meter)
@@ -234,8 +229,8 @@ export default function GistdaFloodMapPage() {
                                             <Polygon
                                                 positions={coordinates}
                                                 pathOptions={{
-                                                    color: getFloodColor(props.flood_level || 'mild'),
-                                                    fillColor: getFloodColor(props.flood_level || 'mild'),
+                                                    color: getFloodColor(props.flood_level, props.water_depth),
+                                                    fillColor: getFloodColor(props.flood_level, props.water_depth),
                                                     fillOpacity: 0.5,
                                                     weight: 2
                                                 }}
@@ -252,9 +247,9 @@ export default function GistdaFloodMapPage() {
                                                                 <strong>ระดับอุทกภัยน้ำท่วม:</strong>{' '}
                                                                 <span
                                                                     className="px-2 py-1 rounded text-white text-xs"
-                                                                    style={{ backgroundColor: getFloodColor(props.flood_level || 'mild') }}
+                                                                    style={{ backgroundColor: getFloodColor(props.flood_level, props.water_depth), color: getFloodTextColor(props.flood_level, props.water_depth) }}
                                                                 >
-                                                                    {props.flood_level || 'mild'}
+                                                                    {getFloodMeta(props.flood_level, props.water_depth).description}
                                                                 </span>
                                                             </p>
                                                             {props.water_depth && (
@@ -283,8 +278,8 @@ export default function GistdaFloodMapPage() {
                                                 center={centerPoint}
                                                 radius={getFloodRadius(props.water_depth || 50)}
                                                 pathOptions={{
-                                                    color: getFloodColor(props.flood_level || 'mild'),
-                                                    fillColor: getFloodColor(props.flood_level || 'mild'),
+                                                    color: getFloodColor(props.flood_level, props.water_depth),
+                                                    fillColor: getFloodColor(props.flood_level, props.water_depth),
                                                     fillOpacity: 0.5,
                                                     weight: 2
                                                 }}
@@ -301,9 +296,9 @@ export default function GistdaFloodMapPage() {
                                                                 <strong>ระดับอุทกภัยน้ำท่วม:</strong>{' '}
                                                                 <span
                                                                     className="px-2 py-1 rounded text-white text-xs"
-                                                                    style={{ backgroundColor: getFloodColor(props.flood_level || 'mild') }}
+                                                                    style={{ backgroundColor: getFloodColor(props.flood_level, props.water_depth), color: getFloodTextColor(props.flood_level, props.water_depth) }}
                                                                 >
-                                                                    {props.flood_level || 'mild'}
+                                                                    {getFloodMeta(props.flood_level, props.water_depth).description}
                                                                 </span>
                                                             </p>
                                                             {props.water_depth && (
@@ -334,21 +329,16 @@ export default function GistdaFloodMapPage() {
                     {/* Legend */}
                     {!loading && !error && (
                         <div className="absolute bottom-6 left-6 bg-white p-4 rounded-lg shadow-lg z-[1000]">
-                            <h4 className="font-bold mb-3 text-gray-800">ระดับความรุนแรง</h4>
+                            <h4 className="font-bold mb-3 text-gray-800">ระดับน้ำเทียบกับผู้ใหญ่ที่ยืนในน้ำ</h4>
                             <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#DC2626' }}></div>
-                                    <span className="text-sm">รุนแรงมาก</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#F59E0B' }}></div>
-                                    <span className="text-sm">ปานกลาง</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
-                                    <span className="text-sm">เล็กน้อย</span>
-                                </div>
+                                {FLOOD_LEVEL_LEGEND.map((level) => (
+                                    <div key={level.value} className="flex items-center gap-2">
+                                        <div className="h-4 w-4 rounded-full" style={{ backgroundColor: level.color }}></div>
+                                        <span className="text-sm">{level.description}</span>
+                                    </div>
+                                ))}
                             </div>
+                            <p className="mt-2 text-xs text-gray-500">จุดที่ไม่มีค่าความลึกแสดงระดับประเมินเดิมใน popup</p>
                         </div>
                     )}
                 </div>

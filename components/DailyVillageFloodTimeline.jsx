@@ -6,6 +6,7 @@ import { showError, showSuccess } from "@/lib/sweetAlert";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 import AppIcon from "@/components/icons/AppIcon";
+import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -187,27 +188,8 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         fetchTambonBoundaries();
     }, []);
 
-    const getFloodColor = (level) => {
-        const colors = {
-            'severe': '#DC2626',
-            'moderate': '#FBBF24',
-            'mild': '#34D399',
-            'safe': '#10B981',
-            'nodata': '#E5E7EB',
-        };
-        return colors[level] || colors.nodata;
-    };
-
-    const getFloodLabel = (level) => {
-        const labels = {
-            'severe': 'อุทกภัยน้ำท่วมสูง',
-            'moderate': 'อุทกภัยน้ำท่วมปานกลาง',
-            'mild': 'อุทกภัยน้ำท่วมต่ำ',
-            'safe': 'ปลอดภัย',
-            'nodata': 'ไม่มีข้อมูล',
-        };
-        return labels[level] || labels.nodata;
-    };
+    const getFloodColor = (level) => (LEGACY_FLOOD_LEVELS[level] || LEGACY_FLOOD_LEVELS.nodata).color;
+    const getFloodLabel = (level) => (LEGACY_FLOOD_LEVELS[level] || LEGACY_FLOOD_LEVELS.nodata).label;
 
     // สร้างไอคอนสำหรับสถานพยาบาล
     const createFacilityIcon = (typecode) => {
@@ -726,10 +708,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                         < div className="mb-4" >
                             <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่อุทกภัยน้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
-                                <LegendItem color="#DC2626" label="อุทกภัยน้ำท่วมสูง" />
-                                <LegendItem color="#FBBF24" label="อุทกภัยน้ำท่วมปานกลาง" />
-                                <LegendItem color="#34D399" label="อุทกภัยน้ำท่วมต่ำ" />
-                                <LegendItem color="#10B981" label="ปลอดภัย" />
+                                {Object.entries(LEGACY_FLOOD_LEVELS).filter(([key]) => key !== 'nodata').map(([key, meta]) => <LegendItem key={key} color={meta.color} label={meta.label} />)}
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded border-2 border-black" style={{ backgroundColor: 'transparent' }}></div>
                                     <span className="text-sm text-gray-700">ไม่มีข้อมูล</span>

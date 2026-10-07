@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, HeartHandshake, RefreshCw, Truck, Users } from "lucide-react";
-import {
+import { ReadOnlyNotice,
   AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, RowActions,
   Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
@@ -315,6 +315,7 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
     >
       {notice}
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}
+      <ReadOnlyNotice message={perms.read_only_message} />
       {data?.migration_needed ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">ฐานข้อมูลยังไม่มีช่องบันทึก &quot;ดูแลแล้ว / เคลื่อนย้ายแล้ว&quot; ให้ผู้ดูแลระบบรัน <code>npm run db:migrate</code> ก่อน</p>
       ) : null}
