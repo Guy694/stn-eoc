@@ -8,6 +8,17 @@ const EMERGENCY_NUMBERS = [
     ["199", "ดับเพลิง"]
 ];
 
+// หน่วยงาน/แหล่งที่ให้ข้อมูลผ่าน API แก่ระบบนี้ (แสดงเป็นเครดิต)
+const DATA_PROVIDERS = [
+    ["GISTDA (สทอภ.)", "ฝุ่น PM2.5 • พื้นที่น้ำท่วมซ้ำซาก", "https://www.gistda.or.th/"],
+    ["ThaiWater (สสน.)", "ระดับน้ำ • ปริมาณฝน • คำเตือน", "https://www.thaiwater.net/"],
+    ["กรมอุตุนิยมวิทยา", "พยากรณ์อากาศ • เรดาร์ฝน", "https://www.tmd.go.th/"],
+    ["Open-Meteo", "พยากรณ์ฝน/ลม/คลื่น • ปริมาณน้ำท่า", "https://open-meteo.com/"],
+    ["RainViewer", "ภาพเรดาร์ฝน", "https://www.rainviewer.com/"],
+    ["Windy.com", "แผนที่ลม/คลื่น", "https://www.windy.com/"]
+   
+];
+
 export default function Footer() {
     return (
         <footer className="border-t border-gray-700 bg-gray-800 text-gray-300">
@@ -47,7 +58,17 @@ export default function Footer() {
                         <ul className="space-y-1.5 text-xs sm:text-sm">
                             <li><a href="https://satun.moph.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white">สำนักงานสาธารณสุขจังหวัดสตูล</a></li>
                             <li><a href="https://www.moph.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white">กระทรวงสาธารณสุข</a></li>
-                            <li><a href="https://www.tmd.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white">กรมอุตุนิยมวิทยา</a></li>
+                        </ul>
+                        <h5 className="mb-1.5 mt-4 text-xs font-bold text-white sm:text-sm">ขอขอบคุณหน่วยงานที่ให้ข้อมูล</h5>
+                        <ul className="space-y-1.5 text-xs sm:text-sm">
+                            {DATA_PROVIDERS.map(([name, detail, url]) => (
+                                <li key={name}>
+                                    <a href={url} target="_blank" rel="noopener noreferrer" className="block hover:text-white">
+                                        <span className="font-semibold">{name}</span>
+                                        <span className="block text-[11px] text-gray-400">{detail}</span>
+                                    </a>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>

@@ -11,6 +11,7 @@ import {
   Download,
   Gauge,
   History,
+  Layers3,
   Hospital,
   Info,
   Landmark,
@@ -59,6 +60,7 @@ import {
 import { fetchLatestRadarLayer } from "@/components/public/disaster-map/windyLayers";
 import { GLASS, MenuToggle, SectionTitle, SidebarItem } from "@/components/public/map/WindyStyleControls";
 import ElevationLegend from "@/components/public/map/ElevationLegend";
+import { FLOOD_FREQ_CLASSES, REPEATED_MIN_FREQ } from "@/lib/floodFreq";
 import { SITUATION_LEVELS } from "@/lib/thaiWater";
 import { RAIN_CATEGORIES } from "@/lib/thaiWaterRain";
 
@@ -167,7 +169,7 @@ const HEALTH_LEGEND = [
   ["#475569", "ยังไม่มีรายงาน"]
 ];
 
-function Legend({ disasterType, onClose, showElevation = false, showWaterStations = false, showRainStations = false, showHealth = false }) {
+function Legend({ disasterType, onClose, showElevation = false, showWaterStations = false, showRainStations = false, showHealth = false, showFloodFreq = false }) {
   const items = disasterType === "disease"
     ? [["bg-red-600", "ระบาดหนัก"], ["bg-amber-400", "ระบาดปานกลาง"], ["bg-teal-500", "เฝ้าระวัง"], ["bg-emerald-600", "สถานพยาบาล"], ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"]]
     : [...FLOOD_LEVEL_LEGEND.map((level) => [level.color, level.description, true]), ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"], ["bg-emerald-600", "สถานพยาบาล"], ["bg-sky-700", "เส้นทางน้ำ"]];
@@ -187,6 +189,20 @@ function Legend({ disasterType, onClose, showElevation = false, showWaterStation
           </span>
         ))}
       </div>
+      {showFloodFreq ? (
+        <div className="mt-3 border-t border-white/15 pt-2">
+          <div className="mb-1 font-black">พื้นที่น้ำท่วมซ้ำซาก (GISTDA พ.ศ. 2554–2567)</div>
+          <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+            {FLOOD_FREQ_CLASSES.filter((item) => item.min >= REPEATED_MIN_FREQ).map((item) => (
+              <span key={item.key} className="flex items-center gap-1.5 font-semibold text-white/90">
+                <span className="h-3 w-3 shrink-0 rounded-[3px] ring-1 ring-white/60" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                {item.label}
+              </span>
+            ))}
+          </div>
+          <p className="mt-1 text-[11px] text-white/70">จำนวนปีที่ภาพดาวเทียมพบน้ำท่วมใน 14 ปี แตะพื้นที่เพื่อดูปีที่ท่วม</p>
+        </div>
+      ) : null}
       {showHealth ? (
         <div className="mt-3 border-t border-white/15 pt-2">
           <div className="mb-1 font-black">สถานพยาบาล (สีตามสถานะที่เจ้าหน้าที่รายงาน)</div>
@@ -463,6 +479,8 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
 
   const extraTileLayers = useMemo(() => (radarEnabled && radarLayer ? [radarLayer] : []), [radarEnabled, radarLayer]);
   const layerItems = useMemo(() => getEocLayerItems(disasterType, sheltersOpen), [disasterType, sheltersOpen]);
+  const [floodFreqStatus, setFloodFreqStatus] = useState({ state: "idle" });
+
   const toggleEocLayer = (key) => {
     setMapLayers((current) => ({ ...current, [key]: !current[key] }));
   };
@@ -502,6 +520,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
             onDataChange={setIncidents}
             extraTileLayers={extraTileLayers}
             zoomControlPosition="bottomright"
+            onFloodFreqStatus={setFloodFreqStatus}
           />
         </div>
 
@@ -755,6 +774,24 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
                 />
               </div>
 
+              <SectionTitle>สถิติพื้นที่เสี่ยง</SectionTitle>
+              <div className="space-y-1.5">
+                <SidebarItem
+                  label={mapLayers.floodFreq && floodFreqStatus.state === "loading" ? "น้ำท่วมซ้ำซาก (กำลังโหลด…)" : "น้ำท่วมซ้ำซาก (GISTDA)"}
+                  icon={Layers3}
+                  tone="from-sky-400 to-indigo-800"
+                  active={Boolean(mapLayers.floodFreq)}
+                  onClick={() => toggleEocLayer("floodFreq")}
+                  title="พื้นที่ที่ภาพดาวเทียมพบน้ำท่วมตั้งแต่ 1 ปีขึ้นไป ในช่วง พ.ศ. 2554–2567"
+                />
+                {mapLayers.floodFreq && floodFreqStatus.state === "error" ? (
+                  <p className="text-right text-[11px] font-bold text-amber-200 drop-shadow">{floodFreqStatus.message || "โหลดข้อมูลไม่สำเร็จ"}</p>
+                ) : null}
+                {mapLayers.floodFreq && floodFreqStatus.state === "ready" ? (
+                  <p className="text-right text-[11px] font-semibold text-white/80 drop-shadow">สถิติ 14 ปี ไม่ใช่สถานการณ์ตอนนี้ • แตะพื้นที่เพื่อดูปีที่ท่วม</p>
+                ) : null}
+              </div>
+
               <SectionTitle>ข้อมูล EOC</SectionTitle>
               <div className="space-y-1.5">
                 {layerItems.map((item) => (
@@ -793,7 +830,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
         {/* ซ้ายล่าง: คำอธิบายสัญลักษณ์ */}
         {legendOpen && (
           <div className="absolute bottom-24 left-3 z-[650] max-h-[calc(100%-31rem)] min-h-[9rem] w-[270px] overflow-y-auto rounded-xl [scrollbar-width:thin] max-md:hidden">
-            <Legend disasterType={disasterType} onClose={() => setLegendOpen(false)} showElevation={Boolean(mapLayers.elevation)} showWaterStations={Boolean(visibleLayers.waterStations)} showRainStations={Boolean(visibleLayers.rainStations)} showHealth={Boolean(visibleLayers.hospitals)} />
+            <Legend disasterType={disasterType} onClose={() => setLegendOpen(false)} showElevation={Boolean(mapLayers.elevation)} showWaterStations={Boolean(visibleLayers.waterStations)} showRainStations={Boolean(visibleLayers.rainStations)} showHealth={Boolean(visibleLayers.hospitals)} showFloodFreq={Boolean(visibleLayers.floodFreq)} />
           </div>
         )}
 

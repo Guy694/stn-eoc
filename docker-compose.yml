@@ -1,36 +1,232 @@
 services:
+
+  # =========================================================
+  # 1. MySQL Database
+  # =========================================================
   db:
     image: mysql:8.0
+    container_name: stn-eoc-db
     restart: always
+
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+
+    # ไม่จำเป็นต้อง expose MySQL ออก Host
+    # Application ทุกตัวติดต่อผ่าน db:3306 ภายใน Docker network
+    #
+    # หากจำเป็นต้อง connect MySQL จาก App Server เองจริง ๆ
+    # ใช้:
+    #
     ports:
-      - "${DB_PORT:-3306}:3306"
+       - "${DB_PORT}:3306"
+
     volumes:
       - db_data:/var/lib/mysql
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}"
-      interval: 5s
-      timeout: 5s
-      retries: 20
 
-  phpmyadmin:
-    image: phpmyadmin:latest
+    networks:
+      - stn-network
+
+
+  # =========================================================
+  # 2. STN EOC
+  # http://127.0.0.1:3001
+  # =========================================================
+
+stn-eoc-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: stn-eoc-app
     restart: always
+
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/${MYSQL_DATABASE}
+
+      NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH}
+      NODE_ENV: ${NODE_ENV}
+
+    ports:
+      - "127.0.0.1:3001:3000"
+
+    volumes:
+      - announcement_uploads:/app/public/uploads
+
+    networks:
+      - stn-network
+
+
+  # =========================================================
+  # 3. STN TREE
+  # http://127.0.0.1:3000
+  # =========================================================
+
+    stn-tree-app:
+    build:
+      context: ../stn-tree
+      dockerfile: Dockerfile
+
+    container_name: stn-tree-app
+    restart: always
+
+    depends_on:
+      - db
+
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      DB_NAME: stn_tree_db
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/stn_tree_db
+
+      NEXT_PUBLIC_BASE_PATH: /stn-tree
+      NODE_ENV: ${NODE_ENV}
+
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    volumes:
+      # - ../stn-tree/public/uploads:/app/public/uploads
+      - ./public/uploads:/app/public/uploads
+
+    networks:
+      - stn-network
+
+
+  # =========================================================
+  # 4. STN AED
+  # http://127.0.0.1:3002
+  # =========================================================
+stn-aed-app:
+    build:
+      context: ../stn-aed
+      dockerfile: Dockerfile
+
+    container_name: stn-aed-app
+    restart: always
+
+    depends_on:
+      - db
+
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      DB_NAME: stn_aed
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/stn_aed
+
+      NEXT_PUBLIC_BASE_PATH: /stn-aed
+      NODE_ENV: ${NODE_ENV}
+
+    ports:
+      - "127.0.0.1:3002:3000"
+
+    volumes:
+      - ../stn-aed/public/uploads:/app/public/uploads
+
+    networks:
+      - stn-network
+
+
+  # =========================================================
+  # 5. STN ATACS
+  # http://127.0.0.1:3003
+  # =========================================================
+    stn-atacs-app:
+    build:
+      context: ../stns-atacs
+      dockerfile: Dockerfile
+
+    container_name: stn-atacs-app
+    restart: always
+
+    depends_on:
+      - db
+
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+      DB_NAME: stn_atacs
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/stn_atacs
+
+      NEXT_PUBLIC_BASE_PATH: /stns-atacs
+      NODE_ENV: ${NODE_ENV}
+
+      THAID_ENABLED: ${ATACS_THAID_ENABLED:-true}
+      CLIENT_ID: ${ATACS_CLIENT_ID}
+      CLIENT_SECRET: ${ATACS_CLIENT_SECRET}
+      APIKEY: ${ATACS_APIKEY}
+      CALLBACK: ${ATACS_CALLBACK}
+      ATACS_AGENT_INSTALL_KEY: ${ATACS_AGENT_INSTALL_KEY}
+      ALLOW_PUBLIC_OFFICER_BOARD: ${ATACS_ALLOW_PUBLIC_OFFICER_BOARD:-true}
+      TELEGRAM_BOT_TOKEN: ${ATACS_TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${ATACS_TELEGRAM_CHAT_ID}
+      THAID_CID_ENCRYPTION_KEY: ${ATACS_THAID_CID_ENCRYPTION_KEY}
+      AUTH_SECRET: ${ATACS_AUTH_SECRET}
+
+    ports:
+      - "127.0.0.1:3003:3000"
+
+    volumes:
+      - ../stns-atacs/public/uploads:/app/public/uploads
+
+    networks:
+      - stn-network
+
+
+  # =========================================================
+  # 6. phpMyAdmin
+  # localhost only
+  # =========================================================
+    phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: stn-eoc-pma
+    restart: always
+
+    depends_on:
+      - db
+
     environment:
       PMA_HOST: db
-      PMA_PORT: 3306
-      UPLOAD_LIMIT: 128M
-    ports:
-      - "8080:80"
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 256M
 
+    ports:
+      - "127.0.0.1:${PMA_PORT}:80"
+
+    networks:
+      - stn-network
+
+# =========================================================
+# Volumes
+# =========================================================
 volumes:
   db_data:
-    external: true
-    name: stn-eoc_db_data
+  announcement_uploads:
+
+
+# =========================================================
+# Docker Network
+# =========================================================
+networks:
+  stn-network:
+    driver: bridge

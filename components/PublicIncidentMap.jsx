@@ -23,6 +23,7 @@ const Pane = dynamic(() => import('react-leaflet').then(mod => mod.Pane), { ssr:
 const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false });
 const WaterReportMarker = dynamic(() => import('./public/map/WaterReportMarker'), { ssr: false });
 const ElevationLayer = dynamic(() => import('./public/map/ElevationLayer'), { ssr: false });
+const FloodFreqLayer = dynamic(() => import('./public/map/FloodFreqLayer'), { ssr: false });
 const WaterStationLayer = dynamic(() => import('./weather/WaterStationLayer'), { ssr: false });
 const RainStationLayer = dynamic(() => import('./weather/RainStationLayer'), { ssr: false });
 
@@ -50,7 +51,9 @@ export default function PublicIncidentMap({
     // ชั้นข้อมูล tile เพิ่มเติมที่ซ้อนบนแผนที่ (เช่น เรดาร์ฝน) [{ key, url, attribution, opacity, maxNativeZoom, zIndex }]
     extraTileLayers = [],
     // ตำแหน่งปุ่มซูม: ค่าเริ่มต้นของ Leaflet (topleft) หรือกำหนดเอง เช่น 'bottomright'
-    zoomControlPosition = 'topleft'
+    zoomControlPosition = 'topleft',
+    // สถานะการโหลดชั้นน้ำท่วมซ้ำซาก (GISTDA) ให้เมนูชั้นข้อมูลแสดง
+    onFloodFreqStatus
 }) {
     const [incidents, setIncidents] = useState([]);
     const [floodAreas, setFloodAreas] = useState([]);
@@ -984,6 +987,9 @@ export default function PublicIncidentMap({
 
                         {/* ความสูงพื้นที่ (ระบายสีตามช่วงความสูง + กล่องบอกความสูง ณ จุดที่ชี้) */}
                         {activeLayers.elevation ? <ElevationLayer /> : null}
+
+                        {/* พื้นที่น้ำท่วมซ้ำซาก GISTDA (สถิติ พ.ศ. 2554–2567) */}
+                        {activeLayers.floodFreq ? <FloodFreqLayer onStatus={onFloodFreqStatus} /> : null}
 
                         {/* ฝนวัดจริง (หยดน้ำ) และระดับน้ำ–ตลิ่ง (สี่เหลี่ยม) จาก ThaiWater */}
                         <Pane name="rain-stations" style={{ zIndex: 450 }}>

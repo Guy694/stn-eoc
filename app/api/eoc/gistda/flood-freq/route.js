@@ -25,8 +25,9 @@ export async function GET(request) {
 
         const apiUrl = `${GISTDA_API_BASE}/resources/features/flood-freq?offset=${offset}&limit=${limit}`;
         const response = await fetch(apiUrl, {
+            // GISTDA API Gateway รับคีย์ทาง header "API-Key" (แบบ Bearer ตอบ INVALID_TOKEN)
             headers: {
-                'Authorization': `Bearer ${GISTDA_API_KEY}`,
+                'API-Key': GISTDA_API_KEY,
                 'Accept': 'application/json'
             },
             next: { revalidate: 3600 }

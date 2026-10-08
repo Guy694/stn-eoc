@@ -37,7 +37,9 @@ export const DEFAULT_LAYERS = {
   // สถานการณ์น้ำ/ฝนตอนนี้จาก ThaiWater
   waterStations: true,
   rainStations: true,
-  elevation: false
+  elevation: false,
+  // พื้นที่น้ำท่วมซ้ำซาก (GISTDA) — เปิดเองจากเมนู เพราะข้อมูล ~0.8 MB
+  floodFreq: false
 };
 
 const DISEASE_DEFAULT_LAYERS = {

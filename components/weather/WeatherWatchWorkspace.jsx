@@ -14,6 +14,7 @@ import {
   Droplets,
   ExternalLink,
   Gauge,
+  Haze,
   HousePlus,
   Layers,
   LocateFixed,
@@ -48,6 +49,8 @@ import {
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import ElevationLegend from "@/components/public/map/ElevationLegend";
 import { DISCHARGE_LEVELS } from "@/lib/forecastSignals";
+import { PM25_UNIT } from "@/lib/pm25";
+import Pm25Card, { Pm25Dot, Pm25Legend } from "@/components/weather/Pm25Card";
 
 const WeatherRiskMap = dynamic(() => import("@/components/weather/WeatherRiskMap"), {
   ssr: false,
@@ -210,6 +213,10 @@ export default function WeatherWatchWorkspace() {
 
   // หน้านี้ = พยากรณ์และความเสี่ยง (สิ่งที่จะเกิด) — สถานการณ์ตอนนี้ (ระดับน้ำ ฝนวัดจริง รายงานประชาชน เรดาร์) อยู่ที่แผนที่สถานการณ์
   const [elevationEnabled, setElevationEnabled] = useState(false);
+  // สีพื้นที่อำเภอบนแผนที่: ความเสี่ยงน้ำท่วม/ดินถล่ม หรือ ฝุ่น PM2.5
+  const [colorBy, setColorBy] = useState("risk");
+  const [pm25, setPm25] = useState(null);
+  const [pm25Error, setPm25Error] = useState("");
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -235,6 +242,25 @@ export default function WeatherWatchWorkspace() {
       setLoading(false);
     }
   }, []);
+
+  // ฝุ่น PM2.5 (GISTDA ออกค่าทุกชั่วโมง) — โหลดแยก ไม่ให้หน้ารอ
+  const loadPm25 = useCallback(async () => {
+    try {
+      const response = await fetch("/stn-eoc/api/public/pm25");
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.error || "ยังดึงข้อมูลฝุ่น PM2.5 ไม่ได้");
+      setPm25(payload);
+      setPm25Error("");
+    } catch (err) {
+      setPm25Error(err.message || "ยังดึงข้อมูลฝุ่น PM2.5 ไม่ได้");
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPm25();
+    const timer = window.setInterval(loadPm25, 30 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [loadPm25]);
 
   useEffect(() => {
     loadWeather();
@@ -324,6 +350,8 @@ export default function WeatherWatchWorkspace() {
             userLocation={userLocation}
             flyTarget={flyTarget}
             elevationEnabled={elevationEnabled}
+            colorBy={colorBy}
+            pm25={pm25}
           />
         </div>
         {isWindy && <WindyFrame src={windyUrl} />}
@@ -335,6 +363,15 @@ export default function WeatherWatchWorkspace() {
             <span className="font-bold">จ.สตูล ตอนนี้: {current.weather_condition || "-"} {current.temperature ?? "-"}°C</span>
             <span className="text-white/60">|</span>
             <span className="font-semibold text-white/85">พื้นที่ต้องเฝ้าระวัง {districtsAtRisk}/{districts.length || 7} อำเภอ</span>
+            {pm25?.province ? (
+              <>
+                <span className="text-white/60">|</span>
+                <button type="button" onClick={() => { setViewMode("risk"); setColorBy("pm25"); }} className="flex items-center gap-1.5 rounded-full px-1.5 font-semibold text-white/85 hover:bg-white/10" title="ดูฝุ่น PM2.5 รายอำเภอบนแผนที่">
+                  <Pm25Dot value={pm25.province.value} />
+                  PM2.5 {pm25.province.value} <span className="text-[11px] font-normal text-white/60">{PM25_UNIT}</span>
+                </button>
+              </>
+            ) : null}
             <span className="text-white/60">|</span>
             <span className="text-xs text-white/70">อัปเดต {formatTime(current.observed_at)} น.</span>
             <button
@@ -462,6 +499,13 @@ export default function WeatherWatchWorkspace() {
                       {" "}• อุณหภูมิ ความชื้น ลม จากแบบจำลอง ECMWF
                     </p>
                   </div>
+
+                  <Pm25Card
+                    data={pm25}
+                    error={pm25Error}
+                    districtName={selectedDistrict.district_name}
+                    onShowMap={() => { setViewMode("risk"); setColorBy("pm25"); }}
+                  />
 
                   {(selectedDistrict.heavy_rain_today || selectedDistrict.heavy_rain_tomorrow) && (
                     <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
@@ -681,8 +725,15 @@ export default function WeatherWatchWorkspace() {
                   label="แผนที่ความเสี่ยง"
                   icon={ShieldCheck}
                   tone="from-emerald-400 to-red-500"
-                  active={!isWindy}
-                  onClick={() => setViewMode("risk")}
+                  active={!isWindy && colorBy === "risk"}
+                  onClick={() => { setViewMode("risk"); setColorBy("risk"); }}
+                />
+                <SidebarItem
+                  label="ฝุ่น PM2.5"
+                  icon={Haze}
+                  tone="from-sky-400 via-yellow-400 to-orange-500"
+                  active={!isWindy && colorBy === "pm25"}
+                  onClick={() => { setViewMode("risk"); setColorBy("pm25"); }}
                 />
                 <SidebarItem
                   label="ความสูงพื้นที่"
@@ -757,6 +808,7 @@ export default function WeatherWatchWorkspace() {
         {!isWindy && (
           <div className={`absolute bottom-[5.75rem] left-[384px] z-[650] hidden max-h-[calc(100%-13rem)] max-w-[360px] overflow-y-auto rounded-xl px-2.5 py-1.5 text-[11px] [scrollbar-width:thin] md:block ${GLASS}`}>
             {elevationEnabled && <ElevationLegend className="mb-1.5 max-w-[320px] border-b border-white/10 pb-1.5" />}
+            {colorBy === "pm25" ? <Pm25Legend /> : (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {RISK_LEVELS.map((level) => (
                 <span key={level} className="flex items-center gap-1 font-bold">
@@ -765,6 +817,7 @@ export default function WeatherWatchWorkspace() {
                 </span>
               ))}
             </div>
+            )}
           </div>
         )}
 

@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, TileLayer, Tooltip, ZoomControl, useMap } from "react-leaflet";
 import { getMapBaseLayer } from "@/lib/mapBaseLayers";
 import { RISK_META } from "@/lib/weatherRiskConfig";
+import { pm25ForDistrict, pm25Level } from "@/lib/pm25";
 import WaterStationLayer from "@/components/weather/WaterStationLayer";
 import RainStationLayer from "@/components/weather/RainStationLayer";
 import WaterReportMarker from "@/components/public/map/WaterReportMarker";
@@ -23,6 +24,19 @@ function normalizeName(value) {
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
+// โหมด PM2.5: ป้ายชื่ออำเภอแสดงค่าฝุ่นแทนอุณหภูมิ/ฝน
+function pm25LabelIcon(district, selected, reading) {
+  const level = pm25Level(reading?.value);
+  return L.divIcon({
+    className: "",
+    iconSize: [0, 0],
+    html: `<div style="transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;font-family:var(--font-kanit, sans-serif)">
+      <span style="white-space:nowrap;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800;color:${level?.text || "#0f172a"};background:${level?.color || "#cbd5e1"};box-shadow:0 2px 6px rgba(0,0,0,.35);${selected ? "outline:2px solid #fff;" : ""}">${escapeHtml(district.district_name)} ${reading?.value ?? "-"}</span>
+      <span style="white-space:nowrap;border-radius:6px;padding:0 6px;font-size:11px;font-weight:700;color:#0f172a;background:rgba(255,255,255,.9)">PM2.5 ${escapeHtml(level?.label || "ไม่มีข้อมูล")}</span>
+    </div>`
+  });
 }
 
 function districtLabelIcon(district, selected) {
@@ -58,8 +72,11 @@ export default function WeatherRiskMap({
   waterStations = [],
   rainStations = [],
   waterReports = [],
-  elevationEnabled = false
+  elevationEnabled = false,
+  colorBy = "risk",
+  pm25 = null
 }) {
+  const byPm25 = colorBy === "pm25" && Boolean(pm25);
   const [boundaries, setBoundaries] = useState([]);
   const baseLayer = getMapBaseLayer(baseMap);
 
@@ -101,18 +118,19 @@ export default function WeatherRiskMap({
         const district = districtByName.get(normalizeName(item.name));
         const meta = riskMeta(district?.risk_level);
         const selected = district && String(district.district_id) === String(selectedDistrictId);
+        const pmColor = byPm25 ? pm25Level(pm25ForDistrict(pm25, item.name)?.value)?.color : null;
         return (
           <GeoJSON
-            key={`risk-${item.code || item.name || index}-${district?.risk_level || "none"}-${selected ? "sel" : ""}-${elevationEnabled ? "elev" : ""}`}
+            key={`risk-${item.code || item.name || index}-${byPm25 ? `pm-${pmColor}` : district?.risk_level || "none"}-${selected ? "sel" : ""}-${elevationEnabled ? "elev" : ""}`}
             data={item.geojson}
             style={{
               // ข้อมูลอำเภอประกอบจากขอบเขตหมู่บ้าน จึงใช้เส้นบางเพื่อไม่ให้แผนที่รก
               color: selected ? "#0f172a" : "#334155",
               weight: selected ? 2.5 : 0.6,
               opacity: selected ? 0.95 : 0.45,
-              fillColor: district ? meta.color : "#94a3b8",
+              fillColor: byPm25 ? pmColor || "#94a3b8" : district ? meta.color : "#94a3b8",
               // เปิดชั้นความสูงพื้นที่: ลดสีความเสี่ยงลงให้เห็นสีความสูง (ยังเห็นขอบอำเภอและคลิกเลือกได้)
-              fillOpacity: elevationEnabled ? (selected ? 0.12 : 0.05) : selected ? 0.42 : 0.28
+              fillOpacity: elevationEnabled ? (selected ? 0.12 : 0.05) : byPm25 ? (selected ? 0.55 : 0.42) : selected ? 0.42 : 0.28
             }}
             eventHandlers={{
               click: () => district && onSelectDistrict?.(district.district_id)
@@ -123,9 +141,11 @@ export default function WeatherRiskMap({
 
       {districts.map((district) => (
         <Marker
-          key={`label-${district.district_id}-${district.risk_level}-${String(district.district_id) === String(selectedDistrictId)}`}
+          key={`label-${district.district_id}-${byPm25 ? "pm" : district.risk_level}-${String(district.district_id) === String(selectedDistrictId)}`}
           position={[district.latitude, district.longitude]}
-          icon={districtLabelIcon(district, String(district.district_id) === String(selectedDistrictId))}
+          icon={byPm25
+            ? pm25LabelIcon(district, String(district.district_id) === String(selectedDistrictId), pm25ForDistrict(pm25, district.district_name))
+            : districtLabelIcon(district, String(district.district_id) === String(selectedDistrictId))}
           interactive={false}
         />
       ))}
