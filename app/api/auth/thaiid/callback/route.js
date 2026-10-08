@@ -215,7 +215,17 @@ export async function GET(request) {
         // 1. แลกเปลี่ยน Authorization Code กับ Access Token
         const tokenData = await exchangeCodeForToken(code, thaiIdConfig);
         const accessToken = tokenData.access_token;
-        const userInfo = await fetchThaiIdUserInfo(accessToken, thaiIdConfig);
+        // ThaiD มักส่ง pid/ชื่อมากับ token อยู่แล้ว: เรียก UserInfo เฉพาะเมื่อข้อมูลไม่ครบ
+        // และถ้า UserInfo ตอบผิดพลาด (เช่น 400) ให้ใช้ข้อมูลจาก token ต่อ แทนที่จะล้มทั้งการล็อกอิน
+        const tokenComplete = Boolean(tokenData.pid && tokenData.given_name && tokenData.family_name);
+        let userInfo = null;
+        if (!tokenComplete) {
+            try {
+                userInfo = await fetchThaiIdUserInfo(accessToken, thaiIdConfig);
+            } catch (userInfoError) {
+                console.error('ThaiD UserInfo error (ใช้ข้อมูลจาก token แทน):', userInfoError?.message || userInfoError);
+            }
+        }
         const thaiIdProfile = mergeThaiIdProfile(tokenData, userInfo);
         const pid = thaiIdProfile.pid;
 
