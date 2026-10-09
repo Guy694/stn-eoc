@@ -33,6 +33,8 @@ import { isWaterReport, timeAgoText } from "@/lib/waterReportMap";
 import { waterLevelMeta } from "@/lib/waterReport";
 import { DISCHARGE_LEVELS } from "@/lib/forecastSignals";
 import { trackPublicUsage } from "@/lib/publicUsage";
+import FloodOutlookCard from "@/components/public/FloodOutlookCard";
+import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -183,10 +185,14 @@ function MyRiskContent() {
     ]);
     const floodSession = (status?.data || []).find((item) => item.eoc_type === "flood" && item.is_active && item.session_id);
     mark("help")(null);
-    const [shelters, floodAreas, incidents] = await Promise.all([
+    const whereData = where?.data || null;
+    const [shelters, floodAreas, incidents, outlook] = await Promise.all([
       getJson("/stn-eoc/api/public/shelter-centers"),
       floodSession ? getJson(`/stn-eoc/api/eoc/flood/area-status?session_id=${floodSession.session_id}&date=${today}`) : null,
-      floodSession ? getJson(`/stn-eoc/api/public/verified-incidents?disaster_type=flood&session_id=${floodSession.session_id}&start_date=${today}&end_date=${today}`) : null
+      floodSession ? getJson(`/stn-eoc/api/public/verified-incidents?disaster_type=flood&session_id=${floodSession.session_id}&start_date=${today}&end_date=${today}`) : null,
+      whereData?.in_satun && whereData.tambon && whereData.district
+        ? getJson(`/stn-eoc/api/public/flood-outlook?district=${encodeURIComponent(whereData.district)}&tambon=${encodeURIComponent(whereData.tambon)}`)
+        : null
     ]);
     setReport({
       state: "done",
@@ -199,6 +205,7 @@ function MyRiskContent() {
       shelters: shelters?.data || [],
       floodAreas: floodAreas?.data || [],
       waterReports: (incidents?.data || []).filter(isWaterReport),
+      outlook: outlook?.data || null,
       elevation: Number.isFinite(elevation) ? elevation : null
     });
     trackPublicUsage("my_risk_checked", "/public/my-risk");
@@ -430,6 +437,9 @@ function MyRiskContent() {
               )}
             </Card>
 
+            {/* พยากรณ์จุดเสี่ยงน้ำท่วม 7 วัน (รายตำบล) */}
+            {report.outlook ? <FloodOutlookCard outlook={report.outlook} /> : null}
+
             {/* ข้างหน้า */}
             {result.district && (
               <Card title={`ข้างหน้า • อ.${result.district.district_name}`} icon={CloudRain}>
@@ -514,6 +524,13 @@ function MyRiskContent() {
                 ) : null}
               </div>
             </section>
+
+            {where?.in_satun ? (
+              <AlertSubscribeCard
+                defaultDistrict={normalizeName(where.district)}
+                tambon={report.outlook ? { key: report.outlook.key, tambon: report.outlook.tambon } : null}
+              />
+            ) : null}
 
             <p className="flex items-center gap-1.5 text-xs leading-5 text-slate-500">
               <Mountain className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

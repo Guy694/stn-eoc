@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import ShareLineButton from "@/components/public/ShareLineButton";
 import Link from "next/link";
 import { HousePlus, Megaphone, Siren, TriangleAlert, X } from "lucide-react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
@@ -104,6 +105,10 @@ export default function HomePopup({ popup, onClose }) {
               </div>
               <div className="mt-3 flex items-center justify-between gap-2 text-sm">
                 <a href="tel:1784" className="font-semibold text-[#b91c1c] underline-offset-4 hover:underline">เหตุด่วนโทร 1784 / 1669</a>
+                <ShareLineButton
+                  text={`⚠️ เตือนภัย จ.สตูล\n${popup.items.slice(0, 3).map((item) => `• ${item.message}`).join("\n")}\nติดตามสถานการณ์:`}
+                  className="inline-flex items-center gap-1.5 font-semibold text-[#06a644] hover:text-[#04833a]"
+                />
                 <button type="button" onClick={onClose} className="font-semibold text-slate-500 hover:text-slate-800">รับทราบ</button>
               </div>
             </div>

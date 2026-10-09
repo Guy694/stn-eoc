@@ -31,6 +31,8 @@ import { choosePopup, loadSeenPopups, markPopupsSeen, urgentAlerts } from "@/lib
 import { OpsTodayCard, RoadAlerts } from "@/components/public/home/OpsToday";
 import { citizenWaterReports, roadAlerts, shelterSummary } from "@/lib/homeSignals";
 import CitizenWaterReports from "@/components/public/home/CitizenWaterReports";
+import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
+import SeaTodayCard from "@/components/public/home/SeaTodayCard";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
 
@@ -656,7 +658,8 @@ export default function PublicHome() {
                 </ul>
               </div>
             ))}
-            <div className="mt-8 rounded-3xl bg-[#0c2f4a] p-5 text-white">
+            <SeaTodayCard className="mt-8" />
+            <div className="mt-6 rounded-3xl bg-[#0c2f4a] p-5 text-white">
               <p className="font-[family-name:var(--font-kanit)] text-lg font-semibold">เบอร์ฉุกเฉิน โทรฟรี 24 ชม.</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {[["1669", "เจ็บป่วยฉุกเฉิน"], ["1784", "สาธารณภัย"], ["191", "เหตุด่วนเหตุร้าย"], ["199", "ดับเพลิง"]].map(([number, label]) => (
@@ -667,6 +670,7 @@ export default function PublicHome() {
                 ))}
               </div>
             </div>
+            <AlertSubscribeCard defaultDistrict={districtName} className="mt-6" />
           </section>
         </div>
 

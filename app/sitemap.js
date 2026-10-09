@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/public/shelters",
   "/public/announcements",
   "/public/agencies",
+  "/public/en",
   "/public/insights",
   "/public/help",
   "/public/help/citizen-guide",

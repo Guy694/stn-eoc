@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity, AlertTriangle, BarChart3, BellRing, CheckCircle2, Construction, DatabaseBackup, ExternalLink, Map as MapIcon,
-  KeyRound, PlugZap, RefreshCw, ShieldCheck, Users, XCircle
+  KeyRound, Megaphone, PlugZap, RefreshCw, ShieldCheck, Users, XCircle
 } from "lucide-react";
 import { AdminPage, StatusPill, useNotice } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
@@ -17,6 +17,7 @@ import SiteVisitorStatistics from "@/components/admin/settings/SiteVisitorStatis
 import ModulePermissions from "@/components/admin/settings/ModulePermissions";
 import WaterAlertSettings from "@/components/admin/settings/WaterAlertSettings";
 import MaintenanceSettings from "@/components/admin/settings/MaintenanceSettings";
+import PublicPushSettings from "@/components/admin/settings/PublicPushSettings";
 
 const API = "/stn-eoc/api/admin/system-status";
 
@@ -27,6 +28,7 @@ const SECTIONS = [
   { value: "security", label: "ความปลอดภัย", hint: "นโยบายรหัสผ่านและการเข้าสู่ระบบ", icon: ShieldCheck },
   { value: "roles", label: "สิทธิ์และบทบาท", hint: "แต่ละบทบาททำอะไรได้บ้าง", icon: Users },
   { value: "modules", label: "สิทธิ์กลุ่มภารกิจ", hint: "ทีมไหนบันทึกเมนูไหนของเหตุการณ์ได้", icon: KeyRound },
+  { value: "public-push", label: "แจ้งเตือนประชาชน", hint: "เด้งเตือนภัยบนมือถือประชาชน", icon: Megaphone },
   { value: "maintenance", label: "ปิดปรับปรุงระบบ", hint: "ปิดหน้าเว็บชั่วคราวระหว่างปรับปรุง", icon: Construction },
   { value: "backup", label: "สำรองข้อมูล", hint: "ไฟล์สำรองและวิธีสำรอง/กู้คืน", icon: DatabaseBackup },
   { value: "visitors", label: "สถิติผู้เข้าชม", hint: "เว็บไซต์สาธารณะ", icon: BarChart3 },
@@ -339,7 +341,7 @@ export default function SystemSettingsWorkspace() {
   };
 
   const current = SECTIONS.find((item) => item.value === section) || SECTIONS[0];
-  const needsData = !["visitors", "data", "modules", "maintenance"].includes(section);
+  const needsData = !["visitors", "data", "modules", "maintenance", "public-push"].includes(section);
   const problems = state.data?.checks?.filter((check) => check.tone !== "ok").length || 0;
 
   return (
@@ -380,6 +382,7 @@ export default function SystemSettingsWorkspace() {
           {section === "data" ? <DataLinks /> : null}
           {section === "modules" ? <ModulePermissions /> : null}
           {section === "maintenance" ? <MaintenanceSettings /> : null}
+          {section === "public-push" ? <PublicPushSettings /> : null}
           {needsData ? (
             state.error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error} <button type="button" onClick={load} className="ml-2 font-bold underline">ลองใหม่</button></p>
               : !state.data ? <p className="rounded-xl border border-[#c9dcee] bg-white p-10 text-center text-sm text-slate-500">กำลังตรวจสถานะระบบ…</p>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b4c86">
+<title>ไม่มีอินเทอร์เน็ต | Satun Geo-EOC</title>
+<style>
+  :root { --navy:#0b4c86; --ink:#0c2f4a; --muted:#5b6b7b; --line:#dbe3ea; --red:#b91c1c; --amber:#92400e; --bg:#f4f7fa; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Kanit, "Noto Sans Thai", Sarabun, system-ui, sans-serif; background:var(--bg); color:var(--ink); line-height:1.55; }
+  header { background:var(--navy); color:#fff; padding:20px 16px 18px; }
+  header h1 { margin:0; font-size:1.35rem; }
+  header p { margin:6px 0 0; color:#cfe1f2; font-size:.95rem; }
+  main { max-width:720px; margin:0 auto; padding:16px; display:grid; gap:14px; }
+  section { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  h2 { margin:0 0 8px; font-size:1.1rem; }
+  .calls { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
+  .calls a { display:flex; flex-direction:column; text-decoration:none; color:#fff; background:var(--red); border-radius:12px; padding:10px 12px; min-height:64px; }
+  .calls a b { font-size:1.4rem; line-height:1.1; }
+  .calls a span { font-size:.85rem; opacity:.92; }
+  .calls a.alt { background:var(--ink); }
+  ul { list-style:none; margin:0; padding:0; }
+  li { padding:9px 0; border-top:1px solid var(--line); }
+  li:first-child { border-top:0; }
+  .warn { border-left:4px solid #f59e0b; padding-left:10px; }
+  .warn.high { border-color:var(--red); }
+  .meta { color:var(--muted); font-size:.85rem; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .btn { display:inline-flex; align-items:center; min-height:40px; padding:6px 12px; border-radius:10px; border:1px solid var(--line); color:var(--navy); text-decoration:none; font-weight:600; background:#fff; font-size:.95rem; }
+  .retry { background:var(--navy); color:#fff; border:0; font:inherit; font-weight:700; border-radius:12px; padding:12px 18px; width:100%; min-height:48px; }
+  .stale { background:#fff7ed; border:1px solid #fed7aa; color:var(--amber); border-radius:12px; padding:10px 12px; font-size:.95rem; }
+  .empty { color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>ตอนนี้ไม่มีอินเทอร์เน็ต</h1>
+  <p>ด้านล่างคือข้อมูลสำคัญที่เครื่องนี้เก็บไว้ล่าสุด ใช้ได้แม้ไม่มีสัญญาณ</p>
+</header>
+<main>
+  <p id="stamp" class="stale" hidden></p>
+  <section>
+    <h2>โทรขอความช่วยเหลือ</h2>
+    <div class="calls" id="calls">
+      <a href="tel:1669"><b>1669</b><span>เจ็บป่วยฉุกเฉิน</span></a>
+      <a href="tel:1784"><b>1784</b><span>สาธารณภัย (ปภ.)</span></a>
+      <a class="alt" href="tel:191"><b>191</b><span>ตำรวจ</span></a>
+      <a class="alt" href="tel:199"><b>199</b><span>ดับเพลิง</span></a>
+    </div>
+    <p class="meta">การโทรใช้สัญญาณโทรศัพท์ ไม่ต้องใช้อินเทอร์เน็ต</p>
+  </section>
+  <section>
+    <h2>ประกาศเตือนล่าสุด</h2>
+    <ul id="warnings"><li class="empty">ยังไม่มีข้อมูลที่เก็บไว้</li></ul>
+  </section>
+  <section>
+    <h2>ศูนย์พักพิงที่เปิดอยู่</h2>
+    <ul id="shelters"><li class="empty">ยังไม่มีข้อมูลที่เก็บไว้</li></ul>
+  </section>
+  <button class="retry" type="button" onclick="location.reload()">ลองเชื่อมต่ออีกครั้ง</button>
+</main>
+<script>
+(function () {
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var when = function (iso) {
+    var d = new Date(iso); if (isNaN(d)) return "";
+    return d.toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) + " น.";
+  };
+  function render(pack) {
+    var stamp = document.getElementById("stamp");
+    if (pack.generated_at) {
+      var mins = Math.round((Date.now() - Date.parse(pack.generated_at)) / 60000);
+      stamp.hidden = false;
+      stamp.textContent = "ข้อมูลเมื่อ " + when(pack.generated_at) + (mins > 90 ? " (ผ่านมา " + Math.round(mins / 60) + " ชั่วโมง อาจไม่เป็นปัจจุบัน)" : "");
+    }
+    var calls = document.getElementById("calls");
+    var have = {};
+    calls.querySelectorAll("a").forEach(function (a) { have[a.getAttribute("href")] = true; });
+    (pack.hotlines || []).forEach(function (h) {
+      var href = "tel:" + h.phone.replace(/[^\d]/g, "");
+      if (have[href]) return;
+      have[href] = true;
+      calls.insertAdjacentHTML("beforeend", '<a class="alt" href="' + esc(href) + '"><b>' + esc(h.phone) + "</b><span>" + esc(h.name) + "</span></a>");
+    });
+    var w = pack.warnings || [];
+    document.getElementById("warnings").innerHTML = w.length ? w.map(function (x) {
+      return '<li class="warn' + (x.level === "high" ? " high" : "") + '">' + esc(x.message) + '<div class="meta">' + esc([when(x.issued_at), x.source].filter(Boolean).join(" • ")) + "</div></li>";
+    }).join("") : '<li class="empty">ไม่มีประกาศเตือน ณ เวลาที่เก็บข้อมูล</li>';
+    var s = pack.shelters || [];
+    document.getElementById("shelters").innerHTML = s.length ? s.map(function (x) {
+      var place = [x.village, x.tambon ? "ต." + x.tambon : "", x.district ? "อ." + x.district : ""].filter(Boolean).join(" ");
+      var links = "";
+      if (x.lat != null && x.lon != null) links += '<a class="btn" href="https://www.google.com/maps/search/?api=1&query=' + x.lat + "," + x.lon + '">นำทาง</a>';
+      if (x.phone) links += '<a class="btn" href="tel:' + esc(String(x.phone).replace(/[^\d]/g, "")) + '">โทร ' + esc(x.phone) + "</a>";
+      return "<li><b>" + esc(x.name) + '</b><div class="meta">' + esc(place) + (x.vacancy != null ? " • ว่าง " + esc(x.vacancy) + " ที่" : "") + "</div>" + (links ? '<div class="row">' + links + "</div>" : "") + "</li>";
+    }).join("") : '<li class="empty">ไม่มีศูนย์พักพิงที่เปิด ณ เวลาที่เก็บข้อมูล</li>';
+  }
+  if ("caches" in window) {
+    caches.match("/stn-eoc/api/public/offline-pack/").then(function (r) { return r ? r.json() : null; }).then(function (pack) { if (pack) render(pack); }).catch(function () {});
+  }
+  window.addEventListener("online", function () { location.reload(); });
+})();
+</script>
+</body>
+</html>

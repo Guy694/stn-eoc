@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import TextSizeToggle from "@/components/public/TextSizeToggle";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
@@ -104,7 +105,11 @@ export default function PublicTopNavigation({ activeMenu }) {
       <div className="mx-auto max-w-[1600px] px-3 sm:px-5">
         <div className="hidden min-h-14 items-center gap-1 overflow-x-auto py-1.5 lg:flex">
           {items.filter(item => !item.emphasis).map(item => renderItem(item))}
-          <div className="ml-auto flex items-center gap-1.5">{items.filter(item => item.emphasis).map(item => renderItem(item))}</div>
+          <div className="ml-auto flex items-center gap-1.5">
+            <Link href="/public/en" lang="en" className="flex h-10 shrink-0 items-center rounded-lg px-2.5 text-sm font-bold text-blue-50 hover:bg-white/10" title="Emergency information in English">EN</Link>
+            <TextSizeToggle className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-blue-50 hover:bg-white/10" />
+            {items.filter(item => item.emphasis).map(item => renderItem(item))}
+          </div>
         </div>
 
         {/* มือถือ/แท็บเล็ต: ปุ่มหลัก 2 ปุ่มกว้างเท่ากัน สูงเท่ากัน + ปุ่มเมนูเป็นไอคอนจัตุรัส */}
@@ -137,6 +142,10 @@ export default function PublicTopNavigation({ activeMenu }) {
             {items.filter(item => !item.emphasis).map(item => renderItem(item, true))}
             <Link href="/public/agencies" onClick={() => setIsOpen(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-3 text-sm font-bold text-blue-50 hover:bg-white/10">
               <Building2 className="h-4 w-4 shrink-0" aria-hidden="true" /> ติดต่อหน่วยงาน
+            </Link>
+            <TextSizeToggle className="flex w-full items-center gap-2 rounded-lg px-3 py-3 text-left text-sm text-blue-50 hover:bg-white/10" />
+            <Link href="/public/en" lang="en" onClick={() => setIsOpen(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-3 text-sm font-bold text-blue-50 hover:bg-white/10">
+              <span className="flex h-4 w-6 items-center justify-center rounded bg-white/20 text-[10px]">EN</span> Emergency info in English
             </Link>
           </div>
         )}
