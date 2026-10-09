@@ -61,6 +61,11 @@ stn-eoc-app:
 
     volumes:
       - announcement_uploads:/app/public/uploads
+      - announcement_uploads:/app/public/uploads
+      - eoc_private_uploads:/app/private/uploads
+      - eoc_infographics:/app/public/infographics
+      - eoc_flood_maps:/app/public/flood-maps
+      - eoc_backups:/app/backups
 
     networks:
       - stn-network
@@ -222,6 +227,10 @@ stn-aed-app:
 volumes:
   db_data:
   announcement_uploads:
+  eoc_private_uploads:
+  eoc_infographics:
+  eoc_flood_maps:
+  eoc_backups:
 
 
 # =========================================================

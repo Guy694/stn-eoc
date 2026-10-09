@@ -311,7 +311,12 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
       context={context}
       title="กลุ่มเปราะบางในเหตุการณ์"
       description="จำนวนแต่ละประเภทดึงจากทะเบียนกลาง เจ้าหน้าที่บันทึกการดูแล การเคลื่อนย้าย และความต้องการของแต่ละหมู่บ้าน"
-      actions={perms.can_edit ? <AddButton onClick={() => { setFormError(""); setAdding(true); }}>เพิ่มหมู่บ้านที่ประสบภัย</AddButton> : null}
+      actions={(
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/eoc/${eocType}/vulnerable-persons`} className="inline-flex min-h-10 items-center rounded-lg border border-[#0b4c86] bg-white px-3 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#eef5fb]">แผนที่รายบุคคล</Link>
+          {perms.can_edit ? <AddButton onClick={() => { setFormError(""); setAdding(true); }}>เพิ่มหมู่บ้านที่ประสบภัย</AddButton> : null}
+        </div>
+      )}
     >
       {notice}
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}

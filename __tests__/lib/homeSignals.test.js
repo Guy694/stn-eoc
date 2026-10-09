@@ -1,4 +1,4 @@
-import { canalState, canalSummary, roadAlerts, shelterSummary, sortCanals } from "@/lib/homeSignals";
+import { canalState, canalSummary, citizenWaterReports, roadAlerts, shelterSummary, sortCanals } from "@/lib/homeSignals";
 
 describe("homeSignals", () => {
   test("สถานะคลองและความสูงในเกจ", () => {
@@ -24,6 +24,21 @@ describe("homeSignals", () => {
     ]);
     expect(rows.map((row) => row.id)).toEqual([3, 2]);
     expect(rows[0]).toMatchObject({ title: "สะพานขาด", blocked: true, area: "อ.ละงู" });
+  });
+
+  test("รายงานน้ำจากประชาชน: เฉพาะที่มีระดับน้ำ เรียงล่าสุดก่อน และไม่ซ้ำกับรายการถนน", () => {
+    const incidents = [
+      { id: 1, problem_category: "flood", water_level: "knee_waist", travel_status: "difficult", title: "น้ำท่วมระดับเข่า–เอว", village: "บ้านควน", district: "ละงู", verified_at: "2026-10-09T03:00:00Z", photo_path: "/stn-eoc/api/x.jpg", confirmations: { still: 3 } },
+      { id: 2, problem_category: "flood", water_level: "chest_up", water_trend: "rising", verified_at: "2026-10-09T03:30:00Z" },
+      { id: 3, problem_category: "flood", water_level: "ankle_knee", verified_at: "2026-10-08T20:00:00Z" },
+      { id: 4, problem_category: "road_cut", title: "สะพานขาด", verified_at: "2026-10-09T01:00:00Z" },
+      { id: 5, problem_category: "flood", water_level: "not-a-level" }
+    ];
+    const cards = citizenWaterReports(incidents);
+    expect(cards.map((card) => card.id)).toEqual([2, 1, 3]);
+    expect(cards[0]).toMatchObject({ trend: { value: "rising" }, level: { value: "chest_up" }, title: "อกขึ้นไป", photo: null });
+    expect(cards[1]).toMatchObject({ title: "น้ำท่วมระดับเข่า–เอว", area: "บ้านควน อ.ละงู", photo: "/stn-eoc/api/x.jpg", stillCount: 3 });
+    expect(roadAlerts(incidents).map((row) => row.id)).toEqual([4]);
   });
 
   test("สรุปศูนย์พักพิง", () => {

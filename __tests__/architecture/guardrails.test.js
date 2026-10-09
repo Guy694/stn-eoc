@@ -65,8 +65,21 @@ describe('architecture guardrails', () => {
         'app/api/eoc/flood/daily-flood-village/route.js',
         'app/api/eoc/gistda/flood/route.js',
         'app/api/eoc/gistda/flood-freq/route.js',
+        'app/api/eoc/vulnerable-persons/route.js',
+        'app/api/eoc/vulnerable-persons/status/route.js',
     ])('%s requires an authenticated officer', (file) => {
         expect(read(path.join(ROOT, file))).toMatch(/requireAuth\(request, OFFICER_ROLES\)/);
+    });
+
+    test('vulnerable person data is never read from public routes or client bundles', () => {
+        const publicOffenders = listFiles(path.join(ROOT, 'app/api/public'), isSource)
+            .filter((file) => /vulnerable_persons|vulnerablePersonsCrypto|fieldCrypto/.test(read(file)))
+            .map(rel);
+        expect(publicOffenders).toEqual([]);
+        const clientOffenders = [...listFiles(path.join(ROOT, 'components'), isSource), ...listFiles(path.join(ROOT, 'app'), isSource)]
+            .filter((file) => /^["']use client["']/.test(read(file)) && /fieldCrypto|vulnerablePersonsCrypto/.test(read(file)))
+            .map(rel);
+        expect(clientOffenders).toEqual([]);
     });
 
     test('scripts contain no hard-coded default passwords', () => {

@@ -154,3 +154,29 @@ describe("ประกาศและภาพจาก สสน.", () => {
     expect(media.radar.map((item) => item.name)).toEqual(["เรดาร์สงขลา"]);
   });
 });
+
+describe("น้ำทะเลหนุนในความเสี่ยงอำเภอติดทะเล", () => {
+  const { assessDistrictRisk: assess, seaRiskStatus } = require("@/lib/forecastSignals");
+
+  it("หนุนสูงกว่าปกติอย่างเดียวไม่เพิ่มคะแนน แต่ถ้ามีฝนหนักร่วมด้วยเพิ่ม 1", () => {
+    const sea = { key: "elevated", label: "หนุนสูงกว่าปกติ", level: 1.35 };
+    expect(assess({ observedRain24h: 0, sea }).score).toBe(0);
+    const withRain = assess({ observedRain24h: 50, sea });
+    expect(withRain.score).toBe(assess({ observedRain24h: 50 }).score + 1);
+    expect(withRain.reasons.join(" ")).toMatch(/น้ำทะเลหนุนสูงกว่าปกติ.*ระบายลงทะเลช้า/);
+  });
+
+  it("หนุนสูงสุดในรอบ 30 วัน เพิ่ม 2 แม้ไม่มีฝน", () => {
+    expect(assess({ sea: { key: "record", label: "หนุนสูงสุดในรอบ 30 วัน", level: 1.6 } }).score).toBe(2);
+  });
+
+  it("ใช้รอบน้ำขึ้นถัดไปใน 24 ชม. ถ้าคาดว่าสูงกว่า และไม่ใช้ข้อมูลเก่า", () => {
+    const now = Date.UTC(2026, 9, 9, 6);
+    const sea = {
+      status: { key: "normal" }, peak: { at: "2026-10-09T03:00:00Z", level: 1.2 }, observed_at: "2026-10-09T05:50:00Z",
+      next_highs: [{ at: "2026-10-09T15:00:00Z", est_level: 1.45, status: "high" }, { at: "2026-10-10T12:00:00Z", est_level: 1.7, status: "record" }]
+    };
+    expect(seaRiskStatus(sea, now)).toMatchObject({ key: "high", level: 1.45, forecast: true });
+    expect(seaRiskStatus({ ...sea, stale: true }, now)).toBeNull();
+  });
+});

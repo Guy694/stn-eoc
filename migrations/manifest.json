@@ -45,6 +45,8 @@
     "20261007_rain_alerts.sql",
     "20261007_incident_confirmations.sql",
     "20261007_health_facility_status.sql",
-    "20261007_incident_tracking.sql"
+    "20261007_incident_tracking.sql",
+    "20261009_vulnerable_persons.sql",
+    "20261009_system_settings.sql"
   ]
 }

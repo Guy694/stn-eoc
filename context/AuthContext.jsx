@@ -19,7 +19,9 @@ export function AuthProvider({ children }) {
     const isPublicPath = useCallback(() => {
         if (typeof window === 'undefined') return false;
         const normalizedPath = window.location.pathname.replace(/^\/stn-eoc/, '') || '/';
-        const publicPages = ['/', '/login', '/register', '/privacy-policy', '/auth/thaiid/callback'];
+        const publicPages = ['/', '/login', '/register', '/privacy-policy', '/auth/thaiid/callback', '/maintenance'];
+        // ระหว่างปิดปรับปรุง proxy แสดงหน้าแจ้งปิดปรับปรุงแทนทุกหน้า (URL เดิม) — ไม่ต้องตรวจ session/ไม่ส่งไปหน้า login
+        if (document.querySelector('[data-maintenance-page]')) return true;
         return normalizedPath.startsWith('/public/')
             || publicPages.some(page => normalizedPath === page || normalizedPath.startsWith(`${page}/`));
     }, []);

@@ -29,7 +29,8 @@ import HeroWeatherFx from "@/components/public/home/HeroWeatherFx";
 import { weatherScene } from "@/lib/weatherFx";
 import { choosePopup, loadSeenPopups, markPopupsSeen, urgentAlerts } from "@/lib/homePopups";
 import { OpsTodayCard, RoadAlerts } from "@/components/public/home/OpsToday";
-import { roadAlerts, shelterSummary } from "@/lib/homeSignals";
+import { citizenWaterReports, roadAlerts, shelterSummary } from "@/lib/homeSignals";
+import CitizenWaterReports from "@/components/public/home/CitizenWaterReports";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
 
@@ -282,6 +283,7 @@ export default function PublicHome() {
   const [water, setWater] = useState({ loading: true, stations: [], fetchedAt: null });
   const [ops, setOps] = useState(null);
   const [roads, setRoads] = useState([]);
+  const [waterReports, setWaterReports] = useState([]);
   const [shelters, setShelters] = useState([]);
   const [popupAnnouncement, setPopupAnnouncement] = useState(undefined);
   const [popup, setPopup] = useState(null);
@@ -328,7 +330,9 @@ export default function PublicHome() {
       if (!controller.signal.aborted) setOps(json?.open ? json.data : null);
     });
     load("/stn-eoc/api/public/verified-incidents").then((json) => {
-      if (!controller.signal.aborted) setRoads(roadAlerts(json?.data || []));
+      if (controller.signal.aborted) return;
+      setRoads(roadAlerts(json?.data || []));
+      setWaterReports(citizenWaterReports(json?.data || []));
     });
     load("/stn-eoc/api/public/announcements/popup").then((json) => {
       if (!controller.signal.aborted) setPopupAnnouncement(json?.data || null);
@@ -586,6 +590,9 @@ export default function PublicHome() {
         {/* ── น้ำในคลองตอนนี้ ── */}
         <CanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} />
 
+        {/* ── รายงานน้ำจากประชาชน (มือถือ/แท็บเล็ต: แถบเลื่อนต่อจากระดับน้ำในคลอง) ── */}
+        <CitizenWaterReports reports={waterReports} layout="strip" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:hidden" />
+
         {/* ── สถานการณ์ที่ดำเนินการอยู่ + สิ่งที่ควรทำ ── */}
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <section aria-labelledby="events-title">
@@ -632,6 +639,8 @@ export default function PublicHome() {
           </section>
 
           <section aria-labelledby="todo-title">
+            {/* จอใหญ่: แผงข้างเหนือ "สิ่งที่ควรทำ" */}
+            <CitizenWaterReports reports={waterReports} layout="list" className="mb-8 hidden lg:block" />
             <h2 id="todo-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">สิ่งที่ควรทำตอนนี้</h2>
             {adviceGroups.length === 0 ? (
               <p className="mt-3 text-[1.05rem] leading-8 text-slate-700">ใช้ชีวิตได้ตามปกติ และติดตามข่าวสารจากหน่วยงานราชการเป็นระยะ</p>

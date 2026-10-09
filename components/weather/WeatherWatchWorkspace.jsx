@@ -51,6 +51,7 @@ import ElevationLegend from "@/components/public/map/ElevationLegend";
 import { DISCHARGE_LEVELS } from "@/lib/forecastSignals";
 import { PM25_UNIT } from "@/lib/pm25";
 import Pm25Card, { Pm25Dot, Pm25Legend } from "@/components/weather/Pm25Card";
+import SeaLevelCard, { SeaLevelPill } from "@/components/weather/SeaLevelCard";
 
 const WeatherRiskMap = dynamic(() => import("@/components/weather/WeatherRiskMap"), {
   ssr: false,
@@ -217,6 +218,8 @@ export default function WeatherWatchWorkspace() {
   const [colorBy, setColorBy] = useState("risk");
   const [pm25, setPm25] = useState(null);
   const [pm25Error, setPm25Error] = useState("");
+  const [seaLevel, setSeaLevel] = useState(null);
+  const [seaLevelError, setSeaLevelError] = useState("");
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -261,6 +264,25 @@ export default function WeatherWatchWorkspace() {
     const timer = window.setInterval(loadPm25, 30 * 60 * 1000);
     return () => window.clearInterval(timer);
   }, [loadPm25]);
+
+  // ระดับน้ำทะเล/น้ำทะเลหนุน (สถานี IOC ลังกาวี วัดรายนาที) — โหลดแยก อัปเดตทุก 10 นาที
+  const loadSeaLevel = useCallback(async () => {
+    try {
+      const response = await fetch("/stn-eoc/api/public/sea-level");
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.error || "ยังดึงข้อมูลระดับน้ำทะเลไม่ได้");
+      setSeaLevel(payload);
+      setSeaLevelError("");
+    } catch (err) {
+      setSeaLevelError(err.message || "ยังดึงข้อมูลระดับน้ำทะเลไม่ได้");
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSeaLevel();
+    const timer = window.setInterval(loadSeaLevel, 10 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [loadSeaLevel]);
 
   useEffect(() => {
     loadWeather();
@@ -370,6 +392,12 @@ export default function WeatherWatchWorkspace() {
                   <Pm25Dot value={pm25.province.value} />
                   PM2.5 {pm25.province.value} <span className="text-[11px] font-normal text-white/60">{PM25_UNIT}</span>
                 </button>
+              </>
+            ) : null}
+            {seaLevel?.status ? (
+              <>
+                <span className="text-white/60">|</span>
+                <SeaLevelPill data={seaLevel} />
               </>
             ) : null}
             <span className="text-white/60">|</span>
@@ -506,6 +534,8 @@ export default function WeatherWatchWorkspace() {
                     districtName={selectedDistrict.district_name}
                     onShowMap={() => { setViewMode("risk"); setColorBy("pm25"); }}
                   />
+
+                  <SeaLevelCard data={seaLevel} error={seaLevelError} />
 
                   {(selectedDistrict.heavy_rain_today || selectedDistrict.heavy_rain_tomorrow) && (
                     <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">

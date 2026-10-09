@@ -13,10 +13,12 @@ export const EVENT_MODULES = {
     items: (ctx) => [
       { key: "brief", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
       { key: "overview", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
+      { key: "area-risk", name: "วิเคราะห์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "รวมฝน น้ำในคลอง น้ำทะเลหนุน ประวัติน้ำท่วม ภูมิประเทศ และกลุ่มเปราะบาง เป็นอันดับตำบลที่ต้องไปก่อน" },
       { key: "command", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
       { key: "records", name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", iconKey: "flood" },
       { key: "shelters", name: "ศูนย์พักพิง", path: `/eoc/shelters?eoc=flood${ctx.sessionId ? `&session=${ctx.sessionId}` : ""}`, iconKey: "shelter", description: "เปิดใช้ศูนย์และอัปเดตยอดผู้พักพิง" },
       { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", iconKey: "vulnerable", description: "ได้รับผลกระทบ ดูแลแล้ว เคลื่อนย้ายแล้ว" },
+      { key: "vulnerable-map", name: "แผนที่กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-persons", iconKey: "map", description: "รายบุคคล พิกัดบ้าน และสถานะการเข้าช่วยเหลือ (เฉพาะเจ้าหน้าที่)" },
       { key: "affected", name: "ผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", iconKey: "people" },
       { key: "health", name: "โรคและสุขภาพ", path: "/eoc/flood/health", iconKey: "health", description: "ผู้ป่วยในศูนย์พักพิงและในชุมชนช่วงน้ำท่วม" },
       { key: "supplies", name: "เวชภัณฑ์และคลังยา", path: "/eoc/flood/supplies", iconKey: "inventory", description: "คงคลัง รับเข้า เบิกจ่าย รายการใกล้หมด" },
@@ -35,6 +37,7 @@ export const EVENT_MODULES = {
       { key: "daily", name: "สรุปรายวัน", path: "/eoc/disease/daily-risk", iconKey: "daily" },
       { key: "map", name: "แผนที่", path: "/eoc/disease/map", iconKey: "map" },
       { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-groups", iconKey: "vulnerable", description: "ได้รับผลกระทบ ดูแลแล้ว เคลื่อนย้ายแล้ว" },
+      { key: "vulnerable-map", name: "แผนที่กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-persons", iconKey: "map", description: "รายบุคคล พิกัดบ้าน และสถานะการเข้าช่วยเหลือ (เฉพาะเจ้าหน้าที่)" },
       { key: "it-support", name: "รายงาน IT support", path: "/eoc/disease/it-support", iconKey: "server", description: "ปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการแก้ไข" }
     ]
   },
