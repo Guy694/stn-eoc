@@ -61,7 +61,9 @@ export async function proxy(request) {
 
 export const config = {
     // ทุกหน้าและ API ยกเว้นไฟล์ static (รูป, สคริปต์, ฟอนต์) — ตอนระบบเปิดปกติ proxy อ่านค่าจากหน่วยความจำ (แคช 10 วินาที) เท่านั้น
+    // หมายเหตุ: หน้าแรก "/" ต้องระบุแยก — ถ้าให้ regex ".*" จับ "/" ด้วย (ร่วมกับ basePath) Next ตอบหน้าว่าง
     matcher: [
-        "/((?!_next/static|_next/image|favicon\\.ico|img/|uploads/|infographics/|flood-maps/|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|css|js|map|txt|xml|json|woff2?|ttf|pdf|geojson)$).*)",
+        "/",
+        "/((?!_next/static|_next/image|favicon\\.ico|img/|uploads/|infographics/|flood-maps/|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|css|js|map|txt|xml|json|woff2?|ttf|pdf|geojson)$).+)",
     ],
 };

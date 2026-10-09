@@ -13,7 +13,7 @@ export const EVENT_MODULES = {
     items: (ctx) => [
       { key: "brief", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
       { key: "overview", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
-      { key: "area-risk", name: "วิเคราะห์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "รวมฝน น้ำในคลอง น้ำทะเลหนุน ประวัติน้ำท่วม ภูมิประเทศ และกลุ่มเปราะบาง เป็นอันดับตำบลที่ต้องไปก่อน" },
+      { key: "area-risk", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
       { key: "command", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
       { key: "records", name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", iconKey: "flood" },
       { key: "shelters", name: "ศูนย์พักพิง", path: `/eoc/shelters?eoc=flood${ctx.sessionId ? `&session=${ctx.sessionId}` : ""}`, iconKey: "shelter", description: "เปิดใช้ศูนย์และอัปเดตยอดผู้พักพิง" },

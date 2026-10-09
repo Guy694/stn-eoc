@@ -74,3 +74,11 @@ describe('proxy (maintenance mode)', () => {
         expect((await proxy(request('/stn-eoc/eoc/flood/', 'session_token=stafftoken'))).headers.get('x-maintenance')).toBeNull();
     });
 });
+
+describe('proxy matcher', () => {
+    test('home page "/" is listed on its own (a catch-all regex that matches "/" makes Next serve a blank home page with basePath)', () => {
+        const { config } = require('@/proxy');
+        expect(config.matcher[0]).toBe('/');
+        expect(config.matcher.slice(1).every((pattern) => pattern.endsWith('.+)'))).toBe(true);
+    });
+});
