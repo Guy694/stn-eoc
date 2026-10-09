@@ -107,29 +107,29 @@ export default function PublicTopNavigation({ activeMenu }) {
           <div className="ml-auto flex items-center gap-1.5">{items.filter(item => item.emphasis).map(item => renderItem(item))}</div>
         </div>
 
-        <div className="flex min-h-14 items-center justify-between lg:hidden">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" aria-hidden="true" />
-            <span className="hidden text-sm font-black sm:inline">ข้อมูลสาธารณะ</span>
+        {/* มือถือ/แท็บเล็ต: ปุ่มหลัก 2 ปุ่มกว้างเท่ากัน สูงเท่ากัน + ปุ่มเมนูเป็นไอคอนจัตุรัส */}
+        <div className="flex min-h-14 items-center gap-2 py-2 lg:hidden">
+          <Building2 className="hidden h-5 w-5 shrink-0 sm:block" aria-hidden="true" />
+          <span className="hidden text-sm font-black md:inline">ข้อมูลสาธารณะ</span>
+          <div className="flex min-w-0 flex-1 items-stretch gap-2 sm:ml-auto sm:max-w-md sm:flex-none">
+            <HelpRequestLink kind="water" className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-2 text-[13px] font-black leading-none text-white shadow-sm hover:bg-sky-400 sm:px-4 sm:text-sm" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! shadow-none! hover:bg-white/15!">
+              <Waves className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">รายงานระดับน้ำ</span>
+            </HelpRequestLink>
+            <HelpRequestLink className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-600 px-2 text-[13px] font-black leading-none text-white shadow-sm hover:bg-red-500 sm:px-4 sm:text-sm" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! shadow-none! hover:bg-white/15!">
+              <Siren className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">ขอความช่วยเหลือ</span>
+            </HelpRequestLink>
           </div>
-          <div className="flex items-center gap-2">
-          <HelpRequestLink kind="water" className="flex items-center gap-1.5 rounded-lg bg-sky-500 px-2.5 py-2 text-sm font-black text-white hover:bg-sky-400" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! hover:bg-white/15!">
-            <Waves className="h-4 w-4" aria-hidden="true" /><span className="sm:hidden">ระดับน้ำ</span><span className="hidden sm:inline">รายงานระดับน้ำ</span>
-          </HelpRequestLink>
-          <HelpRequestLink className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-sm font-black text-white hover:bg-red-500" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! hover:bg-white/15!">
-            <Siren className="h-4 w-4" aria-hidden="true" /> ขอความช่วยเหลือ
-          </HelpRequestLink>
           <button
             type="button"
             onClick={() => setIsOpen(value => !value)}
-            className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-bold hover:bg-white/20"
+            className="flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-white/10 text-sm font-bold hover:bg-white/20 sm:w-auto sm:px-3"
             aria-expanded={isOpen}
             aria-controls="public-mobile-menu"
+            aria-label={isOpen ? "ปิดเมนู" : "เปิดเมนู"}
           >
             {isOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
-            {isOpen ? "ปิด" : "เมนู"}
+            <span className="hidden sm:inline">{isOpen ? "ปิด" : "เมนู"}</span>
           </button>
-          </div>
         </div>
 
         {isOpen && (
