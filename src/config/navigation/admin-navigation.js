@@ -11,19 +11,20 @@ export const EVENT_MODULES = {
     label: "อุทกภัย",
     pathPrefixes: ["/eoc/flood"],
     items: (ctx) => [
-      { key: "brief", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
-      { key: "overview", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
-      { key: "area-risk", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
-      { key: "command", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
-      { key: "records", name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", iconKey: "flood" },
-      { key: "shelters", name: "ศูนย์พักพิง", path: `/eoc/shelters?eoc=flood${ctx.sessionId ? `&session=${ctx.sessionId}` : ""}`, iconKey: "shelter", description: "เปิดใช้ศูนย์และอัปเดตยอดผู้พักพิง" },
-      { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", iconKey: "vulnerable", description: "ได้รับผลกระทบ ดูแลแล้ว เคลื่อนย้ายแล้ว" },
-      { key: "vulnerable-map", name: "แผนที่กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-persons", iconKey: "map", description: "รายบุคคล พิกัดบ้าน และสถานะการเข้าช่วยเหลือ (เฉพาะเจ้าหน้าที่)" },
-      { key: "affected", name: "ผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", iconKey: "people" },
-      { key: "health", name: "โรคและสุขภาพ", path: "/eoc/flood/health", iconKey: "health", description: "ผู้ป่วยในศูนย์พักพิงและในชุมชนช่วงน้ำท่วม" },
-      { key: "supplies", name: "เวชภัณฑ์และคลังยา", path: "/eoc/flood/supplies", iconKey: "inventory", description: "คงคลัง รับเข้า เบิกจ่าย รายการใกล้หมด" },
-      { key: "it-support", name: "รายงาน IT support", path: "/eoc/flood/it-support", iconKey: "server", description: "ปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการแก้ไข" },
-      { key: "team", name: "ทีมปฏิบัติการ", path: "/eoc/flood/operations-team", iconKey: "team" }
+      { key: "brief", group: "สั่งการ", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
+      { key: "overview", group: "สั่งการ", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
+      { key: "area-risk", group: "สั่งการ", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
+      { key: "command", group: "สั่งการ", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
+      { key: "records", group: "พื้นที่และประชาชน", name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", iconKey: "flood" },
+      { key: "shelters", group: "พื้นที่และประชาชน", name: "ศูนย์พักพิง", path: `/eoc/shelters?eoc=flood${ctx.sessionId ? `&session=${ctx.sessionId}` : ""}`, iconKey: "shelter", description: "เปิดใช้ศูนย์และอัปเดตยอดผู้พักพิง" },
+      { key: "vulnerable", group: "พื้นที่และประชาชน", name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", iconKey: "vulnerable", description: "ยอดรายหมู่บ้าน และรายบุคคลบนแผนที่ (พิกัดบ้าน สถานะการช่วยเหลือ)", alsoActive: ["/eoc/flood/vulnerable-persons"] },
+      { key: "affected", group: "พื้นที่และประชาชน", name: "ผู้ได้รับผลกระทบ", path: "/eoc/flood/affected", iconKey: "people" },
+      { key: "health", group: "การแพทย์และทีม", name: "โรคและสุขภาพ", path: "/eoc/flood/health", iconKey: "health", description: "ผู้ป่วยในศูนย์พักพิงและในชุมชนช่วงน้ำท่วม" },
+      { key: "team-reports", group: "การแพทย์และทีม", name: "รายงานประจำวันรายอำเภอ", path: "/eoc/flood/team-reports", iconKey: "daily", description: "MCATT หน่วยแพทย์ MERT จ่ายยา Doxy และการแจกจ่ายทรัพยากร" },
+      { key: "team", group: "การแพทย์และทีม", name: "ทีมปฏิบัติการ", path: "/eoc/flood/operations-team", iconKey: "team" },
+      { key: "supplies", group: "ทรัพยากร", name: "เวชภัณฑ์และคลังยา", path: "/eoc/flood/supplies", iconKey: "inventory", description: "คงคลัง รับเข้า เบิกจ่าย รายการใกล้หมด" },
+      { key: "oxygen", group: "ทรัพยากร", name: "ออกซิเจนเหลว", path: "/eoc/flood/oxygen", iconKey: "inventory", description: "คงเหลือของแต่ละโรงพยาบาล ใช้ได้อีกกี่วัน" },
+      { key: "it-support", group: "ทรัพยากร", name: "รายงาน IT support", path: "/eoc/flood/it-support", iconKey: "server", description: "ปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการแก้ไข" }
     ]
   },
   disease: {
@@ -36,8 +37,7 @@ export const EVENT_MODULES = {
       { key: "facility-reports", name: "รายงานจากหน่วยบริการ", path: "/eoc/disease/records?tab=facility", iconKey: "health" },
       { key: "daily", name: "สรุปรายวัน", path: "/eoc/disease/daily-risk", iconKey: "daily" },
       { key: "map", name: "แผนที่", path: "/eoc/disease/map", iconKey: "map" },
-      { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-groups", iconKey: "vulnerable", description: "ได้รับผลกระทบ ดูแลแล้ว เคลื่อนย้ายแล้ว" },
-      { key: "vulnerable-map", name: "แผนที่กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-persons", iconKey: "map", description: "รายบุคคล พิกัดบ้าน และสถานะการเข้าช่วยเหลือ (เฉพาะเจ้าหน้าที่)" },
+      { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-groups", iconKey: "vulnerable", description: "ยอดรายหมู่บ้าน และรายบุคคลบนแผนที่", alsoActive: ["/eoc/disease/vulnerable-persons"] },
       { key: "it-support", name: "รายงาน IT support", path: "/eoc/disease/it-support", iconKey: "server", description: "ปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการแก้ไข" }
     ]
   },
@@ -206,7 +206,21 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
 }
 
 /** ตรงกับเมนูไหน: เทียบ path และ query ที่ระบุในเมนู (เช่น ?tab=registry) */
+/** จัดเมนูของเหตุการณ์เป็นกลุ่มตาม item.group (เมนูที่ไม่มีกลุ่มรวมไว้กลุ่มเดียวไม่มีหัวข้อ) */
+export function groupMenuItems(items = []) {
+  const groups = [];
+  for (const item of items) {
+    const title = item.group || "";
+    const last = groups[groups.length - 1];
+    if (last && last.title === title) last.items.push(item);
+    else groups.push({ title, items: [item] });
+  }
+  return groups;
+}
+
 export function isMenuItemActive(item, pathname, search = "") {
+  // หน้าที่เป็นส่วนหนึ่งของเมนูนี้ (เช่น แผนที่รายบุคคลอยู่ใต้ "กลุ่มเปราะบาง")
+  if ((item.alsoActive || []).some((path) => pathname === path || pathname === `${path}/`)) return true;
   const [itemPath, itemQuery = ""] = item.path.split("?");
   if (pathname !== itemPath && !(itemPath !== "/" && pathname === `${itemPath}/`)) return false;
   // เทียบเฉพาะ "แท็บ" — เมนูที่ไม่ระบุแท็บคือแท็บเริ่มต้นของหน้า จึงไม่ active เมื่อกำลังดูแท็บอื่น

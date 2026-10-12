@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
-import { AlertTriangle, ArrowRight, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Clock, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
 
 // Component แยกสำหรับจัดการ error จาก ThaiD callback
 function ThaiDErrorHandler({ setError }) {
@@ -116,9 +116,20 @@ function LoginForm() {
     };
 
     return (
-        <main className="min-h-screen bg-[#edf5fc] p-4 text-slate-900 sm:p-6">
-            <div className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
-                <section className="relative flex min-h-[360px] flex-col justify-between overflow-hidden bg-[#083865] p-6 text-white sm:p-8 lg:p-10">
+        <main className="min-h-dvh bg-white text-slate-900 lg:bg-[#edf5fc] lg:p-6">
+            {/* จอมือถือ/แท็บเล็ต: แถบหัวกะทัดรัด แล้วเข้าแบบฟอร์มทันที (ส่วนแนะนำระบบแสดงเฉพาะจอใหญ่) */}
+            <header className="flex items-center gap-3 bg-[#083865] px-4 py-3 text-white lg:hidden">
+                <Image src="/stn-eoc/img/logo.png" alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full bg-white p-0.5" />
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-black leading-tight">Satun Geo-EOC</p>
+                    <p className="truncate text-xs text-blue-100">ศูนย์ปฏิบัติการภาวะฉุกเฉิน สสจ.สตูล</p>
+                </div>
+                <Link href="/" className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold text-blue-50 hover:bg-white/10">
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />หน้าสาธารณะ
+                </Link>
+            </header>
+            <div className="mx-auto grid w-full max-w-6xl bg-white lg:min-h-[calc(100vh-3rem)] lg:grid-cols-[1.05fr_0.95fr] lg:overflow-hidden lg:rounded-2xl lg:border lg:border-blue-100 lg:shadow-2xl">
+                <section className="relative hidden flex-col justify-between overflow-hidden bg-[#083865] p-10 text-white lg:flex">
                     <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, #ffffff 0, transparent 26%), radial-gradient(circle at 80% 10%, #7dd3fc 0, transparent 28%), radial-gradient(circle at 40% 90%, #bae6fd 0, transparent 24%)" }} />
                     <div className="relative">
                         <Link href="/" className="inline-flex items-center gap-3 rounded-full bg-white/10 px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/15">
@@ -129,7 +140,7 @@ function LoginForm() {
 
                     <div className="relative my-10 max-w-xl">
                         <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-100">ช่องทางเข้าระบบสำหรับเจ้าหน้าที่</p>
-                        <h1 className="text-4xl font-black leading-tight sm:text-5xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
+                        <p className="text-4xl font-black leading-tight sm:text-5xl">เข้าสู่ระบบเจ้าหน้าที่</p>
                         <p className="mt-4 text-base leading-7 text-blue-50">
                             ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
                         </p>
@@ -154,28 +165,33 @@ function LoginForm() {
                     </div>
                 </section>
 
-                <section className="flex items-center justify-center p-5 sm:p-8 lg:p-10">
+                <section className="flex justify-center px-5 pb-6 pt-6 sm:px-8 lg:items-center lg:p-10">
                     <div className="w-full max-w-md">
-                        <div className="mb-7">
-                            <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto h-20 w-20 rounded-full bg-white p-2" />
-                            <p className="text-lg font-black text-[#0b4c86] text-center">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
-                            <h2 className="mt-1 text-3xl font-black text-slate-950">เข้าสู่ระบบ</h2>
-                            <p className="mt-2 text-sm leading-6 text-slate-500">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiD เพื่อเข้าสู่พื้นที่ปฏิบัติงาน</p>
+                        <div className="mb-5 lg:mb-7">
+                            <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto hidden h-20 w-20 rounded-full bg-white p-2 lg:block" />
+                            <p className="hidden text-center text-lg font-black text-[#0b4c86] lg:block">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
+                            <h1 className="text-2xl font-black text-slate-950 lg:mt-1 lg:text-3xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
+                            <p className="mt-1 text-sm leading-6 text-slate-500 lg:mt-2">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiD</p>
                         </div>
 
-                        {error && (
-                            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                <div className="flex items-start gap-2">
-                                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-                                    <div className="flex-1 whitespace-pre-line">{error}</div>
+                        {error && (() => {
+                            // หมดเวลาใช้งาน = แจ้งให้ทราบ (สีส้ม) ไม่ใช่ข้อผิดพลาด
+                            const expired = error.startsWith("การเข้าสู่ระบบหมดอายุ");
+                            const Icon = expired ? Clock : AlertTriangle;
+                            return (
+                                <div role="alert" className={`mb-4 rounded-xl border px-3 py-2.5 text-sm ${expired ? "border-amber-200 bg-amber-50 text-amber-900" : "border-red-200 bg-red-50 text-red-700"}`}>
+                                    <div className="flex items-start gap-2">
+                                        <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                                        <div className="flex-1 whitespace-pre-line">{expired ? "หมดเวลาใช้งาน (ไม่ได้ใช้งานเกิน 10 นาที) กรุณาเข้าสู่ระบบอีกครั้ง" : error}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <label htmlFor="username" className="block">
-                                <span className="mb-2 block text-sm font-bold text-slate-700">ชื่อผู้ใช้</span>
-                                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+                                <span className="mb-1.5 block text-sm font-bold text-slate-700">ชื่อผู้ใช้</span>
+                                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm lg:py-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
                                     <UserRound className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
                                     <input
                                         type="text"
@@ -183,7 +199,7 @@ function LoginForm() {
                                         name="username"
                                         value={formData.username}
                                         onChange={handleChange}
-                                        className="w-full bg-transparent text-slate-800 outline-none placeholder:text-slate-400"
+                                        className="w-full bg-transparent text-base text-slate-800 outline-none placeholder:text-slate-400"
                                         placeholder="กรอกชื่อผู้ใช้"
                                         autoComplete="username"
                                         required
@@ -192,8 +208,8 @@ function LoginForm() {
                             </label>
 
                             <label htmlFor="password" className="block">
-                                <span className="mb-2 block text-sm font-bold text-slate-700">รหัสผ่าน</span>
-                                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+                                <span className="mb-1.5 block text-sm font-bold text-slate-700">รหัสผ่าน</span>
+                                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm lg:py-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
                                     <Lock className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
                                     <input
                                         type="password"
@@ -201,7 +217,7 @@ function LoginForm() {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="w-full bg-transparent text-slate-800 outline-none placeholder:text-slate-400"
+                                        className="w-full bg-transparent text-base text-slate-800 outline-none placeholder:text-slate-400"
                                         placeholder="กรอกรหัสผ่าน"
                                         autoComplete="current-password"
                                         required
@@ -214,7 +230,7 @@ function LoginForm() {
                                     <input type="checkbox" className="h-4 w-4 rounded border-slate-300 accent-blue-700" />
                                     จดจำฉันไว้
                                 </label>
-                                <span className="font-semibold text-slate-400">ติดต่อผู้ดูแลหากลืมรหัสผ่าน</span>
+                                <span className="text-right text-xs font-semibold text-slate-400">ลืมรหัสผ่าน ติดต่อผู้ดูแล</span>
                             </div>
 
                             <button
@@ -236,7 +252,7 @@ function LoginForm() {
                             </button>
                         </form>
 
-                        <div className="my-6 flex items-center gap-3 text-xs font-bold text-slate-400">
+                        <div className="my-4 flex items-center gap-3 text-xs font-bold text-slate-400 lg:my-6">
                             <div className="h-px flex-1 bg-slate-200" />
                             หรือ
                             <div className="h-px flex-1 bg-slate-200" />
@@ -251,12 +267,13 @@ function LoginForm() {
                             เข้าสู่ระบบด้วย ThaiD
                         </a>
 
-                        <div className="mt-7 flex flex-col gap-3 text-center text-sm sm:flex-row sm:items-center sm:justify-center sm:text-center">
+                        <div className="mt-5 flex items-center justify-center gap-4 text-center text-sm lg:mt-7">
                             <Link href="/register" className="font-bold text-blue-700 hover:text-blue-900">ลงทะเบียนผู้ใช้งาน</Link>
-                            <Link href="/" className="font-bold text-blue-700 hover:text-blue-900">กลับหน้าสาธารณะ</Link>
+                            <span className="hidden text-slate-300 lg:inline" aria-hidden="true">|</span>
+                            <Link href="/" className="hidden font-bold text-blue-700 hover:text-blue-900 lg:inline">กลับหน้าสาธารณะ</Link>
                         </div>
 
-                        <p className="mt-8 text-center text-xs text-slate-400">© 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
+                        <p className="mt-6 text-center text-xs text-slate-400 lg:mt-8">© 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
 
                         <Suspense fallback={null}>
                             <ThaiDErrorHandler setError={setError} />

@@ -7,8 +7,6 @@ import {
     CalendarClock,
     Car,
     Droplets,
-    Gauge,
-    ShieldCheck,
     Sun,
     UserRound
 } from "lucide-react";
@@ -17,6 +15,14 @@ import { useEOC } from "@/context/EOCContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import CitizenDashboard from "@/components/CitizenDashboard";
 import { getOperationSessionLock, setOperationSessionLock } from "@/lib/eocSessionLock";
+import { EVENT_MODULES } from "@/src/config/navigation/admin-navigation";
+
+// ทางลัดงานที่ทำบ่อยของแต่ละเหตุการณ์ (key ของเมนูใน EVENT_MODULES)
+const QUICK_KEYS = {
+    flood: ['overview', 'records', 'shelters', 'team-reports', 'vulnerable', 'supplies', 'oxygen', 'brief'],
+    disease: ['overview', 'records', 'daily', 'map', 'vulnerable'],
+    'festival-accidents': ['overview', 'records', 'service-points']
+};
 
 // กำหนดเหตุการณ์ที่ระบบรองรับ
 const EOC_MODULES = [
@@ -47,12 +53,11 @@ const EOC_MODULES = [
         name: 'อุบัติเหตุช่วงเทศกาล',
         icon: Car,
         description: 'ระบบติดตามอุบัติเหตุ 7 วันอันตราย ปีใหม่ / สงกรานต์',
-        path: '#',
+        path: '/eoc/festival-accidents',
         tone: 'rose',
-        accentClass: 'bg-slate-300',
-        iconClass: 'bg-slate-100 text-slate-500',
+        accentClass: 'bg-[#0b4c86]',
+        iconClass: 'bg-[#edf5fc] text-[#0b4c86]',
         activeClass: 'border-[#c9dcee] bg-[#f7fbff]',
-        comingSoon: true,
     },
     {
         key: 'drought',
@@ -131,6 +136,23 @@ export default function DashboardPage() {
         }));
     };
 
+    // ทางลัดจากแถบ "เหตุการณ์ที่เปิดอยู่": ล็อกเหตุการณ์ที่เปิดอยู่ให้อัตโนมัติ แล้วไปหน้าที่เลือก
+    const handleQuickEnter = (module, path) => {
+        if (isOperationalUser) {
+            const active = (moduleSessions[module.key] || []).find((item) => item.status === 'active');
+            if (active) {
+                setOperationSessionLock({
+                    moduleType: module.key,
+                    sessionId: active.id,
+                    sessionNumber: active.session_number,
+                    sessionStatus: active.status,
+                    sessionOpenedAt: active.opened_at
+                });
+            }
+        }
+        router.push(path);
+    };
+
     const handleEnterOperations = (module) => {
         if (!isOperationalUser) {
             router.push(module.path);
@@ -173,7 +195,6 @@ export default function DashboardPage() {
     }
 
     const activeModules = EOC_MODULES.filter((mod) => eocStatus?.[mod.key]?.is_active).length;
-    const availableModules = EOC_MODULES.filter((mod) => !mod.comingSoon).length;
     const currentDateLabel = new Date().toLocaleDateString('th-TH', {
         day: 'numeric',
         month: 'long',
@@ -193,10 +214,10 @@ export default function DashboardPage() {
                                     <div>
                                         <p className="mb-2 text-sm font-semibold text-[#0b4c86]">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
                                         <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">
-                                            เหตุการณ์ต่างๆ
+                                            {activeModules ? 'เหตุการณ์ที่กำลังปฏิบัติงาน' : 'ยังไม่มีเหตุการณ์ที่เปิดอยู่'}
                                         </h1>
                                         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                                            เลือกประเภทเหตุการณ์เพื่อเข้าสู่หน้าปฏิบัติการและติดตามข้อมูลล่าสุดของแต่ละ EOC
+                                            {activeModules ? "กดทางลัดด้านล่างเพื่อไปงานที่ต้องทำในเหตุการณ์ที่เปิดอยู่ได้ทันที" : "เลือกประเภทเหตุการณ์ด้านล่างเพื่อดูข้อมูลย้อนหลังของแต่ละ EOC"}
                                         </p>
                                     </div>
                                     <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
@@ -205,29 +226,12 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                                    <StatusTile
-                                        icon={Gauge}
-                                        label="EOC เปิดใช้งาน"
-                                        value={eocLoading ? '-' : activeModules}
-                                        unit="ประเภท"
-                                        tone="text-[#083865] bg-[#edf5fc] border-[#c9dcee]"
-                                    />
-                                    <StatusTile
-                                        icon={ShieldCheck}
-                                        label="โมดูลพร้อมใช้งาน"
-                                        value={availableModules}
-                                        unit="ประเภท"
-                                        tone="text-[#083865] bg-white border-[#c9dcee]"
-                                    />
-                                    <StatusTile
-                                        icon={Activity}
-                                        label="ทั้งหมดในระบบ"
-                                        value={EOC_MODULES.length}
-                                        unit="ประเภท"
-                                        tone="text-slate-700 bg-white border-slate-200"
-                                    />
-                                </div>
+                                <ActiveEvents
+                                    loading={eocLoading}
+                                    modules={EOC_MODULES.filter((mod) => eocStatus?.[mod.key]?.is_active)}
+                                    eocStatus={eocStatus}
+                                    onEnter={handleQuickEnter}
+                                />
                             </section>
 
                             <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -423,19 +427,53 @@ function EventModuleCard({
     return <div className="block">{content}</div>;
 }
 
-function StatusTile({ icon: Icon, label, value, unit, tone }) {
+// เหตุการณ์ที่เปิดอยู่ + ทางลัดไปงานที่ทำบ่อย (กดแล้วเข้าเหตุการณ์ที่เปิดอยู่ทันที ไม่ต้องเลือกครั้งที่)
+function ActiveEvents({ loading, modules, eocStatus, onEnter }) {
+    if (loading) return <div className="mt-6 h-24 animate-pulse rounded-lg bg-slate-100" />;
+    if (!modules.length) {
+        return (
+            <p className="mt-6 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-600">
+                เมื่อผู้บัญชาการเปิดเหตุการณ์ ทางลัดไปงานที่ต้องทำจะแสดงตรงนี้ ระหว่างนี้เลือกประเภทเหตุการณ์ด้านล่างเพื่อดูข้อมูลย้อนหลังได้
+            </p>
+        );
+    }
     return (
-        <div className={`rounded-lg border px-4 py-3 ${tone}`}>
-            <div className="flex items-center justify-between gap-3">
-                <div>
-                    <p className="text-xs font-semibold opacity-75">{label}</p>
-                    <div className="mt-1 flex items-baseline gap-1">
-                        <span className="text-2xl font-bold">{value}</span>
-                        <span className="text-xs font-semibold opacity-70">{unit}</span>
+        <div className="mt-6 space-y-3">
+            {modules.map((module) => {
+                const status = eocStatus?.[module.key] || {};
+                const definition = EVENT_MODULES[module.key];
+                const items = definition ? definition.items({ sessionId: status.session_id }) : [];
+                const quick = (QUICK_KEYS[module.key] || []).map((key) => items.find((item) => item.key === key)).filter(Boolean);
+                const Icon = module.icon;
+                return (
+                    <div key={module.key} className="rounded-xl border border-[#c9dcee] bg-[#f7fbff] p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-[#0b4c86] ring-1 ring-[#c9dcee]"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                                <div>
+                                    <p className="font-black text-slate-900">
+                                        {module.key === 'disease' && status.disease_name ? status.disease_name : module.name}
+                                        {status.session_number ? ` ครั้งที่ ${status.session_number}` : ''}
+                                    </p>
+                                    <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700"><span className="h-2 w-2 rounded-full bg-emerald-500" />เปิดอยู่{status.activated_at ? ` ตั้งแต่ ${new Date(status.activated_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}` : ''}</p>
+                                </div>
+                            </div>
+                            <button type="button" onClick={() => onEnter(module, module.path)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b4c86] px-4 text-sm font-bold text-white hover:bg-[#083865]">
+                                เข้าห้องปฏิบัติการ <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                        </div>
+                        {quick.length ? (
+                            <nav aria-label={`ทางลัด ${module.name}`} className="mt-3 flex flex-wrap gap-2">
+                                {quick.map((item) => (
+                                    <button key={item.key} type="button" onClick={() => onEnter(module, item.path)} title={item.description || item.name} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:border-[#0b4c86] hover:text-[#0b4c86]">
+                                        {item.name}
+                                    </button>
+                                ))}
+                            </nav>
+                        ) : null}
                     </div>
-                </div>
-                <Icon className="h-5 w-5 opacity-80" aria-hidden="true" />
-            </div>
+                );
+            })}
         </div>
     );
 }

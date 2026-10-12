@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { useEOC } from "@/context/EOCContext";
-import { EVENT_MODULES, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
+import { EVENT_MODULES, groupMenuItems, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
 import { MENU_ICONS } from "@/components/Sidebar";
 import { formatDateTime } from "@/lib/adminApi";
 
@@ -41,18 +41,23 @@ export default function EventBar() {
         {status?.activated_at && open ? <span className="text-xs text-blue-100">เปิดเมื่อ {formatDateTime(status.activated_at)}</span> : null}
         {!open ? <span className="text-xs text-blue-100">ดูข้อมูลย้อนหลังได้ แต่ไม่ควรบันทึกเพิ่มเมื่อ EOC ปิดแล้ว</span> : null}
       </div>
-      <nav aria-label={`เมนูงาน${definition.label}`} className="flex gap-1 overflow-x-auto px-2 py-2">
-        {items.map((item) => {
-          const Icon = MENU_ICONS[item.iconKey] || ClipboardList;
-          const active = isMenuItemActive(item, pathname, search);
-          return (
-            <Link key={item.key} href={item.path} title={item.description} aria-current={active ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${active ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc] hover:text-[#0b4c86]"}`}>
-              <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.2} />
-              {item.name}
-            </Link>
-          );
-        })}
+      <nav aria-label={`เมนูงาน${definition.label}`} className="flex items-stretch gap-1 overflow-x-auto px-2 py-2">
+        {groupMenuItems(items).map((group, index) => (
+          <div key={group.title || "main"} className={`flex shrink-0 items-center gap-1 ${index ? "border-l border-slate-200 pl-2" : ""}`}>
+            {group.title ? <span className="hidden shrink-0 px-1 text-[11px] font-bold text-slate-400 xl:inline">{group.title}</span> : null}
+            {group.items.map((item) => {
+              const Icon = MENU_ICONS[item.iconKey] || ClipboardList;
+              const active = isMenuItemActive(item, pathname, search);
+              return (
+                <Link key={item.key} href={item.path} title={item.description} aria-current={active ? "page" : undefined}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${active ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc] hover:text-[#0b4c86]"}`}>
+                  <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.2} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
     </div>
   );

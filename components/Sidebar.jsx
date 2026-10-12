@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
-import { buildAdminMenu, buildOfficerEventSections, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
+import { buildAdminMenu, buildOfficerEventSections, groupMenuItems, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
 
 // ไอคอนตาม iconKey ของเมนู (โครงเมนูอยู่ที่ src/config/navigation/admin-navigation.js)
 const ICONS = {
@@ -286,7 +286,12 @@ export default function Sidebar() {
                         const mine = section.items.filter((item) => item.teamWork);
                         return (
                             <div className="px-1.5 pb-2">
-                                <ul className="space-y-0.5">{shared.map((item) => renderItem(item, true))}</ul>
+                                {groupMenuItems(shared).map((group) => (
+                                    <div key={group.title || "main"}>
+                                        {group.title ? <h4 className="px-3 pb-0.5 pt-2 text-[11px] font-bold text-slate-500">{group.title}</h4> : null}
+                                        <ul className="space-y-0.5">{group.items.map((item) => renderItem(item, true))}</ul>
+                                    </div>
+                                ))}
                                 {mine.length ? (
                                     <>
                                         <h4 className="mt-2 border-t border-emerald-200/70 px-3 pb-1 pt-2 text-[11px] font-bold text-slate-500">งานของกลุ่มภารกิจ</h4>
