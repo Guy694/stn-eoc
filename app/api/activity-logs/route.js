@@ -181,7 +181,7 @@ export async function GET(request) {
         const [countRows] = await connection.execute(countQuery, params);
 
         query += ' ORDER BY al.created_at DESC LIMIT ? OFFSET ?';
-        params.push(limit, offset);
+        params.push(String(limit), String(offset)); // mysql2 execute: ส่งเป็นสตริง (MySQL 8.0.22+ ไม่รับตัวเลขใน LIMIT ของ prepared statement)
 
         const [rows] = await connection.execute(query, params);
 

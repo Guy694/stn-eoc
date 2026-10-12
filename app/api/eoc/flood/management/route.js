@@ -51,7 +51,7 @@ export async function GET(request) {
 
     const teams = await query(`
       SELECT st.id AS session_team_id, t.team_code, t.team_name_th,
-             CONCAT(COALESCE(lead_officer.title, ''), lead_officer.given_name, ' ', lead_officer.family_name) AS lead,
+             CONCAT(COALESCE(lead_officer.title, ''), lead_officer.given_name, ' ', lead_officer.family_name) AS \`lead\`,
              COUNT(DISTINCT tm.id) AS member_count,
              latest_report.id AS report_id,
              latest_report.status AS report_status,

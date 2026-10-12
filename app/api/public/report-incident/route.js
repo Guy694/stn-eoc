@@ -8,6 +8,7 @@ import { stripImageMetadata } from '@/lib/imageSanitize';
 import { isValidCategory } from '@/lib/incidentPublishing';
 import { publicInternalError } from '@/lib/apiResponse';
 import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage, sendTelegramPhoto } from '@/lib/telegram';
+import { notifyOfficersOfNewHelp } from '@/lib/helpAlertsServer';
 import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { HELP_CLOSED_MESSAGE, PROBLEM_CLOSED_MESSAGE, WATER_CLOSED_MESSAGE, getOpenEocSessions, hasOpenEoc } from '@/lib/eocOpen';
 import { hasWaterTrendColumn } from '@/lib/incidentPublishingDb';
@@ -405,6 +406,8 @@ export async function POST(request) {
                 helpReason: helpReason || description || '-',
                 telegramPhoto
             });
+            // เด้งเข้ามือถือเจ้าหน้าที่ที่เปิดรับแจ้งเตือน (ไม่ทำให้การส่งคำขอของประชาชนล้มถ้าส่งไม่สำเร็จ)
+            await notifyOfficersOfNewHelp(result.insertId).catch((error) => console.warn('Officer push error:', error?.message));
         }
 
         return NextResponse.json({

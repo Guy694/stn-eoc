@@ -1,0 +1,63 @@
+"use client";
+
+// เปิด/ปิดแจ้งเตือนคำขอความช่วยเหลือเข้ามือถือ "เครื่องนี้" (Web Push) — ใช้ในหน้าโปรไฟล์
+import { useCallback, useEffect, useState } from "react";
+import { BellOff, BellRing, Smartphone } from "lucide-react";
+import { StatusPill } from "@/components/admin/crud";
+import { isIos, isStandalone, officerPushStatus, subscribeOfficerPush, unsubscribeOfficerPush } from "@/lib/pwaClient";
+
+export default function OfficerPushCard({ className = "" }) {
+  const [status, setStatus] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [iosNeedsInstall, setIosNeedsInstall] = useState(false);
+
+  const refresh = useCallback(() => officerPushStatus().then(setStatus).catch(() => setStatus({ supported: false })), []);
+  useEffect(() => {
+    setIosNeedsInstall(isIos() && !isStandalone());
+    refresh();
+  }, [refresh]);
+
+  const run = async (fn, done) => {
+    setBusy(true);
+    setMessage("");
+    try {
+      await fn();
+      setMessage(done);
+      await refresh();
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const on = Boolean(status?.subscribed);
+  let body;
+  if (!status) body = <p className="mt-3 text-sm text-slate-500">กำลังตรวจเครื่องนี้…</p>;
+  else if (iosNeedsInstall) body = <p className="mt-3 text-sm text-slate-600">iPhone/iPad: กดปุ่มแชร์ใน Safari › &ldquo;เพิ่มไปยังหน้าจอโฮม&rdquo; แล้วเปิดระบบจากไอคอน จึงจะเปิดแจ้งเตือนได้</p>;
+  else if (!status.supported) body = <p className="mt-3 text-sm text-slate-600">เบราว์เซอร์นี้รับแจ้งเตือนไม่ได้ ลองใช้ Chrome หรือ Safari รุ่นใหม่</p>;
+  else if (!status.enabled) body = <p className="mt-3 text-sm text-slate-600">ผู้ดูแลระบบยังไม่ได้ตั้งค่าระบบแจ้งเตือน (VAPID)</p>;
+  else if (status.permission === "denied") body = <p className="mt-3 text-sm text-slate-600">เครื่องนี้ปิดการแจ้งเตือนของเว็บไว้ เปิดได้ที่การตั้งค่าเบราว์เซอร์ › การแจ้งเตือน แล้วกลับมากดอีกครั้ง</p>;
+  else body = (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {on
+        ? <button type="button" disabled={busy} onClick={() => run(unsubscribeOfficerPush, "ปิดแจ้งเตือนงานบนเครื่องนี้แล้ว")} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60"><BellOff className="h-4 w-4" aria-hidden="true" />ปิดบนเครื่องนี้</button>
+        : <button type="button" disabled={busy} onClick={() => run(subscribeOfficerPush, "เปิดแล้ว เครื่องนี้จะเด้งเตือนเมื่อมีคำขอความช่วยเหลือ")} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#0b4c86] px-4 text-sm font-bold text-white hover:bg-[#083865] disabled:opacity-60"><BellRing className="h-4 w-4" aria-hidden="true" />{busy ? "กำลังเปิด…" : "เปิดบนเครื่องนี้"}</button>}
+    </div>
+  );
+
+  return (
+    <section className={`rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm sm:p-6 ${className}`} aria-labelledby="officer-push-title">
+      <h3 id="officer-push-title" className="flex flex-wrap items-center gap-2 font-black text-slate-900">
+        <Smartphone className="h-5 w-5 text-[#0b4c86]" aria-hidden="true" />แจ้งเตือนเข้ามือถือ (ไม่ต้องใช้ Telegram)
+        {status ? (on ? <StatusPill tone="green">เครื่องนี้เปิดอยู่</StatusPill> : <StatusPill tone="gray">เครื่องนี้ยังไม่เปิด</StatusPill>) : null}
+      </h3>
+      <p className="mt-1 text-sm text-slate-600">
+        เด้งเตือนทันทีเมื่อประชาชนส่งคำขอความช่วยเหลือ และเตือนซ้ำทุก 30 นาทีถ้ายังไม่มีใครรับเรื่อง — ตั้งค่าแยกแต่ละเครื่อง (มือถือ/คอมพิวเตอร์)
+      </p>
+      {body}
+      {message ? <p className="mt-2 text-sm text-[#11466e]" role="status">{message}</p> : null}
+    </section>
+  );
+}

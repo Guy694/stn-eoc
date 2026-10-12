@@ -11,6 +11,7 @@ import { pushStatus, subscribePush } from "@/lib/pwaClient";
 
 const API = "/stn-eoc/api/admin/public-push";
 const KIND = { auto: ["อัตโนมัติ", "blue"], manual: ["เจ้าหน้าที่ส่ง", "amber"], test: ["ทดสอบ", "gray"] };
+const kindOf = (row) => (row.audience === "officer" ? ["ถึงเจ้าหน้าที่", "red"] : KIND[row.kind] || [row.kind, "gray"]);
 const EMPTY = { title: "", body: "", url: "/stn-eoc/", districts: [], level: "info" };
 
 export default function PublicPushSettings() {
@@ -98,6 +99,7 @@ export default function PublicPushSettings() {
           <p className="text-xs text-slate-500">เครื่องที่รับแจ้งเตือน</p>
           <p className="text-3xl font-black tabular-nums text-slate-900">{formatNumber(stats?.total || 0)}</p>
           <p className="text-xs text-slate-500">ทั้งจังหวัด {formatNumber(stats?.whole_province || 0)} เครื่อง</p>
+          {stats?.officers ? <p className="mt-1 text-xs text-slate-500">เจ้าหน้าที่รับแจ้งคำขอช่วยเหลือ {formatNumber(stats.officers.officers)} คน ({formatNumber(stats.officers.devices)} เครื่อง)</p> : null}
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
           <p className="text-xs text-slate-500">เลือกเฉพาะพื้นที่ (รายอำเภอ)</p>
@@ -168,7 +170,7 @@ export default function PublicPushSettings() {
           <ul className="divide-y divide-slate-100">
             {stats.log.map((row) => (
               <li key={row.id} className="flex flex-wrap items-start gap-x-3 gap-y-1 px-5 py-2.5 text-sm">
-                <StatusPill tone={KIND[row.kind]?.[1] || "gray"}>{KIND[row.kind]?.[0] || row.kind}</StatusPill>
+                <StatusPill tone={kindOf(row)[1]}>{kindOf(row)[0]}</StatusPill>
                 <span className="min-w-0 flex-1"><b>{row.title}</b> <span className="text-slate-600">— {row.body}</span></span>
                 <span className="shrink-0 text-xs text-slate-500">{formatDateTime(row.created_at)} • ถึง {formatNumber(row.delivered)}/{formatNumber(row.recipients)} เครื่อง{row.removed ? ` • ลบเครื่องที่เลิกใช้ ${row.removed}` : ""}</span>
               </li>

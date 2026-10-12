@@ -119,6 +119,19 @@ export default function IncidentWorkspace() {
   const [deleting, setDeleting] = useState(null);
   const [deleteError, setDeleteError] = useState("");
 
+  // เปิดเรื่องจากลิงก์แจ้งเตือน (?id=123) ครั้งเดียวหลังโหลดรายการ
+  const [deepLinkDone, setDeepLinkDone] = useState(false);
+  useEffect(() => {
+    if (deepLinkDone || loading) return;
+    const id = Number(new URLSearchParams(window.location.search).get("id"));
+    setDeepLinkDone(true);
+    if (!id) return;
+    const row = rows.find((item) => Number(item.id) === id);
+    if (row) open(row);
+    else success(`เรื่อง #${id} มีผู้รับเรื่องแล้ว หรือไม่อยู่ในรายการ "${statusMeta(status).label}"`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, rows, deepLinkDone]);
+
   const open = (row) => {
     setSelected(row);
     setNextStatus(row.status === "pending" ? "reviewing" : row.status);
