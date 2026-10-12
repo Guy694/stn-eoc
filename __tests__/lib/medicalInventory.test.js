@@ -41,3 +41,15 @@ describe("displayItemCode", () => {
     expect(displayItemCode({ item_name: "ผงเกลือแร่ ORS", item_code: "TMT-1234" })).toBe("TMT-1234");
   });
 });
+
+describe("flood preset items", () => {
+  const { FLOOD_PRESET_ITEMS, missingPresetItems } = require("@/lib/medicalInventory");
+  test("10 standard items with unique codes", () => {
+    expect(FLOOD_PRESET_ITEMS).toHaveLength(10);
+    expect(new Set(FLOOD_PRESET_ITEMS.map((item) => item.item_code)).size).toBe(10);
+  });
+  test("missingPresetItems skips existing codes", () => {
+    expect(missingPresetItems(["life_jacket", "FACE_MASK"]).map((item) => item.item_code)).not.toContain("LIFE_JACKET");
+    expect(missingPresetItems([])).toHaveLength(10);
+  });
+});

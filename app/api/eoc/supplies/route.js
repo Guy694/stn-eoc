@@ -5,7 +5,7 @@ import { query, transaction } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { recordChange } from "@/lib/recordArchive";
-import { MOVEMENT_TYPES, applyMovement, normalizeItemCode, stockLevel, summarizeStock } from "@/lib/medicalInventory";
+import { MOVEMENT_TYPES, applyMovement, missingPresetItems, normalizeItemCode, stockLevel, summarizeStock } from "@/lib/medicalInventory";
 import { triggerEventAlerts } from "@/lib/eocAlertRunner";
 
 // คลังเวชภัณฑ์ของ "เหตุการณ์ EOC ครั้งนี้" (ผูกกับ eoc_type + ครั้งที่ ผ่าน medical_inventory_events)
@@ -169,6 +169,35 @@ async function addItem(auth, ctx, body) {
   return NextResponse.json({ success: true, message: "เพิ่มรายการแล้ว" });
 }
 
+// เพิ่มรายการมาตรฐานกรณีอุทกภัยที่หน่วยบริการยังไม่มี (ยอดตั้งต้น 0) ในครั้งเดียว
+async function addPresets(auth, ctx, body) {
+  if (!ctx.event) return bad("ยังไม่ได้เปิดบัญชีคลังของเหตุการณ์นี้", 409);
+  const facilityId = Number(body.health_facility_id);
+  if (!Number.isInteger(facilityId) || facilityId <= 0) return bad("กรุณาเลือกหน่วยบริการ/คลัง");
+  const facilities = await query(`SELECT id, name, typecode FROM health_facilities WHERE id = ? LIMIT 1`, [facilityId]);
+  if (!facilities.length) return bad("ไม่พบหน่วยบริการ");
+  const existing = await query(`SELECT item_code FROM medical_inventory_stock WHERE inventory_event_id = ? AND health_facility_id = ?`, [ctx.event.id, facilityId]);
+  const missing = missingPresetItems(existing.map((row) => row.item_code));
+  if (!missing.length) return NextResponse.json({ success: true, message: "หน่วยบริการนี้มีรายการมาตรฐานครบแล้ว" });
+  const facility = facilities[0];
+  await transaction(async (execute) => {
+    for (const item of missing) {
+      await execute(
+        `INSERT INTO medical_inventory_stock
+           (inventory_event_id, inventory_agency_id, health_facility_id, agency_name, agency_name_original, agency_type,
+            item_code, item_name, unit, movement_tracked, opening_qty, received_qty, issued_qty, balance_qty, data_status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 0, 0, 0, 'recorded')`,
+        [ctx.event.id, facilityId, facilityId, facility.name, facility.name, facility.typecode || "", item.item_code, item.item_name, item.unit]
+      );
+    }
+  });
+  await recordChange({
+    request: ctx.request, user: auth.user, action: "data_create", table: "medical_inventory_stock", id: facilityId, sessionId: ctx.session.id,
+    description: `เพิ่มรายการมาตรฐานอุทกภัย ${missing.length} รายการ ที่ ${facility.name}`
+  });
+  return NextResponse.json({ success: true, message: `เพิ่มรายการมาตรฐาน ${missing.length} รายการแล้ว กด "รับเข้า" เพื่อใส่ยอด` });
+}
+
 async function move(auth, ctx, body) {
   if (!ctx.event) return bad("ยังไม่ได้เปิดบัญชีคลังของเหตุการณ์นี้", 409);
   const stockId = Number(body.stock_id);
@@ -225,6 +254,7 @@ export async function POST(request) {
     ctx.request = request;
     if (body.action === "open_event") return await openEvent(auth, ctx, body);
     if (body.action === "add_item") return await addItem(auth, ctx, body);
+    if (body.action === "add_presets") return await addPresets(auth, ctx, body);
     if (body.action === "movement") return await move(auth, ctx, body);
     return bad("ไม่รู้จักคำสั่ง");
   } catch (error) {

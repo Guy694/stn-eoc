@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { ArrowDownToLine, ArrowUpFromLine, PackageOpen, Scale } from "lucide-react";
 import { ReadOnlyNotice,
   AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
@@ -8,7 +9,7 @@ import { ReadOnlyNotice,
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
-import { MOVEMENT_TYPES, STOCK_LEVEL_LABELS, displayItemCode } from "@/lib/medicalInventory";
+import { FLOOD_PRESET_ITEMS, MOVEMENT_TYPES, STOCK_LEVEL_LABELS, displayItemCode } from "@/lib/medicalInventory";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { sendOrQueue } from "@/lib/offlineQueue";
 
@@ -180,7 +181,13 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
       title="เวชภัณฑ์และคลังยา"
       context={context}
       description="ยอดคงเหลือของแต่ละหน่วยบริการในเหตุการณ์นี้ รายการที่หมดหรือใกล้หมดขึ้นก่อนเสมอ"
-      actions={perms.can_add_item ? <AddButton onClick={() => { setFormError(""); setItemDialog(true); }}>เพิ่มรายการ</AddButton> : null}
+      actions={(
+        <>
+          {eocType === "flood" ? <Link href="/eoc/flood/oxygen" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ออกซิเจนเหลว</Link> : null}
+          {eocType === "flood" ? <Link href="/eoc/flood/team-reports?team=resources" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">แจกจ่ายรายอำเภอ</Link> : null}
+          {perms.can_add_item ? <AddButton onClick={() => { setFormError(""); setItemDialog(true); }}>เพิ่มรายการ</AddButton> : null}
+        </>
+      )}
     >
       {notice}
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
@@ -261,6 +268,24 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
               {(data?.facilities || []).map((facility) => <option key={facility.id} value={facility.id}>{facility.name}{facility.district_name ? ` (อ.${facility.district_name})` : ""}</option>)}
             </select>
           </Field>
+          <Field label="เลือกจากรายการมาตรฐาน" wide hint="เลือกแล้วระบบเติมชื่อ หน่วยนับ และรหัสให้ หรือพิมพ์เองด้านล่าง">
+            <select className={inputClass} value={FLOOD_PRESET_ITEMS.some((item) => item.item_code === itemForm.item_code) ? itemForm.item_code : ""} onChange={(event) => {
+              const preset = FLOOD_PRESET_ITEMS.find((item) => item.item_code === event.target.value);
+              setItemForm((current) => (preset ? { ...current, item_name: preset.item_name, unit: preset.unit, item_code: preset.item_code } : { ...current, item_code: "" }));
+            }}>
+              <option value="">— พิมพ์รายการเอง —</option>
+              {FLOOD_PRESET_ITEMS.map((item) => <option key={item.item_code} value={item.item_code}>{item.item_name} ({item.unit})</option>)}
+            </select>
+          </Field>
+          {itemForm.health_facility_id ? (
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              หรือเพิ่มรายการมาตรฐานทั้ง {FLOOD_PRESET_ITEMS.length} รายการให้หน่วยนี้ในครั้งเดียว (ยอดตั้งต้น 0)
+              <Button variant="secondary" className="min-h-9 px-3" disabled={busy} onClick={async () => {
+                const ok = await post({ action: "add_presets", health_facility_id: itemForm.health_facility_id });
+                if (ok) setItemDialog(false);
+              }}>เพิ่มทั้งชุด</Button>
+            </div>
+          ) : null}
           <Field label="ชื่อรายการ" required>
             <input required className={inputClass} value={itemForm.item_name} placeholder="เช่น ผงเกลือแร่ ORS" onChange={(event) => setItemForm((current) => ({ ...current, item_name: event.target.value }))} />
           </Field>
