@@ -24,7 +24,6 @@ import {
     LifeBuoy,
     Map,
     Megaphone,
-    Menu,
     MonitorCog,
     Package,
     Power,
@@ -38,6 +37,7 @@ import {
     UserRoundPlus,
     Users,
     Waves,
+    Flag,
     X,
     KeyRound
 } from "lucide-react";
@@ -52,6 +52,7 @@ const ICONS = {
     analytics: BrainCircuit,
     overview: BarChart3,
     flood: Waves,
+    flag: Flag,
     shelter: Tent,
     vulnerable: LifeBuoy,
     people: Users,
@@ -105,6 +106,16 @@ export default function Sidebar() {
     const [expandedSections, setExpandedSections] = useState({});
     const { user } = useAuth();
     const { eocStatus } = useEOC();
+
+    // ปุ่ม "เมนู" บนแถบด้านบน (มือถือ) ส่ง event มาเปิด/ปิดเมนูนี้
+    useEffect(() => {
+        const toggleMenu = () => setIsOpen((current) => !current);
+        window.addEventListener("stn:toggle-sidebar", toggleMenu);
+        return () => window.removeEventListener("stn:toggle-sidebar", toggleMenu);
+    }, []);
+    useEffect(() => {
+        window.dispatchEvent(new CustomEvent("stn:sidebar-state", { detail: { open: isOpen } }));
+    }, [isOpen]);
 
     // query string ปัจจุบัน (ใช้แยกเมนูที่ชี้หน้าเดียวกันแต่คนละแท็บ)
     useEffect(() => {
@@ -338,17 +349,7 @@ export default function Sidebar() {
 
     return (
         <>
-            {/* ปุ่มเปิดเมนูบนมือถือ */}
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className="sidebar-toggle fixed bottom-6 right-6 z-50 rounded-full bg-[#0b4c86] p-4 text-white shadow-lg transition-colors hover:bg-[#083865] lg:hidden"
-                aria-label={isOpen ? "ปิดเมนู" : "เปิดเมนู"}
-                aria-expanded={isOpen}
-            >
-                {isOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
-            </button>
-
+            {/* มือถือ: เปิดเมนูจากปุ่ม "เมนู" บนแถบด้านบน (Navbar) — ไม่มีปุ่มลอยบังเนื้อหา */}
             {isOpen && <div className="fixed inset-0 z-30 bg-slate-900/30 backdrop-blur-sm lg:hidden" onClick={() => setIsOpen(false)} aria-hidden="true" />}
 
             <aside

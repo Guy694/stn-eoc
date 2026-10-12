@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Plus } from "lucide-react";
-import { Button, AdminPage, Field, FormDialog, FormGrid, ReadOnlyNotice, StatStrip, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
+import { Button, AdminPage, Field, FormDialog, FormGrid, ReadOnlyNotice, StatStrip, StatusPill, inputClass, latestTime, useNotice } from "@/components/admin/crud";
 import { apiRequest } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { OXYGEN_LEVELS, OXYGEN_LOW_DAYS, OXYGEN_SOURCES, formatDays, oxygenDays, oxygenLevel } from "@/lib/liquidOxygen";
@@ -119,6 +119,7 @@ export default function OxygenWorkspace({ eocType = "flood" }) {
     <AdminPage
       title="ออกซิเจนเหลว"
       context={context}
+      freshness={session ? { value: latestTime((data?.summary?.items || []).map((row) => row.updated_at || (row.report_date ? `${row.report_date}T08:00:00+07:00` : null))), staleHours: 24, label: "รายงานล่าสุด" } : null}
       description={`คงเหลือของแต่ละโรงพยาบาลและใช้ได้อีกกี่วัน ระบบเตือนเมื่อเหลือน้อยกว่า ${OXYGEN_LOW_DAYS} วัน`}
       actions={perms.can_edit ? <Button onClick={() => openReport()}><Plus className="h-4 w-4" />รายงานหน่วยอื่น</Button> : null}
     >

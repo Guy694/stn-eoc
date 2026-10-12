@@ -3,7 +3,7 @@
 // ชุดส่วนประกอบกลางสำหรับหน้าหลังบ้าน (เพิ่ม/ลบ/แก้ไข) ให้ทุกหน้ามีรูปแบบเดียวกัน:
 // หัวหน้า → แถบค้นหา/กรอง → ตาราง (มือถือเป็นการ์ด) → ฟอร์มในหน้าต่าง → ยืนยันลบพร้อมเหตุผล
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { cn } from "@/lib/utils";
 import { formatDateTime, formatRelative, parseDateValue } from "@/lib/adminApi";
@@ -43,7 +43,39 @@ export function AddButton({ children = "เพิ่มข้อมูล", ...p
 }
 
 /** หัวหน้า: ชื่อหน้า + คำอธิบายสั้นว่าหน้านี้ใช้ทำอะไร + ปุ่มหลัก */
-export function AdminPage({ title, description, context, actions, children }) {
+/**
+ * ป้ายความใหม่ของข้อมูล — แบบเดียวกันทุกหน้า: "อัปเดตล่าสุด 25 นาทีที่แล้ว"
+ * เกิน staleHours = ข้อมูลเก่า (โทนส้มอ่อน + ข้อความบอกตรง ๆ) · ไม่มีค่า = ยังไม่มีการรายงาน
+ */
+export function FreshnessBadge({ value, staleHours = 24, label = "อัปเดตล่าสุด", emptyText = "ยังไม่มีการรายงาน" }) {
+  const now = useNow();
+  const date = parseDateValue(value);
+  if (!date) {
+    return <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{emptyText}</span>;
+  }
+  const stale = now - date.getTime() > staleHours * 3600 * 1000;
+  return (
+    <span
+      className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", stale ? "bg-amber-50 text-amber-900 ring-1 ring-amber-200" : "bg-slate-100 text-slate-700")}
+      title={`${label} ${formatDateTime(date)}${stale ? ` · เกิน ${staleHours} ชม. ควรอัปเดต` : ""}`}
+    >
+      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+      {label} <time dateTime={date.toISOString()}>{formatRelative(date, now)}</time>{stale ? " · ข้อมูลอาจไม่เป็นปัจจุบัน" : ""}
+    </span>
+  );
+}
+
+/** ค่าเวลาล่าสุดจากรายการ (ข้ามค่าว่าง) */
+export function latestTime(values = []) {
+  let best = null;
+  for (const value of values) {
+    const date = parseDateValue(value);
+    if (date && (!best || date > best)) best = date;
+  }
+  return best ? best.toISOString() : null;
+}
+
+export function AdminPage({ title, description, context, actions, freshness, children }) {
   return (
     <div className="mx-auto max-w-7xl space-y-4">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -51,6 +83,7 @@ export function AdminPage({ title, description, context, actions, children }) {
           {context ? <div className="mb-1 text-sm font-semibold text-[#0b4c86]">{context}</div> : null}
           <h1 className="text-2xl font-black text-slate-900 sm:text-[1.7rem]">{title}</h1>
           {description ? <p className="mt-1 max-w-3xl text-sm text-slate-600">{description}</p> : null}
+          {freshness ? <div className="mt-2"><FreshnessBadge {...freshness} /></div> : null}
         </div>
         {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
       </header>
@@ -104,9 +137,9 @@ export function StatStrip({ items }) {
 
 export function Toolbar({ search, onSearchChange, searchPlaceholder = "ค้นหา", children, right }) {
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 lg:flex-row lg:items-center">
+    <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 lg:flex-row lg:flex-wrap lg:items-center">
       {onSearchChange ? (
-        <label className="relative block min-w-0 flex-1">
+        <label className="relative block min-w-0 flex-1 lg:min-w-[14rem]">
           <span className="sr-only">{searchPlaceholder}</span>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder={searchPlaceholder} className={cn(inputClass, "pl-9")} />

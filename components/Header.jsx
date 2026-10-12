@@ -29,7 +29,10 @@ export default function Header() {
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={64} height={64} className="w-10 h-10 md:w-16 md:h-16 object-contain" />
                         </div>
                         <div>
-                            <h1 className="text-lg sm:text-xl font-bold">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</h1>
+                            <h1 className="text-base font-bold leading-tight sm:text-xl">
+                                <span className="sm:hidden">EOC สาธารณสุข จ.สตูล</span>
+                                <span className="hidden sm:inline">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</span>
+                            </h1>
                             <p className="text-xs text-blue-100 hidden sm:block">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
                         </div>
                     </div>

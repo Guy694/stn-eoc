@@ -7,6 +7,7 @@ import { ArrowDownRight, ArrowUpRight, CheckCircle2, Circle, ClipboardList, File
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip } from "chart.js";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
+import { areaLabel, flagMeta, stageMeta } from "@/lib/floodTriggers";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineController, LineElement, PointElement, Tooltip, Legend);
 
@@ -71,7 +72,7 @@ function KpiCard({ kpi }) {
 
 function TrendChart({ trend }) {
   if (!trend?.length) return <p className="py-10 text-center text-sm text-slate-500">ยังไม่มีรายงานผู้ป่วย</p>;
-  const labels = trend.map((row) => new Date(`${row.date}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" }));
+  const labels = trend.map((row) => new Date(`${row.day || row.date}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" }));
   const data = {
     labels,
     datasets: [
@@ -207,6 +208,35 @@ function DistrictMatrix({ rows }) {
 // รายการตรวจหลังเปิด EOC — เปิดค้างไว้ถ้ายังขาดข้อจำเป็น และหายไปเมื่อทำครบทุกข้อ
 // พยากรณ์ 7 วันข้างหน้า: จำนวนตำบลที่คาดว่าเสี่ยงในแต่ละวัน (กดไปหน้าพยากรณ์พื้นที่เสี่ยง)
 const OUTLOOK_TONE = { critical: "bg-red-600 text-white", high: "bg-orange-500 text-white", watch: "bg-amber-200 text-amber-950", normal: "bg-slate-100 text-slate-500" };
+// ธงเตือนภัย/Trigger ที่ประกาศอยู่ (เกณฑ์ SAT) — กดไปหน้าประกาศและรายชื่อเป้าหมาย
+function TriggerStrip({ sessionId }) {
+  const [current, setCurrent] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest(`/stn-eoc/api/eoc/area-triggers?eoc=flood${sessionId ? `&session_id=${sessionId}` : ""}`)
+      .then((json) => { if (!cancelled) setCurrent(json.current || []); })
+      .catch(() => { if (!cancelled) setCurrent(null); });
+    return () => { cancelled = true; };
+  }, [sessionId]);
+  if (current === null) return null;
+  return (
+    <Link href="/eoc/flood/triggers" className="flex flex-wrap items-center gap-2 rounded-xl border border-[#c9dcee] bg-white px-3 py-2.5 shadow-sm hover:shadow">
+      <span className="font-black text-slate-900">ธงเตือนภัย/Trigger</span>
+      {current.length ? current.map((item) => {
+        const meta = stageMeta(item.stage);
+        const flag = flagMeta(meta?.flag);
+        return (
+          <span key={item.id} className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold"
+            style={flag ? { background: flag.soft, color: flag.text, boxShadow: `inset 0 0 0 1.5px ${flag.color}` } : { background: "#f1f5f9", color: "#334155" }}>
+            {areaLabel(item)} · {flag ? flag.label : `Trigger ${meta?.trigger}`}{flag && meta?.trigger !== 1 ? ` (T${meta.trigger})` : ""}
+          </span>
+        );
+      }) : <span className="text-sm text-slate-600">ยังไม่มีพื้นที่ที่ประกาศ</span>}
+      <span className="ml-auto text-xs font-bold text-[#0b4c86]">ประกาศ/ดูรายชื่อเป้าหมาย</span>
+    </Link>
+  );
+}
+
 function ForecastStrip() {
   const [outlook, setOutlook] = useState(null);
   useEffect(() => {
@@ -352,19 +382,7 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
         ) : null}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {data.kpis.map((kpi) => <KpiCard key={kpi.key} kpi={kpi} />)}
-        {data.completeness ? (
-          <Link href="/eoc/flood/records" className={`flex flex-col rounded-xl border border-l-4 border-slate-200 bg-white p-4 shadow-sm hover:shadow ${data.completeness.percent >= 80 ? TONE.green.bar : data.completeness.percent > 0 ? TONE.amber.bar : TONE.red.bar}`}>
-            <p className="text-sm font-semibold text-slate-600">ความครบของรายงานวันนี้</p>
-            <p className="mt-2 text-3xl font-black tabular-nums text-slate-900">{data.completeness.percent}<span className="ml-1 text-sm font-semibold text-slate-500">%</span></p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true"><div className="h-full bg-[#0b4c86]" style={{ width: `${data.completeness.percent}%` }} /></div>
-            <p className="mt-2 text-xs text-slate-600">ส่งแล้ว {formatNumber(data.completeness.reported)} จาก {formatNumber(data.completeness.total)} ตำบล — ตัวเลขด้านบนอาจยังไม่ครบถ้ารายงานไม่ครบ</p>
-          </Link>
-        ) : null}
-      </div>
-
-      {eocType === "flood" ? <ForecastStrip /> : null}
+      {eocType === "flood" ? <TriggerStrip sessionId={data?.session?.id} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="rounded-xl border border-[#c9dcee] bg-white shadow-sm lg:col-span-3">
@@ -413,6 +431,21 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
           </Link>
         </div>
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {data.kpis.map((kpi) => <KpiCard key={kpi.key} kpi={kpi} />)}
+        {data.completeness ? (
+          <Link href="/eoc/flood/records" className={`flex flex-col rounded-xl border border-l-4 border-slate-200 bg-white p-4 shadow-sm hover:shadow ${data.completeness.percent >= 80 ? TONE.green.bar : data.completeness.percent > 0 ? TONE.amber.bar : TONE.red.bar}`}>
+            <p className="text-sm font-semibold text-slate-600">ความครบของรายงานวันนี้</p>
+            <p className="mt-2 text-3xl font-black tabular-nums text-slate-900">{data.completeness.percent}<span className="ml-1 text-sm font-semibold text-slate-500">%</span></p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true"><div className="h-full bg-[#0b4c86]" style={{ width: `${data.completeness.percent}%` }} /></div>
+            <p className="mt-2 text-xs text-slate-600">ส่งแล้ว {formatNumber(data.completeness.reported)} จาก {formatNumber(data.completeness.total)} ตำบล — ตัวเลขด้านบนอาจยังไม่ครบถ้ารายงานไม่ครบ</p>
+          </Link>
+        ) : null}
+      </div>
+
+      {eocType === "flood" ? <ForecastStrip /> : null}
+
 
       <div id="sec-districts" className="scroll-mt-20 overflow-hidden rounded-xl border border-[#c9dcee] bg-white shadow-sm">
         <div className="border-b border-slate-100 px-4 py-3">

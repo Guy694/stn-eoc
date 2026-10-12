@@ -11,10 +11,12 @@ export const EVENT_MODULES = {
     label: "อุทกภัย",
     pathPrefixes: ["/eoc/flood"],
     items: (ctx) => [
-      { key: "brief", group: "สั่งการ", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
-      { key: "overview", group: "สั่งการ", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
-      { key: "area-risk", group: "สั่งการ", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
+      { key: "overview", group: "ประเมินสถานการณ์", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
+      { key: "water-report", group: "ประเมินสถานการณ์", name: "รายงานระดับน้ำ", path: "/eoc/flood/water-report", iconKey: "flood", description: "ระดับน้ำสถานีเฝ้าระวัง ปภ. เทียบย้อนหลัง บันทึกเป็น PDF/รูป A4" },
+      { key: "area-risk", group: "ประเมินสถานการณ์", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
+      { key: "triggers", group: "สั่งการ", name: "ธงเตือนภัยและ Trigger", path: "/eoc/flood/triggers", iconKey: "flag", description: "ประกาศธงเขียว/เหลือง/แดง และ Trigger เคลื่อนย้ายกลุ่มเปราะบาง รายพื้นที่" },
       { key: "command", group: "สั่งการ", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
+      { key: "brief", group: "สั่งการ", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
       { key: "records", group: "พื้นที่และประชาชน", name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", iconKey: "flood" },
       { key: "shelters", group: "พื้นที่และประชาชน", name: "ศูนย์พักพิง", path: `/eoc/shelters?eoc=flood${ctx.sessionId ? `&session=${ctx.sessionId}` : ""}`, iconKey: "shelter", description: "เปิดใช้ศูนย์และอัปเดตยอดผู้พักพิง" },
       { key: "vulnerable", group: "พื้นที่และประชาชน", name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", iconKey: "vulnerable", description: "ยอดรายหมู่บ้าน และรายบุคคลบนแผนที่ (พิกัดบ้าน สถานะการช่วยเหลือ)", alsoActive: ["/eoc/flood/vulnerable-persons"] },
@@ -173,6 +175,9 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
     {
       section: "communication",
       title: "สื่อสาร",
+      // ช่วงมีเหตุการณ์เปิดอยู่ พับเมนูทั่วไปไว้ ให้เมนูเหตุการณ์อยู่ใกล้มือ
+      collapsible: anyOpen,
+      defaultExpanded: !anyOpen,
       items: [
         { name: "ประกาศ", path: "/announcements", iconKey: "megaphone" }
       ]

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowDownToLine, ArrowUpFromLine, PackageOpen, Scale } from "lucide-react";
 import { ReadOnlyNotice,
-  AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
+  AddButton, AdminPage, Button, DataTable, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
@@ -178,6 +178,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   const summary = data?.summary;
   return (
     <AdminPage
+      freshness={stock.length ? { value: latestTime(stock.map((row) => row.updated_at)), staleHours: 24 } : null}
       title="เวชภัณฑ์และคลังยา"
       context={context}
       description="ยอดคงเหลือของแต่ละหน่วยบริการในเหตุการณ์นี้ รายการที่หมดหรือใกล้หมดขึ้นก่อนเสมอ"

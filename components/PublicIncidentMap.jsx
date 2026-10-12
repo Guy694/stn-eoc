@@ -460,27 +460,16 @@ export default function PublicIncidentMap({
         });
     };
 
+    // ศูนย์พักพิง: วงกลมม่วง 24px (เล็กพอไม่บังพื้นที่ แต่ยังกดได้)
     const createShelterIcon = () => {
         if (typeof window === 'undefined') return null;
         const L = require('leaflet');
         return L.divIcon({
             className: 'public-shelter-icon',
-            html: `
-                <div style="
-                    width: 38px;
-                    height: 38px;
-                    border-radius: 50%;
-                    border: 3px solid #7C3AED;
-                    background: #8B5CF6;
-                    box-shadow: 0 3px 10px rgba(0,0,0,0.32);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                ">${renderMapIcon("shelter", "h-5 w-5 text-white")}</div>
-            `,
-            iconSize: [38, 38],
-            iconAnchor: [19, 19],
-            popupAnchor: [0, -19]
+            html: `<div style="width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:#7C3AED;box-shadow:0 1px 4px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">${renderMapIcon("shelter", "h-3.5 w-3.5 text-white")}</div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+            popupAnchor: [0, -12]
         });
     };
 

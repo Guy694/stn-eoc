@@ -2,8 +2,10 @@ import { EVENT_MODULES, groupMenuItems, isMenuItemActive } from "@/src/config/na
 
 describe("grouped event menus", () => {
   const items = EVENT_MODULES.flood.items({ sessionId: 1 });
-  test("flood menu grouped in 4 groups in order", () => {
-    expect(groupMenuItems(items).map((group) => group.title)).toEqual(["สั่งการ", "พื้นที่และประชาชน", "การแพทย์และทีม", "ทรัพยากร"]);
+  test("flood menu grouped in 5 groups in order", () => {
+    expect(groupMenuItems(items).map((group) => group.title)).toEqual(["ประเมินสถานการณ์", "สั่งการ", "พื้นที่และประชาชน", "การแพทย์และทีม", "ทรัพยากร"]);
+    expect(groupMenuItems(items)[0].items.map((item) => item.key)).toEqual(["overview", "water-report", "area-risk"]);
+    expect(groupMenuItems(items)[1].items.map((item) => item.key)).toEqual(["triggers", "command", "brief"]);
     expect(items.some((item) => item.key === "vulnerable-map")).toBe(false);
   });
   test("vulnerable menu stays active on persons map", () => {

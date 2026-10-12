@@ -19,7 +19,7 @@ export default function EOCLayout({ children }) {
 
     return (
         <div className="flex flex-col min-h-screen">
-            <div className="print:hidden"><Header /><Navbar /></div>
+            <div className="print:hidden"><Header /><Navbar sidebarMenu={showSidebar} /></div>
             <div className="flex flex-1 relative">
                 {showSidebar && <div className="contents print:hidden"><Sidebar /></div>}
                 <main data-ui-rounded className="flex-1 bg-[#edf5fc] overflow-auto w-full lg:w-auto print:overflow-visible print:bg-white">

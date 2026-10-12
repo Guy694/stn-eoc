@@ -1,14 +1,38 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "./icons/AppIcon";
 
-export default function Navbar() {
+// sidebarMenu: หน้าหลังบ้าน — ปุ่ม "เมนู" บนมือถือเปิดเมนูด้านข้าง (Sidebar) และซ่อนแถบนี้บนจอใหญ่ (มีเมนูด้านข้างอยู่แล้ว)
+export default function Navbar({ sidebarMenu = false }) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const { canAccessResources, canAccessReports } = useAuth();
+    useEffect(() => {
+        if (!sidebarMenu) return undefined;
+        const sync = (event) => setSidebarOpen(Boolean(event.detail?.open));
+        window.addEventListener("stn:sidebar-state", sync);
+        return () => window.removeEventListener("stn:sidebar-state", sync);
+    }, [sidebarMenu]);
+
+    if (sidebarMenu) {
+        return (
+            <nav className="sticky top-0 z-20 bg-[#0b4c86] text-white lg:hidden" aria-label="เมนูหลังบ้าน">
+                <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event("stn:toggle-sidebar"))}
+                    aria-expanded={sidebarOpen}
+                    className="flex w-full items-center justify-between px-4 py-2.5 text-left font-semibold hover:bg-[#083865]"
+                >
+                    <span>เมนู</span>
+                    <AppIcon icon={sidebarOpen ? "x" : "menu"} className="h-6 w-6" />
+                </button>
+            </nav>
+        );
+    }
 
     const allNavItems = [
         { name: "หน้าหลัก", path: "/" },
