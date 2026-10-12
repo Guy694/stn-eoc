@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const isDevelopment = process.env.NODE_ENV !== 'production';
+// บังคับ https (upgrade-insecure-requests + HSTS) เฉพาะเมื่อกำหนดที่อยู่เว็บจริงเป็น https
+// ทดสอบ `npm start` บน http://localhost ได้โดยไม่ถูกเปลี่ยนไป https://localhost (ซึ่งไม่มีอยู่)
+const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || '';
+const enforceHttps = !isDevelopment && appUrl.startsWith('https://');
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
@@ -14,7 +18,7 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  ...(!isDevelopment ? ["upgrade-insecure-requests"] : [])
+  ...(enforceHttps ? ["upgrade-insecure-requests"] : [])
 ].join('; ');
 
 const securityHeaders = [
@@ -25,7 +29,7 @@ const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'off' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()' },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' }
+  ...(enforceHttps ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' }] : [])
 ];
 
 const nextConfig = {
