@@ -5,4 +5,6 @@ export async function register() {
   startWaterAlertScheduler();
   const { startPublicPushScheduler } = await import("./lib/publicPushServer");
   startPublicPushScheduler();
+  const { startDpmWaterScheduler } = await import("./lib/dpmWaterServer");
+  startDpmWaterScheduler();
 }
