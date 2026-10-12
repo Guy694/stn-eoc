@@ -3,7 +3,7 @@
 // แผงสรุปสถานการณ์ (บนสุดของหน้าภาพรวม): อ่านจากบนลงล่าง = สถานการณ์รวม → ตัวชี้วัดหลัก → เรื่องที่ต้องตัดสินใจ → อำเภอไหนต้องไปก่อน
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, CheckCircle2, Circle, ClipboardList, RefreshCw } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CheckCircle2, Circle, ClipboardList, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip } from "chart.js";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
@@ -95,6 +95,21 @@ function heat(value, max) {
   return { backgroundColor: `rgba(11, 76, 134, ${alpha.toFixed(2)})` };
 }
 
+// สถานะตำบลที่เคยท่วม: ยังไม่คลี่คลาย / คลี่คลาย / กลับสู่ภาวะปกติ
+function RecoveryLine({ recovery }) {
+  const parts = [
+    recovery.ongoing ? <b key="o" className="text-red-700">ยังไม่คลี่คลาย {recovery.ongoing}</b> : null,
+    recovery.easing ? <span key="e" className="text-sky-700">คลี่คลาย {recovery.easing}</span> : null,
+    recovery.normal ? <span key="n" className="text-emerald-700">ปกติ {recovery.normal}</span> : null
+  ].filter(Boolean);
+  if (!parts.length) return null;
+  return (
+    <span className="block whitespace-nowrap text-xs" title="สถานะตำบลที่เคยประสบภัย คำนวณจากบันทึกพื้นที่น้ำท่วมล่าสุด">
+      ตำบล: {parts.reduce((acc, part, index) => (index ? [...acc, " · ", part] : [part]), [])}
+    </span>
+  );
+}
+
 function DistrictMatrix({ rows }) {
   const max = (key) => Math.max(0, ...rows.map((row) => row[key] || 0));
   const maxPeople = max("people");
@@ -131,6 +146,7 @@ function DistrictMatrix({ rows }) {
                   <td className="px-3 py-3 text-right tabular-nums" style={heat(row.people, maxPeople)}>
                     <span className="font-bold text-slate-900">{row.people ? formatNumber(row.people) : "-"}</span>
                     {row.villages ? <span className="block text-xs text-slate-600">{formatNumber(row.villages)} หมู่บ้าน{row.severe ? <b className="text-red-700"> · รุนแรง {row.severe}</b> : null}</span> : null}
+                    {row.recovery ? <RecoveryLine recovery={row.recovery} /> : null}
                   </td>
                   <td className={`whitespace-nowrap px-3 py-3 text-right tabular-nums ${row.deaths + row.missing ? "font-bold text-red-700" : "text-slate-700"}`}>
                     {row.deaths || row.missing || row.injured ? `${row.deaths} / ${row.missing} / ${row.injured}` : "-"}
@@ -179,6 +195,7 @@ function DistrictMatrix({ rows }) {
               <div><dt className="inline">เสียชีวิต/สูญหาย </dt><dd className="inline font-bold text-slate-900">{row.deaths}/{row.missing}</dd></div>
               <div><dt className="inline">รายงานวันนี้ </dt><dd className="inline font-bold text-slate-900">{row.tambons ? `${row.reported}/${row.tambons}` : "-"}</dd></div>
             </dl>
+            {row.recovery ? <p className="mt-1 text-xs"><RecoveryLine recovery={row.recovery} /></p> : null}
             {row.reasons.length ? <p className="mt-2 text-xs text-slate-700">{row.reasons.join(" · ")}</p> : null}
           </li>
         ))}
@@ -188,6 +205,48 @@ function DistrictMatrix({ rows }) {
 }
 
 // รายการตรวจหลังเปิด EOC — เปิดค้างไว้ถ้ายังขาดข้อจำเป็น และหายไปเมื่อทำครบทุกข้อ
+// พยากรณ์ 7 วันข้างหน้า: จำนวนตำบลที่คาดว่าเสี่ยงในแต่ละวัน (กดไปหน้าพยากรณ์พื้นที่เสี่ยง)
+const OUTLOOK_TONE = { critical: "bg-red-600 text-white", high: "bg-orange-500 text-white", watch: "bg-amber-200 text-amber-950", normal: "bg-slate-100 text-slate-500" };
+function ForecastStrip() {
+  const [outlook, setOutlook] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/stn-eoc/api/public/flood-outlook/")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result) => { if (!cancelled && result?.success) setOutlook(result.data); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+  if (!outlook?.dates?.length || !outlook.areas?.length) return null;
+  const days = outlook.dates.slice(0, 7).map((date, index) => {
+    const count = { critical: 0, high: 0, watch: 0 };
+    for (const area of outlook.areas) {
+      const level = area.levels[index];
+      if (count[level] !== undefined) count[level] += 1;
+    }
+    const worst = count.critical ? "critical" : count.high ? "high" : count.watch ? "watch" : "normal";
+    return { date, count, worst, total: count.critical + count.high + count.watch };
+  });
+  const label = (date) => new Date(`${date}T00:00:00`).toLocaleDateString("th-TH", { weekday: "short", day: "numeric" });
+  return (
+    <Link href="/eoc/flood/area-risk" className="block rounded-xl border border-[#c9dcee] bg-white p-3 shadow-sm hover:shadow">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="font-black text-slate-900">พยากรณ์ตำบลเสี่ยงน้ำท่วม 7 วัน</h3>
+        <span className="text-xs font-bold text-[#0b4c86]">ดูรายตำบลและเหตุผล</span>
+      </div>
+      <ol className="grid grid-cols-7 gap-1.5">
+        {days.map((day) => (
+          <li key={day.date} className={`rounded-lg px-1 py-2 text-center ${OUTLOOK_TONE[day.worst]}`} title={`เฝ้าระวัง ${day.count.watch} · สูง ${day.count.high} · วิกฤต ${day.count.critical} ตำบล`}>
+            <span className="block text-[11px] font-semibold opacity-90">{label(day.date)}</span>
+            <span className="block text-lg font-black tabular-nums leading-tight">{day.total || "–"}</span>
+            <span className="block text-[10px] opacity-80">{day.total ? "ตำบล" : "ปกติ"}</span>
+          </li>
+        ))}
+      </ol>
+    </Link>
+  );
+}
+
 function SetupChecklist({ setup }) {
   if (!setup || setup.complete) return null;
   const missingRequired = setup.required - setup.requiredDone;
@@ -285,6 +344,12 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
         <button type="button" onClick={load} disabled={state.loading} className="inline-flex items-center gap-1.5 rounded-lg border border-current/20 bg-white/70 px-3 py-1.5 text-sm font-bold hover:bg-white disabled:opacity-60">
           <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ดึงข้อมูลล่าสุด
         </button>
+        {eocType === "flood" ? (
+          <a href={`/stn-eoc/api/eoc/sheet-export?eoc=flood&session_id=${data.session.id}`} download title="แบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล 14 แผ่นงาน"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-current/20 bg-white/70 px-3 py-1.5 text-sm font-bold hover:bg-white">
+            <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
+          </a>
+        ) : null}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -298,6 +363,8 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
           </Link>
         ) : null}
       </div>
+
+      {eocType === "flood" ? <ForecastStrip /> : null}
 
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="rounded-xl border border-[#c9dcee] bg-white shadow-sm lg:col-span-3">
