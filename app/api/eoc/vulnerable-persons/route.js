@@ -16,6 +16,18 @@ export const dynamic = "force-dynamic";
 const SUPPORTED = ["flood", "disease", "festival-accidents"];
 const PRIVILEGED = ["admin", "commander"];
 const PERSON_COLUMNS = "id, vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, clinical_enc, updated_at";
+const CARE_COLUMNS = ", care_group, power_dependent";
+const isMissingColumn = (error) => error?.code === "ER_BAD_FIELD_ERROR";
+
+// ถ้ายังไม่ได้รัน migration กลุ่มสี (20261012_vulnerable_care_group.sql) ใช้คำสั่งเดิมที่ไม่มีคอลัมน์ใหม่
+async function withCareFallback(withCare, withoutCare) {
+  try {
+    return await withCare();
+  } catch (error) {
+    if (isMissingColumn(error)) return withoutCare();
+    throw error;
+  }
+}
 
 const noStore = (response) => {
   response.headers.set("Cache-Control", "no-store, max-age=0");
@@ -62,7 +74,8 @@ export async function GET(request) {
     let cases = [];
     let shelters = [];
     try {
-      rows = await query(`SELECT ${PERSON_COLUMNS} FROM vulnerable_persons WHERE is_active = 1 ORDER BY district, tambon, village, id`);
+      const listSql = (extra) => `SELECT ${PERSON_COLUMNS}${extra} FROM vulnerable_persons WHERE is_active = 1 ORDER BY district, tambon, village, id`;
+      rows = await withCareFallback(() => query(listSql(CARE_COLUMNS)), () => query(listSql("")));
       if (session) {
         shelters = await loadSessionShelters(session);
         const caseSql = (withShelter) => `SELECT c.person_id, c.status, c.moved_to, ${withShelter ? "c.moved_shelter_id," : ""} c.note_enc, c.updated_at,
@@ -144,10 +157,18 @@ export async function POST(request) {
     const checked = validatePerson(body);
     if (checked.error) return bad(checked.error);
     const row = encodePerson(checked.value);
-    const result = await query(
-      `INSERT INTO vulnerable_persons (vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, clinical_enc, created_by, updated_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, row.clinical_enc, auth.user.id, auth.user.id]
+    const base = [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, row.clinical_enc];
+    const result = await withCareFallback(
+      () => query(
+        `INSERT INTO vulnerable_persons (vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, clinical_enc, care_group, power_dependent, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [...base, row.care_group, row.power_dependent, auth.user.id, auth.user.id]
+      ),
+      () => query(
+        `INSERT INTO vulnerable_persons (vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, clinical_enc, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [...base, auth.user.id, auth.user.id]
+      )
     );
     await logVulnerableAccess({ request, user: auth.user, action: "create", personId: result.insertId });
     await recordChange({ request, user: auth.user, action: "CREATE", table: "vulnerable_persons", id: result.insertId, description: `เพิ่มกลุ่มเปราะบางรายบุคคล ต.${row.tambon} อ.${row.district}` });
@@ -171,11 +192,11 @@ export async function PUT(request) {
     const checked = validatePerson(body);
     if (checked.error) return bad(checked.error);
     const row = encodePerson(checked.value);
-    const result = await query(
-      `UPDATE vulnerable_persons
-       SET vulnerable_type = ?, district = ?, tambon = ?, village = ?, name_enc = ?, phone_enc = ?, address_enc = ?, location_enc = ?, needs_enc = ?, caregiver_enc = ?, clinical_enc = ?, updated_by = ?
-       WHERE id = ? AND is_active = 1`,
-      [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, row.clinical_enc, auth.user.id, id]
+    const base = [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, row.clinical_enc];
+    const setBase = "vulnerable_type = ?, district = ?, tambon = ?, village = ?, name_enc = ?, phone_enc = ?, address_enc = ?, location_enc = ?, needs_enc = ?, caregiver_enc = ?, clinical_enc = ?";
+    const result = await withCareFallback(
+      () => query(`UPDATE vulnerable_persons SET ${setBase}, care_group = ?, power_dependent = ?, updated_by = ? WHERE id = ? AND is_active = 1`, [...base, row.care_group, row.power_dependent, auth.user.id, id]),
+      () => query(`UPDATE vulnerable_persons SET ${setBase}, updated_by = ? WHERE id = ? AND is_active = 1`, [...base, auth.user.id, id])
     );
     if (!result.affectedRows) return bad("ไม่พบรายชื่อ", 404);
     await logVulnerableAccess({ request, user: auth.user, action: "update", personId: id });

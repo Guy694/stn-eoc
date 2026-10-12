@@ -18,7 +18,7 @@ const PIN_CSS = `
 .vp-pin--selected{z-index:2}
 .vp-pin--urgent::before{content:"";position:absolute;left:50%;top:38%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:9999px;background:rgba(220,38,38,.35);animation:vp-pulse 1.6s ease-out infinite}
 .vp-tag{position:absolute;left:62%;top:-6px;white-space:nowrap;border-radius:9999px;background:#fff;color:#0f172a;font:700 10px/1 var(--font-kanit),system-ui,sans-serif;padding:2px 5px;box-shadow:0 0 0 1px #94a3b8}
-.vp-tag--priority{color:#b91c1c;box-shadow:0 0 0 1.5px #dc2626}
+
 .vp-shelter{position:relative;width:26px;height:26px;filter:drop-shadow(0 2px 2px rgba(15,23,42,.35))}
 .vp-shelter svg{display:block}
 .vp-shelter__free{position:absolute;left:50%;top:24px;transform:translateX(-50%);white-space:nowrap;border-radius:6px;background:#fff;color:var(--c);font:800 10px/1 var(--font-kanit),system-ui,sans-serif;padding:2px 4px;box-shadow:0 0 0 1px var(--c)}

@@ -10,17 +10,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, History, Lock, MapPinOff, Navigation, Pencil, Phone, RefreshCw, Trash2, UserRound } from "lucide-react";
 import {
   AddButton, AdminPage, Button, Field, FilterSelect, FormDialog, FormGrid, FormSection, ReadOnlyNotice, StatusPill,
-  Toolbar, UpdatedAt, inputClass, useNotice
+  Toolbar, UpdatedAt, inputClass, latestTime, useNotice
 } from "@/components/admin/crud";
 import LocationPicker from "@/components/admin/LocationPicker";
-import { pinSvg } from "@/components/eoc/vulnerable/vulnerablePins";
+import { pinFill, pinSvg } from "@/components/eoc/vulnerable/vulnerablePins";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { pointInGeometry } from "@/lib/healthFacilityStatus";
 import { SHELTER_TYPES, suggestShelters, suggestionReason, shelterTypeMeta } from "@/lib/shelterSuitability";
+import { CARE_GROUPS, careGroupMeta, defaultCareGroup, effectiveCareGroup } from "@/lib/careGroups";
 import {
-  CASE_GROUPS, CASE_STATUSES, VULNERABLE_TYPES, QUICK_FILTERS, caseStatus, filterPersons, maskPhone, matchesQuickFilter, pregnancyAlert, sortByUrgency, summarizePersons, typeMeta, validatePerson
+  CASE_GROUPS, CASE_STATUSES, VULNERABLE_TYPES, QUICK_FILTERS, caseStatus, filterPersons, followUpState, maskPhone, matchesQuickFilter, pregnancyAlert, sortByUrgency, summarizePersons, typeMeta, validatePerson
 } from "@/lib/vulnerablePersons";
+import { areaLabel, matchesStageTarget, stageMeta, stageTitle } from "@/lib/floodTriggers";
 
 const API = "/stn-eoc/api/eoc/vulnerable-persons";
 const AREA_API = "/stn-eoc/api/eoc/vulnerable-event";
@@ -32,17 +34,17 @@ const VulnerablePersonsMap = dynamic(() => import("@/components/eoc/vulnerable/V
 
 const EMPTY_FORM = {
   name: "", vulnerable_type: "bedridden", phone: "", district: "", tambon: "", village: "", address: "", needs: "",
-  caregiver_name: "", caregiver_phone: "", lat: "", lng: "", due_date: "", preterm_history: false
+  caregiver_name: "", caregiver_phone: "", lat: "", lng: "", due_date: "", preterm_history: false, care_group: "", power_dependent: false
 };
 const bangkokToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
-const EMPTY_FILTERS = { group: "all", status: "all", type: "all", district: "all", tambon: "all", search: "", quick: "all" };
+const EMPTY_FILTERS = { group: "all", status: "all", type: "all", care: "all", district: "all", tambon: "all", search: "", quick: "all" };
 const FLOOD_LEVELS = new Set(["severe", "moderate", "mild"]);
 // ปุ่มลัดบนการ์ด: ขั้นถัดไปที่เจ้าหน้าที่หน้างานกดบ่อย
-const QUICK_NEXT = { waiting: ["en_route", "arrived"], unreachable: ["en_route"], en_route: ["arrived"], arrived: ["assisted", "moved"] };
+const QUICK_NEXT = { waiting: ["en_route", "arrived"], unreachable: ["en_route"], en_route: ["arrived"], arrived: ["assisted", "moved"], moved: ["returned"], returned: ["followed_up"] };
 
-function Pin({ status, size = 18 }) {
+function Pin({ status, size = 18, fill = null }) {
   // SVG สร้างจากค่าคงที่ในโค้ด (ไม่มีข้อมูลผู้ใช้)
-  return <span className="inline-block shrink-0" aria-hidden="true" dangerouslySetInnerHTML={{ __html: pinSvg(status, size) }} />;
+  return <span className="inline-block shrink-0" aria-hidden="true" dangerouslySetInnerHTML={{ __html: pinSvg(status, size, fill) }} />;
 }
 
 function areaText(person) {
@@ -88,26 +90,34 @@ function GroupChips({ summary, value, onChange }) {
 }
 
 function MapLegend({ showShelters = false }) {
-  // จอเล็ก: พับคำอธิบายไว้ไม่ให้บังแผนที่ จอใหญ่: เปิดไว้
+  // พับคำอธิบายไว้ไม่ให้บังแผนที่ เปิดไว้เองเฉพาะจอกว้างมาก
   const [open, setOpen] = useState(false);
-  useEffect(() => { setOpen(window.matchMedia("(min-width: 1024px)").matches); }, []);
+  useEffect(() => { setOpen(window.matchMedia("(min-width: 1600px)").matches); }, []);
   return (
     <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)}
-      className="pointer-events-auto absolute bottom-2 left-2 z-[500] max-w-[15rem] rounded-xl bg-white/95 p-2.5 text-[11px] shadow-lg ring-1 ring-slate-200 backdrop-blur">
+      className="pointer-events-auto absolute bottom-2 left-2 z-[500] max-w-[19rem] rounded-xl bg-white/95 p-2.5 text-[11px] shadow-lg ring-1 ring-slate-200 backdrop-blur">
       <summary className="cursor-pointer font-black text-slate-800">สัญลักษณ์</summary>
       <div className="mt-1">
-      <ul className="grid grid-cols-1 gap-y-1">
+      <p className="mb-1 font-bold text-slate-700">สีหมุด = กลุ่มสี</p>
+      <ul className="mb-1.5 flex flex-wrap gap-x-2 gap-y-0.5">
+        {CARE_GROUPS.map((group) => (
+          <li key={group.key} className="flex items-center gap-1 text-slate-700"><span dangerouslySetInnerHTML={{ __html: pinSvg("waiting", 12, group.color) }} aria-hidden="true" />{group.label}</li>
+        ))}
+        <li className="flex items-center gap-1 text-slate-700"><span dangerouslySetInnerHTML={{ __html: pinSvg("assisted", 12, "#9aa6b5") }} aria-hidden="true" />จัดการแล้ว</li>
+      </ul>
+      <p className="mb-1 font-bold text-slate-700">สัญลักษณ์ในหมุด = สถานะ</p>
+      <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
         {CASE_STATUSES.map((status) => (
           <li key={status.key} className="flex items-center gap-1.5 text-slate-700"><Pin status={status.key} size={14} />{status.label}</li>
         ))}
       </ul>
       <p className="mt-1.5 flex items-center gap-1.5 text-slate-600">
-        <span className="rounded-full bg-white px-1.5 text-[10px] font-bold text-red-700 ring-1 ring-red-500">HD</span>
-        ป้ายบนหมุด = ประเภท (ขอบแดง = ต้องช่วยก่อน)
+        <span className="rounded-full bg-white px-1.5 text-[10px] font-bold text-slate-800 ring-1 ring-slate-400">HD ⚡</span>
+        ป้ายบนหมุด = ประเภท, ⚡ = ใช้อุปกรณ์ไฟฟ้า
       </p>
       <p className="mt-1 flex items-center gap-1.5 text-slate-600">
         <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center" aria-hidden="true"><span className="absolute inset-0 rounded-full bg-red-500/40" /><span className="h-1.5 w-1.5 rounded-full bg-red-600" /></span>
-        วงกะพริบ = กลุ่มต้องช่วยก่อนที่ยังรอ
+        วงกะพริบ = กลุ่มสีแดงที่ยังรอช่วยเหลือ
       </p>
       {showShelters ? (
         <>
@@ -120,6 +130,64 @@ function MapLegend({ showShelters = false }) {
         </>
       ) : null}
       </div>
+    </details>
+  );
+}
+
+/** ป้ายกลุ่มสี: ขอบประ = ยังไม่ได้ประเมิน ใช้สีที่ระบบเสนอตามประเภท */
+function CareChip({ person, size = "sm" }) {
+  const meta = careGroupMeta(effectiveCareGroup(person));
+  if (!meta) return null;
+  const assessed = Boolean(person.care_group);
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full font-bold ${size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"}`}
+      style={{ background: meta.soft, color: meta.text, border: `1.5px ${assessed ? "solid" : "dashed"} ${meta.color}` }}
+      title={assessed ? meta.level : `${meta.level} (ระบบเสนอตามประเภท ยังไม่ได้ประเมินรายคน)`}
+    >
+      <span className="inline-block h-2 w-2 rounded-full" style={{ background: meta.color }} aria-hidden="true" />
+      {meta.label}{assessed ? "" : " (เสนอ)"}
+    </span>
+  );
+}
+
+function CareFilterBar({ summary, value, onChange }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="กรองตามกลุ่มสี">
+      <span className="text-xs font-bold text-slate-600">กลุ่มสี</span>
+      {CARE_GROUPS.map((group) => {
+        const active = value === group.key;
+        return (
+          <button key={group.key} type="button" onClick={() => onChange(active ? "all" : group.key)} aria-pressed={active} title={`${group.level}: ${group.examples}`}
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-bold transition"
+            style={active ? { background: group.color, borderColor: group.color, color: group.key === "yellow" ? "#422006" : "#fff" } : { background: "#fff", borderColor: group.color, color: group.text }}>
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: active ? "#fff" : group.color }} aria-hidden="true" />
+            {group.label}
+            <span className="tabular-nums">{formatNumber(summary.byCare?.[group.key] || 0)}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** มือถือ: พับตัวกรองที่ใช้ไม่บ่อยไว้ ให้แผนที่ขึ้นมาเร็ว · จอใหญ่: เปิดไว้เสมอ */
+function MoreFilters({ activeCount, children }) {
+  const [open, setOpen] = useState(false);
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const sync = () => { setWide(query.matches); if (query.matches) setOpen(true); };
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  return (
+    <details open={open || wide} onToggle={(event) => { if (!wide) setOpen(event.currentTarget.open); }} className="space-y-3">
+      <summary className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-bold text-slate-700 lg:hidden">
+        ตัวกรองเพิ่มเติม{activeCount ? <span className="rounded-full bg-[#0b4c86] px-1.5 text-xs text-white">{activeCount}</span> : null}
+      </summary>
+      <div className="mt-3 space-y-3 lg:mt-0">{children}</div>
     </details>
   );
 }
@@ -162,6 +230,7 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
   const quick = perms.can_update_status ? QUICK_NEXT[status.key] || [] : [];
   const [today] = useState(bangkokToday);
   const pregnancy = pregnancyAlert(person, today);
+  const followUp = followUpState(person);
   return (
     <li>
       <article
@@ -169,11 +238,14 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
         aria-current={selected ? "true" : undefined}
       >
         <button type="button" onClick={() => onSelect(person.id)} className="flex w-full items-start gap-2.5 text-left">
-          <Pin status={status.key} size={24} />
+          <Pin status={status.key} size={24} fill={pinFill(person)} />
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="font-black text-slate-900">{person.name}</span>
+              <CareChip person={person} />
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">{type?.short || person.vulnerable_type}</span>
+              {person.power_dependent ? <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-bold text-violet-800 ring-1 ring-violet-200">ใช้อุปกรณ์ไฟฟ้า</span> : null}
+              {followUp ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${followUp.key === "late" ? "bg-red-50 text-red-700 ring-red-200" : followUp.key === "due" ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-cyan-50 text-cyan-800 ring-cyan-200"}`}>{followUp.text}</span> : null}
               {pregnancy ? <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 ring-1 ring-rose-200">{pregnancy.text}</span> : null}
               {person.in_flood_area && caseStatus(person.status).group !== "done" ? <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800 ring-1 ring-sky-200">บ้านอยู่ในพื้นที่น้ำท่วม</span> : null}
               {!person.location ? <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-700"><MapPinOff className="h-3 w-3" aria-hidden="true" />ไม่มีพิกัด</span> : null}
@@ -361,6 +433,8 @@ function PersonDialog({ open, editing, areas, sessionId, onClose, onSaved }) {
       ...EMPTY_FORM,
       ...Object.fromEntries(Object.keys(EMPTY_FORM).map((key) => [key, editing[key] ?? ""])),
       preterm_history: Boolean(editing.preterm_history),
+      care_group: editing.care_group || "",
+      power_dependent: Boolean(editing.power_dependent),
       lat: editing.location?.lat ?? "",
       lng: editing.location?.lng ?? ""
     } : EMPTY_FORM);
@@ -410,6 +484,16 @@ function PersonDialog({ open, editing, areas, sessionId, onClose, onSaved }) {
               {VULNERABLE_TYPES.map((type) => <option key={type.key} value={type.key}>{type.label}</option>)}
             </select>
           </Field>
+          <Field label="กลุ่มสี" hint={careGroupMeta(form.care_group || defaultCareGroup(form.vulnerable_type, form.power_dependent))?.level}>
+            <select className={inputClass} value={form.care_group} onChange={set("care_group")}>
+              <option value="">ยังไม่ประเมิน ใช้ที่ระบบเสนอ ({careGroupMeta(defaultCareGroup(form.vulnerable_type, form.power_dependent))?.label})</option>
+              {CARE_GROUPS.map((group) => <option key={group.key} value={group.key}>{group.label}: {group.level}</option>)}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm font-semibold text-slate-800">
+            <input type="checkbox" className="h-4 w-4" checked={Boolean(form.power_dependent)} onChange={(event) => setForm((current) => ({ ...current, power_dependent: event.target.checked }))} />
+            พึ่งเครื่องช่วยหายใจหรืออุปกรณ์ที่ใช้ไฟฟ้า
+          </label>
           {form.vulnerable_type === "pregnant" ? (
             <>
               <Field label="กำหนดคลอด" hint="ใช้เรียงลำดับและเตือนเมื่อใกล้คลอดภายใน 30 วัน"><input type="date" className={inputClass} value={form.due_date || ""} onChange={set("due_date")} /></Field>
@@ -487,9 +571,23 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
   const quickCounts = useMemo(() => {
     const counts = { priority: persons.filter((person) => matchesQuickFilter(person, "priority", today)).length, unmapped: persons.filter((person) => !person.location).length };
     if (floodAreas.length) counts.flood_pending = persons.filter((person) => matchesQuickFilter(person, "flood_pending", today)).length;
+    const followUp = persons.filter((person) => matchesQuickFilter(person, "follow_up", today)).length;
+    if (followUp) counts.follow_up = followUp;
     return counts;
   }, [persons, floodAreas.length, today]);
-  const filtered = useMemo(() => sortByUrgency(filterPersons(persons, { ...filters, today })), [persons, filters, today]);
+  const [stageFilter, setStageFilter] = useState(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stage = params.get("stage");
+    const district = params.get("district") || "all";
+    const tambon = params.get("tambon") || "all";
+    if (stage && stageMeta(stage)) setStageFilter({ stage, district: district === "all" ? null : district, tambon: tambon === "all" ? null : tambon });
+    if (district !== "all" || tambon !== "all") setFilters((current) => ({ ...current, district, tambon }));
+  }, []);
+  const filtered = useMemo(() => {
+    const base = filterPersons(persons, { ...filters, today });
+    return sortByUrgency(stageFilter ? base.filter((person) => matchesStageTarget(person, stageFilter.stage)) : base);
+  }, [persons, filters, today, stageFilter]);
   const activeShelterCount = shelters.filter((shelter) => Number(shelter.active) === 1).length;
   const districtOptions = useMemo(() => sortTh(persons.map((person) => person.district)), [persons]);
   const tambonOptions = useMemo(() => sortTh(persons.filter((person) => filters.district === "all" || person.district === filters.district).map((person) => person.tambon)), [persons, filters.district]);
@@ -533,6 +631,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
     <AdminPage
       context={context}
       title="แผนที่กลุ่มเปราะบางรายบุคคล"
+      freshness={session ? { value: latestTime(persons.map((person) => person.status_updated_at)), staleHours: 6, label: "อัปเดตสถานะล่าสุด", emptyText: "ยังไม่มีการอัปเดตสถานะในเหตุการณ์นี้" } : null}
       description="ดูว่าใครยังไม่ได้รับการช่วยเหลือ อยู่ตรงไหน และอัปเดตสถานะเมื่อเจ้าหน้าที่เข้าพื้นที่"
       actions={(
         <div className="flex flex-wrap gap-2">
@@ -557,7 +656,14 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
       ) : null}
       <ReadOnlyNotice message={perms.read_only_message} />
 
-      <GroupChips summary={summary} value={filters.group} onChange={setFilter("group")} />
+      {stageFilter ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#0b4c86]/30 bg-[#eef5fc] px-3 py-2 text-sm text-[#083865]">
+          <span className="font-bold">รายชื่อเป้าหมาย {stageTitle(stageFilter.stage)} · {areaLabel(stageFilter)}</span>
+          <span className="text-slate-600">{stageMeta(stageFilter.stage)?.targetLabel}</span>
+          <Button variant="secondary" className="ml-auto min-h-8 px-3 py-1 text-xs" onClick={() => { setStageFilter(null); window.history.replaceState(null, "", window.location.pathname); }}>แสดงทุกคน</Button>
+        </div>
+      ) : null}
+      <CareFilterBar summary={summary} value={filters.care} onChange={setFilter("care")} />
       <QuickFilterBar counts={quickCounts} value={filters.quick} onChange={setFilter("quick")} />
       {summary.total ? (
         <div className="flex items-center gap-3 text-xs text-slate-600">
@@ -572,6 +678,8 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
         </div>
       ) : null}
 
+      <MoreFilters activeCount={["group", "status", "type", "district", "tambon"].filter((key) => filters[key] !== "all").length + (filters.search ? 1 : 0)}>
+      <GroupChips summary={summary} value={filters.group} onChange={setFilter("group")} />
       <Toolbar
         search={filters.search}
         onSearchChange={setFilter("search")}
@@ -588,6 +696,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
         <FilterSelect label="อำเภอ" value={filters.district} onChange={setFilter("district")} options={[{ value: "all", label: "ทุกอำเภอ" }, ...districtOptions.map((name) => ({ value: name, label: `อ.${name}` }))]} />
         <FilterSelect label="ตำบล" value={filters.tambon} onChange={setFilter("tambon")} options={[{ value: "all", label: "ทุกตำบล" }, ...tambonOptions.map((name) => ({ value: name, label: `ต.${name}` }))]} />
       </Toolbar>
+      </MoreFilters>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="relative h-[55vh] min-h-[360px] overflow-hidden rounded-xl border border-slate-200 bg-white lg:h-[calc(100vh-17rem)] lg:min-h-[520px]">

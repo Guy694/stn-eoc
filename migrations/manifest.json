@@ -55,6 +55,9 @@
     "20261011_team_daily_reports.sql",
     "20261011_vulnerable_person_clinical.sql",
     "20261011_team_reports_unit.sql",
-    "20261012_shelter_types.sql"
+    "20261012_shelter_types.sql",
+    "20261012_dpm_water_readings.sql",
+    "20261012_vulnerable_care_group.sql",
+    "20261012_area_trigger_flags.sql"
   ]
 }
