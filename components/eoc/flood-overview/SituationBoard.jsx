@@ -345,7 +345,7 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
           <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ดึงข้อมูลล่าสุด
         </button>
         {eocType === "flood" ? (
-          <a href={`/stn-eoc/api/eoc/sheet-export?eoc=flood&session_id=${data.session.id}`} download title="แบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล 14 แผ่นงาน"
+          <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download title="แบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล 14 แผ่นงาน"
             className="inline-flex items-center gap-1.5 rounded-lg border border-current/20 bg-white/70 px-3 py-1.5 text-sm font-bold hover:bg-white">
             <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
           </a>

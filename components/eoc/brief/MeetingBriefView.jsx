@@ -78,7 +78,7 @@ export default function MeetingBriefView({ eocType = "flood" }) {
         <div className="flex gap-2 print:hidden">
           <Button variant="secondary" onClick={load} disabled={state.loading}><RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} />ดึงข้อมูลล่าสุด</Button>
           {eocType === "flood" ? (
-            <a href={`/stn-eoc/api/eoc/sheet-export?eoc=flood&session_id=${data.session.id}`} download
+            <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download
               title="14 แผ่นงานตามแบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล (ไม่รวมข้อมูลรายบุคคล)"
               className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
               <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
