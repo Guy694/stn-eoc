@@ -4,39 +4,9 @@
 //   ลบจริง:            npm run test-data:cleanup -- --apply
 import mysql from "mysql2/promise";
 
-const TAG = "%[ทดสอบ]%";
 const apply = process.argv.includes("--apply");
 
-// ลำดับสำคัญ: ลบตารางลูกก่อนตารางแม่
-// แจ้งเตือนระดับอำเภอ/ผู้เสียชีวิตคำนวณจากยอดรวม จึงไม่มีป้ายทดสอบในข้อความ —
-// ลบเฉพาะที่เกิดหลังรายงานโรคทดสอบชิ้นแรก (ต้องลบก่อนรายงานโรค) เพื่อให้เหตุจริงภายหลังแจ้งเตือนได้อีก
-const FIRST_TEST_REPORT = `LEAST(
-    COALESCE((SELECT MIN(created_at) FROM disease_reports WHERE notes LIKE ?), '9999-12-31'),
-    COALESCE((SELECT MIN(r.created_at) FROM shelter_disease_reports r JOIN shelter_centers sc ON sc.id = r.shelter_id WHERE sc.sheltername LIKE ? OR r.notes LIKE ?), '9999-12-31'))`;
-
-const STEPS = [
-  ["ประวัติแจ้งเตือนระดับอำเภอที่เกิดระหว่างทดสอบ", `DELETE FROM eoc_alert_log WHERE (alert_key LIKE 'health-district:%' OR alert_key LIKE 'deaths:%') AND created_at >= ${FIRST_TEST_REPORT}`],
-  ["รายงานโรคในศูนย์ (ศูนย์ทดสอบ)", "DELETE r FROM shelter_disease_reports r JOIN shelter_centers sc ON sc.id = r.shelter_id WHERE sc.sheltername LIKE ?"],
-  ["รายงานโรคในศูนย์ (หมายเหตุทดสอบ)", "DELETE FROM shelter_disease_reports WHERE notes LIKE ?"],
-  ["การเปิดใช้ศูนย์ทดสอบ", "DELETE a FROM shelter_session_activations a JOIN shelter_centers sc ON sc.id = a.shelter_id WHERE sc.sheltername LIKE ?"],
-  ["ยอดผู้พักพิงศูนย์ทดสอบ", "DELETE o FROM shelter_occupancy o JOIN shelter_centers sc ON sc.id = o.shelter_id WHERE sc.sheltername LIKE ?"],
-  ["ศูนย์พักพิงทดสอบ", "DELETE FROM shelter_centers WHERE sheltername LIKE ?"],
-  ["รายงานผู้ป่วยในชุมชน", "DELETE FROM disease_reports WHERE notes LIKE ?"],
-  ["กลุ่มเปราะบางในเหตุการณ์", "DELETE FROM vulnerable_groups WHERE notes LIKE ? OR village LIKE ?"],
-  ["ทะเบียนกลุ่มเปราะบาง (หมู่บ้านทดสอบ)", "DELETE FROM vulnerable_group_baselines WHERE notes LIKE ? OR village LIKE ?"],
-  ["การรับ/จ่ายเวชภัณฑ์", "DELETE m FROM medical_inventory_movements m JOIN medical_inventory_stock s ON s.id = m.stock_id WHERE s.item_name LIKE ?"],
-  ["รายการเวชภัณฑ์", "DELETE FROM medical_inventory_stock WHERE item_name LIKE ?"],
-  ["สถานการณ์/ข้อสั่งการ", "DELETE FROM eoc_daily_directives WHERE content LIKE ?"],
-  ["เรื่องแจ้งปัญหา IT", "DELETE FROM eoc_it_tickets WHERE title LIKE ?"],
-  ["ทรัพยากร IT ทดสอบ", "DELETE FROM it_resources WHERE unit_name LIKE ?"],
-  ["ประวัติแจ้งเตือนอัตโนมัติที่เกิดจากข้อมูลทดสอบ", "DELETE FROM eoc_alert_log WHERE message LIKE ?"]
-];
-
-const paramsFor = (sql) => Array((sql.match(/\?/g) || []).length).fill(TAG);
-
-function toCount(sql) {
-  return sql.replace(/^DELETE\s+(\w+\s+)?FROM/i, "SELECT COUNT(*) AS count FROM");
-}
+import { STEPS, paramsFor, toCount } from "../lib/testDataCleanup.mjs";
 
 const connection = await mysql.createConnection({
   host: process.env.DB_HOST || "localhost",
