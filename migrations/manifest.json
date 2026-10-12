@@ -48,6 +48,13 @@
     "20261007_incident_tracking.sql",
     "20261009_vulnerable_persons.sql",
     "20261009_system_settings.sql",
-    "20261010_public_push.sql"
+    "20261010_public_push.sql",
+    "20261010_push_officer.sql",
+    "20261011_liquid_oxygen.sql",
+    "20261011_vulnerable_psych_dialysis.sql",
+    "20261011_team_daily_reports.sql",
+    "20261011_vulnerable_person_clinical.sql",
+    "20261011_team_reports_unit.sql",
+    "20261012_shelter_types.sql"
   ]
 }
