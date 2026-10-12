@@ -3,6 +3,21 @@ import { getConnection } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { ArchiveError, handleArchiveDelete, recordChange } from '@/lib/recordArchive';
+import { normalizeShelterType, parseCapabilities } from '@/lib/shelterSuitability';
+
+// ประเภทศูนย์และความพร้อม (คอลัมน์ใหม่ — ถ้ายังไม่ migrate ให้ข้ามโดยไม่ทำให้การบันทึกหลักล้ม)
+async function saveShelterKind(pool, id, body) {
+    if (body.shelter_type === undefined && body.capabilities === undefined) return;
+    try {
+        await pool.query('UPDATE shelter_centers SET shelter_type = ?, capabilities = ? WHERE id = ?', [
+            normalizeShelterType(body.shelter_type),
+            parseCapabilities(body.capabilities).join(',') || null,
+            id
+        ]);
+    } catch (error) {
+        if (error.code !== 'ER_BAD_FIELD_ERROR') throw error;
+    }
+}
 
 // GET - Fetch all shelter centers
 export async function GET(request) {
@@ -102,6 +117,8 @@ export async function POST(request) {
             ]
         );
 
+        await saveShelterKind(pool, result.insertId, body);
+
         await recordChange({
             request, user: auth.user, action: 'data_create', table: 'shelter_centers', id: result.insertId,
             description: `เพิ่มศูนย์พักพิง: ${sheltername}`, newValues: body
@@ -199,6 +216,8 @@ export async function PUT(request) {
                 id
             ]
         );
+
+        await saveShelterKind(pool, id, body);
 
         await recordChange({
             request, user: auth.user, action: 'data_update', table: 'shelter_centers', id,

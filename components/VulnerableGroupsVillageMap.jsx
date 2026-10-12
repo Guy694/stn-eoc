@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import AppIcon from "@/components/icons/AppIcon";
+import { VULNERABLE_TYPES } from "@/lib/vulnerableEvent";
 
 const MapContainer = dynamic(
     () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -37,12 +38,13 @@ function numberValue(value) {
 }
 
 function vulnerableTotal(record) {
-    return numberValue(record.elderly)
-        + numberValue(record.children)
-        + numberValue(record.disabled)
-        + numberValue(record.bedridden)
-        + numberValue(record.pregnant)
-        + numberValue(record.chronic_illness);
+    return VULNERABLE_TYPES.reduce((sum, type) => sum + numberValue(record[type.key]), 0);
+}
+
+const zeroCounts = () => Object.fromEntries(VULNERABLE_TYPES.map((type) => [type.key, 0]));
+function addCounts(target, source) {
+    target.total += source.total;
+    for (const type of VULNERABLE_TYPES) target[type.key] += source[type.key];
 }
 
 function getVulnerableColor(total, maxTotal) {
@@ -67,12 +69,7 @@ function buildVulnerableLookup(records) {
         const total = vulnerableTotal(record);
         const current = {
             total,
-            elderly: numberValue(record.elderly),
-            children: numberValue(record.children),
-            disabled: numberValue(record.disabled),
-            bedridden: numberValue(record.bedridden),
-            pregnant: numberValue(record.pregnant),
-            chronic_illness: numberValue(record.chronic_illness),
+            ...Object.fromEntries(VULNERABLE_TYPES.map((type) => [type.key, numberValue(record[type.key])])),
             notes: record.notes,
             needs: record.needs,
             source_type: record.source_type
@@ -81,21 +78,10 @@ function buildVulnerableLookup(records) {
         if (isDistrictAggregate) {
             const existing = districtMap.get(district) || {
                 total: 0,
-                elderly: 0,
-                children: 0,
-                disabled: 0,
-                bedridden: 0,
-                pregnant: 0,
-                chronic_illness: 0,
+                ...zeroCounts(),
                 source_type: record.source_type
             };
-            existing.total += current.total;
-            existing.elderly += current.elderly;
-            existing.children += current.children;
-            existing.disabled += current.disabled;
-            existing.bedridden += current.bedridden;
-            existing.pregnant += current.pregnant;
-            existing.chronic_illness += current.chronic_illness;
+            addCounts(existing, current);
             districtMap.set(district, existing);
             return;
         }
@@ -103,22 +89,11 @@ function buildVulnerableLookup(records) {
         const tambonKey = `${district}|${tambon}`;
         const tambonExisting = tambonMap.get(tambonKey) || {
             total: 0,
-            elderly: 0,
-            children: 0,
-            disabled: 0,
-            bedridden: 0,
-            pregnant: 0,
-            chronic_illness: 0,
+            ...zeroCounts(),
             source_type: record.source_type
         };
 
-        tambonExisting.total += current.total;
-        tambonExisting.elderly += current.elderly;
-        tambonExisting.children += current.children;
-        tambonExisting.disabled += current.disabled;
-        tambonExisting.bedridden += current.bedridden;
-        tambonExisting.pregnant += current.pregnant;
-        tambonExisting.chronic_illness += current.chronic_illness;
+        addCounts(tambonExisting, current);
         tambonMap.set(tambonKey, tambonExisting);
 
         if (village) {
@@ -161,6 +136,8 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [baseMap, setBaseMap] = useState("street");
+    // ระบายสีตาม "รวมทุกประเภท" หรือเลือกดูทีละประเภท (เช่น เฉพาะผู้ป่วยฟอกไต)
+    const [metric, setMetric] = useState("total");
     const selectedBaseLayer = getMapBaseLayer(baseMap);
 
     useEffect(() => {
@@ -211,16 +188,13 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
     const provinceSummary = useMemo(() => {
         return records.reduce((summary, record) => {
             summary.total += vulnerableTotal(record);
-            summary.elderly += numberValue(record.elderly);
-            summary.children += numberValue(record.children);
-            summary.disabled += numberValue(record.disabled);
-            summary.bedridden += numberValue(record.bedridden);
-            summary.pregnant += numberValue(record.pregnant);
-            summary.chronic_illness += numberValue(record.chronic_illness);
+            for (const type of VULNERABLE_TYPES) summary[type.key] += numberValue(record[type.key]);
             return summary;
-        }, { total: 0, elderly: 0, children: 0, disabled: 0, bedridden: 0, pregnant: 0, chronic_illness: 0 });
+        }, { total: 0, ...zeroCounts() });
     }, [records]);
-    const maxTotal = Math.max(...mappedPolygons.map((poly) => poly.vulnerableInfo?.total || 0), 0);
+    const valueOf = (info) => (info ? (metric === "total" ? info.total : Number(info[metric]) || 0) : 0);
+    const maxTotal = Math.max(...mappedPolygons.map((poly) => valueOf(poly.vulnerableInfo)), 0);
+    const metricLabel = metric === "total" ? "ทุกประเภท" : VULNERABLE_TYPES.find((type) => type.key === metric)?.label || "";
     const sourceLabel = source === "baseline" ? "ฐานข้อมูลกลาง" : "ข้อมูลในเหตุการณ์";
 
     if (!session) {
@@ -236,7 +210,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                         แผนที่ข้อมูลกลุ่มเปราะบาง (ระดับหมู่บ้าน)
                     </h2>
                     <p className="text-gray-600">
-                        ครั้งที่ {session.session_number} • แสดงจำนวนกลุ่มเปราะบางจาก{sourceLabel}
+                        ครั้งที่ {session.session_number} • ระบายสีตาม{metricLabel} จาก{sourceLabel} • กดกล่องตัวเลขด้านล่างเพื่อเลือกประเภท
                     </p>
                 </div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -253,14 +227,9 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                 </label>
             </div>
 
-            <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-                <SummaryBox label="รวมทั้งหมด" value={provinceSummary.total} tone="emerald" />
-                <SummaryBox label="ผู้สูงอายุ" value={provinceSummary.elderly} />
-                <SummaryBox label="เด็กเล็ก" value={provinceSummary.children} />
-                <SummaryBox label="ผู้พิการ" value={provinceSummary.disabled} />
-                <SummaryBox label="ติดเตียง" value={provinceSummary.bedridden} />
-                <SummaryBox label="ตั้งครรภ์" value={provinceSummary.pregnant} />
-                <SummaryBox label="โรคเรื้อรัง" value={provinceSummary.chronic_illness} />
+            <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5 xl:grid-cols-10">
+                <SummaryBox label="รวมทั้งหมด" value={provinceSummary.total} tone="emerald" active={metric === "total"} onClick={() => setMetric("total")} />
+                {VULNERABLE_TYPES.map((type) => <SummaryBox key={type.key} label={type.short} value={provinceSummary[type.key]} active={metric === type.key} onClick={() => setMetric(type.key)} />)}
             </div>
 
             {error && (
@@ -291,7 +260,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
 
                             {mappedPolygons.map((poly, index) => {
                                 const info = poly.vulnerableInfo;
-                                const total = info?.total || 0;
+                                const total = valueOf(info);
                                 const fillColor = getVulnerableColor(total, maxTotal);
                                 return (
                                     <Polygon
@@ -312,14 +281,9 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                                                 {info ? (
                                                     <>
                                                         <div className="my-2 rounded bg-emerald-50 px-2 py-1 font-bold text-emerald-800">
-                                                            รวม {formatNumber(total)} คน {info.level === "district" ? "(ยอดระดับอำเภอ)" : info.level === "tambon" ? "(ยอดระดับตำบล)" : ""}
+                                                            {metric === "total" ? "รวม" : metricLabel} {formatNumber(total)} คน {info.level === "district" ? "(ยอดระดับอำเภอ)" : info.level === "tambon" ? "(ยอดระดับตำบล)" : ""}
                                                         </div>
-                                                        ผู้สูงอายุ: {formatNumber(info.elderly)}<br />
-                                                        เด็กเล็ก: {formatNumber(info.children)}<br />
-                                                        ผู้พิการ: {formatNumber(info.disabled)}<br />
-                                                        ผู้ป่วยติดเตียง: {formatNumber(info.bedridden)}<br />
-                                                        สตรีมีครรภ์: {formatNumber(info.pregnant)}<br />
-                                                        ผู้ป่วยเรื้อรัง: {formatNumber(info.chronic_illness)}<br />
+                                                        {VULNERABLE_TYPES.filter((type) => info[type.key]).map((type) => <span key={type.key}>{type.label}: {formatNumber(info[type.key])}<br /></span>)}
                                                         {info.needs && <><strong>ความต้องการ:</strong> {info.needs}<br /></>}
                                                         {info.notes && <><strong>หมายเหตุ:</strong> {info.notes}<br /></>}
                                                     </>
@@ -349,16 +313,19 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
     );
 }
 
-function SummaryBox({ label, value, tone = "slate" }) {
-    const toneClass = tone === "emerald"
-        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-        : "border-slate-200 bg-slate-50 text-slate-700";
+// กล่องสรุป = ปุ่มเลือกว่าจะระบายสีแผนที่ตามประเภทไหน
+function SummaryBox({ label, value, tone = "slate", active = false, onClick }) {
+    const toneClass = active
+        ? "border-[#0b4c86] bg-[#0b4c86] text-white"
+        : tone === "emerald"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-400"
+            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-400";
     return (
-        <div className={`rounded-lg border p-3 ${toneClass}`}>
-            <div className="text-xs font-black opacity-75">{label}</div>
+        <button type="button" onClick={onClick} aria-pressed={active} className={`rounded-lg border p-3 text-left transition ${toneClass}`}>
+            <div className="text-xs font-black opacity-80">{label}</div>
             <div className="mt-1 text-2xl font-black">{formatNumber(value)}</div>
             <div className="text-xs font-semibold opacity-70">คน</div>
-        </div>
+        </button>
     );
 }
 

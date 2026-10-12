@@ -5,7 +5,7 @@
 // - เจ้าหน้าที่หน้างานกดเปลี่ยนสถานะได้ทันที (กำลังเดินทาง → ถึงพื้นที่ → ช่วยเหลือแล้ว/เคลื่อนย้าย)
 // ข้อมูลส่วนบุคคลเข้ารหัสในฐานข้อมูล ถอดรหัสที่เซิร์ฟเวอร์เฉพาะคำขอของเจ้าหน้าที่ และบันทึกการเข้าดูทุกครั้ง
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, History, Lock, MapPinOff, Navigation, Pencil, Phone, RefreshCw, Trash2, UserRound } from "lucide-react";
 import {
@@ -16,8 +16,10 @@ import LocationPicker from "@/components/admin/LocationPicker";
 import { pinSvg } from "@/components/eoc/vulnerable/vulnerablePins";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
+import { pointInGeometry } from "@/lib/healthFacilityStatus";
+import { SHELTER_TYPES, suggestShelters, suggestionReason, shelterTypeMeta } from "@/lib/shelterSuitability";
 import {
-  CASE_GROUPS, CASE_STATUSES, VULNERABLE_TYPES, caseStatus, filterPersons, maskPhone, sortByUrgency, summarizePersons, typeMeta, validatePerson
+  CASE_GROUPS, CASE_STATUSES, VULNERABLE_TYPES, QUICK_FILTERS, caseStatus, filterPersons, maskPhone, matchesQuickFilter, pregnancyAlert, sortByUrgency, summarizePersons, typeMeta, validatePerson
 } from "@/lib/vulnerablePersons";
 
 const API = "/stn-eoc/api/eoc/vulnerable-persons";
@@ -30,9 +32,11 @@ const VulnerablePersonsMap = dynamic(() => import("@/components/eoc/vulnerable/V
 
 const EMPTY_FORM = {
   name: "", vulnerable_type: "bedridden", phone: "", district: "", tambon: "", village: "", address: "", needs: "",
-  caregiver_name: "", caregiver_phone: "", lat: "", lng: ""
+  caregiver_name: "", caregiver_phone: "", lat: "", lng: "", due_date: "", preterm_history: false
 };
-const EMPTY_FILTERS = { group: "all", status: "all", type: "all", district: "all", tambon: "all", search: "" };
+const bangkokToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+const EMPTY_FILTERS = { group: "all", status: "all", type: "all", district: "all", tambon: "all", search: "", quick: "all" };
+const FLOOD_LEVELS = new Set(["severe", "moderate", "mild"]);
 // ปุ่มลัดบนการ์ด: ขั้นถัดไปที่เจ้าหน้าที่หน้างานกดบ่อย
 const QUICK_NEXT = { waiting: ["en_route", "arrived"], unreachable: ["en_route"], en_route: ["arrived"], arrived: ["assisted", "moved"] };
 
@@ -83,19 +87,71 @@ function GroupChips({ summary, value, onChange }) {
   );
 }
 
-function MapLegend() {
+function MapLegend({ showShelters = false }) {
+  // จอเล็ก: พับคำอธิบายไว้ไม่ให้บังแผนที่ จอใหญ่: เปิดไว้
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setOpen(window.matchMedia("(min-width: 1024px)").matches); }, []);
   return (
-    <div className="pointer-events-auto absolute bottom-2 left-2 z-[500] max-w-[15rem] rounded-xl bg-white/95 p-2.5 text-[11px] shadow-lg ring-1 ring-slate-200 backdrop-blur">
-      <p className="mb-1 font-black text-slate-800">สัญลักษณ์</p>
+    <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)}
+      className="pointer-events-auto absolute bottom-2 left-2 z-[500] max-w-[15rem] rounded-xl bg-white/95 p-2.5 text-[11px] shadow-lg ring-1 ring-slate-200 backdrop-blur">
+      <summary className="cursor-pointer font-black text-slate-800">สัญลักษณ์</summary>
+      <div className="mt-1">
       <ul className="grid grid-cols-1 gap-y-1">
         {CASE_STATUSES.map((status) => (
           <li key={status.key} className="flex items-center gap-1.5 text-slate-700"><Pin status={status.key} size={14} />{status.label}</li>
         ))}
       </ul>
       <p className="mt-1.5 flex items-center gap-1.5 text-slate-600">
-        <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center" aria-hidden="true"><span className="absolute inset-0 rounded-full bg-red-500/40" /><span className="h-1.5 w-1.5 rounded-full bg-red-600" /></span>
-        วงกะพริบ = ติดเตียง/พิการ/ตั้งครรภ์ ที่ยังรอ
+        <span className="rounded-full bg-white px-1.5 text-[10px] font-bold text-red-700 ring-1 ring-red-500">HD</span>
+        ป้ายบนหมุด = ประเภท (ขอบแดง = ต้องช่วยก่อน)
       </p>
+      <p className="mt-1 flex items-center gap-1.5 text-slate-600">
+        <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center" aria-hidden="true"><span className="absolute inset-0 rounded-full bg-red-500/40" /><span className="h-1.5 w-1.5 rounded-full bg-red-600" /></span>
+        วงกะพริบ = กลุ่มต้องช่วยก่อนที่ยังรอ
+      </p>
+      {showShelters ? (
+        <>
+          <p className="mb-1 mt-2 font-black text-slate-800">ศูนย์พักพิง (ตัวเลข = ที่ว่าง)</p>
+          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+            {SHELTER_TYPES.map((type) => (
+              <li key={type.key} className="flex items-center gap-1 text-slate-700"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: type.color }} aria-hidden="true" />{type.short}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      </div>
+    </details>
+  );
+}
+
+function QuickFilterBar({ counts, value, onChange }) {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="ตัวกรองลัด">
+      {QUICK_FILTERS.filter((item) => item.key === "all" || counts[item.key] !== undefined).map((item) => {
+        const active = value === item.key;
+        const count = counts[item.key];
+        return (
+          <button key={item.key} type="button" onClick={() => onChange(active ? "all" : item.key)} aria-pressed={active} title={item.hint}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold transition ${active ? "border-[#0b4c86] bg-[#0b4c86] text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"}`}>
+            {item.label}
+            {count !== undefined && item.key !== "all" ? <span className={`rounded-full px-1.5 text-xs tabular-nums ${active ? "bg-white/20" : item.key === "unmapped" ? "bg-slate-100" : count ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-500"}`}>{formatNumber(count)}</span> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function LayerToggles({ layers, onChange, floodCount, shelterCount, canFlood }) {
+  const toggle = (key) => onChange({ ...layers, [key]: !layers[key] });
+  return (
+    <div className="pointer-events-auto absolute right-2 top-2 z-[500] rounded-xl bg-white/95 p-2 text-xs shadow-lg ring-1 ring-slate-200 backdrop-blur">
+      <p className="mb-1 font-black text-slate-800">ชั้นข้อมูล</p>
+      {canFlood ? (
+        <label className="flex items-center gap-1.5 py-0.5"><input type="checkbox" checked={layers.flood} onChange={() => toggle("flood")} />พื้นที่น้ำท่วมล่าสุด ({formatNumber(floodCount)})</label>
+      ) : null}
+      <label className="flex items-center gap-1.5 py-0.5"><input type="checkbox" checked={layers.shelters} onChange={() => toggle("shelters")} />ศูนย์พักพิงที่เปิด ({formatNumber(shelterCount)})</label>
+      {layers.shelters ? <label className="flex items-center gap-1.5 py-0.5 pl-4 text-slate-600"><input type="checkbox" checked={layers.allShelters} onChange={() => toggle("allShelters")} />รวมศูนย์ที่ยังไม่เปิด</label> : null}
     </div>
   );
 }
@@ -104,6 +160,8 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
   const status = caseStatus(person.status);
   const type = typeMeta(person.vulnerable_type);
   const quick = perms.can_update_status ? QUICK_NEXT[status.key] || [] : [];
+  const [today] = useState(bangkokToday);
+  const pregnancy = pregnancyAlert(person, today);
   return (
     <li>
       <article
@@ -116,6 +174,8 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
             <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="font-black text-slate-900">{person.name}</span>
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">{type?.short || person.vulnerable_type}</span>
+              {pregnancy ? <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 ring-1 ring-rose-200">{pregnancy.text}</span> : null}
+              {person.in_flood_area && caseStatus(person.status).group !== "done" ? <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800 ring-1 ring-sky-200">บ้านอยู่ในพื้นที่น้ำท่วม</span> : null}
               {!person.location ? <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-700"><MapPinOff className="h-3 w-3" aria-hidden="true" />ไม่มีพิกัด</span> : null}
             </span>
             <span className="block truncate text-xs text-slate-500">{areaText(person)}</span>
@@ -175,8 +235,8 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
   );
 }
 
-function StatusDialog({ target, sessionId, onClose, onSaved }) {
-  const [form, setForm] = useState({ status: "arrived", moved_to: "", note: "" });
+function StatusDialog({ target, sessionId, shelters = [], onClose, onSaved }) {
+  const [form, setForm] = useState({ status: "arrived", moved_to: "", moved_shelter_id: "", note: "" });
   const [history, setHistory] = useState({ loading: false, rows: [] });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -184,7 +244,7 @@ function StatusDialog({ target, sessionId, onClose, onSaved }) {
 
   useEffect(() => {
     if (!person) return;
-    setForm({ status: target.status || person.status || "arrived", moved_to: person.moved_to || "", note: "" });
+    setForm({ status: target.status || person.status || "arrived", moved_to: person.moved_shelter_id ? "" : person.moved_to || "", moved_shelter_id: person.moved_shelter_id ? String(person.moved_shelter_id) : "", note: "" });
     setError("");
     setHistory({ loading: true, rows: [] });
     apiRequest(`${API}/status?session_id=${sessionId}&person_id=${person.id}`)
@@ -192,11 +252,13 @@ function StatusDialog({ target, sessionId, onClose, onSaved }) {
       .catch(() => setHistory({ loading: false, rows: [] }));
   }, [person, target, sessionId]);
 
+  const suggestions = useMemo(() => (person ? suggestShelters(person, shelters, { limit: 5 }) : []), [person, shelters]);
+
   const submit = async () => {
     setBusy(true);
     setError("");
     try {
-      const json = await apiRequest(`${API}/status`, { method: "POST", body: { session_id: sessionId, person_id: person.id, ...form } });
+      const json = await apiRequest(`${API}/status`, { method: "POST", body: { session_id: sessionId, person_id: person.id, ...form, moved_shelter_id: form.status === "moved" ? form.moved_shelter_id : "" } });
       onSaved(json.message);
     } catch (err) {
       setError(err.message);
@@ -237,9 +299,31 @@ function StatusDialog({ target, sessionId, onClose, onSaved }) {
             </div>
           </fieldset>
           {form.status === "moved" ? (
-            <Field label="เคลื่อนย้ายไปที่" required hint="เช่น ศูนย์พักพิงโรงเรียนบ้านควน, รพ.ละงู, บ้านญาติ">
-              <input className={inputClass} value={form.moved_to} onChange={(event) => setForm((current) => ({ ...current, moved_to: event.target.value }))} />
-            </Field>
+            <fieldset>
+              <legend className="mb-1 text-sm font-bold text-slate-800">เคลื่อนย้ายไปที่</legend>
+              <p className="mb-2 text-xs text-slate-500">ศูนย์ที่เปิดในเหตุการณ์นี้ เรียงจากที่เหมาะกับ{typeMeta(person.vulnerable_type)?.short || "กลุ่มนี้"}และใกล้บ้านที่สุด</p>
+              {suggestions.length ? (
+                <div className="space-y-1.5">
+                  {suggestions.map((item) => {
+                    const checked = String(form.moved_shelter_id) === String(item.id);
+                    return (
+                      <label key={item.id} className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-2.5 ${checked ? "border-[#0b4c86] bg-[#eef5fb] ring-1 ring-[#0b4c86]" : item.full ? "border-slate-200 opacity-70" : "border-slate-200 hover:border-slate-300"}`}>
+                        <input type="radio" name="vp-shelter" className="mt-1" checked={checked} onChange={() => setForm((current) => ({ ...current, moved_shelter_id: String(item.id), moved_to: "" }))} />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-black text-slate-900">{item.name}{item.suitable && item.shelter_type !== "general" ? <span className="ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ backgroundColor: shelterTypeMeta(item.shelter_type).color }}>{shelterTypeMeta(item.shelter_type).short}</span> : null}</span>
+                          <span className="block text-xs text-slate-600">{suggestionReason(item) || [item.tambon && `ต.${item.tambon}`, item.district_name && `อ.${item.district_name}`].filter(Boolean).join(" ")}</span>
+                          {item.missing?.length && item.shelter_type !== "general" ? <span className="block text-[11px] text-amber-700">ยังไม่ระบุว่ามี: {item.missing.length} รายการที่กลุ่มนี้ควรมี</span> : null}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">ยังไม่มีศูนย์พักพิงที่เปิดในเหตุการณ์นี้ (เปิดได้ที่เมนูศูนย์พักพิง) — ระบุปลายทางเองด้านล่าง</p>}
+              <label className="mt-2 block text-xs font-semibold text-slate-700">หรือที่อื่น (โรงพยาบาล บ้านญาติ ฯลฯ)
+                <input className={`${inputClass} mt-1`} value={form.moved_to} placeholder="เช่น รพ.ละงู, บ้านญาติ ต.กำแพง"
+                  onChange={(event) => setForm((current) => ({ ...current, moved_to: event.target.value, moved_shelter_id: event.target.value ? "" : current.moved_shelter_id }))} />
+              </label>
+            </fieldset>
           ) : null}
           <Field label="บันทึกหน้างาน" hint="เช่น ส่งยาครบ 7 วัน, ต้องการเครื่องผลิตออกซิเจน (เก็บแบบเข้ารหัส)">
             <textarea rows={2} className={inputClass} value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
@@ -276,6 +360,7 @@ function PersonDialog({ open, editing, areas, sessionId, onClose, onSaved }) {
     setForm(editing ? {
       ...EMPTY_FORM,
       ...Object.fromEntries(Object.keys(EMPTY_FORM).map((key) => [key, editing[key] ?? ""])),
+      preterm_history: Boolean(editing.preterm_history),
       lat: editing.location?.lat ?? "",
       lng: editing.location?.lng ?? ""
     } : EMPTY_FORM);
@@ -325,6 +410,15 @@ function PersonDialog({ open, editing, areas, sessionId, onClose, onSaved }) {
               {VULNERABLE_TYPES.map((type) => <option key={type.key} value={type.key}>{type.label}</option>)}
             </select>
           </Field>
+          {form.vulnerable_type === "pregnant" ? (
+            <>
+              <Field label="กำหนดคลอด" hint="ใช้เรียงลำดับและเตือนเมื่อใกล้คลอดภายใน 30 วัน"><input type="date" className={inputClass} value={form.due_date || ""} onChange={set("due_date")} /></Field>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm font-semibold text-slate-800">
+                <input type="checkbox" className="h-4 w-4" checked={Boolean(form.preterm_history)} onChange={(event) => setForm((current) => ({ ...current, preterm_history: event.target.checked }))} />
+                เคยคลอดก่อนกำหนด
+              </label>
+            </>
+          ) : null}
           <Field label="เบอร์โทร"><input className={inputClass} inputMode="tel" value={form.phone} onChange={set("phone")} autoComplete="off" /></Field>
           <Field label="ความต้องการ/อาการที่ต้องระวัง" hint="เช่น ใช้ออกซิเจน, ต้องฟอกไต, ต้องใช้รถเข็น"><input className={inputClass} value={form.needs} onChange={set("needs")} /></Field>
           <Field label="ชื่อผู้ดูแล"><input className={inputClass} value={form.caregiver_name} onChange={set("caregiver_name")} autoComplete="off" /></Field>
@@ -353,6 +447,9 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
   const [removing, setRemoving] = useState(null);
   const [busy, setBusy] = useState(false);
   const [removeError, setRemoveError] = useState("");
+  const [floodAreas, setFloodAreas] = useState([]);
+  const [layers, setLayers] = useState({ flood: true, shelters: true, allShelters: false });
+  const [today] = useState(() => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10));
 
   const load = useCallback(async () => {
     setState((current) => ({ ...current, loading: true }));
@@ -370,9 +467,30 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
   const data = state.data;
   const session = data?.session || null;
   const perms = data?.permissions || {};
-  const persons = useMemo(() => data?.persons || [], [data]);
+  const shelters = useMemo(() => data?.shelters || [], [data]);
+  const sessionId = session?.id;
+  // พื้นที่น้ำท่วมล่าสุดของเหตุการณ์ (หมู่บ้านที่รายงานว่ามีน้ำ) — ใช้ซ้อนแผนที่และบอกว่าบ้านใครอยู่ในพื้นที่น้ำท่วม
+  useEffect(() => {
+    if (eocType !== "flood" || !sessionId) return;
+    let cancelled = false;
+    fetch(`/stn-eoc/api/eoc/flood/area-status?session_id=${sessionId}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json) => { if (!cancelled) setFloodAreas((json?.data || []).filter((area) => FLOOD_LEVELS.has(area.flood_level) && area.geometry)); })
+      .catch(() => { if (!cancelled) setFloodAreas([]); });
+    return () => { cancelled = true; };
+  }, [eocType, sessionId]);
+  const persons = useMemo(() => (data?.persons || []).map((person) => ({
+    ...person,
+    in_flood_area: Boolean(person.location && floodAreas.some((area) => pointInGeometry(person.location.lat, person.location.lng, area.geometry)))
+  })), [data, floodAreas]);
   const summary = useMemo(() => summarizePersons(persons), [persons]);
-  const filtered = useMemo(() => sortByUrgency(filterPersons(persons, filters)), [persons, filters]);
+  const quickCounts = useMemo(() => {
+    const counts = { priority: persons.filter((person) => matchesQuickFilter(person, "priority", today)).length, unmapped: persons.filter((person) => !person.location).length };
+    if (floodAreas.length) counts.flood_pending = persons.filter((person) => matchesQuickFilter(person, "flood_pending", today)).length;
+    return counts;
+  }, [persons, floodAreas.length, today]);
+  const filtered = useMemo(() => sortByUrgency(filterPersons(persons, { ...filters, today })), [persons, filters, today]);
+  const activeShelterCount = shelters.filter((shelter) => Number(shelter.active) === 1).length;
   const districtOptions = useMemo(() => sortTh(persons.map((person) => person.district)), [persons]);
   const tambonOptions = useMemo(() => sortTh(persons.filter((person) => filters.district === "all" || person.district === filters.district).map((person) => person.tambon)), [persons, filters.district]);
   const unmapped = filtered.filter((person) => !person.location).length;
@@ -418,11 +536,11 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
       description="ดูว่าใครยังไม่ได้รับการช่วยเหลือ อยู่ตรงไหน และอัปเดตสถานะเมื่อเจ้าหน้าที่เข้าพื้นที่"
       actions={(
         <div className="flex flex-wrap gap-2">
-          <Link href={`/eoc/${eocType}/vulnerable-groups`} className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">สรุปรายหมู่บ้าน</Link>
           {perms.can_edit_registry ? <AddButton onClick={() => setPersonDialog({ open: true, editing: null })}>เพิ่มรายชื่อ</AddButton> : null}
         </div>
       )}
     >
+      <VulnerableViewTabs eocType={eocType} current="persons" />
       {notice}
       <p className="flex items-start gap-2 rounded-xl border border-[#c9dcee] bg-[#f3f8fc] px-3 py-2 text-xs text-slate-700">
         <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#0b4c86]" aria-hidden="true" />
@@ -440,6 +558,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
       <ReadOnlyNotice message={perms.read_only_message} />
 
       <GroupChips summary={summary} value={filters.group} onChange={setFilter("group")} />
+      <QuickFilterBar counts={quickCounts} value={filters.quick} onChange={setFilter("quick")} />
       {summary.total ? (
         <div className="flex items-center gap-3 text-xs text-slate-600">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200" role="meter" aria-valuenow={summary.donePercent} aria-valuemin={0} aria-valuemax={100} aria-label="สัดส่วนที่จัดการแล้ว">
@@ -472,8 +591,9 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="relative h-[55vh] min-h-[360px] overflow-hidden rounded-xl border border-slate-200 bg-white lg:h-[calc(100vh-17rem)] lg:min-h-[520px]">
-          <VulnerablePersonsMap people={filtered} selectedId={selectedId} onSelect={setSelectedId} fitKey={fitKey} />
-          <MapLegend />
+          <VulnerablePersonsMap people={filtered} selectedId={selectedId} onSelect={setSelectedId} fitKey={fitKey} floodAreas={floodAreas} shelters={shelters} layers={layers} />
+          <MapLegend showShelters={layers.shelters && shelters.length > 0} />
+          {session ? <LayerToggles layers={layers} onChange={setLayers} floodCount={floodAreas.length} shelterCount={activeShelterCount} canFlood={eocType === "flood"} /> : null}
           {!state.loading && filtered.length && !filtered.some((person) => person.location) ? (
             <p className="absolute inset-x-3 top-3 z-[500] rounded-lg bg-amber-50/95 px-3 py-2 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">รายชื่อที่กรองไว้ยังไม่มีพิกัดบ้าน กด &quot;แก้ไข&quot; แล้วปักหมุดเพื่อให้แสดงบนแผนที่</p>
           ) : null}
@@ -522,6 +642,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
         <StatusDialog
           target={statusTarget}
           sessionId={session.id}
+          shelters={shelters}
           onClose={() => setStatusTarget(null)}
           onSaved={async (message) => { setStatusTarget(null); success(message); await load(); }}
         />

@@ -175,8 +175,9 @@ function rowToVulnerableGroup(row) {
   const totalCared = parseNumber(row[26]);
   const moved = parseNumber(row[27]);
   const sourceNotes = normalizeText(row[28]);
-  const chronicIllnessCombined = chronicIllness + mentalHealth + dialysis;
-  const mappedTotal = pregnant + bedridden + children + chronicIllnessCombined + disabled + elderly;
+  // แยกจิตเวช/ฟอกไตเป็นกลุ่มของตัวเอง (ต้องรัน migration 20261011_vulnerable_psych_dialysis.sql ก่อน)
+  // ชีตรวมรายอำเภอไม่แยก HD/CAPD จึงลงที่ฟอกไตทางเส้นเลือด (HD) ซึ่งเร่งด่วนกว่า แล้วระบุในหมายเหตุ
+  const mappedTotal = pregnant + bedridden + children + chronicIllness + mentalHealth + dialysis + disabled + elderly;
 
   if (mappedTotal !== totalAffected) {
     throw new Error(`ยอดรวมอำเภอ${district} ไม่ตรงกับชีต: map=${mappedTotal}, sheet=${totalAffected}`);
@@ -191,7 +192,10 @@ function rowToVulnerableGroup(row) {
     disabled,
     bedridden,
     pregnant,
-    chronic_illness: chronicIllnessCombined,
+    chronic_illness: chronicIllness,
+    psychiatric: mentalHealth,
+    dialysis_hd: dialysis,
+    dialysis_pd: 0,
     total_affected: totalAffected,
     total_cared: totalCared,
     totalAffected,
@@ -212,7 +216,7 @@ function buildNotes(record) {
     `ระดับข้อมูล: อำเภอ (${DISTRICT_TOTAL_TAMBON})`,
     `ได้รับการดูแลแล้ว ${record.totalCared} ราย`,
     `เคลื่อนย้ายแล้ว ${record.moved} ราย`,
-    `โรคเรื้อรังรวม ${record.chronic_illness} ราย (โรคเรื้อรัง ${record.breakdown.chronic_illness}, จิตเวช ${record.breakdown.mental_health}, ฟอกไต ${record.breakdown.dialysis})`,
+    `ฟอกไต ${record.breakdown.dialysis} ราย (ชีตไม่แยกทางเส้นเลือด/หน้าท้อง บันทึกเป็นทางเส้นเลือด)`,
   ];
 
   if (record.sourceNotes) parts.push(`หมายเหตุจากชีต: ${record.sourceNotes}`);
@@ -227,9 +231,9 @@ async function upsertVulnerableGroup(connection, row) {
   const [result] = await connection.execute(
     `INSERT INTO vulnerable_groups
      (session_id, province, district, tambon, village,
-      elderly, children, disabled, bedridden, pregnant, chronic_illness,
+      elderly, children, disabled, bedridden, pregnant, chronic_illness, psychiatric, dialysis_hd, dialysis_pd,
       notes, needs, created_by)
-     VALUES (?, 'สตูล', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     VALUES (?, 'สตูล', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        elderly = VALUES(elderly),
        children = VALUES(children),
@@ -237,6 +241,9 @@ async function upsertVulnerableGroup(connection, row) {
        bedridden = VALUES(bedridden),
        pregnant = VALUES(pregnant),
        chronic_illness = VALUES(chronic_illness),
+       psychiatric = VALUES(psychiatric),
+       dialysis_hd = VALUES(dialysis_hd),
+       dialysis_pd = VALUES(dialysis_pd),
        notes = VALUES(notes),
        needs = VALUES(needs),
        created_by = VALUES(created_by),
@@ -252,6 +259,9 @@ async function upsertVulnerableGroup(connection, row) {
       row.bedridden,
       row.pregnant,
       row.chronic_illness,
+      row.psychiatric,
+      row.dialysis_hd,
+      row.dialysis_pd,
       row.notes,
       row.needs,
       row.created_by,
@@ -265,9 +275,9 @@ async function upsertVulnerableGroupBaseline(connection, row) {
   const [result] = await connection.execute(
     `INSERT INTO vulnerable_group_baselines
      (province, district, tambon, village,
-      elderly, children, disabled, bedridden, pregnant, chronic_illness,
+      elderly, children, disabled, bedridden, pregnant, chronic_illness, psychiatric, dialysis_hd, dialysis_pd,
       total_cared, moved, notes, needs, import_source, source_url, source_as_of_date, created_by)
-     VALUES ('สตูล', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     VALUES ('สตูล', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        elderly = VALUES(elderly),
        children = VALUES(children),
@@ -275,6 +285,9 @@ async function upsertVulnerableGroupBaseline(connection, row) {
        bedridden = VALUES(bedridden),
        pregnant = VALUES(pregnant),
        chronic_illness = VALUES(chronic_illness),
+       psychiatric = VALUES(psychiatric),
+       dialysis_hd = VALUES(dialysis_hd),
+       dialysis_pd = VALUES(dialysis_pd),
        total_cared = VALUES(total_cared),
        moved = VALUES(moved),
        notes = VALUES(notes),
@@ -294,6 +307,9 @@ async function upsertVulnerableGroupBaseline(connection, row) {
       row.bedridden,
       row.pregnant,
       row.chronic_illness,
+      row.psychiatric,
+      row.dialysis_hd,
+      row.dialysis_pd,
       row.total_cared,
       row.moved,
       row.notes,
@@ -324,6 +340,9 @@ function writeReport(report) {
     'bedridden',
     'children',
     'chronic_illness',
+    'psychiatric',
+    'dialysis_hd',
+    'dialysis_pd',
     'disabled',
     'elderly',
     'total_affected',

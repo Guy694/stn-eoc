@@ -22,12 +22,14 @@ import { readQuery, useUrlState } from "@/components/admin/useUrlState";
 import ShelterSessionDashboard from "@/components/admin/shelters/ShelterSessionDashboard";
 import { summarizeShelters } from "@/lib/shelterDashboard";
 import { sendOrQueue } from "@/lib/offlineQueue";
+import { SHELTER_CAPABILITIES, SHELTER_TYPES, capabilityLabel, parseCapabilities, shelterTypeMeta } from "@/lib/shelterSuitability";
 
 // แผนที่ใช้ Leaflet (ทำงานเฉพาะในเบราว์เซอร์) — โหลดเมื่อเปิดแท็บแผนที่เท่านั้น
 const ShelterCenterMap = dynamic(() => import("@/components/ShelterCenterMap"), {
   ssr: false,
   loading: () => <div className="flex h-96 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-500">กำลังโหลดแผนที่…</div>
 });
+
 
 const REGISTRY_API = "/stn-eoc/api/admin/shelter-center";
 const ACTIVATION_API = "/stn-eoc/api/eoc/shelter-activations";
@@ -44,8 +46,20 @@ const typeLabel = (value) => SHELTER_EOC_TYPES.find((item) => item.value === val
 
 const EMPTY_SHELTER = {
   sheltername: "", eoc_type: "flood", shelter_capacity: "", contact_phone: "",
-  district_name: "", tambon: "", village: "", address: "", lat: "", lon: "", is_active: 1
+  district_name: "", tambon: "", village: "", address: "", lat: "", lon: "", is_active: 1,
+  shelter_type: "general", capabilities: ""
 };
+
+function ShelterTypeChip({ row }) {
+  const type = shelterTypeMeta(row.shelter_type);
+  const caps = parseCapabilities(row.capabilities);
+  return (
+    <span className="inline-flex flex-col gap-0.5">
+      <span className="inline-flex w-fit items-center rounded px-1.5 py-0.5 text-[11px] font-bold text-white" style={{ backgroundColor: type.color }}>{type.short}</span>
+      {caps.length ? <span className="text-[11px] text-slate-500" title={caps.map(capabilityLabel).join(", ")}>ความพร้อม {caps.length} รายการ</span> : null}
+    </span>
+  );
+}
 
 function area(row) {
   return [row.village, row.tambon && `ต.${row.tambon}`, row.district_name && `อ.${row.district_name}`].filter(Boolean).join(" ");
@@ -315,7 +329,7 @@ export default function ShelterWorkspace() {
               emptyText={sessionFilter === "active" ? "ยังไม่ได้เปิดใช้ศูนย์ใดในเหตุการณ์นี้ เลือก \"ยังไม่เปิดใช้\" เพื่อเปิดใช้ศูนย์" : "ไม่พบศูนย์ตามเงื่อนไข"}
               emptyAction={sessionFilter === "active" && canEditSession ? <Button variant="secondary" onClick={() => setSessionFilter("inactive")}>ดูศูนย์ที่ยังไม่เปิดใช้</Button> : null}
               columns={[
-                { key: "sheltername", label: "ศูนย์พักพิง", render: (row) => (<div><div className="font-semibold text-slate-900">{row.sheltername}</div><div className="text-xs text-slate-500">{area(row)}</div></div>) },
+                { key: "sheltername", label: "ศูนย์พักพิง", render: (row) => (<div><div className="font-semibold text-slate-900">{row.sheltername}{row.shelter_type && row.shelter_type !== "general" ? <span className="ml-1.5 rounded px-1.5 py-0.5 align-middle text-[10px] font-bold text-white" style={{ backgroundColor: shelterTypeMeta(row.shelter_type).color }}>{shelterTypeMeta(row.shelter_type).short}</span> : null}</div><div className="text-xs text-slate-500">{area(row)}</div></div>) },
                 { key: "state", label: "สถานะ", render: (row) => Number(row.is_activated_for_session) === 1 ? <StatusPill tone="green">เปิดใช้</StatusPill> : <StatusPill>ยังไม่เปิดใช้</StatusPill> },
                 { key: "occupancy", label: "ผู้พักพิง / ความจุ", render: (row) => Number(row.is_activated_for_session) === 1 ? <OccupancyBar occupancy={Number(row.session_occupancy || 0)} capacity={Number(row.shelter_capacity || 0)} /> : <span className="text-slate-500">ความจุ {formatNumber(row.shelter_capacity)} คน</span> },
                 { key: "updated", label: "อัปเดตล่าสุด", render: (row) => Number(row.is_activated_for_session) === 1 ? <UpdatedAt value={row.activation_updated_at || row.activated_at} staleHours={12} /> : "-" },
@@ -364,6 +378,7 @@ export default function ShelterWorkspace() {
             rowClassName={(row) => (Number(row.is_active) === 1 ? "" : "opacity-60")}
             columns={[
               { key: "sheltername", label: "ศูนย์พักพิง", render: (row) => (<div><div className="font-semibold text-slate-900">{row.sheltername}</div><div className="text-xs text-slate-500">{area(row)}</div></div>) },
+              { key: "shelter_type", label: "ประเภทศูนย์", render: (row) => <ShelterTypeChip row={row} /> },
               { key: "eoc_type", label: "ใช้สำหรับ", render: (row) => typeLabel(row.eoc_type) },
               { key: "shelter_capacity", label: "ความจุ", render: (row) => `${formatNumber(row.shelter_capacity)} คน` },
               { key: "contact_phone", label: "ติดต่อ", render: (row) => row.contact_phone || row.coordinator_phone || "-" },
@@ -443,6 +458,27 @@ export default function ShelterWorkspace() {
           <Field label="ความจุ (คน)" required>
             <input type="number" min={1} className={inputClass} value={form.shelter_capacity} onChange={(event) => updateForm({ shelter_capacity: event.target.value })} />
           </Field>
+          <Field label="ประเภทศูนย์" hint="ใช้แนะนำศูนย์ที่เหมาะกับกลุ่มเปราะบางตอนเคลื่อนย้าย">
+            <select className={inputClass} value={form.shelter_type || "general"} onChange={(event) => updateForm({ shelter_type: event.target.value })}>
+              {SHELTER_TYPES.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+            </select>
+          </Field>
+          <fieldset className="sm:col-span-2">
+            <legend className="mb-1.5 text-sm font-semibold text-slate-800">ความพร้อมของศูนย์</legend>
+            <div className="grid gap-x-3 gap-y-1.5 sm:grid-cols-2">
+              {SHELTER_CAPABILITIES.map((item) => {
+                const caps = parseCapabilities(form.capabilities);
+                const checked = caps.includes(item.key);
+                return (
+                  <label key={item.key} className="flex items-center gap-2 text-sm text-slate-700">
+                    <input type="checkbox" className="h-4 w-4" checked={checked}
+                      onChange={() => updateForm({ capabilities: (checked ? caps.filter((key) => key !== item.key) : [...caps, item.key]).join(",") })} />
+                    {item.label}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
           <AreaFields value={form} onChange={updateForm} names={{ district: "district_name", tambon: "tambon", village: "village" }} />
           <Field label="เบอร์ติดต่อ">
             <input className={inputClass} inputMode="tel" value={form.contact_phone || ""} onChange={(event) => updateForm({ contact_phone: event.target.value })} placeholder="0xx-xxx-xxxx" />

@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
 import pool from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
+import { VULNERABLE_TYPES } from '@/lib/vulnerableEvent';
+
+const VULNERABLE_KEYS = VULNERABLE_TYPES.map((type) => type.key);
 
 async function tableExists(tableName) {
     const rows = await pool.query(
@@ -433,11 +436,7 @@ export async function GET(request) {
             `SELECT 
                 district,
                 tambon,
-                SUM(elderly) as elderly,
-                SUM(children) as children,
-                SUM(disabled) as disabled,
-                SUM(pregnant) as pregnant,
-                SUM(bedridden) as bedridden
+                ${VULNERABLE_KEYS.map((key) => `SUM(${key}) as ${key}`).join(', ')}
              FROM vulnerable_groups
              WHERE session_id = ?
              GROUP BY district, tambon`,
@@ -447,12 +446,7 @@ export async function GET(request) {
         const vulnerableTotal = await pool.query(
             `SELECT 
                 COUNT(*) as villages,
-                SUM(elderly) as total_elderly,
-                SUM(children) as total_children,
-                SUM(disabled) as total_disabled,
-                SUM(pregnant) as total_pregnant,
-                SUM(bedridden) as total_bedridden,
-                SUM(chronic_illness) as total_chronic_illness
+                ${VULNERABLE_KEYS.map((key) => `SUM(${key}) as total_${key}`).join(', ')}
                 ${hasCareColumns ? ', SUM(cared_count) as total_cared, SUM(moved_count) as total_moved' : ''}
              FROM vulnerable_groups
              WHERE session_id = ?`,
@@ -635,12 +629,7 @@ export async function GET(request) {
         }
 
         const vulnerableSummary = vulnerableTotal[0] || {};
-        const totalVulnerable = asNumber(vulnerableSummary.total_elderly)
-            + asNumber(vulnerableSummary.total_children)
-            + asNumber(vulnerableSummary.total_disabled)
-            + asNumber(vulnerableSummary.total_pregnant)
-            + asNumber(vulnerableSummary.total_bedridden)
-            + asNumber(vulnerableSummary.total_chronic_illness);
+        const totalVulnerable = VULNERABLE_KEYS.reduce((sum, key) => sum + asNumber(vulnerableSummary[`total_${key}`]), 0);
         const vulnerablePending = Math.max(totalVulnerable - asNumber(vulnerableSummary.total_cared), 0);
         const communityDiseasePatients = diseaseByType.reduce((sum, item) => sum + asNumber(item.cumulative_total), 0);
         // ผู้ป่วยสะสม = ในชุมชน + ในศูนย์พักพิง (ให้ตรงกับหน้าโรคและสุขภาพ)

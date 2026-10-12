@@ -4,6 +4,8 @@
 // จำนวนแต่ละประเภทดึงจากทะเบียนกลาง (/eoc/vulnerable-groups) — เจ้าหน้าที่เพิ่ม/ลบหมู่บ้าน และแก้ไขเฉพาะสถานะ
 // (ดูแลแล้ว เคลื่อนย้ายแล้ว ย้ายไปที่ ความต้องการ หมายเหตุ)
 import { useCallback, useEffect, useMemo, useState } from "react";
+import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
+import VillageMapPanel from "@/components/eoc/vulnerable/VillageMapPanel";
 import Link from "next/link";
 import { AlertTriangle, HeartHandshake, RefreshCw, Truck, Users } from "lucide-react";
 import { ReadOnlyNotice,
@@ -313,11 +315,11 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
       description="จำนวนแต่ละประเภทดึงจากทะเบียนกลาง เจ้าหน้าที่บันทึกการดูแล การเคลื่อนย้าย และความต้องการของแต่ละหมู่บ้าน"
       actions={(
         <div className="flex flex-wrap gap-2">
-          <Link href={`/eoc/${eocType}/vulnerable-persons`} className="inline-flex min-h-10 items-center rounded-lg border border-[#0b4c86] bg-white px-3 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#eef5fb]">แผนที่รายบุคคล</Link>
           {perms.can_edit ? <AddButton onClick={() => { setFormError(""); setAdding(true); }}>เพิ่มหมู่บ้านที่ประสบภัย</AddButton> : null}
         </div>
       )}
     >
+      <VulnerableViewTabs eocType={eocType} current="villages" />
       {notice}
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}
       <ReadOnlyNotice message={perms.read_only_message} />
@@ -417,6 +419,7 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
         busy={busy}
         error={formError}
       />
+      {eocType === "flood" ? <VillageMapPanel session={session} /> : null}
     </AdminPage>
   );
 }

@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
+import { VULNERABLE_TYPES } from '@/lib/vulnerableEvent';
+
+const TYPE_KEYS = VULNERABLE_TYPES.map((type) => type.key);
+const SUM_COLUMNS = TYPE_KEYS.map((key) => `SUM(${key}) as total_${key}`).join(', ');
+const SUM_ALL = `SUM(${TYPE_KEYS.map((key) => `COALESCE(${key}, 0)`).join(' + ')})`;
+const ZERO_TOTALS = Object.fromEntries(TYPE_KEYS.map((key) => [`total_${key}`, 0]));
 
 const pool = getPool();
 
@@ -50,12 +56,7 @@ export async function GET(request) {
                     data: {
                         province: {
                             province: 'สตูล',
-                            total_elderly: 0,
-                            total_children: 0,
-                            total_disabled: 0,
-                            total_bedridden: 0,
-                            total_pregnant: 0,
-                            total_chronic_illness: 0,
+                            ...ZERO_TOTALS,
                             grand_total: 0,
                             district_count: 0,
                             tambon_count: 0,
@@ -89,13 +90,8 @@ export async function GET(request) {
         const [provinceStats] = await connection.execute(`
             SELECT 
                 province,
-                SUM(elderly) as total_elderly,
-                SUM(children) as total_children,
-                SUM(disabled) as total_disabled,
-                SUM(bedridden) as total_bedridden,
-                SUM(pregnant) as total_pregnant,
-                SUM(chronic_illness) as total_chronic_illness,
-                SUM(elderly + children + disabled + bedridden + pregnant + chronic_illness) as grand_total,
+                ${SUM_COLUMNS},
+                ${SUM_ALL} as grand_total,
                 COUNT(DISTINCT district) as district_count,
                 COUNT(DISTINCT CONCAT(district, '-', tambon)) as tambon_count,
                 COUNT(*) as village_count
@@ -108,13 +104,8 @@ export async function GET(request) {
         const [districtStats] = await connection.execute(`
             SELECT 
                 district,
-                SUM(elderly) as total_elderly,
-                SUM(children) as total_children,
-                SUM(disabled) as total_disabled,
-                SUM(bedridden) as total_bedridden,
-                SUM(pregnant) as total_pregnant,
-                SUM(chronic_illness) as total_chronic_illness,
-                SUM(elderly + children + disabled + bedridden + pregnant + chronic_illness) as total,
+                ${SUM_COLUMNS},
+                ${SUM_ALL} as total,
                 COUNT(DISTINCT CONCAT(district, '-', tambon)) as tambon_count,
                 COUNT(*) as village_count
             FROM ${tableName}
@@ -128,13 +119,8 @@ export async function GET(request) {
             SELECT 
                 district,
                 tambon,
-                SUM(elderly) as total_elderly,
-                SUM(children) as total_children,
-                SUM(disabled) as total_disabled,
-                SUM(bedridden) as total_bedridden,
-                SUM(pregnant) as total_pregnant,
-                SUM(chronic_illness) as total_chronic_illness,
-                SUM(elderly + children + disabled + bedridden + pregnant + chronic_illness) as total,
+                ${SUM_COLUMNS},
+                ${SUM_ALL} as total,
                 COUNT(*) as village_count
             FROM ${tableName}
             WHERE ${whereClause}
@@ -147,12 +133,7 @@ export async function GET(request) {
             data: {
                 province: provinceStats[0] || {
                     province: 'สตูล',
-                    total_elderly: 0,
-                    total_children: 0,
-                    total_disabled: 0,
-                    total_bedridden: 0,
-                    total_pregnant: 0,
-                    total_chronic_illness: 0,
+                    ...ZERO_TOTALS,
                     grand_total: 0,
                     district_count: 0,
                     tambon_count: 0,

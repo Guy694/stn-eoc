@@ -55,7 +55,7 @@ describe("vulnerablePersons", () => {
   it("ตรวจการเปลี่ยนสถานะ", () => {
     expect(validateStatusChange({ status: "flying" }).error).toBeTruthy();
     expect(validateStatusChange({ status: "moved" }).error).toMatch(/ไปที่ไหน/);
-    expect(validateStatusChange({ status: "arrived", moved_to: "x" }).value).toEqual({ status: "arrived", moved_to: null, note: null });
+    expect(validateStatusChange({ status: "arrived", moved_to: "x" }).value).toEqual({ status: "arrived", moved_to: null, moved_shelter_id: null, note: null });
   });
 
   it("ปิดบังเบอร์", () => {

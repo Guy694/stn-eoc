@@ -3,17 +3,14 @@ import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
 import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
+import { VULNERABLE_TYPES } from '@/lib/vulnerableEvent';
 
 const pool = getPool();
 
-const COUNT_COLUMNS = new Set([
-    'elderly',
-    'children',
-    'disabled',
-    'bedridden',
-    'pregnant',
-    'chronic_illness',
-]);
+// ประเภทกลุ่มเปราะบาง (คอลัมน์จำนวน) มาจาก lib/vulnerableEvent.js ที่เดียว
+const TYPE_KEYS = VULNERABLE_TYPES.map((type) => type.key);
+const COUNT_COLUMNS = new Set(TYPE_KEYS);
+const SUM_TYPES = TYPE_KEYS.map((key) => `COALESCE(${key}, 0)`).join(' + ');
 
 function toNumber(value) {
     const number = Number(value);
@@ -57,12 +54,7 @@ export async function GET(request) {
                 district,
                 tambon,
                 village,
-                elderly,
-                children,
-                disabled,
-                bedridden,
-                pregnant,
-                chronic_illness,
+                ${TYPE_KEYS.join(', ')},
                 total_cared,
                 moved,
                 notes,
@@ -79,13 +71,8 @@ export async function GET(request) {
 
         const [summary] = await connection.execute(`
             SELECT
-                SUM(elderly) as total_elderly,
-                SUM(children) as total_children,
-                SUM(disabled) as total_disabled,
-                SUM(bedridden) as total_bedridden,
-                SUM(pregnant) as total_pregnant,
-                SUM(chronic_illness) as total_chronic_illness,
-                SUM(elderly + children + disabled + bedridden + pregnant + chronic_illness) as grand_total,
+                ${TYPE_KEYS.map((key) => `SUM(${key}) as total_${key}`).join(',\n                ')},
+                SUM(${SUM_TYPES}) as grand_total,
                 COUNT(*) as location_count
             FROM vulnerable_group_baselines
             WHERE ${whereParts.join(' AND ')}
@@ -125,16 +112,10 @@ export async function POST(request) {
 
         const [result] = await connection.execute(`
             INSERT INTO vulnerable_group_baselines
-            (province, district, tambon, village, elderly, children, disabled, bedridden,
-             pregnant, chronic_illness, total_cared, moved, notes, needs, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (province, district, tambon, village, ${TYPE_KEYS.join(', ')}, total_cared, moved, notes, needs, created_by)
+            VALUES (?, ?, ?, ?, ${TYPE_KEYS.map(() => '?').join(', ')}, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
-                elderly = VALUES(elderly),
-                children = VALUES(children),
-                disabled = VALUES(disabled),
-                bedridden = VALUES(bedridden),
-                pregnant = VALUES(pregnant),
-                chronic_illness = VALUES(chronic_illness),
+                ${TYPE_KEYS.map((key) => `${key} = VALUES(${key})`).join(',\n                ')},
                 total_cared = VALUES(total_cared),
                 moved = VALUES(moved),
                 notes = VALUES(notes),
@@ -146,12 +127,7 @@ export async function POST(request) {
             data.district,
             data.tambon,
             village,
-            toNumber(data.elderly),
-            toNumber(data.children),
-            toNumber(data.disabled),
-            toNumber(data.bedridden),
-            toNumber(data.pregnant),
-            toNumber(data.chronic_illness),
+            ...TYPE_KEYS.map((key) => toNumber(data[key])),
             toNumber(data.total_cared),
             toNumber(data.moved),
             data.notes || null,
@@ -251,12 +227,7 @@ export async function PUT(request) {
                 district = ?,
                 tambon = ?,
                 village = ?,
-                elderly = ?,
-                children = ?,
-                disabled = ?,
-                bedridden = ?,
-                pregnant = ?,
-                chronic_illness = ?,
+                ${TYPE_KEYS.map((key) => `${key} = ?`).join(',\n                ')},
                 total_cared = ?,
                 moved = ?,
                 notes = ?,
@@ -267,12 +238,7 @@ export async function PUT(request) {
             data.district,
             data.tambon,
             village,
-            toNumber(data.elderly),
-            toNumber(data.children),
-            toNumber(data.disabled),
-            toNumber(data.bedridden),
-            toNumber(data.pregnant),
-            toNumber(data.chronic_illness),
+            ...TYPE_KEYS.map((key) => toNumber(data[key])),
             toNumber(data.total_cared),
             toNumber(data.moved),
             data.notes || null,

@@ -29,9 +29,27 @@ export function pinLabel(person) {
   return `${caseStatus(person.status).label} • ${typeMeta(person.vulnerable_type)?.short || ""} • ${person.name || ""}`;
 }
 
-/** หมุด + วงกะพริบสำหรับผู้ที่ยังไม่ได้รับการช่วยเหลือและอยู่ในกลุ่มเร่งด่วน (ติดเตียง/พิการ/ตั้งครรภ์) */
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+
+/**
+ * หมุด: สีและสัญลักษณ์ในหมุด = สถานะการช่วยเหลือ, ป้ายเล็กมุมขวาบน = ประเภท (เตียง, HD, ครรภ์ ...)
+ * ป้ายของกลุ่มต้องช่วยก่อน (priority ≥ 2) ขอบแดง — วงกะพริบ = กลุ่มนี้ที่ยังรอช่วยเหลือ
+ */
 export function pinHtml(person, { selected = false } = {}) {
-  const urgent = person.status === "waiting" && (typeMeta(person.vulnerable_type)?.priority || 0) >= 2;
+  const type = typeMeta(person.vulnerable_type);
+  const priority = (type?.priority || 0) >= 2;
+  const urgent = person.status === "waiting" && priority;
   const size = selected ? 38 : 30;
-  return `<div class="vp-pin${urgent ? " vp-pin--urgent" : ""}${selected ? " vp-pin--selected" : ""}" style="width:${size}px;height:${Math.round(size * 1.33)}px">${pinSvg(person.status, size)}</div>`;
+  const tag = type?.tag ? `<span class="vp-tag${priority ? " vp-tag--priority" : ""}">${escapeHtml(type.tag)}</span>` : "";
+  return `<div class="vp-pin${urgent ? " vp-pin--urgent" : ""}${selected ? " vp-pin--selected" : ""}" style="width:${size}px;height:${Math.round(size * 1.33)}px">${pinSvg(person.status, size)}${tag}</div>`;
+}
+
+/** หมุดศูนย์พักพิง: สี่เหลี่ยมสีตามประเภทศูนย์ + ตัวเลขที่ว่าง */
+export function shelterPinHtml({ color = "#0b4c86", free = null, active = true, full = false }) {
+  const label = !active ? "ปิด" : free === null ? "" : full ? "เต็ม" : String(free);
+  const bg = !active ? "#94a3b8" : color;
+  return `<div class="vp-shelter${full ? " vp-shelter--full" : ""}" style="--c:${bg}">
+    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="${bg}" stroke="#fff" stroke-width="2"/><path d="M6.5 12.5 12 7.5l5.5 5v5h-11z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+    ${label ? `<span class="vp-shelter__free">${escapeHtml(label)}</span>` : ""}
+  </div>`;
 }

@@ -3,6 +3,9 @@ import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
 import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
+import { VULNERABLE_TYPES } from '@/lib/vulnerableEvent';
+
+const TYPE_KEYS = VULNERABLE_TYPES.map((type) => type.key);
 
 const pool = getPool();
 
@@ -48,12 +51,7 @@ async function fetchSessionRows(connection, { sessionId, district, tambon }) {
             district,
             tambon,
             village,
-            elderly,
-            children,
-            disabled,
-            bedridden,
-            pregnant,
-            chronic_illness,
+            ${TYPE_KEYS.join(', ')},
             notes,
             needs,
             created_by,
@@ -85,12 +83,7 @@ async function fetchBaselineRows(connection, { district, tambon }) {
             district,
             tambon,
             village,
-            elderly,
-            children,
-            disabled,
-            bedridden,
-            pregnant,
-            chronic_illness,
+            ${TYPE_KEYS.join(', ')},
             notes,
             needs,
             created_by,
@@ -181,23 +174,13 @@ export async function POST(request) {
             // ถ้ามีแล้ว ให้ UPDATE
             await connection.execute(`
                 UPDATE vulnerable_groups SET
-                    elderly = ?,
-                    children = ?,
-                    disabled = ?,
-                    bedridden = ?,
-                    pregnant = ?,
-                    chronic_illness = ?,
+                    ${TYPE_KEYS.map((key) => `${key} = ?`).join(', ')},
                     notes = ?,
                     needs = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             `, [
-                data.elderly || 0,
-                data.children || 0,
-                data.disabled || 0,
-                data.bedridden || 0,
-                data.pregnant || 0,
-                data.chronic_illness || 0,
+                ...TYPE_KEYS.map((key) => Number(data[key]) || 0),
                 data.notes || null,
                 data.needs || null,
                 existing[0].id
@@ -217,21 +200,16 @@ export async function POST(request) {
             const [result] = await connection.execute(`
                 INSERT INTO vulnerable_groups
                 (session_id, province, district, tambon, village,
-                 elderly, children, disabled, bedridden, pregnant, chronic_illness,
+                 ${TYPE_KEYS.join(', ')},
                  notes, needs, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ${TYPE_KEYS.map(() => '?').join(', ')}, ?, ?, ?)
             `, [
                 data.session_id,
                 data.province || 'สตูล',
                 data.district,
                 data.tambon,
                 data.village || null,
-                data.elderly || 0,
-                data.children || 0,
-                data.disabled || 0,
-                data.bedridden || 0,
-                data.pregnant || 0,
-                data.chronic_illness || 0,
+                ...TYPE_KEYS.map((key) => Number(data[key]) || 0),
                 data.notes || null,
                 data.needs || null,
                 auth.user.username
@@ -276,23 +254,13 @@ export async function PUT(request) {
 
         await connection.execute(`
             UPDATE vulnerable_groups SET
-                elderly = ?,
-                children = ?,
-                disabled = ?,
-                bedridden = ?,
-                pregnant = ?,
-                chronic_illness = ?,
+                ${TYPE_KEYS.map((key) => `${key} = ?`).join(', ')},
                 notes = ?,
                 needs = ?,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         `, [
-            data.elderly || 0,
-            data.children || 0,
-            data.disabled || 0,
-            data.bedridden || 0,
-            data.pregnant || 0,
-            data.chronic_illness || 0,
+            ...TYPE_KEYS.map((key) => Number(data[key]) || 0),
             data.notes || null,
             data.needs || null,
             data.id

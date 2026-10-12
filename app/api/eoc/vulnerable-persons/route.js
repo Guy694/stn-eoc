@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 const SUPPORTED = ["flood", "disease", "festival-accidents"];
 const PRIVILEGED = ["admin", "commander"];
-const PERSON_COLUMNS = "id, vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, updated_at";
+const PERSON_COLUMNS = "id, vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, clinical_enc, updated_at";
 
 const noStore = (response) => {
   response.headers.set("Cache-Control", "no-store, max-age=0");
@@ -60,16 +60,19 @@ export async function GET(request) {
 
     let rows;
     let cases = [];
+    let shelters = [];
     try {
       rows = await query(`SELECT ${PERSON_COLUMNS} FROM vulnerable_persons WHERE is_active = 1 ORDER BY district, tambon, village, id`);
       if (session) {
-        cases = await query(
-          `SELECT c.person_id, c.status, c.moved_to, c.note_enc, c.updated_at,
+        shelters = await loadSessionShelters(session);
+        const caseSql = (withShelter) => `SELECT c.person_id, c.status, c.moved_to, ${withShelter ? "c.moved_shelter_id," : ""} c.note_enc, c.updated_at,
                   TRIM(CONCAT(COALESCE(o.given_name, ''), ' ', COALESCE(o.family_name, ''))) AS updated_by_name
            FROM vulnerable_person_cases c LEFT JOIN officer o ON o.id = c.updated_by
-           WHERE c.session_id = ?`,
-          [session.id]
-        );
+           WHERE c.session_id = ?`;
+        cases = await query(caseSql(true), [session.id]).catch((error) => {
+          if (error?.code === "ER_BAD_FIELD_ERROR") return query(caseSql(false), [session.id]);
+          throw error;
+        });
       }
     } catch (error) {
       if (isMissingTable(error)) return json({ success: true, migration_needed: true, session, persons: [], summary: summarizePersons([]), permissions: await permissionsFor(auth.user, session) });
@@ -84,6 +87,7 @@ export async function GET(request) {
         ...person,
         status: current?.status || DEFAULT_STATUS,
         moved_to: current?.moved_to || null,
+        moved_shelter_id: current?.moved_shelter_id || null,
         case_note: current ? decryptNote(current.note_enc) : null,
         status_updated_at: current?.updated_at || null,
         status_updated_by: current?.updated_by_name || null
@@ -91,11 +95,33 @@ export async function GET(request) {
     });
 
     await logVulnerableAccess({ request, user: auth.user, action: "list", sessionId: session?.id ?? null, count: persons.length });
-    return json({ success: true, session, persons, summary: summarizePersons(persons), permissions: await permissionsFor(auth.user, session) });
+    // ยอดกลุ่มเปราะบางที่ย้ายเข้าแต่ละศูนย์ (จากทะเบียนรายบุคคล)
+    const movedCount = new Map();
+    for (const person of persons) if (person.status === "moved" && person.moved_shelter_id) movedCount.set(person.moved_shelter_id, (movedCount.get(person.moved_shelter_id) || 0) + 1);
+    return json({
+      success: true, session, persons, summary: summarizePersons(persons), permissions: await permissionsFor(auth.user, session),
+      shelters: shelters.map((shelter) => ({ ...shelter, vulnerable_moved: movedCount.get(shelter.id) || 0 }))
+    });
   } catch (error) {
     if (isMissingKey(error)) return bad(error.message, 503);
     console.error("Vulnerable persons GET error:", error?.message || error);
     return noStore(publicInternalError("ไม่สามารถโหลดทะเบียนกลุ่มเปราะบางได้"));
+  }
+}
+
+// ศูนย์พักพิงของเหตุการณ์ (พิกัด ประเภท ความพร้อม ที่ว่าง) — ใช้ซ้อนบนแผนที่และแนะนำตอนเคลื่อนย้าย
+async function loadSessionShelters(session) {
+  const base = (extra) => `SELECT sc.id, sc.sheltername AS name, sc.lat, sc.lon, sc.district_name, sc.tambon, sc.shelter_capacity AS capacity,
+           ${extra}
+           CASE WHEN ssa.id IS NOT NULL AND ssa.is_active = 1 THEN 1 ELSE 0 END AS active, COALESCE(ssa.current_occupancy, 0) AS occupancy
+    FROM shelter_centers sc LEFT JOIN shelter_session_activations ssa ON ssa.shelter_id = sc.id AND ssa.session_id = ?
+    WHERE sc.eoc_type = ? AND sc.lat IS NOT NULL AND sc.lon IS NOT NULL`;
+  try {
+    return await query(base("sc.shelter_type, sc.capabilities,"), [session.id, session.eoc_type]);
+  } catch (error) {
+    if (error?.code === "ER_BAD_FIELD_ERROR") return query(base(""), [session.id, session.eoc_type]).catch(() => []);
+    if (isMissingTable(error)) return [];
+    throw error;
   }
 }
 
@@ -119,9 +145,9 @@ export async function POST(request) {
     if (checked.error) return bad(checked.error);
     const row = encodePerson(checked.value);
     const result = await query(
-      `INSERT INTO vulnerable_persons (vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, created_by, updated_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, auth.user.id, auth.user.id]
+      `INSERT INTO vulnerable_persons (vulnerable_type, district, tambon, village, name_enc, phone_enc, address_enc, location_enc, needs_enc, caregiver_enc, clinical_enc, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, row.clinical_enc, auth.user.id, auth.user.id]
     );
     await logVulnerableAccess({ request, user: auth.user, action: "create", personId: result.insertId });
     await recordChange({ request, user: auth.user, action: "CREATE", table: "vulnerable_persons", id: result.insertId, description: `เพิ่มกลุ่มเปราะบางรายบุคคล ต.${row.tambon} อ.${row.district}` });
@@ -147,9 +173,9 @@ export async function PUT(request) {
     const row = encodePerson(checked.value);
     const result = await query(
       `UPDATE vulnerable_persons
-       SET vulnerable_type = ?, district = ?, tambon = ?, village = ?, name_enc = ?, phone_enc = ?, address_enc = ?, location_enc = ?, needs_enc = ?, caregiver_enc = ?, updated_by = ?
+       SET vulnerable_type = ?, district = ?, tambon = ?, village = ?, name_enc = ?, phone_enc = ?, address_enc = ?, location_enc = ?, needs_enc = ?, caregiver_enc = ?, clinical_enc = ?, updated_by = ?
        WHERE id = ? AND is_active = 1`,
-      [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, auth.user.id, id]
+      [row.vulnerable_type, row.district, row.tambon, row.village, row.name_enc, row.phone_enc, row.address_enc, row.location_enc, row.needs_enc, row.caregiver_enc, row.clinical_enc, auth.user.id, id]
     );
     if (!result.affectedRows) return bad("ไม่พบรายชื่อ", 404);
     await logVulnerableAccess({ request, user: auth.user, action: "update", personId: id });
