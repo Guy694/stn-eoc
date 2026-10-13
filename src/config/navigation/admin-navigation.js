@@ -204,7 +204,8 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       items: [
         { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
         { name: "ตั้งค่าบัญชี", path: "/settings", iconKey: "lock" },
-        { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", iconKey: "guide" }
+        { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", iconKey: "guide" },
+        { name: "คู่มือผู้ดูแลระบบ", path: "/eoc/guide/admin", iconKey: "guide" }
       ]
     }
   ];

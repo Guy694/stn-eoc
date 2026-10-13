@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOperationalSessionAccess } from "@/lib/eocOperationalAccess";
 import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { query, transaction } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
@@ -26,6 +27,8 @@ export async function GET(request) {
     const sessionId = Number(params.get("session_id"));
     const personId = Number(params.get("person_id"));
     if (!sessionId || !personId) return bad("ไม่ระบุเหตุการณ์หรือรายชื่อ");
+    const assigned = await getOperationalSessionAccess(auth.user, sessionId);
+    if (!assigned.ok) return bad(assigned.status === 403 ? "ดูรายบุคคลได้เฉพาะเจ้าหน้าที่ที่ได้รับมอบหมายในเหตุการณ์นี้" : assigned.message, assigned.status);
     const rows = await query(
       `SELECT e.id, e.status, e.moved_to, e.note_enc, e.created_at,
               TRIM(CONCAT(COALESCE(o.given_name, ''), ' ', COALESCE(o.family_name, ''))) AS created_by_name

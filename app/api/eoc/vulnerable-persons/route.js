@@ -3,6 +3,7 @@ import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
 import { modulePermissions } from "@/lib/eocModuleAccess";
+import { getOperationalSessionAccess } from "@/lib/eocOperationalAccess";
 import { recordChange } from "@/lib/recordArchive";
 import { logVulnerableAccess } from "@/lib/vulnerableAccessLog";
 import { decodePerson, decryptNote, encodePerson } from "@/lib/vulnerablePersonsCrypto";
@@ -11,6 +12,7 @@ import { DEFAULT_STATUS, summarizePersons, validatePerson } from "@/lib/vulnerab
 // ทะเบียนกลุ่มเปราะบางรายบุคคล (ชื่อ เบอร์ ที่อยู่ พิกัดบ้าน เข้ารหัสในฐานข้อมูล)
 // - ทุก endpoint ต้องเข้าสู่ระบบเป็นเจ้าหน้าที่ ไม่มีเส้นทางสาธารณะ
 // - ส่งข้อมูลแบบ no-store และบันทึกการเข้าดูทุกครั้ง (vulnerable_access_log)
+// - รายชื่อเต็ม (ชื่อ เบอร์ ที่อยู่ พิกัด) เห็นเฉพาะแอดมิน/ผู้บัญชาการ และผู้ที่ได้รับมอบหมายในเหตุการณ์ คนอื่นเห็นเฉพาะยอดรวม
 export const dynamic = "force-dynamic";
 
 const SUPPORTED = ["flood", "disease", "festival-accidents"];
@@ -69,6 +71,8 @@ export async function GET(request) {
     const eocType = params.get("eoc") || "flood";
     if (!SUPPORTED.includes(eocType)) return bad("ประเภท EOC ไม่ถูกต้อง");
     const session = await resolveSession(eocType, params.get("session_id"));
+    const canSeePeople = PRIVILEGED.includes(auth.user.role)
+      || Boolean(session && (await getOperationalSessionAccess(auth.user, session.id).catch(() => ({ ok: false }))).ok);
 
     let rows;
     let cases = [];
@@ -93,6 +97,15 @@ export async function GET(request) {
     }
 
     const caseByPerson = new Map(cases.map((row) => [row.person_id, row]));
+    if (!canSeePeople) {
+      // ยอดรวมเท่านั้น — ไม่ถอดรหัส ไม่ส่งข้อมูลรายบุคคล
+      const counted = rows.map((row) => ({ vulnerable_type: row.vulnerable_type, care_group: row.care_group, power_dependent: row.power_dependent, status: caseByPerson.get(row.id)?.status || DEFAULT_STATUS }));
+      return json({
+        success: true, session, persons: [], restricted: true, summary: summarizePersons(counted),
+        restricted_message: "รายชื่อรายบุคคลเห็นได้เฉพาะเจ้าหน้าที่ที่ได้รับมอบหมายในเหตุการณ์นี้ (ติดต่อผู้บัญชาการเพื่อเพิ่มเข้ากล่องภารกิจ) — ตอนนี้แสดงเฉพาะยอดรวม",
+        permissions: { can_edit_registry: false, can_update_status: false, can_delete: false, read_only_message: null }, shelters: []
+      });
+    }
     const persons = rows.map((row) => {
       const person = decodePerson(row);
       const current = caseByPerson.get(row.id);

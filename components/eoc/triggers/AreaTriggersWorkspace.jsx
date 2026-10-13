@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Flag, ListChecks, Users } from "lucide-react";
-import { AdminPage, Button, Field, FormDialog, inputClass, latestTime, useNotice } from "@/components/admin/crud";
+import { AdminPage, Button, Field, FormDialog, ReadOnlyNotice, inputClass, latestTime, useNotice } from "@/components/admin/crud";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { CARE_GROUPS, effectiveCareGroup } from "@/lib/careGroups";
@@ -45,9 +45,20 @@ function StageBadge({ stage }) {
   );
 }
 
-function DeclarationCard({ item, targets, canDeclare, onAdjust, onCancel }) {
+function DeclarationCard({ item, targets, canDeclare, canTick, onAdjust, onCancel, onToggle }) {
   const meta = stageMeta(item.stage);
   const style = stageStyle(item.stage);
+  const [busyIndex, setBusyIndex] = useState(null);
+  const doneCount = meta.actions.filter((_, index) => item.actions?.[index]?.done).length;
+  const percent = Math.round((doneCount / meta.actions.length) * 100);
+  const toggle = async (index, done) => {
+    setBusyIndex(index);
+    try {
+      await onToggle(item, index, done);
+    } finally {
+      setBusyIndex(null);
+    }
+  };
   const params = new URLSearchParams({ stage: item.stage });
   if (item.district) params.set("district", item.district);
   if (item.tambon) params.set("tambon", item.tambon);
@@ -63,14 +74,38 @@ function DeclarationCard({ item, targets, canDeclare, onAdjust, onCancel }) {
           <p className="text-sm text-slate-700"><span className="font-bold text-slate-900">เกณฑ์: </span>{meta.criteria}</p>
           {item.note ? <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-800"><span className="font-bold">หมายเหตุ: </span>{item.note}</p> : null}
           <div>
-            <p className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-[#083865]"><ListChecks className="h-4 w-4" aria-hidden="true" />สิ่งที่ต้องทำ</p>
-            <ol className="space-y-1.5">
-              {meta.actions.map((action, index) => (
-                <li key={action.text} className="grid grid-cols-[1.5rem_1fr] gap-1 text-sm">
-                  <span className="font-bold tabular-nums text-slate-500">{index + 1}.</span>
-                  <span><span className="text-slate-900">{action.text}</span><span className="block text-xs text-slate-500">ผู้รับผิดชอบ: {action.who}</span></span>
-                </li>
-              ))}
+            <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="flex items-center gap-1.5 text-sm font-bold text-[#083865]"><ListChecks className="h-4 w-4" aria-hidden="true" />สิ่งที่ต้องทำ</p>
+              <span className="text-xs font-semibold text-slate-600">ทำแล้ว {doneCount}/{meta.actions.length}</span>
+              <span className="h-1.5 w-28 overflow-hidden rounded-full bg-slate-200" role="meter" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="ความคืบหน้า">
+                <span className="block h-full rounded-full bg-[#0b4c86] transition-all" style={{ width: `${percent}%` }} />
+              </span>
+            </div>
+            <ol className="space-y-1">
+              {meta.actions.map((action, index) => {
+                const state = item.actions?.[index];
+                const done = Boolean(state?.done);
+                return (
+                  <li key={action.text}>
+                    <label className={`flex gap-2.5 rounded-lg px-2 py-1.5 text-sm transition ${canTick ? "cursor-pointer hover:bg-slate-50" : ""} ${done ? "bg-slate-50" : ""}`}>
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-[#0b4c86]"
+                        checked={done}
+                        disabled={!canTick || busyIndex === index}
+                        onChange={(event) => toggle(index, event.target.checked)}
+                      />
+                      <span className="min-w-0">
+                        <span className={done ? "text-slate-500 line-through decoration-slate-400" : "text-slate-900"}>{index + 1}. {action.text}</span>
+                        <span className="block text-xs text-slate-500">
+                          ผู้รับผิดชอบ: {action.who}
+                          {done && state?.updated_by_name ? <> · ทำแล้วโดย {state.updated_by_name} {formatDateTime(state.updated_at)}</> : null}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
             </ol>
           </div>
         </div>
@@ -236,7 +271,7 @@ function StageReference() {
 }
 
 export default function AreaTriggersWorkspace() {
-  const { notice, success } = useNotice();
+  const { notice, success, fail } = useNotice();
   const [state, setState] = useState({ loading: true, data: null, error: "" });
   const [persons, setPersons] = useState(null);
   const [areas, setAreas] = useState([]);
@@ -276,6 +311,23 @@ export default function AreaTriggersWorkspace() {
     return result;
   }, [persons, current]);
 
+  const toggleAction = async (item, index, done) => {
+    // อัปเดตบนจอทันที แล้วโหลดใหม่ให้ได้ชื่อผู้ติ๊ก/เวลา
+    setState((current) => ({
+      ...current,
+      data: current.data && {
+        ...current.data,
+        current: current.data.current.map((row) => (row.id === item.id ? { ...row, actions: { ...row.actions, [index]: { ...(row.actions?.[index] || {}), done } } } : row))
+      }
+    }));
+    try {
+      await apiRequest(API, { method: "PATCH", body: { session_id: session?.id, trigger_id: item.id, action_index: index, done } });
+    } catch (error) {
+      fail(error.message);
+    }
+    await load();
+  };
+
   const counts = useMemo(() => {
     const byFlag = { red: 0, yellow: 0, green: 0, none: 0 };
     for (const item of current) byFlag[stageMeta(item.stage)?.flag || "none"] += 1;
@@ -296,6 +348,9 @@ export default function AreaTriggersWorkspace() {
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}
       {data && !data.ready ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">ยังไม่ได้ติดตั้งตารางประกาศ ให้ผู้ดูแลระบบรัน npm run db:migrate</p> : null}
       {data && !session ? <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">ยังไม่มีเหตุการณ์อุทกภัย ประกาศได้เมื่อเปิด EOC</p> : null}
+      {session && data?.ready && session.status === "active" ? (
+        <ReadOnlyNotice message={[data.can_declare ? null : data.declare_message, data.can_tick ? null : data.tick_message].filter(Boolean).join(" · ") || null} />
+      ) : null}
 
       {session ? (
         <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -323,6 +378,8 @@ export default function AreaTriggersWorkspace() {
             item={item}
             targets={targetsById ? targetsById.get(item.id) : null}
             canDeclare={Boolean(data?.can_declare)}
+            canTick={Boolean(data?.can_tick)}
+            onToggle={toggleAction}
             onAdjust={(target) => setDialog({ open: true, initial: target })}
             onCancel={(target) => setDialog({ open: true, initial: { ...target, cancel: true } })}
           />

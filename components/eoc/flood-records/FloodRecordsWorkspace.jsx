@@ -16,6 +16,7 @@ import {
 import TambonCoverage from "./TambonCoverage";
 import RecordFormDialog from "./RecordFormDialog";
 import CopyDayDialog from "./CopyDayDialog";
+import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
 
 const API = "/stn-eoc/api/admin/flood-records";
 
@@ -40,6 +41,7 @@ export default function FloodRecordsWorkspace() {
   const [records, setRecords] = useState([]);
   const [recordsState, setRecordsState] = useState({ loading: false, error: "" });
   const [permissions, setPermissions] = useState({ can_edit: true, read_only_message: null });
+  const [importOpen, setImportOpen] = useState(false);
   const [date, setDate] = useState("");
   const [search, setSearch] = useState("");
   const [district, setDistrict] = useState("all");
@@ -154,6 +156,7 @@ export default function FloodRecordsWorkspace() {
       actions={canOperate ? (
         <>
           <Button variant="secondary" onClick={() => setCopyOpen(true)}><Copy className="h-4 w-4" aria-hidden="true" /> คัดลอกจากวันอื่น</Button>
+          <ImportExcelButton onClick={() => setImportOpen(true)} />
           <Button onClick={() => setDialog({ mode: "village" })}><Plus className="h-4 w-4" aria-hidden="true" /> บันทึกหมู่บ้าน</Button>
         </>
       ) : null}
@@ -291,6 +294,7 @@ export default function FloodRecordsWorkspace() {
         note="ถ้าแค่ตัวเลขผิด ให้กด “แก้ไข” แทน การลบจะย้ายไปถังขยะและกู้คืนได้"
       />
       {notice}
+      <ImportExcelDialog open={importOpen} onOpenChange={setImportOpen} kind="flood-records" context={{ eoc: "flood", session_id: session.id }} onImported={load} />
     </AdminPage>
   );
 }

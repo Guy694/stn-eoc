@@ -73,6 +73,7 @@ export async function GET(request) {
       history_ready: historyReady,
       fetched_at: new Date(source.fetchedAt).toISOString(),
       stale: source.stale,
+      from_database: Boolean(source.fromDatabase),
       source: DPM_SOURCE,
       source_url: DPM_URL
     });

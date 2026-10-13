@@ -52,18 +52,45 @@ function Delta({ kpi }) {
   );
 }
 
+// เส้นแนวโน้มเล็ก (เฉพาะตัวชี้วัดที่มีข้อมูลรายวัน) — จุดสุดท้ายเน้นสีตามสถานะ
+function Sparkline({ values, tone }) {
+  if (!values || values.length < 3) return null;
+  const width = 96;
+  const height = 30;
+  const max = Math.max(...values, 1);
+  const step = width / (values.length - 1);
+  const points = values.map((value, index) => [index * step, height - 3 - (value / max) * (height - 6)]);
+  const path = points.map(([x, y], index) => `${index ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const area = `${path} L${width},${height} L0,${height} Z`;
+  const color = tone === "red" ? "#dc2626" : tone === "amber" ? "#d97706" : "#0b4c86";
+  const [lastX, lastY] = points[points.length - 1];
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="shrink-0 overflow-visible" aria-hidden="true">
+      <path d={area} fill={color} opacity="0.08" />
+      <path d={path} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={lastX} cy={lastY} r="2.6" fill={color} />
+    </svg>
+  );
+}
+
+// การ์ดตัวชี้วัด: เน้นสีเฉพาะที่ต้องสนใจ (แดง/เหลือง) — ปกติ/ไม่มีข้อมูลเป็นโทนกลาง ให้การ์ดที่มีปัญหาเด่นขึ้นมา
 function KpiCard({ kpi }) {
   const t = TONE[kpi.tone] || TONE.gray;
+  const alert = kpi.tone === "red" || kpi.tone === "amber";
+  const muted = kpi.tone === "gray";
   return (
-    <Link href={kpi.href} className={`group flex flex-col rounded-xl border border-l-4 border-slate-200 bg-white p-4 shadow-sm transition hover:border-[#0b4c86]/40 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4c86] ${t.bar}`}>
+    <Link href={kpi.href} className={`group flex flex-col rounded-xl border border-l-4 p-4 shadow-sm transition hover:border-[#0b4c86]/40 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4c86] ${alert ? t.bar : "border-l-slate-200"} ${kpi.tone === "red" ? "border-red-100 bg-red-50/40" : "border-slate-200 bg-white"}`}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold leading-snug text-slate-600">{kpi.label}</p>
-        <StatusPill tone={kpi.tone} />
+        {alert ? <StatusPill tone={kpi.tone} /> : <span className="shrink-0 text-[11px] font-semibold text-slate-400">{t.label}</span>}
       </div>
-      <p className="mt-2 text-3xl font-black tabular-nums text-slate-900">
-        {typeof kpi.value === "number" ? formatNumber(kpi.value) : kpi.value}
-        <span className="ml-1 text-sm font-semibold text-slate-500">{kpi.unit}</span>
-      </p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <p className={`text-3xl font-black tabular-nums ${muted ? "text-slate-400" : kpi.tone === "red" ? "text-red-800" : "text-slate-900"}`}>
+          {typeof kpi.value === "number" ? formatNumber(kpi.value) : kpi.value}
+          <span className="ml-1 text-sm font-semibold text-slate-500">{kpi.unit}</span>
+        </p>
+        <Sparkline values={kpi.spark} tone={kpi.tone} />
+      </div>
       <Delta kpi={kpi} />
       <p className="mt-2 text-xs leading-relaxed text-slate-600">{kpi.detail}</p>
     </Link>
@@ -433,7 +460,7 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {data.kpis.map((kpi) => <KpiCard key={kpi.key} kpi={kpi} />)}
+        {data.kpis.map((kpi) => <KpiCard key={kpi.key} kpi={kpi.key === "health" ? { ...kpi, spark: (data.trend || []).map((row) => Number(row.total) || 0) } : kpi} />)}
         {data.completeness ? (
           <Link href="/eoc/flood/records" className={`flex flex-col rounded-xl border border-l-4 border-slate-200 bg-white p-4 shadow-sm hover:shadow ${data.completeness.percent >= 80 ? TONE.green.bar : data.completeness.percent > 0 ? TONE.amber.bar : TONE.red.bar}`}>
             <p className="text-sm font-semibold text-slate-600">ความครบของรายงานวันนี้</p>

@@ -8,6 +8,7 @@ import { ReadOnlyNotice,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
+import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { FLOOD_PRESET_ITEMS, MOVEMENT_TYPES, STOCK_LEVEL_LABELS, displayItemCode } from "@/lib/medicalInventory";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
@@ -36,6 +37,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   const [facilityFilter, setFacilityFilter] = useState("");
   const [moveDialog, setMoveDialog] = useState(null);
   const [itemDialog, setItemDialog] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [moveForm, setMoveForm] = useState({ qty: "", requested_team: "", note: "" });
@@ -186,6 +188,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
         <>
           {eocType === "flood" ? <Link href="/eoc/flood/oxygen" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ออกซิเจนเหลว</Link> : null}
           {eocType === "flood" ? <Link href="/eoc/flood/team-reports?team=resources" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">แจกจ่ายรายอำเภอ</Link> : null}
+          {perms.can_add_item ? <ImportExcelButton onClick={() => setImportOpen(true)} /> : null}
           {perms.can_add_item ? <AddButton onClick={() => { setFormError(""); setItemDialog(true); }}>เพิ่มรายการ</AddButton> : null}
         </>
       )}
@@ -301,6 +304,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
           </Field>
         </FormGrid>
       </FormDialog>
+      <ImportExcelDialog open={importOpen} onOpenChange={setImportOpen} kind="supplies" context={{ eoc: eocType, session_id: data?.session?.id }} onImported={load} />
     </AdminPage>
   );
 }

@@ -139,3 +139,16 @@ describe("suggestFlag (SAT 3 flags)", () => {
     expect(suggestFlag([row("STN08", null, null, { level: null, malfunction: true })]).key).toBe("green");
   });
 });
+
+import { stationsFromReadings } from "@/lib/dpmWater";
+
+describe("stationsFromReadings (ใช้ค่าที่เก็บไว้เมื่อ ปภ. ไม่ตอบ)", () => {
+  test("แปลงแถวในฐานข้อมูลเป็นสถานี คำนวณระยะต่ำกว่าตลิ่ง และเวลาไทย → UTC", () => {
+    const [a, b] = stationsFromReadings([
+      { station_code: "stn08", station_name: "สะพานเคียน", hour_at: "2026-10-13 19:00:00", water_level: "4.20", bank_level: "5.07", malfunction: 0 },
+      { station_code: "STN01", station_name: "สะพานร้อยเมตร", hour_at: "2026-10-13 19:00:00", water_level: null, bank_level: 3.8, malfunction: 0 }
+    ]);
+    expect(a).toMatchObject({ code: "STN01", level: null, malfunction: true });
+    expect(b).toMatchObject({ code: "STN08", level: 4.2, bank: 5.07, belowBank: 0.87, malfunction: false, observedAt: "2026-10-13T12:00:00.000Z" });
+  });
+});

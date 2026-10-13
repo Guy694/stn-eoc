@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
+import { requireModuleEdit } from '@/lib/eocModuleAccess';
 import { publicInternalError } from '@/lib/apiResponse';
 
 // GET - Fetch shelter centers for a specific EOC session
@@ -131,7 +132,8 @@ export async function GET(request) {
 // POST - Update shelter occupancy for EOC session
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // บันทึกจำนวนผู้พักในเหตุการณ์: เฉพาะกล่องภารกิจเจ้าของเมนูศูนย์พักพิง (ค่าเริ่มต้น Logistics) และแอดมิน/ผู้บัญชาการ
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const body = await request.json();
@@ -143,6 +145,8 @@ export async function POST(request) {
                 { status: 400 }
             );
         }
+        const gate = await requireModuleEdit(auth.user, eoc_session_id, 'shelters');
+        if (gate.response) return gate.response;
 
         // Check if record exists
         const pool = await getConnection();

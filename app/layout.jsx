@@ -5,7 +5,6 @@ import { EOCProvider } from "@/context/EOCContext";
 import AppToaster from "@/components/providers/AppToaster";
 import PwaRegister from "@/components/PwaRegister";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { TEXT_SCALE_SCRIPT } from "@/lib/textScale";
 
 const kanit = Kanit({
   variable: "--font-kanit",
@@ -42,10 +41,6 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="th" suppressHydrationWarning>
-      <head>
-        {/* ขนาดตัวอักษรที่ผู้ใช้เลือกไว้ — ใส่ก่อนแสดงผลเพื่อไม่ให้หน้ากระพริบ */}
-        <script dangerouslySetInnerHTML={{ __html: TEXT_SCALE_SCRIPT }} />
-      </head>
       <body
         className={`${kanit.variable} antialiased`}
         suppressHydrationWarning

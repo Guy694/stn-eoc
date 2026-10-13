@@ -287,7 +287,7 @@ function ReportSheet({ data, recommendations, flag, flagSource, compact = false 
 
         <p className="mt-auto text-[10px] text-slate-500">
           ที่มา: {data.source} ({data.source_url.replace(/^https:\/\//, "")}) · ดึงข้อมูล {new Date(data.fetched_at).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })} น.
-          {data.stale ? " · ต้นทางไม่ตอบ ใช้ข้อมูลล่าสุดที่มี" : ""}
+          {data.from_database ? " · ปภ. ไม่ตอบ ใช้ค่าล่าสุดที่ระบบเก็บไว้" : data.stale ? " · ต้นทางไม่ตอบ ใช้ข้อมูลล่าสุดที่มี" : ""}
         </p>
       </div>
 

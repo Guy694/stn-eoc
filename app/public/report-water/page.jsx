@@ -296,7 +296,7 @@ export default function ReportWaterPage() {
 
       <aside className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
         <Siren className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 flex-1 font-semibold">มีคนติดอยู่ บาดเจ็บ หรือต้องอพยพ? ไม่ต้องรายงานระดับน้ำ</span>
+        <span className="min-w-0 flex-1 font-semibold">มีกลุ่มเปราะบาง ต้องการความช่วยเหลือ? ไม่ต้องรายงานระดับน้ำ</span>
         <Link href="/public/report-incident" className="rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-700">ขอความช่วยเหลือ</Link>
       </aside>
 

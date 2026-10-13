@@ -7,22 +7,18 @@ import {
     CalendarClock,
     Car,
     Droplets,
-    Sun,
-    UserRound
+    Sun
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import CitizenDashboard from "@/components/CitizenDashboard";
 import { getOperationSessionLock, setOperationSessionLock } from "@/lib/eocSessionLock";
-import { EVENT_MODULES } from "@/src/config/navigation/admin-navigation";
-
-// ทางลัดงานที่ทำบ่อยของแต่ละเหตุการณ์ (key ของเมนูใน EVENT_MODULES)
-const QUICK_KEYS = {
-    flood: ['overview', 'records', 'shelters', 'team-reports', 'vulnerable', 'supplies', 'oxygen', 'brief'],
-    disease: ['overview', 'records', 'daily', 'map', 'vulnerable'],
-    'festival-accidents': ['overview', 'records', 'service-points']
-};
+import { EVENT_MODULES, groupMenuItems } from "@/src/config/navigation/admin-navigation";
+import { MENU_ICONS } from "@/components/Sidebar";
+import { ClipboardList, Flag } from "lucide-react";
+import { UpdatedAt } from "@/components/admin/crud";
+import { areaLabel, flagMeta, stageMeta } from "@/lib/floodTriggers";
 
 // กำหนดเหตุการณ์ที่ระบบรองรับ
 const EOC_MODULES = [
@@ -208,70 +204,34 @@ export default function DashboardPage() {
                     <CitizenDashboard />
                 ) : (
                     <>
-                        <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-                            <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                                    <div>
-                                        <p className="mb-2 text-sm font-semibold text-[#0b4c86]">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
-                                        <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">
-                                            {activeModules ? 'เหตุการณ์ที่กำลังปฏิบัติงาน' : 'ยังไม่มีเหตุการณ์ที่เปิดอยู่'}
-                                        </h1>
-                                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                                            {activeModules ? "กดทางลัดด้านล่างเพื่อไปงานที่ต้องทำในเหตุการณ์ที่เปิดอยู่ได้ทันที" : "เลือกประเภทเหตุการณ์ด้านล่างเพื่อดูข้อมูลย้อนหลังของแต่ละ EOC"}
-                                        </p>
-                                    </div>
-                                    <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
-                                        <CalendarClock className="h-4 w-4" aria-hidden="true" />
-                                        {currentDateLabel}
-                                    </div>
-                                </div>
+                        <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-[#0b4c86]">
+                                    สวัสดี {`${user.title || ''}${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
+                                    <span className="font-normal text-slate-500"> · {user.roleDisplay || user.role}{user.department ? ` · ${user.department}` : ''}</span>
+                                </p>
+                                <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">
+                                    {activeModules ? 'เหตุการณ์ที่กำลังปฏิบัติงาน' : 'ยังไม่มีเหตุการณ์ที่เปิดอยู่'}
+                                </h1>
+                            </div>
+                            <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                                <CalendarClock className="h-4 w-4" aria-hidden="true" />
+                                {currentDateLabel}
+                            </div>
+                        </header>
 
-                                <ActiveEvents
-                                    loading={eocLoading}
-                                    modules={EOC_MODULES.filter((mod) => eocStatus?.[mod.key]?.is_active)}
-                                    eocStatus={eocStatus}
-                                    onEnter={handleQuickEnter}
-                                />
-                            </section>
-
-                            <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#edf5fc] text-[#0b4c86]">
-                                        <UserRound className="h-5 w-5" aria-hidden="true" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold text-slate-500">ผู้ใช้งาน</p>
-                                        <h2 className="truncate text-lg font-bold text-slate-900">
-                                            {`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
-                                        </h2>
-                                    </div>
-                                </div>
-                                <div className="mt-5 space-y-3 text-sm">
-                                    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-                                        <span className="text-slate-500">สิทธิ์</span>
-                                        <span className="font-semibold text-[#0b4c86]">{user.roleDisplay || user.role}</span>
-                                    </div>
-                                    {user.department && (
-                                        <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-                                            <span className="text-slate-500">หน่วยงาน</span>
-                                            <span className="truncate font-semibold text-slate-700">{user.department}</span>
-                                        </div>
-                                    )}
-                                    {user.position && (
-                                        <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-                                            <span className="text-slate-500">ตำแหน่ง</span>
-                                            <span className="truncate font-semibold text-slate-700">{user.position}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </aside>
-                        </div>
+                        <ActiveEvents
+                            loading={eocLoading}
+                            modules={EOC_MODULES.filter((mod) => eocStatus?.[mod.key]?.is_active)}
+                            eocStatus={eocStatus}
+                            onEnter={handleQuickEnter}
+                        />
 
                         {/* EOC Event Modules */}
                         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                             <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                                 <div>
-                                    <h2 className="text-xl font-black text-slate-900">เลือกประเภทเหตุการณ์</h2>
+                                    <h2 className="text-xl font-black text-slate-900">ทุกประเภทเหตุการณ์</h2>
                                     <p className="text-sm text-slate-500">ระบบจะแสดงเฉพาะหน้าปฏิบัติการที่พร้อมใช้งาน และสำหรับเจ้าหน้าที่จะต้องเลือกเหตุการณ์ก่อนเข้าใช้งาน</p>
                                 </div>
                             </div>
@@ -334,17 +294,17 @@ function EventModuleCard({
         <div
             className={`group relative flex h-full min-h-[260px] flex-col overflow-hidden rounded-xl border bg-white transition ${
                 module.comingSoon
-                    ? 'border-slate-200 opacity-70'
+                    ? 'border-dashed border-slate-300 bg-slate-50/60'
                     : isActive
                         ? `${module.activeClass} shadow-sm hover:shadow-md`
                         : 'border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md'
             }`}
         >
-            <div className={`h-1.5 ${module.accentClass}`} />
+            <div className={`h-1.5 ${module.comingSoon ? 'bg-transparent' : isActive ? 'bg-[#0b4c86]' : 'bg-slate-200'}`} />
 
             <div className="flex flex-1 flex-col p-5">
                 <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${module.iconClass}`}>
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${isActive ? 'bg-[#0b4c86] text-white' : module.comingSoon ? 'bg-slate-100 text-slate-400' : 'bg-slate-100 text-slate-600'}`}>
                         <Icon className="h-6 w-6" aria-hidden="true" strokeWidth={2.2} />
                     </div>
                     {eocLoading ? (
@@ -427,55 +387,126 @@ function EventModuleCard({
     return <div className="block">{content}</div>;
 }
 
-// เหตุการณ์ที่เปิดอยู่ + ทางลัดไปงานที่ทำบ่อย (กดแล้วเข้าเหตุการณ์ที่เปิดอยู่ทันที ไม่ต้องเลือกครั้งที่)
+// สถานะล่าสุดของเหตุการณ์ (สรุปสถานการณ์ + ธงที่ประกาศ) — โหลดแยก ไม่ให้หน้าหลักช้า
+function useEventPulse(eocKey, sessionId) {
+    const [pulse, setPulse] = useState(null);
+    useEffect(() => {
+        if (!eocKey || !sessionId) return undefined;
+        let cancelled = false;
+        const params = `eoc=${eocKey}&session_id=${sessionId}`;
+        Promise.all([
+            fetch(`/stn-eoc/api/eoc/situation-board/?${params}`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+            eocKey === 'flood' ? fetch(`/stn-eoc/api/eoc/area-triggers/?${params}`).then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null)
+        ]).then(([board, triggers]) => {
+            if (cancelled) return;
+            setPulse({
+                headline: board?.success ? board.headline : null,
+                agendaTotal: board?.success ? board.agendaTotal : null,
+                generatedAt: board?.generated_at || null,
+                triggers: triggers?.success ? triggers.current || [] : null
+            });
+        });
+        return () => { cancelled = true; };
+    }, [eocKey, sessionId]);
+    return pulse;
+}
+
+const HEADLINE_TONE = {
+    red: 'border-red-200 bg-red-50 text-red-900',
+    amber: 'border-amber-200 bg-amber-50 text-amber-900',
+    green: 'border-emerald-200 bg-emerald-50 text-emerald-900',
+    gray: 'border-slate-200 bg-slate-50 text-slate-700'
+};
+
+function ActiveEventBanner({ module, status, onEnter }) {
+    const definition = EVENT_MODULES[module.key];
+    const items = definition ? definition.items({ sessionId: status.session_id }) : [];
+    const groups = groupMenuItems(items);
+    const pulse = useEventPulse(module.key, status.session_id);
+    const Icon = module.icon;
+    const name = module.key === 'disease' && status.disease_name ? status.disease_name : module.name;
+    return (
+        <section className="mb-6 overflow-hidden rounded-2xl border border-[#c9dcee] bg-white shadow-sm" aria-label={`${name} ที่เปิดอยู่`}>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-3 bg-[#083865] px-5 py-4 text-white">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><Icon className="h-6 w-6" aria-hidden="true" /></span>
+                <div className="min-w-0 flex-1">
+                    <p className="text-xl font-black leading-tight sm:text-2xl">{name}{status.session_number ? ` ครั้งที่ ${status.session_number}` : ''}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-blue-100">
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-300"><span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />เปิดอยู่</span>
+                        {status.activated_at ? <span>ตั้งแต่ {new Date(status.activated_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}</span> : null}
+                        {pulse?.generatedAt ? <span className="[&_time]:text-blue-100">· สรุปล่าสุด <UpdatedAt value={pulse.generatedAt} staleHours={1} /></span> : null}
+                    </p>
+                </div>
+                <button type="button" onClick={() => onEnter(module, module.path)} className="inline-flex h-11 items-center gap-2 rounded-lg bg-white px-4 text-sm font-bold text-[#083865] hover:bg-blue-50">
+                    เข้าห้องปฏิบัติการ <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+            </div>
+
+            {pulse && (pulse.headline || pulse.triggers?.length || pulse.agendaTotal) ? (
+                <div className="grid gap-3 border-b border-slate-100 p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                    {pulse.headline?.text ? (
+                        <button type="button" onClick={() => onEnter(module, module.path)} className={`rounded-xl border px-4 py-3 text-left ${HEADLINE_TONE[pulse.headline.tone] || HEADLINE_TONE.gray}`}>
+                            <span className="block text-base font-black leading-snug">{pulse.headline.text}</span>
+                            {pulse.agendaTotal ? <span className="mt-0.5 block text-sm font-semibold opacity-80">เรื่องที่ต้องตัดสินใจและติดตาม {pulse.agendaTotal} เรื่อง</span> : null}
+                        </button>
+                    ) : <span />}
+                    {pulse.triggers ? (
+                        <button type="button" onClick={() => onEnter(module, '/eoc/flood/triggers')} className="flex min-w-[15rem] flex-col justify-center rounded-xl border border-slate-200 px-4 py-3 text-left hover:border-[#0b4c86]">
+                            <span className="flex items-center gap-1.5 text-sm font-bold text-slate-700"><Flag className="h-4 w-4" aria-hidden="true" />ธงเตือนภัย/Trigger</span>
+                            {pulse.triggers.length ? (
+                                <span className="mt-1.5 flex flex-wrap gap-1.5">
+                                    {pulse.triggers.slice(0, 4).map((item) => {
+                                        const flag = flagMeta(stageMeta(item.stage)?.flag);
+                                        return (
+                                            <span key={item.id} className="rounded-full px-2 py-0.5 text-xs font-bold" style={flag ? { background: flag.soft, color: flag.text, boxShadow: `inset 0 0 0 1.5px ${flag.color}` } : { background: '#f1f5f9', color: '#334155' }}>
+                                                {areaLabel(item)} · {flag ? flag.label : `T${stageMeta(item.stage)?.trigger}`}
+                                            </span>
+                                        );
+                                    })}
+                                    {pulse.triggers.length > 4 ? <span className="text-xs font-semibold text-slate-500">+{pulse.triggers.length - 4}</span> : null}
+                                </span>
+                            ) : <span className="mt-1 text-sm text-slate-500">ยังไม่มีพื้นที่ที่ประกาศ</span>}
+                        </button>
+                    ) : null}
+                </div>
+            ) : null}
+
+            <nav aria-label={`งานใน${name}`} className="grid gap-x-6 gap-y-4 p-4 sm:grid-cols-2 xl:grid-cols-5">
+                {groups.map((group) => (
+                    <div key={group.title || 'main'} className="min-w-0">
+                        {group.title ? <h3 className="mb-1.5 text-xs font-bold text-slate-500">{group.title}</h3> : null}
+                        <ul className="space-y-0.5">
+                            {group.items.map((item) => {
+                                const ItemIcon = MENU_ICONS[item.iconKey] || ClipboardList;
+                                return (
+                                    <li key={item.key}>
+                                        <button type="button" onClick={() => onEnter(module, item.path)} title={item.description || item.name}
+                                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm font-semibold text-slate-700 hover:bg-[#edf5fc] hover:text-[#0b4c86]">
+                                            <ItemIcon className="h-4 w-4 shrink-0 text-[#0b4c86]" aria-hidden="true" strokeWidth={2.2} />
+                                            <span className="min-w-0 leading-snug">{item.name}</span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                ))}
+            </nav>
+        </section>
+    );
+}
+
+// เหตุการณ์ที่เปิดอยู่: แถบเต็มความกว้าง + สถานะล่าสุด + ทางลัดทุกงาน จัดกลุ่มตามเมนู
 function ActiveEvents({ loading, modules, eocStatus, onEnter }) {
-    if (loading) return <div className="mt-6 h-24 animate-pulse rounded-lg bg-slate-100" />;
+    if (loading) return <div className="mb-6 h-48 animate-pulse rounded-2xl bg-slate-100" />;
     if (!modules.length) {
         return (
-            <p className="mt-6 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-600">
+            <p className="mb-6 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-600">
                 เมื่อผู้บัญชาการเปิดเหตุการณ์ ทางลัดไปงานที่ต้องทำจะแสดงตรงนี้ ระหว่างนี้เลือกประเภทเหตุการณ์ด้านล่างเพื่อดูข้อมูลย้อนหลังได้
             </p>
         );
     }
-    return (
-        <div className="mt-6 space-y-3">
-            {modules.map((module) => {
-                const status = eocStatus?.[module.key] || {};
-                const definition = EVENT_MODULES[module.key];
-                const items = definition ? definition.items({ sessionId: status.session_id }) : [];
-                const quick = (QUICK_KEYS[module.key] || []).map((key) => items.find((item) => item.key === key)).filter(Boolean);
-                const Icon = module.icon;
-                return (
-                    <div key={module.key} className="rounded-xl border border-[#c9dcee] bg-[#f7fbff] p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-[#0b4c86] ring-1 ring-[#c9dcee]"><Icon className="h-5 w-5" aria-hidden="true" /></span>
-                                <div>
-                                    <p className="font-black text-slate-900">
-                                        {module.key === 'disease' && status.disease_name ? status.disease_name : module.name}
-                                        {status.session_number ? ` ครั้งที่ ${status.session_number}` : ''}
-                                    </p>
-                                    <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700"><span className="h-2 w-2 rounded-full bg-emerald-500" />เปิดอยู่{status.activated_at ? ` ตั้งแต่ ${new Date(status.activated_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}` : ''}</p>
-                                </div>
-                            </div>
-                            <button type="button" onClick={() => onEnter(module, module.path)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b4c86] px-4 text-sm font-bold text-white hover:bg-[#083865]">
-                                เข้าห้องปฏิบัติการ <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                            </button>
-                        </div>
-                        {quick.length ? (
-                            <nav aria-label={`ทางลัด ${module.name}`} className="mt-3 flex flex-wrap gap-2">
-                                {quick.map((item) => (
-                                    <button key={item.key} type="button" onClick={() => onEnter(module, item.path)} title={item.description || item.name} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:border-[#0b4c86] hover:text-[#0b4c86]">
-                                        {item.name}
-                                    </button>
-                                ))}
-                            </nav>
-                        ) : null}
-                    </div>
-                );
-            })}
-        </div>
-    );
+    return modules.map((module) => <ActiveEventBanner key={module.key} module={module} status={eocStatus?.[module.key] || {}} onEnter={onEnter} />);
 }
 
 function InfoRow({ label, value }) {

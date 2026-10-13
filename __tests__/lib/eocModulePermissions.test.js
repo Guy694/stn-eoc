@@ -91,3 +91,17 @@ describe("สิทธิ์ที่แอดมินตั้งเอง (eo
     expect(normalizeOwnerInput(["*", "sat"]).value).toEqual(["*"]);
   });
 });
+
+describe("ประกาศธงเตือนภัย/Trigger ใช้สิทธิ์ตามกล่องภารกิจ ไม่ใช่บทบาทของบัญชี", () => {
+  const sat = [{ team_code: "sat" }];
+  test("ทีม SAT ในเหตุการณ์ประกาศได้ แม้บัญชีเป็นเจ้าหน้าที่ทั่วไป", () => {
+    expect(moduleEditAccess({ role: "staff", memberships: sat, moduleKey: "triggers" }).canEdit).toBe(true);
+  });
+  test("บัญชีบทบาท SAT ที่อยู่ทีมอื่นในเหตุการณ์ ประกาศไม่ได้", () => {
+    expect(moduleEditAccess({ role: "SAT", memberships: [{ team_code: "logistics" }], moduleKey: "triggers" })).toEqual({ canEdit: false, reason: "not_owner" });
+  });
+  test("ผู้บัญชาการประกาศได้เสมอขณะเหตุการณ์เปิด", () => {
+    expect(moduleEditAccess({ role: "commander", moduleKey: "triggers" }).canEdit).toBe(true);
+    expect(moduleEditAccess({ role: "commander", moduleKey: "triggers", sessionActive: false }).canEdit).toBe(false);
+  });
+});

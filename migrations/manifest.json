@@ -58,6 +58,7 @@
     "20261012_shelter_types.sql",
     "20261012_dpm_water_readings.sql",
     "20261012_vulnerable_care_group.sql",
-    "20261012_area_trigger_flags.sql"
+    "20261012_area_trigger_flags.sql",
+    "20261013_area_trigger_actions.sql"
   ]
 }

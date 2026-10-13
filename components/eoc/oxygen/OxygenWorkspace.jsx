@@ -5,7 +5,7 @@ import { AlertTriangle, Plus } from "lucide-react";
 import { Button, AdminPage, Field, FormDialog, FormGrid, ReadOnlyNotice, StatStrip, StatusPill, inputClass, latestTime, useNotice } from "@/components/admin/crud";
 import { apiRequest } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
-import { OXYGEN_LEVELS, OXYGEN_LOW_DAYS, OXYGEN_SOURCES, formatDays, oxygenDays, oxygenLevel } from "@/lib/liquidOxygen";
+import { OXYGEN_CRITICAL_DAYS, OXYGEN_LEVELS, OXYGEN_LOW_DAYS, OXYGEN_SOURCES, formatDays, oxygenDays, oxygenLevel } from "@/lib/liquidOxygen";
 import { cn } from "@/lib/utils";
 
 const thaiDate = (value) => (value ? new Date(`${value}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "");
@@ -26,6 +26,37 @@ const emptyForm = (facilityId = "", previous = null, today = "") => {
   }
   return form;
 };
+
+// แถบวันที่ใช้ได้ (สเกล 0–7 วัน) แยกส่วนตามแหล่ง พร้อมเส้นเกณฑ์ 1 วัน (วิกฤต) และ 3 วัน (ต้องจัดหา)
+const GAUGE_MAX_DAYS = 7;
+const SOURCE_FILL = { tank: "#0b4c86", big: "#3b82c4", small: "#93c5e8" };
+function DaysGauge({ days }) {
+  if (!days || days.total === null) return null;
+  const pct = (value) => `${Math.min(100, (Math.max(0, value || 0) / GAUGE_MAX_DAYS) * 100)}%`;
+  let used = 0;
+  const segments = OXYGEN_SOURCES.map((source) => {
+    const value = Math.max(0, Math.min(days[source.key] || 0, GAUGE_MAX_DAYS - used));
+    const segment = { key: source.key, label: source.label, value, left: used };
+    used += value;
+    return segment;
+  }).filter((segment) => segment.value > 0);
+  return (
+    <div className="mt-3" aria-hidden="true">
+      <div className="relative h-3 overflow-hidden rounded-full bg-slate-100">
+        {segments.map((segment) => (
+          <span key={segment.key} className="absolute inset-y-0" style={{ left: pct(segment.left), width: pct(segment.value), background: SOURCE_FILL[segment.key] }} title={`${segment.label} ${formatDays(segment.value)} วัน`} />
+        ))}
+        <span className="absolute inset-y-0 w-0.5 bg-red-600" style={{ left: pct(OXYGEN_CRITICAL_DAYS) }} />
+        <span className="absolute inset-y-0 w-0.5 bg-amber-500" style={{ left: pct(OXYGEN_LOW_DAYS) }} />
+      </div>
+      <div className="relative mt-0.5 h-3 text-[10px] text-slate-500">
+        <span className="absolute -translate-x-1/2 text-red-700" style={{ left: pct(OXYGEN_CRITICAL_DAYS) }}>1</span>
+        <span className="absolute -translate-x-1/2 text-amber-700" style={{ left: pct(OXYGEN_LOW_DAYS) }}>3 วัน</span>
+        <span className="absolute right-0">{GAUGE_MAX_DAYS}+</span>
+      </div>
+    </div>
+  );
+}
 
 function Sparkline({ points }) {
   if (points.length < 2) return null;
@@ -161,11 +192,12 @@ export default function OxygenWorkspace({ eocType = "flood" }) {
                 </p>
                 <Sparkline points={card.history} />
               </div>
+              {report ? <DaysGauge days={report.days} /> : null}
               {report ? (
                 <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
                   {OXYGEN_SOURCES.map((source) => (
                     <div key={source.key}>
-                      <dt className="text-slate-500">{source.label.replace("ถังออกซิเจนเหลว", "ถังหลัก").replace("ถังสำรองขนาด", "สำรอง")}</dt>
+                      <dt className="flex items-center gap-1 text-slate-500"><span className="inline-block h-2 w-2 rounded-full" style={{ background: SOURCE_FILL[source.key] }} aria-hidden="true" />{source.label.replace("ถังออกซิเจนเหลว", "ถังหลัก").replace("ถังสำรองขนาด", "สำรอง")}</dt>
                       <dd className="font-bold text-slate-800">{report[`${source.key}_qty`] == null ? "-" : `${Number(report[`${source.key}_qty`]).toLocaleString("th-TH")} ${source.unit}`}</dd>
                     </div>
                   ))}

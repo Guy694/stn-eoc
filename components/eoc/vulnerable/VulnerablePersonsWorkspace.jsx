@@ -23,6 +23,7 @@ import {
   CASE_GROUPS, CASE_STATUSES, VULNERABLE_TYPES, QUICK_FILTERS, caseStatus, filterPersons, followUpState, maskPhone, matchesQuickFilter, pregnancyAlert, sortByUrgency, summarizePersons, typeMeta, validatePerson
 } from "@/lib/vulnerablePersons";
 import { areaLabel, matchesStageTarget, stageMeta, stageTitle } from "@/lib/floodTriggers";
+import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
 
 const API = "/stn-eoc/api/eoc/vulnerable-persons";
 const AREA_API = "/stn-eoc/api/eoc/vulnerable-event";
@@ -234,7 +235,8 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
   return (
     <li>
       <article
-        className={`rounded-xl border bg-white p-3 transition ${selected ? "border-[#0b4c86] shadow-md ring-1 ring-[#0b4c86]" : "border-slate-200 hover:border-slate-300"}`}
+        className={`rounded-xl border border-l-4 bg-white p-3 transition ${selected ? "border-[#0b4c86] shadow-md ring-1 ring-[#0b4c86]" : "border-slate-200 hover:border-slate-300"}`}
+        style={{ borderLeftColor: careGroupMeta(effectiveCareGroup(person))?.color }}
         aria-current={selected ? "true" : undefined}
       >
         <button type="button" onClick={() => onSelect(person.id)} className="flex w-full items-start gap-2.5 text-left">
@@ -243,8 +245,10 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
             <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="font-black text-slate-900">{person.name}</span>
               <CareChip person={person} />
+            </span>
+            <span className="mt-1 flex flex-wrap items-center gap-1">
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">{type?.short || person.vulnerable_type}</span>
-              {person.power_dependent ? <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-bold text-violet-800 ring-1 ring-violet-200">ใช้อุปกรณ์ไฟฟ้า</span> : null}
+              {person.power_dependent ? <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-bold text-violet-800 ring-1 ring-violet-200">⚡ ใช้อุปกรณ์ไฟฟ้า</span> : null}
               {followUp ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${followUp.key === "late" ? "bg-red-50 text-red-700 ring-red-200" : followUp.key === "due" ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-cyan-50 text-cyan-800 ring-cyan-200"}`}>{followUp.text}</span> : null}
               {pregnancy ? <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 ring-1 ring-rose-200">{pregnancy.text}</span> : null}
               {person.in_flood_area && caseStatus(person.status).group !== "done" ? <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800 ring-1 ring-sky-200">บ้านอยู่ในพื้นที่น้ำท่วม</span> : null}
@@ -528,6 +532,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
   const [selectedId, setSelectedId] = useState(null);
   const [statusTarget, setStatusTarget] = useState(null);
   const [personDialog, setPersonDialog] = useState({ open: false, editing: null });
+  const [importOpen, setImportOpen] = useState(false);
   const [removing, setRemoving] = useState(null);
   const [busy, setBusy] = useState(false);
   const [removeError, setRemoveError] = useState("");
@@ -567,7 +572,8 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
     ...person,
     in_flood_area: Boolean(person.location && floodAreas.some((area) => pointInGeometry(person.location.lat, person.location.lng, area.geometry)))
   })), [data, floodAreas]);
-  const summary = useMemo(() => summarizePersons(persons), [persons]);
+  const restricted = Boolean(data?.restricted);
+  const summary = useMemo(() => (restricted && data?.summary ? data.summary : summarizePersons(persons)), [restricted, data, persons]);
   const quickCounts = useMemo(() => {
     const counts = { priority: persons.filter((person) => matchesQuickFilter(person, "priority", today)).length, unmapped: persons.filter((person) => !person.location).length };
     if (floodAreas.length) counts.flood_pending = persons.filter((person) => matchesQuickFilter(person, "flood_pending", today)).length;
@@ -635,6 +641,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
       description="ดูว่าใครยังไม่ได้รับการช่วยเหลือ อยู่ตรงไหน และอัปเดตสถานะเมื่อเจ้าหน้าที่เข้าพื้นที่"
       actions={(
         <div className="flex flex-wrap gap-2">
+          {perms.can_edit_registry ? <ImportExcelButton onClick={() => setImportOpen(true)} /> : null}
           {perms.can_edit_registry ? <AddButton onClick={() => setPersonDialog({ open: true, editing: null })}>เพิ่มรายชื่อ</AddButton> : null}
         </div>
       )}
@@ -654,7 +661,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
       ) : session && session.status !== "active" ? (
         <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">เหตุการณ์นี้ปิดแล้ว สถานะที่แสดงเป็นผลสุดท้ายของเหตุการณ์ (ดูได้อย่างเดียว)</p>
       ) : null}
-      <ReadOnlyNotice message={perms.read_only_message} />
+      <ReadOnlyNotice message={restricted ? data.restricted_message : perms.read_only_message} />
 
       {stageFilter ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#0b4c86]/30 bg-[#eef5fc] px-3 py-2 text-sm text-[#083865]">
@@ -735,7 +742,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center p-6 text-center text-sm text-slate-600">
               <UserRound className="h-10 w-10 text-slate-300" aria-hidden="true" />
-              {summary.total ? <p className="mt-2">ไม่พบรายชื่อตามตัวกรอง</p> : (
+              {restricted ? <p className="mt-2 max-w-xs">ทะเบียนมี {formatNumber(summary.total)} คน — รายชื่อแสดงเฉพาะผู้ที่ได้รับมอบหมายในเหตุการณ์นี้</p> : summary.total ? <p className="mt-2">ไม่พบรายชื่อตามตัวกรอง</p> : (
                 <>
                   <p className="mt-2 font-bold text-slate-800">ยังไม่มีรายชื่อในทะเบียน</p>
                   <p className="mt-1 max-w-xs text-xs">เพิ่มผู้ป่วยติดเตียง ผู้พิการ หญิงตั้งครรภ์ ฯลฯ พร้อมปักหมุดบ้าน เพื่อวางแผนเข้าช่วยเหลือเมื่อเกิดเหตุ</p>
@@ -780,6 +787,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
         <p className="text-sm text-slate-700">รายชื่อนี้จะไม่แสดงในรายการและแผนที่อีก ประวัติการช่วยเหลือในเหตุการณ์ที่ผ่านมายังเก็บไว้ ใช้เมื่อย้ายออกนอกพื้นที่หรือเสียชีวิต</p>
         {removing?.phone ? <p className="mt-2 text-xs text-slate-500">เบอร์ที่บันทึกไว้: {maskPhone(removing.phone)}</p> : null}
       </FormDialog>
+      <ImportExcelDialog open={importOpen} onOpenChange={setImportOpen} kind="vulnerable" context={{ eoc: eocType, session_id: sessionId }} onImported={load} />
     </AdminPage>
   );
 }

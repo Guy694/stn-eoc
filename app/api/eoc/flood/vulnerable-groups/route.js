@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
+import { requireModuleEdit } from '@/lib/eocModuleAccess';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
 import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
@@ -152,10 +153,13 @@ export async function POST(request) {
     let connection;
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        // บันทึกได้เฉพาะกล่องภารกิจเจ้าของเมนูกลุ่มเปราะบางในเหตุการณ์นี้ และแอดมิน/ผู้บัญชาการ
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
+        const gate = await requireModuleEdit(auth.user, data.session_id, 'vulnerable');
+        if (gate.response) return gate.response;
         connection = await pool.getConnection();
 
         // ตรวจสอบว่ามีข้อมูลของหมู่บ้านนี้ใน session นี้แล้วหรือยัง
@@ -238,7 +242,7 @@ export async function PUT(request) {
     let connection;
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, OFFICER_ROLES);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
@@ -249,6 +253,12 @@ export async function PUT(request) {
                 error: 'ID is required'
             }, { status: 400 });
         }
+        const [owner] = await pool.execute('SELECT session_id FROM vulnerable_groups WHERE id = ? LIMIT 1', [data.id]);
+        if (!owner.length) {
+            return NextResponse.json({ success: false, error: 'ไม่พบข้อมูล' }, { status: 404 });
+        }
+        const gate = await requireModuleEdit(auth.user, owner[0].session_id, 'vulnerable');
+        if (gate.response) return gate.response;
 
         connection = await pool.getConnection();
 
