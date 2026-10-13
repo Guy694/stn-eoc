@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useFullscreenMap } from "@/components/FullscreenMapWrapper";
 import AppIcon from "./icons/AppIcon";
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 // แก้ไข icon default ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -97,7 +98,7 @@ export default function DisasterMap({ events, onEventClick }) {
                 border: 1px solid rgba(239, 68, 68, 0.5);
                 text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
                 white-space: nowrap;
-            ">${text}</div>`,
+            ">${esc(text)}</div>`,
             iconSize: null,
             iconAnchor: [0, 0]
         });

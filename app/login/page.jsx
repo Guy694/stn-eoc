@@ -67,6 +67,8 @@ function ThaiDErrorHandler({ setError }) {
 // รับเฉพาะ path ภายในแอป (กัน open redirect ไปเว็บอื่น)
 function getSafeNextPath(value) {
     if (!value || typeof value !== 'string') return null;
+    // กัน open redirect: ต้องเป็น path ในเว็บนี้เท่านั้น (เบราว์เซอร์ตัดช่องว่าง/แท็บทิ้ง ทำให้ "/\t/evil.com" กลายเป็น //evil.com)
+    if (/[\s\u0000-\u001f\u007f]/.test(value)) return null;
     if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null;
     return value;
 }

@@ -9,6 +9,7 @@ import { GeoJSON, MapContainer, Marker, TileLayer, Tooltip, useMap } from "react
 import { pinHtml, pinLabel, shelterPinHtml } from "@/components/eoc/vulnerable/vulnerablePins";
 import { caseStatus, typeMeta } from "@/lib/vulnerablePersons";
 import { capabilityLabel, parseCapabilities, shelterTypeMeta } from "@/lib/shelterSuitability";
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 const SATUN_CENTER = [6.75, 99.95];
 
@@ -104,7 +105,7 @@ export default function VulnerablePersonsMap({ people, selectedId, onSelect, fit
             key={`flood-${floodFeatures.features.length}`}
             data={floodFeatures}
             style={(feature) => FLOOD_STYLE[feature.properties.level]}
-            onEachFeature={(feature, layer) => layer.bindTooltip(`${feature.properties.name || ""} ต.${feature.properties.tambon || ""} — ${FLOOD_LABEL[feature.properties.level]}`, { sticky: true })}
+            onEachFeature={(feature, layer) => layer.bindTooltip(`${esc(feature.properties.name)} ต.${esc(feature.properties.tambon)} — ${esc(FLOOD_LABEL[feature.properties.level])}`, { sticky: true })}
           />
         ) : null}
         <FitToPeople people={mapped} fitKey={fitKey} />

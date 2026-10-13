@@ -38,8 +38,8 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const eocType = searchParams.get('type'); // flood, drought, tsunami, earthquake, disease
         const status = searchParams.get('status'); // active, closed
-        const limit = parseInt(searchParams.get('limit')) || 50;
-        const offset = parseInt(searchParams.get('offset')) || 0;
+        const limit = Math.min(Math.max(Number.parseInt(searchParams.get('limit'), 10) || 50, 1), 500);
+        const offset = Math.max(Number.parseInt(searchParams.get('offset'), 10) || 0, 0);
         const hasOrderColumns = await hasOrderFileColumns(connection);
         const hasDiseaseColumns = await hasDiseaseSubtypeColumns(connection);
         const orderFileSelect = hasOrderColumns

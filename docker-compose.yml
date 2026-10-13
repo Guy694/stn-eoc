@@ -1,0 +1,55 @@
+# Satun Geo-EOC: ฐานข้อมูล + แอป (ค่าทั้งหมดอ่านจาก .env — ดู .env.example)
+#   ฐานข้อมูลอย่างเดียว (ตอนพัฒนา):  docker compose up -d db
+#   ทั้งระบบ (production):           docker compose up -d --build
+# แอปเปิดที่ 127.0.0.1:3001 ให้ nginx (https) เป็นด่านหน้า และส่ง X-Real-IP ของผู้ใช้มา (TRUST_PROXY=1)
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?ตั้ง MYSQL_ROOT_PASSWORD ใน .env}
+      MYSQL_DATABASE: ${DB_NAME:-stneoc}
+      # ผู้ใช้ของแอป: มีสิทธิ์เฉพาะฐานข้อมูลนี้ (ไม่ใช้ root)
+      MYSQL_USER: ${DB_USER:-stneoc_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?ตั้ง DB_PASSWORD ใน .env}
+      TZ: Asia/Bangkok
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    # เปิดเฉพาะเครื่องตัวเอง (สำหรับเครื่องมือดูแลฐานข้อมูล/npm run dev) — ไม่เปิดสู่เครือข่ายภายนอก
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-3306}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      NODE_ENV: production
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - private_uploads:/app/private/uploads
+      - public_uploads:/app/public/uploads
+      - infographics:/app/public/infographics
+      - flood_maps:/app/public/flood-maps
+      - backups:/app/backups
+
+volumes:
+  db_data:
+  private_uploads:
+  public_uploads:
+  infographics:
+  flood_maps:
+  backups:

@@ -5,6 +5,7 @@ import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 import AppIcon from "@/components/icons/AppIcon";
 import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -440,7 +441,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
         return L.divIcon({
             className: 'label-icon',
-            html: `<div style="${styleString}; white-space: nowrap; pointer-events: none;">${text}</div>`,
+            html: `<div style="${styleString}; white-space: nowrap; pointer-events: none;">${esc(text)}</div>`,
             iconSize: null,
             iconAnchor: [0, 0]
         });

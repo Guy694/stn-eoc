@@ -94,4 +94,35 @@ describe('architecture guardrails', () => {
         const onDisk = fs.readdirSync(path.join(ROOT, 'migrations')).filter((name) => name.endsWith('.sql')).sort();
         expect([...manifest.migrations].sort()).toEqual(onDisk);
     });
+
+    // API ที่ตั้งใจเปิดโดยไม่ต้องเข้าสู่ระบบ — เพิ่ม route ใหม่ที่ไม่ตรวจสิทธิ์ต้องเพิ่มชื่อที่นี่พร้อมเหตุผล ไม่งั้น test ล้ม
+    // (กันลืมใส่ requireAuth ใน API ที่ส่งข้อมูลภายใน/ข้อมูลส่วนบุคคล)
+    const PUBLIC_API_ROUTES = {
+        'เข้าสู่ระบบ/ลงทะเบียน (ตรวจตัวตนเอง)': ['auth/citizen-thaiid/authorize', 'auth/citizen-thaiid/callback', 'auth/login', 'auth/logout', 'auth/register', 'auth/thaiid/authorize', 'auth/thaiid/callback', 'auth/thaiid/register'],
+        'ข้อมูลภูมิศาสตร์/หน่วยบริการ (ไม่มีข้อมูลบุคคล)': ['common/area-polygons', 'common/areas', 'common/boundary-polygons', 'common/district-boundaries', 'common/health-facilities', 'common/tambon-boundaries', 'common/village-polygons', 'common/villages', 'common/waterways'],
+        'ตัวเลขสรุปสำหรับแผนที่/หน้าสาธารณะ': ['eoc/disease/daily-stats', 'eoc/disease/outbreak-dashboard', 'eoc/disease/sessions-summary', 'eoc/festival-accidents/compare', 'eoc/festival-accidents/daily-summary', 'eoc/flood/area-status'],
+        'ส่งต่อไปยัง route ที่ตรวจสิทธิ์แล้ว (re-export)': ['eoc/vulnerable-groups', 'eoc/vulnerable-groups/stats'],
+        'ตรวจสถานะเซิร์ฟเวอร์': ['health'],
+        'บริการประชาชน (มี rate limit)': ['assistant/route-advice', 'public/accident-reports', 'public/accident-stats', 'public/agency-contacts', 'public/announcements', 'public/announcements/popup', 'public/disease-stats', 'public/flood-disease-summary', 'public/flood-freq', 'public/flood-outlook', 'public/flood-stats', 'public/help-availability', 'public/incident-normal', 'public/infographics', 'public/offline-pack', 'public/ops-today', 'public/place-search', 'public/pm25', 'public/push', 'public/rain-stations', 'public/report-incident', 'public/sea-level', 'public/shelter-centers', 'public/site-views', 'public/situation', 'public/track', 'public/usage', 'public/villages', 'public/water-levels', 'public/weather-watch', 'public/where']
+    };
+    const AUTH_MARKERS = /requireAuth|getAuthSession|getCitizenSession|x-cron-secret|CRON_SECRET/;
+
+    test('every API route checks the caller, or is a listed public route', () => {
+        const apiDir = path.join(ROOT, 'app', 'api');
+        const routes = listFiles(apiDir, (file) => path.basename(file) === 'route.js')
+            .map((file) => ({ name: path.relative(apiDir, path.dirname(file)).split(path.sep).join('/'), source: read(file) }));
+        const allowed = new Set(Object.values(PUBLIC_API_ROUTES).flat());
+        const unchecked = routes.filter((route) => !AUTH_MARKERS.test(route.source)).map((route) => route.name);
+        expect(unchecked.filter((name) => !allowed.has(name))).toEqual([]);
+        // รายการต้องไม่ค้าง: route ที่ลบไปแล้ว หรือเพิ่มการตรวจสิทธิ์แล้ว ให้เอาออกจากรายการด้วย
+        expect([...allowed].filter((name) => !unchecked.includes(name))).toEqual([]);
+    });
+
+    test('re-exported vulnerable-group routes point at routes that require login', () => {
+        for (const name of PUBLIC_API_ROUTES['ส่งต่อไปยัง route ที่ตรวจสิทธิ์แล้ว (re-export)']) {
+            const target = /from ['"]@\/(app\/api\/[^'"]+)['"]/.exec(read(path.join(ROOT, 'app', 'api', name, 'route.js')))?.[1];
+            expect(target).toBeTruthy();
+            expect(read(path.join(ROOT, `${target}.js`))).toMatch(/requireAuth\(/);
+        }
+    });
 });

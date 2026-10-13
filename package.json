@@ -26,6 +26,7 @@
     "test-data:cleanup": "node --env-file=.env scripts/cleanup-test-data.mjs",
     "diseases:normalize": "node --env-file=.env scripts/normalize-disease-names.mjs",
     "incidents:secure-photos": "node --env-file=.env scripts/secure-incident-photos.mjs",
+    "pdpa:retention": "node --env-file=.env scripts/pdpa-retention.mjs",
     "push:vapid": "node scripts/generate-vapid-keys.mjs"
   },
   "dependencies": {

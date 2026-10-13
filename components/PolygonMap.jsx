@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect } from "react";
 import AppIcon from "./icons/AppIcon";
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 // แก้ไข icon default ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -155,7 +156,7 @@ export default function PolygonMap({
 
         return L.divIcon({
             className: 'label-icon',
-            html: `<div style="${styleString}; white-space: nowrap;">${text}</div>`,
+            html: `<div style="${styleString}; white-space: nowrap;">${esc(text)}</div>`,
             iconSize: null,
             iconAnchor: [0, 0]
         });

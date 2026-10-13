@@ -9,9 +9,14 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const days = searchParams.get('days') || '30';
-        const limit = searchParams.get('limit') || '1000';
-        const offset = searchParams.get('offset') || '0';
+        // ค่าเหล่านี้ไปต่อใน URL ของ GISTDA ที่แนบคีย์ของเรา — รับเฉพาะตัวเลขในช่วงที่กำหนด (กันการแก้ path ไปเรียกบริการอื่น)
+        const int = (value, fallback, min, max) => {
+            const n = Number.parseInt(value ?? '', 10);
+            return Number.isInteger(n) ? Math.min(Math.max(n, min), max) : fallback;
+        };
+        const days = int(searchParams.get('days'), 30, 1, 90);
+        const limit = int(searchParams.get('limit'), 1000, 1, 5000);
+        const offset = int(searchParams.get('offset'), 0, 0, 1000000);
 
         if (!process.env.GISTDA_API_KEY) {
             return NextResponse.json({

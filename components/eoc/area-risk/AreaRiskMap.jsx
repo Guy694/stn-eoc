@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { GeoJSON, MapContainer, Pane, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 function FitOnce({ geometry }) {
   const map = useMap();
@@ -33,7 +34,7 @@ export default function AreaRiskMap({ geometry, colorOf, labelOf, selectedKey, o
         data={geometry}
         style={style}
         onEachFeature={(feature, layer) => {
-          layer.bindTooltip(labelOf(feature.properties.key), { sticky: true });
+          layer.bindTooltip(esc(labelOf(feature.properties.key)), { sticky: true });
           layer.on("click", () => onSelect(feature.properties.key));
         }}
       />

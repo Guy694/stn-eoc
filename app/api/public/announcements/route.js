@@ -14,7 +14,8 @@ export async function GET(request) {
         const eocType = searchParams.get('eocType');
         const announcementId = Number.parseInt(searchParams.get('id') || '', 10);
         const includeOld = searchParams.get('include_old') === '1' || searchParams.get('includeArchived') === '1';
-        const limit = Math.min(parseInt(searchParams.get('limit') || '12', 10), includeOld ? 200 : 50);
+        // ค่าที่ไม่ใช่ตัวเลข/ติดลบ ใช้ค่าเริ่มต้น (เดิม ?limit=abc ทำให้คำสั่ง SQL ผิดและได้ 500)
+        const limit = Math.min(Math.max(Number.parseInt(searchParams.get('limit') || '12', 10) || 12, 1), includeOld ? 200 : 50);
 
         const [columns] = await connection.execute(
             `SHOW COLUMNS FROM announcements LIKE 'eoc_type'`

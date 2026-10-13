@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPool } from "@/lib/db";
+import { getAuthSession } from "@/lib/auth";
 
 const pool = getPool();
 
@@ -15,10 +16,15 @@ async function hasDiseaseSubtypeColumns(connection) {
 }
 
 // GET - ดึงข้อมูลสถานะพื้นที่โรคระบาด
+// ใช้ทั้งแผนที่เจ้าหน้าที่และแผนที่สาธารณะ — ข้อมูลสุขภาพเป็นข้อมูลอ่อนไหว (PDPA ม.26) จึงแยกสิ่งที่ส่งออก:
+//   เจ้าหน้าที่ที่เข้าสู่ระบบ: ได้หมายเหตุ และจุดบ้านผู้ป่วย (ถ้ามีพิกัด)
+//   สาธารณะ: ไม่มีหมายเหตุ และจุดอยู่ที่กึ่งกลางหมู่บ้าน/ที่ตั้งหน่วยบริการเท่านั้น (รวมยอดต่อหมู่บ้าน)
 export async function GET(request) {
     let connection;
 
     try {
+        const viewer = await getAuthSession(request).catch(() => ({ success: false }));
+        const isOfficer = Boolean(viewer?.success);
         const { searchParams } = new URL(request.url);
         const sessionId = searchParams.get('session_id');
         const date = searchParams.get('date');
@@ -68,6 +74,10 @@ export async function GET(request) {
         }
 
         // ดึงข้อมูลรายงานโรค โดยรวมเป็นจุดตามพื้นที่ เพื่อรองรับข้อมูลนำเข้าระดับหมู่บ้าน
+        const villageLat = "ST_Y(ST_Centroid(ST_SRID(v.geom, 0)))";
+        const villageLng = "ST_X(ST_Centroid(ST_SRID(v.geom, 0)))";
+        const latExpr = isOfficer ? `COALESCE(dr.home_lat, ${villageLat}, hf.lat)` : `COALESCE(${villageLat}, hf.lat)`;
+        const lngExpr = isOfficer ? `COALESCE(dr.home_lng, ${villageLng}, hf.lon)` : `COALESCE(${villageLng}, hf.lon)`;
         let query = `
             SELECT 
                 MIN(dr.id) as id,
@@ -75,19 +85,19 @@ export async function GET(request) {
                 dr.disease_name,
                 SUM(dr.patient_count) as patient_count,
                 COUNT(*) as report_count,
-                CASE
+                ${isOfficer ? `CASE
                     WHEN SUM(CASE WHEN dr.import_source IS NOT NULL THEN 1 ELSE 0 END) > 0
                     THEN CONCAT('นำเข้าจาก Google Sheet ', SUM(CASE WHEN dr.import_source IS NOT NULL THEN dr.patient_count ELSE 0 END), ' ราย')
                     ELSE GROUP_CONCAT(DISTINCT dr.notes SEPARATOR '\\n')
-                END as notes,
+                END` : "NULL"} as notes,
                 hf.name as facility_name,
                 COALESCE(dr.district_name, hf.district_name) as district,
                 COALESCE(dr.tambon_name, hf.tambon) as tambon,
                 dr.moo,
                 COALESCE(dr.village_name, v.villname) as village_name,
                 dr.village_polygon_id,
-                COALESCE(dr.home_lat, ST_Y(ST_Centroid(ST_SRID(v.geom, 0))), hf.lat) as lat,
-                COALESCE(dr.home_lng, ST_X(ST_Centroid(ST_SRID(v.geom, 0))), hf.lon) as lng
+                ${latExpr} as lat,
+                ${lngExpr} as lng
             FROM disease_reports dr
             LEFT JOIN health_facilities hf ON dr.health_facility_id = hf.id
             LEFT JOIN satun_village_polygon v ON dr.village_polygon_id = v.id
@@ -112,8 +122,8 @@ export async function GET(request) {
                 COALESCE(dr.village_name, v.villname),
                 dr.village_polygon_id,
                 hf.name,
-                COALESCE(dr.home_lat, ST_Y(ST_Centroid(ST_SRID(v.geom, 0))), hf.lat),
-                COALESCE(dr.home_lng, ST_X(ST_Centroid(ST_SRID(v.geom, 0))), hf.lon)
+                ${latExpr},
+                ${lngExpr}
             ORDER BY MAX(dr.report_date) DESC, district, tambon, CAST(dr.moo AS UNSIGNED), village_name
         `;
 
@@ -156,12 +166,13 @@ export async function GET(request) {
 
         return NextResponse.json({
             success: true,
+            detail: isOfficer ? 'officer' : 'public',
             hasActiveSession: true,
             activeSession: activeSession,
             data: reports,
             tambonSummary: tambonData,
             stats: stats
-        });
+        }, { headers: { 'Cache-Control': isOfficer ? 'private, no-store' : 'no-store' } });
 
     } catch (error) {
         console.error('Database error:', error);

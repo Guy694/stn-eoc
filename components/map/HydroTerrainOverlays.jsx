@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { getMapOverlayLayer } from '@/lib/mapBaseLayers';
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((mod) => mod.GeoJSON), { ssr: false });
@@ -66,9 +67,9 @@ export default function HydroTerrainOverlays({ showHillshade = false, showWaterw
                         const props = feature.properties || {};
                         layer.bindPopup(`
                             <div style="font-family: var(--font-kanit); min-width: 160px">
-                                <strong>${props.name || props.label || 'เส้นทางน้ำ'}</strong>
-                                <p style="margin: 4px 0 0"><strong>ประเภท:</strong> ${props.label || props.waterway || '-'}</p>
-                                <p style="margin: 4px 0 0"><strong>แหล่งข้อมูล:</strong> ${props.source || 'OpenStreetMap'}</p>
+                                <strong>${esc(props.name || props.label || 'เส้นทางน้ำ')}</strong>
+                                <p style="margin: 4px 0 0"><strong>ประเภท:</strong> ${esc(props.label || props.waterway || '-')}</p>
+                                <p style="margin: 4px 0 0"><strong>แหล่งข้อมูล:</strong> ${esc(props.source || 'OpenStreetMap')}</p>
                             </div>
                         `);
                     }}

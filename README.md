@@ -50,6 +50,8 @@ npm run dev                     # http://localhost:3000/stn-eoc
 | `npm run db:migrate:baseline -- --through <ไฟล์>` | บันทึกว่าฐานข้อมูลเดิมมี migration ถึงไฟล์ที่ระบุแล้ว (ทำครั้งแรกครั้งเดียว) |
 | `npm run backup:eoc` / `npm run restore:test` | สำรองแบบเข้ารหัส / ทดสอบกู้คืน ([docs/backup-recovery.md](docs/backup-recovery.md)) |
 | `npm run security:weak-passwords` | ค้นหาและรีเซ็ตบัญชีที่ใช้รหัสผ่านเดาง่าย |
+| `npm run pdpa:retention` | ดูว่าคำขอจากประชาชนที่ปิดเรื่องเกิน `PDPA_RETENTION_DAYS` วันมีกี่เรื่อง · ใส่ `-- --apply` เพื่อลบชื่อ/เบอร์/รูปจริง (ตั้ง cron ตามรอบที่ตกลงกับผู้รับผิดชอบข้อมูล) |
+| `npm run test-data:cleanup` | ดู/ลบข้อมูลจำลองที่ติดป้าย [ทดสอบ] (`-- --apply` เพื่อลบจริง) — ทำก่อนเปิดใช้งานจริง |
 | `npm run test:e2e` | เทสต์เปิดเบราว์เซอร์จริง (หน้าสาธารณะ, สิทธิ์เข้าหลังบ้าน, หน้าเจ้าหน้าที่) บนจอคอมและมือถือ — ติดตั้งครั้งแรกด้วย `npm i -D @playwright/test && npx playwright install chromium`; ชุดที่ต้องล็อกอินใช้บัญชีทดสอบจาก `E2E_USERNAME` / `E2E_PASSWORD` |
 
 ## กติกาสำหรับนักพัฒนา
@@ -92,6 +94,22 @@ location /stn-eoc/ {
 
 - ตั้ง `TRUST_PROXY=1` เมื่ออยู่หลัง nginx ชั้นเดียว
 - mount โฟลเดอร์อัปโหลด (`UPLOAD_DIR`) เป็น volume ถาวร
+รายการตรวจบนเซิร์ฟเวอร์ก่อนเปิดใช้จริง: [docs/production-server-checklist.md](docs/production-server-checklist.md)
+
+### Deploy ด้วย Docker
+
+```bash
+cp .env.example .env              # ใส่ค่าจริง: DB_PASSWORD, MYSQL_ROOT_PASSWORD, SECRET_KEY, VULNERABLE_DATA_KEY, APP_URL=https://...
+docker compose up -d --build      # MySQL (ผู้ใช้ stneoc_app ไม่ใช่ root) + แอปที่ 127.0.0.1:3001
+docker compose exec app node scripts/migrate.mjs up
+```
+
+- nginx บนเครื่องเดียวกันใช้ `proxy_pass http://127.0.0.1:3001;` (พอร์ต MySQL และแอปเปิดเฉพาะ 127.0.0.1)
+- `.dockerignore` กัน `.env`, `database/`, `backups/` และไฟล์ dump ไม่ให้เข้า image
+- รันแอปแค่ 1 container (งานเบื้องหลังมีล็อกกันทำงานซ้อน แต่ 1 container จัดการง่ายที่สุด)
+- ตอนเริ่มเซิร์ฟเวอร์ ถ้าตั้งค่าสำคัญไม่ครบ (TRUST_PROXY, APP_URL https, SECRET_KEY, DB_USER=root) จะมีคำเตือน `[config]` ใน log
+- `1docker-compose.yml` เป็นไฟล์รวมหลายระบบของเซิร์ฟเวอร์เดิม (ใช้ root และเปิดพอร์ต MySQL) — ให้ใช้ `docker-compose.yml` นี้แทนสำหรับ Satun Geo-EOC
+
 - การอัปเกรดครั้งล่าสุด (ก.ย. 2569) มีขั้นตอนเฉพาะ ดู [docs/security-upgrade-2026-09.md](docs/security-upgrade-2026-09.md)
 
 ## เอกสารเพิ่มเติม

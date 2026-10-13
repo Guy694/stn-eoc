@@ -12,6 +12,7 @@ import { FLOOD_LEVEL_LEGEND, floodAreaMapMeta } from '@/lib/floodMapLevels';
 import { waterLevelMeta } from '@/lib/waterReport';
 import { isWaterReport } from '@/lib/waterReportMap';
 import { problemStyle } from './public/problemCategoryIcons';
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -853,7 +854,7 @@ export default function PublicIncidentMap({
                                         data={item.geojson}
                                         style={{ color: districtBoundaryColor, weight: 3, opacity: 0.95, fillOpacity: 0, interactive: true }}
                                         onEachFeature={(feature, layer) => {
-                                            layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong class="text-lg">อ.${item.name}</strong></div>`);
+                                            layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong class="text-lg">อ.${esc(item.name)}</strong></div>`);
                                         }}
                                     />
                                     {showLabels && center && (
@@ -873,7 +874,7 @@ export default function PublicIncidentMap({
                                         data={item.geojson}
                                         style={{ color: '#059669', weight: 2.5, opacity: 0.95, fillOpacity: 0, dashArray: '5, 5', interactive: true }}
                                         onEachFeature={(feature, layer) => {
-                                            layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>ต.${item.name}</strong><p class="text-sm">อ.${item.district_name}</p></div>`);
+                                            layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>ต.${esc(item.name)}</strong><p class="text-sm">อ.${esc(item.district_name)}</p></div>`);
                                         }}
                                     />
                                     {showLabels && center && (
@@ -892,7 +893,7 @@ export default function PublicIncidentMap({
                                     data={item.geojson}
                                     style={{ color: '#64748B', weight: 1, opacity: 0.8, fillOpacity: 0 }}
                                     onEachFeature={(feature, layer) => {
-                                        layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>${item.name}</strong><p class="text-xs">ต.${item.tambon_name} อ.${item.district_name}</p></div>`);
+                                        layer.bindPopup(`<div class="text-center" style="font-family: var(--font-kanit)"><strong>${esc(item.name)}</strong><p class="text-xs">ต.${esc(item.tambon_name)} อ.${esc(item.district_name)}</p></div>`);
                                     }}
                                 />
                             );
@@ -916,10 +917,10 @@ export default function PublicIncidentMap({
                                         layer.bindPopup(`
                                             <div style="font-family: var(--font-kanit); min-width: 180px">
                                                 <strong>พื้นที่อุทกภัยน้ำท่วม</strong>
-                                                <p style="margin: 4px 0 0">อ.${area.district || '-'} ต.${area.tambon || '-'} ${area.villname || ''}</p>
-                                                <p style="margin: 4px 0 0"><strong>ระดับ:</strong> ${meta.description || meta.label || 'ไม่มีข้อมูลระดับน้ำ'}</p>
+                                                <p style="margin: 4px 0 0">อ.${esc(area.district || '-')} ต.${esc(area.tambon || '-')} ${esc(area.villname || '')}</p>
+                                                <p style="margin: 4px 0 0"><strong>ระดับ:</strong> ${esc(meta.description || meta.label || 'ไม่มีข้อมูลระดับน้ำ')}</p>
                                                 <p style="margin: 4px 0 0"><strong>วันที่:</strong> ${area.recorded_day ? new Date(area.recorded_day).toLocaleDateString('th-TH') : '-'}</p>
-                                                ${area.water_level > 0 ? `<p style="margin: 4px 0 0"><strong>ระดับน้ำ:</strong> ${area.water_level} ม.</p>` : ''}
+                                                ${area.water_level > 0 ? `<p style="margin: 4px 0 0"><strong>ระดับน้ำ:</strong> ${esc(area.water_level)} ม.</p>` : ''}
                                                 ${area.affected_population > 0 ? `<p style="margin: 4px 0 0"><strong>ผู้ได้รับผลกระทบ:</strong> ${Number(area.affected_population).toLocaleString('th-TH')} คน</p>` : ''}
                                             </div>
                                         `);
@@ -937,9 +938,9 @@ export default function PublicIncidentMap({
                                     const props = feature.properties || {};
                                     layer.bindPopup(`
                                         <div style="font-family: var(--font-kanit); min-width: 160px">
-                                            <strong>${props.name || props.label || 'เส้นทางน้ำ'}</strong>
-                                            <p style="margin: 4px 0 0"><strong>ประเภท:</strong> ${props.label || props.waterway || '-'}</p>
-                                            <p style="margin: 4px 0 0"><strong>แหล่งข้อมูล:</strong> ${props.source || 'OpenStreetMap'}</p>
+                                            <strong>${esc(props.name || props.label || 'เส้นทางน้ำ')}</strong>
+                                            <p style="margin: 4px 0 0"><strong>ประเภท:</strong> ${esc(props.label || props.waterway || '-')}</p>
+                                            <p style="margin: 4px 0 0"><strong>แหล่งข้อมูล:</strong> ${esc(props.source || 'OpenStreetMap')}</p>
                                         </div>
                                     `);
                                 }}

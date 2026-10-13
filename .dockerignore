@@ -1,0 +1,39 @@
+# ไม่ส่งไฟล์ลับ ข้อมูลจริง และไฟล์ที่ไม่ใช้ตอน build เข้า image
+.git
+.github
+.vscode
+.next
+node_modules
+.env
+.env.*
+!.env.example
+database
+backups
+private
+public/uploads
+public/infographics
+public/flood-maps
+prompter
+docs
+e2e
+__tests__
+coverage
+# ไฟล์ dump/กุญแจทุกชั้นโฟลเดอร์ (migrations/*.sql ต้องอยู่ใน image จึงยกเว้นไว้ด้านล่าง)
+**/*.sql
+**/*.sql.gz
+**/*.dump
+**/*.tar.gz
+**/*.zip
+**/*.log
+**/*.pem
+**/*.key
+1docker-compose.yml
+docker-compose*.yml
+Dockerfile
+image.png
+analysis.md
+filelist.md
+database_analysis.json
+
+# migration ต้องใช้ใน container
+!migrations/*.sql

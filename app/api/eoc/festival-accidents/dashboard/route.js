@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
+import { getAuthSession } from "@/lib/auth";
 
 const pool = getPool();
 
@@ -150,8 +151,12 @@ export async function GET(request) {
             servicePointsData = checkpoints;
         } catch { checkpointCount = 0; }
 
+        // หน้าสาธารณะใช้ API นี้ด้วย: ซ่อนหมายเหตุ (อาจมีรายละเอียดผู้บาดเจ็บ/ผู้เสียชีวิต) และผู้บันทึก
+        const viewer = await getAuthSession(request).catch(() => ({ success: false }));
+        const shown = viewer?.success ? accidents : accidents.map(({ notes: _notes, reported_by: _reportedBy, ...rest }) => rest);
+
         // 5 เหตุการณ์ล่าสุด
-        const recentAccidents = accidents.slice(-5).reverse();
+        const recentAccidents = shown.slice(-5).reverse();
 
         return NextResponse.json({
             success: true,
@@ -171,7 +176,7 @@ export async function GET(request) {
             causeAnalysis,
             recentAccidents,
             mapData: {
-                accidents: accidents,
+                accidents: shown,
                 servicePoints: servicePointsData
             }
         });

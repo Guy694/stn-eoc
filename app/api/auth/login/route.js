@@ -7,6 +7,9 @@ import { getClientIp, getUserAgent } from "@/lib/clientIp";
 import { consumeRateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 import { getPool } from "@/lib/db";
 
+// hash ของรหัสผ่านสุ่มที่ไม่มีใครรู้ (cost 12 เท่าของจริง) ใช้เทียบเมื่อไม่พบชื่อผู้ใช้
+const DUMMY_HASH = "$2b$12$C6UzMDM.H6dfI/f/IKcEeO5r8b0QJ3Gk0r6x1o3m8rjD4v3f8nM1e";
+
 const pool = getPool();
 
 export async function POST(request) {
@@ -78,6 +81,8 @@ export async function POST(request) {
             );
 
             if (officers.length === 0) {
+                // เทียบรหัสผ่านกับค่าหลอก ให้เวลาตอบใกล้เคียงกรณีมีผู้ใช้จริง (กันการเดาว่าชื่อผู้ใช้ไหนมีอยู่จากเวลาตอบ)
+                await bcrypt.compare(String(password), DUMMY_HASH).catch(() => false);
                 // บันทึก login attempt ที่ล้มเหลว
                 await connection.execute(
                     'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 0)',
@@ -153,9 +158,10 @@ export async function POST(request) {
                     ['login_failed', officer.id, username, ip_address, user_agent, `Wrong password (attempt ${failedAttempts}/5)`, 'medium']
                 );
 
+                // ข้อความเดียวกับกรณีไม่มีชื่อผู้ใช้ (ไม่บอกจำนวนครั้ง เพื่อไม่ให้รู้ว่าชื่อผู้ใช้นี้มีอยู่จริง)
                 const message = failedAttempts >= 5
                     ? 'บัญชีถูกล็อคชั่วคราว 30 นาที เนื่องจาก login ผิด 5 ครั้ง'
-                    : `ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (${failedAttempts}/5)`;
+                    : 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
 
                 return NextResponse.json(
                     { success: false, message },

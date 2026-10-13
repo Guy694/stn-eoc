@@ -12,8 +12,13 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const offset = searchParams.get('offset') || '0';
-        const limit = searchParams.get('limit') || '100';
+        // ไปต่อใน URL ที่แนบคีย์ GISTDA — รับเฉพาะตัวเลข
+        const int = (value, fallback, min, max) => {
+            const n = Number.parseInt(value ?? '', 10);
+            return Number.isInteger(n) ? Math.min(Math.max(n, min), max) : fallback;
+        };
+        const offset = int(searchParams.get('offset'), 0, 0, 1000000);
+        const limit = int(searchParams.get('limit'), 100, 1, 1000);
 
         if (!GISTDA_API_KEY) {
             return NextResponse.json({

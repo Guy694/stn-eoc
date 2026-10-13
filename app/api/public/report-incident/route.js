@@ -205,31 +205,43 @@ export async function POST(request) {
     try {
         const formData = await request.formData();
 
-        // Extract form data
-        const firstName = formData.get('firstName');
-        const lastName = formData.get('lastName');
-        const phone = formData.get('phone');
-        const village = formData.get('village') || null;
-        const subDistrict = formData.get('subDistrict') || null;
-        const district = formData.get('district') || null;
-        const description = formData.get('description');
-        const helpCategory = formData.get('helpCategory') || null;
-        const helpReason = formData.get('helpReason') || description;
-        const waterLevel = formData.get('waterLevel');
-        const affectedPeople = formData.get('affectedPeople') || null;
-        const urgency = formData.get('urgency') || 'medium';
-        const travelStatus = formData.get('travelStatus') || null; // สถานะการสัญจร
-        const reportType = formData.get('reportType') || 'help_request'; // ประเภทรายงาน
-        const disasterType = formData.get('disasterType') || 'assistance'; // ประเภทภัย
-        const occurredAt = formData.get('occurredAt') || new Date().toISOString();
-        const latitude = formData.get('latitude');
-        const longitude = formData.get('longitude');
+        // Extract form data — รับเฉพาะข้อความ (กันไฟล์ที่ส่งมาแทนช่องข้อความ) ตัดช่องว่าง และจำกัดความยาวตามคอลัมน์
+        const text = (name, max) => {
+            const value = formData.get(name);
+            if (typeof value !== 'string') return null;
+            const clean = value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/[ \t]+/g, ' ').trim();
+            return clean ? clean.slice(0, max) : null;
+        };
+        const firstName = text('firstName', 100);
+        const lastName = text('lastName', 100);
+        const phone = text('phone', 20);
+        const village = text('village', 100);
+        const subDistrict = text('subDistrict', 100);
+        const district = text('district', 100);
+        const description = text('description', 5000);
+        const helpCategory = text('helpCategory', 100);
+        const helpReason = text('helpReason', 5000) || description;
+        const waterLevel = text('waterLevel', 50);
+        const affectedRaw = text('affectedPeople', 10);
+        const affectedPeople = affectedRaw && /^\d{1,6}$/.test(affectedRaw) ? Number(affectedRaw) : null;
+        const urgencyRaw = text('urgency', 20) || 'medium';
+        const urgency = ['low', 'medium', 'high', 'critical'].includes(urgencyRaw) ? urgencyRaw : 'medium';
+        const travelStatus = text('travelStatus', 20); // สถานะการสัญจร
+        const reportType = text('reportType', 30) || 'help_request'; // ประเภทรายงาน
+        const disasterType = text('disasterType', 30) || 'assistance'; // ประเภทภัย
+        // เวลาเกิดเหตุ: ต้องเป็นวันที่จริง ไม่เกิน 1 วันข้างหน้า และไม่เก่ากว่า 30 วัน ไม่งั้นใช้เวลาปัจจุบัน
+        const occurredRaw = Date.parse(text('occurredAt', 40) || '');
+        const occurredAt = Number.isFinite(occurredRaw) && occurredRaw < Date.now() + 864e5 && occurredRaw > Date.now() - 30 * 864e5
+            ? new Date(occurredRaw).toISOString()
+            : new Date().toISOString();
+        const latitude = text('latitude', 30);
+        const longitude = text('longitude', 30);
         const photo = formData.get('photo');
-        const problemCategory = formData.get('problemCategory') || null;
+        const problemCategory = text('problemCategory', 50);
         // รายงานระดับน้ำ: ไม่บังคับชื่อ/เบอร์ (ให้ประชาชนรายงานได้เร็ว) แต่ต้องมีตำแหน่งและระดับน้ำ
         const isWaterReport = formData.get('reportSource') === 'water_level';
-        const waterTrend = formData.get('waterTrend') || null;
-        const passability = formData.get('passability') || null;
+        const waterTrend = text('waterTrend', 20);
+        const passability = text('passability', 20);
 
         if (isWaterReport) {
             return handleWaterReport({
@@ -246,6 +258,15 @@ export async function POST(request) {
                 success: false,
                 message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน'
             }, { status: 400 });
+        }
+        if (!/^[0-9+\-\s]{9,20}$/.test(phone) || phone.replace(/\D/g, '').length < 9) {
+            return NextResponse.json({ success: false, message: 'เบอร์โทรไม่ถูกต้อง (9–10 หลัก)' }, { status: 400 });
+        }
+        // พิกัดต้องเป็นตัวเลขและอยู่ในประเทศไทยโดยประมาณ (กันค่าผิด/สลับละติจูด-ลองจิจูด)
+        const latValue = Number(latitude);
+        const lngValue = Number(longitude);
+        if (!Number.isFinite(latValue) || !Number.isFinite(lngValue) || latValue < 5 || latValue > 21 || lngValue < 97 || lngValue > 106) {
+            return NextResponse.json({ success: false, message: 'ตำแหน่งไม่ถูกต้อง กรุณาปักหมุดใหม่' }, { status: 400 });
         }
 
         // Validate report_type

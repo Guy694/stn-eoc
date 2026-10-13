@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { renderToStaticMarkup } from 'react-dom/server';
 import AppIcon from "@/components/icons/AppIcon";
 import ShelterPopup from "@/components/public/map/ShelterPopup";
+import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -242,7 +243,7 @@ export default function ShelterCenterMap({
                                         data={item.geojson}
                                         style={{ color: districtBoundaryColor, weight: 3, opacity: 0.95, fillOpacity: 0 }}
                                         onEachFeature={(feature, layer) => {
-                                            layer.bindPopup(`<div class="text-center"><strong class="text-lg">อ.${item.name}</strong></div>`);
+                                            layer.bindPopup(`<div class="text-center"><strong class="text-lg">อ.${esc(item.name)}</strong></div>`);
                                         }}
                                     />
                                     {showLabels && center && (
@@ -262,7 +263,7 @@ export default function ShelterCenterMap({
                                         data={item.geojson}
                                         style={{ color: '#059669', weight: 2, fillColor: '#10B981', fillOpacity: 0.1, dashArray: '5, 5' }}
                                         onEachFeature={(feature, layer) => {
-                                            layer.bindPopup(`<div class="text-center"><strong>ต.${item.name}</strong><p class="text-sm">อ.${item.district_name}</p></div>`);
+                                            layer.bindPopup(`<div class="text-center"><strong>ต.${esc(item.name)}</strong><p class="text-sm">อ.${esc(item.district_name)}</p></div>`);
                                         }}
                                     />
                                     {showLabels && center && (
