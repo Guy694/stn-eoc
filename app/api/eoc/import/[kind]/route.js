@@ -6,8 +6,8 @@ import { MAX_IMPORT_BYTES } from "@/lib/imports/core";
 import { importSpec } from "@/lib/imports/specs";
 import { ImportError, buildTemplate, runImport } from "@/lib/imports/server";
 
-// นำเข้าข้อมูลจาก Excel: /api/eoc/import/{vulnerable|flood-records|supplies}
-// GET  = ดาวน์โหลดไฟล์ตัวอย่าง (มีแผ่นคำอธิบายและรายการให้เลือก)
+// นำเข้าข้อมูลจาก Excel: /api/eoc/import/{vulnerable|flood-records|supplies|supplies-daily}
+// GET  = ดาวน์โหลดไฟล์ตัวอย่าง (มีแผ่นคำอธิบายและรายการให้เลือก) — supplies-daily เติมรายการยาของเหตุการณ์ไว้ให้ (?eoc, session_id, facility_id)
 // POST = multipart: file, mode=check|commit, only_valid=1, eoc, session_id
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,12 @@ export async function GET(request, { params }) {
     if (!auth.success) return auth.response;
     const { kind } = await params;
     if (!importSpec(kind)) return bad("ไม่รู้จักชนิดข้อมูลที่จะนำเข้า", 404);
-    const { buffer, filename } = await buildTemplate(kind);
+    const params = new URL(request.url).searchParams;
+    const { buffer, filename } = await buildTemplate(kind, {
+      eocType: ["flood", "disease"].includes(params.get("eoc")) ? params.get("eoc") : "flood",
+      sessionId: Number(params.get("session_id")) || null,
+      facilityId: Number(params.get("facility_id")) || null
+    });
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

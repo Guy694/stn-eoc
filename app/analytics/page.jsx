@@ -286,7 +286,7 @@ function TeamsTab({ teams }) {
 }
 
 function InventoryTab({ inventory }) {
-    if (!inventory?.available) return <EmptyText text="ยังไม่มีตารางข้อมูลเวชภัณฑ์ กรุณาเปิดเมนูเวชภัณฑ์และคงคลังเพื่อนำเข้าข้อมูลก่อน" />;
+    if (!inventory?.available) return <EmptyText text="ยังไม่มีตารางข้อมูลเวชภัณฑ์ กรุณาเปิดเมนูเวชภัณฑ์และคลังยาเพื่อนำเข้ายอดตั้งต้นก่อน" />;
     const rows = inventory.low_stock || [];
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

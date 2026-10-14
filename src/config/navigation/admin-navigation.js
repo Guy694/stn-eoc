@@ -24,7 +24,7 @@ export const EVENT_MODULES = {
       { key: "health", group: "การแพทย์และทีม", name: "โรคและสุขภาพ", path: "/eoc/flood/health", iconKey: "health", description: "ผู้ป่วยในศูนย์พักพิงและในชุมชนช่วงน้ำท่วม" },
       { key: "team-reports", group: "การแพทย์และทีม", name: "รายงานประจำวันรายอำเภอ", path: "/eoc/flood/team-reports", iconKey: "daily", description: "MCATT หน่วยแพทย์ MERT จ่ายยา Doxy และการแจกจ่ายทรัพยากร" },
       { key: "team", group: "การแพทย์และทีม", name: "ทีมปฏิบัติการ", path: "/eoc/flood/operations-team", iconKey: "team" },
-      { key: "supplies", group: "ทรัพยากร", name: "เวชภัณฑ์และคลังยา", path: "/eoc/flood/supplies", iconKey: "inventory", description: "คงคลัง รับเข้า เบิกจ่าย รายการใกล้หมด" },
+      { key: "supplies", group: "ทรัพยากร", name: "เวชภัณฑ์และคลังยา", path: "/eoc/flood/supplies", iconKey: "inventory", description: "ยอดตั้งต้น รายงานรับเข้า/ใช้ไปประจำวัน dashboard รายการใกล้หมด" },
       { key: "oxygen", group: "ทรัพยากร", name: "ออกซิเจนเหลว", path: "/eoc/flood/oxygen", iconKey: "inventory", description: "คงเหลือของแต่ละโรงพยาบาล ใช้ได้อีกกี่วัน" },
       { key: "it-support", group: "ทรัพยากร", name: "รายงาน IT support", path: "/eoc/flood/it-support", iconKey: "server", description: "ปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการแก้ไข" }
     ]
@@ -166,7 +166,6 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
         { name: "ทะเบียนกลุ่มเปราะบาง", path: "/eoc/vulnerable-groups", iconKey: "vulnerable" },
         { name: "หน่วยบริการสุขภาพ", path: "/admin/health-facilities", iconKey: "health" },
         { name: "หมู่บ้านและพื้นที่", path: "/admin/village-polygons", iconKey: "map" },
-        { name: "เวชภัณฑ์และคงคลัง", path: "/resources/medical-inventory", iconKey: "inventory" },
         { name: "ทรัพยากร IT", path: "/admin/it-resources", iconKey: "server" },
         { name: "ข้อมูลอ้างอิงอื่น", path: "/admin/master-data/agencies", iconKey: "database", description: "หน่วยงาน โรค ภัย ความเสี่ยง เส้นทาง" }
       ]

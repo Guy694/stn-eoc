@@ -51,7 +51,7 @@ describe("template", () => {
   test.each(Object.keys(IMPORT_SPECS))("%s template opens with help, data and list sheets", (kind) => {
     const spec = importSpec(kind);
     const sheets = readXlsx(buildXlsx(templateSheets(spec, refs)));
-    expect(sheets.map((sheet) => sheet.name)).toEqual([HELP_SHEET, DATA_SHEET, LIST_SHEET]);
+    expect(sheets.map((sheet) => sheet.name)).toEqual([HELP_SHEET, DATA_SHEET, LIST_SHEET, ...(spec.examples?.length ? ["ตัวอย่าง"] : [])]);
     const data = sheets[1];
     expect(data.rows[0]).toEqual(spec.columns.map(headerText));
     expect(sheets[0].rows.flat()).toEqual(expect.arrayContaining(spec.columns.map((c) => c.header)));

@@ -14,7 +14,8 @@ const mockTables = {
   floodRecords: [{ id: 55, day: "2026-10-12", district: "ละงู", tambon: "กำแพง", village: "บ้านทุ่ง" }],
   facilities: [{ id: 7, name: "รพ.ละงู", district_name: "ละงู", typecode: "รพ.ชุมชน" }],
   stock: [{ id: 300, health_facility_id: 7, item_code: "ผงเกลือแร่_ORS", item_name: "ผงเกลือแร่ ORS", unit: "ซอง", received_qty: 0, issued_qty: 0, balance_qty: 100 }],
-  persons: [{ id: 1, district: "ละงู", tambon: "กำแพง", name: "นางสมใจ ใจดี" }]
+  persons: [{ id: 1, district: "ละงู", tambon: "กำแพง", name: "นางสมใจ ใจดี" }],
+  dailyReports: [{ id: 70, stock_id: 300, report_date: "2026-10-02", received_qty: 0, used_qty: 10, counted_qty: null, note: null }]
 };
 
 function mockQuery(sql) {
@@ -25,6 +26,7 @@ function mockQuery(sql) {
   if (/FROM medical_inventory_events/.test(sql)) return [{ id: 40, event_name: "อุทกภัย ครั้งที่ 3" }];
   if (/FROM medical_inventory_stock/.test(sql)) return mockTables.stock;
   if (/FROM vulnerable_persons/.test(sql)) return mockTables.persons;
+  if (/FROM medical_inventory_daily_reports/.test(sql)) return mockTables.dailyReports;
   return [];
 }
 
@@ -32,7 +34,10 @@ jest.mock("@/lib/db", () => ({
   query: jest.fn(async (sql) => mockQuery(sql)),
   transaction: jest.fn(async (callback) => callback(async (sql, params) => {
     mockExecuted.push({ sql: sql.replace(/\s+/g, " ").trim(), params });
-    if (/FOR UPDATE/.test(sql)) return mockTables.stock.filter((row) => row.id === params[0]);
+    if (/FOR UPDATE/.test(sql) && /FROM medical_inventory_daily_reports/.test(sql)) {
+      return mockTables.dailyReports.filter((row) => row.stock_id === params[0] && row.report_date === params[1]);
+    }
+    if (/FOR UPDATE/.test(sql)) return mockTables.stock.filter((row) => (/id IN/.test(sql) ? params.slice(1).includes(row.id) : row.id === params[0]));
     return /^\s*INSERT/.test(sql) ? { insertId: 900 + mockExecuted.length } : { affectedRows: 1 };
   }))
 }));
@@ -41,6 +46,7 @@ jest.mock("@/lib/eocModuleAccess", () => ({
   modulePermissions: jest.fn(async () => ({ can_edit: true }))
 }));
 jest.mock("@/lib/recordArchive", () => ({ recordChange: jest.fn(async () => {}) }));
+jest.mock("@/lib/eocAlertRunner", () => ({ triggerEventAlerts: jest.fn() }));
 jest.mock("@/lib/vulnerableAccessLog", () => ({ logVulnerableAccess: jest.fn(async () => {}) }));
 jest.mock("@/lib/vulnerablePersonsCrypto", () => ({
   decodePerson: (row) => ({ ...row }),
@@ -101,6 +107,38 @@ describe("supplies import", () => {
     expect(movement.params).toEqual([300, 20, 100, 80, "sat01", 9, "นับยอดจาก Excel: stock.xlsx — นับเช้า", 5]);
     const same = await runImport("supplies", { buffer: file("supplies", [["รพ.ละงู", null, "ผงเกลือแร่ ORS", "ซอง", 100, null]]), filename: "s.xlsx", user, sessionId: 9 });
     expect(same.plan).toMatchObject({ create: 0, update: 0, skip: 1, skipped: [{ row: 2, reason: "ยอดเท่าเดิม" }] });
+  });
+});
+
+describe("supplies daily import", () => {
+  // คอลัมน์: วันที่ หน่วยบริการ รหัส ชื่อ หน่วย คงเหลือในระบบ รับเข้า ใช้ไป นับได้จริง หมายเหตุ
+  const rows = [
+    ["02/10/2569", "รพ.ละงู", null, "ผงเกลือแร่ ORS", "ซอง", 100, null, 20, null, null],   // แก้รายงานเดิมของวันที่ 2 (10 → 20)
+    ["03/10/2569", "รพ.ละงู", null, "ผงเกลือแร่ ORS", "ซอง", 100, 50, 30, 90, "รับเพิ่ม"],  // วันใหม่
+    ["03/10/2569", "รพ.ละงู", null, "ผงเกลือแร่ ORS", "ซอง", 100, null, 1, null, null],    // ซ้ำวันเดียวกัน
+    ["04/10/2569", "รพ.ละงู", null, "ยาที่ไม่มีในคลัง", "ซอง", null, null, 1, null, null],   // ไม่มีในคลัง
+    ["05/10/2569", "รพ.ละงู", null, "ผงเกลือแร่ ORS", "ซอง", null, null, null, null, null],   // ไม่กรอกใช้ไป
+    ["06/10/2569", "รพ.ละงู", null, "ผงเกลือแร่ ORS", "ซอง", null, null, 500, null, null]     // ใช้เกินยอดที่มี
+  ];
+
+  test("check: update same day, create new day, and explain each bad row", async () => {
+    const result = await runImport("supplies-daily", { buffer: file("supplies-daily", rows), filename: "d.xlsx", user, sessionId: 9 });
+    expect(result.plan).toMatchObject({ create: 1, update: 1 });
+    const byRow = Object.groupBy(result.check.problems, (p) => p.row);
+    expect(byRow[4][0].message).toMatch("ซ้ำกับแถวที่ 3");
+    expect(byRow[5][0].message).toMatch("ไม่มีรายการนี้ในคลัง");
+    expect(byRow[6][0]).toMatchObject({ column: "ใช้ไป/จ่ายออก", message: "ต้องกรอก" });
+    expect(byRow[7][0].message).toMatch("ใช้ไปเกินยอดคงเหลือ");
+  });
+
+  test("commit applies only the difference for a corrected day", async () => {
+    const result = await runImport("supplies-daily", { buffer: file("supplies-daily", rows.slice(0, 2)), filename: "d.xlsx", user, sessionId: 9, commit: true });
+    expect(result.result).toEqual({ created: 1, updated: 1 });
+    const stockUpdates = mockExecuted.filter((e) => /^UPDATE medical_inventory_stock/.test(e.sql)).map((e) => e.params.slice(0, 3));
+    // 100 → แก้วันที่ 2 ใช้เพิ่ม 10 → 90 → วันที่ 3 รับ 50 ใช้ 30 → 110
+    expect(stockUpdates).toEqual([[0, 10, 90], [50, 40, 110]]);
+    const insert = mockExecuted.find((e) => /INSERT INTO medical_inventory_daily_reports/.test(e.sql));
+    expect(insert.params).toEqual([40, 300, "2026-10-03", 50, 30, 90, "รับเพิ่ม", "excel", 5, "sat01"]);
   });
 });
 

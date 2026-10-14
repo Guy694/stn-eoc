@@ -98,11 +98,16 @@ function CheckResult({ result }) {
 }
 
 /**
- * kind: vulnerable | flood-records | supplies
+ * kind: vulnerable | flood-records | supplies | supplies-daily
  * context: { eoc, session_id } ส่งไปกับไฟล์เพื่อให้ข้อมูลเข้าเหตุการณ์ที่เลือกอยู่
  */
 export default function ImportExcelDialog({ open, onOpenChange, kind, context = {}, onImported }) {
   const spec = importSpec(kind);
+  // ไฟล์ตัวอย่างบางชนิดเติมข้อมูลของเหตุการณ์ไว้ให้ (เช่น แบบรายงานเวชภัณฑ์ประจำวัน) จึงส่งบริบทไปด้วย
+  const templateQuery = new URLSearchParams(
+    Object.entries(context).filter(([, value]) => value !== undefined && value !== null && value !== "").map(([key, value]) => [key, String(value)])
+  ).toString();
+  const templateHref = `${ENDPOINT(kind)}${templateQuery ? `?${templateQuery}` : ""}`;
   const inputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [state, setState] = useState({ busy: false, error: "", result: null, done: null });
@@ -192,7 +197,7 @@ export default function ImportExcelDialog({ open, onOpenChange, kind, context = 
             <p className="mt-1 text-sm text-slate-600">
               กรอก {spec.unit} ในแผ่นงาน “กรอกข้อมูล” · หัวคอลัมน์สีส้มต้องกรอก · ช่องที่มีลูกศรให้เลือกจากรายการ · ไม่เกิน {n(MAX_IMPORT_ROWS)} แถวต่อไฟล์
             </p>
-            <a href={ENDPOINT(kind)} download className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
+            <a href={templateHref} download className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
               <Download className="h-4 w-4" aria-hidden="true" /> ดาวน์โหลดไฟล์ตัวอย่าง
             </a>
             <div className="mt-3"><ColumnGuide spec={spec} /></div>

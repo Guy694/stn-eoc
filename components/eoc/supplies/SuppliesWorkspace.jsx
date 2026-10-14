@@ -2,21 +2,25 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDownToLine, ArrowUpFromLine, PackageOpen, Scale } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, PackageOpen, Scale } from "lucide-react";
 import { ReadOnlyNotice,
   AddButton, AdminPage, Button, DataTable, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
-import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
+import ImportExcelDialog from "@/components/eoc/ImportExcelDialog";
+import SuppliesDashboard from "@/components/eoc/supplies/SuppliesDashboard";
+import SuppliesDailyReport from "@/components/eoc/supplies/SuppliesDailyReport";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { FLOOD_PRESET_ITEMS, MOVEMENT_TYPES, STOCK_LEVEL_LABELS, displayItemCode } from "@/lib/medicalInventory";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { sendOrQueue } from "@/lib/offlineQueue";
 
 const TABS = [
+  { value: "overview", label: "ภาพรวม" },
+  { value: "daily", label: "รายงานประจำวัน" },
   { value: "stock", label: "คงคลัง" },
-  { value: "history", label: "ประวัติรับเข้า-เบิกจ่าย" }
+  { value: "history", label: "ประวัติปรับยอด" }
 ];
 
 const LEVEL_ORDER = { out: 0, low: 1, unknown: 2, ok: 3 };
@@ -27,17 +31,21 @@ function LevelPill({ level }) {
   return <StatusPill tone={config.tone}>{config.label}</StatusPill>;
 }
 
-// คลังเวชภัณฑ์ของเหตุการณ์ EOC: เปิดบัญชีคลัง (ยกยอดจากครั้งก่อนได้) → เพิ่มรายการ → รับเข้า/เบิกจ่าย/ปรับยอด
+// เวชภัณฑ์และคลังยาของเหตุการณ์ EOC (เมนูเดียว)
+// เปิดบัญชีคลัง → วันแรกนำเข้ารายการ + ยอดตั้งต้น (Excel หรือเพิ่มทีละรายการ) → ทุกวันรายงานรับเข้า/ใช้ไปของทุกรายการ
+// ระบบคำนวณคงเหลือเอง (ยกมา + รับเข้า − ใช้ไป) และสรุปใน dashboard
 export default function SuppliesWorkspace({ eocType = "flood" }) {
   const { notice, success, fail } = useNotice();
-  const [tab, setTab] = useUrlState("tab", "stock", TABS.map((item) => item.value));
+  const [tab, setTab] = useUrlState("tab", "overview", TABS.map((item) => item.value));
+  const [dailyFacility, setDailyFacility] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [state, setState] = useState({ loading: true, data: null, error: "" });
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
   const [facilityFilter, setFacilityFilter] = useState("");
   const [moveDialog, setMoveDialog] = useState(null);
   const [itemDialog, setItemDialog] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
+  const [importKind, setImportKind] = useState(null);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [moveForm, setMoveForm] = useState({ qty: "", requested_team: "", note: "" });
@@ -51,12 +59,28 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
     } catch (error) {
       setState({ loading: false, data: null, error: error.message });
     }
+    setRefreshKey((key) => key + 1);
   }, [url]);
   useEffect(() => { load(); }, [load]);
 
   const data = state.data;
   const perms = data?.permissions || {};
   const stock = useMemo(() => data?.stock || [], [data]);
+
+  // หน่วยบริการที่มีรายการในคลัง (ใช้เลือกในแบบรายงานประจำวัน)
+  const facilities = useMemo(() => {
+    const map = new Map();
+    for (const row of stock) {
+      const id = row.health_facility_id || row.inventory_agency_id;
+      if (!map.has(id)) map.set(id, { id, name: row.agency_name, district: row.district_name || "" });
+    }
+    return [...map.values()].sort((a, b) => String(a.district).localeCompare(String(b.district), "th") || String(a.name).localeCompare(String(b.name), "th"));
+  }, [stock]);
+
+  const openDaily = (facilityId) => {
+    setDailyFacility(facilityId ? String(facilityId) : "");
+    setTab("daily");
+  };
 
   const facilityOptions = useMemo(() => {
     const names = [...new Set(stock.map((row) => row.agency_name))].sort((a, b) => a.localeCompare(b, "th"));
@@ -131,8 +155,9 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
     { key: "agency_name", label: "หน่วยบริการ/คลัง", render: (row) => <span>{row.agency_name}{row.district_name ? <span className="block text-xs text-slate-500">อ.{row.district_name}</span> : null}</span> },
     { key: "level", label: "สถานะ", render: (row) => <LevelPill level={row.level} /> },
     { key: "balance_qty", label: "คงเหลือ", className: "text-right", render: (row) => <span className="font-black tabular-nums">{formatNumber(row.balance_qty)} <span className="text-xs font-normal text-slate-500">{row.unit}</span></span> },
+    { key: "opening_qty", label: "ยอดตั้งต้น", className: "text-right tabular-nums", render: (row) => formatNumber(row.opening_qty) },
     { key: "received_qty", label: "รับเข้า", className: "text-right tabular-nums", render: (row) => formatNumber(row.received_qty) },
-    { key: "issued_qty", label: "เบิกจ่าย", className: "text-right tabular-nums", render: (row) => formatNumber(row.issued_qty) },
+    { key: "issued_qty", label: "ใช้ไป/จ่ายออก", className: "text-right tabular-nums", render: (row) => formatNumber(row.issued_qty) },
     { key: "updated_at", label: "อัปเดต", render: (row) => <UpdatedAt value={row.updated_at} /> }
   ];
 
@@ -183,12 +208,13 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
       freshness={stock.length ? { value: latestTime(stock.map((row) => row.updated_at)), staleHours: 24 } : null}
       title="เวชภัณฑ์และคลังยา"
       context={context}
-      description="ยอดคงเหลือของแต่ละหน่วยบริการในเหตุการณ์นี้ รายการที่หมดหรือใกล้หมดขึ้นก่อนเสมอ"
+      description="วันแรกนำเข้ายอดตั้งต้น จากนั้นทุกหน่วยบริการรายงานรับเข้าและใช้ไปของทุกรายการทุกวัน ระบบคำนวณยอดคงเหลือให้เอง"
       actions={(
         <>
           {eocType === "flood" ? <Link href="/eoc/flood/oxygen" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ออกซิเจนเหลว</Link> : null}
           {eocType === "flood" ? <Link href="/eoc/flood/team-reports?team=resources" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">แจกจ่ายรายอำเภอ</Link> : null}
-          {perms.can_add_item ? <ImportExcelButton onClick={() => setImportOpen(true)} /> : null}
+          {perms.can_add_item ? <Button variant="secondary" onClick={() => setImportKind("supplies")}>นำเข้ายอดตั้งต้น</Button> : null}
+          {perms.can_move ? <Button variant="secondary" onClick={() => setImportKind("supplies-daily")}><ClipboardList className="h-4 w-4" aria-hidden="true" />นำเข้ารายงานประจำวัน</Button> : null}
           {perms.can_add_item ? <AddButton onClick={() => { setFormError(""); setItemDialog(true); }}>เพิ่มรายการ</AddButton> : null}
         </>
       )}
@@ -196,7 +222,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
       {notice}
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
       <ReadOnlyNotice message={perms.read_only_message} />
-      {summary ? (
+      {summary && tab === "stock" ? (
         <StatStrip items={[
           { label: "ชนิดเวชภัณฑ์", value: formatNumber(summary.items) },
           { label: "หน่วยบริการ/คลัง", value: formatNumber(summary.agencies) },
@@ -209,8 +235,15 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
         <Tabs value={tab} onChange={setTab} items={TABS} />
       </div>
 
-      {tab === "history" ? (
-        <DataTable columns={historyColumns} rows={data?.movements || []} loading={state.loading} emptyText="ยังไม่มีการรับเข้าหรือเบิกจ่ายในเหตุการณ์นี้" caption="ประวัติรับเข้า-เบิกจ่าย" />
+      {tab === "overview" ? (
+        <SuppliesDashboard eocType={eocType} sessionId={session?.id} refreshKey={refreshKey} onPickFacility={openDaily} />
+      ) : tab === "daily" ? (
+        <SuppliesDailyReport
+          eocType={eocType} sessionId={session?.id} facilities={facilities} facilityId={dailyFacility} onFacilityChange={setDailyFacility}
+          onSaved={() => setRefreshKey((key) => key + 1)} success={success} fail={fail} openImport={() => setImportKind("supplies-daily")}
+        />
+      ) : tab === "history" ? (
+        <DataTable columns={historyColumns} rows={data?.movements || []} loading={state.loading} emptyText="ยังไม่มีการปรับยอดในเหตุการณ์นี้ (รับเข้า/ใช้ไปรายวันดูได้ที่ ภาพรวม และ รายงานประจำวัน)" caption="ประวัติปรับยอด" />
       ) : (
         <>
           <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อเวชภัณฑ์หรือหน่วยบริการ">
@@ -229,9 +262,8 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
             rowClassName={(row) => (row.level === "out" ? "bg-red-50/40" : row.level === "low" ? "bg-amber-50/40" : "")}
             rowActions={perms.can_move ? (row) => (
               <div className="flex flex-wrap justify-end gap-1">
-                <Button variant="secondary" className="min-h-9 px-2.5" onClick={() => openMove(row, "receive")}><ArrowDownToLine className="h-4 w-4" />รับเข้า</Button>
-                <Button className="min-h-9 px-2.5" disabled={Number(row.balance_qty) <= 0} onClick={() => openMove(row, "issue")}><ArrowUpFromLine className="h-4 w-4" />เบิกจ่าย</Button>
-                <Button variant="ghost" className="min-h-9 px-2" onClick={() => openMove(row, "adjust")} aria-label="ปรับยอดตามที่นับได้" title="ปรับยอดตามที่นับได้"><Scale className="h-4 w-4" /></Button>
+                <Button variant="secondary" className="min-h-9 px-2.5" onClick={() => openDaily(row.health_facility_id || row.inventory_agency_id)}><ClipboardList className="h-4 w-4" />รายงานวันนี้</Button>
+                <Button variant="ghost" className="min-h-9 px-2" onClick={() => openMove(row, "adjust")} aria-label="ปรับยอดตามที่นับได้" title="ปรับยอดตามที่นับได้ (แก้ยอดเมื่อนับคลังแล้วไม่ตรง)"><Scale className="h-4 w-4" /></Button>
               </div>
             ) : undefined}
           />
@@ -304,7 +336,11 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
           </Field>
         </FormGrid>
       </FormDialog>
-      <ImportExcelDialog open={importOpen} onOpenChange={setImportOpen} kind="supplies" context={{ eoc: eocType, session_id: data?.session?.id }} onImported={load} />
+      <ImportExcelDialog
+        open={Boolean(importKind)} onOpenChange={(open) => { if (!open) setImportKind(null); }} kind={importKind || "supplies"}
+        context={{ eoc: eocType, session_id: data?.session?.id, ...(importKind === "supplies-daily" && tab === "daily" && dailyFacility ? { facility_id: dailyFacility } : {}) }}
+        onImported={load}
+      />
     </AdminPage>
   );
 }

@@ -107,7 +107,6 @@ describe("production data source safeguards", () => {
             "app/eoc/flood/operations-team/page.jsx",
             "app/profile/page.jsx",
             "app/settings/page.jsx",
-            "app/resources/medical-inventory/page.jsx",
             "components/eoc/FloodEocManagementDashboard.jsx",
             "src/features/eoc/teams/shared/components/base-team-records.jsx",
         ];
