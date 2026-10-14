@@ -136,7 +136,6 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       title: "ภาพรวม",
       items: [
         { name: "หน้าหลัก", path: "/dashboard", iconKey: "home" },
-        { name: "ห้องบัญชาการ", path: "/commander/dashboard", iconKey: "command", description: "ภาพรวมสำหรับประชุมและตัดสินใจ" },
         { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" }
       ]
     },

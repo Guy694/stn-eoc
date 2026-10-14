@@ -61,7 +61,6 @@ stn-eoc-app:
 
     volumes:
       - announcement_uploads:/app/public/uploads
-      - announcement_uploads:/app/public/uploads
       - eoc_private_uploads:/app/private/uploads
       - eoc_infographics:/app/public/infographics
       - eoc_flood_maps:/app/public/flood-maps

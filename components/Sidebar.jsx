@@ -210,7 +210,6 @@ export default function Sidebar() {
             title: "ภาพรวม",
             items: [
                 { name: "หน้าหลัก", path: "/dashboard", iconKey: "home", description: "เลือกเหตุการณ์ก่อนเข้าสู่หน้าปฏิบัติการ" },
-                ...(user.role === "commander" ? [{ name: "ห้องบัญชาการ", path: "/commander/dashboard", iconKey: "command" }] : []),
                 { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" }
             ]
         },

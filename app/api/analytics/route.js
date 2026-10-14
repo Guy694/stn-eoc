@@ -10,16 +10,11 @@ const number = (value) => {
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
-async function tableExists(tableName) {
-    const rows = await db.query(
-        `SELECT 1
-         FROM INFORMATION_SCHEMA.TABLES
-         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?
-         LIMIT 1`,
-        [tableName]
-    );
-    return rows.length > 0;
-}
+const isMissingTable = (error) => error?.code === "ER_NO_SUCH_TABLE";
+
+// ผลลัพธ์เก็บไว้สั้น ๆ ต่อกลุ่มผู้ดู (ผู้บริหาร = ชุดเดียว, ทีม = ต่อคน) ลดการคำนวณซ้ำเมื่อหลายคนเปิดพร้อมกัน
+const CACHE_MS = 30 * 1000;
+const cache = new Map();
 
 function analyzeTeam(row) {
     const memberCount = number(row.member_count);
@@ -112,14 +107,79 @@ function buildRecommendations({ kpis, teams, lowStock, diseaseDistricts }) {
     return recommendations;
 }
 
+// คลังเวชภัณฑ์ของเหตุการณ์ที่เปิดอยู่ (ไม่มีให้ใช้บัญชีล่าสุด) — เกณฑ์เดียวกับหน้าคลัง: คงเหลือ / (ยอดตั้งต้น + รับเข้า)
+async function loadInventory() {
+    const empty = { available: false, lowStock: [], summary: { low_stock_count: 0, critical_stock_count: 0, total_balance: 0, item_count: 0 } };
+    try {
+        const events = await db.query(
+            `SELECT e.id
+             FROM medical_inventory_events e
+             LEFT JOIN eoc_sessions s ON s.eoc_type = e.eoc_type AND s.session_number = e.session_number AND s.status = 'active'
+             ORDER BY (s.id IS NOT NULL) DESC, e.created_at DESC, e.id DESC
+             LIMIT 1`,
+            []
+        );
+        if (!events.length) return { ...empty, available: true };
+        const eventId = events[0].id;
+        const [rows, summaryRows] = await Promise.all([
+            db.query(
+                `SELECT s.id, s.agency_name, s.item_code, s.item_name, s.unit,
+                        COALESCE(s.opening_qty, 0) + COALESCE(s.received_qty, 0) AS opening_qty,
+                        COALESCE(s.balance_qty, 0) AS balance_qty,
+                        ROUND((COALESCE(s.balance_qty, 0) / NULLIF(COALESCE(s.opening_qty, 0) + COALESCE(s.received_qty, 0), 0)) * 100, 1) AS remain_pct,
+                        hf.district_name
+                 FROM medical_inventory_stock s
+                 LEFT JOIN health_facilities hf ON hf.id = s.health_facility_id
+                 WHERE s.inventory_event_id = ?
+                   AND s.data_status = 'recorded'
+                   AND COALESCE(s.opening_qty, 0) + COALESCE(s.received_qty, 0) > 0
+                   AND COALESCE(s.balance_qty, 0) / (COALESCE(s.opening_qty, 0) + COALESCE(s.received_qty, 0)) < 0.2
+                 ORDER BY remain_pct ASC, s.balance_qty ASC, s.item_name ASC
+                 LIMIT 100`,
+                [eventId]
+            ),
+            db.query(
+                `SELECT COUNT(DISTINCT item_code) AS item_count, COALESCE(SUM(balance_qty), 0) AS total_balance
+                 FROM medical_inventory_stock WHERE inventory_event_id = ? AND data_status = 'recorded'`,
+                [eventId]
+            )
+        ]);
+        const lowStock = rows.map((item) => ({
+            ...item,
+            opening_qty: number(item.opening_qty),
+            balance_qty: number(item.balance_qty),
+            remain_pct: number(item.remain_pct),
+            severity: number(item.remain_pct) <= 10 ? "critical" : "warning"
+        }));
+        return {
+            available: true,
+            lowStock,
+            summary: {
+                item_count: number(summaryRows[0]?.item_count),
+                total_balance: number(summaryRows[0]?.total_balance),
+                low_stock_count: lowStock.length,
+                critical_stock_count: lowStock.filter((item) => item.severity === "critical").length
+            }
+        };
+    } catch (error) {
+        if (isMissingTable(error)) return empty;
+        throw error;
+    }
+}
+
 export async function GET(request) {
     try {
         // `staff` also grants access to every registered EOC team role through requireAuth.
         const auth = await requireAuth(request, ["admin", "commander", "staff"]);
         if (!auth.success) return auth.response;
         const privileged = ["admin", "commander"].includes(auth.user.role);
+        const cacheKey = privileged ? "all" : `user:${auth.user.id}`;
+        const cached = cache.get(cacheKey);
+        if (cached && Date.now() - cached.at < CACHE_MS && new URL(request.url).searchParams.get("refresh") !== "1") {
+            return NextResponse.json({ success: true, data: cached.data, cached: true });
+        }
 
-        const [sessions, affectedRows, shelterRows, teamRows, diseaseDaily, diseaseDistrictRows] = await Promise.all([
+        const [sessions, affectedRows, shelterRows, teamRows, diseaseDaily, diseaseDistrictRows, inventory] = await Promise.all([
             db.query(
                 `SELECT id, eoc_type, session_number, opened_at, status
                  FROM eoc_sessions
@@ -134,9 +194,10 @@ export async function GET(request) {
                  FROM affected_persons ap
                  JOIN eoc_sessions es ON es.id = ap.session_id AND es.status = 'active'
                  JOIN (
-                    SELECT session_id, MAX(report_date) AS latest_date
-                    FROM affected_persons
-                    GROUP BY session_id
+                    SELECT p.session_id, MAX(p.report_date) AS latest_date
+                    FROM affected_persons p
+                    JOIN eoc_sessions s2 ON s2.id = p.session_id AND s2.status = 'active'
+                    GROUP BY p.session_id
                  ) latest ON latest.session_id = ap.session_id AND latest.latest_date = ap.report_date`,
                 []
             ),
@@ -148,41 +209,73 @@ export async function GET(request) {
                  WHERE ssa.is_active = 1`,
                 []
             ),
+            // รวมยอดแต่ละเรื่องแยกกันก่อนแล้วค่อยต่อกับทีม — เดิม JOIN สมาชิก × กิจกรรม × รายงานพร้อมกัน
+            // ทำให้แถวคูณกันเป็นจำนวนมาก (ช้ามากเมื่อ activity_logs ใหญ่)
             db.query(
-                `SELECT t.id, t.team_code, t.team_name_th, t.team_name_en,
-                        COUNT(DISTINCT est.eoc_session_id) AS assigned_sessions,
-                        COUNT(DISTINCT CASE WHEN etm.is_active = 1 THEN etm.officer_id END) AS member_count,
-                        COUNT(DISTINCT CASE WHEN est.team_lead_officer_id IS NOT NULL THEN est.team_lead_officer_id END) AS lead_count,
-                        COUNT(DISTINCT CASE WHEN al.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN al.id END) AS activity_count_7d,
-                        COUNT(DISTINCT CASE WHEN report.status = 'draft' THEN report.id END) AS draft_reports,
-                        COUNT(DISTINCT CASE WHEN report.status = 'submitted' THEN report.id END) AS submitted_reports,
-                        COUNT(DISTINCT CASE WHEN report.status = 'verified' THEN report.id END) AS verified_reports,
-                        COUNT(DISTINCT CASE WHEN report.status = 'approved' THEN report.id END) AS approved_reports,
-                        COUNT(DISTINCT CASE WHEN report.status = 'returned' THEN report.id END) AS returned_reports,
-                        MAX(al.created_at) AS last_activity_at
+                `WITH active_st AS (
+                    SELECT est.id, est.team_id, est.eoc_session_id, est.team_lead_officer_id
+                    FROM eoc_session_teams est
+                    JOIN eoc_sessions es ON es.id = est.eoc_session_id AND es.status = 'active'
+                    WHERE est.is_active = 1
+                 ),
+                 assigned AS (
+                    SELECT team_id, COUNT(DISTINCT eoc_session_id) AS assigned_sessions,
+                           COUNT(DISTINCT team_lead_officer_id) AS lead_count
+                    FROM active_st GROUP BY team_id
+                 ),
+                 members AS (
+                    SELECT st.team_id, COUNT(DISTINCT etm.officer_id) AS member_count
+                    FROM active_st st
+                    JOIN eoc_team_members etm ON etm.session_team_id = st.id AND etm.is_active = 1
+                    GROUP BY st.team_id
+                 ),
+                 activity AS (
+                    SELECT st.team_id,
+                           COUNT(DISTINCT CASE WHEN al.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN al.id END) AS activity_count_7d,
+                           MAX(al.created_at) AS last_activity_at
+                    FROM active_st st
+                    JOIN eoc_team_members etm ON etm.session_team_id = st.id AND etm.is_active = 1
+                    JOIN activity_logs al ON al.eoc_session_id = st.eoc_session_id AND al.user_id = etm.officer_id
+                    GROUP BY st.team_id
+                 ),
+                 reports AS (
+                    SELECT st.team_id,
+                           SUM(r.status = 'draft') AS draft_reports,
+                           SUM(r.status = 'submitted') AS submitted_reports,
+                           SUM(r.status = 'verified') AS verified_reports,
+                           SUM(r.status = 'approved') AS approved_reports,
+                           SUM(r.status = 'returned') AS returned_reports
+                    FROM active_st st
+                    JOIN eoc_team_reports r ON r.session_team_id = st.id
+                    GROUP BY st.team_id
+                 )
+                 SELECT t.id, t.team_code, t.team_name_th, t.team_name_en,
+                        COALESCE(a.assigned_sessions, 0) AS assigned_sessions,
+                        COALESCE(m.member_count, 0) AS member_count,
+                        COALESCE(a.lead_count, 0) AS lead_count,
+                        COALESCE(ac.activity_count_7d, 0) AS activity_count_7d,
+                        COALESCE(r.draft_reports, 0) AS draft_reports,
+                        COALESCE(r.submitted_reports, 0) AS submitted_reports,
+                        COALESCE(r.verified_reports, 0) AS verified_reports,
+                        COALESCE(r.approved_reports, 0) AS approved_reports,
+                        COALESCE(r.returned_reports, 0) AS returned_reports,
+                        ac.last_activity_at
                  FROM eoc_teams t
-                 LEFT JOIN eoc_session_teams est ON est.team_id = t.id
-                    AND est.is_active = 1
-                    AND EXISTS (SELECT 1 FROM eoc_sessions es WHERE es.id = est.eoc_session_id AND es.status = 'active')
-                 LEFT JOIN eoc_team_members etm ON etm.session_team_id = est.id AND etm.is_active = 1
-                 LEFT JOIN activity_logs al ON al.eoc_session_id = est.eoc_session_id AND al.user_id = etm.officer_id
-                 LEFT JOIN eoc_team_reports report ON report.session_team_id = est.id
+                 LEFT JOIN assigned a ON a.team_id = t.id
+                 LEFT JOIN members m ON m.team_id = t.id
+                 LEFT JOIN activity ac ON ac.team_id = t.id
+                 LEFT JOIN reports r ON r.team_id = t.id
                  WHERE t.is_active = 1
                    AND t.team_code IN (${REGISTERED_TEAM_CODES.map(() => "?").join(",")})
                    AND (? = 1 OR EXISTS (
                      SELECT 1
-                     FROM eoc_session_teams access_st
+                     FROM active_st access_st
                      JOIN eoc_team_members access_member
                        ON access_member.session_team_id = access_st.id
                       AND access_member.is_active = 1
-                     JOIN eoc_sessions access_session
-                       ON access_session.id = access_st.eoc_session_id
-                      AND access_session.status = 'active'
                      WHERE access_st.team_id = t.id
-                       AND access_st.is_active = 1
                        AND access_member.officer_id = ?
                    ))
-                 GROUP BY t.id, t.team_code, t.team_name_th, t.team_name_en
                  ORDER BY FIELD(t.team_code, ${REGISTERED_TEAM_CODES.map(() => "?").join(",")})`,
                 [...REGISTERED_TEAM_CODES, privileged ? 1 : 0, auth.user.id, ...REGISTERED_TEAM_CODES]
             ),
@@ -206,54 +299,11 @@ export async function GET(request) {
                  GROUP BY COALESCE(NULLIF(hf.district_name, ''), 'ไม่ระบุอำเภอ')
                  ORDER BY current_cases DESC, district_name ASC`,
                 []
-            )
+            ),
+            loadInventory()
         ]);
 
-        const hasInventory = await tableExists("medical_inventory_stock") && await tableExists("medical_inventory_events");
-        let lowStock = [];
-        let inventorySummary = { low_stock_count: 0, critical_stock_count: 0, total_balance: 0, item_count: 0 };
-
-        if (hasInventory) {
-            lowStock = await db.query(
-                `SELECT s.id, s.agency_name, s.item_code, s.item_name, s.unit,
-                        COALESCE(s.opening_qty, 0) AS opening_qty,
-                        COALESCE(s.balance_qty, 0) AS balance_qty,
-                        ROUND((COALESCE(s.balance_qty, 0) / NULLIF(s.opening_qty, 0)) * 100, 1) AS remain_pct,
-                        hf.district_name
-                 FROM medical_inventory_stock s
-                 LEFT JOIN health_facilities hf ON hf.id = s.health_facility_id
-                 WHERE s.data_status = 'recorded'
-                   AND s.inventory_event_id = (SELECT id FROM medical_inventory_events ORDER BY created_at DESC LIMIT 1)
-                   AND COALESCE(s.opening_qty, 0) > 0
-                   AND COALESCE(s.balance_qty, 0) / NULLIF(s.opening_qty, 0) < 0.2
-                 ORDER BY remain_pct ASC, s.balance_qty ASC, s.item_name ASC
-                 LIMIT 100`,
-                []
-            );
-            lowStock = lowStock.map((item) => ({
-                ...item,
-                opening_qty: number(item.opening_qty),
-                balance_qty: number(item.balance_qty),
-                remain_pct: number(item.remain_pct),
-                severity: number(item.remain_pct) <= 10 ? "critical" : "warning"
-            }));
-
-            const summaryRows = await db.query(
-                `SELECT COUNT(DISTINCT item_code) AS item_count,
-                        COALESCE(SUM(balance_qty), 0) AS total_balance
-                 FROM medical_inventory_stock
-                 WHERE data_status = 'recorded'
-                   AND inventory_event_id = (SELECT id FROM medical_inventory_events ORDER BY created_at DESC LIMIT 1)`,
-                []
-            );
-            inventorySummary = {
-                item_count: number(summaryRows[0]?.item_count),
-                total_balance: number(summaryRows[0]?.total_balance),
-                low_stock_count: lowStock.length,
-                critical_stock_count: lowStock.filter((item) => item.severity === "critical").length
-            };
-        }
-
+        const { available: hasInventory, lowStock, summary: inventorySummary } = inventory;
         const teams = teamRows.map(analyzeTeam);
         const diseaseDistricts = diseaseDistrictRows.map((item) => {
             const current = number(item.current_cases);
@@ -276,18 +326,18 @@ export async function GET(request) {
             critical_teams: teams.filter((team) => team.status === "critical").length
         };
 
-        return NextResponse.json({
-            success: true,
-            data: {
-                generated_at: new Date().toISOString(),
-                kpis,
-                active_sessions: sessions,
-                teams,
-                inventory: { available: hasInventory, summary: inventorySummary, low_stock: lowStock },
-                disease: { daily_trend: diseaseDaily, districts: diseaseDistricts },
-                recommendations: buildRecommendations({ kpis, teams, lowStock, diseaseDistricts })
-            }
-        });
+        const data = {
+            generated_at: new Date().toISOString(),
+            kpis,
+            active_sessions: sessions,
+            teams,
+            inventory: { available: hasInventory, summary: inventorySummary, low_stock: lowStock },
+            disease: { daily_trend: diseaseDaily, districts: diseaseDistricts },
+            recommendations: buildRecommendations({ kpis, teams, lowStock, diseaseDistricts })
+        };
+        cache.set(cacheKey, { at: Date.now(), data });
+        if (cache.size > 200) cache.delete(cache.keys().next().value);
+        return NextResponse.json({ success: true, data });
     } catch (error) {
         console.error("Analytics API error:", error);
         return NextResponse.json(

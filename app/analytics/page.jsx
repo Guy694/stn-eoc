@@ -30,7 +30,13 @@ import {
     YAxis
 } from "recharts";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import AnalyticsAIChat from "@/components/analytics/AnalyticsAIChat";
+import dynamic from "next/dynamic";
+
+// แท็บ AI โหลดเฉพาะเมื่อเปิดใช้ (ไม่ถ่วงการเปิดหน้าครั้งแรก)
+const AnalyticsAIChat = dynamic(() => import("@/components/analytics/AnalyticsAIChat"), {
+    ssr: false,
+    loading: () => <div className="h-64 animate-pulse rounded-xl border border-slate-200 bg-white" />
+});
 import { useAuth } from "@/context/AuthContext";
 
 const TABS = [
@@ -62,11 +68,11 @@ export default function AnalyticsPage() {
         if (!authLoading && !user) router.push("/login");
     }, [authLoading, user, router]);
 
-    const loadAnalytics = useCallback(async () => {
+    const loadAnalytics = useCallback(async (refresh = false) => {
         setLoading(true);
         setError("");
         try {
-            const response = await fetch("/stn-eoc/api/analytics", { cache: "no-store" });
+            const response = await fetch(`/stn-eoc/api/analytics/${refresh ? "?refresh=1" : ""}`, { cache: "no-store" });
             const payload = await response.json();
             if (!response.ok || !payload.success) throw new Error(payload.message || "ไม่สามารถโหลดข้อมูลวิเคราะห์ได้");
             setData(payload.data);
@@ -122,7 +128,7 @@ export default function AnalyticsPage() {
                             </div>
                             <button
                                 type="button"
-                                onClick={loadAnalytics}
+                                onClick={() => loadAnalytics(true)}
                                 disabled={loading}
                                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
                             >

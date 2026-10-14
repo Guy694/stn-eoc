@@ -244,7 +244,7 @@ export default function EocControlWorkspace() {
 
       {/* ฟอร์มเปิด EOC */}
       <FormDialog open={Boolean(opening)} onOpenChange={(value) => !value && setOpening(null)} title={`เปิด EOC ${opening?.name_th || ""}`}
-        description="ข้อมูลนี้บันทึกเป็นประวัติเหตุการณ์ และแสดงในห้องบัญชาการ" onSubmit={submitOpen} busy={busy} error={formError} submitText="ยืนยันเปิด EOC">
+        description="ข้อมูลนี้บันทึกเป็นประวัติเหตุการณ์ และแสดงในภาพรวมสถานการณ์" onSubmit={submitOpen} busy={busy} error={formError} submitText="ยืนยันเปิด EOC">
         <FormGrid>
           <Field label="วันและเวลาที่เปิด" required>
             <input type="datetime-local" className={inputClass} value={openForm.openedAt || ""} onChange={(event) => setOpenForm((current) => ({ ...current, openedAt: event.target.value }))} />
