@@ -73,7 +73,7 @@ export default function Footer() {
                             <li><a href="https://satun.moph.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white">สำนักงานสาธารณสุขจังหวัดสตูล</a></li>
                             <li><a href="https://www.moph.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white">กระทรวงสาธารณสุข</a></li>
                         </ul>
-                        <h5 className="mb-1.5 mt-4 text-xs font-bold text-white sm:text-sm">ขอขอบคุณหน่วยงานที่ให้ข้อมูล</h5>
+                        <h5 className="mb-1.5 mt-4 text-xs font-bold text-white sm:text-sm">ขอขอบคุณหน่วยงานที่ให้ข้อมูลจาก</h5>
                         <ul className="space-y-1.5 text-xs sm:text-sm">
                             {DATA_PROVIDERS.map(([name, detail, url]) => (
                                 <li key={name}>
