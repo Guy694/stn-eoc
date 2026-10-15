@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
 
         if (officers.length === 0) {
             return NextResponse.json(
-                { success: false, error: 'Officer not found' },
+                { success: false, error: 'ไม่พบเจ้าหน้าที่' },
                 { status: 404 }
             );
         }
@@ -54,7 +54,7 @@ export async function PUT(request, { params }) {
         const existing = await query('SELECT id, role, is_approved FROM officer WHERE id = ?', [id]);
         if (existing.length === 0) {
             return NextResponse.json(
-                { success: false, error: 'Officer not found' },
+                { success: false, error: 'ไม่พบเจ้าหน้าที่' },
                 { status: 404 }
             );
         }
@@ -67,7 +67,7 @@ export async function PUT(request, { params }) {
             );
             if (duplicate.length > 0) {
                 return NextResponse.json(
-                    { success: false, error: 'Username already exists' },
+                    { success: false, error: 'ชื่อผู้ใช้นี้มีอยู่แล้ว' },
                     { status: 409 }
                 );
             }
@@ -141,7 +141,7 @@ export async function PUT(request, { params }) {
 
         if (updates.length === 0) {
             return NextResponse.json(
-                { success: false, error: 'No fields to update' },
+                { success: false, error: 'ไม่มีข้อมูลที่เปลี่ยนแปลง' },
                 { status: 400 }
             );
         }
@@ -199,7 +199,7 @@ export async function DELETE(request, { params }) {
         const existing = await query('SELECT id, username FROM officer WHERE id = ?', [id]);
         if (existing.length === 0) {
             return NextResponse.json(
-                { success: false, error: 'Officer not found' },
+                { success: false, error: 'ไม่พบเจ้าหน้าที่' },
                 { status: 404 }
             );
         }

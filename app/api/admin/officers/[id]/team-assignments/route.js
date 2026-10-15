@@ -36,12 +36,19 @@ export async function GET(request, { params }) {
             ORDER BY s.opened_at DESC, t.sort_order ASC
         `);
 
-        const assignments = isNewOfficer ? [] : await query(`
-            SELECT session_team_id, role_in_team
-            FROM eoc_team_members
-            WHERE officer_id = ?
-              AND is_active = TRUE
-        `, [id]);
+        // เฉพาะทีมในเหตุการณ์ที่ยังเปิดอยู่ (ตรงกับที่ PUT รับ) — ทีมของเหตุการณ์ที่ปิดแล้วไม่ถูกแตะตอนบันทึก
+        const assignments = isNewOfficer ? [] : (await query(`
+            SELECT tm.session_team_id, tm.role_in_team
+            FROM eoc_team_members tm
+            JOIN eoc_session_teams st ON st.id = tm.session_team_id
+            JOIN eoc_sessions s ON s.id = st.eoc_session_id
+            JOIN eoc_teams t ON t.id = st.team_id
+            WHERE tm.officer_id = ?
+              AND tm.is_active = TRUE
+              AND s.status = 'active'
+              AND st.is_active = TRUE
+              AND t.is_active = TRUE
+        `, [id])).map((row) => ({ ...row, role_in_team: normalizeTeamMemberRole(row.role_in_team) }));
 
         return NextResponse.json({ success: true, availableTeams, assignments });
     } catch (error) {

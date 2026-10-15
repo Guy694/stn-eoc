@@ -92,7 +92,7 @@ export async function POST(request) {
         // Validate required fields
         if (!username || !password || !given_name || !family_name || !role) {
             return NextResponse.json(
-                { success: false, error: 'Missing required fields' },
+                { success: false, error: 'กรุณากรอกชื่อผู้ใช้ รหัสผ่าน ชื่อ นามสกุล และสิทธิ์ระบบ' },
                 { status: 400 }
             );
         }
@@ -112,7 +112,7 @@ export async function POST(request) {
 
         if (existing.length > 0) {
             return NextResponse.json(
-                { success: false, error: 'Username already exists' },
+                { success: false, error: 'ชื่อผู้ใช้นี้มีอยู่แล้ว' },
                 { status: 409 }
             );
         }
