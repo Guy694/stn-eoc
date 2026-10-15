@@ -15,13 +15,14 @@ export default function PublicOpsScaffold({
   children,
   showWeatherMenu = false,
   showPageHeader = true,
+  showBottomBar = false,
   mainClassName = ""
 }) {
   return (
     <div className="min-h-screen bg-[#edf5fc] text-slate-900">
       <PublicHeader eocStatus={eocStatus} eocLabel={eocLabel} eocIsOpen={eocIsOpen} />
 
-      <PublicTopNavigation activeMenu={activeMenu} showWeatherMenu={showWeatherMenu} />
+      <PublicTopNavigation activeMenu={activeMenu} showWeatherMenu={showWeatherMenu} showBottomBar={showBottomBar} />
 
       <div className="min-h-[calc(100vh-143px)]">
         <main className={`min-w-0 p-3 ${mainClassName}`}>
@@ -38,6 +39,8 @@ export default function PublicOpsScaffold({
 
       <div>
         <Footer />
+        {/* เว้นที่ให้แถบล่างบนมือถือ ไม่ให้บังท้าย footer */}
+        {showBottomBar ? <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] lg:hidden" aria-hidden="true" /> : null}
       </div>
 
       {/* เปิดผู้ช่วยได้จากเมนู "ถามผู้ช่วย" / ขอความช่วยเหลือมีปุ่มใน navbar แล้ว จึงไม่ใช้ปุ่มลอย */}

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
+import PublicBottomBar from "@/components/public/PublicBottomBar";
 import {
   Bell,
   Bot,
@@ -24,12 +25,25 @@ import {
 // เมนูสำหรับประชาชน: เรียงตามสิ่งที่ประชาชนต้องการรู้ก่อน
 // (ลิงก์เข้าสู่ระบบเจ้าหน้าที่และหน่วยงานย้ายไปอยู่ใน footer)
 // (prop showWeatherMenu เดิมไม่มีผลแล้ว — เมนูสภาพอากาศแสดงตลอด)
-export default function PublicTopNavigation({ activeMenu }) {
+// showBottomBar: บนมือถือ เมื่อเลื่อนลงพ้น navbar แสดงแถบล่างแทน
+export default function PublicTopNavigation({ activeMenu, showBottomBar = false }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [pastNav, setPastNav] = useState(false);
+  const navRef = useRef(null);
   const { sheltersOpen } = useHelpAvailability();
 
   useEffect(() => setIsOpen(false), [pathname]);
+
+  useEffect(() => {
+    if (!showBottomBar || !navRef.current || typeof IntersectionObserver === "undefined") return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      setPastNav(!entry.isIntersecting && entry.boundingClientRect.bottom <= 0);
+    });
+    observer.observe(navRef.current);
+    return () => observer.disconnect();
+  }, [showBottomBar]);
+
 
   const openAssistant = () => {
     window.dispatchEvent(new CustomEvent("eoc-assistant:open"));
@@ -100,7 +114,8 @@ export default function PublicTopNavigation({ activeMenu }) {
   };
 
   return (
-    <nav className="relative z-[900] border-b border-blue-950/20 bg-[#0b4c86] text-white shadow-md" aria-label="เมนูข้อมูลสาธารณะ">
+    <>
+    <nav ref={navRef} className="relative z-[900] border-b border-blue-950/20 bg-[#0b4c86] text-white shadow-md" aria-label="เมนูข้อมูลสาธารณะ">
       <div className="mx-auto max-w-[1600px] px-3 sm:px-5">
         <div className="hidden min-h-14 items-center gap-1 overflow-x-auto py-1.5 lg:flex">
           {items.filter(item => !item.emphasis).map(item => renderItem(item))}
@@ -148,5 +163,7 @@ export default function PublicTopNavigation({ activeMenu }) {
         )}
       </div>
     </nav>
+    {showBottomBar ? <PublicBottomBar visible={pastNav && !isOpen} activeMenu={activeMenu} /> : null}
+    </>
   );
 }

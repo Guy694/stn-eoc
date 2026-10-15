@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, PackageOpen, Scale, Trash2 } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, FileUp, PackageOpen, Scale, Trash2 } from "lucide-react";
 import { ReadOnlyNotice,
   AddButton, AdminPage, Button, DataTable, DeleteDialog, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
-import ImportExcelDialog from "@/components/eoc/ImportExcelDialog";
 import HospitalDrugImportDialog from "@/components/eoc/supplies/HospitalDrugImportDialog";
 import SuppliesDashboard from "@/components/eoc/supplies/SuppliesDashboard";
 import SuppliesDailyReport from "@/components/eoc/supplies/SuppliesDailyReport";
@@ -33,7 +32,7 @@ function LevelPill({ level }) {
 }
 
 // เวชภัณฑ์และคลังยาของเหตุการณ์ EOC (เมนูเดียว)
-// เปิดบัญชีคลัง → วันแรกนำเข้ารายการ + ยอดตั้งต้น (Excel หรือเพิ่มทีละรายการ) → ทุกวันรายงานรับเข้า/ใช้ไปของทุกรายการ
+// เปิดบัญชีคลัง → วันแรกนำเข้า 4 ไฟล์จากระบบคลังยา รพ. เป็นยอดตั้งต้น (หรือเพิ่มทีละรายการ) → ทุกวันนำเข้า 4 ไฟล์ชุดใหม่เป็นรายงานประจำวัน
 // ระบบคำนวณคงเหลือเอง (ยกมา + รับเข้า − ใช้ไป) และสรุปใน dashboard
 export default function SuppliesWorkspace({ eocType = "flood" }) {
   const { notice, success, fail } = useNotice();
@@ -46,8 +45,8 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   const [facilityFilter, setFacilityFilter] = useState("");
   const [moveDialog, setMoveDialog] = useState(null);
   const [itemDialog, setItemDialog] = useState(false);
-  const [importKind, setImportKind] = useState(null);
-  const [hospitalImport, setHospitalImport] = useState(false);
+  const [hospitalImport, setHospitalImport] = useState(null); // null | "stock" | "daily"
+  const [dailyJump, setDailyJump] = useState(null);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
   const [deleteTarget, setDeleteTarget] = useState(null); // { mode: "selected" | "filtered" | "all" }
@@ -260,14 +259,12 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
       freshness={stock.length ? { value: latestTime(stock.map((row) => row.updated_at)), staleHours: 24 } : null}
       title="เวชภัณฑ์และคลังยา"
       context={context}
-      description="วันแรกนำเข้ายอดตั้งต้น จากนั้นทุกหน่วยบริการรายงานรับเข้าและใช้ไปของทุกรายการทุกวัน ระบบคำนวณยอดคงเหลือให้เอง"
+      description="นำเข้า 4 ไฟล์จากระบบคลังยา รพ. (DRUGLIST / INVENTORY / RECEIPT / DISTRIBUTION) วันแรกเป็นยอดตั้งต้น และทุกวันเป็นรายงานประจำวัน ระบบคำนวณใช้ไปและคงเหลือให้เอง"
       actions={(
         <>
           {eocType === "flood" ? <Link href="/eoc/flood/oxygen" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ออกซิเจนเหลว</Link> : null}
           {eocType === "flood" ? <Link href="/eoc/flood/team-reports?team=resources" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">แจกจ่ายรายอำเภอ</Link> : null}
-          {perms.can_add_item ? <Button variant="secondary" onClick={() => setImportKind("supplies")}>นำเข้ายอดตั้งต้น</Button> : null}
-          {perms.can_add_item ? <Button variant="secondary" onClick={() => setHospitalImport(true)}>นำเข้าจากระบบคลังยา รพ.</Button> : null}
-          {perms.can_move ? <Button variant="secondary" onClick={() => setImportKind("supplies-daily")}><ClipboardList className="h-4 w-4" aria-hidden="true" />นำเข้ารายงานประจำวัน</Button> : null}
+          {perms.can_add_item ? <Button variant="secondary" onClick={() => setHospitalImport(tab === "daily" ? "daily" : "stock")}><FileUp className="h-4 w-4" aria-hidden="true" />นำเข้าไฟล์คลังยา รพ.</Button> : null}
           {perms.can_add_item ? <AddButton onClick={() => { setFormError(""); setItemDialog(true); }}>เพิ่มรายการ</AddButton> : null}
         </>
       )}
@@ -293,7 +290,8 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
       ) : tab === "daily" ? (
         <SuppliesDailyReport
           eocType={eocType} sessionId={session?.id} facilities={facilities} facilityId={dailyFacility} onFacilityChange={setDailyFacility}
-          onSaved={() => setRefreshKey((key) => key + 1)} success={success} fail={fail} openImport={() => setImportKind("supplies-daily")}
+          onSaved={() => setRefreshKey((key) => key + 1)} success={success} fail={fail}
+          openHospitalImport={perms.can_move ? () => setHospitalImport("daily") : undefined} refreshKey={refreshKey} dateOverride={dailyJump}
         />
       ) : tab === "history" ? (
         <DataTable columns={historyColumns} rows={data?.movements || []} loading={state.loading} emptyText="ยังไม่มีการปรับยอดในเหตุการณ์นี้ (รับเข้า/ใช้ไปรายวันดูได้ที่ ภาพรวม และ รายงานประจำวัน)" caption="ประวัติปรับยอด" />
@@ -412,13 +410,15 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
         note="ตัวรายการย้ายไปถังขยะ (ผู้ดูแลระบบกู้คืนได้ทีละรายการ) ส่วนรายงานประจำวันและประวัติปรับยอดของรายการเหล่านี้จะถูกลบไปด้วยและกู้คืนไม่ได้ ระบบบันทึกว่าใครลบ เมื่อไร เพราะอะไร"
       />
       <HospitalDrugImportDialog
-        open={hospitalImport} onOpenChange={setHospitalImport} eocType={eocType} sessionId={data?.session?.id}
-        onImported={() => { load(); setRefreshKey((key) => key + 1); }}
-      />
-      <ImportExcelDialog
-        open={Boolean(importKind)} onOpenChange={(open) => { if (!open) setImportKind(null); }} kind={importKind || "supplies"}
-        context={{ eoc: eocType, session_id: data?.session?.id, ...(importKind === "supplies-daily" && tab === "daily" && dailyFacility ? { facility_id: dailyFacility } : {}) }}
-        onImported={load}
+        open={Boolean(hospitalImport)} onOpenChange={(open) => { if (!open) setHospitalImport(null); }} eocType={eocType} sessionId={data?.session?.id}
+        mode={hospitalImport === "daily" ? "daily" : "stock"} initialFacilityId={hospitalImport === "daily" ? dailyFacility : ""}
+        onImported={(info) => {
+          load();
+          if (hospitalImport === "daily" && info) {
+            if (info.facilityId) setDailyFacility(String(info.facilityId));
+            if (info.date) setDailyJump({ date: info.date, at: Date.now() });
+          }
+        }}
       />
     </AdminPage>
   );

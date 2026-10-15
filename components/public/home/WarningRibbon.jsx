@@ -22,23 +22,31 @@ export default function WarningRibbon({ warnings = [] }) {
         @keyframes warning-ribbon-in { from { transform: translateY(-100%); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .warning-ribbon { animation: none; } }
       `}</style>
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
-        <span className="inline-flex items-center gap-2 font-[family-name:var(--font-kanit)] text-base font-bold">
-          <span className="relative flex h-3 w-3" aria-hidden="true">
-            <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-70 motion-reduce:animate-none ${severe ? "bg-white" : "bg-[#7c2d12]"}`} />
-            <span className={`relative inline-flex h-3 w-3 rounded-full ${severe ? "bg-white" : "bg-[#7c2d12]"}`} />
-          </span>
+      {/* มือถือ: แถวเดียวกะทัดรัด (ป้ายเล็ก + ข้อความ 2 บรรทัด + ลิงก์สั้น) / จอใหญ่: แบบเต็ม */}
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-3 py-2 sm:gap-4 sm:px-6 sm:py-3">
+        <span className="relative hidden h-3 w-3 shrink-0 sm:flex" aria-hidden="true">
+          <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-70 motion-reduce:animate-none ${severe ? "bg-white" : "bg-[#7c2d12]"}`} />
+          <span className={`relative inline-flex h-3 w-3 rounded-full ${severe ? "bg-white" : "bg-[#7c2d12]"}`} />
+        </span>
+        <TriangleAlert className="h-5 w-5 shrink-0 sm:hidden" aria-hidden="true" />
+        <span className="hidden shrink-0 items-center gap-2 font-[family-name:var(--font-kanit)] text-base font-bold sm:inline-flex">
           <TriangleAlert className="h-5 w-5" aria-hidden="true" /> ประกาศเตือน
         </span>
-        <p className="min-w-0 flex-1 text-[15px] font-semibold leading-6">
-          {first.message}
-          {first.issued_at ? <span className="ml-2 font-normal opacity-80">{timeText(first.issued_at)}</span> : null}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold leading-4 opacity-90 sm:hidden">
+            ประกาศเตือน{first.issued_at ? ` · ${timeText(first.issued_at)}` : ""}
+          </p>
+          <p className="line-clamp-2 text-[13px] font-semibold leading-[1.35] sm:line-clamp-none sm:text-[15px] sm:leading-6" title={first.message}>
+            {first.message}
+            {first.issued_at ? <span className="ml-2 hidden font-normal opacity-80 sm:inline">{timeText(first.issued_at)}</span> : null}
+          </p>
+        </div>
         <Link
           href="/public/weather-watch"
-          className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-bold ${severe ? "bg-white/15 hover:bg-white/25" : "bg-[#2b1d00]/10 hover:bg-[#2b1d00]/20"}`}
+          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold sm:px-3 sm:py-1.5 sm:text-sm ${severe ? "bg-white/15 hover:bg-white/25" : "bg-[#2b1d00]/10 hover:bg-[#2b1d00]/20"}`}
         >
-          {sorted.length > 1 ? `ดูทั้งหมด ${sorted.length} ประกาศ` : "ดูรายละเอียด"}
+          <span className="sm:hidden">{sorted.length > 1 ? `ทั้งหมด ${sorted.length}` : "ดู"}</span>
+          <span className="hidden sm:inline">{sorted.length > 1 ? `ดูทั้งหมด ${sorted.length} ประกาศ` : "ดูรายละเอียด"}</span>
         </Link>
       </div>
     </div>

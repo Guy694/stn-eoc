@@ -41,7 +41,7 @@ function PlanPreview({ plan }) {
         {s.opening ? <> · แก้ยอดตั้งต้น <b>{n(s.opening)}</b></> : null} · เท่าเดิม <b>{n(s.unchanged)}</b>
         {s.missing ? <> · ยังไม่รายงาน <b className="text-amber-700">{n(s.missing)}</b></> : null}{s.skip ? <> · ข้าม <b>{n(s.skip)}</b></> : null}
       </p>
-      {s.replaces ? <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{n(s.replaces)} รายการมีรายงานของวันนี้ที่กรอกผ่านแบบฟอร์มหรือ Excel อยู่แล้ว ระบบจะแทนที่ด้วยยอดจากไฟล์คลังยา</p> : null}
+      {s.replaces ? <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{n(s.replaces)} รายการมีรายงานของวันนี้ที่กรอกผ่านแบบฟอร์มอยู่แล้ว ระบบจะแทนที่ด้วยยอดจากไฟล์คลังยา</p> : null}
       {s.extra_received ? <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900">{n(s.extra_received)} รายการมียอดคงคลังเพิ่มขึ้นมากกว่าที่รับตามไฟล์ RECEIPT ระบบนับส่วนต่างเป็น “รับเข้า” (ถ้ามีการรับจริงให้แนบไฟล์ RECEIPT ของวันนั้นด้วย)</p> : null}
       {plan.manual?.length ? (
         <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -90,7 +90,8 @@ function PlanPreview({ plan }) {
   );
 }
 
-export default function HospitalDrugImportDialog({ open, onOpenChange, eocType = "flood", sessionId, onImported }) {
+// mode="daily": เปิดจากแท็บรายงานประจำวัน (ข้อความเน้นการรายงานรายวัน) · initialFacilityId: หน่วยบริการที่เลือกอยู่
+export default function HospitalDrugImportDialog({ open, onOpenChange, eocType = "flood", sessionId, onImported, mode = "stock", initialFacilityId = "" }) {
   const inputRef = useRef(null);
   const [files, setFiles] = useState([]); // ไฟล์ที่อ่านแล้ว (สะสมได้หลายครั้ง)
   const [context, setContext] = useState(null);
@@ -121,10 +122,11 @@ export default function HospitalDrugImportDialog({ open, onOpenChange, eocType =
     apiRequest(`${ENDPOINT}?${params}`)
       .then((json) => {
         setContext(json);
-        if (json.mapped_facility_id) setFacilityId((current) => current || String(json.mapped_facility_id));
+        const preferred = json.mapped_facility_id || initialFacilityId;
+        if (preferred) setFacilityId((current) => current || String(preferred));
       })
       .catch((err) => setError(err.message));
-  }, [open, eocType, sessionId, hospCode]);
+  }, [open, eocType, sessionId, hospCode, initialFacilityId]);
 
   // ยาที่หน่วยนี้ติดตามอยู่แล้วจากไฟล์ของ รพ. นี้ (รายงานทุกครั้งที่นำเข้า เอาออกไม่ได้)
   const tracked = useMemo(() => {
@@ -206,7 +208,7 @@ export default function HospitalDrugImportDialog({ open, onOpenChange, eocType =
       else {
         setResult(json.counts);
         setPlan(null);
-        onImported?.();
+        onImported?.({ date: json.plan?.date || merged.onhandDate || null, facilityId });
       }
     } catch (err) {
       setError(err.message);
@@ -217,8 +219,10 @@ export default function HospitalDrugImportDialog({ open, onOpenChange, eocType =
 
   return (
     <AppDialog open={open} onOpenChange={onOpenChange} size="xl" busy={busy}
-      title="นำเข้าข้อมูลจากระบบคลังยาของโรงพยาบาล"
-      description="ไฟล์ DRUGLIST / INVENTORY / RECEIPT / DISTRIBUTION ที่ส่งออกจากระบบคลังยาของ รพ. เลือกได้หลายไฟล์พร้อมกัน ระบบยังไม่บันทึกจนกว่าจะกดยืนยัน">
+      title={mode === "daily" ? "รายงานประจำวันจากไฟล์คลังยา รพ." : "นำเข้าข้อมูลจากระบบคลังยาของโรงพยาบาล"}
+      description={mode === "daily"
+        ? "ส่งออก 4 ไฟล์ (DRUGLIST / INVENTORY / RECEIPT / DISTRIBUTION) จากระบบคลังยาของ รพ. ทุกวัน แล้วเลือกไฟล์ทั้งหมดพร้อมกัน ระบบคำนวณใช้ไป = ยกมา + รับเข้า − คงคลังในไฟล์ ให้เป็นรายงานของวันที่ในไฟล์ INVENTORY ตรวจก่อนบันทึกได้"
+        : "ไฟล์ DRUGLIST / INVENTORY / RECEIPT / DISTRIBUTION ที่ส่งออกจากระบบคลังยาของ รพ. เลือกได้หลายไฟล์พร้อมกัน ระบบยังไม่บันทึกจนกว่าจะกดยืนยัน"}>
       <div className="space-y-4">
         {result ? (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">

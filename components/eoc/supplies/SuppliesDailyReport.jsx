@@ -3,7 +3,7 @@
 // รายงานเวชภัณฑ์ประจำวันของหน่วยบริการ: เลือกวันที่ + หน่วยบริการ → กรอกรับเข้า/ใช้ไป/นับได้จริง ทุกรายการ
 // ระบบคำนวณคงเหลือให้เห็นทันที (ยกมา + รับเข้า − ใช้ไป) และเตือนเมื่อยอดนับไม่ตรง
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Download } from "lucide-react";
+import { CheckCircle2, FileUp } from "lucide-react";
 import { Button, Field, ReadOnlyNotice, StatusPill, inputClass } from "@/components/admin/crud";
 import { formatNumber } from "@/lib/adminApi";
 import { sendOrQueue } from "@/lib/offlineQueue";
@@ -16,7 +16,7 @@ const parse = (value) => {
   return String(value ?? "").trim() === "" || !Number.isFinite(n) ? null : n;
 };
 
-export default function SuppliesDailyReport({ eocType = "flood", sessionId, facilities = [], facilityId, onFacilityChange, onSaved, success, fail, openImport }) {
+export default function SuppliesDailyReport({ eocType = "flood", sessionId, facilities = [], facilityId, onFacilityChange, onSaved, success, fail, openHospitalImport, refreshKey = 0, dateOverride }) {
   const [date, setDate] = useState(todayKey());
   const [state, setState] = useState({ loading: false, data: null, error: "" });
   const [values, setValues] = useState({});
@@ -44,7 +44,9 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
       setState({ loading: false, data: null, error: error.message });
     }
   }, [query]);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, refreshKey]);
+  // หลังนำเข้าไฟล์คลังยา รพ. ให้กระโดดไปวันที่ของยอดในไฟล์
+  useEffect(() => { if (/^\d{4}-\d{2}-\d{2}/.test(String(dateOverride?.date || ""))) setDate(String(dateOverride.date).slice(0, 10)); }, [dateOverride]);
 
   const data = state.data;
   const rows = useMemo(() => data?.rows || [], [data]);
@@ -92,7 +94,6 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
     }
   };
 
-  const templateHref = `/stn-eoc/api/eoc/import/supplies-daily/?${new URLSearchParams({ eoc: eocType, ...(sessionId ? { session_id: String(sessionId) } : {}), ...(facilityId ? { facility_id: String(facilityId) } : {}) })}`;
   const today = data?.today || todayKey();
 
   return (
@@ -113,10 +114,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
             </select>
           </Field>
           <div className="flex flex-wrap gap-2">
-            <a href={templateHref} download className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
-              <Download className="h-4 w-4" aria-hidden="true" />แบบรายงาน Excel
-            </a>
-            {canReport && openImport ? <Button variant="secondary" onClick={openImport}>นำเข้าไฟล์</Button> : null}
+            {canReport && openHospitalImport ? <Button onClick={openHospitalImport}><FileUp className="h-4 w-4" aria-hidden="true" />นำเข้าไฟล์คลังยา รพ.</Button> : null}
           </div>
         </div>
         {data?.status ? (
@@ -130,7 +128,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
 
       {!facilityId ? (
-        <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">เลือกหน่วยบริการเพื่อกรอกรายงานของวันนี้ หรือดาวน์โหลดแบบรายงาน Excel ของทุกหน่วยบริการแล้วนำเข้าครั้งเดียว</p>
+        <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">กด “นำเข้าไฟล์คลังยา รพ.” เพื่อรายงานจาก 4 ไฟล์ของวันนี้ หรือเลือกหน่วยบริการเพื่อดูและแก้ยอดรายวัน</p>
       ) : state.loading && !rows.length ? (
         <div className="h-40 animate-pulse rounded-xl bg-slate-100" aria-busy="true" />
       ) : !rows.length ? (

@@ -434,6 +434,7 @@ export default function PublicHome() {
       eocStatus={headerStatus}
       eocLabel={headerLabel}
       showPageHeader={false}
+      showBottomBar
       mainClassName="p-0!"
     >
       <div className="bg-[#eef2f1] text-[#15232e]">
