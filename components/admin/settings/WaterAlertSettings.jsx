@@ -2,7 +2,8 @@
 
 // ตั้งค่า/ตรวจสอบแจ้งเตือนระดับน้ำ (หน้าตั้งค่าระบบ → การแจ้งเตือน)
 import { useCallback, useEffect, useState } from "react";
-import { Play, RefreshCw, Volume2 } from "lucide-react";
+import { Play, RefreshCw, Speech, Volume2 } from "lucide-react";
+import { setVoiceEnabled, speak, speechSupported, voiceEnabled, waitForVoices } from "@/lib/alertSpeech";
 import { StatusPill, useNotice } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 
@@ -51,6 +52,16 @@ export default function WaterAlertSettings() {
       setBusy(false);
     }
   };
+  const [voice, setVoice] = useState({ supported: false, thai: null, on: true });
+  useEffect(() => {
+    if (!speechSupported()) return;
+    waitForVoices().then((found) => setVoice({ supported: true, thai: found ? `${found.name} (${found.lang})` : "", on: voiceEnabled() }));
+  }, []);
+  const toggleVoice = (on) => {
+    setVoiceEnabled(on);
+    setVoice((current) => ({ ...current, on }));
+  };
+  const testVoice = () => speak("แจ้งเตือนระดับน้ำ ทดสอบ น้ำล้นตลิ่ง สถานีตัวอย่าง อำเภอละงู สูงกว่าตลิ่ง 0.25 เมตร", { force: true });
   const testLocal = (level, kind = "water") => window.dispatchEvent(new CustomEvent("water-alert:test", { detail: { level, kind } }));
 
   const data = state.data;
@@ -147,6 +158,21 @@ export default function WaterAlertSettings() {
             </div>
           </>
         ) : null}
+
+        <div className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="inline-flex items-center gap-2 font-bold text-slate-900">
+              <input type="checkbox" checked={voice.on} onChange={(event) => toggleVoice(event.target.checked)} disabled={!voice.supported} />
+              <Speech className="h-4 w-4" aria-hidden="true" /> อ่านแจ้งเตือนเป็นเสียงพูด
+            </label>
+            <button type="button" onClick={testVoice} disabled={!voice.thai} className="text-xs font-bold text-[#0b4c86] underline disabled:text-slate-400 disabled:no-underline">ทดสอบเสียงพูด</button>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            {!voice.supported ? "เบราว์เซอร์นี้ไม่รองรับเสียงพูด จะมีแค่เสียงสัญญาณ"
+              : voice.thai ? `หลังเสียงสัญญาณจะพูดหัวข้อ เช่น “แจ้งเตือนระดับน้ำ น้ำล้นตลิ่ง สถานี…” หรือ “แจ้งเตือนปริมาณฝนตก ฝนหนักมาก…” · เสียงที่ใช้: ${voice.thai} · ตั้งค่าเฉพาะเครื่องนี้`
+                : "เครื่องนี้ยังไม่มีเสียงภาษาไทย จึงมีแค่เสียงสัญญาณ — ติดตั้งเสียงภาษาไทยในการตั้งค่าภาษา/การอ่านออกเสียงของเครื่อง (Windows: Settings › Time & language › Speech, macOS: การช่วยการเข้าถึง › เนื้อหาที่พูด) แล้วเปิดเบราว์เซอร์ใหม่"}
+          </p>
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
           <Play className="h-3.5 w-3.5" aria-hidden="true" /> ทดสอบระดับอื่น:

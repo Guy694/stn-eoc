@@ -25,19 +25,19 @@ export function Arrow({ direction, size = 14 }) {
 }
 
 // ธงตามเกณฑ์ทีม SAT: เขียว เฝ้าระวัง · เหลือง เตรียมพร้อมเคลื่อนย้าย · แดง เคลื่อนย้าย
-export function StatusFlag({ level, source }) {
+export function StatusFlag({ level, source, compact = false }) {
   return (
-    <div className="flex flex-col items-end" aria-label={`${level.label} ${level.meaning}`}>
-      <svg width="74" height="78" viewBox="0 0 74 86" aria-hidden="true" className="mr-3">
+    <div className={`flex flex-col ${compact ? "items-center" : "items-end"}`} aria-label={`${level.label} ${level.meaning}`}>
+      <svg width={compact ? 40 : 74} height={compact ? 42 : 78} viewBox="0 0 74 86" aria-hidden="true" className={compact ? "" : "mr-3"}>
         <rect x="6" y="2" width="4" height="84" rx="2" fill="#1f2937" />
         <circle cx="8" cy="3.5" r="3.5" fill="#1f2937" />
         <path d="M10 8 C 26 2, 40 14, 56 8 S 70 6, 72 9 L 72 44 C 66 41, 58 42, 52 45 C 38 51, 24 40, 10 46 Z" fill={level.color} />
         <path d="M10 8 C 26 2, 40 14, 56 8 S 70 6, 72 9 L 72 16 C 60 13, 52 20, 38 17 C 26 14, 18 12, 10 16 Z" fill="#ffffff" opacity="0.18" />
       </svg>
-      <span className="mt-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold text-white" style={{ background: level.color }}>
+      <span data-pill className={`mt-0.5 whitespace-nowrap rounded-full px-2 font-semibold leading-[1.7] text-white ${compact ? "text-[10px]" : "text-[11px]"}`} style={{ background: level.color }}>
         {level.label} · {level.meaning}
       </span>
-      {source ? <span className="mt-0.5 whitespace-nowrap rounded bg-white/80 px-1 text-[9.5px] text-slate-600">{source}</span> : null}
+      {source ? <span className="mt-0.5 whitespace-nowrap rounded bg-white/80 px-1 text-[9px] leading-[1.5] text-slate-600">{source}</span> : null}
     </div>
   );
 }

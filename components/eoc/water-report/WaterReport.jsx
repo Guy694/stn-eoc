@@ -376,6 +376,11 @@ export default function WaterReport() {
   const saveImage = async () => {
     if (!sheetRef.current) return;
     setSaving(true);
+    // html2canvas วัดตำแหน่งเส้นฐานตัวอักษรจากเอกสารหลัก แต่ Tailwind ตั้ง img เป็น display:block ทำให้วัดผิด
+    // ข้อความในภาพเลื่อนลงต่ำกว่ากล่อง → ระหว่างบันทึกภาพให้ img เป็น inline-block ชั่วคราว
+    const baselineFix = document.createElement("style");
+    baselineFix.textContent = "img { display: inline-block !important; }";
+    document.head.appendChild(baselineFix);
     try {
       const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(sheetRef.current, {
@@ -395,6 +400,7 @@ export default function WaterReport() {
     } catch (err) {
       setError(`บันทึกรูปไม่สำเร็จ: ${err.message}`);
     } finally {
+      baselineFix.remove();
       setSaving(false);
     }
   };

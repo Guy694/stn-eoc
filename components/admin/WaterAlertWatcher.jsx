@@ -4,11 +4,13 @@
 // - ดึงเรื่องใหม่จาก /api/eoc/water-alerts ทุก 60 วินาที
 // - "รับทราบ" แล้วไม่เด้งซ้ำ (จำไว้ในเบราว์เซอร์ และซิงก์ทุกแท็บ)
 // - น้ำล้นตลิ่ง: เสียงเตือนซ้ำทุก 2 นาทีจนกว่าจะกดรับทราบ (สูงสุด 5 ครั้ง)
+// - เสียงสัญญาณตามด้วยเสียงพูดภาษาไทย เช่น "แจ้งเตือนระดับน้ำ น้ำล้นตลิ่ง สถานี..." (ปิดเสียงพูดแยกได้)
 // - เบราว์เซอร์อนุญาตให้เล่นเสียงหลังผู้ใช้แตะหน้าเว็บอย่างน้อย 1 ครั้ง จึงปลดล็อกเสียงเมื่อมีการแตะครั้งแรก
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BellRing, CheckCircle2, CloudRain, Siren, TriangleAlert, Volume2, VolumeX, Waves, X } from "lucide-react";
+import { BellRing, CheckCircle2, CloudRain, Siren, Speech, TriangleAlert, Volume2, VolumeX, Waves, X } from "lucide-react";
 import { playPattern } from "@/lib/alertSound";
+import { SPEAK_DELAY_MS, VOICE_KEY, setVoiceEnabled, speak, speechSupported, voiceEnabled, waterAlertSpeech } from "@/lib/alertSpeech";
 
 const API = "/stn-eoc/api/eoc/water-alerts";
 const SEEN_KEY = "stn-water-alert-seen";
@@ -44,6 +46,7 @@ const RANK = { info: 0, serious: 1, critical: 2 };
 export default function WaterAlertWatcher() {
   const [alerts, setAlerts] = useState([]);
   const [soundOn, setSoundOn] = useState(true);
+  const [voiceOn, setVoiceOn] = useState(true);
   const [audioLocked, setAudioLocked] = useState(false);
   const [notifyPermission, setNotifyPermission] = useState("unsupported");
   const ctxRef = useRef(null);
@@ -59,8 +62,10 @@ export default function WaterAlertWatcher() {
     return ctxRef.current;
   }, []);
 
-  const play = useCallback((level) => {
+  const play = useCallback((level, items = null) => {
     if (!readSound()) return;
+    // เสียงพูดตามหลังสัญญาณ (เครื่องที่ไม่มีเสียงภาษาไทยจะข้ามเอง)
+    if (items?.length) speak(waterAlertSpeech(items), { delayMs: SPEAK_DELAY_MS[level] || 800 });
     const ctx = ensureContext();
     if (!ctx) return;
     if (ctx.state === "suspended") {
@@ -88,7 +93,8 @@ export default function WaterAlertWatcher() {
     });
     const top = items.reduce((worst, item) => (RANK[item.level] > RANK[worst] ? item.level : worst), "info");
     repeatsRef.current = 0;
-    play(top);
+    const ordered = [...items].sort((a, b) => RANK[b.level] - RANK[a.level]);
+    play(top, ordered);
     showSystemNotification(items);
   }, [play, showSystemNotification]);
 
@@ -111,6 +117,7 @@ export default function WaterAlertWatcher() {
 
   useEffect(() => {
     setSoundOn(readSound());
+    setVoiceOn(voiceEnabled());
     setNotifyPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
     poll();
     const timer = window.setInterval(poll, POLL_MS);
@@ -121,6 +128,7 @@ export default function WaterAlertWatcher() {
     const onStorage = (event) => {
       if (event.key === SEEN_KEY) setAlerts((current) => current.filter((item) => item.id < 0 || item.id > (Number(event.newValue) || 0)));
       if (event.key === SOUND_KEY) setSoundOn(event.newValue !== "off");
+      if (event.key === VOICE_KEY) setVoiceOn(event.newValue !== "off");
     };
     const onTest = (event) => {
       const level = event.detail?.level || "critical";
@@ -161,12 +169,14 @@ export default function WaterAlertWatcher() {
 
   // วิกฤตที่ยังไม่รับทราบ: เตือนซ้ำเป็นระยะ
   const hasCritical = alerts.some((item) => item.level === "critical");
+  const alertsRef = useRef(alerts);
+  useEffect(() => { alertsRef.current = alerts; }, [alerts]);
   useEffect(() => {
     if (!hasCritical) return undefined;
     const timer = window.setInterval(() => {
       if (repeatsRef.current >= MAX_REPEATS) return;
       repeatsRef.current += 1;
-      play("critical");
+      play("critical", alertsRef.current.filter((item) => item.level === "critical"));
     }, REPEAT_MS);
     return () => window.clearInterval(timer);
   }, [hasCritical, play]);
@@ -187,9 +197,20 @@ export default function WaterAlertWatcher() {
     writeValue(SOUND_KEY, next ? "on" : "off");
     if (next) play("info");
   };
+  const toggleVoice = () => {
+    const next = !voiceOn;
+    setVoiceOn(next);
+    setVoiceEnabled(next);
+    if (next) speak(waterAlertSpeech(alerts), { force: true });
+    else if (speechSupported()) window.speechSynthesis.cancel();
+  };
   const enableAudio = () => {
     const ctx = ensureContext();
-    ctx?.resume().then(() => { setAudioLocked(false); playPattern(ctx, alerts[0]?.level || "info"); }).catch(() => {});
+    ctx?.resume().then(() => {
+      setAudioLocked(false);
+      playPattern(ctx, alerts[0]?.level || "info");
+      speak(waterAlertSpeech(alerts), { delayMs: SPEAK_DELAY_MS[alerts[0]?.level] || 800 });
+    }).catch(() => {});
   };
   const askNotification = () => {
     if (typeof Notification === "undefined") return;
@@ -222,6 +243,11 @@ export default function WaterAlertWatcher() {
             <header className={`flex items-center gap-2 px-4 py-2 text-white ${style.bar}`}>
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="flex-1 text-sm font-black">{topic} · {style.label}</span>
+              {speechSupported() ? (
+                <button type="button" onClick={toggleVoice} className={`rounded-full p-1 hover:bg-white/20 ${voiceOn && soundOn ? "" : "opacity-50"}`} aria-pressed={voiceOn} aria-label={voiceOn ? "ปิดเสียงพูด" : "เปิดเสียงพูด"} title={voiceOn ? "ปิดเสียงพูด (เหลือเสียงสัญญาณ)" : "เปิดเสียงพูดอ่านแจ้งเตือน"}>
+                  <Speech className="h-4 w-4" aria-hidden="true" />
+                </button>
+              ) : null}
               <button type="button" onClick={toggleSound} className="rounded-full p-1 hover:bg-white/20" aria-label={soundOn ? "ปิดเสียงแจ้งเตือน" : "เปิดเสียงแจ้งเตือน"} title={soundOn ? "ปิดเสียง" : "เปิดเสียง"}>
                 {soundOn ? <Volume2 className="h-4 w-4" aria-hidden="true" /> : <VolumeX className="h-4 w-4" aria-hidden="true" />}
               </button>

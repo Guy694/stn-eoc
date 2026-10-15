@@ -47,9 +47,9 @@ function StationTable({ data }) {
       <SectionHead
         number="1"
         title={`ระดับน้ำสถานีเฝ้าระวัง ${report.rows.length} สถานี`}
-        aside={<span className="inline-block rounded-full bg-white px-2.5 py-0.5 text-[11px] font-semibold" style={{ color: allBelow ? "#15803d" : UP }}>{allBelow ? "✓ ทุกสถานีที่มีข้อมูลต่ำกว่าตลิ่ง" : report.headline}</span>}
+        aside={<span data-pill className="inline-block rounded-full bg-white px-2.5 text-[11px] font-semibold leading-[1.7]" style={{ color: allBelow ? "#15803d" : UP }}>{allBelow ? "✓ ทุกสถานีที่มีข้อมูลต่ำกว่าตลิ่ง" : report.headline}</span>}
       />
-      <table className="w-full border-collapse text-[12px]">
+      <table className="w-full border-collapse text-[11.5px]">
         <thead>
           <tr style={{ background: "#e3eff9", color: NAVY }}>
             <th className="px-2 py-1 text-left font-semibold">รหัส</th>
@@ -64,20 +64,20 @@ function StationTable({ data }) {
         <tbody>
           {report.rows.map((row, index) => (
             <tr key={row.code} style={{ background: index % 2 ? ZEBRA : "#ffffff", borderTop: "1px solid #e3edf6" }}>
-              <td className="px-2 py-[3px] font-medium">{row.code}</td>
-              <td className="px-2 py-[3px] leading-snug">{row.name}</td>
-              {columns.map((column) => <td key={column.hour} className="px-2 py-[3px] text-right tabular-nums">{formatLevel(column.levels?.[row.code] ?? null)}</td>)}
-              <td className="px-2 py-[3px] text-right font-semibold tabular-nums">{row.malfunction || row.level === null ? <span className="font-normal text-slate-500">ไม่มีข้อมูล</span> : formatLevel(row.level)}</td>
-              <td className="px-2 py-[3px] text-right tabular-nums">
+              <td className="px-2 py-[1.5px] font-medium">{row.code}</td>
+              <td className="px-2 py-[1.5px] leading-snug">{row.name}</td>
+              {columns.map((column) => <td key={column.hour} className="px-2 py-[1.5px] text-right tabular-nums">{formatLevel(column.levels?.[row.code] ?? null)}</td>)}
+              <td className="px-2 py-[1.5px] text-right font-semibold tabular-nums">{row.malfunction || row.level === null ? <span className="font-normal text-slate-500">ไม่มีข้อมูล</span> : formatLevel(row.level)}</td>
+              <td className="px-2 py-[1.5px] text-right tabular-nums">
                 <span className="inline-flex items-center justify-end gap-1 font-semibold" style={{ color: diffColor(row.direction) }}>
                   <Arrow direction={row.direction} />
                   {row.diff === null ? "" : row.direction === "steady" ? "คงที่" : Math.abs(row.diff).toFixed(2)}
                 </span>
               </td>
-              <td className="px-2 py-[3px] text-right tabular-nums" style={row.belowBank !== null && row.belowBank < 1 ? { color: UP, fontWeight: 700 } : undefined}>
+              <td className="px-2 py-[1.5px] text-right tabular-nums" style={row.belowBank !== null && row.belowBank < 1 ? { color: UP, fontWeight: 700 } : undefined}>
                 {row.belowBank === null ? "–" : row.belowBank < 0 ? `ล้น ${Math.abs(row.belowBank).toFixed(2)}` : row.belowBank.toFixed(2)}
               </td>
-              <td className="px-2 py-[3px] text-right tabular-nums">{formatLevel(row.bank)}</td>
+              <td className="px-2 py-[1.5px] text-right tabular-nums">{formatLevel(row.bank)}</td>
             </tr>
           ))}
         </tbody>
@@ -94,9 +94,9 @@ function StationTable({ data }) {
 function CrossSection({ card }) {
   const { level, bank, warning } = card;
   const W = 230;
-  const H = 104;
+  const H = 82;
   const values = [level, bank, warning].filter((value) => value !== null && value !== undefined);
-  if (!values.length) return <div className="grid h-[104px] place-items-center text-[11px] text-slate-500">ไม่มีข้อมูลระดับน้ำ</div>;
+  if (!values.length) return <div className="grid h-[82px] place-items-center text-[11px] text-slate-500">ไม่มีข้อมูลระดับน้ำ</div>;
   const high = Math.max(...values);
   const low = Math.min(...values);
   const span = Math.max(high - low, 1.5);
@@ -114,7 +114,7 @@ function CrossSection({ card }) {
   const xOnRight = (yy) => rightTop - ((yy - bankY) / (bedY - bankY)) * slope;
   const marker = level !== null ? (leftTop + rightTop) / 2 - 22 : 0;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-[104px] w-full" role="img" aria-label={`${card.label} ระดับน้ำ ${formatLevel(level)} ม. ตลิ่ง ${formatLevel(bank)} ม.`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="block h-[82px] w-full" role="img" aria-label={`${card.label} ระดับน้ำ ${formatLevel(level)} ม. ตลิ่ง ${formatLevel(bank)} ม.`}>
       <rect x="0" y="0" width={W} height={H} fill="#eef6fc" />
       {waterY !== null ? (
         <polygon points={`${xOnLeft(waterY)},${waterY} ${xOnRight(waterY)},${waterY} ${rightTop - slope},${bedY} ${leftTop + slope},${bedY}`} fill={WATER} opacity="0.85" />
@@ -131,7 +131,8 @@ function CrossSection({ card }) {
       {warning !== null ? (
         <>
           <line x1="2" x2={W - 42} y1={y(warning)} y2={y(warning)} stroke={WARN_ORANGE} strokeWidth="1.3" strokeDasharray="4 3" />
-          <text x={(W - 40) / 2} y={y(warning) - 2.5} textAnchor="middle" fontSize="9" fontWeight="600" fill={WARN_ORANGE}>เฝ้าระวัง {formatLevel(warning)} ม.</text>
+          {/* เส้นเฝ้าระวังอยู่ใกล้ตลิ่ง → วางป้ายไว้ใต้เส้น ไม่ให้ทับป้ายตลิ่ง */}
+          <text x={(W - 40) / 2} y={bank !== null && Math.abs(y(warning) - bankY) < 12 ? y(warning) + 9 : y(warning) - 2.5} textAnchor="middle" fontSize="9" fontWeight="600" fill={WARN_ORANGE}>เฝ้าระวัง {formatLevel(warning)} ม.</text>
         </>
       ) : null}
       {waterY !== null ? (
@@ -157,19 +158,19 @@ function BasinCard({ card }) {
   const changeText = card.diff === null ? "–" : card.direction === "steady" ? "คงที่" : Math.abs(card.diff).toFixed(2);
   return (
     <div className="overflow-hidden rounded-lg border" style={{ borderColor: BORDER }}>
-      <p className="flex items-center justify-center gap-1 px-2 py-1 text-[13.5px] font-semibold text-white" style={{ background: NAVY }}>
+      <p className="flex items-center justify-center gap-1 px-2 py-0.5 text-[13px] font-semibold text-white" style={{ background: NAVY }}>
         <svg width="11" height="14" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z" fill="#fff" /></svg>
         {card.label}
       </p>
       {card.station ? <CrossSection card={card} /> : (
-        <div className="grid h-[104px] place-items-center px-3 text-center text-[11px] text-slate-500">ยังไม่พบสถานีวัดของ{card.label} เลือกสถานีได้ที่ “ตั้งค่ารายงาน”</div>
+        <div className="grid h-[82px] place-items-center px-3 text-center text-[11px] text-slate-500">ยังไม่พบสถานีวัดของ{card.label} เลือกสถานีได้ที่ “ตั้งค่ารายงาน”</div>
       )}
-      <table className="w-full border-collapse text-center text-[11.5px]">
+      <table className="w-full border-collapse text-center text-[11px]">
         <thead>
           <tr style={{ background: "#e3eff9", color: NAVY }}>
-            <th className="py-0.5 font-semibold">{card.previousSource === "previous" ? "ครั้งก่อน" : "เมื่อวาน"}</th>
-            <th className="py-0.5 font-semibold">ล่าสุด</th>
-            <th className="py-0.5 font-semibold">เปลี่ยนแปลง</th>
+            <th className="py-0 font-semibold">{card.previousSource === "previous" ? "ครั้งก่อน" : "เมื่อวาน"}</th>
+            <th className="py-0 font-semibold">ล่าสุด</th>
+            <th className="py-0 font-semibold">เปลี่ยนแปลง</th>
           </tr>
         </thead>
         <tbody>
@@ -182,7 +183,7 @@ function BasinCard({ card }) {
           </tr>
         </tbody>
       </table>
-      {card.station ? <p className="truncate border-t px-2 py-0.5 text-[9px] text-slate-500" style={{ borderColor: "#e3edf6" }}>สถานี{card.station.name}{card.station.agency ? ` (${card.station.agency})` : ""}</p> : null}
+      {card.station ? <p className="truncate border-t px-2 text-[8.5px] leading-[1.5] text-slate-500" style={{ borderColor: "#e3edf6" }}>สถานี{card.station.name}{card.station.agency ? ` (${card.station.agency})` : ""}</p> : null}
     </div>
   );
 }
@@ -196,7 +197,7 @@ function BasinSection({ extras }) {
     <section className="rounded-[10px] border" style={{ borderColor: BORDER }}>
       <SectionHead number="2" title="ระดับลุ่มน้ำหลัก" aside={aside ? <>{aside}<br />หน่วย: เมตร (รทก.)</> : "หน่วย: เมตร (รทก.)"} />
       {!extras ? <p className="px-4 py-6 text-center text-[12px] text-slate-500">กำลังโหลดข้อมูลลุ่มน้ำ…</p> : (
-        <div className="grid grid-cols-3 gap-2 p-2">
+        <div className="grid grid-cols-3 gap-1.5 p-1.5">
           {cards.map((card) => <BasinCard key={card.key} card={card} />)}
         </div>
       )}
@@ -205,52 +206,55 @@ function BasinSection({ extras }) {
 }
 
 /* ---------- 3 ฝน ---------- */
+const RAIN_ROWS = 8; // แสดงสถานีฝนมากสุด 8 อันดับ (ที่เหลือบอกเป็นจำนวน) ให้รายงานอยู่ใน A4 หน้าเดียว
 function RainSection({ extras }) {
   const rain = extras?.rain;
   const media = extras?.rain_media || [];
   const forecast = extras?.forecast || [];
+  const hiddenRain = rain ? Math.max(0, (rain.total || rain.rows.length) - Math.min(rain.rows.length, RAIN_ROWS)) : 0;
   return (
     <section className="rounded-[10px] border" style={{ borderColor: BORDER }}>
       <SectionHead number="3" title="ฝนสะสม 24 ชม. และแนวโน้มเฝ้าระวัง" />
       {!extras ? <p className="px-4 py-6 text-center text-[12px] text-slate-500">กำลังโหลดข้อมูลฝน…</p> : (
-        <div className="grid grid-cols-[1fr_1.12fr] gap-2 p-2">
-          <div>
-            <table className="w-full border-collapse text-[11.5px]">
+        <div className="grid grid-cols-[1.08fr_1fr] gap-2 p-1.5">
+          <div className="min-w-0">
+            <table className="w-full table-fixed border-collapse text-[11px]">
+              <colgroup><col /><col className="w-[3.4rem]" /><col className="w-[3.6rem]" /><col className="w-[2.6rem]" /></colgroup>
               <thead>
                 <tr style={{ background: "#e3eff9", color: NAVY }}>
                   <th className="px-1.5 py-0.5 text-left font-semibold">สถานี</th>
-                  <th className="px-1.5 py-0.5 text-right font-semibold leading-tight">ฝน 24 ชม.<br /><span className="font-normal">(มม.)</span></th>
-                  <th className="px-1.5 py-0.5 text-center font-semibold">ระดับ</th>
-                  <th className="px-1.5 py-0.5 text-right font-semibold">เวลา</th>
+                  <th className="px-1 py-0.5 text-right font-semibold">มม.</th>
+                  <th className="px-1 py-0.5 text-center font-semibold">ระดับ</th>
+                  <th className="px-1 py-0.5 text-right font-semibold">เวลา</th>
                 </tr>
               </thead>
               <tbody>
-                {rain?.rows?.length ? rain.rows.map((row, index) => (
+                {rain?.rows?.length ? rain.rows.slice(0, RAIN_ROWS).map((row, index) => (
                   <tr key={row.id} style={{ background: index % 2 ? ZEBRA : "#ffffff", borderTop: "1px solid #e3edf6" }}>
-                    <td className="px-1.5 py-[2px] leading-snug">{row.name}{row.amphoe ? <span className="text-[9.5px] text-slate-500"> อ.{row.amphoe}</span> : null}</td>
-                    <td className="px-1.5 py-[2px] text-right font-semibold tabular-nums">{row.rain24h.toFixed(1)}</td>
-                    <td className="px-1.5 py-[2px] text-center"><span className="inline-block min-w-[3.6rem] rounded px-1 text-[10.5px] font-semibold" style={{ background: row.color, color: row.textColor }}>{row.label}</span></td>
-                    <td className="px-1.5 py-[2px] text-right tabular-nums text-slate-600">{row.time}</td>
+                    <td className="truncate px-1.5 py-[1.5px]" title={`${row.name}${row.amphoe ? ` อ.${row.amphoe}` : ""}`}>{row.name}{row.amphoe ? <span className="text-[9.5px] text-slate-500"> อ.{row.amphoe}</span> : null}</td>
+                    <td className="px-1 py-[1.5px] text-right font-semibold tabular-nums">{row.rain24h.toFixed(1)}</td>
+                    <td className="px-1 py-[1.5px] text-center"><span data-pill className="inline-block w-full rounded px-1 text-[10px] font-semibold leading-[1.5]" style={{ background: row.color, color: row.textColor }}>{row.label}</span></td>
+                    <td className="px-1 py-[1.5px] text-right tabular-nums text-slate-600">{row.time.replace(" น.", "")}</td>
                   </tr>
                 )) : (
                   <tr><td colSpan={4} className="px-2 py-4 text-center text-slate-500">ไม่มีสถานีที่วัดฝนได้ใน 24 ชม.ล่าสุด</td></tr>
                 )}
               </tbody>
             </table>
-            <p className="mt-1 text-[10px] text-slate-500">
-              หน่วย: มม.{rain?.timeRange ? ` · เวลารายสถานี ${rain.timeRange}` : ""}{rain?.hidden ? ` · มีฝนอีก ${rain.hidden} สถานี` : ""} · เกณฑ์ฝนกรมอุตุนิยมวิทยา
+            <p className="mt-0.5 text-[9.5px] leading-tight text-slate-500">
+              ฝนสะสม 24 ชม. (มม.) · เวลา (น.){rain?.timeRange ? ` ${rain.timeRange}` : ""}{hiddenRain ? ` · มีฝนอีก ${hiddenRain} สถานี` : ""} · เกณฑ์ฝนกรมอุตุนิยมวิทยา
             </p>
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex min-w-0 flex-col gap-1">
             {media.length ? (
               <div className="grid grid-cols-2 gap-1.5">
                 {media.map((item, index) => (
                   <figure key={item.url} className="overflow-hidden rounded border" style={{ borderColor: BORDER }}>
-                    <figcaption className="px-1 py-0.5 text-center text-[10.5px] font-semibold text-white" style={{ background: BRAND }}>
+                    <figcaption className="px-1 text-center text-[10px] font-semibold leading-[1.6] text-white" style={{ background: BRAND }}>
                       {index === 0 ? "วันนี้" : index === 1 ? "พรุ่งนี้" : ""} {item.datetime ? `(${thaiShortDate(item.datetime)})` : ""}
                     </figcaption>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.url} alt={`แผนที่คาดการณ์ฝน ${thaiShortDate(item.datetime)}`} className="block h-[118px] w-full bg-white object-cover object-left-bottom" crossOrigin="anonymous" />
+                    <img src={item.url} alt={`แผนที่คาดการณ์ฝน ${thaiShortDate(item.datetime)}`} className="block h-[96px] w-full bg-white object-cover object-left-bottom" crossOrigin="anonymous" />
                   </figure>
                 ))}
               </div>
@@ -258,26 +262,26 @@ function RainSection({ extras }) {
               <p className="rounded border px-2 py-3 text-center text-[11px] text-slate-500" style={{ borderColor: BORDER }}>ยังดึงภาพคาดการณ์ฝนจาก สสน. ไม่ได้</p>
             )}
             {forecast.length ? (
-              <table className="w-full border-collapse text-center text-[10.5px]">
+              <table className="w-full table-fixed border-collapse text-center text-[9.5px]">
                 <thead>
                   <tr style={{ background: NAVY, color: "#fff" }}>
-                    <th className="px-1 py-0.5 text-left font-semibold">คาดการณ์ 7 วัน</th>
+                    <th className="w-[3.6rem] px-1 py-0.5 text-left font-semibold">7 วัน</th>
                     {forecast.map((day) => <th key={day.date} className="px-0.5 py-0.5 font-semibold leading-tight">{thaiShortDate(day.date).replace(/ \d{4}$/, "")}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   <tr style={{ borderTop: "1px solid #e3edf6" }}>
                     <td className="px-1 py-0.5 text-left font-semibold" style={{ color: NAVY }}>ฝน</td>
-                    {forecast.map((day) => <td key={day.date} className="px-0.5 py-0.5">{day.label}</td>)}
+                    {forecast.map((day) => <td key={day.date} className="px-0 py-0.5 leading-tight">{day.label}</td>)}
                   </tr>
                   <tr style={{ background: ZEBRA, borderTop: "1px solid #e3edf6" }}>
-                    <td className="px-1 py-0.5 text-left font-semibold" style={{ color: NAVY }}>โอกาสฝน (%)</td>
+                    <td className="px-1 py-0.5 text-left font-semibold" style={{ color: NAVY }}>โอกาส %</td>
                     {forecast.map((day) => <td key={day.date} className="px-0.5 py-0.5 font-semibold tabular-nums">{day.probability ?? "–"}</td>)}
                   </tr>
                 </tbody>
               </table>
             ) : null}
-            <p className="text-[9.5px] leading-tight text-slate-500">ภาพ: แบบจำลอง WRF-ROMS ของ สสน. (สตูลอยู่มุมล่างซ้าย) · ตาราง: แบบจำลอง ECMWF ฝนรวมรายวันและโอกาสฝนสูงสุดของวัน</p>
+            <p className="text-[9px] leading-tight text-slate-500">ภาพ: WRF-ROMS ของ สสน. (สตูลมุมล่างซ้าย) · ตาราง: ECMWF ฝนรวมรายวันและโอกาสฝนสูงสุด</p>
           </div>
         </div>
       )}
@@ -296,14 +300,14 @@ function AreaSection({ areas }) {
   return (
     <section className="rounded-[10px] border" style={{ borderColor: BORDER }}>
       <SectionHead number="4" title="พื้นที่เฝ้าระวังสำคัญ" />
-      <div className="grid grid-cols-3 gap-2 p-2">
+      <div className="grid grid-cols-3 gap-1.5 p-1.5">
         {areas.map((area) => (
-          <div key={area.key} className="rounded-lg border px-2.5 py-1.5" style={{ borderColor: BORDER, background: ZEBRA }}>
+          <div key={area.key} className="rounded-lg border px-2 py-1" style={{ borderColor: BORDER, background: ZEBRA }}>
             <p className="flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: NAVY }}>
               <svg width="26" height="20" viewBox="0 0 26 20" aria-hidden="true">{AREA_ICONS[area.key]}</svg>
               {area.title}
             </p>
-            <p className="mt-0.5 text-[12px] leading-snug text-slate-700">{area.text || "–"}</p>
+            <p className="text-[11.5px] leading-snug text-slate-700">{area.text || "–"}</p>
           </div>
         ))}
       </div>
@@ -316,29 +320,29 @@ export default function FullReportSheet({ data, extras, config, flag, flagSource
   const issuer = config?.issuer || {};
   return (
     <article className="water-sheet relative flex flex-col overflow-hidden bg-white text-slate-800" style={{ width: "210mm", minHeight: "297mm" }} data-a4 data-compact={compact ? "1" : undefined}>
-      <header className="relative px-[10mm] pb-6 pt-[5mm]" style={{ background: "linear-gradient(180deg, #e6f1fb 0%, #f6fafe 100%)" }}>
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 pt-1"><StatusFlag level={flag} source={flagSource} /></div>
+      <header className="relative px-[8mm] pb-3 pt-[2.5mm]" style={{ background: "linear-gradient(180deg, #e6f1fb 0%, #f6fafe 100%)" }}>
+        <div className="flex items-center gap-3">
+          <div className="shrink-0"><StatusFlag level={flag} source={flagSource} compact /></div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-[24px] font-bold leading-[1.18]" style={{ color: NAVY }}>การประเมินความเสี่ยงสถานการณ์อุทกภัย<br />จังหวัดสตูล</h1>
-            <p className="mt-1.5 inline-block rounded-full border bg-white px-4 py-0.5 text-[14px] font-medium" style={{ borderColor: "#9cc2e5", color: NAVY }}>
+            <h1 className="whitespace-nowrap text-[19px] font-bold leading-[1.3]" style={{ color: NAVY }}>การประเมินความเสี่ยงสถานการณ์อุทกภัย จังหวัดสตูล</h1>
+            <p data-pill className="mt-1 inline-block rounded-full border bg-white px-3 text-[12.5px] font-medium leading-[1.7]" style={{ borderColor: "#9cc2e5", color: NAVY }}>
               ข้อมูล ณ วันที่ {report.dataLabel.date} เวลา {report.dataLabel.time}
             </p>
           </div>
           {issuer.name || issuer.position ? (
-            <div className="mt-1 shrink-0 rounded-lg px-3 py-1.5 text-center text-[12px] leading-snug text-white" style={{ background: NAVY }}>
+            <div className="shrink-0 rounded-lg px-3 py-1 text-center text-[11px] leading-snug text-white" style={{ background: NAVY }}>
               {issuer.name ? <p className="font-semibold">{issuer.name}</p> : null}
               {issuer.position ? <p className="text-white/85">{issuer.position}</p> : null}
             </div>
           ) : null}
         </div>
-        <svg className="absolute inset-x-0 bottom-0 h-6 w-full" viewBox="0 0 800 24" preserveAspectRatio="none" aria-hidden="true">
+        <svg className="absolute inset-x-0 bottom-0 h-3 w-full" viewBox="0 0 800 24" preserveAspectRatio="none" aria-hidden="true">
           <path d="M0 14 C 80 4, 160 22, 240 12 S 400 2, 480 12 S 640 22, 720 10 S 790 8, 800 12 V24 H0 Z" fill="#cfe3f5" />
           <path d="M0 18 C 100 10, 180 26, 280 17 S 460 8, 560 17 S 720 25, 800 16 V24 H0 Z" fill="#a9cdee" />
         </svg>
       </header>
 
-      <div className="flex flex-1 flex-col gap-[2.5mm] px-[8mm] pb-[2mm] pt-[2.5mm]">
+      <div className="flex flex-1 flex-col gap-[2mm] px-[7mm] pb-[1.5mm] pt-[2mm]">
         <StationTable data={data} />
         <BasinSection extras={extras} />
         <RainSection extras={extras} />
@@ -349,11 +353,12 @@ export default function FullReportSheet({ data, extras, config, flag, flagSource
         </p>
       </div>
 
-      <footer className="relative px-[12mm] pb-[3mm] pt-4 text-center text-[10px] leading-[1.35]" style={{ background: "linear-gradient(0deg, #dbeaf8 0%, #f6fafe 100%)", color: NAVY }}>
-        <svg className="absolute inset-x-0 top-0 h-4 w-full" viewBox="0 0 800 20" preserveAspectRatio="none" aria-hidden="true">
+      <footer className="relative px-[10mm] pb-[2mm] pt-2.5 text-center text-[9.5px] leading-[1.4]" style={{ background: "linear-gradient(0deg, #dbeaf8 0%, #f6fafe 100%)", color: NAVY }}>
+        <svg className="absolute inset-x-0 top-0 h-2 w-full" viewBox="0 0 800 20" preserveAspectRatio="none" aria-hidden="true">
           <path d="M0 8 C 120 18, 220 0, 340 9 S 560 18, 680 7 S 780 4, 800 8 V0 H0 Z" fill="#ffffff" />
         </svg>
-        {DEFAULT_FOOTER.map((line) => <p key={line} className={line === DEFAULT_FOOTER[0] ? "font-semibold" : ""}>{line}</p>)}
+        <p className="font-semibold">{DEFAULT_FOOTER[0]}</p>
+        <p>{DEFAULT_FOOTER.slice(1).join(" ")}</p>
       </footer>
     </article>
   );

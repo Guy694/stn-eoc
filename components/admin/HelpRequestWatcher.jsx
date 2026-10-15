@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BellRing, Clock, LifeBuoy, Smartphone, X } from "lucide-react";
 import { playPattern } from "@/lib/alertSound";
+import { SPEAK_DELAY_MS, helpRequestSpeech, speak } from "@/lib/alertSpeech";
 import { waitedText } from "@/lib/helpAlerts";
 import { officerPushStatus, subscribeOfficerPush } from "@/lib/pwaClient";
 
@@ -71,7 +72,9 @@ export default function HelpRequestWatcher() {
     const fresh = next.filter((item) => shownRef.current.get(item.id) !== (item.kind === "new" ? "new" : item.escalation));
     for (const item of fresh) shownRef.current.set(item.id, item.kind === "new" ? "new" : item.escalation);
     if (fresh.length) {
-      play(fresh.some((item) => item.kind === "new") ? "critical" : "serious");
+      const level = fresh.some((item) => item.kind === "new") ? "critical" : "serious";
+      play(level);
+      if (soundOn()) speak(helpRequestSpeech(fresh), { delayMs: SPEAK_DELAY_MS[level] });
       if (typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden) {
         for (const item of fresh.slice(0, 3)) {
           try {
