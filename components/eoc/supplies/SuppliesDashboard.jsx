@@ -7,6 +7,7 @@ import { Button, DataTable, FilterSelect, StatStrip, StatusPill } from "@/compon
 import { formatNumber } from "@/lib/adminApi";
 import { COVER_LEVELS, DAILY_WINDOW_DAYS, shortThaiDate } from "@/lib/medicalDaily";
 import { STOCK_LEVEL_LABELS } from "@/lib/medicalInventory";
+import { periodLabel } from "@/lib/hospitalDrugFiles";
 
 const LEVEL_CELL = {
   out: "bg-red-100 text-red-900",
@@ -38,6 +39,19 @@ function CoverPill({ days, level }) {
 function LevelPill({ level }) {
   const config = STOCK_LEVEL_LABELS[level] || STOCK_LEVEL_LABELS.unknown;
   return <StatusPill tone={config.tone}>{config.label}</StatusPill>;
+}
+
+const EXPIRY_TONE = { expired: "red", within90: "red", within180: "amber" };
+const EXPIRY_TEXT = { expired: "หมดอายุแล้ว", within90: "ภายใน 3 เดือน", within180: "ภายใน 6 เดือน" };
+
+// อัตราใช้ต่อวัน พร้อมบอกว่ามาจากรายงานรายวันหรืออัตราใช้ปกติของโรงพยาบาล
+function AvgUse({ row }) {
+  return (
+    <span className="tabular-nums">
+      {formatNumber(row.avg_use)}
+      {row.avg_source === "baseline" && row.baseline ? <span className="block text-xs text-slate-500">ปกติ {periodLabel(row.baseline.period)}</span> : null}
+    </span>
+  );
 }
 
 const qty = (value, unit) => <span className="tabular-nums">{formatNumber(value)}{unit ? <span className="ml-1 text-xs text-slate-500">{unit}</span> : null}</span>;
@@ -210,7 +224,7 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
   const urgentColumns = [
     { key: "item_name", label: "รายการ", render: (row) => <span className="font-bold text-slate-900">{row.item_name}<span className="block text-xs font-normal text-slate-500">{row.agency_name} · อ.{row.district}</span></span> },
     { key: "balance", label: "คงเหลือ", className: "text-right", render: (row) => qty(row.balance, row.unit) },
-    { key: "avg_use", label: `ใช้เฉลี่ย/วัน (${DAILY_WINDOW_DAYS} วัน)`, className: "text-right", render: (row) => qty(row.avg_use) },
+    { key: "avg_use", label: `ใช้เฉลี่ย/วัน (${DAILY_WINDOW_DAYS} วัน)`, className: "text-right", render: (row) => <AvgUse row={row} /> },
     { key: "days_cover", label: "พอใช้อีก", render: (row) => <CoverPill days={row.days_cover} level={row.cover_level} /> },
     { key: "level", label: "สถานะ", render: (row) => <LevelPill level={row.level} /> },
     { key: "last_report", label: "รายงานล่าสุด", render: (row) => (row.last_report ? shortThaiDate(row.last_report) : <span className="text-slate-400">ยังไม่เคย</span>) }
@@ -229,6 +243,13 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
     { key: "days_cover", label: "พอใช้อีก", render: (row) => <CoverPill days={row.days_cover} level={row.cover_level} /> },
     { key: "out", label: "หน่วยที่หมด/ใกล้หมด", className: "text-right", render: (row) => <span className="tabular-nums"><span className={row.out ? "font-bold text-red-700" : ""}>{row.out}</span> / <span className={row.low ? "font-bold text-amber-700" : ""}>{row.low}</span></span> }
   ];
+  const expiryColumns = [
+    { key: "expire_date", label: "วันหมดอายุ", render: (row) => <span>{shortThaiDate(row.expire_date)}<span className="block text-xs text-slate-500">{row.days < 0 ? `เกินมา ${formatNumber(-row.days)} วัน` : `อีก ${formatNumber(row.days)} วัน`}</span></span> },
+    { key: "item_name", label: "รายการ", render: (row) => <span className="font-bold text-slate-900">{row.item_name}<span className="block text-xs font-normal text-slate-500">{row.agency_name}{row.lot_no ? ` · ล็อต ${row.lot_no}` : ""}</span></span> },
+    { key: "qty", label: "จำนวน", className: "text-right", render: (row) => qty(row.qty, row.unit) },
+    { key: "value", label: "มูลค่า (บาท)", className: "text-right", render: (row) => (row.value === null ? "–" : qty(row.value)) },
+    { key: "status", label: "สถานะ", render: (row) => <StatusPill tone={EXPIRY_TONE[row.status]}>{EXPIRY_TEXT[row.status]}</StatusPill> }
+  ];
   const diffColumns = [
     { key: "date", label: "วันที่", render: (row) => shortThaiDate(row.date) },
     { key: "item_name", label: "รายการ", render: (row) => <span>{row.item_name}<span className="block text-xs text-slate-500">{row.agency_name}</span></span> },
@@ -243,13 +264,27 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
         { label: "รายการเวชภัณฑ์", value: `${formatNumber(summary.items)} ชนิด` },
         { label: `รายงานวันที่ ${shortThaiDate(dashboard.today)}`, value: `${formatNumber(reporting.today.complete)}/${formatNumber(reporting.today.total)} หน่วย`, className: reporting.today.missing ? "text-amber-700" : "text-emerald-700" },
         { label: "หมด / พอใช้ไม่ถึง 3 วัน", value: `${formatNumber(summary.out)} / ${formatNumber(summary.critical_cover)}`, className: summary.out || summary.critical_cover ? "text-red-700" : undefined },
-        { label: "ยอดนับไม่ตรงวันนี้", value: formatNumber(summary.discrepancies), className: summary.discrepancies ? "text-amber-700" : undefined }
+        { label: "ยอดนับไม่ตรงวันนี้", value: formatNumber(summary.discrepancies), className: summary.discrepancies ? "text-amber-700" : undefined },
+        ...(summary.lots ? [{ label: "ล็อตหมดอายุ / ใน 3 เดือน", value: `${formatNumber(summary.expired)} / ${formatNumber(summary.expiring_90)}`, className: summary.expired || summary.expiring_90 ? "text-red-700" : undefined }] : [])
       ]} />
 
       <Section title="ต้องเติมด่วน" description={`รายการที่หมด ใกล้หมด หรือคาดว่าพอใช้ไม่เกิน 7 วัน (คิดจากอัตราใช้เฉลี่ย ${DAILY_WINDOW_DAYS} วันล่าสุด)`}>
         <DataTable columns={urgentColumns} rows={dashboard.urgent} caption="ต้องเติมด่วน" emptyText="ไม่มีรายการที่ต้องเติมด่วน" pageSize={10}
           rowClassName={(row) => (row.level === "out" || row.cover_level === "critical" ? "bg-red-50/40" : "")} />
       </Section>
+
+      {summary.baseline_items ? (
+        <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+          {formatNumber(summary.baseline_items)} รายการยังรายงานรายวันไม่ถึง 3 วัน ระบบใช้อัตราใช้ปกติจากระบบคลังยาของโรงพยาบาล (ยอดจ่ายเดือนล่าสุด ÷ จำนวนวัน) คำนวณว่าพอใช้อีกกี่วันไปก่อน
+        </p>
+      ) : null}
+
+      {summary.lots ? (
+        <Section title="ยาใกล้หมดอายุ" description="จากล็อตที่นำเข้าจากระบบคลังยาของโรงพยาบาล ใช้ล็อตที่ใกล้หมดอายุก่อน หรือแลกเปลี่ยนกับหน่วยที่ใช้มากกว่า">
+          <DataTable columns={expiryColumns} rows={dashboard.expiring || []} rowKey={(row) => `${row.stock_id}-${row.lot_no}-${row.expire_date}`} caption="ยาใกล้หมดอายุ" emptyText="ไม่มียาที่หมดอายุภายใน 6 เดือน" pageSize={10}
+            rowClassName={(row) => (row.status === "expired" ? "bg-red-50/40" : "")} />
+        </Section>
+      ) : null}
 
       <Section title="การส่งรายงานประจำวัน" description="หน่วยบริการต้องรายงานทุกรายการทุกวัน กดชื่อหน่วยที่ยังไม่รายงานเพื่อกรอกแทนได้">
         <ReportingPanel reporting={reporting} onPickFacility={onPickFacility} />

@@ -9,6 +9,7 @@ import { ReadOnlyNotice,
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
 import ImportExcelDialog from "@/components/eoc/ImportExcelDialog";
+import HospitalDrugImportDialog from "@/components/eoc/supplies/HospitalDrugImportDialog";
 import SuppliesDashboard from "@/components/eoc/supplies/SuppliesDashboard";
 import SuppliesDailyReport from "@/components/eoc/supplies/SuppliesDailyReport";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
@@ -46,6 +47,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   const [moveDialog, setMoveDialog] = useState(null);
   const [itemDialog, setItemDialog] = useState(false);
   const [importKind, setImportKind] = useState(null);
+  const [hospitalImport, setHospitalImport] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [moveForm, setMoveForm] = useState({ qty: "", requested_team: "", note: "" });
@@ -214,6 +216,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
           {eocType === "flood" ? <Link href="/eoc/flood/oxygen" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ออกซิเจนเหลว</Link> : null}
           {eocType === "flood" ? <Link href="/eoc/flood/team-reports?team=resources" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">แจกจ่ายรายอำเภอ</Link> : null}
           {perms.can_add_item ? <Button variant="secondary" onClick={() => setImportKind("supplies")}>นำเข้ายอดตั้งต้น</Button> : null}
+          {perms.can_add_item ? <Button variant="secondary" onClick={() => setHospitalImport(true)}>นำเข้าจากระบบคลังยา รพ.</Button> : null}
           {perms.can_move ? <Button variant="secondary" onClick={() => setImportKind("supplies-daily")}><ClipboardList className="h-4 w-4" aria-hidden="true" />นำเข้ารายงานประจำวัน</Button> : null}
           {perms.can_add_item ? <AddButton onClick={() => { setFormError(""); setItemDialog(true); }}>เพิ่มรายการ</AddButton> : null}
         </>
@@ -336,6 +339,10 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
           </Field>
         </FormGrid>
       </FormDialog>
+      <HospitalDrugImportDialog
+        open={hospitalImport} onOpenChange={setHospitalImport} eocType={eocType} sessionId={data?.session?.id}
+        onImported={() => { load(); setRefreshKey((key) => key + 1); }}
+      />
       <ImportExcelDialog
         open={Boolean(importKind)} onOpenChange={(open) => { if (!open) setImportKind(null); }} kind={importKind || "supplies"}
         context={{ eoc: eocType, session_id: data?.session?.id, ...(importKind === "supplies-daily" && tab === "daily" && dailyFacility ? { facility_id: dailyFacility } : {}) }}

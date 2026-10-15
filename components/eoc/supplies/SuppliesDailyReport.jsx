@@ -171,7 +171,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
                     <tr key={row.stock_id} className={c.negative ? "bg-red-50/60" : ""}>
                       <td className="px-3 py-2">
                         <span className="font-bold text-slate-900">{row.item_name}</span>
-                        <span className="block text-xs text-slate-500">{row.unit || "-"}{row.report ? " · รายงานแล้ว" : ""}</span>
+                        <span className="block text-xs text-slate-500">{row.unit || "-"}{row.report ? (row.report.source === "hospital" ? " · รายงานจากไฟล์คลังยา รพ. (แก้ที่นี่ได้ แต่การนำเข้าไฟล์ของวันเดียวกันอีกครั้งจะแทนที่)" : " · รายงานแล้ว") : ""}</span>
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-slate-600">{formatNumber(row.start_qty)}</td>
                       <td className="px-3 py-2 text-right">{input("received_qty", { label: "รับเข้า" })}</td>
