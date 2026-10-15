@@ -1,26 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Download, FileDown, ImageDown, Pencil, RefreshCw } from "lucide-react";
+import { Download, FileDown, ImageDown, Pencil, RefreshCw, Settings2 } from "lucide-react";
 import { Button } from "@/components/admin/crud";
 import { apiRequest } from "@/lib/adminApi";
 import { BANK_LEVELS, flagRecommendations, formatLevel, formatSigned, thaiHourLabel } from "@/lib/dpmWater";
 import { FLOOD_FLAGS, flagMeta } from "@/lib/floodTriggers";
+import FullReportSheet from "@/components/eoc/water-report/FullReportSheet";
+import ReportConfigEditor from "@/components/eoc/water-report/ReportConfigEditor";
+import { normalizeReportConfig } from "@/lib/waterReportExtras";
+import { Arrow, BRAND, DEFAULT_FOOTER, DOWN, NAVY, SectionHead, StatusFlag, STEADY, UP } from "@/components/eoc/water-report/sheetParts";
 
-const NAVY = "#083865";
-const BRAND = "#0b4c86";
-const UP = "#c62828";
-const DOWN = "#1d64b8";
-const STEADY = "#64748b";
-const DEFAULT_FOOTER = [
-  "ออกโดยกลุ่มภารกิจตระหนักรู้สถานการณ์ (Situation Awareness Team)",
-  "ศูนย์บัญชาการเหตุการณ์ภาวะอุทกภัยทางสาธารณสุข",
-  "สำหรับทุกโรคและภัยสุขภาพ (Emergency Operation Center : EOC)",
-  "สำนักงานสาธารณสุขจังหวัดสตูล"
-];
 const SHEET_WIDTH_PX = 794; // 210mm ที่ 96dpi
 const A4_HEIGHT_PX = 1123; // 297mm ที่ 96dpi
 const RECOMMENDATION_KEY = "stn-eoc:water-report:recommendations";
+const LAYOUT_KEY = "stn-eoc:water-report:layout";
+
+function readLayout() {
+  try {
+    return window.localStorage.getItem(LAYOUT_KEY) === "summary" ? "summary" : "full";
+  } catch {
+    return "full";
+  }
+}
 
 function readSaved() {
   try {
@@ -83,50 +85,6 @@ function hourOptionLabel(hour, dataHour) {
   const label = thaiHourLabel(hour);
   const sameDay = hour.slice(0, 10) === String(dataHour || "").slice(0, 10);
   return sameDay ? label.time : `${label.date.replace(/ \d{4}$/, "")} ${label.time}`;
-}
-
-function Arrow({ direction, size = 14 }) {
-  if (direction === "up") {
-    return <svg width={size} height={size} viewBox="0 0 16 16" aria-label="เพิ่มขึ้น"><path d="M8 1.5 14 8H10v6.5H6V8H2z" fill={UP} /></svg>;
-  }
-  if (direction === "down") {
-    return <svg width={size} height={size} viewBox="0 0 16 16" aria-label="ลดลง"><path d="M8 14.5 2 8h4V1.5h4V8h4z" fill={DOWN} /></svg>;
-  }
-  if (direction === "steady") {
-    return <svg width={size} height={size} viewBox="0 0 16 16" aria-label="คงที่"><path d="M2 5h12v2.2H2zM2 8.8h12V11H2z" fill={STEADY} /></svg>;
-  }
-  return <span aria-label="ไม่มีข้อมูล" style={{ color: STEADY }}>–</span>;
-}
-
-// ธงตามเกณฑ์ทีม SAT: เขียว เฝ้าระวัง · เหลือง เตรียมพร้อมเคลื่อนย้าย · แดง เคลื่อนย้าย
-function StatusFlag({ level, source }) {
-  return (
-    <div className="flex flex-col items-end" aria-label={`${level.label} ${level.meaning}`}>
-      <svg width="74" height="78" viewBox="0 0 74 86" aria-hidden="true" className="mr-3">
-        <rect x="6" y="2" width="4" height="84" rx="2" fill="#1f2937" />
-        <circle cx="8" cy="3.5" r="3.5" fill="#1f2937" />
-        <path d="M10 8 C 26 2, 40 14, 56 8 S 70 6, 72 9 L 72 44 C 66 41, 58 42, 52 45 C 38 51, 24 40, 10 46 Z" fill={level.color} />
-        <path d="M10 8 C 26 2, 40 14, 56 8 S 70 6, 72 9 L 72 16 C 60 13, 52 20, 38 17 C 26 14, 18 12, 10 16 Z" fill="#ffffff" opacity="0.18" />
-      </svg>
-      <span className="mt-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold text-white" style={{ background: level.color }}>
-        {level.label} · {level.meaning}
-      </span>
-      {source ? <span className="mt-0.5 whitespace-nowrap rounded bg-white/80 px-1 text-[9.5px] text-slate-600">{source}</span> : null}
-    </div>
-  );
-}
-
-function SectionHead({ number, title, aside }) {
-  return (
-    <div className="flex items-center gap-3 rounded-t-[10px] px-4 py-1.5" style={{ background: BRAND }}>
-      <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0" aria-hidden="true">
-        <circle cx="14" cy="14" r="14" fill="#ffffff" />
-        <text x="14" y="19.5" textAnchor="middle" fontSize="16" fontWeight="700" fill={BRAND} fontFamily="Kanit, system-ui, sans-serif">{number}</text>
-      </svg>
-      <h2 className="text-[18px] font-semibold leading-tight text-white">{title}</h2>
-      {aside ? <span className="ml-auto text-right text-[10.5px] leading-tight text-white/85">{aside}</span> : null}
-    </div>
-  );
 }
 
 function TrendCard({ tone, title, rows }) {
@@ -314,27 +272,58 @@ export default function WaterReport() {
   const [scale, setScale] = useState(1);
   const [sheetHeight, setSheetHeight] = useState(0);
   const [compact, setCompact] = useState(false);
+  const [layout, setLayout] = useState("full");
+  const [early, setEarly] = useState("");
+  const [extras, setExtras] = useState(null);
+  const [extrasError, setExtrasError] = useState("");
+  const [configOpen, setConfigOpen] = useState(false);
   const frameRef = useRef(null);
   const sheetRef = useRef(null);
 
-  useEffect(() => { setCustom(readSaved()); }, []);
+  useEffect(() => { setCustom(readSaved()); setLayout(readLayout()); }, []);
 
-  const load = useCallback(async (nextCompare = compare, refresh = false) => {
+  const changeLayout = (value) => {
+    setLayout(value);
+    try { window.localStorage.setItem(LAYOUT_KEY, value); } catch { /* ไม่มีที่เก็บก็ไม่เป็นไร */ }
+  };
+
+  // หัวข้อ 2–4 (ThaiWater ฝน พยากรณ์) โหลดแยก ตารางหลักขึ้นได้ก่อน
+  const loadExtras = useCallback(async (refresh = false) => {
+    setExtrasError("");
+    try {
+      const json = await apiRequest(`/stn-eoc/api/eoc/water-report/extras/${refresh ? "?refresh=1" : ""}`);
+      setExtras(json);
+    } catch (err) {
+      setExtrasError(err.message || "โหลดข้อมูลลุ่มน้ำและฝนไม่สำเร็จ");
+    }
+  }, []);
+
+  useEffect(() => { loadExtras(false); }, [loadExtras]);
+
+  const saveConfig = async (value) => {
+    await apiRequest("/stn-eoc/api/eoc/water-report/config/", { method: "PUT", body: { config: value } });
+    setConfigOpen(false);
+    await loadExtras(false);
+  };
+
+  const load = useCallback(async (nextCompare = compare, refresh = false, nextEarly = early) => {
     setLoading(true);
     setError("");
     try {
       const params = new URLSearchParams();
       if (nextCompare) params.set("compare", nextCompare);
+      if (nextEarly) params.set("early", nextEarly);
       if (refresh) params.set("refresh", "1");
       const json = await apiRequest(`/stn-eoc/api/eoc/water-report/?${params.toString()}`);
       setData(json);
       setCompare(nextCompare);
+      setEarly(nextEarly);
     } catch (err) {
       setError(err.message || "โหลดรายงานไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
-  }, [compare]);
+  }, [compare, early]);
 
   useEffect(() => { load(""); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -362,7 +351,8 @@ export default function WaterReport() {
   const shownFlag = flagMeta(shownFlagKey);
   const flagSource = flagChoice ? "" : declaredFlag ? "ตามประกาศ EOC" : "ประเมินจากระดับน้ำ";
   const recommendations = custom || (data ? flagRecommendations(shownFlagKey) : []);
-  const contentKey = `${data?.fetched_at || ""}|${recommendations.join("|")}|${data?.report.rows.length || 0}`;
+  const contentKey = `${layout}|${data?.fetched_at || ""}|${extras?.fetched_at || ""}|${recommendations.join("|")}|${data?.report.rows.length || 0}`;
+  const reportConfig = extras?.config || normalizeReportConfig(null);
   useEffect(() => { setCompact(false); }, [contentKey]);
 
   const startEdit = () => {
@@ -427,6 +417,29 @@ export default function WaterReport() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-slate-700">
+            รูปแบบ
+            <select value={layout} onChange={(event) => changeLayout(event.target.value)} className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm">
+              <option value="full">ประเมินความเสี่ยง 4 หัวข้อ</option>
+              <option value="summary">สรุปธงและข้อเสนอ</option>
+            </select>
+          </label>
+          {layout === "full" ? (
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              คอลัมน์แรก
+              <select
+                value={early}
+                onChange={(event) => load(compare, false, event.target.value)}
+                className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm"
+                disabled={loading || !data?.hours?.length}
+              >
+                <option value="">อัตโนมัติ (6 ชม.ก่อนเวลาที่เทียบ)</option>
+                {(data?.hours || []).map((item) => (
+                  <option key={item.hour} value={item.hour}>{hourOptionLabel(item.hour, data.report.dataHour)}</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <label className="flex items-center gap-2 text-sm text-slate-700">
             เทียบกับ
             <select
               value={compare}
@@ -448,8 +461,10 @@ export default function WaterReport() {
               {FLOOD_FLAGS.map((flag) => <option key={flag.key} value={flag.key}>{flag.label} {flag.meaning}</option>)}
             </select>
           </label>
-          <Button variant="secondary" onClick={() => load(compare, true)} disabled={loading}><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />ดึงข้อมูลล่าสุด</Button>
-          <Button variant="secondary" onClick={startEdit} disabled={!data}><Pencil className="h-4 w-4" />แก้ข้อเสนอ</Button>
+          <Button variant="secondary" onClick={() => { load(compare, true); loadExtras(true); }} disabled={loading}><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />ดึงข้อมูลล่าสุด</Button>
+          {layout === "full"
+            ? <Button variant="secondary" onClick={() => setConfigOpen(true)}><Settings2 className="h-4 w-4" />ตั้งค่ารายงาน</Button>
+            : <Button variant="secondary" onClick={startEdit} disabled={!data}><Pencil className="h-4 w-4" />แก้ข้อเสนอ</Button>}
           <Button variant="secondary" onClick={saveImage} disabled={!data || saving}><ImageDown className="h-4 w-4" />{saving ? "กำลังบันทึก…" : "บันทึกเป็นรูป"}</Button>
           <Button onClick={printPdf} disabled={!data}><FileDown className="h-4 w-4" />บันทึก PDF</Button>
         </div>
@@ -467,9 +482,15 @@ export default function WaterReport() {
         <p className="text-sm text-slate-600 print:hidden">
           ระบบเสนอ <b style={{ color: suggested.text }}>{suggested.label} {suggested.meaning}</b> เพราะ{suggested.reason}
           {declaredFlag ? <> · EOC ประกาศไว้ <b style={{ color: flagMeta(declaredFlag).text }}>{flagMeta(declaredFlag).label}</b></> : <> · ยังไม่มีการประกาศธง <a href="/stn-eoc/eoc/flood/triggers/" className="font-semibold text-[#0b4c86] underline">ไปหน้าประกาศธง/Trigger</a></>}
-          {" "}· ข้อเสนอในข้อ 4 เปลี่ยนตามธงอัตโนมัติ (ตามการดำเนินการ Trigger 1 ของ SAT)
+          {layout === "summary" ? " · ข้อเสนอในข้อ 4 เปลี่ยนตามธงอัตโนมัติ (ตามการดำเนินการ Trigger 1 ของ SAT)" : null}
         </p>
       ) : null}
+
+      {configOpen ? (
+        <ReportConfigEditor config={reportConfig} stations={extras?.basin_stations || []} onSave={saveConfig} onCancel={() => setConfigOpen(false)} />
+      ) : null}
+
+      {layout === "full" && extrasError ? <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 print:hidden">หัวข้อ 2–3: {extrasError}</p> : null}
 
       {editing ? (
         <div className="space-y-2 rounded-xl border border-[#c9dcee] bg-white p-4 print:hidden">
@@ -492,7 +513,9 @@ export default function WaterReport() {
         <div ref={frameRef} data-sheet-frame className="w-full overflow-hidden print:overflow-visible" style={{ height: sheetHeight ? sheetHeight * scale : undefined }}>
           <div data-sheet-scale style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: SHEET_WIDTH_PX }}>
             <div ref={sheetRef} className="shadow-[0_2px_18px_rgba(8,56,101,0.12)] print:shadow-none">
-              <ReportSheet data={data} recommendations={recommendations} flag={shownFlag} flagSource={flagSource} compact={compact} />
+              {layout === "full"
+                ? <FullReportSheet data={data} extras={extras} config={reportConfig} flag={shownFlag} flagSource={flagSource} compact={compact} />
+                : <ReportSheet data={data} recommendations={recommendations} flag={shownFlag} flagSource={flagSource} compact={compact} />}
             </div>
           </div>
         </div>

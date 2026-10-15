@@ -62,12 +62,24 @@ export async function GET(request) {
     if (!baseline || !Object.keys(baseline).length) compareHour = null;
     const compareLabel = compareHour ? thaiHourLabel(compareHour).time : "";
 
+    // คอลัมน์เวลาเพิ่มเติมของตาราง (แบบ 4 หัวข้อ): ค่าเริ่มต้น 6 ชม.ก่อนเวลาที่เทียบ
+    const earlyRequested = String(params.get("early") || "").trim();
+    const earlyHour = HOUR_PATTERN.test(earlyRequested) ? earlyRequested : shiftHourKey(compareHour || shiftHourKey(dataHour, -4), -6);
+    let earlyLevels = null;
+    if (historyReady) earlyLevels = await loadDpmBaseline(earlyHour).catch(() => null);
+    const columns = [
+      earlyLevels && Object.keys(earlyLevels).length ? { hour: earlyHour, label: thaiHourLabel(earlyHour).time, levels: earlyLevels } : null,
+      compareHour ? { hour: compareHour, label: compareLabel, levels: baseline } : null
+    ].filter(Boolean);
+
     const report = buildWaterReport(stations, { baseline, compareLabel, dataHour });
     return NextResponse.json({
       success: true,
       report,
       declared: await loadDeclared(),
       compare: compareHour || "prev",
+      columns,
+      early: earlyHour,
       requested_compare: requested || null,
       hours,
       history_ready: historyReady,

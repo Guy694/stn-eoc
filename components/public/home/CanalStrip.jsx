@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { canalState, canalSummary, sortCanals } from "@/lib/homeSignals";
 
 function timeText(value) {
@@ -28,8 +29,14 @@ function Gauge({ state, delay = 0 }) {
 }
 
 /** "น้ำในคลองตอนนี้": สถานีวัดระดับน้ำ ThaiWater ในสตูล เรียงจากที่น่าห่วงที่สุด */
+// จำนวนสถานีที่แสดงก่อนกด "ดูทั้งหมด" (เรียงจากน่าห่วงที่สุด จึงไม่พลาดสถานีสำคัญ)
+const INITIAL_COUNT = 6;
+
 export default function CanalStrip({ stations = [], observedAt = null, loading = false }) {
+  const [expanded, setExpanded] = useState(false);
   const sorted = sortCanals(stations);
+  const visible = expanded ? sorted : sorted.slice(0, INITIAL_COUNT);
+  const hiddenCount = sorted.length - visible.length;
   const worst = sorted[0] ? canalState(sorted[0]) : null;
   const latest = stations.map((item) => item.observedAt).filter(Boolean).sort().pop() || observedAt;
 
@@ -55,13 +62,14 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
       {loading ? (
         <div className="mt-4 h-32 animate-pulse rounded-3xl bg-white" />
       ) : sorted.length > 0 ? (
-        <ul className="-mx-4 mt-4 flex snap-x gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:mx-0 sm:px-0">
-          {sorted.map((station, index) => {
+        <>
+        <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {visible.map((station, index) => {
             const state = canalState(station);
             return (
               <li
                 key={station.id}
-                className="flex w-[15.5rem] shrink-0 snap-start gap-3 rounded-3xl bg-white p-4 ring-1 ring-[#d6e3ea]"
+                className="flex gap-3 rounded-3xl bg-white p-4 ring-1 ring-[#d6e3ea]"
                 style={state.rank >= 2 ? { boxShadow: `inset 0 0 0 2px ${state.tone}` } : undefined}
               >
                 <Gauge state={state} delay={index * 90} />
@@ -85,10 +93,22 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
             );
           })}
         </ul>
+        {sorted.length > INITIAL_COUNT ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-4 py-3 text-[15px] font-semibold text-[#11466e] ring-1 ring-[#d6e3ea] hover:bg-[#f2f7fa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#11466e]"
+          >
+            {expanded ? "แสดงน้อยลง" : `ดูทั้งหมด (อีก ${hiddenCount} สถานี)`}
+            <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
+          </button>
+        ) : null}
+        </>
       ) : (
         <p className="mt-4 rounded-3xl bg-white p-5 text-slate-600">ยังไม่มีข้อมูลจากสถานีวัดระดับน้ำ ลองใหม่อีกครั้งภายหลัง</p>
       )}
-      <p className="mt-1 text-xs text-slate-500">ตัวเลข = ระยะจากระดับน้ำถึงตลิ่ง (ติดลบ = ยังต่ำกว่าตลิ่ง) • เส้นประในเกจคือระดับตลิ่ง</p>
+      <p className="mt-2 text-xs text-slate-500">ตัวเลข = ระยะจากระดับน้ำถึงตลิ่ง (ติดลบ = ยังต่ำกว่าตลิ่ง) • เส้นประในเกจคือระดับตลิ่ง</p>
 
       <style>{`
         .canal-gauge__water { transform-origin: bottom; animation: canal-fill 1.1s cubic-bezier(.2,.8,.2,1) both; }
