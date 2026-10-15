@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, PackageOpen, Scale } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, PackageOpen, Scale, Trash2 } from "lucide-react";
 import { ReadOnlyNotice,
-  AddButton, AdminPage, Button, DataTable, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
+  AddButton, AdminPage, Button, DataTable, DeleteDialog, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
@@ -49,6 +49,9 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   const [importKind, setImportKind] = useState(null);
   const [hospitalImport, setHospitalImport] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+  const [deleteTarget, setDeleteTarget] = useState(null); // { mode: "selected" | "filtered" | "all" }
+  const [deleteError, setDeleteError] = useState("");
   const [formError, setFormError] = useState("");
   const [moveForm, setMoveForm] = useState({ qty: "", requested_team: "", note: "" });
   const [itemForm, setItemForm] = useState({ health_facility_id: "", item_name: "", item_code: "", unit: "", opening_qty: "" });
@@ -97,6 +100,53 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
       .filter((row) => !keyword || `${row.item_name} ${row.item_code} ${row.agency_name}`.toLowerCase().includes(keyword))
       .sort((a, b) => (LEVEL_ORDER[a.level] ?? 9) - (LEVEL_ORDER[b.level] ?? 9) || String(a.item_name).localeCompare(String(b.item_name), "th"));
   }, [stock, search, levelFilter, facilityFilter]);
+
+  // ล้างรายการที่ติ๊กไว้ซึ่งไม่อยู่ในบัญชีแล้ว (หลังลบ/โหลดใหม่)
+  useEffect(() => {
+    setSelected((current) => {
+      const ids = new Set(stock.map((row) => row.id));
+      const next = new Set([...current].filter((id) => ids.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [stock]);
+
+  const selection = perms.can_delete ? {
+    selected,
+    onToggle: (row) => setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(row.id)) next.delete(row.id); else next.add(row.id);
+      return next;
+    }),
+    onTogglePage: (pageRows, checked) => setSelected((current) => {
+      const next = new Set(current);
+      for (const row of pageRows) { if (checked) next.add(row.id); else next.delete(row.id); }
+      return next;
+    })
+  } : undefined;
+
+  const filtering = Boolean(search.trim() || levelFilter || facilityFilter);
+  const deletePlan = (mode) => {
+    if (mode === "selected") return { ids: [...selected], label: `${selected.size.toLocaleString("th-TH")} รายการที่เลือก` };
+    if (mode === "filtered") return { ids: rows.map((row) => row.id), label: `${rows.length.toLocaleString("th-TH")} รายการที่แสดงอยู่ตามตัวกรอง` };
+    return { all: true, label: `เวชภัณฑ์ทั้งหมด ${stock.length.toLocaleString("th-TH")} รายการในบัญชีคลังนี้` };
+  };
+
+  const confirmDelete = async (reason) => {
+    const plan = deletePlan(deleteTarget.mode);
+    setBusy(true);
+    setDeleteError("");
+    try {
+      const result = await apiRequest(url, { method: "DELETE", body: { reason, ...(plan.all ? { all: true } : { ids: plan.ids }) } });
+      success(result.message || "ลบแล้ว");
+      setDeleteTarget(null);
+      setSelected(new Set());
+      await load();
+    } catch (error) {
+      setDeleteError(error.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const post = async (body, okMessage) => {
     setBusy(true);
@@ -255,9 +305,21 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
             ]} />
             <FilterSelect label="หน่วยบริการ" value={facilityFilter} onChange={setFacilityFilter} options={facilityOptions} className="min-w-[12rem]" />
           </Toolbar>
+          {perms.can_delete && stock.length ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+              <span className="text-slate-600">{selected.size ? `เลือกอยู่ ${selected.size.toLocaleString("th-TH")} รายการ` : "ติ๊กเลือกรายการที่ต้องการลบ"}</span>
+              <Button variant="danger" className="min-h-9 px-3" disabled={!selected.size || busy} onClick={() => { setDeleteError(""); setDeleteTarget({ mode: "selected" }); }}><Trash2 className="h-4 w-4" />ลบที่เลือก</Button>
+              {selected.size ? <Button variant="ghost" className="min-h-9 px-3" onClick={() => setSelected(new Set())}>ยกเลิกการเลือก</Button> : null}
+              <span className="ml-auto flex flex-wrap gap-2">
+                {filtering && rows.length ? <Button variant="secondary" className="min-h-9 px-3" disabled={busy} onClick={() => { setDeleteError(""); setDeleteTarget({ mode: "filtered" }); }}>ลบทั้งหมดที่แสดง ({rows.length.toLocaleString("th-TH")})</Button> : null}
+                <Button variant="secondary" className="min-h-9 border-red-300 px-3 text-red-700" disabled={busy} onClick={() => { setDeleteError(""); setDeleteTarget({ mode: "all" }); }}>ลบทั้งหมดในบัญชี ({stock.length.toLocaleString("th-TH")})</Button>
+              </span>
+            </div>
+          ) : null}
           <DataTable
             columns={columns}
             rows={rows}
+            selection={selection}
             loading={state.loading}
             caption="คงคลังเวชภัณฑ์"
             emptyText={stock.length ? "ไม่พบรายการตามเงื่อนไข" : "ยังไม่มีรายการเวชภัณฑ์ในบัญชีคลังนี้"}
@@ -339,6 +401,16 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
           </Field>
         </FormGrid>
       </FormDialog>
+      <DeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        itemType="รายการเวชภัณฑ์"
+        itemLabel={deleteTarget ? deletePlan(deleteTarget.mode).label : ""}
+        onConfirm={confirmDelete}
+        busy={busy}
+        error={deleteError}
+        note="ตัวรายการย้ายไปถังขยะ (ผู้ดูแลระบบกู้คืนได้ทีละรายการ) ส่วนรายงานประจำวันและประวัติปรับยอดของรายการเหล่านี้จะถูกลบไปด้วยและกู้คืนไม่ได้ ระบบบันทึกว่าใครลบ เมื่อไร เพราะอะไร"
+      />
       <HospitalDrugImportDialog
         open={hospitalImport} onOpenChange={setHospitalImport} eocType={eocType} sessionId={data?.session?.id}
         onImported={() => { load(); setRefreshKey((key) => key + 1); }}

@@ -101,7 +101,7 @@ export async function GET(request, { params }) {
       WHERE tm.session_team_id = ? AND tm.is_active = TRUE
       ORDER BY
         CASE WHEN st.team_lead_officer_id = o.id THEN 0 ELSE 1 END,
-        CASE tm.role_in_team WHEN 'หัวหน้าทีม' THEN 1 WHEN 'รองหัวหน้าทีม' THEN 2 ELSE 3 END,
+        CASE tm.role_in_team WHEN 'หัวหน้าทีม' THEN 1 ELSE 3 END,
         o.given_name, o.family_name
     `, [selected.session_team_id]);
 

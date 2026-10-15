@@ -3,8 +3,9 @@ import { getConnection, query } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { appendAuditLog } from "@/lib/auditLog";
+import { TEAM_MEMBER_ROLES as TEAM_MEMBER_ROLES_LIST, normalizeTeamMemberRole } from "@/lib/teamMemberRoles";
 
-const TEAM_MEMBER_ROLES = new Set(["หัวหน้าทีม", "รองหัวหน้าทีม", "สมาชิกทีม"]);
+const TEAM_MEMBER_ROLES = new Set(TEAM_MEMBER_ROLES_LIST);
 
 export async function GET(request, { params }) {
     try {
@@ -68,7 +69,8 @@ export async function PUT(request, { params }) {
         const selected = new Map();
         for (const assignment of normalizedAssignments) {
             const sessionTeamId = Number(assignment.sessionTeamId);
-            const roleInTeam = assignment.roleInTeam;
+            // ค่าเก่าในฐานข้อมูล (เช่น "สมาชิก", "ผู้ประสานงาน") แปลงเป็นบทบาทมาตรฐานก่อนตรวจ
+            const roleInTeam = normalizeTeamMemberRole(assignment.roleInTeam);
             if (!Number.isInteger(sessionTeamId) || sessionTeamId <= 0 || !TEAM_MEMBER_ROLES.has(roleInTeam)) {
                 return NextResponse.json({ success: false, message: "ข้อมูลกลุ่มภารกิจหรือบทบาทในทีมไม่ถูกต้อง" }, { status: 400 });
             }

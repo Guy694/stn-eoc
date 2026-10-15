@@ -231,7 +231,8 @@ export function DataTable({
   rowActions,
   pageSize = 25,
   rowClassName,
-  caption
+  caption,
+  selection // { selected: Set, onToggle(row), onTogglePage(rows, checked) } — มีช่องติ๊กเลือกแถว
 }) {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -240,6 +241,7 @@ export function DataTable({
   const visible = useMemo(() => rows.slice((safePage - 1) * pageSize, safePage * pageSize), [rows, safePage, pageSize]);
   const keyOf = (row) => (typeof rowKey === "function" ? rowKey(row) : row[rowKey]);
   const cell = (column, row) => (column.render ? column.render(row) : row[column.key] ?? "-");
+  const pageAllSelected = Boolean(selection) && visible.length > 0 && visible.every((row) => selection.selected.has(keyOf(row)));
 
   if (loading && rows.length === 0) {
     return (
@@ -266,13 +268,23 @@ export function DataTable({
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold text-slate-600">
             <tr>
+              {selection ? (
+                <th scope="col" className="w-10 px-3 py-3">
+                  <input type="checkbox" className="h-4 w-4" checked={pageAllSelected} onChange={(event) => selection.onTogglePage(visible, event.target.checked)} aria-label="เลือกทุกรายการในหน้านี้" />
+                </th>
+              ) : null}
               {columns.map((column) => <th key={column.key} scope="col" className={cn("px-4 py-3", column.className)}>{column.label}</th>)}
               {rowActions ? <th scope="col" className="px-4 py-3 text-right"><span className="sr-only">จัดการ</span></th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {visible.map((row) => (
-              <tr key={keyOf(row)} className={cn("align-top hover:bg-slate-50/70", rowClassName?.(row))}>
+              <tr key={keyOf(row)} className={cn("align-top hover:bg-slate-50/70", rowClassName?.(row), selection?.selected.has(keyOf(row)) && "bg-sky-50")}>
+                {selection ? (
+                  <td className="px-3 py-3">
+                    <input type="checkbox" className="h-4 w-4" checked={selection.selected.has(keyOf(row))} onChange={() => selection.onToggle(row)} aria-label="เลือกแถวนี้" />
+                  </td>
+                ) : null}
                 {columns.map((column) => <td key={column.key} className={cn("px-4 py-3", column.className)}>{cell(column, row)}</td>)}
                 {rowActions ? <td className="px-2 py-2 text-right">{rowActions(row)}</td> : null}
               </tr>
@@ -286,8 +298,11 @@ export function DataTable({
         {visible.map((row) => {
           const [first, ...rest] = columns.filter((column) => column.mobile !== false);
           return (
-            <li key={keyOf(row)} className={cn("p-4", rowClassName?.(row))}>
-              <div className="font-bold text-slate-900">{cell(first, row)}</div>
+            <li key={keyOf(row)} className={cn("p-4", rowClassName?.(row), selection?.selected.has(keyOf(row)) && "bg-sky-50")}>
+              <div className="flex items-start gap-2 font-bold text-slate-900">
+                {selection ? <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" checked={selection.selected.has(keyOf(row))} onChange={() => selection.onToggle(row)} aria-label="เลือกแถวนี้" /> : null}
+                <div className="min-w-0">{cell(first, row)}</div>
+              </div>
               <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
                 {rest.map((column) => (
                   <div key={column.key} className="min-w-0">

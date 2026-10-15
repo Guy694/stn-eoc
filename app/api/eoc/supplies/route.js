@@ -4,7 +4,7 @@ import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { query, transaction } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
-import { recordChange } from "@/lib/recordArchive";
+import { ArchiveError, archiveAndDelete, archiveErrorResponse, normalizeReason, recordChange } from "@/lib/recordArchive";
 import { MOVEMENT_TYPES, applyMovement, missingPresetItems, normalizeItemCode, stockLevel, summarizeStock } from "@/lib/medicalInventory";
 import { triggerEventAlerts } from "@/lib/eocAlertRunner";
 
@@ -98,7 +98,7 @@ export async function GET(request) {
       permissions: await (async () => {
         const perms = await modulePermissions(auth.user, ctx.session.id, "supplies");
         const allowed = isActive && perms.can_edit;
-        return { can_open: allowed, can_add_item: allowed, can_move: allowed, read_only_message: allowed ? null : perms.read_only_message };
+        return { can_open: allowed, can_add_item: allowed, can_move: allowed, can_delete: allowed, read_only_message: allowed ? null : perms.read_only_message };
       })()
     });
   } catch (error) {
@@ -260,5 +260,61 @@ export async function POST(request) {
   } catch (error) {
     console.error("Supplies POST error:", error);
     return publicInternalError("ไม่สามารถบันทึกข้อมูลคลังเวชภัณฑ์ได้");
+  }
+}
+
+const MAX_DELETE = 5000;
+
+// ลบรายการเวชภัณฑ์ที่เลือก หรือ "ลบทั้งหมด" (ของทั้งบัญชี หรือเฉพาะหน่วยบริการที่ระบุ)
+// รายการถูกย้ายเข้าถังขยะ (กู้คืนทีละรายการได้) พร้อมบันทึกเหตุผล ผู้ลบ และเวลา
+// รายงานประจำวันและประวัติปรับยอดของรายการนั้นถูกลบไปด้วย (กู้คืนได้เฉพาะตัวรายการ)
+export async function DELETE(request) {
+  try {
+    const auth = await requireAuth(request, OFFICER_ROLES);
+    if (!auth.success) return auth.response;
+    const body = await request.json().catch(() => ({}));
+    const ctx = await loadContext(new URL(request.url).searchParams);
+    if (ctx.error) return ctx.error;
+    if (!ctx.session) return bad("ยังไม่มีเหตุการณ์ EOC", 404);
+    if (ctx.session.status !== "active") return bad("เหตุการณ์นี้ปิดแล้ว ดูข้อมูลได้อย่างเดียว", 409);
+    const gate = await requireModuleEdit(auth.user, ctx.session.id, "supplies");
+    if (gate.response) return gate.response;
+    if (!ctx.event) return bad("ยังไม่ได้เปิดบัญชีคลังของเหตุการณ์นี้", 409);
+
+    const reason = normalizeReason(body.reason);
+    let ids;
+    if (body.all === true) {
+      const facilityId = body.health_facility_id ? Number(body.health_facility_id) : null;
+      if (body.health_facility_id && (!Number.isInteger(facilityId) || facilityId <= 0)) return bad("หน่วยบริการไม่ถูกต้อง");
+      const rows = await query(
+        `SELECT id FROM medical_inventory_stock WHERE inventory_event_id = ?${facilityId ? " AND health_facility_id = ?" : ""}`,
+        facilityId ? [ctx.event.id, facilityId] : [ctx.event.id]
+      );
+      ids = rows.map((row) => row.id);
+    } else {
+      ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(Number))].filter((id) => Number.isInteger(id) && id > 0);
+    }
+    if (!ids.length) return bad("ไม่มีรายการที่จะลบ");
+    if (ids.length > MAX_DELETE) return bad(`ลบได้ครั้งละไม่เกิน ${MAX_DELETE.toLocaleString("th-TH")} รายการ`);
+
+    const deleted = await transaction(async (execute) => {
+      let count = 0;
+      for (const id of ids) {
+        const owner = await execute(`SELECT id FROM medical_inventory_stock WHERE id = ? AND inventory_event_id = ?`, [id, ctx.event.id]);
+        if (!owner.length) continue; // ไม่ใช่ของเหตุการณ์นี้ หรือถูกลบไปแล้ว — ข้าม
+        await archiveAndDelete(execute, {
+          table: "medical_inventory_stock", id, reason, user: auth.user, request,
+          beforeDelete: async (row, run) => {
+            await run(`DELETE FROM medical_inventory_daily_reports WHERE stock_id = ?`, [row.id]);
+          }
+        });
+        count += 1;
+      }
+      return count;
+    });
+    if (!deleted) throw new ArchiveError("ไม่พบรายการที่ต้องการลบ (อาจถูกลบไปแล้ว)", 404);
+    return NextResponse.json({ success: true, deleted, message: `ลบ ${deleted.toLocaleString("th-TH")} รายการแล้ว (ย้ายไปถังขยะ)` });
+  } catch (error) {
+    return archiveErrorResponse(error, "ไม่สามารถลบรายการเวชภัณฑ์ได้");
   }
 }

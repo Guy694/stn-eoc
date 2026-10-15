@@ -518,7 +518,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
 // ========================================
 function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onClose }) {
     const [selectedOfficer, setSelectedOfficer] = useState('');
-    const [roleInTeam, setRoleInTeam] = useState('สมาชิก');
+    const [roleInTeam, setRoleInTeam] = useState('สมาชิกทีม');
 
     const currentMemberIds = Array.isArray(currentMembers) ? currentMembers.filter(m => m.is_active).map(m => m.officer_id) : [];
     const availableForAdd = Array.isArray(availableOfficers) ? availableOfficers.filter(o => !currentMemberIds.includes(o.id)) : [];
@@ -568,9 +568,8 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                                 onChange={(e) => setRoleInTeam(e.target.value)}
                                 className="text-gray-600 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                             >
-                                <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
-                                {/* <option value="รองหัวหน้าทีม">รองหัวหน้าทีม</option>
-                                <option value="หัวหน้าทีม">หัวหน้าทีม</option> */}
+                                <option value="สมาชิกทีม">สมาชิกทีม</option>
+                                <option value="หัวหน้าทีม">หัวหน้าทีม</option>
                             </select>
                         </div>
                     </div>

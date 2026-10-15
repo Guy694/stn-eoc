@@ -135,7 +135,7 @@ export async function GET(request, { params }) {
                 ORDER BY 
                     CASE tm.role_in_team 
                         WHEN 'หัวหน้าทีม' THEN 1
-                        WHEN 'รองหัวหน้าทีม' THEN 2
+                       
                         ELSE 3
                     END,
                     o.given_name, o.family_name

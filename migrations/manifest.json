@@ -61,6 +61,7 @@
     "20261012_area_trigger_flags.sql",
     "20261013_area_trigger_actions.sql",
     "20261014_medical_inventory_daily_reports.sql",
-    "20261015_hospital_drug_import.sql"
+    "20261015_hospital_drug_import.sql",
+    "20261015_team_member_roles.sql"
   ]
 }

@@ -4,6 +4,7 @@
 // ========================================
 
 import { NextResponse } from 'next/server';
+import { TEAM_MEMBER_ROLES as TEAM_MEMBER_ROLES_LIST, normalizeTeamMemberRole } from '@/lib/teamMemberRoles';
 import { requireModuleEdit } from '@/lib/eocModuleAccess';
 import { query as dbQuery } from '@/lib/db';
 import { getConnection, query } from '@/lib/db';
@@ -11,7 +12,7 @@ import { OFFICER_ROLES, requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { appendAuditLog } from '@/lib/auditLog';
 
-const TEAM_MEMBER_ROLES = new Set(['หัวหน้าทีม', 'รองหัวหน้าทีม', 'สมาชิกทีม']);
+const TEAM_MEMBER_ROLES = new Set(TEAM_MEMBER_ROLES_LIST);
 
 async function getTeamContext(connection, sessionTeamId) {
     const [rows] = await connection.execute(`
@@ -132,10 +133,11 @@ export async function POST(request, { params }) {
         const teamGate = await requireModuleEdit(auth.user, await sessionOfTeam(sessionTeamId), 'team');
         if (teamGate.response) return teamGate.response;
         const body = await request.json();
-        const { officerId, roleInTeam, notes } = body;
+        const { officerId, notes } = body;
+        const roleInTeam = normalizeTeamMemberRole(body.roleInTeam);
 
         // Validate required fields
-        if (!sessionTeamId || !officerId || !roleInTeam) {
+        if (!sessionTeamId || !officerId || !body.roleInTeam) {
             return NextResponse.json({
                 success: false,
                 message: 'ข้อมูลไม่ครบถ้วน'
@@ -177,7 +179,7 @@ export async function POST(request, { params }) {
             INSERT INTO eoc_team_members 
             (session_team_id, officer_id, role_in_team, assigned_by, notes)
             VALUES (?, ?, ?, ?, ?)
-        `, [sessionTeamId, officerId, roleInTeam || 'เจ้าหน้าที่', auth.user.id, notes || null]);
+        `, [sessionTeamId, officerId, roleInTeam, auth.user.id, notes || null]);
 
         await writeMemberAudit(connection, request, auth.user, {
             action: 'data_create',
@@ -217,7 +219,8 @@ export async function PATCH(request, { params }) {
         const teamGate = await requireModuleEdit(auth.user, await sessionOfTeam(sessionTeamId), 'team');
         if (teamGate.response) return teamGate.response;
         const body = await request.json();
-        const { memberId, roleInTeam } = body;
+        const { memberId } = body;
+        const roleInTeam = normalizeTeamMemberRole(body.roleInTeam);
         if (!memberId || !TEAM_MEMBER_ROLES.has(roleInTeam)) {
             return NextResponse.json({ success: false, message: 'ข้อมูลสมาชิกหรือบทบาทไม่ถูกต้อง' }, { status: 400 });
         }

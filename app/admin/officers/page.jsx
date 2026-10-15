@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizeTeamMemberRole } from '@/lib/teamMemberRoles';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
@@ -111,7 +112,7 @@ export default function OfficersManagementPage() {
             setAvailableTeamAssignments(data.availableTeams || []);
             setTeamAssignments((data.assignments || []).map((assignment) => ({
                 sessionTeamId: String(assignment.session_team_id),
-                roleInTeam: assignment.role_in_team === 'เจ้าหน้าที่' ? 'สมาชิกทีม' : (assignment.role_in_team || 'สมาชิกทีม')
+                roleInTeam: normalizeTeamMemberRole(assignment.role_in_team)
             })));
         } catch (error) {
             console.error('Error loading officer team assignments:', error);
@@ -675,7 +676,7 @@ export default function OfficersManagementPage() {
                                                     <input type="checkbox" checked={Boolean(assignment)} onChange={() => toggleTeamAssignment(team.session_team_id)} className="mt-1 h-4 w-4" />
                                                     <span><span className="font-bold">{team.team_code}</span> - {team.team_name_th}<span className="mt-0.5 block text-xs text-gray-500">EOC {team.eoc_type} · ครั้งที่ {team.session_number}</span></span>
                                                 </label>
-                                                {assignment && <select value={assignment.roleInTeam} onChange={(event) => changeTeamAssignmentRole(team.session_team_id, event.target.value)} className="border border-gray-300 px-2 py-1 text-sm text-gray-800 sm:w-36"><option value="สมาชิกทีม">สมาชิกทีม</option><option value="รองหัวหน้าทีม">รองหัวหน้าทีม</option><option value="หัวหน้าทีม">หัวหน้าทีม</option></select>}
+                                                {assignment && <select value={assignment.roleInTeam} onChange={(event) => changeTeamAssignmentRole(team.session_team_id, event.target.value)} className="border border-gray-300 px-2 py-1 text-sm text-gray-800 sm:w-36"><option value="สมาชิกทีม">สมาชิกทีม</option><option value="หัวหน้าทีม">หัวหน้าทีม</option></select>}
                                             </div>;
                                         })}
                                     </div>
