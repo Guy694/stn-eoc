@@ -162,7 +162,7 @@ function BasinCard({ card }) {
         <svg width="11" height="14" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z" fill="#fff" /></svg>
         {card.label}
       </p>
-      {card.station ? <CrossSection card={card} /> : (
+      {card.station || card.manual ? <CrossSection card={card} /> : (
         <div className="grid h-[82px] place-items-center px-3 text-center text-[11px] text-slate-500">ยังไม่พบสถานีวัดของ{card.label} เลือกสถานีได้ที่ “ตั้งค่ารายงาน”</div>
       )}
       <table className="w-full border-collapse text-center text-[11px]">
@@ -183,7 +183,7 @@ function BasinCard({ card }) {
           </tr>
         </tbody>
       </table>
-      {card.station ? <p className="truncate border-t px-2 text-[8.5px] leading-[1.5] text-slate-500" style={{ borderColor: "#e3edf6" }}>สถานี{card.station.name}{card.station.agency ? ` (${card.station.agency})` : ""}</p> : null}
+      {card.manual ? <p className="truncate border-t px-2 text-[8.5px] leading-[1.5] text-slate-500" style={{ borderColor: "#e3edf6" }}>ระดับที่เจ้าหน้าที่กรอกเอง{card.observedAt ? ` · ${isoText(card.observedAt)}` : ""}{card.station ? ` · สถานี${card.station.name}` : ""}</p> : card.station ? <p className="truncate border-t px-2 text-[8.5px] leading-[1.5] text-slate-500" style={{ borderColor: "#e3edf6" }}>สถานี{card.station.name}{card.station.agency ? ` (${card.station.agency})` : ""}</p> : null}
     </div>
   );
 }

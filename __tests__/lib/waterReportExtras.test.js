@@ -31,6 +31,23 @@ describe("pickBasinStation", () => {
   });
 });
 
+describe("ระดับน้ำล่าสุดที่กรอกเอง", () => {
+  it("normalize เก็บ level/previous/level_at และตัดค่าเวลาที่ผิดรูปแบบ", () => {
+    const config = normalizeReportConfig({ basins: [{ key: "langu", level: "8.25", previous: "8.1", level_at: "2026-10-15T14:30" }, { key: "dusan", level: "", level_at: "สุ่ม" }] });
+    expect(config.basins[1]).toMatchObject({ level: 8.25, previous: 8.1, level_at: "2026-10-15T14:30" });
+    expect(config.basins[0]).toMatchObject({ level: null, previous: null, level_at: "" });
+  });
+  it("ใช้ค่าที่กรอกแทนค่าสถานี คำนวณต่ำกว่าตลิ่งและการเปลี่ยนแปลงจากค่าเมื่อวานที่กรอก", () => {
+    const basin = { key: "langu", label: "คลองละงู", warning: 11.5, bank: 12.8, level: 12, previous: 11.7, level_at: "2026-10-15T14:30" };
+    const card = buildBasinCard(basin, station({ waterLevelMsl: 7.53, bankLevelMsl: 12.8, trend: { change: 0.2 } }), { previous: 6.6 });
+    expect(card).toMatchObject({ manual: true, level: 12, previous: 11.7, diff: 0.3, belowBank: 0.8, status: "warning" });
+    expect(card.observedAt).toBe("2026-10-15T07:30:00.000Z");
+  });
+  it("กรอกระดับได้แม้ไม่พบสถานี", () => {
+    expect(buildBasinCard({ key: "x", label: "x", warning: null, bank: 10, level: 9 }, null)).toMatchObject({ manual: true, level: 9, belowBank: 1, status: "normal", diff: null });
+  });
+});
+
 describe("buildBasinCard", () => {
   const basin = { key: "langu", label: "คลองละงู", warning: 11.5, bank: null };
   it("เทียบกับเมื่อวานและคำนวณระยะต่ำกว่าตลิ่ง", () => {

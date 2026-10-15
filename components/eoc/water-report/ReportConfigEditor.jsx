@@ -14,6 +14,14 @@ export default function ReportConfigEditor({ config, stations = [], onSave, onCa
 
   const setIssuer = (field, value) => setDraft((prev) => ({ ...prev, issuer: { ...prev.issuer, [field]: value } }));
   const setBasin = (index, field, value) => setDraft((prev) => ({ ...prev, basins: prev.basins.map((basin, i) => (i === index ? { ...basin, [field]: value } : basin)) }));
+  const nowLocal = () => {
+    const bangkok = new Date(Date.now() + 7 * 3600 * 1000);
+    return bangkok.toISOString().slice(0, 16);
+  };
+  const setLevel = (index, value) => setDraft((prev) => ({
+    ...prev,
+    basins: prev.basins.map((basin, i) => (i === index ? { ...basin, level: value, level_at: value !== "" && !basin.level_at ? nowLocal() : basin.level_at } : basin))
+  }));
   const setArea = (index, field, value) => setDraft((prev) => ({ ...prev, areas: prev.areas.map((area, i) => (i === index ? { ...area, [field]: value } : area)) }));
 
   const save = async () => {
@@ -22,7 +30,7 @@ export default function ReportConfigEditor({ config, stations = [], onSave, onCa
     try {
       await onSave({
         ...draft,
-        basins: draft.basins.map((basin) => ({ ...basin, warning: toNumber(basin.warning), bank: toNumber(basin.bank) }))
+        basins: draft.basins.map((basin) => ({ ...basin, warning: toNumber(basin.warning), bank: toNumber(basin.bank), level: toNumber(basin.level), previous: toNumber(basin.previous), level_at: basin.level === "" || basin.level === null || basin.level === undefined ? "" : basin.level_at || "" }))
       });
     } catch (err) {
       setError(err.message || "บันทึกไม่สำเร็จ");
@@ -71,8 +79,23 @@ export default function ReportConfigEditor({ config, stations = [], onSave, onCa
             <label className="text-sm text-slate-700">ตลิ่ง (ถ้าต่างจาก ThaiWater)
               <input type="number" step="0.01" inputMode="decimal" value={basin.bank ?? ""} onChange={(event) => setBasin(index, "bank", event.target.value)} className={inputClass} placeholder="ตาม ThaiWater" />
             </label>
+            <div className="grid gap-2 border-t border-slate-200 pt-2 sm:col-span-4 sm:grid-cols-[1fr_1fr_1.4fr_auto]">
+              <label className="text-sm text-slate-700">ระดับน้ำล่าสุด (กรอกเอง)
+                <input type="number" step="0.01" inputMode="decimal" value={basin.level ?? ""} onChange={(event) => setLevel(index, event.target.value)} className={inputClass} placeholder="ใช้ค่าจากสถานี" />
+              </label>
+              <label className="text-sm text-slate-700">ระดับเมื่อวาน (ถ้ามี)
+                <input type="number" step="0.01" inputMode="decimal" value={basin.previous ?? ""} onChange={(event) => setBasin(index, "previous", event.target.value)} className={inputClass} placeholder="ไม่แสดง" disabled={basin.level === "" || basin.level === null || basin.level === undefined} />
+              </label>
+              <label className="text-sm text-slate-700">วัดเมื่อ
+                <input type="datetime-local" value={basin.level_at || ""} onChange={(event) => setBasin(index, "level_at", event.target.value)} className={inputClass} disabled={basin.level === "" || basin.level === null || basin.level === undefined} />
+              </label>
+              <div className="flex items-end">
+                <button type="button" className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 disabled:opacity-40" disabled={basin.level === "" || basin.level === null || basin.level === undefined} onClick={() => setDraft((prev) => ({ ...prev, basins: prev.basins.map((item, i) => (i === index ? { ...item, level: "", previous: "", level_at: "" } : item)) }))}>ล้างค่าที่กรอก</button>
+              </div>
+            </div>
           </div>
         ))}
+        <p className="text-xs text-slate-500">ถ้ากรอก “ระดับน้ำล่าสุด” ระบบจะใช้ค่าที่กรอกแทนค่าจากสถานี และแสดงว่า “กรอกเอง” ในรายงาน ควรล้างค่าเมื่อไม่ใช้แล้ว</p>
         {!stations.length ? <p className="text-xs text-amber-700">ยังดึงรายชื่อสถานีจาก ThaiWater ไม่ได้ ใช้การค้นจากชื่อไปก่อน</p> : null}
       </fieldset>
 

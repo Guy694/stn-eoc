@@ -43,7 +43,7 @@ stn-eoc-app:
 
     depends_on:
       - db
-
+    env_file: .env
     environment:
       DB_HOST: db
       DB_PORT: 3306
