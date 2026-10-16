@@ -152,7 +152,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       title: "งานรอดำเนินการ",
       items: [
         { name: "คำขอจากประชาชน", path: "/admin/incident-reports", iconKey: "inbox", badge: "pendingReports", description: "คำขอความช่วยเหลือ จุดปัญหา และรายงานเส้นทาง — ตรวจก่อนเผยแพร่" },
-        { name: "คำขอสมัครเจ้าหน้าที่", path: "/admin/officers", iconKey: "userCheck", badge: "pendingRegistrations" }
+        { name: "คำขอสมัครเจ้าหน้าที่", path: "/admin/officers?tab=requests", iconKey: "userCheck", badge: "pendingRegistrations", description: "อนุมัติหรือปฏิเสธบัญชีที่สมัครใหม่" }
       ]
     },
     {

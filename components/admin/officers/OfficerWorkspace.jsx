@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Pencil, Trash2, UserCheck } from "lucide-react";
+import { CheckCircle2, Pencil, RotateCcw, Trash2, UserCheck, XCircle } from "lucide-react";
 import {
-  AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, StatStrip, StatusPill, Toolbar,
+  AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, StatStrip, StatusPill, Tabs, Toolbar,
   inputClass, useNotice
 } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
+import { useUrlState } from "@/components/admin/useUrlState";
 import { showDeleteConfirm } from "@/lib/sweetAlert";
 import { TEAM_ROLE_OPTIONS } from "@/lib/eocRoles";
 import { PASSWORD_POLICY_TEXT, validatePassword } from "@/lib/passwordPolicy";
@@ -22,7 +23,6 @@ const SYSTEM_ROLES = [
 ];
 const ROLE_BY_VALUE = new Map(SYSTEM_ROLES.map((role) => [role.value, role]));
 const EOC_LABEL = { flood: "อุทกภัย", disease: "โรคติดต่อ" };
-const REG_STATUS = { pending: ["รอยืนยัน ThaiD", "amber"], verified: ["ยืนยัน ThaiD แล้ว", "blue"], approved: ["อนุมัติแล้ว", "green"], rejected: ["ปฏิเสธ", "red"] };
 
 const EMPTY_FORM = { username: "", password: "", title: "", given_name: "", family_name: "", email: "", phone: "", role: "staff", department: "", is_approved: 1 };
 const fullName = (row) => `${row.title || ""}${row.title ? " " : ""}${row.given_name || ""} ${row.family_name || ""}`.trim();
@@ -34,12 +34,75 @@ function RolePill({ role }) {
   return <StatusPill tone={config?.tone || "gray"}>{shortRole(role)}</StatusPill>;
 }
 
+/** คิวคำขอรออนุมัติ: ยึดบัญชีที่ยังไม่อนุมัติ (ไม่ซ้ำกับคนที่อนุมัติแล้ว) */
+function RequestQueue({ rows, loading, approveRole, onRoleChange, onApprove, onEdit, onReject, onRestore }) {
+  const waiting = rows.filter((row) => !row.rejected);
+  const rejected = rows.filter((row) => row.rejected);
+  if (loading && !rows.length) return <div className="h-32 animate-pulse rounded-xl bg-slate-100" aria-busy="true" />;
+  if (!waiting.length && !rejected.length) {
+    return <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">ไม่มีคำขอรออนุมัติ</p>;
+  }
+  return (
+    <div className="space-y-4">
+      {waiting.length ? (
+        <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">
+          {waiting.map((row) => (
+            <li key={row.id} className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-center">
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-center gap-2 font-bold text-slate-900">
+                  {fullName(row) || row.username}
+                  {row.thaiid_verified ? <StatusPill tone="green">ยืนยัน ThaiD แล้ว</StatusPill> : <StatusPill tone="amber">ยังไม่ยืนยัน ThaiD</StatusPill>}
+                </p>
+                <p className="mt-0.5 text-sm text-slate-600">{row.username}{row.agency ? ` · ${row.agency}` : ""}{row.phone ? ` · ${row.phone}` : ""}</p>
+                <p className="text-xs text-slate-500">
+                  ขอสิทธิ์ {shortRole(row.requested_role || row.role)} · ส่งคำขอ {formatDateTime(row.requested_at || row.request_time || row.created_at)}
+                  {!row.thaiid_verified ? " · ตรวจตัวตนให้แน่ใจก่อนอนุมัติ" : ""}
+                </p>
+              </div>
+              <label className="block text-xs font-semibold text-slate-600">
+                อนุมัติเป็น
+                <select className={`${inputClass} mt-1`} value={approveRole[row.id] || row.requested_role || "staff"} onChange={(event) => onRoleChange(row.id, event.target.value)}>
+                  {SYSTEM_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                </select>
+              </label>
+              <div className="flex flex-wrap gap-1.5 lg:justify-end">
+                <Button className="min-h-10 px-3" onClick={() => onApprove(row)}><UserCheck className="h-4 w-4" aria-hidden="true" />อนุมัติ</Button>
+                <Button variant="secondary" className="min-h-10 px-3" onClick={() => onEdit(row)}><Pencil className="h-4 w-4" aria-hidden="true" />แก้ไข</Button>
+                <Button variant="ghost" className="min-h-10 px-3 text-red-700" onClick={() => onReject(row)}><XCircle className="h-4 w-4" aria-hidden="true" />ปฏิเสธ</Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-6 text-center text-sm text-slate-600">ไม่มีคำขอรออนุมัติ</p>}
+
+      {rejected.length ? (
+        <details className="rounded-xl border border-slate-200 bg-white">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-bold text-slate-700">คำขอที่ปฏิเสธแล้ว ({rejected.length})</summary>
+          <ul className="divide-y divide-slate-100 border-t border-slate-100">
+            {rejected.map((row) => (
+              <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm">
+                <span><b className="text-slate-800">{fullName(row) || row.username}</b> <span className="text-slate-500">{row.username}{row.agency ? ` · ${row.agency}` : ""}</span></span>
+                <Button variant="ghost" className="min-h-9 px-2.5" onClick={() => onRestore(row)}><RotateCcw className="h-4 w-4" aria-hidden="true" />คืนเข้าคิว</Button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
 // จัดการเจ้าหน้าที่: บัญชีผู้ใช้ สิทธิ์ระบบ และกลุ่มภารกิจ EOC ที่ได้รับมอบหมาย
 export default function OfficerWorkspace() {
   const { notice, success, fail } = useNotice();
   const [officers, setOfficers] = useState([]);
   const [roleStats, setRoleStats] = useState({});
   const [registrations, setRegistrations] = useState({ rows: [], stats: {} });
+  const [tab, setTab] = useUrlState("tab", "all", ["all", "requests"]);
+  const [approveRole, setApproveRole] = useState({}); // สิทธิ์ที่จะอนุมัติ แยกตามคน (ค่าเริ่มต้น = สิทธิ์ที่ขอ)
+  const [rejecting, setRejecting] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectError, setRejectError] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
@@ -58,7 +121,7 @@ export default function OfficerWorkspace() {
     try {
       const [list, regs] = await Promise.all([
         apiRequest(API),
-        apiRequest("/stn-eoc/api/admin/registrations?limit=8").catch(() => null)
+        apiRequest("/stn-eoc/api/admin/registrations?limit=200").catch(() => null)
       ]);
       setOfficers(list.data || []);
       setRoleStats(list.stats || {});
@@ -79,7 +142,7 @@ export default function OfficerWorkspace() {
       .filter((row) => !keyword || `${fullName(row)} ${row.username} ${row.email || ""} ${row.phone || ""}`.toLowerCase().includes(keyword));
   }, [officers, search, roleFilter, statusFilter]);
 
-  const pendingCount = officers.filter((row) => Number(row.is_approved) !== 1).length;
+  const approvedCount = officers.filter((row) => Number(row.is_approved) === 1).length;
   const roleOptions = useMemo(() => [
     { value: "", label: "ทุกสิทธิ์ระบบ" },
     ...SYSTEM_ROLES.filter((role) => roleStats[role.value]).map((role) => ({ value: role.value, label: `${shortRole(role.value)} (${roleStats[role.value]})` }))
@@ -167,8 +230,8 @@ export default function OfficerWorkspace() {
   };
 
   /* ---------- อนุมัติ / ลบ ---------- */
-  const approve = async (officer) => {
-    const role = officer.requested_role || officer.role || "staff";
+  const approve = async (officer, chosenRole) => {
+    const role = chosenRole || officer.requested_role || officer.role || "staff";
     try {
       await apiRequest(`${API}/${officer.id}`, { method: "PUT", body: { role, requested_role: role, is_approved: 1 } });
       success(`อนุมัติ ${fullName(officer) || "เจ้าหน้าที่"} แล้ว`);
@@ -186,6 +249,18 @@ export default function OfficerWorkspace() {
       load();
     } catch (error) {
       fail(error.message || "ลบไม่สำเร็จ");
+    }
+  };
+
+  const reviewRequest = async (officer, action, reason = "") => {
+    try {
+      const result = await apiRequest("/stn-eoc/api/admin/registrations", { method: "PATCH", body: { officer_id: officer.id, action, reason } });
+      success(result.message);
+      setRejecting(null);
+      load();
+    } catch (error) {
+      if (action === "reject") setRejectError(error.message);
+      else fail(error.message);
     }
   };
 
@@ -221,45 +296,32 @@ export default function OfficerWorkspace() {
     >
       {notice}
       <StatStrip items={[
-        { label: "เจ้าหน้าที่ทั้งหมด", value: officers.length.toLocaleString("th-TH") },
-        { label: "รออนุมัติ", value: pendingCount.toLocaleString("th-TH"), className: pendingCount ? "text-amber-700" : undefined },
-        { label: "ผู้ดูแลระบบ", value: (roleStats.admin || 0).toLocaleString("th-TH") },
-        { label: "ลงทะเบียนใหม่รอดำเนินการ", value: (regStats.actionable || 0).toLocaleString("th-TH"), className: regStats.actionable ? "text-amber-700" : undefined }
+        { label: "เจ้าหน้าที่ที่ใช้งานได้", value: approvedCount.toLocaleString("th-TH") },
+        { label: "คำขอรออนุมัติ", value: (regStats.waiting || 0).toLocaleString("th-TH"), className: regStats.waiting ? "text-amber-700" : undefined },
+        { label: "ยืนยัน ThaiD แล้ว รออนุมัติ", value: (regStats.verified || 0).toLocaleString("th-TH") },
+        { label: "ผู้ดูแลระบบ", value: (roleStats.admin || 0).toLocaleString("th-TH") }
       ]} />
 
-      {registrations.rows.length ? (
-        <section className="overflow-hidden rounded-xl border border-amber-200 bg-white">
-          <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-amber-100 bg-amber-50 px-4 py-3">
-            <h2 className="font-black text-amber-950">ผู้ลงทะเบียนใหม่</h2>
-            <p className="text-sm text-amber-800">รอยืนยัน ThaiD {regStats.pending || 0} คน · ยืนยันแล้วรออนุมัติ {regStats.verified || 0} คน</p>
-          </header>
-          <ul className="divide-y divide-slate-100">
-            {registrations.rows.map((reg) => {
-              const [statusText, tone] = REG_STATUS[reg.status] || [reg.status, "gray"];
-              const canApprove = reg.user_type === "officer" && Number(reg.is_approved) !== 1 && reg.officer_id;
-              const requested = reg.requested_role || reg.role || "staff";
-              return (
-                <li key={reg.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-slate-900">{fullName(reg) || "-"}</p>
-                    <p className="text-xs text-slate-500">{reg.user_type === "officer" ? "เจ้าหน้าที่" : "ประชาชน"}{reg.username ? ` · ${reg.username}` : ""}{reg.agency ? ` · ${reg.agency}` : ""}</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill tone={tone}>{statusText}</StatusPill>
-                    {reg.user_type === "officer" ? <StatusPill tone="gray">ขอสิทธิ์ {shortRole(requested)}</StatusPill> : null}
-                    {canApprove ? (
-                      <Button className="min-h-9 px-3" onClick={() => approve({ ...reg, id: reg.officer_id, requested_role: requested })}>
-                        <UserCheck className="h-4 w-4" aria-hidden="true" />อนุมัติ
-                      </Button>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
+      <div className="rounded-xl border border-[#c9dcee] bg-white px-2">
+        <Tabs value={tab} onChange={setTab} items={[
+          { value: "all", label: "เจ้าหน้าที่ทั้งหมด" },
+          { value: "requests", label: regStats.waiting ? `คำขอรออนุมัติ (${regStats.waiting})` : "คำขอรออนุมัติ" }
+        ]} />
+      </div>
 
+      {tab === "requests" ? (
+        <RequestQueue
+          rows={registrations.rows}
+          loading={loading}
+          approveRole={approveRole}
+          onRoleChange={(id, role) => setApproveRole((current) => ({ ...current, [id]: role }))}
+          onApprove={(row) => approve(row, approveRole[row.id])}
+          onEdit={(row) => openForm({ ...row, is_approved: 0 })}
+          onReject={(row) => { setRejectReason(""); setRejectError(""); setRejecting(row); }}
+          onRestore={(row) => reviewRequest(row, "restore")}
+        />
+      ) : (
+      <>
       <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อ ชื่อผู้ใช้ อีเมล หรือเบอร์โทร">
         <FilterSelect label="สถานะ" value={statusFilter} onChange={setStatusFilter} options={[
           { value: "", label: "ทุกสถานะ" }, { value: "pending", label: "รออนุมัติ" }, { value: "approved", label: "ใช้งานได้" }
@@ -285,6 +347,23 @@ export default function OfficerWorkspace() {
           </div>
         )}
       />
+      </>
+      )}
+
+      <FormDialog
+        open={Boolean(rejecting)}
+        onOpenChange={(open) => { if (!open) setRejecting(null); }}
+        title={rejecting ? `ปฏิเสธคำขอของ ${fullName(rejecting)}` : ""}
+        description="บัญชียังอยู่แต่เข้าใช้งานไม่ได้ คืนเข้าคิวได้ภายหลัง ระบบบันทึกเหตุผลไว้ในประวัติการใช้งาน"
+        onSubmit={() => reviewRequest(rejecting, "reject", rejectReason)}
+        error={rejectError}
+        submitText="ปฏิเสธคำขอ"
+        size="md"
+      >
+        <Field label="เหตุผล" required wide hint="เช่น ไม่ใช่บุคลากรในจังหวัด, ลงทะเบียนซ้ำ">
+          <textarea rows={3} required minLength={5} className={inputClass} value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} />
+        </Field>
+      </FormDialog>
 
       <FormDialog
         open={Boolean(dialog)}

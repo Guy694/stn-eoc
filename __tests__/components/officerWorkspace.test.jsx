@@ -71,3 +71,46 @@ describe("OfficerWorkspace", () => {
     expect(calls.some((call) => call.method === "PUT")).toBe(false);
   });
 });
+
+describe("OfficerWorkspace คำขอรออนุมัติ", () => {
+  const pending = { id: 500, username: "skyline", title: "นาย", given_name: "ชาคริต", family_name: "ทองนวล", requested_role: "staff", role: "staff", agency: "สสจ.สตูล", thaiid_verified: true, rejected: false, requested_at: "2026-10-16T02:00:00Z" };
+  const rejectedRow = { ...pending, id: 501, username: "old_user", rejected: true };
+
+  function setupQueue() {
+    const calls = [];
+    window.history.replaceState(null, "", "/?tab=requests");
+    global.fetch = jest.fn((url, init = {}) => {
+      calls.push({ url, method: init.method || "GET", body: init.body ? JSON.parse(init.body) : null });
+      if (url.includes("/registrations")) {
+        if (init.method === "PATCH") return respond({ success: true, message: "ปฏิเสธคำขอแล้ว" });
+        return respond({ success: true, data: [pending, rejectedRow], stats: { waiting: 1, verified: 1, rejected: 1, actionable: 1 } });
+      }
+      if (init.method === "PUT") return respond({ success: true, data: {} });
+      return respond({ success: true, data: [officer], stats: { staff: 1 } });
+    });
+    render(<OfficerWorkspace />);
+    return calls;
+  }
+
+  afterEach(() => window.history.replaceState(null, "", "/"));
+
+  it("แสดงเฉพาะคนที่ยังไม่อนุมัติ พร้อมสถานะ ThaiD และอนุมัติตามสิทธิ์ที่เลือก", async () => {
+    const calls = setupQueue();
+    expect(await screen.findByText("ยืนยัน ThaiD แล้ว")).toBeTruthy();
+    expect(screen.getByText(/คำขอที่ปฏิเสธแล้ว \(1\)/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("อนุมัติเป็น"), { target: { value: "LOGISTICS" } });
+    fireEvent.click(screen.getByRole("button", { name: /^อนุมัติ$/ }));
+    await waitFor(() => expect(calls.some((call) => call.method === "PUT" && /officers\/500\/?$/.test(call.url))).toBe(true));
+    expect(calls.find((call) => call.method === "PUT").body).toEqual({ role: "LOGISTICS", requested_role: "LOGISTICS", is_approved: 1 });
+  });
+
+  it("ปฏิเสธต้องมีเหตุผล แล้วส่ง PATCH", async () => {
+    const calls = setupQueue();
+    fireEvent.click(await screen.findByRole("button", { name: /ปฏิเสธ$/ }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "ลงทะเบียนซ้ำ" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "ปฏิเสธคำขอ" }));
+    await waitFor(() => expect(calls.some((call) => call.method === "PATCH")).toBe(true));
+    expect(calls.find((call) => call.method === "PATCH").body).toEqual({ officer_id: 500, action: "reject", reason: "ลงทะเบียนซ้ำ" });
+  });
+});
