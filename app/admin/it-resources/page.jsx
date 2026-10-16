@@ -16,6 +16,7 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import AppIcon from "@/components/icons/AppIcon";
+import FacilitySelect from "@/components/common/FacilitySelect";
 
 ChartJS.register(
     CategoryScale,
@@ -26,6 +27,8 @@ ChartJS.register(
     Legend,
     ArcElement
 );
+
+const facilityName = (facility) => facility.name;
 
 export default function ITResourcesPage() {
     const [resources, setResources] = useState([]);
@@ -555,17 +558,14 @@ export default function ITResourcesPage() {
                                     {/* Unit Info */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">หน่วยบริการ *</label>
-                                        <select
-                                            required
+                                        <FacilitySelect
+                                            facilities={healthFacilities}
                                             value={formData.unit_name}
-                                            onChange={(e) => setFormData({ ...formData, unit_name: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-lg text-gray-700"
-                                        >
-                                            <option value="">-- เลือกหน่วยบริการ --</option>
-                                            {healthFacilities.map(facility => (
-                                                <option key={facility.id} value={facility.name}>{facility.name}</option>
-                                            ))}
-                                        </select>
+                                            onChange={(value) => setFormData({ ...formData, unit_name: value })}
+                                            getValue={facilityName}
+                                            selectClassName="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                            required
+                                        />
                                     </div>
 
 

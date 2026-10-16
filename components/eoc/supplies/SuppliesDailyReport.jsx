@@ -8,6 +8,7 @@ import { Button, Field, ReadOnlyNotice, StatusPill, inputClass } from "@/compone
 import { formatNumber } from "@/lib/adminApi";
 import { sendOrQueue } from "@/lib/offlineQueue";
 import { shortThaiDate, todayKey } from "@/lib/medicalDaily";
+import FacilitySelect from "@/components/common/FacilitySelect";
 
 const blankRow = { received_qty: "", used_qty: "", counted_qty: "", note: "" };
 const toInput = (value) => (value === null || value === undefined ? "" : String(Number(value)));
@@ -103,16 +104,17 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
           <Field label="วันที่รายงาน">
             <input type="date" className={inputClass} value={date} max={today} onChange={(event) => setDate(event.target.value || today)} />
           </Field>
-          <Field label="หน่วยบริการ/คลัง">
-            <select className={inputClass} value={facilityId || ""} onChange={(event) => onFacilityChange(event.target.value)}>
-              <option value="">เลือกหน่วยบริการ</option>
-              {facilities.map((facility) => {
+          <div>
+            <span className="mb-1 block text-sm font-bold text-slate-800">หน่วยบริการ/คลัง</span>
+            <FacilitySelect
+              facilities={facilities} value={facilityId || ""} onChange={onFacilityChange} selectClassName={inputClass}
+              renderLabel={(facility) => {
                 const status = statusOf(facility.id);
                 const mark = status === "complete" ? " ✓ รายงานแล้ว" : status === "partial" ? " · รายงานไม่ครบ" : "";
-                return <option key={facility.id} value={facility.id}>{facility.name}{facility.district ? ` (อ.${facility.district})` : ""}{mark}</option>;
-              })}
-            </select>
-          </Field>
+                return `${facility.name}${facility.district ? ` (อ.${facility.district})` : ""}${mark}`;
+              }}
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
             {canReport && openHospitalImport ? <Button onClick={openHospitalImport}><FileUp className="h-4 w-4" aria-hidden="true" />นำเข้าไฟล์คลังยา รพ.</Button> : null}
           </div>

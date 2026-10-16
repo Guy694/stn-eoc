@@ -29,7 +29,7 @@
 - [ ] สร้างผู้ใช้เฉพาะแอป (ถ้าไม่ใช้ docker compose ใหม่):
       `CREATE USER 'stneoc_app'@'%' IDENTIFIED BY '...'; GRANT ALL ON stneoc.* TO 'stneoc_app'@'%';`
 - [ ] MySQL ไม่เปิดพอร์ต 3306 สู่ภายนอก (bind 127.0.0.1 หรืออยู่ในเครือข่าย docker เท่านั้น) และ firewall ปิด 3306
-- [ ] สำรองฐานข้อมูลก่อน migrate แล้วรัน `npm run db:migrate` (หรือ `docker compose exec app node scripts/migrate.mjs up`) · ตรวจ `npm run db:migrate:status` ไม่มีค้าง
+- [ ] migrate ฐานข้อมูล: `./scripts/docker-migrate.sh up` (สำรองให้อัตโนมัติ) · ตรวจ `./scripts/docker-migrate.sh status` ไม่มีค้าง — ขั้นตอนเต็มดู [docs/database-migration.md](database-migration.md)
 - [ ] ลบข้อมูลทดสอบ: `npm run test-data:cleanup` (ดูก่อน) → `-- --apply`
 - [ ] เปลี่ยนรหัสผ่านบัญชีทดสอบ/บัญชีตั้งต้น และรัน `npm run security:weak-passwords`
 

@@ -167,8 +167,8 @@ function LoginForm() {
                         </div>
                         <div className="rounded-xl border border-white/15 bg-white/10 p-4">
                             <IdCard className="mb-2 h-5 w-5" />
-                            <div className="font-black">ThaiD</div>
-                            <div className="mt-1 text-xs text-blue-100">รองรับการยืนยันตัวตน</div>
+                            <div className="font-black">ThaiD · Provider ID</div>
+                            <div className="mt-1 text-xs text-blue-100">ยืนยันตัวตนผ่านบัญชีภาครัฐ</div>
                         </div>
                     </div>
                 </section>
@@ -179,7 +179,7 @@ function LoginForm() {
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto hidden h-20 w-20 rounded-full bg-white p-2 lg:block" />
                             <p className="hidden text-center text-lg font-black text-[#0b4c86] lg:block">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
                             <h1 className="text-2xl font-black text-slate-950 lg:mt-1 lg:text-3xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
-                            <p className="mt-1 text-sm leading-6 text-slate-500 lg:mt-2">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiD</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-500 lg:mt-2">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiD / Provider ID</p>
                         </div>
 
                         {error && (() => {
@@ -266,22 +266,37 @@ function LoginForm() {
                             <div className="h-px flex-1 bg-slate-200" />
                         </div>
 
-                        <a
-                            href="/stn-eoc/api/auth/thaiid/authorize/?from=login"
-                            onClick={refreshThaiIdLink}
-                            className="flex w-full items-center justify-center gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition hover:border-blue-200 hover:bg-blue-100"
-                        >
-                            <Image src="/stn-eoc/img/thaiid.png" alt="ThaiD" width={36} height={36} className="h-9 w-9" />
-                            เข้าสู่ระบบด้วย ThaiD
-                        </a>
+                        {/* ปุ่มยืนยันตัวตนภายนอก: โลโก้ในกรอบ + ชื่อ + คำอธิบายสั้น + ลูกศร (โครงเดียวกันทั้งสองปุ่ม) */}
+                        <div className="space-y-2.5">
+                            <a
+                                href="/stn-eoc/api/auth/thaiid/authorize/?from=login"
+                                onClick={refreshThaiIdLink}
+                                className="group flex w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-2 pr-4 text-left shadow-[0_1px_2px_rgba(15,23,42,.05)] transition duration-200 hover:-translate-y-px hover:border-[#1e40af]/35 hover:shadow-[0_12px_24px_-16px_rgba(30,64,175,.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e40af]/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                            >
+                                <span className="flex h-12 w-20 shrink-0 items-center justify-center rounded-xl bg-[#f1f5fb]">
+                                    <Image src="/stn-eoc/img/thaiid.png" alt="" width={40} height={40} className="h-10 w-10 rounded-lg" />
+                                </span>
+                                <span className="min-w-0 flex-1 leading-tight">
+                                    <span className="block text-[15px] font-black text-slate-900">เข้าสู่ระบบด้วย ThaiD</span>
+                                    <span className="mt-0.5 block text-xs font-medium text-slate-500">ยืนยันตัวตนผ่านแอป ThaiD (ปค.)</span>
+                                </span>
+                                <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition duration-200 group-hover:translate-x-0.5 group-hover:text-[#1e40af] motion-reduce:transition-none" aria-hidden="true" />
+                            </a>
 
-                        <a
-                            href="/stn-eoc/api/auth/provider-id/authorize/"
-                            className="mt-2.5 flex w-full items-center justify-center gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-black text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-50"
-                        >
-                            <Image src="/stn-eoc/img/provider-id.png" alt="Provider ID" width={326} height={128} className="h-9 w-auto shrink-0" />
-                            <span className="text-left leading-tight">เข้าสู่ระบบด้วย Provider ID<span className="block text-xs font-semibold text-emerald-700">บุคลากรสาธารณสุข (Health ID)</span></span>
-                        </a>
+                            <a
+                                href="/stn-eoc/api/auth/provider-id/authorize/"
+                                className="group flex w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-2 pr-4 text-left shadow-[0_1px_2px_rgba(15,23,42,.05)] transition duration-200 hover:-translate-y-px hover:border-[#0f8a4f]/35 hover:shadow-[0_12px_24px_-16px_rgba(15,138,79,.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f8a4f]/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                            >
+                                <span className="flex h-12 w-20 shrink-0 items-center justify-center rounded-xl bg-[#f0f8f3] px-1">
+                                    <Image src="/stn-eoc/img/provider-id.png" alt="" width={326} height={128} className="h-auto w-full" />
+                                </span>
+                                <span className="min-w-0 flex-1 leading-tight">
+                                    <span className="block text-[15px] font-black text-slate-900">เข้าสู่ระบบด้วย Provider ID</span>
+                                    <span className="mt-0.5 block text-xs font-medium text-slate-500">บุคลากรสาธารณสุข ผ่าน Health ID (สธ.)</span>
+                                </span>
+                                <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition duration-200 group-hover:translate-x-0.5 group-hover:text-[#0f8a4f] motion-reduce:transition-none" aria-hidden="true" />
+                            </a>
+                        </div>
 
                         <div className="mt-5 flex items-center justify-center gap-4 text-center text-sm lg:mt-7">
                             <Link href="/register" className="font-bold text-blue-700 hover:text-blue-900">ลงทะเบียนผู้ใช้งาน</Link>

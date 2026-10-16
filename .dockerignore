@@ -37,3 +37,6 @@ database_analysis.json
 
 # migration ต้องใช้ใน container
 !migrations/*.sql
+
+# สำรองฐานข้อมูล (มีข้อมูลส่วนบุคคล ห้ามเข้า image)
+db-backups

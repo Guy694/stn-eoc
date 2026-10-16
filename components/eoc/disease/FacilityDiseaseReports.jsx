@@ -18,6 +18,7 @@ import {
 import { Bar, Pie } from 'react-chartjs-2';
 import AppIcon from "@/components/icons/AppIcon";
 import { buildDiseaseChoices } from '@/lib/diseaseNames';
+import FacilitySelect from "@/components/common/FacilitySelect";
 
 ChartJS.register(
     CategoryScale,
@@ -899,19 +900,13 @@ export default function FacilityDiseaseReports() {
                                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                                     หน่วยบริการ *
                                                 </label>
-                                                <select
+                                                <FacilitySelect
+                                                    facilities={facilities}
                                                     value={formData.health_facility_id}
-                                                    onChange={(e) => setFormData({ ...formData, health_facility_id: e.target.value })}
-                                                    className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
+                                                    onChange={(value) => setFormData({ ...formData, health_facility_id: value })}
+                                                    selectClassName="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2"
                                                     required
-                                                >
-                                                    <option value="">เลือกหน่วยบริการ</option>
-                                                    {facilities.map(facility => (
-                                                        <option key={facility.id} value={facility.id}>
-                                                            {facility.name} ({facility.district_name})
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                />
                                             </div>
 
                                             <div>

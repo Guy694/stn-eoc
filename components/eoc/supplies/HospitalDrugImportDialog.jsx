@@ -13,6 +13,7 @@ import {
 } from "@/lib/hospitalDrugFiles";
 import { shortThaiDate } from "@/lib/medicalDaily";
 import { PLAN_ACTIONS, hospitalPrefix } from "@/lib/hospitalDrugPlan";
+import FacilitySelect from "@/components/common/FacilitySelect";
 
 const ENDPOINT = "/stn-eoc/api/eoc/supplies/hospital-import/";
 const n = (value) => (value === null || value === undefined ? "–" : Number(value).toLocaleString("th-TH", { maximumFractionDigits: 2 }));
@@ -276,10 +277,7 @@ export default function HospitalDrugImportDialog({ open, onOpenChange, eocType =
             <div className="grid gap-3 sm:grid-cols-[1fr_1fr]">
               <label className="text-sm font-semibold text-slate-800">
                 หน่วยบริการของข้อมูลนี้{hospCode ? <span className="font-normal text-slate-500"> (รหัสในไฟล์ {hospCode})</span> : null}
-                <select value={facilityId} onChange={(event) => setFacilityId(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm font-normal" required>
-                  <option value="">เลือกหน่วยบริการ</option>
-                  {(context?.facilities || []).map((facility) => <option key={facility.value} value={facility.value}>{facility.label}{facility.district ? ` (อ.${facility.district})` : ""}</option>)}
-                </select>
+                <FacilitySelect facilities={context?.facilities || []} value={facilityId} onChange={setFacilityId} required className="mt-1 font-normal" />
                 {context?.mapped_facility_id ? <span className="mt-1 block text-xs font-normal text-slate-500">ระบบจำหน่วยบริการของรหัสนี้จากครั้งก่อน</span> : null}
               </label>
               <div className="text-sm text-slate-700">

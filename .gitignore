@@ -67,3 +67,6 @@ next-env.d.ts
 # Playwright
 /playwright-report/
 /test-results/
+
+# สำรองฐานข้อมูลจาก scripts/docker-migrate.sh (มีข้อมูลส่วนบุคคล ห้าม commit)
+db-backups/

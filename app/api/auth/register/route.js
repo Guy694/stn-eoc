@@ -4,11 +4,14 @@ import { getPool } from "@/lib/db";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { getClientIp } from "@/lib/clientIp";
+import { facilityOrderSql } from "@/lib/facilityOrder";
+import { TEAM_ROLE_CODES } from "@/lib/eocRoles";
 
 const pool = getPool();
 
 const VALID_USER_TYPES = new Set(['citizen', 'officer']);
-const VALID_ROLES = new Set(['staff', 'MCATT', 'SAT', 'SeRHT', 'commander']);
+// สิทธิ์ที่ขอได้ตอนลงทะเบียน: เจ้าหน้าที่ทั่วไป ผู้บัญชาการ และทุกกลุ่มภารกิจ (ไม่รวม admin) — แอดมินปรับได้ก่อนอนุมัติ
+const VALID_ROLES = new Set(['staff', 'commander', ...TEAM_ROLE_CODES]);
 
 function normalizeName(value) {
     return String(value || '')
@@ -34,17 +37,22 @@ function isValidUsername(value) {
 }
 
 
-async function getAgencyOptions(connection) {
+// หน่วยงานที่ลงทะเบียนได้ เรียง โรงพยาบาล → สสจ. → สสอ. → รพ.สต. (ชื่อซ้ำเก็บรายการแรก)
+async function getAgencyFacilities(connection) {
     const [rows] = await connection.execute(`
-        SELECT DISTINCT name AS agency
+        SELECT name, typecode, district_name
         FROM health_facilities
         WHERE COALESCE(is_active, 1) = 1
           AND name IS NOT NULL
           AND name <> ''
-        ORDER BY agency ASC
+        ORDER BY ${facilityOrderSql()}
     `);
+    const seen = new Set();
+    return rows.filter((row) => (seen.has(row.name) ? false : seen.add(row.name)));
+}
 
-    return rows.map((row) => row.agency);
+async function getAgencyOptions(connection) {
+    return (await getAgencyFacilities(connection)).map((row) => row.name);
 }
 
 async function assertRateLimit(connection, ipAddress) {
@@ -79,11 +87,12 @@ export async function GET() {
 
     try {
         connection = await pool.getConnection();
-        const agencies = await getAgencyOptions(connection);
+        const facilities = await getAgencyFacilities(connection);
 
         return NextResponse.json({
             success: true,
-            agencies
+            agencies: facilities.map((row) => row.name),
+            agency_facilities: facilities.map((row) => ({ name: row.name, typecode: row.typecode || "", district_name: row.district_name || "" }))
         });
     } catch (error) {
         console.error('Registration options error:', error);

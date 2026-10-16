@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { publicInternalError } from '@/lib/apiResponse';
 import { FACILITY_STATUS_SELECT, hasFacilityStatusColumns } from '@/lib/healthFacilityDb';
+import { facilityOrderSql } from "@/lib/facilityOrder";
 
 // API สำหรับดึงข้อมูลสถานพยาบาล (ใช้บนแผนที่สาธารณะ: ไม่มีข้อมูลบุคคล)
 export async function GET(request) {
@@ -46,7 +47,7 @@ export async function GET(request) {
             params.push(risk);
         }
 
-        sql += ' ORDER BY typecode, name';
+        sql += ` ORDER BY ${facilityOrderSql()}`;
 
         const facilities = await query(sql, params);
 

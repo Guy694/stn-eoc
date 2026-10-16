@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { OXYGEN_CRITICAL_DAYS, OXYGEN_LEVELS, OXYGEN_LOW_DAYS, OXYGEN_SOURCES, formatDays, oxygenDays, oxygenLevel } from "@/lib/liquidOxygen";
 import { cn } from "@/lib/utils";
+import FacilitySelect from "@/components/common/FacilitySelect";
 
 const thaiDate = (value) => (value ? new Date(`${value}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "");
 
@@ -234,12 +235,10 @@ export default function OxygenWorkspace({ eocType = "flood" }) {
       >
         <FormGrid>
           {!dialog?.card ? (
-            <Field label="หน่วยบริการ" required wide>
-              <select required className={inputClass} value={form.health_facility_id} onChange={set("health_facility_id")}>
-                <option value="">เลือกหน่วยบริการ</option>
-                {(data?.facilities || []).map((facility) => <option key={facility.id} value={facility.id}>{facility.name}{facility.district_name ? ` (อ.${facility.district_name})` : ""}</option>)}
-              </select>
-            </Field>
+            <div className="sm:col-span-2">
+              <span className="mb-1 block text-sm font-bold text-slate-800">หน่วยบริการ <span className="text-red-600">*</span></span>
+              <FacilitySelect facilities={data?.facilities || []} value={form.health_facility_id} onChange={(value) => setForm((current) => ({ ...current, health_facility_id: value }))} required selectClassName={inputClass} />
+            </div>
           ) : null}
           <Field label="วันที่รายงาน" required wide>
             <input type="date" required max={today} className={inputClass} value={form.report_date} onChange={set("report_date")} />

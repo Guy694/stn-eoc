@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { facilityOrderSql } from "@/lib/facilityOrder";
 
 function parseNumber(value) {
     if (value === undefined || value === null || String(value).trim() === "") return null;
@@ -75,7 +76,7 @@ async function loadHealthFacilities() {
         `SELECT id, name, typecode, district_name, tambon, lat, lon
          FROM health_facilities
          WHERE is_active = 1
-         ORDER BY name ASC`,
+         ORDER BY ${facilityOrderSql()}`,
         []
     );
 }

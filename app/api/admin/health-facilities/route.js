@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { FACILITY_STATUS_SELECT, hasFacilityStatusColumns } from '@/lib/healthFacilityDb';
+import { facilityOrderSql } from "@/lib/facilityOrder";
 
 // GET - ดึงรายการสถานพยาบาลทั้งหมด
 export async function GET(request) {
@@ -43,7 +44,7 @@ export async function GET(request) {
             params.push(searchTerm, searchTerm, searchTerm, searchTerm);
         }
 
-        sql += ' ORDER BY name ASC';
+        sql += ` ORDER BY ${facilityOrderSql()}`;
 
         const facilities = await query(sql, params);
 

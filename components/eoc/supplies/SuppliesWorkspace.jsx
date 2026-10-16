@@ -15,6 +15,8 @@ import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { FLOOD_PRESET_ITEMS, MOVEMENT_TYPES, STOCK_LEVEL_LABELS, displayItemCode } from "@/lib/medicalInventory";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { sendOrQueue } from "@/lib/offlineQueue";
+import FacilitySelect from "@/components/common/FacilitySelect";
+import { compareFacilities } from "@/lib/facilityOrder";
 
 const TABS = [
   { value: "overview", label: "ภาพรวม" },
@@ -23,6 +25,7 @@ const TABS = [
   { value: "history", label: "ประวัติปรับยอด" }
 ];
 
+const facilityName = (facility) => facility.name;
 const LEVEL_ORDER = { out: 0, low: 1, unknown: 2, ok: 3 };
 const MOVE_ICON = { receive: ArrowDownToLine, issue: ArrowUpFromLine, adjust: Scale };
 
@@ -76,9 +79,9 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
     const map = new Map();
     for (const row of stock) {
       const id = row.health_facility_id || row.inventory_agency_id;
-      if (!map.has(id)) map.set(id, { id, name: row.agency_name, district: row.district_name || "" });
+      if (!map.has(id)) map.set(id, { id, name: row.agency_name, district: row.district_name || "", typecode: row.agency_type || "" });
     }
-    return [...map.values()].sort((a, b) => String(a.district).localeCompare(String(b.district), "th") || String(a.name).localeCompare(String(b.name), "th"));
+    return [...map.values()].sort(compareFacilities);
   }, [stock]);
 
   const openDaily = (facilityId) => {
@@ -86,10 +89,6 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
     setTab("daily");
   };
 
-  const facilityOptions = useMemo(() => {
-    const names = [...new Set(stock.map((row) => row.agency_name))].sort((a, b) => a.localeCompare(b, "th"));
-    return [{ value: "", label: "ทุกหน่วยบริการ" }, ...names.map((name) => ({ value: name, label: name }))];
-  }, [stock]);
 
   const rows = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -301,7 +300,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
             <FilterSelect label="สถานะ" value={levelFilter} onChange={setLevelFilter} options={[
               { value: "", label: "ทุกสถานะ" }, { value: "out", label: "หมด" }, { value: "low", label: "ใกล้หมด" }, { value: "ok", label: "พอใช้" }, { value: "unknown", label: "ยังไม่รายงาน" }
             ]} />
-            <FilterSelect label="หน่วยบริการ" value={facilityFilter} onChange={setFacilityFilter} options={facilityOptions} className="min-w-[12rem]" />
+            <FacilitySelect facilities={facilities} value={facilityFilter} onChange={setFacilityFilter} getValue={facilityName} allLabel="ทุกหน่วยบริการ" className="min-w-[14rem]" />
           </Toolbar>
           {perms.can_delete && stock.length ? (
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
@@ -361,12 +360,10 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
 
       <FormDialog open={itemDialog} onOpenChange={setItemDialog} title="เพิ่มรายการเวชภัณฑ์" description="เพิ่มรายการให้หน่วยบริการหนึ่งแห่ง พร้อมยอดตั้งต้น" onSubmit={submitItem} busy={busy} error={formError} submitText="เพิ่มรายการ">
         <FormGrid>
-          <Field label="หน่วยบริการ/คลัง" required wide>
-            <select required className={inputClass} value={itemForm.health_facility_id} onChange={(event) => setItemForm((current) => ({ ...current, health_facility_id: event.target.value }))}>
-              <option value="">เลือกหน่วยบริการ</option>
-              {(data?.facilities || []).map((facility) => <option key={facility.id} value={facility.id}>{facility.name}{facility.district_name ? ` (อ.${facility.district_name})` : ""}</option>)}
-            </select>
-          </Field>
+          <div className="sm:col-span-2">
+            <span className="mb-1 block text-sm font-bold text-slate-800">หน่วยบริการ/คลัง <span className="text-red-600">*</span></span>
+            <FacilitySelect facilities={data?.facilities || []} value={itemForm.health_facility_id} onChange={(value) => setItemForm((current) => ({ ...current, health_facility_id: value }))} required selectClassName={inputClass} />
+          </div>
           <Field label="เลือกจากรายการมาตรฐาน" wide hint="เลือกแล้วระบบเติมชื่อ หน่วยนับ และรหัสให้ หรือพิมพ์เองด้านล่าง">
             <select className={inputClass} value={FLOOD_PRESET_ITEMS.some((item) => item.item_code === itemForm.item_code) ? itemForm.item_code : ""} onChange={(event) => {
               const preset = FLOOD_PRESET_ITEMS.find((item) => item.item_code === event.target.value);

@@ -7,6 +7,7 @@ import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { ArchiveError, archiveAndDelete, archiveErrorResponse, normalizeReason, recordChange } from "@/lib/recordArchive";
 import { MOVEMENT_TYPES, applyMovement, missingPresetItems, normalizeItemCode, stockLevel, summarizeStock } from "@/lib/medicalInventory";
 import { triggerEventAlerts } from "@/lib/eocAlertRunner";
+import { facilityOrderSql } from "@/lib/facilityOrder";
 
 // คลังเวชภัณฑ์ของ "เหตุการณ์ EOC ครั้งนี้" (ผูกกับ eoc_type + ครั้งที่ ผ่าน medical_inventory_events)
 const SUPPORTED = ["flood", "disease"];
@@ -79,7 +80,7 @@ export async function GET(request) {
                 m.movement_at, s.item_name, s.unit, s.agency_name
          FROM medical_inventory_movements m JOIN medical_inventory_stock s ON s.id = m.stock_id
          WHERE s.inventory_event_id = ? ORDER BY m.movement_at DESC, m.id DESC LIMIT 300`, [ctx.event.id]) : [],
-      query(`SELECT id, name, district_name FROM health_facilities WHERE is_active = 1 ORDER BY district_name, name`),
+      query(`SELECT id, name, district_name, typecode FROM health_facilities WHERE is_active = 1 ORDER BY ${facilityOrderSql()}`),
       ctx.event ? null : findPreviousEvent(ctx.session)
     ]);
 

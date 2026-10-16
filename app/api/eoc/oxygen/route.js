@@ -9,6 +9,7 @@ import { triggerEventAlerts } from "@/lib/eocAlertRunner";
 import { facilityTypeInfo } from "@/lib/healthFacilityStatus";
 import { formatDays, oxygenDays, summarizeOxygen, validateOxygenReport } from "@/lib/liquidOxygen";
 import { OXYGEN_FIELDS as FIELDS, loadOxygenLatest } from "@/lib/liquidOxygenServer";
+import { facilityOrderSql } from "@/lib/facilityOrder";
 
 // ออกซิเจนเหลวของโรงพยาบาลในเหตุการณ์ EOC: รายงานล่าสุดของแต่ละแห่ง + ประวัติ 14 วัน
 const SUPPORTED = ["flood", "disease"];
@@ -48,7 +49,7 @@ export async function GET(request) {
       if (error.code !== "ER_NO_SUCH_TABLE") throw error;
       ready = false;
     }
-    const facilities = (await query(`SELECT id, name, district_name, typecode FROM health_facilities WHERE is_active = 1 ORDER BY district_name, name`))
+    const facilities = (await query(`SELECT id, name, district_name, typecode FROM health_facilities WHERE is_active = 1 ORDER BY ${facilityOrderSql()}`))
       .map((row) => ({ id: row.id, name: row.name, district_name: row.district_name, hospital: facilityTypeInfo(row.typecode).level === "hospital" }));
     const perms = await modulePermissions(auth.user, ctx.session.id, MODULE);
     const canEdit = ctx.session.status === "active" && perms.can_edit;

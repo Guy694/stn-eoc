@@ -8,6 +8,7 @@ import { formatNumber } from "@/lib/adminApi";
 import { COVER_LEVELS, DAILY_WINDOW_DAYS, shortThaiDate } from "@/lib/medicalDaily";
 import { STOCK_LEVEL_LABELS } from "@/lib/medicalInventory";
 import { periodLabel } from "@/lib/hospitalDrugFiles";
+import { compareFacilities } from "@/lib/facilityOrder";
 
 const LEVEL_CELL = {
   out: "bg-red-100 text-red-900",
@@ -152,12 +153,12 @@ function Matrix({ stocks, items, districts, mode }) {
   const seen = new Map();
   for (const stock of stocks) {
     if (!seen.has(stock.facility_id)) {
-      seen.set(stock.facility_id, { id: stock.facility_id, name: stock.agency_name, district: stock.district, cells: {} });
+      seen.set(stock.facility_id, { id: stock.facility_id, name: stock.agency_name, district: stock.district, typecode: stock.typecode, cells: {} });
       facilities.push(seen.get(stock.facility_id));
     }
     seen.get(stock.facility_id).cells[stock.item_code] = stock;
   }
-  facilities.sort((a, b) => String(a.district).localeCompare(String(b.district), "th") || String(a.name).localeCompare(String(b.name), "th"));
+  facilities.sort(compareFacilities);
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-sm">
