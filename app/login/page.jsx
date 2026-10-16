@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
-import { AlertTriangle, ArrowLeft, ArrowRight, Clock, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, BadgeCheck, Clock, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
 
 // Component แยกสำหรับจัดการ error จาก ThaiD callback
 function ThaiDErrorHandler({ setError }) {
@@ -19,6 +19,12 @@ function ThaiDErrorHandler({ setError }) {
         // ตรวจสอบ session timeout
         if (timeout === 'true') {
             setError('การเข้าสู่ระบบหมดอายุเนื่องจากไม่มีการใช้งานเกิน 10 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+            return;
+        }
+
+        // ข้อผิดพลาดจาก Provider ID (Health ID) ส่งข้อความภาษาไทยมาพร้อมกันแล้ว
+        if (errorType && errorType.startsWith('provider_')) {
+            setError(errorMessage || 'เข้าสู่ระบบด้วย Provider ID ไม่สำเร็จ');
             return;
         }
 
@@ -267,6 +273,14 @@ function LoginForm() {
                         >
                             <Image src="/stn-eoc/img/thaiid.png" alt="ThaiD" width={36} height={36} className="h-9 w-9" />
                             เข้าสู่ระบบด้วย ThaiD
+                        </a>
+
+                        <a
+                            href="/stn-eoc/api/auth/provider-id/authorize/"
+                            className="mt-2.5 flex w-full items-center justify-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800 transition hover:border-emerald-200 hover:bg-emerald-100"
+                        >
+                            <BadgeCheck className="h-6 w-6" aria-hidden="true" />
+                            <span className="text-left leading-tight">เข้าสู่ระบบด้วย Provider ID<span className="block text-xs font-semibold text-emerald-700">บุคลากรสาธารณสุข (Health ID กระทรวงสาธารณสุข)</span></span>
                         </a>
 
                         <div className="mt-5 flex items-center justify-center gap-4 text-center text-sm lg:mt-7">

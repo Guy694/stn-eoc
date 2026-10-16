@@ -9,6 +9,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { AdminPage, StatusPill, inputClass } from "@/components/admin/crud";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import OfficerPushCard from "@/components/admin/OfficerPushCard";
+import ProviderIdLinkCard from "@/components/admin/ProviderIdLinkCard";
 
 const TITLES = ["นาย", "นาง", "นางสาว", "ดร."];
 
@@ -258,6 +259,7 @@ export default function ProfilePage() {
                         </div>
                     </form>
                     <OfficerPushCard className="lg:col-span-2" />
+                    <ProviderIdLinkCard className="lg:col-span-2" />
                 </div>
             </AdminPage>
         </EOCLayout>
