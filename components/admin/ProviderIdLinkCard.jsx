@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BadgeCheck, Link2, Unlink } from "lucide-react";
+import Image from "next/image";
+import { Link2, Unlink } from "lucide-react";
 import { StatusPill } from "@/components/admin/crud";
 import { formatDateTime } from "@/lib/adminApi";
 
@@ -67,7 +68,7 @@ export default function ProviderIdLinkCard({ className = "" }) {
   return (
     <section className={`rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm sm:p-6 ${className}`} aria-labelledby="provider-id-title">
       <h3 id="provider-id-title" className="flex flex-wrap items-center gap-2 font-black text-slate-900">
-        <BadgeCheck className="h-5 w-5 text-[#0b6b4f]" aria-hidden="true" />เข้าสู่ระบบด้วย Provider ID
+        <Image src="/stn-eoc/img/provider-id.png" alt="" width={326} height={128} className="h-7 w-auto" />เข้าสู่ระบบด้วย Provider ID
         {status && !status.migration_required ? (status.linked ? <StatusPill tone="green">เชื่อมแล้ว</StatusPill> : <StatusPill tone="gray">ยังไม่เชื่อม</StatusPill>) : null}
       </h3>
       <p className="mt-1 text-sm text-slate-600">

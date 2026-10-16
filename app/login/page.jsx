@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
-import { AlertTriangle, ArrowLeft, ArrowRight, BadgeCheck, Clock, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Clock, IdCard, Lock, MapPinned, ShieldCheck, UserRound } from "lucide-react";
 
 // Component แยกสำหรับจัดการ error จาก ThaiD callback
 function ThaiDErrorHandler({ setError }) {
@@ -277,10 +277,10 @@ function LoginForm() {
 
                         <a
                             href="/stn-eoc/api/auth/provider-id/authorize/"
-                            className="mt-2.5 flex w-full items-center justify-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800 transition hover:border-emerald-200 hover:bg-emerald-100"
+                            className="mt-2.5 flex w-full items-center justify-center gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-black text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-50"
                         >
-                            <BadgeCheck className="h-6 w-6" aria-hidden="true" />
-                            <span className="text-left leading-tight">เข้าสู่ระบบด้วย Provider ID<span className="block text-xs font-semibold text-emerald-700">บุคลากรสาธารณสุข (Health ID กระทรวงสาธารณสุข)</span></span>
+                            <Image src="/stn-eoc/img/provider-id.png" alt="Provider ID" width={326} height={128} className="h-9 w-auto shrink-0" />
+                            <span className="text-left leading-tight">เข้าสู่ระบบด้วย Provider ID<span className="block text-xs font-semibold text-emerald-700">บุคลากรสาธารณสุข (Health ID)</span></span>
                         </a>
 
                         <div className="mt-5 flex items-center justify-center gap-4 text-center text-sm lg:mt-7">

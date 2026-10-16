@@ -24,7 +24,7 @@ describe("Health ID / Provider ID client", () => {
   });
 
   it("บอกค่าที่ยังไม่ได้ตั้ง", () => {
-    expect(getProviderIdConfigError({ ...config, providerSecretKey: "" })).toMatch(/PROVIDER_ID_UAT_SECRET_KEY/);
+    expect(getProviderIdConfigError({ ...config, providerSecretKey: "" })).toMatch(/PROVIDER_ID_PRD_SECRET_KEY/);
     expect(getProviderIdConfigError(config)).toBeNull();
   });
 
@@ -127,9 +127,10 @@ describe("getProviderIdConfig", () => {
   it("เลือกชุด UAT/PRD ตาม PROVIDER_ID_ENV และ URL ตามคู่มือ", () => {
     Object.assign(process.env, { HEALTH_ID_UAT_CLIENT_ID: "uat-id", HEALTH_ID_PRD_CLIENT_ID: "prd-id", NEXT_PUBLIC_BASE_URL: "https://eoc.example" });
     const request = new NextRequest("http://localhost/stn-eoc/api/auth/provider-id/authorize/");
-    expect(getProviderIdConfig(request)).toMatchObject({ mode: "uat", healthClientId: "uat-id", healthIdUrl: "https://uat-moph.id.th", providerUrl: "https://uat-provider.id.th", redirectUri: "https://eoc.example/stn-eoc/api/auth/provider-id/callback/" });
-    process.env.PROVIDER_ID_ENV = "prd";
-    expect(getProviderIdConfig(request)).toMatchObject({ mode: "prd", healthClientId: "prd-id", healthIdUrl: "https://moph.id.th", providerUrl: "https://provider.id.th" });
+    // ค่าเริ่มต้น = ระบบจริง
+    expect(getProviderIdConfig(request)).toMatchObject({ mode: "prd", healthClientId: "prd-id", healthIdUrl: "https://moph.id.th", providerUrl: "https://provider.id.th", redirectUri: "https://eoc.example/stn-eoc/api/auth/provider-id/callback/" });
+    process.env.PROVIDER_ID_ENV = "uat";
+    expect(getProviderIdConfig(request)).toMatchObject({ mode: "uat", healthClientId: "uat-id", healthIdUrl: "https://uat-moph.id.th", providerUrl: "https://uat-provider.id.th" });
   });
 
   it("ใช้ชุดเดียวแบบไม่มี _UAT/_PRD ได้", () => {
