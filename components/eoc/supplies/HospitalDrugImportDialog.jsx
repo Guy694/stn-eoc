@@ -282,7 +282,7 @@ export default function HospitalDrugImportDialog({ open, onOpenChange, eocType =
               </label>
               <div className="text-sm text-slate-700">
                 <p className="font-semibold text-slate-800">ยอดคงคลัง</p>
-                <p className="mt-1">{hasInventory ? `ณ สิ้นวันที่ ${merged.onhandDate ? shortThaiDate(merged.onhandDate) : "ไม่ระบุ"} — ยาที่ติดตามอยู่: ระบบคำนวณใช้ไปของวันนั้นเป็นรายงานประจำวัน · ยาใหม่: ใช้เป็นยอดตั้งต้น` : "ไม่มีไฟล์ INVENTORY: บันทึกได้เฉพาะอัตราใช้ปกติของยาที่ติดตามอยู่"}</p>
+                <p className="mt-1">{hasInventory ? `ณ สิ้นวันที่ ${merged.onhandDate ? shortThaiDate(merged.onhandDate) : "ไม่ระบุ"} — ยาที่ติดตามอยู่: ระบบคำนวณใช้ไปของวันนั้นเป็นรายงานประจำวัน · ยาใหม่: ใช้เป็นยอดตั้งต้น${merged.inventoryComplete ? " · ยาที่ไม่มียอดในไฟล์บันทึกเป็น 0" : ""}` : "ไม่มีไฟล์ INVENTORY: บันทึกได้เฉพาะอัตราใช้ปกติของยาที่ติดตามอยู่"}</p>
               </div>
             </div>
 
@@ -322,7 +322,7 @@ export default function HospitalDrugImportDialog({ open, onOpenChange, eocType =
                           {item.essential ? <span className="ml-1.5 rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-800">ยาจำเป็น</span> : null}
                           <span className="block text-xs text-slate-500">รหัส {item.working_code}{item.trade_name && item.trade_name !== item.name ? ` · ${item.trade_name}` : ""}{item.nlem ? ` · บัญชี ${item.nlem}` : ""}</span>
                         </td>
-                        <td className="px-3 py-1.5 text-right tabular-nums">{item.onhand === null ? <span className="text-slate-400">–</span> : <>{n(item.onhand)} <span className="text-xs text-slate-500">{item.unit}</span></>}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums">{item.onhand === null ? <span className="text-slate-400" title={merged.inventoryComplete ? "ไม่มียอดในไฟล์ INVENTORY จะบันทึกเป็น 0" : "ไม่มียอดในไฟล์ INVENTORY"}>{merged.inventoryComplete ? "0" : "–"}</span> : <>{n(item.onhand)} <span className="text-xs text-slate-500">{item.unit}</span></>}</td>
                         <td className="px-3 py-1.5">{item.nearest_expiry ? shortThaiDate(item.nearest_expiry) : <span className="text-slate-400">–</span>}{item.lots.length > 1 ? <span className="block text-xs text-slate-500">{item.lots.length} ล็อต</span> : null}</td>
                         <td className="px-3 py-1.5 text-right tabular-nums">{month ? <>{n(month.avg_daily)}<span className="block text-xs text-slate-500">{periodLabel(month.period)}</span></> : <span className="text-slate-400">–</span>}</td>
                       </tr>

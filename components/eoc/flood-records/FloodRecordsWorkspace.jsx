@@ -3,7 +3,7 @@
 // บันทึกพื้นที่น้ำท่วมรายวัน (ทีม SAT)
 // ลำดับการใช้งาน: เลือกวัน → ดูว่าตำบลไหนยังไม่ส่ง → กดตำบลเพื่อบันทึกทั้งตำบล หรือบันทึกรายหมู่บ้าน → แก้ไขรายแถวในตาราง
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Copy, Plus } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, ClipboardCheck, Copy, Home, Plus, Users } from "lucide-react";
 import {
   AdminPage, Button, DataTable, DeleteDialog, FilterSelect, RowActions, StatStrip, StatusPill, Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
@@ -201,10 +201,10 @@ export default function FloodRecordsWorkspace() {
       {recordsState.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{recordsState.error}</p> : null}
 
       <StatStrip items={[
-        { label: "ส่งรายงานแล้ว", value: `${coverageSummary.percent}%`, className: coverageSummary.percent >= 100 ? "text-emerald-700" : coverageSummary.percent >= 50 ? "text-amber-700" : "text-red-700" },
-        { label: "หมู่บ้านที่มีน้ำท่วม", value: formatNumber(day.villages) },
-        { label: "ระดับสูง–สูงมาก", value: formatNumber(day.severe), className: day.severe ? "text-red-700" : undefined },
-        { label: "ผู้ได้รับผลกระทบ", value: `${formatNumber(day.people)} คน` }
+        { icon: ClipboardCheck, label: "ส่งรายงานแล้ว", value: `${coverageSummary.percent}%`, share: coverageSummary.percent, className: coverageSummary.percent >= 100 ? "text-emerald-700" : coverageSummary.percent >= 50 ? "text-amber-700" : "text-red-700" },
+        { icon: Home, label: "หมู่บ้านที่มีน้ำท่วม", tone: "blue", value: formatNumber(day.villages) },
+        { icon: AlertTriangle, label: "ระดับสูง–สูงมาก", value: formatNumber(day.severe), className: day.severe ? "text-red-700" : undefined },
+        { icon: Users, label: "ผู้ได้รับผลกระทบ", value: formatNumber(day.people), unit: "คน" }
       ]} />
 
       <TambonCoverage

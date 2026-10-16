@@ -7,7 +7,7 @@ import useHelpAvailability, { HELP_CLOSED_HINT, WATER_CLOSED_HINT } from "@/comp
 // เมื่อ EOC ปิด จะเปลี่ยนเป็นปุ่มสีเทาที่กดไม่ได้ พร้อมคำอธิบาย (ไม่ซ่อนปุ่ม เพื่อให้ประชาชนรู้ว่าเมื่อไหร่จะใช้ได้)
 // children เป็นฟังก์ชันได้: ({ helpOpen }) => ... เพื่อเปลี่ยนข้อความตามสถานะ
 // kind="water" → ลิงก์ "รายงานระดับน้ำ" ซึ่งเปิดเฉพาะเมื่อมี EOC ด้านอุทกภัย
-export default function HelpRequestLink({ kind = "help", className = "", disabledClassName = "", onClick, children }) {
+export default function HelpRequestLink({ kind = "help", className = "", disabledClassName = "", onClick, children, ...rest }) {
   const availability = useHelpAvailability();
   const isWater = kind === "water";
   const helpOpen = isWater ? availability.floodOpen : availability.helpOpen;
@@ -26,5 +26,5 @@ export default function HelpRequestLink({ kind = "help", className = "", disable
     );
   }
 
-  return <Link href={isWater ? "/public/report-water" : "/public/report-incident"} onClick={onClick} className={className}>{content}</Link>;
+  return <Link href={isWater ? "/public/report-water" : "/public/report-incident"} onClick={onClick} className={className} {...rest}>{content}</Link>;
 }

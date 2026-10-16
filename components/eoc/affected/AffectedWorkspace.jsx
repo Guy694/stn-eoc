@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
-import { Pencil, Trash2 } from "lucide-react";
+import { Bandage, HeartCrack, Home, Pencil, Search, Trash2 } from "lucide-react";
 import {
   AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, ReadOnlyNotice,
   StatStrip, inputClass, latestTime, useNotice
@@ -349,10 +349,10 @@ export default function AffectedWorkspace() {
       {session ? (
         <>
           <StatStrip items={[
-            { label: "เสียชีวิต", value: `${formatNumber(deaths)} คน`, className: deaths ? "text-red-800" : undefined },
-            { label: "สูญหาย", value: `${formatNumber(missing)} คน`, className: missing ? "text-red-700" : undefined },
-            { label: "บาดเจ็บ", value: `${formatNumber(injured)} คน`, className: injured ? "text-amber-700" : undefined },
-            { label: "ทรัพย์สินเสียหาย", value: `${formatNumber(n(province.province_affected))} ราย` }
+            { icon: HeartCrack, label: "เสียชีวิต", value: formatNumber(deaths), unit: "คน", className: deaths ? "text-red-800" : undefined },
+            { icon: Search, label: "สูญหาย", value: formatNumber(missing), unit: "คน", className: missing ? "text-red-700" : undefined },
+            { icon: Bandage, label: "บาดเจ็บ", value: formatNumber(injured), unit: "คน", className: injured ? "text-amber-700" : undefined },
+            { icon: Home, label: "ทรัพย์สินเสียหาย", value: formatNumber(n(province.province_affected)), unit: "ราย" }
           ]} />
           <p className="-mt-2 text-xs text-slate-500">ยอดทั้งจังหวัด {periodLabel}</p>
 

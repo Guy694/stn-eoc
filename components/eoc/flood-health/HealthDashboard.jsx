@@ -3,11 +3,12 @@
 // ภาพรวมโรคและสุขภาพในเหตุการณ์: ตอบ 3 คำถามในห้องประชุม
 //  1) สถานการณ์ดีขึ้นหรือแย่ลง (แนวโน้ม + 7 วันเทียบ 7 วันก่อน)  2) ที่ไหน/โรคอะไร  3) ควรทำอะไรต่อ
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertOctagon, AlertTriangle, ArrowDownRight, ArrowUpRight, HeartPulse, Info, Minus, RefreshCw, Siren } from "lucide-react";
+import { AlertOctagon, AlertTriangle, Ambulance, ArrowDownRight, ArrowUpRight, CalendarDays, CalendarRange, HeartCrack, HeartPulse, Info, MapPin, Minus, RefreshCw, Siren } from "lucide-react";
 import { Bar, Line } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Tooltip } from "chart.js";
 import { Button } from "@/components/admin/crud";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler, Tooltip, Legend);
 
@@ -31,14 +32,8 @@ function Change({ value, suffix = "" }) {
   );
 }
 
-function Kpi({ label, value, unit = "ราย", hint, tone = "text-slate-900" }) {
-  return (
-    <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
-      <p className="text-xs font-semibold text-slate-500">{label}</p>
-      <p className={`mt-1 text-3xl font-black tabular-nums ${tone}`}>{value}<span className="ml-1 text-sm font-semibold text-slate-500">{unit}</span></p>
-      {hint ? <div className="mt-0.5 text-xs text-slate-500">{hint}</div> : null}
-    </div>
-  );
+function Kpi({ icon, label, value, unit = "ราย", hint, tone = "text-slate-900" }) {
+  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} />;
 }
 
 const ACTION_STYLE = {
@@ -151,12 +146,12 @@ export default function HealthDashboard({ eocType = "flood", onGoto }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Kpi label="ผู้ป่วยสะสม" value={formatNumber(totals.cases)} hint={`ชุมชน ${formatNumber(totals.community)} · ศูนย์ ${formatNumber(totals.shelter)}`} tone="text-[#0b4c86]" />
-        <Kpi label="วันนี้" value={formatNumber(totals.today)} hint="ผู้ป่วยรายใหม่ที่รายงานวันนี้" />
-        <Kpi label="7 วันล่าสุด" value={formatNumber(totals.last7)} hint={<span>เทียบ 7 วันก่อน ({formatNumber(totals.prev7)}) <Change value={totals.change} /></span>} tone={totals.change === null || totals.change > 0 ? "text-red-700" : "text-slate-900"} />
-        <Kpi label="อำเภอที่พบผู้ป่วย" value={formatNumber(totals.districtsWithCases)} unit="อำเภอ" />
-        <Kpi label="ส่งต่อโรงพยาบาล" value={formatNumber(totals.hospitalized)} hint="จากศูนย์พักพิง" tone={totals.hospitalized ? "text-amber-700" : "text-slate-900"} />
-        <Kpi label="เสียชีวิต" value={formatNumber(totals.deaths)} hint={totals.severeReports ? `รายงานอาการรุนแรง ${totals.severeReports} ครั้ง` : "จากศูนย์พักพิง"} tone={totals.deaths ? "text-red-700" : "text-slate-900"} />
+        <Kpi icon={HeartPulse} label="ผู้ป่วยสะสม" value={formatNumber(totals.cases)} hint={`ชุมชน ${formatNumber(totals.community)} · ศูนย์ ${formatNumber(totals.shelter)}`} tone="text-[#0b4c86]" />
+        <Kpi icon={CalendarDays} label="วันนี้" value={formatNumber(totals.today)} hint="ผู้ป่วยรายใหม่ที่รายงานวันนี้" />
+        <Kpi icon={CalendarRange} label="7 วันล่าสุด" value={formatNumber(totals.last7)} hint={<span>เทียบ 7 วันก่อน ({formatNumber(totals.prev7)}) <Change value={totals.change} /></span>} tone={totals.change === null || totals.change > 0 ? "text-red-700" : "text-slate-900"} />
+        <Kpi icon={MapPin} label="อำเภอที่พบผู้ป่วย" value={formatNumber(totals.districtsWithCases)} unit="อำเภอ" />
+        <Kpi icon={Ambulance} label="ส่งต่อโรงพยาบาล" value={formatNumber(totals.hospitalized)} hint="จากศูนย์พักพิง" tone={totals.hospitalized ? "text-amber-700" : "text-slate-900"} />
+        <Kpi icon={HeartCrack} label="เสียชีวิต" value={formatNumber(totals.deaths)} hint={totals.severeReports ? `รายงานอาการรุนแรง ${totals.severeReports} ครั้ง` : "จากศูนย์พักพิง"} tone={totals.deaths ? "text-red-700" : "text-slate-900"} />
       </div>
 
       <Panel title="ควรทำอะไรต่อ" subtitle="สรุปอัตโนมัติจากแนวโน้มและชนิดโรค ใช้ประกอบการตัดสินใจของทีม ไม่ใช่คำสั่ง">

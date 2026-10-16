@@ -45,16 +45,16 @@ function VulnerableSummary({ totals, areaCount, districtLabel }) {
   const types = [...VULNERABLE_TYPES].sort((a, b) => b.priority - a.priority);
   return (
     <section className="grid gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="สรุปจำนวนผู้เปราะบาง">
-      <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)]">
+      <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)]">
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" aria-hidden="true" />
-        <p className="relative text-sm font-semibold text-blue-100">ผู้เปราะบางทั้งหมด</p>
-        <p className="relative mt-1 text-[2.6rem] font-black leading-none tabular-nums">{formatNumber(totals.all)}</p>
+        <p className="relative text-sm font-medium text-blue-100">ผู้เปราะบางทั้งหมด</p>
+        <p className="relative mt-1 text-[2.6rem] font-bold leading-none tabular-nums">{formatNumber(totals.all)}</p>
         <p className="relative mt-1 text-sm text-blue-100">คน</p>
         <dl className="relative mt-5 space-y-1.5 border-t border-white/15 pt-3 text-sm">
           {PRIORITY_GROUPS.map((group) => (
             <div key={group.priority} className="flex items-center justify-between gap-2">
               <dt className="flex items-center gap-2 text-blue-50"><span className={`h-2 w-2 rounded-full ${group.dot}`} aria-hidden="true" />{group.label}</dt>
-              <dd className="font-bold tabular-nums">{formatNumber(VULNERABLE_TYPES.filter((type) => type.priority === group.priority).reduce((sum, type) => sum + (Number(totals[type.key]) || 0), 0))}</dd>
+              <dd className="font-semibold tabular-nums">{formatNumber(VULNERABLE_TYPES.filter((type) => type.priority === group.priority).reduce((sum, type) => sum + (Number(totals[type.key]) || 0), 0))}</dd>
             </div>
           ))}
         </dl>
@@ -70,13 +70,13 @@ function VulnerableSummary({ totals, areaCount, districtLabel }) {
           const value = Number(totals[type.key]) || 0;
           const share = totals.all ? Math.round((value / totals.all) * 1000) / 10 : 0;
           return (
-            <li key={type.key} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-3.5 transition-shadow hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,.5)]">
+            <li key={type.key} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-3.5 font-[family-name:var(--font-kanit)] transition-shadow hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,.5)]">
               <div className="flex items-start justify-between gap-2">
                 <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ${tone.tile}`}><Icon className="h-[18px] w-[18px]" aria-hidden="true" /></span>
                 {tone.label ? <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">{tone.label}</span> : null}
               </div>
-              <p className="mt-2.5 min-h-[2.5em] text-[13px] font-semibold leading-tight text-slate-600">{type.label}</p>
-              <p className="mt-1 text-2xl font-black leading-none tabular-nums text-slate-900">{formatNumber(value)}</p>
+              <p className="mt-2.5 min-h-[2.5em] text-[13px] font-medium leading-tight text-slate-600">{type.label}</p>
+              <p className="mt-1 text-2xl font-bold leading-none tabular-nums text-slate-900">{formatNumber(value)}</p>
               <div className="mt-3 flex items-center gap-2" title={`${share}% ของผู้เปราะบางทั้งหมด`}>
                 <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                   <span className={`block h-full rounded-full ${tone.bar}`} style={{ width: `${Math.min(100, share)}%` }} />

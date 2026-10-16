@@ -32,6 +32,25 @@ describe("planHospitalDay", () => {
     expect(plan.summary).toMatchObject({ report: 2, out: 1, create: 1 });
   });
 
+  it("ยาที่ไม่มียอดคงคลังในไฟล์ INVENTORY ครบหน้า: บันทึกเป็น 0 แทนการข้าม", () => {
+    const plan = planHospitalDay({ ...base, onhandDate: "2026-10-14",
+      stocks: [stock("1", { balance_qty: 50 })],
+      items: [
+        { working_code: "1", name: "Doxycycline", onhand: null },
+        { working_code: "5", name: "Cetirizine", onhand: null }
+      ] });
+    expect(byCode(plan, "1")).toMatchObject({ action: "out", zero_filled: true, start: 50, used: 50, end: 0 });
+    expect(byCode(plan, "5")).toMatchObject({ action: "create", zero_filled: true, opening: 0, end: 0 });
+    expect(plan.summary).toMatchObject({ skip: 0, zero_filled: 2 });
+  });
+
+  it("ไฟล์ INVENTORY ไม่ครบหน้า/ไม่มีไฟล์: ยาที่ไม่มียอดยังข้าม", () => {
+    const partial = planHospitalDay({ ...base, inventoryComplete: false, onhandDate: "2026-10-14", stocks: [stock("1")], items: [{ working_code: "1", name: "Doxycycline", onhand: null }] });
+    expect(byCode(partial, "1")).toMatchObject({ action: "skip" });
+    const noInventory = planHospitalDay({ ...base, onhandDate: null, stocks: [stock("1")], items: [{ working_code: "1", name: "Doxycycline", onhand: null }] });
+    expect(byCode(noInventory, "1")).toMatchObject({ action: "skip", reason: "ไม่มีไฟล์ INVENTORY" });
+  });
+
   it("ไฟล์ไม่ครบทุกหน้า: ยาที่ไม่อยู่ในไฟล์ยังไม่สรุปว่าหมด", () => {
     const plan = planHospitalDay({ ...base, inventoryComplete: false, onhandDate: "2026-10-14", stocks: [stock("3")], items: [] });
     expect(byCode(plan, "3")).toMatchObject({ action: "missing" });

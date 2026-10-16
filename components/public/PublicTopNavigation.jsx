@@ -25,13 +25,30 @@ import {
 // เมนูสำหรับประชาชน: เรียงตามสิ่งที่ประชาชนต้องการรู้ก่อน
 // (ลิงก์เข้าสู่ระบบเจ้าหน้าที่และหน่วยงานย้ายไปอยู่ใน footer)
 // (prop showWeatherMenu เดิมไม่มีผลแล้ว — เมนูสภาพอากาศแสดงตลอด)
-// showBottomBar: บนมือถือ เมื่อเลื่อนลงพ้น navbar แสดงแถบล่างแทน
+// showBottomBar: บนมือถือ เมื่อเลื่อนลงพ้น navbar แสดงแถบล่างแทน (หน้าแรก)
+// หน้าที่อยู่ในแถบล่างเอง (BOTTOM_BAR_ROUTES) แสดงแถบล่างตลอดบนมือถือ พร้อมไฮไลต์หน้าปัจจุบัน
+export const BOTTOM_BAR_ROUTES = {
+  "/public/report-water": "water",
+  "/public/my-risk": "myrisk",
+  "/public/report-incident": "help",
+  "/public/track": "track",
+  "/public/shelters": "shelters"
+};
+
+export function bottomBarKey(pathname) {
+  const path = String(pathname || "").replace(/^\/stn-eoc/, "").replace(/\/+$/, "");
+  return BOTTOM_BAR_ROUTES[path] || null;
+}
+
 export default function PublicTopNavigation({ activeMenu, showBottomBar = false }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [pastNav, setPastNav] = useState(false);
   const navRef = useRef(null);
   const { sheltersOpen } = useHelpAvailability();
+  const barKey = bottomBarKey(pathname);
+  const barAlways = Boolean(barKey);
+  const barEnabled = showBottomBar || barAlways;
 
   useEffect(() => setIsOpen(false), [pathname]);
 
@@ -163,7 +180,7 @@ export default function PublicTopNavigation({ activeMenu, showBottomBar = false 
         )}
       </div>
     </nav>
-    {showBottomBar ? <PublicBottomBar visible={pastNav && !isOpen} activeMenu={activeMenu} /> : null}
+    {barEnabled ? <PublicBottomBar visible={(barAlways || pastNav) && !isOpen} activeMenu={barKey || activeMenu} reserveSpace={barAlways} /> : null}
     </>
   );
 }

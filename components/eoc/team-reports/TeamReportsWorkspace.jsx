@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPage, Button, DataTable, Field, FormDialog, FormGrid, FormSection, ReadOnlyNotice, StatStrip, StatusPill, Tabs, inputClass, useNotice } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
+import { Activity, ClipboardCheck, Layers, Package, Users } from "lucide-react";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { TEAM_REPORT_KEYS, TEAM_REPORT_TYPES, summarizeTeamReports } from "@/lib/teamDailyReports";
@@ -133,16 +134,16 @@ export default function TeamReportsWorkspace({ eocType = "flood" }) {
   const sumAll = (values = {}) => config.fields.reduce((sum, field) => sum + (Number(values[field.key]) || 0), 0);
   const isResources = team === "resources";
   const stats = [
-    { label: "อำเภอที่รายงาน", value: `${reportedCount} / ${districtCount}`, className: reportedCount < districtCount ? "text-amber-700" : "text-emerald-700" },
-    { label: isResources ? "แจกจ่ายรวม (วันที่เลือก)" : `${keyField.label} (วันที่เลือก)`, value: formatNumber(isResources ? sumAll(teamSummary?.today) : teamSummary?.today[keyField.key] || 0) },
-    { label: isResources ? "แจกจ่ายรวม สะสม" : `${keyField.label} สะสม`, value: formatNumber(isResources ? sumAll(teamSummary?.cumulative) : teamSummary?.cumulative[keyField.key] || 0) },
+    { icon: ClipboardCheck, label: "อำเภอที่รายงาน", value: `${reportedCount} / ${districtCount}`, share: districtCount ? Math.round((reportedCount / districtCount) * 1000) / 10 : 0, className: reportedCount < districtCount ? "text-amber-700" : "text-emerald-700" },
+    { icon: Activity, tone: "blue", label: isResources ? "แจกจ่ายรวม (วันที่เลือก)" : `${keyField.label} (วันที่เลือก)`, value: formatNumber(isResources ? sumAll(teamSummary?.today) : teamSummary?.today[keyField.key] || 0) },
+    { icon: Layers, label: isResources ? "แจกจ่ายรวม สะสม" : `${keyField.label} สะสม`, value: formatNumber(isResources ? sumAll(teamSummary?.cumulative) : teamSummary?.cumulative[keyField.key] || 0) },
     team === "mcatt"
-      ? { label: "เครียดระดับสูง สะสม", value: formatNumber(teamSummary?.cumulative.stress_high || 0), className: teamSummary?.cumulative.stress_high ? "text-red-700" : undefined }
+      ? { icon: Users, label: "เครียดระดับสูง สะสม", value: formatNumber(teamSummary?.cumulative.stress_high || 0), className: teamSummary?.cumulative.stress_high ? "text-red-700" : undefined }
       : team === "doxy"
-        ? { label: "กลุ่มเสี่ยงที่สำรวจ สะสม", value: formatNumber(teamSummary?.cumulative.at_risk || 0) }
+        ? { icon: Users, label: "กลุ่มเสี่ยงที่สำรวจ สะสม", value: formatNumber(teamSummary?.cumulative.at_risk || 0) }
         : isResources
-          ? { label: "ชุดยาช่วยเหลือ สะสม", value: formatNumber(teamSummary?.cumulative.relief_kits || 0) }
-          : { label: "ส่งต่อ สะสม", value: formatNumber(teamSummary?.cumulative.referred || 0) }
+          ? { icon: Package, label: "ชุดยาช่วยเหลือ สะสม", value: formatNumber(teamSummary?.cumulative.relief_kits || 0) }
+          : { icon: Users, label: "ส่งต่อ สะสม", value: formatNumber(teamSummary?.cumulative.referred || 0) }
   ];
 
   return (

@@ -2,24 +2,19 @@
 
 // สถิติผู้เข้าชมเว็บไซต์ (ย้ายมาจากหน้าตั้งค่าส่วนตัว) + ส่งออก CSV
 import { useCallback, useEffect, useState } from "react";
-import { Download, RefreshCw } from "lucide-react";
+import { CalendarDays, CalendarRange, Download, RefreshCw, Users } from "lucide-react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from "chart.js";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { visitorStatsToCsv } from "@/lib/systemStatus";
+import { MetricCard } from "@/components/common/MetricCards";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 const DEVICE_LABELS = { mobile: "มือถือ", tablet: "แท็บเล็ต", desktop: "คอมพิวเตอร์", other: "อื่น ๆ" };
 
-function Stat({ label, value, note }) {
-  return (
-    <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
-      <p className="text-sm font-semibold text-slate-600">{label}</p>
-      <p className="mt-1 text-3xl font-black tabular-nums text-slate-900">{value}</p>
-      {note ? <p className="text-xs text-slate-500">{note}</p> : null}
-    </div>
-  );
+function Stat({ icon, label, value, note, tone }) {
+  return <MetricCard icon={icon} label={label} value={value} note={note} tone={tone} />;
 }
 
 function RankList({ title, rows, label, valueKey, unit = "ครั้ง" }) {
@@ -88,9 +83,9 @@ export default function SiteVisitorStatistics() {
       {stats ? (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Stat label="ผู้เข้าชมทั้งหมด" value={formatNumber(stats.totalVisits)} note="นับครั้งละหนึ่งเซสชันของเบราว์เซอร์" />
-            <Stat label="วันนี้" value={formatNumber(stats.todayVisits)} />
-            <Stat label="7 วันล่าสุด" value={formatNumber(stats.last7DaysVisits)} />
+            <Stat icon={Users} tone="blue" label="ผู้เข้าชมทั้งหมด" value={formatNumber(stats.totalVisits)} note="นับครั้งละหนึ่งเซสชันของเบราว์เซอร์" />
+            <Stat icon={CalendarDays} label="วันนี้" value={formatNumber(stats.todayVisits)} />
+            <Stat icon={CalendarRange} label="7 วันล่าสุด" value={formatNumber(stats.last7DaysVisits)} />
           </div>
           <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
             <h4 className="mb-2 font-black text-slate-900">ยอดเข้าชมรายวัน 30 วันล่าสุด</h4>

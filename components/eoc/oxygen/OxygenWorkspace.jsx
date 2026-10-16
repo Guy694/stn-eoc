@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertOctagon, AlertTriangle, ClipboardCheck, Hourglass, Plus, Truck } from "lucide-react";
 import { Button, AdminPage, Field, FormDialog, FormGrid, ReadOnlyNotice, StatStrip, StatusPill, inputClass, latestTime, useNotice } from "@/components/admin/crud";
 import { apiRequest } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
@@ -163,10 +163,10 @@ export default function OxygenWorkspace({ eocType = "flood" }) {
 
       {session ? (
         <StatStrip items={[
-          { label: "วิกฤต (<1 วัน)", value: summary?.critical ?? 0, className: summary?.critical ? "text-red-700" : undefined },
-          { label: `ต้องจัดหา (<${OXYGEN_LOW_DAYS} วัน)`, value: summary?.low ?? 0, className: summary?.low ? "text-amber-700" : undefined },
-          { label: "มีปัญหาการจัดหา", value: summary?.problems ?? 0, className: summary?.problems ? "text-amber-700" : undefined },
-          { label: "รายงานแล้ววันนี้", value: `${reportedToday} / ${cards.length}` }
+          { icon: AlertOctagon, label: "วิกฤต (<1 วัน)", value: summary?.critical ?? 0, className: summary?.critical ? "text-red-700" : undefined },
+          { icon: Hourglass, label: `ต้องจัดหา (<${OXYGEN_LOW_DAYS} วัน)`, value: summary?.low ?? 0, className: summary?.low ? "text-amber-700" : undefined },
+          { icon: Truck, label: "มีปัญหาการจัดหา", value: summary?.problems ?? 0, className: summary?.problems ? "text-amber-700" : undefined },
+          { icon: ClipboardCheck, label: "รายงานแล้ววันนี้", value: `${reportedToday} / ${cards.length}`, tone: "blue", share: cards.length ? Math.round((reportedToday / cards.length) * 1000) / 10 : 0 }
         ]} />
       ) : null}
 

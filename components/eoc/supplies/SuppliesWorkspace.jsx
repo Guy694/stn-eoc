@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, FileUp, PackageOpen, Scale, Trash2 } from "lucide-react";
 import { ReadOnlyNotice,
-  AddButton, AdminPage, Button, DataTable, DeleteDialog, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatStrip, StatusPill, Tabs, Toolbar,
+  AddButton, AdminPage, Button, DataTable, DeleteDialog, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatusPill, Tabs, Toolbar,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
 import HospitalDrugImportDialog from "@/components/eoc/supplies/HospitalDrugImportDialog";
 import SuppliesDashboard from "@/components/eoc/supplies/SuppliesDashboard";
 import SuppliesDailyReport from "@/components/eoc/supplies/SuppliesDailyReport";
+import { StockSummary } from "@/components/eoc/supplies/SuppliesSummaryCards";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { FLOOD_PRESET_ITEMS, MOVEMENT_TYPES, STOCK_LEVEL_LABELS, displayItemCode } from "@/lib/medicalInventory";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
@@ -272,12 +273,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
       <ReadOnlyNotice message={perms.read_only_message} />
       {summary && tab === "stock" ? (
-        <StatStrip items={[
-          { label: "ชนิดเวชภัณฑ์", value: formatNumber(summary.items) },
-          { label: "หน่วยบริการ/คลัง", value: formatNumber(summary.agencies) },
-          { label: "หมด", value: formatNumber(summary.out), className: summary.out ? "text-red-700" : undefined },
-          { label: "ใกล้หมด (<20%)", value: formatNumber(summary.low), className: summary.low ? "text-amber-700" : undefined }
-        ]} />
+        <StockSummary summary={summary} levelFilter={levelFilter} onFilter={setLevelFilter} />
       ) : null}
 
       <div className="rounded-xl border border-[#c9dcee] bg-white px-2">

@@ -13,6 +13,7 @@ import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { IT_CATEGORIES, IT_SEVERITIES, IT_STATUSES, RESOURCE_STATUSES, formatDuration } from "@/lib/itSupport";
 import { sendOrQueue } from "@/lib/offlineQueue";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 const API = "/stn-eoc/api/eoc/it-support";
 const RESOURCE_TYPES = { server: "เซิร์ฟเวอร์", internet: "อินเทอร์เน็ต", network: "เครือข่าย", hardware: "ฮาร์ดแวร์" };
@@ -28,14 +29,8 @@ const EMPTY = {
   assignee: "", workaround: "", resolution: "", reporter_name: "", reporter_phone: "", reported_at: ""
 };
 
-function Kpi({ icon: Icon, label, value, hint, tone = "text-slate-900" }) {
-  return (
-    <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
-      <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-500"><Icon className="h-4 w-4" aria-hidden="true" />{label}</p>
-      <p className={`mt-1 text-3xl font-black tabular-nums ${tone}`}>{value}</p>
-      {hint ? <p className="mt-0.5 text-xs text-slate-500">{hint}</p> : null}
-    </div>
-  );
+function Kpi({ icon, label, value, hint, tone = "text-slate-900" }) {
+  return <MetricCard icon={icon} label={label} value={value} note={hint} tone={toneFromClass(tone)} />;
 }
 
 export default function ItSupportWorkspace({ eocType = "flood" }) {

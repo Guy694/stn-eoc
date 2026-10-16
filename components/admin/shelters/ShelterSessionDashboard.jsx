@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { AlertTriangle, BedDouble, Building2, Clock3, HeartPulse, Users } from "lucide-react";
 import { formatNumber } from "@/lib/adminApi";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 const PILL = {
   red: "bg-red-50 text-red-800 ring-red-200",
@@ -17,14 +18,8 @@ function usageTone(percent) {
   return "bg-emerald-600";
 }
 
-function Kpi({ icon: Icon, label, value, unit, hint, tone = "text-slate-900" }) {
-  return (
-    <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500"><Icon className="h-4 w-4" aria-hidden="true" />{label}</div>
-      <p className={`mt-1 text-3xl font-black tabular-nums ${tone}`}>{value}{unit ? <span className="ml-1 text-sm font-semibold text-slate-500">{unit}</span> : null}</p>
-      {hint ? <p className="mt-0.5 text-xs text-slate-500">{hint}</p> : null}
-    </div>
-  );
+function Kpi({ icon, label, value, unit, hint, tone = "text-slate-900" }) {
+  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} />;
 }
 
 function Meter({ percent, label }) {

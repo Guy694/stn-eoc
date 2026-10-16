@@ -217,7 +217,7 @@ export default function AIChatbot({ showLauncher = true }) {
   return (
     <>
       {showLauncher && !launcherHidden && !isOpen && (
-        <div className="fixed bottom-5 right-5 z-[1100] flex items-center gap-2 lg:bottom-6">
+        <div className="eoc-assistant-launcher fixed bottom-5 right-5 z-[1100] flex items-center gap-2 lg:bottom-6">
           <button
             type="button"
             onClick={() => setIsOpen(true)}

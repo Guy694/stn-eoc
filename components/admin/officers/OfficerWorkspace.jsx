@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Lock, LockOpen, Pencil, RotateCcw, Trash2, UserCheck, XCircle } from "lucide-react";
+import { BadgeCheck, CheckCircle2, Lock, LockOpen, Pencil, RotateCcw, ShieldCheck, Trash2, UserCheck, UserPlus, Users, XCircle } from "lucide-react";
 import {
   AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, StatStrip, StatusPill, Tabs, Toolbar,
   inputClass, useNotice
@@ -318,10 +318,10 @@ export default function OfficerWorkspace() {
     >
       {notice}
       <StatStrip items={[
-        { label: "เจ้าหน้าที่ที่ใช้งานได้", value: approvedCount.toLocaleString("th-TH") },
-        { label: "คำขอรออนุมัติ", value: (regStats.waiting || 0).toLocaleString("th-TH"), className: regStats.waiting ? "text-amber-700" : undefined },
-        { label: "ยืนยัน ThaiD แล้ว รออนุมัติ", value: (regStats.verified || 0).toLocaleString("th-TH") },
-        { label: "ผู้ดูแลระบบ", value: (roleStats.admin || 0).toLocaleString("th-TH") }
+        { icon: Users, tone: "blue", label: "เจ้าหน้าที่ที่ใช้งานได้", value: approvedCount.toLocaleString("th-TH") },
+        { icon: UserPlus, label: "คำขอรออนุมัติ", onClick: () => setTab("requests"), active: tab === "requests", value: (regStats.waiting || 0).toLocaleString("th-TH"), className: regStats.waiting ? "text-amber-700" : undefined },
+        { icon: BadgeCheck, label: "ยืนยัน ThaiD แล้ว รออนุมัติ", value: (regStats.verified || 0).toLocaleString("th-TH") },
+        { icon: ShieldCheck, label: "ผู้ดูแลระบบ", value: (roleStats.admin || 0).toLocaleString("th-TH") }
       ]} />
 
       <div className="rounded-xl border border-[#c9dcee] bg-white px-2">

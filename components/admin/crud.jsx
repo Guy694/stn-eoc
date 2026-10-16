@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Clock, Pencil, Plus, Search, Trash2 } from "
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { cn } from "@/lib/utils";
 import { formatDateTime, formatRelative, parseDateValue } from "@/lib/adminApi";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 export const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#0b4c86] focus:ring-2 focus:ring-[#0b4c86]/15 disabled:bg-slate-100 disabled:text-slate-500";
@@ -121,17 +122,19 @@ export function Tabs({ value, onChange, items }) {
   );
 }
 
-/** ตัวเลขสรุปสั้นๆ เหนือตาราง (ไม่เกิน 4–5 ตัว) */
+/**
+ * ตัวเลขสรุปเหนือตาราง (ไม่เกิน 4–6 ตัว) แสดงเป็นการ์ดธีมกลาง (components/common/MetricCards)
+ * item: { label, value, unit?, icon?, tone? | className? (สีแบบเดิม เช่น "text-red-700"), note?, tag?, share?, onClick?, active? }
+ */
 export function StatStrip({ items }) {
+  const list = items.filter(Boolean);
+  const cols = list.length >= 5 ? "lg:grid-cols-5" : list.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4";
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200 sm:grid-cols-4">
-      {items.map((item) => (
-        <div key={item.label} className="bg-white px-4 py-3">
-          <dt className="text-xs font-semibold text-slate-500">{item.label}</dt>
-          <dd className={cn("mt-0.5 text-2xl font-black text-slate-900", item.className)}>{item.value}</dd>
-        </div>
+    <ul className={cn("grid grid-cols-2 gap-2.5", cols)}>
+      {list.map(({ className, tone, ...item }) => (
+        <li key={item.label}><MetricCard {...item} tone={tone || toneFromClass(className)} /></li>
       ))}
-    </dl>
+    </ul>
   );
 }
 

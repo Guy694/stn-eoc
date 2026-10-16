@@ -4,7 +4,7 @@
 // หัวข้อที่ไม่มีข้อมูลจะไม่แสดงเป็นกล่องว่าง แต่รวมไว้ในบรรทัดเดียวท้ายหน้า
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, FileText, HeartCrack, HeartPulse, Home, Tent, Users } from "lucide-react";
 import { AdminPage, Button, StatStrip, StatusPill } from "@/components/admin/crud";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
@@ -108,12 +108,12 @@ export default function EventHistoryDetail({ sessionId }) {
   const empty = [];
 
   const headline = [
-    peak ? { label: "ได้รับผลกระทบสูงสุด", value: `${formatNumber(peak.people)} คน` } : null,
-    peak ? { label: "หมู่บ้านน้ำท่วมสูงสุด", value: formatNumber(peak.villages) } : null,
-    health.patients ? { label: "ผู้ป่วยสะสม", value: `${formatNumber(health.patients)} ราย` } : null,
-    shelters.opened ? { label: "เปิดศูนย์พักพิง", value: `${formatNumber(shelters.opened)} แห่ง` } : null,
-    casualties.deaths ? { label: "เสียชีวิต", value: `${formatNumber(casualties.deaths)} ราย`, className: "text-red-700" } : null,
-    { label: "ระยะเวลา", value: `${formatNumber(session.days)} วัน` }
+    peak ? { icon: Users, tone: "blue", label: "ได้รับผลกระทบสูงสุด", value: formatNumber(peak.people), unit: "คน" } : null,
+    peak ? { icon: Home, label: "หมู่บ้านน้ำท่วมสูงสุด", value: formatNumber(peak.villages) } : null,
+    health.patients ? { icon: HeartPulse, label: "ผู้ป่วยสะสม", value: formatNumber(health.patients), unit: "ราย" } : null,
+    shelters.opened ? { icon: Tent, label: "เปิดศูนย์พักพิง", value: formatNumber(shelters.opened), unit: "แห่ง" } : null,
+    casualties.deaths ? { icon: HeartCrack, label: "เสียชีวิต", value: formatNumber(casualties.deaths), unit: "ราย", className: "text-red-700" } : null,
+    { icon: CalendarDays, label: "ระยะเวลา", value: formatNumber(session.days), unit: "วัน" }
   ].filter(Boolean).slice(0, 4);
 
   const hasCasualties = casualties.deaths || casualties.missing || casualties.injured || casualties.evacuated;

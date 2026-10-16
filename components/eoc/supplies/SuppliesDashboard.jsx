@@ -3,7 +3,8 @@
 // Dashboard วิเคราะห์เวชภัณฑ์ของเหตุการณ์: ต้องเติมด่วน · ภาพรวมรายเวชภัณฑ์ · แนวโน้มรายวัน · การส่งรายงาน · หน่วยบริการ/อำเภอ × เวชภัณฑ์ · ยอดนับไม่ตรง
 import { useEffect, useMemo, useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Button, DataTable, FilterSelect, StatStrip, StatusPill } from "@/components/admin/crud";
+import { Button, DataTable, FilterSelect, StatusPill } from "@/components/admin/crud";
+import { DashboardSummary } from "@/components/eoc/supplies/SuppliesSummaryCards";
 import { formatNumber } from "@/lib/adminApi";
 import { COVER_LEVELS, DAILY_WINDOW_DAYS, shortThaiDate } from "@/lib/medicalDaily";
 import { STOCK_LEVEL_LABELS } from "@/lib/medicalInventory";
@@ -261,13 +262,7 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
 
   return (
     <div className="space-y-4">
-      <StatStrip items={[
-        { label: "รายการเวชภัณฑ์", value: `${formatNumber(summary.items)} ชนิด` },
-        { label: `รายงานวันที่ ${shortThaiDate(dashboard.today)}`, value: `${formatNumber(reporting.today.complete)}/${formatNumber(reporting.today.total)} หน่วย`, className: reporting.today.missing ? "text-amber-700" : "text-emerald-700" },
-        { label: "หมด / พอใช้ไม่ถึง 3 วัน", value: `${formatNumber(summary.out)} / ${formatNumber(summary.critical_cover)}`, className: summary.out || summary.critical_cover ? "text-red-700" : undefined },
-        { label: "ยอดนับไม่ตรงวันนี้", value: formatNumber(summary.discrepancies), className: summary.discrepancies ? "text-amber-700" : undefined },
-        ...(summary.lots ? [{ label: "ล็อตหมดอายุ / ใน 3 เดือน", value: `${formatNumber(summary.expired)} / ${formatNumber(summary.expiring_90)}`, className: summary.expired || summary.expiring_90 ? "text-red-700" : undefined }] : [])
-      ]} />
+      <DashboardSummary summary={summary} reporting={reporting} today={dashboard.today} />
 
       <Section title="ต้องเติมด่วน" description={`รายการที่หมด ใกล้หมด หรือคาดว่าพอใช้ไม่เกิน 7 วัน (คิดจากอัตราใช้เฉลี่ย ${DAILY_WINDOW_DAYS} วันล่าสุด)`}>
         <DataTable columns={urgentColumns} rows={dashboard.urgent} caption="ต้องเติมด่วน" emptyText="ไม่มีรายการที่ต้องเติมด่วน" pageSize={10}

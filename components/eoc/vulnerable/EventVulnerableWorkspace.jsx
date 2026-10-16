@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
 import VillageMapPanel from "@/components/eoc/vulnerable/VillageMapPanel";
 import Link from "next/link";
-import { AlertTriangle, HeartHandshake, RefreshCw, Truck, Users } from "lucide-react";
+import { AlertTriangle, Clock3, HeartHandshake, RefreshCw, Truck, Users } from "lucide-react";
 import { ReadOnlyNotice,
   AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, RowActions,
   Toolbar, UpdatedAt, inputClass, useNotice
@@ -16,6 +16,7 @@ import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { VULNERABLE_TYPES, affectedOf, areaLabel, validateEventRecord } from "@/lib/vulnerableEvent";
 import { sendOrQueue } from "@/lib/offlineQueue";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 const API = "/stn-eoc/api/eoc/vulnerable-event";
 const EMPTY_STATUS = { cared_count: 0, moved_count: 0, moved_to: "", needs: "", notes: "" };
@@ -33,14 +34,8 @@ function Meter({ value, max, tone = "bg-[#0b4c86]", label }) {
   );
 }
 
-function Kpi({ icon: Icon, label, value, unit = "คน", hint, tone = "text-slate-900" }) {
-  return (
-    <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
-      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">{Icon ? <Icon className="h-4 w-4" aria-hidden="true" /> : null}{label}</div>
-      <p className={`mt-1 text-3xl font-black tabular-nums ${tone}`}>{formatNumber(value)} <span className="text-sm font-semibold text-slate-500">{unit}</span></p>
-      {hint ? <p className="mt-0.5 text-xs text-slate-500">{hint}</p> : null}
-    </div>
-  );
+function Kpi({ icon, label, value, unit = "คน", hint, tone = "text-slate-900" }) {
+  return <MetricCard icon={icon} label={label} value={formatNumber(value)} unit={unit} note={hint} tone={toneFromClass(tone)} />;
 }
 
 function Dashboard({ summary }) {
@@ -52,7 +47,7 @@ function Dashboard({ summary }) {
         <Kpi icon={AlertTriangle} label="กลุ่มเปราะบางที่ได้รับผลกระทบ" value={summary.affected} hint="จำนวนตามทะเบียนกลาง" tone="text-[#0b4c86]" />
         <Kpi icon={HeartHandshake} label="ดูแลแล้ว" value={summary.cared} hint={`${summary.caredPercent}% ของผู้ได้รับผลกระทบ`} tone="text-emerald-700" />
         <Kpi icon={Truck} label="เคลื่อนย้ายแล้ว" value={summary.moved} hint={`${summary.movedPercent}% ของผู้ได้รับผลกระทบ`} tone="text-sky-800" />
-        <Kpi label="ยังไม่ได้ดูแล" value={summary.pending} hint={summary.pending ? "ต้องติดตาม" : "ดูแลครบแล้ว"} tone={summary.pending ? "text-red-700" : "text-emerald-700"} />
+        <Kpi icon={Clock3} label="ยังไม่ได้ดูแล" value={summary.pending} hint={summary.pending ? "ต้องติดตาม" : "ดูแลครบแล้ว"} tone={summary.pending ? "text-red-700" : "text-emerald-700"} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
