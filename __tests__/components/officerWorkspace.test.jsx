@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import OfficerWorkspace from "@/components/admin/officers/OfficerWorkspace";
 
-jest.mock("@/lib/sweetAlert", () => ({ showDeleteConfirm: jest.fn(async () => true) }));
+jest.mock("@/lib/sweetAlert", () => ({ showDeleteConfirm: jest.fn(async () => true), showConfirm: jest.fn(async () => true) }));
 
 const officer = { id: 331, username: "eoc2569_008", title: "นางสาว", given_name: "นุสรีย์", family_name: "ปะดุกา", email: "", phone: "", role: "staff", is_approved: 1, created_at: "2026-10-01T00:00:00Z" };
 const teams = [

@@ -32,6 +32,8 @@ export async function GET(request) {
                 department,
                 requested_role,
                 is_approved,
+                account_locked_until,
+                (account_locked_until IS NOT NULL AND account_locked_until > NOW() + INTERVAL 1 YEAR) AS is_suspended,
                 created_at,
                 updated_at
             FROM officer

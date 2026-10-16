@@ -221,6 +221,16 @@ export function RowActions({ onEdit, onDelete, editLabel = "แก้ไข", de
  * ตาราง: จอใหญ่เป็นตาราง จอเล็กเป็นการ์ด
  * columns: [{ key, label, render?(row), className?, mobile?: false }]
  */
+/** เลขหน้าแบบย่อ: 1 … 4 5 6 … 12 */
+export function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  if (current <= 3) [2, 3, 4].forEach((page) => pages.add(page));
+  if (current >= total - 2) [total - 3, total - 2, total - 1].forEach((page) => pages.add(page));
+  const sorted = [...pages].filter((page) => page >= 1 && page <= total).sort((a, b) => a - b);
+  return sorted.flatMap((page, index) => (index && page - sorted[index - 1] > 1 ? ["…", page] : [page]));
+}
+
 export function DataTable({
   columns,
   rows,
@@ -229,14 +239,16 @@ export function DataTable({
   emptyText = "ยังไม่มีข้อมูล",
   emptyAction,
   rowActions,
-  pageSize = 25,
+  pageSize: initialPageSize = 25,
+  pageSizeOptions, // เช่น [20, 50, 100] — ให้ผู้ใช้เลือกจำนวนแถวต่อหน้า
   rowClassName,
   caption,
   selection // { selected: Set, onToggle(row), onTogglePage(rows, checked) } — มีช่องติ๊กเลือกแถว
 }) {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-  useEffect(() => { setPage(1); }, [rows.length]);
+  useEffect(() => { setPage(1); }, [rows.length, pageSize]);
   const safePage = Math.min(page, totalPages);
   const visible = useMemo(() => rows.slice((safePage - 1) * pageSize, safePage * pageSize), [rows, safePage, pageSize]);
   const keyOf = (row) => (typeof rowKey === "function" ? rowKey(row) : row[rowKey]);
@@ -317,16 +329,38 @@ export function DataTable({
         })}
       </ul>
 
-      {totalPages > 1 ? (
-        <nav className="flex items-center justify-between gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600" aria-label="เปลี่ยนหน้า">
-          <span>
+      {totalPages > 1 || (pageSizeOptions && rows.length > Math.min(...pageSizeOptions)) ? (
+        <nav className="flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between" aria-label="เปลี่ยนหน้า">
+          <span className="flex flex-wrap items-center gap-2">
             {((safePage - 1) * pageSize + 1).toLocaleString("th-TH")}–{Math.min(safePage * pageSize, rows.length).toLocaleString("th-TH")} จาก {rows.length.toLocaleString("th-TH")}
+            {pageSizeOptions ? (
+              <label className="inline-flex items-center gap-1.5">
+                <span className="text-slate-500">· แสดง</span>
+                <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))} className="h-8 rounded-md border border-slate-300 bg-white px-1.5 text-sm" aria-label="จำนวนแถวต่อหน้า">
+                  {pageSizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
+                </select>
+                <span className="text-slate-500">แถว</span>
+              </label>
+            ) : null}
           </span>
-          <span className="flex gap-1">
-            <Button variant="ghost" className="min-h-9 px-2" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)} aria-label="หน้าก่อน"><ChevronLeft className="h-4 w-4" /></Button>
-            <span className="self-center px-1">หน้า {safePage}/{totalPages}</span>
-            <Button variant="ghost" className="min-h-9 px-2" disabled={safePage >= totalPages} onClick={() => setPage(safePage + 1)} aria-label="หน้าถัดไป"><ChevronRight className="h-4 w-4" /></Button>
-          </span>
+          {totalPages > 1 ? (
+            <span className="flex items-center gap-1">
+              <Button variant="ghost" className="min-h-9 px-2" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)} aria-label="หน้าก่อน"><ChevronLeft className="h-4 w-4" /></Button>
+              {pageNumbers(safePage, totalPages).map((item, index) => (item === "…"
+                ? <span key={`gap-${index}`} className="px-1 text-slate-400" aria-hidden="true">…</span>
+                : (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setPage(item)}
+                    aria-current={item === safePage ? "page" : undefined}
+                    aria-label={`หน้า ${item}`}
+                    className={cn("h-9 min-w-9 rounded-lg px-2 text-sm font-bold tabular-nums", item === safePage ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-white")}
+                  >{item}</button>
+                )))}
+              <Button variant="ghost" className="min-h-9 px-2" disabled={safePage >= totalPages} onClick={() => setPage(safePage + 1)} aria-label="หน้าถัดไป"><ChevronRight className="h-4 w-4" /></Button>
+            </span>
+          ) : null}
         </nav>
       ) : null}
     </div>

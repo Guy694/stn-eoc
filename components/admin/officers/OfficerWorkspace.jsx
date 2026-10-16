@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Pencil, RotateCcw, Trash2, UserCheck, XCircle } from "lucide-react";
+import { CheckCircle2, Lock, LockOpen, Pencil, RotateCcw, Trash2, UserCheck, XCircle } from "lucide-react";
 import {
   AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, StatStrip, StatusPill, Tabs, Toolbar,
   inputClass, useNotice
 } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { useUrlState } from "@/components/admin/useUrlState";
-import { showDeleteConfirm } from "@/lib/sweetAlert";
+import { showConfirm, showDeleteConfirm } from "@/lib/sweetAlert";
 import { TEAM_ROLE_OPTIONS } from "@/lib/eocRoles";
 import { PASSWORD_POLICY_TEXT, validatePassword } from "@/lib/passwordPolicy";
 import { TEAM_LEADER_ROLE, TEAM_MEMBER_ROLE, normalizeTeamMemberRole } from "@/lib/teamMemberRoles";
@@ -25,6 +25,8 @@ const ROLE_BY_VALUE = new Map(SYSTEM_ROLES.map((role) => [role.value, role]));
 const EOC_LABEL = { flood: "อุทกภัย", disease: "โรคติดต่อ" };
 
 const EMPTY_FORM = { username: "", password: "", title: "", given_name: "", family_name: "", email: "", phone: "", role: "staff", department: "", is_approved: 1 };
+// สถานะบัญชี: ระงับ (ล็อกไม่มีกำหนด) > ใช้งานได้ > รออนุมัติ
+const statusOf = (row) => (Number(row.is_suspended) === 1 ? "suspended" : Number(row.is_approved) === 1 ? "approved" : "pending");
 const fullName = (row) => `${row.title || ""}${row.title ? " " : ""}${row.given_name || ""} ${row.family_name || ""}`.trim();
 const roleLabel = (value) => ROLE_BY_VALUE.get(value)?.label || value || "-";
 const shortRole = (value) => roleLabel(value).split(" - ")[0];
@@ -67,7 +69,7 @@ function RequestQueue({ rows, loading, approveRole, onRoleChange, onApprove, onE
               </label>
               <div className="flex flex-wrap gap-1.5 lg:justify-end">
                 <Button className="min-h-10 px-3" onClick={() => onApprove(row)}><UserCheck className="h-4 w-4" aria-hidden="true" />อนุมัติ</Button>
-                <Button variant="secondary" className="min-h-10 px-3" onClick={() => onEdit(row)}><Pencil className="h-4 w-4" aria-hidden="true" />แก้ไข</Button>
+                <Button variant="secondary" className="min-h-10 px-2.5" onClick={() => onEdit(row)} aria-label={`แก้ไข ${fullName(row) || row.username}`} title="แก้ไข"><Pencil className="h-4 w-4" aria-hidden="true" /></Button>
                 <Button variant="ghost" className="min-h-10 px-3 text-red-700" onClick={() => onReject(row)}><XCircle className="h-4 w-4" aria-hidden="true" />ปฏิเสธ</Button>
               </div>
             </li>
@@ -138,11 +140,11 @@ export default function OfficerWorkspace() {
     const keyword = search.trim().toLowerCase();
     return officers
       .filter((row) => !roleFilter || row.role === roleFilter)
-      .filter((row) => !statusFilter || (statusFilter === "pending" ? Number(row.is_approved) !== 1 : Number(row.is_approved) === 1))
+      .filter((row) => !statusFilter || statusFilter === statusOf(row))
       .filter((row) => !keyword || `${fullName(row)} ${row.username} ${row.email || ""} ${row.phone || ""}`.toLowerCase().includes(keyword));
   }, [officers, search, roleFilter, statusFilter]);
 
-  const approvedCount = officers.filter((row) => Number(row.is_approved) === 1).length;
+  const approvedCount = officers.filter((row) => statusOf(row) === "approved").length;
   const roleOptions = useMemo(() => [
     { value: "", label: "ทุกสิทธิ์ระบบ" },
     ...SYSTEM_ROLES.filter((role) => roleStats[role.value]).map((role) => ({ value: role.value, label: `${shortRole(role.value)} (${roleStats[role.value]})` }))
@@ -241,6 +243,16 @@ export default function OfficerWorkspace() {
     }
   };
 
+  const setSuspended = async (officer, suspend) => {
+    try {
+      const result = await apiRequest(`${API}/${officer.id}`, { method: "PATCH", body: { action: suspend ? "suspend" : "reactivate" } });
+      success(result.message || (suspend ? "ระงับการใช้งานแล้ว" : "เปิดใช้งานแล้ว"));
+      load();
+    } catch (error) {
+      fail(error.message || "บันทึกไม่สำเร็จ");
+    }
+  };
+
   const remove = async (officer) => {
     if (!await showDeleteConfirm(`ลบบัญชี ${fullName(officer)} (${officer.username}) ใช่หรือไม่?`)) return;
     try {
@@ -248,6 +260,13 @@ export default function OfficerWorkspace() {
       success("ลบบัญชีแล้ว");
       load();
     } catch (error) {
+      // มีประวัติการทำงาน → ลบไม่ได้ เสนอให้ระงับการใช้งานแทน
+      if (error.payload?.code === "HAS_HISTORY") {
+        if (await showConfirm("ลบบัญชีนี้ไม่ได้", `${error.message} ระงับการใช้งานบัญชี ${officer.username} แทนหรือไม่?`, "ระงับการใช้งาน", "ยกเลิก")) {
+          await setSuspended(officer, true);
+        }
+        return;
+      }
       fail(error.message || "ลบไม่สำเร็จ");
     }
   };
@@ -278,7 +297,10 @@ export default function OfficerWorkspace() {
         {row.requested_role && row.requested_role !== row.role ? <span className="text-xs text-amber-700">ขอสิทธิ์ {shortRole(row.requested_role)}</span> : null}
       </span>
     ) },
-    { key: "status", label: "สถานะ", render: (row) => (Number(row.is_approved) === 1 ? <StatusPill tone="green">ใช้งานได้</StatusPill> : <StatusPill tone="amber">รออนุมัติ</StatusPill>) },
+    { key: "status", label: "สถานะ", render: (row) => {
+      const status = statusOf(row);
+      return status === "suspended" ? <StatusPill tone="red">ระงับการใช้งาน</StatusPill> : status === "approved" ? <StatusPill tone="green">ใช้งานได้</StatusPill> : <StatusPill tone="amber">รออนุมัติ</StatusPill>;
+    } },
     { key: "contact", label: "ติดต่อ", render: (row) => (
       <span className="block text-sm text-slate-700">{row.phone || "-"}{row.email ? <span className="block break-all text-xs text-slate-500">{row.email}</span> : null}</span>
     ) },
@@ -324,7 +346,7 @@ export default function OfficerWorkspace() {
       <>
       <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อ ชื่อผู้ใช้ อีเมล หรือเบอร์โทร">
         <FilterSelect label="สถานะ" value={statusFilter} onChange={setStatusFilter} options={[
-          { value: "", label: "ทุกสถานะ" }, { value: "pending", label: "รออนุมัติ" }, { value: "approved", label: "ใช้งานได้" }
+          { value: "", label: "ทุกสถานะ" }, { value: "pending", label: "รออนุมัติ" }, { value: "approved", label: "ใช้งานได้" }, { value: "suspended", label: "ระงับการใช้งาน" }
         ]} />
         <FilterSelect label="สิทธิ์ระบบ" value={roleFilter} onChange={setRoleFilter} options={roleOptions} className="min-w-[12rem]" />
       </Toolbar>
@@ -335,15 +357,22 @@ export default function OfficerWorkspace() {
         rows={rows}
         loading={loading}
         caption="รายชื่อเจ้าหน้าที่"
+        pageSize={20}
+        pageSizeOptions={[20, 50, 100]}
         emptyText={officers.length ? "ไม่พบเจ้าหน้าที่ตามเงื่อนไข" : "ยังไม่มีบัญชีเจ้าหน้าที่"}
-        rowClassName={(row) => (Number(row.is_approved) !== 1 ? "bg-amber-50/40" : "")}
+        rowClassName={(row) => (statusOf(row) === "suspended" ? "bg-slate-50 text-slate-500" : statusOf(row) === "pending" ? "bg-amber-50/40" : "")}
         rowActions={(row) => (
           <div className="flex flex-wrap justify-end gap-1">
             {Number(row.is_approved) !== 1 ? (
               <Button className="min-h-9 px-2.5" onClick={() => approve(row)}><CheckCircle2 className="h-4 w-4" aria-hidden="true" />อนุมัติ</Button>
             ) : null}
-            <Button variant="secondary" className="min-h-9 px-2.5" onClick={() => openForm(row)}><Pencil className="h-4 w-4" aria-hidden="true" />แก้ไข</Button>
-            <Button variant="ghost" className="min-h-9 px-2 text-red-700" onClick={() => remove(row)} aria-label={`ลบ ${fullName(row)}`}><Trash2 className="h-4 w-4" aria-hidden="true" /></Button>
+            <Button variant="secondary" className="min-h-9 px-2.5" onClick={() => openForm(row)} aria-label={`แก้ไข ${fullName(row) || row.username}`} title="แก้ไข"><Pencil className="h-4 w-4" aria-hidden="true" /></Button>
+            {statusOf(row) === "suspended" ? (
+              <Button variant="ghost" className="min-h-9 px-2 text-emerald-700" onClick={() => setSuspended(row, false)} aria-label={`เปิดใช้งาน ${fullName(row)}`} title="เปิดใช้งานอีกครั้ง"><LockOpen className="h-4 w-4" aria-hidden="true" /></Button>
+            ) : (
+              <Button variant="ghost" className="min-h-9 px-2 text-slate-600" onClick={async () => { if (await showConfirm("ระงับการใช้งาน", `บัญชี ${row.username} จะเข้าระบบไม่ได้จนกว่าจะเปิดใช้งานอีกครั้ง ประวัติการทำงานยังอยู่ครบ`, "ระงับการใช้งาน", "ยกเลิก")) setSuspended(row, true); }} aria-label={`ระงับการใช้งาน ${fullName(row)}`} title="ระงับการใช้งาน"><Lock className="h-4 w-4" aria-hidden="true" /></Button>
+            )}
+            <Button variant="ghost" className="min-h-9 px-2 text-red-700" onClick={() => remove(row)} aria-label={`ลบ ${fullName(row)}`} title="ลบ"><Trash2 className="h-4 w-4" aria-hidden="true" /></Button>
           </div>
         )}
       />

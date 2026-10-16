@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
+import { recordChange } from '@/lib/recordArchive';
 import { requireAuth, revokeUserSessions } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
@@ -187,33 +188,116 @@ export async function PUT(request, { params }) {
     }
 }
 
-// DELETE - ลบเจ้าหน้าที่
+// ประวัติการทำงานที่ต้องเก็บไว้ (ตารางเหล่านี้อ้างถึงเจ้าหน้าที่โดยไม่ยอมให้ลบ) — มีอย่างใดอย่างหนึ่ง = ลบไม่ได้ ให้ระงับแทน
+const HISTORY_CHECKS = [
+    { label: 'เปิด/ปิดเหตุการณ์ EOC', sql: 'SELECT COUNT(*) AS n FROM eoc_sessions WHERE opened_by = ? OR closed_by = ?', params: (id) => [id, id] },
+    { label: 'ผู้บัญชาการเหตุการณ์', sql: 'SELECT COUNT(*) AS n FROM eoc_session_commanders WHERE officer_id = ?', params: (id) => [id] },
+    { label: 'รายงานทีม', sql: 'SELECT COUNT(*) AS n FROM eoc_team_reports WHERE created_by = ?', params: (id) => [id] }
+];
+
+async function officerHistory(id) {
+    const found = [];
+    for (const check of HISTORY_CHECKS) {
+        try {
+            const rows = await query(check.sql, check.params(id));
+            const count = Number(rows[0]?.n || 0);
+            if (count) found.push(`${check.label} ${count} รายการ`);
+        } catch (error) {
+            if (error?.code !== 'ER_NO_SUCH_TABLE' && error?.code !== 'ER_BAD_FIELD_ERROR') throw error;
+        }
+    }
+    return found;
+}
+
+const historyResponse = (history) => NextResponse.json({
+    success: false,
+    code: 'HAS_HISTORY',
+    error: `ลบไม่ได้ เพราะมีประวัติการทำงานในระบบ (${history.join(', ')}) ซึ่งต้องเก็บไว้ ให้ใช้ "ระงับการใช้งาน" แทน บัญชีจะเข้าระบบไม่ได้แต่ประวัติยังอยู่`,
+    history
+}, { status: 409 });
+
+// DELETE - ลบเจ้าหน้าที่ (เฉพาะที่ไม่มีประวัติการทำงาน) — ถอดออกจากทีมที่ได้รับมอบหมายก่อนลบ
 export async function DELETE(request, { params }) {
     try {
         const auth = await requireAuth(request, ['admin']);
         if (!auth.success) return auth.response;
 
         const { id } = await params;
-
-        // ตรวจสอบว่ามีเจ้าหน้าที่นี้อยู่หรือไม่
-        const existing = await query('SELECT id, username FROM officer WHERE id = ?', [id]);
-        if (existing.length === 0) {
-            return NextResponse.json(
-                { success: false, error: 'ไม่พบเจ้าหน้าที่' },
-                { status: 404 }
-            );
+        if (String(id) === String(auth.user.id)) {
+            return NextResponse.json({ success: false, error: 'ลบบัญชีของตัวเองไม่ได้' }, { status: 400 });
         }
 
-        await query('DELETE FROM officer WHERE id = ?', [id]);
+        const existing = await query('SELECT id, username FROM officer WHERE id = ?', [id]);
+        if (existing.length === 0) {
+            return NextResponse.json({ success: false, error: 'ไม่พบเจ้าหน้าที่' }, { status: 404 });
+        }
 
+        const history = await officerHistory(id);
+        if (history.length) return historyResponse(history);
+
+        try {
+            await transaction(async (execute) => {
+                await execute('UPDATE eoc_session_teams SET team_lead_officer_id = NULL WHERE team_lead_officer_id = ?', [id]).catch((error) => {
+                    if (error?.code !== 'ER_NO_SUCH_TABLE' && error?.code !== 'ER_BAD_FIELD_ERROR') throw error;
+                });
+                await execute('DELETE FROM eoc_team_members WHERE officer_id = ?', [id]).catch((error) => {
+                    if (error?.code !== 'ER_NO_SUCH_TABLE') throw error;
+                });
+                await execute('DELETE FROM officer WHERE id = ?', [id]);
+            });
+        } catch (error) {
+            // ตารางอื่นที่อ้างถึงเจ้าหน้าที่ (ไม่อยู่ในรายการตรวจด้านบน)
+            if (error?.code === 'ER_ROW_IS_REFERENCED_2' || error?.code === 'ER_ROW_IS_REFERENCED') {
+                return historyResponse(['ข้อมูลที่บันทึกไว้ในระบบ']);
+            }
+            throw error;
+        }
+
+        await recordChange({ request, user: auth.user, action: 'data_delete', table: 'officer', id, description: `ลบบัญชีเจ้าหน้าที่ ${existing[0].username}` });
         return NextResponse.json({
             success: true,
-            message: 'Officer deleted successfully',
+            message: 'ลบบัญชีแล้ว',
             data: { id: parseInt(id), username: existing[0].username }
         });
 
     } catch (error) {
         console.error('Error deleting officer:', error);
         return publicInternalError('เกิดข้อผิดพลาดในการลบเจ้าหน้าที่');
+    }
+}
+
+// วันล็อกแบบไม่มีกำหนด (ใช้ช่อง account_locked_until ที่ระบบตรวจทั้งตอนเข้าสู่ระบบและทุกคำขอ)
+const SUSPEND_UNTIL = '9999-12-31 00:00:00';
+
+// PATCH - ระงับ / เปิดใช้งานบัญชีอีกครั้ง { action: 'suspend' | 'reactivate' }
+export async function PATCH(request, { params }) {
+    try {
+        const auth = await requireAuth(request, ['admin']);
+        if (!auth.success) return auth.response;
+        const { id } = await params;
+        const body = await request.json().catch(() => ({}));
+        if (!['suspend', 'reactivate'].includes(body.action)) {
+            return NextResponse.json({ success: false, error: 'คำสั่งไม่ถูกต้อง' }, { status: 400 });
+        }
+        if (body.action === 'suspend' && String(id) === String(auth.user.id)) {
+            return NextResponse.json({ success: false, error: 'ระงับบัญชีของตัวเองไม่ได้' }, { status: 400 });
+        }
+        const existing = await query('SELECT id, username FROM officer WHERE id = ?', [id]);
+        if (!existing.length) return NextResponse.json({ success: false, error: 'ไม่พบเจ้าหน้าที่' }, { status: 404 });
+
+        if (body.action === 'suspend') {
+            await query('UPDATE officer SET account_locked_until = ? WHERE id = ?', [SUSPEND_UNTIL, id]);
+            await revokeUserSessions(id);
+        } else {
+            await query('UPDATE officer SET account_locked_until = NULL, failed_login_attempts = 0 WHERE id = ?', [id]);
+        }
+        await recordChange({
+            request, user: auth.user, action: 'data_update', table: 'officer', id,
+            description: `${body.action === 'suspend' ? 'ระงับการใช้งาน' : 'เปิดใช้งานอีกครั้ง'} บัญชี ${existing[0].username}`
+        });
+        return NextResponse.json({ success: true, message: body.action === 'suspend' ? 'ระงับการใช้งานแล้ว' : 'เปิดใช้งานแล้ว' });
+    } catch (error) {
+        console.error('Error suspending officer:', error);
+        return publicInternalError('บันทึกสถานะบัญชีไม่สำเร็จ');
     }
 }
