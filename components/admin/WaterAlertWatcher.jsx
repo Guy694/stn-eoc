@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BellRing, CheckCircle2, CloudRain, Siren, Speech, TriangleAlert, Volume2, VolumeX, Waves, X } from "lucide-react";
-import { playPattern } from "@/lib/alertSound";
+import { getAlertAudioContext, installAlertAudioUnlock, playPattern, showSystemAlert, unlockAlertAudio } from "@/lib/alertSound";
 import { SPEAK_DELAY_MS, VOICE_KEY, setVoiceEnabled, speak, speechSupported, voiceEnabled, waterAlertSpeech } from "@/lib/alertSpeech";
 
 const API = "/stn-eoc/api/eoc/water-alerts";
@@ -49,17 +49,17 @@ export default function WaterAlertWatcher() {
   const [voiceOn, setVoiceOn] = useState(true);
   const [audioLocked, setAudioLocked] = useState(false);
   const [notifyPermission, setNotifyPermission] = useState("unsupported");
-  const ctxRef = useRef(null);
   const cursorRef = useRef(0);
   const disabledRef = useRef(false);
   const repeatsRef = useRef(0);
 
-  const ensureContext = useCallback(() => {
-    if (typeof window === "undefined") return null;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return null;
-    if (!ctxRef.current) ctxRef.current = new AudioCtx();
-    return ctxRef.current;
+  // AudioContext ร่วมกับเตือนคำขอความช่วยเหลือ — ปลดล็อกเมื่อผู้ใช้แตะหน้าจอครั้งแรก (มือถือ)
+  const ensureContext = useCallback(() => getAlertAudioContext(), []);
+  useEffect(() => {
+    installAlertAudioUnlock();
+    const ready = () => setAudioLocked(false);
+    window.addEventListener("stn-alert-audio-ready", ready);
+    return () => window.removeEventListener("stn-alert-audio-ready", ready);
   }, []);
 
   const play = useCallback((level, items = null) => {
@@ -80,7 +80,7 @@ export default function WaterAlertWatcher() {
     if (typeof Notification === "undefined" || Notification.permission !== "granted" || !document.hidden) return;
     for (const item of items) {
       try {
-        new Notification(item.title, { body: String(item.message || "").split("\n").slice(0, 2).join(" · "), tag: `water-alert-${item.id}`, requireInteraction: item.level === "critical" });
+        showSystemAlert(item.title, { body: String(item.message || "").split("\n").slice(0, 2).join(" · "), tag: `water-alert-${item.id}`, requireInteraction: item.level === "critical" });
       } catch { /* บางเบราว์เซอร์ต้องใช้ service worker — ข้ามได้ */ }
     }
   }, []);
@@ -206,7 +206,7 @@ export default function WaterAlertWatcher() {
   };
   const enableAudio = () => {
     const ctx = ensureContext();
-    ctx?.resume().then(() => {
+    unlockAlertAudio().then(() => {
       setAudioLocked(false);
       playPattern(ctx, alerts[0]?.level || "info");
       speak(waterAlertSpeech(alerts), { delayMs: SPEAK_DELAY_MS[alerts[0]?.level] || 800 });

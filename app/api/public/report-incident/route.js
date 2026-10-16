@@ -2,6 +2,7 @@ import { startTracking } from '@/lib/incidentTrackingDb';
 import { formatTrackingCode } from '@/lib/helpTracking';
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { parseOccurredAt } from '@/lib/publicReportTime';
 import { writeFile, mkdir } from 'fs/promises';
 import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getPrivateUploadDir, resolveInside, validateImageFile } from '@/lib/fileUpload';
 import { stripImageMetadata } from '@/lib/imageSanitize';
@@ -229,11 +230,8 @@ export async function POST(request) {
         const travelStatus = text('travelStatus', 20); // สถานะการสัญจร
         const reportType = text('reportType', 30) || 'help_request'; // ประเภทรายงาน
         const disasterType = text('disasterType', 30) || 'assistance'; // ประเภทภัย
-        // เวลาเกิดเหตุ: ต้องเป็นวันที่จริง ไม่เกิน 1 วันข้างหน้า และไม่เก่ากว่า 30 วัน ไม่งั้นใช้เวลาปัจจุบัน
-        const occurredRaw = Date.parse(text('occurredAt', 40) || '');
-        const occurredAt = Number.isFinite(occurredRaw) && occurredRaw < Date.now() + 864e5 && occurredRaw > Date.now() - 30 * 864e5
-            ? new Date(occurredRaw).toISOString()
-            : new Date().toISOString();
+        // เวลาเกิดเหตุ (เวลาไทยจากฟอร์ม) → Date ให้ mysql2 แปลงตามโซนเวลาของฐานข้อมูล ดู lib/publicReportTime.js
+        const occurredAt = parseOccurredAt(text('occurredAt', 40));
         const latitude = text('latitude', 30);
         const longitude = text('longitude', 30);
         const photo = formData.get('photo');

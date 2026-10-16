@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BellRing, Clock, LifeBuoy, Smartphone, X } from "lucide-react";
-import { playPattern } from "@/lib/alertSound";
+import { installAlertAudioUnlock, playAlert, showSystemAlert } from "@/lib/alertSound";
 import { SPEAK_DELAY_MS, helpRequestSpeech, speak } from "@/lib/alertSpeech";
 import { waitedText } from "@/lib/helpAlerts";
 import { officerPushStatus, subscribeOfficerPush } from "@/lib/pwaClient";
@@ -51,20 +51,17 @@ export default function HelpRequestWatcher() {
   const [push, setPush] = useState(null);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState("");
-  const ctxRef = useRef(null);
   const disabledRef = useRef(false);
   const shownRef = useRef(new Map()); // id → "new" | step ที่เคยส่งเสียงแล้วในแท็บนี้
   const pendingRef = useRef([]);
 
   const play = useCallback((level) => {
-    if (!soundOn() || typeof window === "undefined") return;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    if (!ctxRef.current) ctxRef.current = new AudioCtx();
-    const ctx = ctxRef.current;
-    if (ctx.state === "suspended") ctx.resume().then(() => playPattern(ctx, level)).catch(() => {});
-    else playPattern(ctx, level);
+    if (!soundOn()) return;
+    playAlert(level).catch(() => {});
   }, []);
+
+  // มือถือ: เสียงเล่นได้หลังผู้ใช้แตะหน้าจอครั้งแรก — ปลดล็อกไว้ล่วงหน้า
+  useEffect(() => { installAlertAudioUnlock(); }, []);
 
   const recompute = useCallback((list) => {
     const next = visibleHelpAlerts(list, Number(readJson(SEEN_KEY, 0)) || 0, readJson(ESC_KEY, {}));
@@ -75,11 +72,11 @@ export default function HelpRequestWatcher() {
       const level = fresh.some((item) => item.kind === "new") ? "critical" : "serious";
       play(level);
       if (soundOn()) speak(helpRequestSpeech(fresh), { delayMs: SPEAK_DELAY_MS[level] });
-      if (typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden) {
+      if (document.hidden) {
         for (const item of fresh.slice(0, 3)) {
-          try {
-            new Notification(item.kind === "new" ? `🆘 คำขอความช่วยเหลือใหม่ #${item.id}` : `⏰ คำขอ #${item.id} รอ ${waitedText(item.waited_min)}`, { body: `${item.place}\n${item.summary || ""}`, tag: `help-${item.id}` });
-          } catch { /* บางเบราว์เซอร์ต้องแสดงผ่าน service worker เท่านั้น */ }
+          showSystemAlert(item.kind === "new" ? `🆘 คำขอความช่วยเหลือใหม่ #${item.id}` : `⏰ คำขอ #${item.id} รอ ${waitedText(item.waited_min)}`, {
+            body: `${item.place}\n${item.summary || ""}`, tag: `help-${item.id}`, renotify: true, requireInteraction: true, data: { url: `/stn-eoc${linkFor(item.id)}` }
+          });
         }
       }
     }
