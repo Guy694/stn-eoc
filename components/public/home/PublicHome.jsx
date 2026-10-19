@@ -425,7 +425,7 @@ export default function PublicHome() {
 
   return (
     <>
-    <HomeSplashScreen />
+    <HomeSplashScreen ready={!loading} />
     <HomePopup popup={popup} onClose={closePopup} />
     <PublicOpsScaffold
       title="หน้าหลัก"

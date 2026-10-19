@@ -65,6 +65,7 @@
     "20261015_team_member_roles.sql",
     "20261016_provider_id_login.sql",
     "20261016_officer_role_text.sql",
-    "20261019_officer_telegram_link.sql"
+    "20261019_officer_telegram_link.sql",
+    "20261019_village_polygon_names.sql"
   ]
 }
