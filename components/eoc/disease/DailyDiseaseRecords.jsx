@@ -5,6 +5,11 @@ import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
+import { AlertTriangle, Biohazard, CircleCheck, CircleDashed, ClipboardList, MapPinned, Plus, Users } from "lucide-react";
+import { ReadOnlyNotice } from "@/components/admin/crud";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
+import { EmptyPanel, HeroProgress, PageHero, Panel, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { formatNumber } from "@/lib/adminApi";
 import { buildDiseaseChoices } from '@/lib/diseaseNames';
 
 // eocType: เหตุการณ์ที่ใช้ผูกข้อมูล ("disease" = EOC โรคระบาด, "flood" = โรคในชุมชนช่วงน้ำท่วม)
@@ -196,7 +201,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!activeSession) {
+            if (!activeSession) {
             showError('ไม่พบเหตุการณ์ EOC ที่เปิดอยู่');
             return;
         }
@@ -414,19 +419,20 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                         (record.tambon_name === tambon.name || record.tambon === tambon.name);
                 });
 
-                const recordedCount = recordedToday.length;
+                // นับหมู่บ้าน (ไม่ซ้ำ) ที่มีบันทึกวันนี้ — หนึ่งหมู่บ้านอาจมีหลายโรค
+                const recordedCount = new Set(recordedToday.map(r => r.village_name || r.moo || r.facility_name || r.id)).size;
                 const totalPatients = recordedToday.reduce((sum, r) => sum + (r.patient_count || 0), 0);
 
                 // แสดงทุกตำบลที่มีหมู่บ้าน
                 if (totalVillages > 0) {
-                    const status = recordedCount > 0 ? 'partial' : 'empty';
+                    const status = recordedCount >= totalVillages ? 'complete' : recordedCount > 0 ? 'partial' : 'empty';
 
                     allTambonsStatus.push({
                         district: district.name,
                         tambon: tambon.name,
                         key: key,
                         totalVillages: totalVillages,
-                        recordedVillages: recordedCount,
+                        recordedVillages: Math.min(recordedCount, totalVillages),
                         totalPatients: totalPatients,
                         status: status
                     });
@@ -446,10 +452,10 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
     };
 
     const getSeverityColor = (count) => {
-        if (count >= 300) return 'bg-red-100 text-red-800';
-        if (count >= 100) return 'bg-yellow-100 text-yellow-800';
-        if (count >= 1) return 'bg-[#dbeaf7] text-[#083865]';
-        return 'bg-green-100 text-green-800';
+        if (count >= 300) return 'bg-red-50 text-red-700 ring-1 ring-red-100';
+        if (count >= 100) return 'bg-amber-50 text-amber-800 ring-1 ring-amber-100';
+        if (count >= 1) return 'bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100';
+        return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100';
     };
 
     const getSeverityLabel = (count) => {
@@ -461,145 +467,120 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
 
     if (!activeSession) {
         return (
-            <>
-                <div className="p-6">
-                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
-                        <p className="text-slate-600">
-                            {eocType === 'flood' ? 'บันทึกโรคในพื้นที่ได้เมื่อเปิด EOC อุทกภัยน้ำท่วมแล้ว' : 'กรุณาเปิดเหตุการณ์ EOC โรคระบาดก่อนบันทึกข้อมูล'}
-                        </p>
-                    </div>
-                </div>
-            </>
+            <EmptyPanel
+                icon={AlertTriangle}
+                tone="amber"
+                title="ไม่มีเหตุการณ์ EOC ที่เปิดอยู่"
+                text={eocType === 'flood' ? 'บันทึกโรคในพื้นที่ได้เมื่อเปิด EOC อุทกภัยน้ำท่วมแล้ว' : 'กรุณาเปิดเหตุการณ์ EOC โรคระบาดก่อนบันทึกข้อมูล'}
+            />
         );
     }
 
+    const tambonStatus = getAllTambonsStatus();
+    const completedTambons = getCompletedTambons();
+    const unrecordedTambons = getUnrecordedTambons();
+    const partialCount = tambonStatus.filter(t => t.status === 'partial').length;
+    const emptyCount = tambonStatus.filter(t => t.status === 'empty').length;
+    const totalTambons = tambonStatus.length;
+    const completePercent = totalTambons ? Math.round((completedTambons.length / totalTambons) * 100) : 0;
+    const totalPatients = records.reduce((sum, record) => sum + (Number(record.patient_count) || 0), 0);
+    const openTambonForm = (item) => {
+        setEditingRecord(null);
+        const now = new Date();
+        const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        setFormData({ ...formData, district: item.district, tambon: item.tambon, village: '', report_date: localDate });
+        setIsTambonMode(true);
+        setShowModal(true);
+    };
+
     return (
         <>
-            <div className="p-6">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
-                            <span className="text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                            {eocType === 'disease' ? `บันทึกพื้นที่ ${activeDiseaseEocName}` : activeDiseaseEocName}
-                        </h1>
-                        <p className="text-slate-600">
-                            {subtitle ? `${subtitle} · ` : ''}เหตุการณ์ครั้งที่ {activeSession.session_number} เปิดเมื่อ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
-                        </p>
-                        {eocType === 'disease' && activeSession.disease_name && (
-                            <p className="mt-1 text-sm font-semibold text-[#0b4c86]">
-                                ประเภท EOC ที่เปิดติดตาม: {activeDiseaseEocName}
-                            </p>
+            <div className="space-y-4 font-[family-name:var(--font-kanit)]">
+                <PageHero
+                    icon={Biohazard}
+                    eyebrow={eocType === 'flood' ? 'โรคและสุขภาพช่วงน้ำท่วม' : 'บันทึกพื้นที่'}
+                    title={title || (eocType === 'disease' ? `บันทึกพื้นที่ ${activeDiseaseEocName}` : activeDiseaseEocName)}
+                    subtitle={subtitle || null}
+                    meta={`เหตุการณ์ครั้งที่ ${activeSession.session_number} · เปิดเมื่อ ${new Date(activeSession.opened_at).toLocaleDateString('th-TH', { dateStyle: 'medium' })}${eocType === 'disease' && activeSession.disease_name ? ` · ติดตาม ${activeDiseaseEocName}` : ''}`}
+                    actions={canEdit ? (
+                        <button
+                            type="button"
+                            onClick={() => { setEditingRecord(null); resetForm(); setShowModal(true); }}
+                            className={heroPrimaryButtonClass}
+                        >
+                            <Plus className="h-4 w-4" aria-hidden="true" />เพิ่มข้อมูลใหม่
+                        </button>
+                    ) : null}
+                    aside={totalTambons ? (
+                        <HeroProgress
+                            label="ตำบลที่บันทึกครบวันนี้"
+                            value={completePercent}
+                            percent={completePercent}
+                            note={`ครบ ${completedTambons.length} จาก ${totalTambons} ตำบล${partialCount ? ` · บางส่วน ${partialCount}` : ''}`}
+                        />
+                    ) : null}
+                />
+
+                {!canEdit && permissions.read_only_message ? <ReadOnlyNotice message={permissions.read_only_message} /> : null}
+
+                <MetricGrid>
+                    <MetricCard icon={ClipboardList} label="รายการที่บันทึก" value={formatNumber(records.length)} unit="รายการ" tone="blue" />
+                    <MetricCard icon={Users} label="ผู้ป่วยรวม" value={formatNumber(totalPatients)} unit="คน" tone={totalPatients > 0 ? "red" : "muted"} />
+                    <MetricCard icon={CircleCheck} label="ตำบลบันทึกครบ" value={formatNumber(completedTambons.length)} unit="ตำบล" tone="green" />
+                    <MetricCard icon={CircleDashed} label="ตำบลยังไม่ครบ" value={formatNumber(unrecordedTambons.length)} unit="ตำบล" tone={unrecordedTambons.length ? "amber" : "muted"} note={partialCount ? `บางส่วน ${partialCount} · ยังไม่บันทึก ${emptyCount}` : null} />
+                </MetricGrid>
+
+                {totalTambons ? (
+                    <Panel
+                        icon={MapPinned}
+                        title="สถานะการบันทึกวันนี้"
+                        subtitle={canEdit && unrecordedTambons.length ? 'กดตำบลที่ยังไม่ครบเพื่อบันทึกทั้งตำบล' : 'แยกตามตำบล'}
+                        action={(
+                            <div className="flex flex-wrap gap-3 text-xs text-slate-600">
+                                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />ครบ {completedTambons.length}</span>
+                                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-500" aria-hidden="true" />บางส่วน {partialCount}</span>
+                                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-slate-300" aria-hidden="true" />ยังไม่บันทึก {emptyCount}</span>
+                            </div>
                         )}
-                    </div>
-                    {canEdit && <button
-                        onClick={() => {
-                            setEditingRecord(null);
-                            resetForm();
-                            setShowModal(true);
-                        }}
-                        className="bg-[#0b4c86] text-white px-6 py-3 rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
+                        bodyClassName="p-4"
                     >
-                        <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                        เพิ่มข้อมูลใหม่
-                    </button>}
-                </div>
-                {!canEdit && permissions.read_only_message ? (
-                    <p className="mb-6 rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{permissions.read_only_message}</p>
+                        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+                            {[...unrecordedTambons, ...completedTambons].map((item) => {
+                                const done = item.status === 'complete';
+                                const partial = item.status === 'partial';
+                                const dot = done ? 'bg-emerald-500' : partial ? 'bg-amber-500' : 'bg-slate-300';
+                                const body = (
+                                    <>
+                                        <span className="flex items-center gap-1.5 font-semibold text-slate-900"><span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} aria-hidden="true" /><span className="truncate">{item.tambon}</span></span>
+                                        <span className="mt-0.5 block truncate text-xs text-slate-500">อ.{item.district}</span>
+                                        <span className={`mt-1 block text-xs font-medium ${done ? 'text-emerald-700' : partial ? 'text-amber-700' : 'text-slate-500'}`}>
+                                            {done ? `${item.recordedVillages}/${item.totalVillages} หมู่บ้าน` : `${item.totalVillages} หมู่บ้าน`}
+                                        </span>
+                                    </>
+                                );
+                                return (
+                                    <li key={item.key}>
+                                        {done ? (
+                                            <div className="h-full rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-sm">{body}</div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                disabled={!canEdit}
+                                                onClick={() => openTambonForm(item)}
+                                                className={`h-full w-full rounded-xl border px-3 py-2 text-left text-sm transition enabled:hover:border-[#0b4c86] enabled:hover:shadow-[0_12px_28px_-20px_rgba(15,23,42,.55)] disabled:cursor-default ${partial ? 'border-amber-200 bg-amber-50/60' : 'border-slate-200 bg-white'}`}
+                                            >
+                                                {body}
+                                            </button>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </Panel>
                 ) : null}
 
-                {/* สถานะการบันทึกตำบลวันนี้ */}
-                <div className="mb-6">
-                    <div className="flex items-center gap-4 mb-4">
-                        <h3 className="font-bold text-slate-800"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะการบันทึกวันนี้</h3>
-                        <div className="flex gap-2 text-sm">
-                            <span className="text-slate-600 flex items-center gap-1">
-                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                                บันทึกครบ ({getCompletedTambons().length})
-                            </span>
-                            <span className="text-slate-600 flex items-center gap-1">
-                                <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                                บันทึกบางส่วน ({getAllTambonsStatus().filter(t => t.status === 'partial').length})
-                            </span>
-                            <span className="text-slate-600 flex items-center gap-1">
-                                <span className="w-3 h-3 bg-slate-400 rounded-full"></span>
-                                ยังไม่ได้บันทึก ({getAllTambonsStatus().filter(t => t.status === 'empty').length})
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* ตำบลที่บันทึกครบแล้ว (สีเขียว) */}
-                    {getCompletedTambons().length > 0 && (
-                        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
-                            <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
-                                <span><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                                ตำบลที่บันทึกครบแล้ว ({getCompletedTambons().length} ตำบล)
-                            </h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                                {getCompletedTambons().map((item) => (
-                                    <div
-                                        key={item.key}
-                                        className="text-left px-3 py-2 bg-green-100 border border-green-300 rounded-lg text-sm"
-                                    >
-                                        <div className="font-medium text-green-800">{item.tambon}</div>
-                                        <div className="text-xs text-green-600">อ.{item.district}</div>
-                                        <div className="text-xs text-green-700 font-medium mt-1">
-                                            <AppIcon icon="check" className="inline-block h-4 w-4" /> {item.recordedVillages}/{item.totalVillages} หมู่บ้าน
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ตำบลที่ยังบันทึกไม่ครบ (สีเหลือง) */}
-                    {getUnrecordedTambons().length > 0 && (
-                        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
-                            <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                                <span><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                                ตำบลที่ยังบันทึกไม่ครบ ({getUnrecordedTambons().length} ตำบล) - คลิกเพื่อบันทึก
-                            </h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                                {getUnrecordedTambons().map((item) => (
-                                    <button
-                                        key={item.key}
-                                        disabled={!canEdit}
-                                        onClick={() => {
-                                            setEditingRecord(null);
-                                            const now = new Date();
-                                            const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                                            setFormData({
-                                                ...formData,
-                                                district: item.district,
-                                                tambon: item.tambon,
-                                                village: '',
-                                                report_date: localDate
-                                            });
-                                            setIsTambonMode(true);
-                                            setShowModal(true);
-                                        }}
-                                        className={`text-left px-3 py-2 rounded-lg hover:opacity-80 transition-colors text-sm ${item.status === 'partial'
-                                            ? 'bg-orange-100 border border-orange-300'
-                                            : 'bg-white border border-yellow-300 hover:bg-yellow-50'
-                                            }`}
-                                    >
-                                        <div className="font-medium text-slate-800">{item.tambon}</div>
-                                        <div className="text-xs text-slate-500">อ.{item.district}</div>
-                                        <div className={`text-xs font-medium mt-1 ${item.status === 'partial' ? 'text-orange-600' : 'text-slate-500'
-                                            }`}>
-                                            {item.totalVillages} หมู่บ้าน
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
                 {/* Filters */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">อำเภอ</label>
@@ -646,11 +627,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                 </div>
 
                 {/* Table */}
-                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
-                    <div className="p-4 bg-slate-50 border-b border-slate-200">
-                        <h3 className="font-bold text-slate-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางข้อมูลที่บันทึกแล้ว</h3>
-                        <p className="text-sm text-slate-600 mt-1">แสดงข้อมูลทั้งหมด {records.length} รายการ</p>
-                    </div>
+                <Panel icon={ClipboardList} title="ข้อมูลที่บันทึกแล้ว" subtitle={`ทั้งหมด ${formatNumber(records.length)} รายการ`}>
 
                     {loading ? (
                         <div className="text-center py-8">
@@ -676,58 +653,58 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-200">
-                                <thead className="bg-slate-50">
+                                <thead className="bg-slate-50/80">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                                             #
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                                             พื้นที่
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                                             โรค
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                                             วันที่
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                                             จำนวนผู้ป่วย
                                         </th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500">
                                             จัดการ
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-slate-200">
+                                <tbody className="divide-y divide-slate-100 bg-white">
                                     {paginatedRecords.map((record, index) => (
-                                        <tr key={record.id} className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                        <tr key={record.id} className="transition-colors hover:bg-slate-50/70">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
                                                 {((currentPage - 1) * pageSize) + index + 1}
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-3">
                                                 <div className="text-sm font-medium text-slate-900">
                                                     {record.facility_name || (record.moo || record.village_name ? `หมู่ ${record.moo || '-'} ${record.village_name || ''}` : '-')}
                                                 </div>
                                                 <div className="text-sm text-slate-500">ต.{record.tambon_name} อ.{record.district_name}</div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-[#dbeaf7] text-[#083865]">
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
                                                     <AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {record.disease_name}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
                                                 {record.report_date ? new Date(record.report_date).toLocaleDateString('th-TH', {
                                                     year: 'numeric',
                                                     month: 'long',
                                                     day: 'numeric'
                                                 }) : '-'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <span className={`px-3 py-1 text-xs font-medium rounded-full ${getSeverityColor(record.patient_count)}`}>
                                                     {record.patient_count || 0} คน - {getSeverityLabel(record.patient_count)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <td className="px-4 py-3 whitespace-nowrap text-center">
                                                 {canEdit && <>
                                                 <button
                                                     onClick={() => handleEdit(record)}
@@ -758,14 +735,14 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                         onPageChange={setCurrentPage}
                         onPageSizeChange={setPageSize}
                     />
-                </div>
+                </Panel>
 
                 {/* Modal */}
                 {showModal && (
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white font-[family-name:var(--font-kanit)]">
                             <div className="p-6">
-                                <h2 className="text-slate-700 text-2xl font-bold mb-4">
+                                <h2 className="mb-4 text-xl font-semibold text-slate-900">
                                     {editingRecord ? 'แก้ไขข้อมูล' : isTambonMode ? 'บันทึกข้อมูลทั้งตำบล' : 'เพิ่มข้อมูลใหม่'}
                                 </h2>
 
@@ -925,13 +902,13 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                 setEditingRecord(null);
                                                 resetForm();
                                             }}
-                                            className="px-6 py-2 bg-red-500 rounded-lg hover:bg-red-600 text-white"
+                                            className="min-h-10 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
                                         >
                                             ยกเลิก
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
+                                            className="min-h-10 rounded-lg bg-[#0b4c86] px-5 py-2 text-sm font-bold text-white hover:bg-[#083865]"
                                         >
                                             {editingRecord ? 'บันทึกการแก้ไข' : 'บันทึก'}
                                         </button>

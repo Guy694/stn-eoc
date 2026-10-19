@@ -1,10 +1,24 @@
 "use client";
 import { useEOC } from "@/context/EOCContext";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import AppIcon from "@/components/icons/AppIcon";
+import { AlertTriangle, Ambulance, Biohazard, CalendarDays, CircleCheck, ClipboardList, Home, Plus, Trash2, UserPlus, X } from "lucide-react";
+import { Button, ReadOnlyNotice, inputClass } from "@/components/admin/crud";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
+import { EmptyPanel, PageHero, Panel, heroInputClass, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { formatNumber } from "@/lib/adminApi";
 import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/sweetAlert';
 import { FLOOD_DISEASE_CHOICES, buildDiseaseChoices } from '@/lib/diseaseNames';
+
+// จำนวนผู้ป่วยของรายงานหนึ่งรายการ (มือถืออยู่ใต้ชื่อโรค · จอใหญ่อยู่ด้านขวา)
+function CaseCounts({ report, className = "" }) {
+    return (
+        <dl className={`grid-cols-3 gap-1.5 text-center text-xs ${className}`}>
+            <div className="rounded-lg bg-red-50 px-2.5 py-1"><dt className="text-red-700">ป่วยใหม่</dt><dd className="text-base font-bold tabular-nums text-red-700">{report.new_cases}</dd></div>
+            <div className="rounded-lg bg-emerald-50 px-2.5 py-1"><dt className="text-emerald-700">หาย</dt><dd className="text-base font-bold tabular-nums text-emerald-700">{report.recovered}</dd></div>
+            <div className="rounded-lg bg-amber-50 px-2.5 py-1"><dt className="text-amber-800">ส่ง รพ.</dt><dd className="text-base font-bold tabular-nums text-amber-800">{report.hospitalized}</dd></div>
+        </dl>
+    );
+}
 
 export default function ShelterDiseaseReports() {
     const { eocStatus } = useEOC();
@@ -176,257 +190,161 @@ export default function ShelterDiseaseReports() {
         }
     };
 
-    const severityColors = {
-        low: 'bg-green-100 text-green-800',
-        medium: 'bg-yellow-100 text-yellow-800',
-        high: 'bg-orange-100 text-orange-800',
-        critical: 'bg-red-100 text-red-800'
+    const SEVERITY = {
+        low: { label: 'ต่ำ', className: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
+        medium: { label: 'ปานกลาง', className: 'bg-amber-50 text-amber-800 ring-amber-100' },
+        high: { label: 'สูง', className: 'bg-orange-50 text-orange-700 ring-orange-100' },
+        critical: { label: 'วิกฤต', className: 'bg-red-50 text-red-700 ring-red-100' }
     };
-
-    const severityLabels = {
-        low: 'ต่ำ',
-        medium: 'ปานกลาง',
-        high: 'สูง',
-        critical: 'วิกฤต'
-    };
+    const setNumber = (key) => (e) => setFormData({ ...formData, [key]: parseInt(e.target.value, 10) || 0 });
+    const label = "mb-1 block text-sm font-medium text-slate-700";
+    const dateText = new Date(`${selectedDate}T00:00:00`).toLocaleDateString('th-TH', { dateStyle: 'long' });
 
     if (!isActive) {
         return (
-            <>
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
-                    <span className="text-5xl mb-4 block"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                    <h2 className="text-xl font-bold text-yellow-800 mb-2">ไม่มี EOC อุทกภัยน้ำท่วมที่เปิดใช้งาน</h2>
-                    <p className="text-yellow-700">กรุณาเปิด EOC ก่อนจึงจะสามารถบันทึกรายงานโรคได้</p>
-                </div>
-            </>
+            <EmptyPanel
+                icon={AlertTriangle}
+                tone="amber"
+                title="ยังไม่มีเหตุการณ์อุทกภัยที่เปิดอยู่"
+                text="เปิด EOC อุทกภัยก่อน จึงจะบันทึกรายงานโรคในศูนย์พักพิงได้"
+            />
         );
     }
 
     return (
-        <>
-            <div className="space-y-6">
-                {/* Header */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center">
-                                <span className="text-3xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-black text-slate-900">รายงานโรคในศูนย์พักพิง</h1>
-                                <p className="text-slate-600">บันทึกสถานการณ์โรครายวันในศูนย์พักพิงชั่วคราว</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <input
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className="text-slate-600 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                            />
-                            {canEdit && <button
-                                onClick={() => setShowForm(!showForm)}
-                                className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
-                            >
-                                <span><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                                <span>เพิ่มรายงาน</span>
-                            </button>}
-                        </div>
-                    </div>
-                </div>
-                {!canEdit && permissions.read_only_message ? (
-                    <p className="mb-4 rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{permissions.read_only_message}</p>
-                ) : null}
-
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white rounded-2xl p-5 border border-slate-200">
-                        <p className="text-slate-500 text-sm">รายงานทั้งหมด</p>
-                        <p className="text-3xl font-bold text-slate-800">{stats.total_reports || 0}</p>
-                    </div>
-                    <div className="bg-red-50 rounded-xl p-5 shadow-sm border border-red-100">
-                        <p className="text-red-600 text-sm">ผู้ป่วยใหม่</p>
-                        <p className="text-3xl font-bold text-red-700">{stats.total_new_cases || 0}</p>
-                    </div>
-                    <div className="bg-green-50 rounded-xl p-5 shadow-sm border border-green-100">
-                        <p className="text-green-600 text-sm">หายแล้ว</p>
-                        <p className="text-3xl font-bold text-green-700">{stats.total_recovered || 0}</p>
-                    </div>
-                    <div className="bg-orange-50 rounded-xl p-5 shadow-sm border border-orange-100">
-                        <p className="text-orange-600 text-sm">ส่งต่อ รพ.</p>
-                        <p className="text-3xl font-bold text-orange-700">{stats.total_hospitalized || 0}</p>
-                    </div>
-                </div>
-
-                {/* Add Form */}
-                {showForm && canEdit && (
-                    <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4">เพิ่มรายงานโรค</h3>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">ศูนย์พักพิง *</label>
-                                    <select
-                                        value={formData.shelter_id}
-                                        onChange={(e) => setFormData({ ...formData, shelter_id: e.target.value })}
-                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                                        required
-                                    >
-                                        <option value="">-- เลือกศูนย์พักพิง --</option>
-                                        {activatedShelters.map(s => (
-                                            <option key={s.id} value={s.id}>{s.sheltername} (ต.{s.tambon})</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">ประเภทโรค *</label>
-                                    <select
-                                        value={formData.disease_type}
-                                        onChange={(e) => setFormData({ ...formData, disease_type: e.target.value })}
-                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                                        required
-                                    >
-                                        <option value="">-- เลือกประเภทโรค --</option>
-                                        {commonDiseases.map((d, i) => (
-                                            <option key={i} value={d.name}>{d.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">ผู้ป่วยใหม่</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={formData.new_cases}
-                                        onChange={(e) => setFormData({ ...formData, new_cases: parseInt(e.target.value) || 0 })}
-                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">หายแล้ว</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={formData.recovered}
-                                        onChange={(e) => setFormData({ ...formData, recovered: parseInt(e.target.value) || 0 })}
-                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">ส่งต่อ รพ.</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={formData.hospitalized}
-                                        onChange={(e) => setFormData({ ...formData, hospitalized: parseInt(e.target.value) || 0 })}
-                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">ระดับความรุนแรง</label>
-                                    <select
-                                        value={formData.severity}
-                                        onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
-                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                                    >
-                                        <option value="low">ต่ำ</option>
-                                        <option value="medium">ปานกลาง</option>
-                                        <option value="high">สูง</option>
-                                        <option value="critical">วิกฤต</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">หมายเหตุ</label>
-                                <textarea
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
-                                    rows="2"
-                                />
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors disabled:opacity-50"
-                                >
-                                    {saving ? "กำลังบันทึก..." : "บันทึก"}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowForm(false)}
-                                    className="px-6 py-2 bg-slate-100 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                                >
-                                    ยกเลิก
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+        <div className="space-y-4 font-[family-name:var(--font-kanit)]">
+            <PageHero
+                icon={Biohazard}
+                eyebrow="โรคและสุขภาพช่วงน้ำท่วม"
+                title="รายงานโรคในศูนย์พักพิง"
+                subtitle="บันทึกผู้ป่วยรายวันของศูนย์พักพิงชั่วคราวที่เปิดอยู่"
+                meta={`ศูนย์พักพิงที่เปิดอยู่ ${activatedShelters.length} แห่ง · ข้อมูลวันที่ ${dateText}`}
+                actions={(
+                    <>
+                        <label className="sr-only" htmlFor="shelter-report-date">วันที่รายงาน</label>
+                        <input
+                            id="shelter-report-date"
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className={heroInputClass}
+                        />
+                        {canEdit ? (
+                            <button type="button" onClick={() => setShowForm(!showForm)} className={heroPrimaryButtonClass} aria-expanded={showForm}>
+                                {showForm ? <X className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
+                                {showForm ? 'ปิดแบบฟอร์ม' : 'เพิ่มรายงาน'}
+                            </button>
+                        ) : null}
+                    </>
                 )}
+            />
 
-                {/* Reports List */}
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                    <div className="p-4 bg-slate-50 border-b border-slate-100">
-                        <h3 className="font-semibold text-slate-800">รายงานวันที่ {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h3>
+            {!canEdit && permissions.read_only_message ? <ReadOnlyNotice message={permissions.read_only_message} /> : null}
+
+            <MetricGrid>
+                <MetricCard icon={ClipboardList} label="รายงานทั้งหมด" value={formatNumber(stats.total_reports || 0)} unit="รายการ" tone="blue" />
+                <MetricCard icon={UserPlus} label="ผู้ป่วยใหม่" value={formatNumber(stats.total_new_cases || 0)} unit="ราย" tone={stats.total_new_cases > 0 ? "red" : "muted"} />
+                <MetricCard icon={CircleCheck} label="หายแล้ว" value={formatNumber(stats.total_recovered || 0)} unit="ราย" tone="green" />
+                <MetricCard icon={Ambulance} label="ส่งต่อ รพ." value={formatNumber(stats.total_hospitalized || 0)} unit="ราย" tone={stats.total_hospitalized > 0 ? "amber" : "muted"} />
+            </MetricGrid>
+
+            {showForm && canEdit && (
+                <Panel icon={Plus} title="เพิ่มรายงานโรค" subtitle={`บันทึกของวันที่ ${dateText}`} bodyClassName="p-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <label className={label} htmlFor="shelter-id">ศูนย์พักพิง <span className="text-red-600">*</span></label>
+                                <select id="shelter-id" value={formData.shelter_id} onChange={(e) => setFormData({ ...formData, shelter_id: e.target.value })} className={inputClass} required>
+                                    <option value="">เลือกศูนย์พักพิง</option>
+                                    {activatedShelters.map(s => (
+                                        <option key={s.id} value={s.id}>{s.sheltername} (ต.{s.tambon})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className={label} htmlFor="shelter-disease">ประเภทโรค <span className="text-red-600">*</span></label>
+                                <select id="shelter-disease" value={formData.disease_type} onChange={(e) => setFormData({ ...formData, disease_type: e.target.value })} className={inputClass} required>
+                                    <option value="">เลือกประเภทโรค</option>
+                                    {commonDiseases.map((d, i) => (
+                                        <option key={i} value={d.name}>{d.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                            <div>
+                                <label className={label} htmlFor="shelter-new">ผู้ป่วยใหม่</label>
+                                <input id="shelter-new" type="number" min="0" value={formData.new_cases} onChange={setNumber('new_cases')} className={inputClass} />
+                            </div>
+                            <div>
+                                <label className={label} htmlFor="shelter-recovered">หายแล้ว</label>
+                                <input id="shelter-recovered" type="number" min="0" value={formData.recovered} onChange={setNumber('recovered')} className={inputClass} />
+                            </div>
+                            <div>
+                                <label className={label} htmlFor="shelter-hospitalized">ส่งต่อ รพ.</label>
+                                <input id="shelter-hospitalized" type="number" min="0" value={formData.hospitalized} onChange={setNumber('hospitalized')} className={inputClass} />
+                            </div>
+                            <div>
+                                <label className={label} htmlFor="shelter-severity">ระดับความรุนแรง</label>
+                                <select id="shelter-severity" value={formData.severity} onChange={(e) => setFormData({ ...formData, severity: e.target.value })} className={inputClass}>
+                                    {Object.entries(SEVERITY).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={label} htmlFor="shelter-notes">หมายเหตุ</label>
+                            <textarea id="shelter-notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className={inputClass} rows="2" />
+                        </div>
+
+                        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                            <Button variant="secondary" onClick={() => setShowForm(false)}>ยกเลิก</Button>
+                            <Button type="submit" disabled={saving}>{saving ? "กำลังบันทึก..." : "บันทึก"}</Button>
+                        </div>
+                    </form>
+                </Panel>
+            )}
+
+            <Panel icon={CalendarDays} title={`รายงานวันที่ ${dateText}`} subtitle={`${reports.length} รายการ`}>
+                {loading ? (
+                    <div className="space-y-2 p-4" aria-busy="true">
+                        {[0, 1, 2].map((i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-100 motion-reduce:animate-none" />)}
                     </div>
-
-                    {loading ? (
-                        <div className="flex items-center justify-center h-48">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b border-[#0b4c86]"></div>
-                        </div>
-                    ) : reports.length === 0 ? (
-                        <div className="text-center py-12 text-slate-500">
-                            <span className="text-4xl block mb-2"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                            <p>ยังไม่มีรายงานโรคในวันนี้</p>
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-slate-100">
-                            {reports.map((report) => (
-                                <div key={report.id} className="p-4 hover:bg-slate-50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                                <span className="text-xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
-                                            </div>
-                                            <div>
-                                                <h4 className="font-semibold text-slate-800">{report.disease_type}</h4>
-                                                <p className="text-sm text-slate-500"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.sheltername}</p>
-                                            </div>
+                ) : reports.length === 0 ? (
+                    <div className="flex flex-col items-center px-6 py-10 text-center">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-400 ring-1 ring-slate-200"><ClipboardList className="h-6 w-6" aria-hidden="true" /></span>
+                        <p className="mt-3 font-semibold text-slate-900">ยังไม่มีรายงานโรคของวันนี้</p>
+                        {canEdit ? <p className="mt-1 text-sm text-slate-500">กด “เพิ่มรายงาน” ด้านบนเพื่อบันทึกผู้ป่วยในศูนย์พักพิง</p> : null}
+                    </div>
+                ) : (
+                    <ul className="divide-y divide-slate-100">
+                        {reports.map((report) => {
+                            const severity = SEVERITY[report.severity] || SEVERITY.low;
+                            return (
+                                <li key={report.id} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50/70">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-700 ring-1 ring-red-100"><Biohazard className="h-5 w-5" aria-hidden="true" /></span>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <h4 className="font-semibold text-slate-900">{report.disease_type}</h4>
+                                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${severity.className}`}>ความรุนแรง{severity.label}</span>
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-right">
-                                                <div className="flex items-center gap-3 text-sm">
-                                                    <span className="text-red-600">ป่วยใหม่: {report.new_cases}</span>
-                                                    <span className="text-green-600">หาย: {report.recovered}</span>
-                                                    <span className="text-orange-600">รพ.: {report.hospitalized}</span>
-                                                </div>
-                                                <span className={`inline-block px-2 py-0.5 rounded text-xs mt-1 ${severityColors[report.severity]}`}>
-                                                    {severityLabels[report.severity]}
-                                                </span>
-                                            </div>
-                                            {canEdit && <button
-                                                onClick={() => handleDelete(report.id)}
-                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                                            >
-                                                <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
-                                            </button>}
-                                        </div>
+                                        <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500"><Home className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{report.sheltername}</p>
+                                        {report.notes ? <p className="mt-1 text-sm text-slate-600">{report.notes}</p> : null}
+                                        <CaseCounts report={report} className="mt-2 grid sm:hidden" />
                                     </div>
-                                    {report.notes && (
-                                        <p className="mt-2 text-sm text-slate-600 ml-16"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.notes}</p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </>
+                                    <CaseCounts report={report} className="hidden sm:grid" />
+                                    {canEdit ? (
+                                        <button type="button" onClick={() => handleDelete(report.id)} className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-700" aria-label={`ลบรายงาน ${report.disease_type} ${report.sheltername}`}>
+                                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                        </button>
+                                    ) : null}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+            </Panel>
+        </div>
     );
 }

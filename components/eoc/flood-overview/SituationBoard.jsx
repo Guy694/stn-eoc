@@ -8,6 +8,7 @@ import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip } from "chart.js";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { areaLabel, flagMeta, stageMeta } from "@/lib/floodTriggers";
+import { Panel } from "@/components/common/ThemePanels";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineController, LineElement, PointElement, Tooltip, Legend);
 
@@ -108,24 +109,6 @@ function KpiCard({ kpi }) {
 }
 
 /** กล่องเนื้อหาธีมเดียวกัน: หัวข้อมีไอคอน + ลิงก์ด้านขวา */
-function Panel({ icon: Icon, title, subtitle, action, children, className = "", bodyClassName = "" }) {
-  return (
-    <section className={`overflow-hidden rounded-2xl border border-slate-200 bg-white font-[family-name:var(--font-kanit)] ${className}`}>
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          {Icon ? <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><Icon className="h-4 w-4" aria-hidden="true" /></span> : null}
-          <div className="min-w-0">
-            <h3 className="font-semibold text-slate-900">{title}</h3>
-            {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
-          </div>
-        </div>
-        {action}
-      </header>
-      <div className={bodyClassName}>{children}</div>
-    </section>
-  );
-}
-
 const panelLink = "inline-flex items-center gap-0.5 text-sm font-semibold text-[#0b4c86] hover:underline";
 
 function TrendChart({ trend }) {
