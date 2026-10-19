@@ -11,7 +11,6 @@ import {
   Bell,
   Bot,
   Building2,
-  CloudSun,
   Home,
   HousePlus,
   Map,
@@ -61,9 +60,8 @@ export default function PublicTopNavigation({ activeMenu, showBottomBar = false,
 
   const items = [
     { href: "/", label: "หน้าหลัก", shortLabel: "หน้าแรก", icon: Home, key: "home" },
-    // แผนที่ 2 หน้าแบ่งตามคำถาม: "ตอนนี้เกิดอะไรขึ้น" (สถานการณ์) กับ "จะเกิดอะไรขึ้น" (พยากรณ์และความเสี่ยง)
-    { href: "/public/disaster-map", label: "แผนที่สถานการณ์", shortLabel: "สถานการณ์", icon: Map, key: "map" },
-    { href: "/public/weather-watch", label: "พยากรณ์และความเสี่ยง", shortLabel: "พยากรณ์", icon: CloudSun, key: "weather" },
+    // แผนที่เดียว: สถานการณ์ตอนนี้ + ความเสี่ยง/พยากรณ์ (หน้า /public/disaster-map เดิมยังเปิดได้จากลิงก์ แต่ไม่อยู่ในเมนูแล้ว)
+    { href: "/public/weather-watch", label: "แผนที่สถานการณ์และความเสี่ยง", shortLabel: "แผนที่", icon: Map, key: "weather" },
     { href: "/public/my-risk", label: "บ้านฉันเสี่ยงไหม", shortLabel: "เสี่ยงไหม", icon: HousePlus, key: "myrisk" },
     // ศูนย์พักพิงแสดงเฉพาะช่วงที่เปิดศูนย์ปฏิบัติการ (EOC)
     ...(sheltersOpen ? [{ href: "/public/shelters", label: "ศูนย์พักพิง", shortLabel: "พักพิง", icon: Tent, key: "shelters" }] : []),

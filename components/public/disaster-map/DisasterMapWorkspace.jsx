@@ -766,11 +766,11 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
                   </div>
                 )}
                 <SidebarItem
-                  label="พยากรณ์และความเสี่ยง →"
+                  label="แผนที่สถานการณ์และความเสี่ยง →"
                   icon={CloudSun}
                   tone="from-sky-400 to-amber-400"
                   href="/stn-eoc/public/weather-watch/"
-                  title="เปิดหน้าพยากรณ์และความเสี่ยง: พยากรณ์ 7 วัน ความเสี่ยงรายอำเภอ และแผนที่ Windy"
+                  title="เปิดหน้าแผนที่สถานการณ์และความเสี่ยง: พยากรณ์ 7 วัน ความเสี่ยงรายอำเภอ และแผนที่ Windy"
                 />
               </div>
 

@@ -1,8 +1,8 @@
 import WeatherWatchWorkspace from "@/components/weather/WeatherWatchWorkspace";
 
 export const metadata = {
-  title: "พยากรณ์และความเสี่ยง | Satun Geo-EOC",
-  description: "พยากรณ์ฝน 7 วันและความเสี่ยงฝนตกหนัก น้ำท่วม ดินถล่ม และคลื่นลมทะเลรายอำเภอของจังหวัดสตูล พร้อมแผนที่พยากรณ์อากาศจาก Windy"
+  title: "แผนที่สถานการณ์และความเสี่ยง | Satun Geo-EOC",
+  description: "แผนที่สถานการณ์และความเสี่ยงของจังหวัดสตูล: ระดับน้ำ–ตลิ่ง ฝนวัดจริง สถานพยาบาล เส้นทาง/ถนน คลอง ความเสี่ยงน้ำท่วม ดินถล่ม คลื่นลมรายอำเภอ พยากรณ์ฝน 7 วัน และแผนที่ Windy"
 };
 
 export default function WeatherWatchPage() {

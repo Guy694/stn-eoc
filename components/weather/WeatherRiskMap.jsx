@@ -11,6 +11,7 @@ import WaterStationLayer from "@/components/weather/WaterStationLayer";
 import RainStationLayer from "@/components/weather/RainStationLayer";
 import WaterReportMarker from "@/components/public/map/WaterReportMarker";
 import ElevationLayer from "@/components/public/map/ElevationLayer";
+import SituationLayers from "@/components/public/map/SituationLayers";
 
 const CENTER = [6.86, 99.98];
 
@@ -74,7 +75,8 @@ export default function WeatherRiskMap({
   waterReports = [],
   elevationEnabled = false,
   colorBy = "risk",
-  pm25 = null
+  pm25 = null,
+  situationLayers = null
 }) {
   const byPm25 = colorBy === "pm25" && Boolean(pm25);
   const [boundaries, setBoundaries] = useState([]);
@@ -160,6 +162,9 @@ export default function WeatherRiskMap({
         ))}
       </Pane>
       {waterStations.length > 0 && <WaterStationLayer stations={waterStations} />}
+
+      {/* ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์) */}
+      {situationLayers ? <SituationLayers layers={situationLayers} /> : null}
 
       {userLocation && (
         <CircleMarker

@@ -33,7 +33,12 @@ import {
   Umbrella,
   Waves,
   Wind,
-  Cctv
+  Cctv,
+  Hospital,
+  Landmark,
+  MapPinned,
+  Route,
+  Signpost
 } from "lucide-react";
 import AIChatbot from "@/components/AIChatbot";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
@@ -64,6 +69,17 @@ const BASE_MAPS = [
   { key: "street", label: "แผนที่ถนน", icon: MapIcon, tone: "from-sky-400 to-blue-600" },
   { key: "satellite", label: "ภาพดาวเทียม", icon: Satellite, tone: "from-emerald-500 to-slate-700" },
   { key: "topo", label: "ภูมิประเทศ", icon: Layers, tone: "from-lime-400 to-green-700" }
+];
+
+// ชั้นข้อมูลสถานการณ์ตอนนี้ (เดิมอยู่ที่หน้าแผนที่สถานการณ์)
+const SITUATION_ITEMS = [
+  { key: "waterStations", label: "ระดับน้ำ–ตลิ่ง (ThaiWater)", icon: Gauge, tone: "from-sky-400 to-blue-700" },
+  { key: "rainStations", label: "ฝนวัดจริง (ThaiWater)", icon: Umbrella, tone: "from-sky-300 to-indigo-600" },
+  { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-emerald-400 to-green-600", title: "สีตามสถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
+  { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600", title: "รายงานการสัญจรที่เจ้าหน้าที่ตรวจแล้ว: เขียว ผ่านได้ · เหลือง ผ่านลำบาก · แดง ผ่านไม่ได้" },
+  { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "from-cyan-400 to-sky-600" },
+  { key: "tambon", label: "ขอบเขตตำบล", icon: MapPinned, tone: "from-emerald-300 to-teal-600" },
+  { key: "district", label: "ขอบเขตอำเภอ", icon: Landmark, tone: "from-slate-400 to-slate-700" }
 ];
 
 const EMERGENCY_CONTACTS = [
@@ -212,7 +228,12 @@ export default function WeatherWatchWorkspace() {
   const [flyTarget, setFlyTarget] = useState(null);
   const [selectedDay, setSelectedDay] = useState(0);
 
-  // หน้านี้ = พยากรณ์และความเสี่ยง (สิ่งที่จะเกิด) — สถานการณ์ตอนนี้ (ระดับน้ำ ฝนวัดจริง รายงานประชาชน เรดาร์) อยู่ที่แผนที่สถานการณ์
+  // หน้านี้ = แผนที่สถานการณ์และความเสี่ยง: ความเสี่ยง/พยากรณ์รายอำเภอ + ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์)
+  const [situationLayers, setSituationLayers] = useState({ waterStations: true, rainStations: true });
+  const toggleSituation = (key) => {
+    setViewMode("risk");
+    setSituationLayers((current) => ({ ...current, [key]: !current[key] }));
+  };
   const [elevationEnabled, setElevationEnabled] = useState(false);
   // สีพื้นที่อำเภอบนแผนที่: ความเสี่ยงน้ำท่วม/ดินถล่ม หรือ ฝุ่น PM2.5
   const [colorBy, setColorBy] = useState("risk");
@@ -362,7 +383,7 @@ export default function WeatherWatchWorkspace() {
     <div className="flex h-dvh flex-col overflow-hidden bg-slate-900">
       <PublicTopNavigation activeMenu="weather" showWeatherMenu bottomBar="off" />
 
-      <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่พยากรณ์และความเสี่ยง">
+      <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่สถานการณ์และความเสี่ยง">
         <div className={`absolute inset-0 ${isWindy ? "invisible" : ""}`} aria-hidden={isWindy}>
           <WeatherRiskMap
             districts={districts}
@@ -374,6 +395,7 @@ export default function WeatherWatchWorkspace() {
             elevationEnabled={elevationEnabled}
             colorBy={colorBy}
             pm25={pm25}
+            situationLayers={situationLayers}
           />
         </div>
         {isWindy && <WindyFrame src={windyUrl} />}
@@ -749,6 +771,21 @@ export default function WeatherWatchWorkspace() {
           <MenuToggle open={sidebarOpen} onToggle={() => setSidebarOpen((open) => !open)} controls="weather-layer-menu" />
           {sidebarOpen && (
             <nav id="weather-layer-menu" aria-label="ชั้นข้อมูลสภาพอากาศ" className="pointer-events-auto mt-3 min-h-0 w-[250px] overflow-y-auto overscroll-contain pb-2 pl-2 pr-0.5 [scrollbar-width:thin]">
+              <SectionTitle>สถานการณ์ตอนนี้</SectionTitle>
+              <div className="space-y-1.5">
+                {SITUATION_ITEMS.map((item) => (
+                  <SidebarItem
+                    key={item.key}
+                    label={item.label}
+                    icon={item.icon}
+                    tone={item.tone}
+                    title={item.title}
+                    active={!isWindy && Boolean(situationLayers[item.key])}
+                    onClick={() => toggleSituation(item.key)}
+                  />
+                ))}
+              </div>
+
               <SectionTitle>ความเสี่ยงรายอำเภอ</SectionTitle>
               <div className="space-y-1.5">
                 <SidebarItem
@@ -838,6 +875,16 @@ export default function WeatherWatchWorkspace() {
         {!isWindy && (
           <div className={`absolute bottom-[5.75rem] left-[384px] z-[650] hidden max-h-[calc(100%-13rem)] max-w-[360px] overflow-y-auto rounded-xl px-2.5 py-1.5 text-[11px] [scrollbar-width:thin] md:block ${GLASS}`}>
             {elevationEnabled && <ElevationLegend className="mb-1.5 max-w-[320px] border-b border-white/10 pb-1.5" />}
+            {situationLayers.hospitals || situationLayers.traffic ? (
+              <div className="mb-1.5 flex flex-wrap gap-x-2 gap-y-1 border-b border-white/10 pb-1.5">
+                {situationLayers.hospitals ? [["#15803d", "สถานพยาบาลเปิดปกติ"], ["#b45309", "จำกัดบริการ/ถนนท่วม"], ["#b91c1c", "ปิด/น้ำท่วม"]].map(([color, text]) => (
+                  <span key={text} className="flex items-center gap-1 font-bold"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />{text}</span>
+                )) : null}
+                {situationLayers.traffic ? [["#10B981", "ถนนผ่านได้"], ["#F59E0B", "ผ่านลำบาก"], ["#EF4444", "ผ่านไม่ได้"]].map(([color, text]) => (
+                  <span key={text} className="flex items-center gap-1 font-bold"><span className="h-2.5 w-2.5 rounded-full ring-1 ring-white/70" style={{ backgroundColor: color }} aria-hidden="true" />{text}</span>
+                )) : null}
+              </div>
+            ) : null}
             {colorBy === "pm25" ? <Pm25Legend /> : (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {RISK_LEVELS.map((level) => (
