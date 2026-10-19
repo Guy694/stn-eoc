@@ -9,7 +9,7 @@ import { formatEocDisplayName } from "@/lib/eocDisplay";
 const PublicIncidentMap = dynamic(() => import("@/components/PublicIncidentMap"), {
     ssr: false,
     loading: () => (
-        <div className="flex h-[620px] items-center justify-center rounded-xl border border-[#c9dcee] bg-white text-slate-500">
+        <div className="flex h-[620px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500">
             กำลังโหลดแผนที่...
         </div>
     )
@@ -81,7 +81,7 @@ export default function DiseaseMapPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-[1600px] space-y-4">
-                <section className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
+                <section className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>
                             <p className="text-sm font-bold text-[#0b4c86]">{eocName}</p>
@@ -118,7 +118,7 @@ export default function DiseaseMapPage() {
                     </div>
                 </section>
 
-                <section className="overflow-hidden rounded-xl border border-[#c9dcee] bg-white shadow-sm">
+                <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                     <PublicIncidentMap
                         disasterType="disease"
                         sessionId={activeSession?.id || null}

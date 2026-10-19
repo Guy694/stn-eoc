@@ -154,11 +154,11 @@ export default function TeamReportsWorkspace({ eocType = "flood" }) {
       {data && data.ready === false ? <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">ยังไม่ได้ติดตั้งตารางรายงานทีม ให้ผู้ดูแลระบบรัน <code>npm run db:migrate</code></p> : null}
       <ReadOnlyNotice message={perms.read_only_message} />
 
-      <div className="rounded-xl border border-[#c9dcee] bg-white px-2">
+      <div className="rounded-2xl border border-slate-200 bg-white px-2">
         <Tabs value={team} onChange={setTeam} items={TEAM_REPORT_KEYS.map((key) => ({ value: key, label: TEAM_REPORT_TYPES[key].label, count: summary[key]?.districtsToday.length || undefined }))} />
       </div>
 
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-3">
         <label className="text-sm font-semibold text-slate-700">
           วันที่
           <input type="date" max={today} value={selectedDate} onChange={(event) => setDate(event.target.value)} className={cn(inputClass, "mt-1 w-auto")} />

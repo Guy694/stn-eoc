@@ -69,7 +69,7 @@ export default function WaterAlertSettings() {
   const rainStates = (data?.states || []).filter((row) => row.kind === "rain");
   const rainActive = rainStates.filter((row) => row.state !== "normal");
   return (
-    <section className="rounded-xl border border-[#c9dcee] bg-white shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div className="min-w-0">
           <h3 className="font-black text-slate-900">แจ้งเตือนน้ำล้นตลิ่งและฝนหนัก (ThaiWater)</h3>

@@ -154,15 +154,15 @@ export default function CitizenDashboard() {
 
             {/* EOC Status Section */}
             <div>
-                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-800">
+                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-slate-800">
                     <AppIcon icon="siren" className="h-6 w-6 text-red-600" />
                     สถานะ EOC
                 </h3>
 
                 {loading ? (
-                    <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                    <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-gray-600">กำลังโหลดข้อมูล EOC...</p>
+                        <p className="text-slate-600">กำลังโหลดข้อมูล EOC...</p>
                     </div>
                 ) : activeEOCs.length > 0 ? (
                     <div className="space-y-4">
@@ -229,7 +229,7 @@ export default function CitizenDashboard() {
                         })}
                     </div>
                 ) : (
-                    <div className="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl shadow-md p-8 text-center">
+                    <div className="bg-gradient-to-r from-slate-400 to-slate-500 text-white rounded-xl shadow-md p-8 text-center">
                         <AppIcon icon="checkCircle" className="mx-auto mb-4 h-16 w-16" />
                         <h4 className="text-2xl font-bold mb-2">ไม่มี EOC ที่เปิดอยู่</h4>
                         <p className="opacity-90">ขณะนี้ไม่มีสถานการณ์ฉุกเฉิน</p>
@@ -239,7 +239,7 @@ export default function CitizenDashboard() {
 
             {/* Quick Actions */}
             <div>
-                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-800">
+                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-slate-800">
                     <AppIcon icon="activity" className="h-6 w-6 text-blue-600" />
                     เมนูด่วน
                 </h3>
@@ -251,8 +251,8 @@ export default function CitizenDashboard() {
                         {({ helpOpen }) => (
                             <>
                                 <AppIcon icon="siren" className="mx-auto mb-4 h-12 w-12 text-red-600 transition-transform group-hover:scale-110" />
-                                <h4 className="font-bold text-lg text-gray-800">ขอความช่วยเหลือ</h4>
-                                <p className="text-sm text-gray-600 mt-2">{helpOpen ? "ส่งคำขอถึงเจ้าหน้าที่ EOC" : "เปิดเมื่อมีเหตุการณ์ฉุกเฉิน • เหตุด่วนโทร 1669"}</p>
+                                <h4 className="font-bold text-lg text-slate-800">ขอความช่วยเหลือ</h4>
+                                <p className="text-sm text-slate-600 mt-2">{helpOpen ? "ส่งคำขอถึงเจ้าหน้าที่ EOC" : "เปิดเมื่อมีเหตุการณ์ฉุกเฉิน • เหตุด่วนโทร 1669"}</p>
                             </>
                         )}
                     </HelpRequestLink>
@@ -262,8 +262,8 @@ export default function CitizenDashboard() {
                         className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
                     >
                         <AppIcon icon="map" className="mx-auto mb-4 h-12 w-12 text-blue-600 transition-transform group-hover:scale-110" />
-                        <h4 className="font-bold text-lg text-gray-800">แผนที่ภัยพิบัติ</h4>
-                        <p className="text-sm text-gray-600 mt-2">ดูสถานการณ์ทั้งหมด</p>
+                        <h4 className="font-bold text-lg text-slate-800">แผนที่ภัยพิบัติ</h4>
+                        <p className="text-sm text-slate-600 mt-2">ดูสถานการณ์ทั้งหมด</p>
                     </Link>
 
                     <Link
@@ -271,56 +271,56 @@ export default function CitizenDashboard() {
                         className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 hover:border-green-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
                     >
                         <AppIcon icon="info" className="mx-auto mb-4 h-12 w-12 text-green-600 transition-transform group-hover:scale-110" />
-                        <h4 className="font-bold text-lg text-gray-800">ข้อมูลและคำแนะนำ</h4>
-                        <p className="text-sm text-gray-600 mt-2">คำแนะนำป้องกันภัย</p>
+                        <h4 className="font-bold text-lg text-slate-800">ข้อมูลและคำแนะนำ</h4>
+                        <p className="text-sm text-slate-600 mt-2">คำแนะนำป้องกันภัย</p>
                     </Link>
                 </div>
             </div>
 
             {/* My Reports History */}
             <div>
-                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-800">
+                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-slate-800">
                     <AppIcon icon="clipboard" className="h-6 w-6 text-blue-600" />
                     ประวัติการแจ้งเหตุของคุณ
                 </h3>
 
                 {reportsLoading ? (
-                    <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                    <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-gray-600">กำลังโหลดประวัติ...</p>
+                        <p className="text-slate-600">กำลังโหลดประวัติ...</p>
                     </div>
                 ) : myReports.length > 0 ? (
-                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             วันที่แจ้ง
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             ประเภท
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             สถานที่
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             สถานะ
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-white divide-y divide-slate-200">
                                     {paginatedReports.map((report) => {
                                         const badge = getStatusBadge(report.status);
                                         return (
-                                            <tr key={report.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <tr key={report.id} className="hover:bg-slate-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                                                     {formatDate(report.created_at)}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                                                     {report.disaster_type || report.report_type}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-900">
+                                                <td className="px-6 py-4 text-sm text-slate-900">
                                                     {report.village && `ม.${report.village} `}
                                                     {report.sub_district && `ต.${report.sub_district} `}
                                                     {report.district && `อ.${report.district}`}
@@ -345,10 +345,10 @@ export default function CitizenDashboard() {
                         />
                     </div>
                 ) : (
-                    <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                    <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h4 className="text-xl font-bold text-gray-800 mb-2">ยังไม่มีประวัติการแจ้งเหตุ</h4>
-                        <p className="text-gray-600 mb-4">คุณยังไม่เคยแจ้งเหตุภัยพิบัติ</p>
+                        <h4 className="text-xl font-bold text-slate-800 mb-2">ยังไม่มีประวัติการแจ้งเหตุ</h4>
+                        <p className="text-slate-600 mb-4">คุณยังไม่เคยแจ้งเหตุภัยพิบัติ</p>
                         <HelpRequestLink
                             className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all"
                             disabledClassName="cursor-not-allowed bg-slate-300! text-slate-600! shadow-none! hover:bg-slate-300!"

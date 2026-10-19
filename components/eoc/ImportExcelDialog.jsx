@@ -22,7 +22,7 @@ export function ImportExcelButton({ onClick, disabled }) {
 
 function ColumnGuide({ spec }) {
   return (
-    <details className="rounded-lg border border-slate-200 bg-white">
+    <details className="rounded-2xl border border-slate-200 bg-white">
       <summary className="cursor-pointer px-4 py-2.5 text-sm font-bold text-[#0b4c86]">ดูคอลัมน์และวิธีกรอก ({spec.columns.length} คอลัมน์)</summary>
       <div className="max-h-72 overflow-auto border-t border-slate-200">
         <table className="w-full text-left text-sm">
@@ -61,7 +61,7 @@ function CheckResult({ result }) {
       </p>
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {items.map((item) => (
-          <div key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+          <div key={item.label} className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
             <dt className="text-xs text-slate-500">{item.label}</dt>
             <dd className={`text-xl font-black tabular-nums ${item.tone}`}>{n(item.value)}</dd>
           </div>
@@ -86,7 +86,7 @@ function CheckResult({ result }) {
         </div>
       ) : null}
       {plan.skipped?.length ? (
-        <details className="rounded-lg border border-slate-200 bg-white text-sm">
+        <details className="rounded-2xl border border-slate-200 bg-white text-sm">
           <summary className="cursor-pointer px-3 py-2 font-semibold text-slate-700">แถวที่ระบบจะข้าม ({n(plan.skip)})</summary>
           <ul className="max-h-40 overflow-auto border-t border-slate-100 px-3 py-2 text-slate-600">
             {plan.skipped.map((item) => <li key={item.row}>แถว {item.row}: {item.reason}</li>)}

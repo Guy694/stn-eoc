@@ -126,7 +126,7 @@ export default function DiseaseManagementPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-7xl space-y-5">
-                <section className="rounded-xl border border-[#c9dcee] bg-gradient-to-r from-[#0b4c86] to-rose-600 p-5 text-white shadow-sm">
+                <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-5">
                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
                         <div>
                             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-teal-100">

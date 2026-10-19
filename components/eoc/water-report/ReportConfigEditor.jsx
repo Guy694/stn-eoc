@@ -42,7 +42,7 @@ export default function ReportConfigEditor({ config, stations = [], onSave, onCa
   const sortedStations = [...stations].sort((a, b) => `${a.river}${a.name}`.localeCompare(`${b.river}${b.name}`, "th"));
 
   return (
-    <div className="space-y-4 rounded-xl border border-[#c9dcee] bg-white p-4 print:hidden">
+    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
       <div>
         <h2 className="text-base font-bold text-[#083865]">ตั้งค่ารายงานแบบ 4 หัวข้อ</h2>
         <p className="text-xs text-slate-500">ค่าที่บันทึกใช้ร่วมกันทุกคนในทีม และใช้กับรายงานรอบถัดไป</p>

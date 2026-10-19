@@ -206,7 +206,7 @@ export default function ShelterDiseaseReports() {
         <>
             <div className="space-y-6">
                 {/* Header */}
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div className="bg-white rounded-2xl p-6 border border-slate-200">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center">
@@ -214,7 +214,7 @@ export default function ShelterDiseaseReports() {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-black text-slate-900">รายงานโรคในศูนย์พักพิง</h1>
-                                <p className="text-gray-600">บันทึกสถานการณ์โรครายวันในศูนย์พักพิงชั่วคราว</p>
+                                <p className="text-slate-600">บันทึกสถานการณ์โรครายวันในศูนย์พักพิงชั่วคราว</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
@@ -222,7 +222,7 @@ export default function ShelterDiseaseReports() {
                                 type="date"
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="text-gray-600 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                className="text-slate-600 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                             />
                             {canEdit && <button
                                 onClick={() => setShowForm(!showForm)}
@@ -240,9 +240,9 @@ export default function ShelterDiseaseReports() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                        <p className="text-gray-500 text-sm">รายงานทั้งหมด</p>
-                        <p className="text-3xl font-bold text-gray-800">{stats.total_reports || 0}</p>
+                    <div className="bg-white rounded-2xl p-5 border border-slate-200">
+                        <p className="text-slate-500 text-sm">รายงานทั้งหมด</p>
+                        <p className="text-3xl font-bold text-slate-800">{stats.total_reports || 0}</p>
                     </div>
                     <div className="bg-red-50 rounded-xl p-5 shadow-sm border border-red-100">
                         <p className="text-red-600 text-sm">ผู้ป่วยใหม่</p>
@@ -260,16 +260,16 @@ export default function ShelterDiseaseReports() {
 
                 {/* Add Form */}
                 {showForm && canEdit && (
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">เพิ่มรายงานโรค</h3>
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4">เพิ่มรายงานโรค</h3>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ศูนย์พักพิง *</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">ศูนย์พักพิง *</label>
                                     <select
                                         value={formData.shelter_id}
                                         onChange={(e) => setFormData({ ...formData, shelter_id: e.target.value })}
-                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                         required
                                     >
                                         <option value="">-- เลือกศูนย์พักพิง --</option>
@@ -279,11 +279,11 @@ export default function ShelterDiseaseReports() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทโรค *</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">ประเภทโรค *</label>
                                     <select
                                         value={formData.disease_type}
                                         onChange={(e) => setFormData({ ...formData, disease_type: e.target.value })}
-                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                         required
                                     >
                                         <option value="">-- เลือกประเภทโรค --</option>
@@ -296,41 +296,41 @@ export default function ShelterDiseaseReports() {
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ผู้ป่วยใหม่</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">ผู้ป่วยใหม่</label>
                                     <input
                                         type="number"
                                         min="0"
                                         value={formData.new_cases}
                                         onChange={(e) => setFormData({ ...formData, new_cases: parseInt(e.target.value) || 0 })}
-                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">หายแล้ว</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">หายแล้ว</label>
                                     <input
                                         type="number"
                                         min="0"
                                         value={formData.recovered}
                                         onChange={(e) => setFormData({ ...formData, recovered: parseInt(e.target.value) || 0 })}
-                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ส่งต่อ รพ.</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">ส่งต่อ รพ.</label>
                                     <input
                                         type="number"
                                         min="0"
                                         value={formData.hospitalized}
                                         onChange={(e) => setFormData({ ...formData, hospitalized: parseInt(e.target.value) || 0 })}
-                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ระดับความรุนแรง</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">ระดับความรุนแรง</label>
                                     <select
                                         value={formData.severity}
                                         onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
-                                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                        className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                     >
                                         <option value="low">ต่ำ</option>
                                         <option value="medium">ปานกลาง</option>
@@ -341,11 +341,11 @@ export default function ShelterDiseaseReports() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">หมายเหตุ</label>
                                 <textarea
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
+                                    className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40"
                                     rows="2"
                                 />
                             </div>
@@ -361,7 +361,7 @@ export default function ShelterDiseaseReports() {
                                 <button
                                     type="button"
                                     onClick={() => setShowForm(false)}
-                                    className="px-6 py-2 bg-gray-100 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                                    className="px-6 py-2 bg-slate-100 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                     ยกเลิก
                                 </button>
@@ -371,9 +371,9 @@ export default function ShelterDiseaseReports() {
                 )}
 
                 {/* Reports List */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-4 bg-gray-50 border-b border-gray-100">
-                        <h3 className="font-semibold text-gray-800">รายงานวันที่ {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h3>
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                    <div className="p-4 bg-slate-50 border-b border-slate-100">
+                        <h3 className="font-semibold text-slate-800">รายงานวันที่ {new Date(selectedDate).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h3>
                     </div>
 
                     {loading ? (
@@ -381,22 +381,22 @@ export default function ShelterDiseaseReports() {
                             <div className="animate-spin rounded-full h-12 w-12 border-b border-[#0b4c86]"></div>
                         </div>
                     ) : reports.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-slate-500">
                             <span className="text-4xl block mb-2"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <p>ยังไม่มีรายงานโรคในวันนี้</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gray-100">
+                        <div className="divide-y divide-slate-100">
                             {reports.map((report) => (
-                                <div key={report.id} className="p-4 hover:bg-gray-50">
+                                <div key={report.id} className="p-4 hover:bg-slate-50">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                                                 <span className="text-xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             </div>
                                             <div>
-                                                <h4 className="font-semibold text-gray-800">{report.disease_type}</h4>
-                                                <p className="text-sm text-gray-500"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.sheltername}</p>
+                                                <h4 className="font-semibold text-slate-800">{report.disease_type}</h4>
+                                                <p className="text-sm text-slate-500"><AppIcon icon="home" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.sheltername}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
@@ -419,7 +419,7 @@ export default function ShelterDiseaseReports() {
                                         </div>
                                     </div>
                                     {report.notes && (
-                                        <p className="mt-2 text-sm text-gray-600 ml-16"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.notes}</p>
+                                        <p className="mt-2 text-sm text-slate-600 ml-16"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {report.notes}</p>
                                     )}
                                 </div>
                             ))}

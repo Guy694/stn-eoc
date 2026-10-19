@@ -59,9 +59,9 @@ export default function LiveUpdatesFeed() {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="border border-slate-200 bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                     <span className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
                     รายงานล่าสุด
                 </h3>
@@ -77,29 +77,29 @@ export default function LiveUpdatesFeed() {
                 <div className="space-y-3">
                     {[1, 2, 3].map(i => (
                         <div key={i} className="animate-pulse flex gap-3 p-3">
-                            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                            <div className="w-12 h-12 bg-slate-200 rounded-lg"></div>
                             <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                                <div className="h-3 bg-slate-200 rounded w-1/2"></div>
                             </div>
                         </div>
                     ))}
                 </div>
             ) : reports.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">ไม่มีรายงานใหม่</p>
+                <p className="text-center text-slate-500 py-8">ไม่มีรายงานใหม่</p>
             ) : (
                 <div className="space-y-3">
                     {reports.map((report) => (
                         <div
                             key={report.id}
-                            className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100"
+                            className="flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors border border-slate-100"
                         >
                             <AppIcon icon={getIcon(report.reportType)} className="h-8 w-8 flex-shrink-0 text-blue-600" />
                             <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-800 truncate">
+                                <p className="font-semibold text-slate-800 truncate">
                                     {report.description || 'รายงานเหตุการณ์'}
                                 </p>
-                                <p className="text-sm text-gray-500 truncate">
+                                <p className="text-sm text-slate-500 truncate">
                                     {report.subDistrict}, {report.district} • {timeAgo(report.createdAt)}
                                 </p>
                             </div>

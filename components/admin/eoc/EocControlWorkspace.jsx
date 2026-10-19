@@ -184,7 +184,7 @@ export default function EocControlWorkspace() {
             {cards.map((card) => {
               const active = Boolean(card.status.is_active);
               return (
-                <article key={card.id} className={`flex flex-col rounded-xl border bg-white p-5 ${active ? "border-emerald-300 ring-1 ring-emerald-200" : "border-slate-200"}`}>
+                <article key={card.id} className={`flex flex-col rounded-2xl border bg-white p-5 ${active ? "border-emerald-300 ring-1 ring-emerald-200" : "border-slate-200"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="text-lg font-black text-slate-900">{card.name_th}</h2>

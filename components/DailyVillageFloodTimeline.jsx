@@ -346,11 +346,11 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         return (
             <div className="bg-[#edf5fc] border-2 border-[#c9dcee] rounded-lg p-6 text-center">
                 <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
+                <p className="text-slate-600">
                     เลือกปีและ เหตุการณ์ EOC จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
                 </p>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-slate-500 mt-2">
                     <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
                 </p>
             </div>
@@ -358,12 +358,12 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="border border-slate-200 bg-white rounded-2xl p-6">
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">
                     <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-slate-600">
                     ครั้งที่ {session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
                     {session.closed_at && ` ถึง ${new Date(session.closed_at).toLocaleDateString('th-TH')}`}
                     {' '}({dates.length} วัน)
@@ -373,14 +373,14 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             {/* Timeline Selector */}
             <div className="mb-6">
                     <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <label className="font-semibold text-gray-700">เลือกวันที่:</label>
+                        <label className="font-semibold text-slate-700">เลือกวันที่:</label>
                         <div className="flex gap-2 items-center">
-                            <label className="text-gray-700 flex items-center gap-2 text-sm">
+                            <label className="text-slate-700 flex items-center gap-2 text-sm">
                                 <span className="font-semibold">แผนที่พื้นหลัง</span>
                                 <select
                                     value={baseMap}
                                     onChange={(e) => setBaseMap(e.target.value)}
-                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-[#0b4c86]"
+                                    className="rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:border-[#0b4c86]"
                                 >
                                     {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
                                         <option key={key} value={key}>{layer.label}</option>
@@ -388,7 +388,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                 </select>
                             </label>
 
-                        <label className="text-gray-700 flex items-center gap-2 text-sm">
+                        <label className="text-slate-700 flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
                                 checked={showFacilities}
@@ -397,7 +397,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                             />
                             แสดงสถานพยาบาล
                         </label>
-                        <label className="text-gray-700 flex items-center gap-2 text-sm">
+                        <label className="text-slate-700 flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
                                 checked={showWaterways}
@@ -406,7 +406,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                             />
                             เส้นทางน้ำ/คลอง
                         </label>
-                        <label className="text-gray-700 flex items-center gap-2 text-sm">
+                        <label className="text-slate-700 flex items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
                                 checked={showHillshade}
@@ -446,7 +446,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                     onClick={() => setSelectedDate(date)}
                                     className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium transition-all ${isSelected
                                         ? 'bg-[#0b4c86] text-white shadow-lg'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                         }`}
                                 >
                                     <div className="text-sm">วันที่ {index + 1}</div>
@@ -465,13 +465,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             </div>
 
             {/* Map Display */}
-            <div ref={mapRef} className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-6">
+            <div ref={mapRef} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
                 {/* Header */}
                 <div className="text-center mb-4">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    <h3 className="text-2xl font-bold text-slate-800 mb-2">
                         สถานการณ์อุทกภัยน้ำท่วม จังหวัดสตูล (ระดับหมู่บ้าน)
                     </h3>
-                    <p className="text-lg text-gray-600">
+                    <p className="text-lg text-slate-600">
                         {selectedDate ? `ข้อมูลวันที่: ${selectedDate.toLocaleDateString('th-TH', {
                             weekday: 'long',
                             day: 'numeric',
@@ -485,13 +485,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                     <div className="flex items-center justify-center h-96">
                         <div className="text-center">
                             <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
-                            <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+                            <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                         </div>
                     </div>
                 ) : (
                     <>
                         {/* Leaflet Map */}
-                        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6" style={{ height: '600px' }}>
+                        <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden mb-6" style={{ height: '600px' }}>
                             <MapContainer
                                 center={[6.6238, 100.0673]}
                                 zoom={10}
@@ -707,22 +707,22 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
 
                         {/* Legend */}
                         < div className="mb-4" >
-                            <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่อุทกภัยน้ำท่วม:</h3>
+                            <h3 className="text-sm font-semibold text-slate-700 mb-2">สัญลักษณ์พื้นที่อุทกภัยน้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
                                 {Object.entries(LEGACY_FLOOD_LEVELS).filter(([key]) => key !== 'nodata').map(([key, meta]) => <LegendItem key={key} color={meta.color} label={meta.label} />)}
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded border-2 border-black" style={{ backgroundColor: 'transparent' }}></div>
-                                    <span className="text-sm text-gray-700">ไม่มีข้อมูล</span>
+                                    <span className="text-sm text-slate-700">ไม่มีข้อมูล</span>
                                 </div>
                             </div>
                         </div >
 
                         {showTambonBoundaries && (
                             <div className="mb-4">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
+                                <h3 className="text-sm font-semibold text-slate-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
                                 <div className="flex items-center gap-2">
                                     <div className="w-12 h-1 border-2 border-[#0b4c86]" style={{ borderStyle: 'dashed' }}></div>
-                                    <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
+                                    <span className="text-sm text-slate-700">เส้นขอบเขตตำบล</span>
                                 </div>
                             </div>
                         )
@@ -731,7 +731,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                         {
                             showFacilities && (
                                 <div className="mb-6">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์สถานพยาบาล:</h3>
+                                    <h3 className="text-sm font-semibold text-slate-700 mb-2">สัญลักษณ์สถานพยาบาล:</h3>
                                     <div className="flex justify-start gap-4 flex-wrap">
                                         <FacilityLegendItem color="#DC2626" label="รพ.ทั่วไป" />
                                         <FacilityLegendItem color="#F59E0B" label="รพ.ชุมชน" />
@@ -784,7 +784,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             {
                 !loading && floodData && floodData.villages && floodData.villages.length > 0 && (
                     <div className="mt-6">
-                        <h4 className="font-semibold text-gray-800 mb-3">
+                        <h4 className="font-semibold text-slate-800 mb-3">
                             รายละเอียดหมู่บ้านที่ได้รับผลกระทบ ({floodData.villages.length} หมู่บ้าน):
                         </h4>
                         <div className="flex flex-col gap-4">
@@ -792,7 +792,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                 {floodData.villages
                                     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                                     .map((village) => (
-                                        <div key={village.villcode} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <div key={village.villcode} className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors">
                                             <div
                                                 className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
                                                 style={{ backgroundColor: getFloodColor(village.level) }}
@@ -802,9 +802,9 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-medium text-gray-800 truncate">{village.name}</div>
-                                                <div className="text-sm text-gray-600">อ.{village.district}</div>
-                                                <div className="text-xs text-gray-500 flex items-center gap-2">
+                                                <div className="font-medium text-slate-800 truncate">{village.name}</div>
+                                                <div className="text-sm text-slate-600">อ.{village.district}</div>
+                                                <div className="text-xs text-slate-500 flex items-center gap-2">
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${village.level === 'severe' ? 'bg-red-200 text-red-800' :
                                                         village.level === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
                                                             'bg-green-200 text-green-800'
@@ -824,17 +824,17 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                     <button
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
-                                        className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                                        className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
                                     >
                                         &lt; ก่อนหน้า
                                     </button>
-                                    <span className="text-gray-700 font-medium">
+                                    <span className="text-slate-700 font-medium">
                                         หน้า {currentPage} / {Math.ceil(floodData.villages.length / ITEMS_PER_PAGE)}
                                     </span>
                                     <button
                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(floodData.villages.length / ITEMS_PER_PAGE), p + 1))}
                                         disabled={currentPage === Math.ceil(floodData.villages.length / ITEMS_PER_PAGE)}
-                                        className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                                        className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
                                     >
                                         ถัดไป &gt;
                                     </button>
@@ -852,10 +852,10 @@ function LegendItem({ color, label }) {
     return (
         <div className="flex items-center gap-2">
             <div
-                className="w-6 h-6 rounded border-2 border-gray-300"
+                className="w-6 h-6 rounded border-2 border-slate-300"
                 style={{ backgroundColor: color }}
             />
-            <span className="text-sm font-medium text-gray-700">{label}</span>
+            <span className="text-sm font-medium text-slate-700">{label}</span>
         </div>
     );
 }
@@ -871,7 +871,7 @@ function FacilityLegendItem({ color, label }) {
                     <path d="M5 0h2v5h5v2H7v5H5V7H0V5h5V0z" />
                 </svg>
             </div>
-            <span className="text-sm font-medium text-gray-700">{label}</span>
+            <span className="text-sm font-medium text-slate-700">{label}</span>
         </div>
     );
 }

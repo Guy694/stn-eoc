@@ -51,7 +51,7 @@ function Dashboard({ summary }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h3 className="text-base font-black text-slate-900">แยกตามประเภท</h3>
           <p className="text-xs text-slate-500">ผู้เปราะบางในหมู่บ้านที่ประสบภัย (จากทะเบียนกลาง)</p>
           <ul className="mt-4 space-y-3">
@@ -69,7 +69,7 @@ function Dashboard({ summary }) {
           </ul>
         </div>
 
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h3 className="text-base font-black text-slate-900">ต้องติดตามด่วน</h3>
           <p className="text-xs text-slate-500">หมู่บ้านที่ยังดูแลไม่ครบ เรียงตามจำนวนผู้ติดเตียง/พิการ/ตั้งครรภ์ที่รอ</p>
           {summary.urgent.length ? (
@@ -94,7 +94,7 @@ function Dashboard({ summary }) {
       </div>
 
       {summary.districts.length ? (
-        <div className="overflow-x-auto rounded-xl border border-[#c9dcee] bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <table className="w-full min-w-[36rem] text-left text-sm">
             <caption className="px-5 pt-4 text-left text-base font-black text-slate-900">แยกตามอำเภอ</caption>
             <thead className="text-xs text-slate-500">
@@ -331,7 +331,7 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
       {data?.summary && records.length ? <Dashboard summary={data.summary} /> : null}
 
       {!state.loading && data && !records.length ? (
-        <div className="rounded-xl border border-dashed border-[#c9dcee] bg-white px-6 py-10 text-center">
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
           <Users className="mx-auto h-10 w-10 text-slate-300" aria-hidden="true" />
           <h2 className="mt-3 text-lg font-black text-slate-900">ยังไม่มีหมู่บ้านที่ประสบภัยในเหตุการณ์นี้</h2>
           <p className="mx-auto mt-1 max-w-lg text-sm text-slate-600">

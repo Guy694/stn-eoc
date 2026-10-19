@@ -183,7 +183,7 @@ function ScenarioDetail({ result, area }) {
 function ScenarioControls({ value, onChange }) {
   const set = (key) => (next) => onChange({ ...value, [key]: next });
   return (
-    <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 lg:grid-cols-[1.3fr_1fr_1fr]">
+    <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 lg:grid-cols-[1.3fr_1fr_1fr]">
       <div>
         <label className="flex items-baseline justify-between text-sm font-bold text-slate-800" htmlFor="sc-rain">
           <span className="flex items-center gap-1.5"><CloudRain className="h-4 w-4 text-sky-600" aria-hidden="true" />ฝน 24 ชม.</span>
@@ -400,7 +400,7 @@ export default function AreaRiskWorkspace({ initialData = null, initialBacktest 
           </Toolbar>
 
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_420px]">
-            <div className="relative h-[55vh] min-h-[380px] overflow-hidden rounded-xl border border-slate-200 bg-white xl:h-[660px]">
+            <div className="relative h-[55vh] min-h-[380px] overflow-hidden rounded-2xl border border-slate-200 bg-white xl:h-[660px]">
               <AreaRiskMap geometry={data.geometry} colorOf={colorOf} labelOf={labelOf} selectedKey={selected} onSelect={setSelected} version={`${mode}-${district}-${dayIndex}-${JSON.stringify(scenario)}-${data.generated_at}`} patches={patches} />
               <div className="absolute bottom-2 left-2 z-[500] rounded-lg bg-white/95 p-2 text-[11px] shadow ring-1 ring-slate-200">
                 {(mode === "baseline" ? Object.values(BASELINE_LEVELS).reverse().map((item) => [BASE_COLORS[item.key], item.label]) : RISK_LEVELS.map((level) => [NOW_COLORS[level], RISK_META[level].label])).map(([color, label]) => (
@@ -410,8 +410,8 @@ export default function AreaRiskWorkspace({ initialData = null, initialBacktest 
               </div>
             </div>
             <div className="flex min-h-0 flex-col gap-3 xl:h-[660px]">
-              <section className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-slate-200 bg-white" aria-label="รายละเอียดตำบล">{detail}</section>
-              <section className="max-h-[280px] overflow-y-auto rounded-xl border border-slate-200 bg-white" aria-label="อันดับตำบล">
+              <section className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white" aria-label="รายละเอียดตำบล">{detail}</section>
+              <section className="max-h-[280px] overflow-y-auto rounded-2xl border border-slate-200 bg-white" aria-label="อันดับตำบล">
                 {modeCounts ? (
                   <p className="sticky top-0 flex flex-wrap gap-x-3 border-b border-slate-100 bg-white px-3 py-1.5 text-[11px] text-slate-600">
                     {[...RISK_LEVELS].reverse().map((level) => <span key={level}><span className="mr-1 inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: NOW_COLORS[level] }} />{RISK_META[level].label} {modeCounts[level] || 0}</span>)}
@@ -436,7 +436,7 @@ export default function AreaRiskWorkspace({ initialData = null, initialBacktest 
             </div>
           </div>
 
-          <details className="rounded-xl border border-slate-200 bg-white p-4">
+          <details className="rounded-2xl border border-slate-200 bg-white p-4">
             <summary className="flex cursor-pointer items-center gap-2 text-sm font-black text-slate-800"><Database className="h-4 w-4" aria-hidden="true" />แหล่งข้อมูลและวิธีคิด ({data.sources.filter((s) => s.status === "ok").length}/{data.sources.length} พร้อมใช้)</summary>
             <ul className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
               {data.sources.map((source) => (

@@ -139,10 +139,10 @@ export default function FloodMapPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="flex items-center justify-center min-h-screen bg-slate-50">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
-                    <p className="text-gray-600 text-lg">กำลังโหลดข้อมูล...</p>
+                    <p className="text-slate-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
         );
@@ -159,7 +159,7 @@ export default function FloodMapPage() {
                                 <span className="text-4xl"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 {mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}
                             </h1>
-                            <p className="text-gray-600">
+                            <p className="text-slate-600">
                                 {mode === "realtime"
                                     ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์"
                                     : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}
@@ -200,16 +200,16 @@ export default function FloodMapPage() {
                                     const isExpanded = expandedTeams[teamKey];
 
                                     return (
-                                        <div key={teamKey} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden">
+                                        <div key={teamKey} className="border border-slate-200 bg-white rounded-2xl hover:shadow-md transition-shadow overflow-hidden">
                                             <div className="p-4">
                                                 <div className="mb-2">
-                                                    <h3 className="font-bold text-gray-900 text-lg">
+                                                    <h3 className="font-bold text-slate-900 text-lg">
                                                         {team.team_name_th || team.team_name_en}
                                                     </h3>
                                                 </div>
 
                                                 {team.team_lead_name && (
-                                                    <p className="text-sm text-gray-700 mb-1">
+                                                    <p className="text-sm text-slate-700 mb-1">
                                                         <span className="font-medium">หัวหน้าทีม:</span> {team.team_lead_name}
                                                     </p>
                                                 )}
@@ -244,7 +244,7 @@ export default function FloodMapPage() {
                                                 </div>
 
                                                 {team.description && (
-                                                    <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                                                    <p className="text-xs text-slate-500 mt-2 line-clamp-2">
                                                         {team.description}
                                                     </p>
                                                 )}
@@ -252,17 +252,17 @@ export default function FloodMapPage() {
 
                                             {/* แสดงรายชื่อสมาชิกเมื่อ expand */}
                                             {isExpanded && team.members && team.members.length > 0 && (
-                                                <div className="border-t border-gray-100 bg-gray-50 p-3">
-                                                    <p className="text-xs font-medium text-gray-600 mb-2">รายชื่อสมาชิก:</p>
+                                                <div className="border-t border-slate-100 bg-slate-50 p-3">
+                                                    <p className="text-xs font-medium text-slate-600 mb-2">รายชื่อสมาชิก:</p>
                                                     <ul className="space-y-1">
                                                         {team.members.map((member, mIdx) => (
-                                                            <li key={mIdx} className="text-sm text-gray-700 flex items-center gap-2">
+                                                            <li key={mIdx} className="text-sm text-slate-700 flex items-center gap-2">
                                                                 <span className="w-1.5 h-1.5 bg-[#0b4c86] rounded-full"></span>
                                                                 {member.given_name && member.family_name
                                                                     ? `${member.given_name} ${member.family_name}`
                                                                     : member.full_name || member.name || `สมาชิก ${mIdx + 1}`}
                                                                 {member.role_in_team && (
-                                                                    <span className="text-xs text-gray-500">({member.role_in_team})</span>
+                                                                    <span className="text-xs text-slate-500">({member.role_in_team})</span>
                                                                 )}
                                                             </li>
                                                         ))}
@@ -287,7 +287,7 @@ export default function FloodMapPage() {
                             onClick={() => setMode("realtime")}
                             className={`px-6 py-3 rounded-lg font-medium transition-all ${mode === "realtime"
                                 ? "bg-[#0b4c86] text-white shadow-lg"
-                                : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                                 }`}
                         >
                             <AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โหมด Realtime
@@ -296,7 +296,7 @@ export default function FloodMapPage() {
                             onClick={() => setMode("historical")}
                             className={`px-6 py-3 rounded-lg font-medium transition-all ${mode === "historical"
                                 ? "bg-[#0b4c86] text-white shadow-lg"
-                                : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                                 }`}
                         >
                             <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> โหมดข้อมูลย้อนหลัง
@@ -328,12 +328,12 @@ export default function FloodMapPage() {
 
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
-                            <div className="bg-white rounded-lg shadow-md p-6">
-                                <h2 className=" text-center text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                                <h2 className=" text-center text-xl md:text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <span className="text-3xl"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
-                                <p className="text-gray-600 mb-4">
+                                <p className="text-slate-600 mb-4">
                                     แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
                                 </p>
                                 <PublicIncidentMap
@@ -377,16 +377,16 @@ export default function FloodMapPage() {
                                             const isExpanded = expandedTeams[teamKey];
 
                                             return (
-                                                <div key={teamKey} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden">
+                                                <div key={teamKey} className="border border-slate-200 bg-white rounded-2xl hover:shadow-md transition-shadow overflow-hidden">
                                                     <div className="p-4">
                                                         <div className="mb-2">
-                                                            <h3 className="font-bold text-gray-900 text-lg">
+                                                            <h3 className="font-bold text-slate-900 text-lg">
                                                                 {team.team_name_th || team.team_name_en}
                                                             </h3>
                                                         </div>
 
                                                         {team.team_lead_name && (
-                                                            <p className="text-sm text-gray-700 mb-1">
+                                                            <p className="text-sm text-slate-700 mb-1">
                                                                 <span className="font-medium">หัวหน้าทีม:</span> {team.team_lead_name}
                                                             </p>
                                                         )}
@@ -421,7 +421,7 @@ export default function FloodMapPage() {
                                                         </div>
 
                                                         {team.description && (
-                                                            <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                                                            <p className="text-xs text-slate-500 mt-2 line-clamp-2">
                                                                 {team.description}
                                                             </p>
                                                         )}
@@ -429,17 +429,17 @@ export default function FloodMapPage() {
 
                                                     {/* แสดงรายชื่อสมาชิกเมื่อ expand */}
                                                     {isExpanded && team.members && team.members.length > 0 && (
-                                                        <div className="border-t border-gray-100 bg-gray-50 p-3">
-                                                            <p className="text-xs font-medium text-gray-600 mb-2">รายชื่อสมาชิก:</p>
+                                                        <div className="border-t border-slate-100 bg-slate-50 p-3">
+                                                            <p className="text-xs font-medium text-slate-600 mb-2">รายชื่อสมาชิก:</p>
                                                             <ul className="space-y-1">
                                                                 {team.members.map((member, mIdx) => (
-                                                                    <li key={mIdx} className="text-sm text-gray-700 flex items-center gap-2">
+                                                                    <li key={mIdx} className="text-sm text-slate-700 flex items-center gap-2">
                                                                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
                                                                         {member.given_name && member.family_name
                                                                             ? `${member.given_name} ${member.family_name}`
                                                                             : member.full_name || member.name || `สมาชิก ${mIdx + 1}`}
                                                                         {member.role_in_team && (
-                                                                            <span className="text-xs text-gray-500">({member.role_in_team})</span>
+                                                                            <span className="text-xs text-slate-500">({member.role_in_team})</span>
                                                                         )}
                                                                     </li>
                                                                 ))}
@@ -477,12 +477,12 @@ export default function FloodMapPage() {
 
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
-                            <div className="bg-white rounded-lg shadow-md p-6">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                                <h2 className="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <span className="text-3xl"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
-                                <p className="text-gray-600 mb-4">
+                                <p className="text-slate-600 mb-4">
                                     แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
                                 </p>
                                 <PublicIncidentMap

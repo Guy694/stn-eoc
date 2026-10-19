@@ -99,7 +99,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
         <div className="grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end">
           <Field label="วันที่รายงาน">
             <input type="date" className={inputClass} value={date} max={today} onChange={(event) => setDate(event.target.value || today)} />
@@ -136,7 +136,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
       ) : !rows.length ? (
         <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">หน่วยบริการนี้ยังไม่มีรายการในคลัง — เพิ่มรายการหรือนำเข้ายอดตั้งต้นก่อน</p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-[#c9dcee] bg-white">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
             <p className="text-sm text-slate-700">
               กรอกแล้ว <b>{filled}/{rows.length}</b> รายการ

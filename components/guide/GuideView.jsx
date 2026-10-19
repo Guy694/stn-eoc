@@ -51,7 +51,7 @@ function Block({ block }) {
   }
   if (block.kind === "faq") {
     return (
-      <details className="group rounded-lg border border-slate-200 bg-white px-3 py-2 open:bg-slate-50/60">
+      <details className="group rounded-2xl border border-slate-200 bg-white px-3 py-2 open:bg-slate-50/60">
         <summary className="cursor-pointer list-none font-semibold text-slate-900 marker:hidden">
           <span className="mr-1.5 text-[#0b4c86] transition group-open:rotate-90 inline-block">›</span>{block.q}
         </summary>

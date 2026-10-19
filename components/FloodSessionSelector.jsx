@@ -178,21 +178,21 @@ export default function FloodSessionSelector({
 
     // โหมดข้อมูลย้อนหลัง
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">
                 <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลย้อนหลัง
             </h3>
 
             {/* เลือกปี */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                         เลือกปี
                     </label>
                     <select
                         value={selectedYear || ''}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-transparent text-gray-700"
+                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-transparent text-slate-700"
                     >
                         <option value="">-- เลือกปี --</option>
                         {years.map(year => (
@@ -206,7 +206,7 @@ export default function FloodSessionSelector({
                 {/* เลือกเหตุการณ์ */}
                 {sessions.length > 0 ? (
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
                             เลือกเหตุการณ์ EOC ({sessions.length} เหตุการณ์)
                         </label>
                         <select
@@ -215,7 +215,7 @@ export default function FloodSessionSelector({
                                 const session = sessions.find(s => s.id === parseInt(e.target.value));
                                 handleSessionChange(session);
                             }}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-transparent text-gray-700"
+                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 focus:border-transparent text-slate-700"
                         >
                             <option value="">-- เลือกเหตุการณ์ --</option>
                             {sessions.map(session => (
@@ -228,9 +228,9 @@ export default function FloodSessionSelector({
                     </div>
                 ) : selectedYear && !loading && (
                     <div className="md:col-span-2">
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                            <p className="text-gray-600"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่พบเหตุการณ์ EOC ในปี {selectedYear + 543}</p>
-                            <p className="text-sm text-gray-500 mt-1">ลองเลือกปีอื่น</p>
+                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
+                            <p className="text-slate-600"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่พบเหตุการณ์ EOC ในปี {selectedYear + 543}</p>
+                            <p className="text-sm text-slate-500 mt-1">ลองเลือกปีอื่น</p>
                         </div>
                     </div>
                 )}
@@ -240,7 +240,7 @@ export default function FloodSessionSelector({
             {loading ? (
                 <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-b border-[#0b4c86] mx-auto mb-4"></div>
-                    <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+                    <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : yearSummary && (
                 <div className="bg-[#edf5fc] rounded-lg p-4">
@@ -285,22 +285,22 @@ export default function FloodSessionSelector({
 
             {/* แสดงรายละเอียดเหตุการณ์ที่เลือก */}
             {selectedSession && (
-                <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="mt-4 bg-slate-50 rounded-lg p-4 border border-slate-200">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
-                            <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
                                 {selectedSession.status === 'active' ? (
                                     <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
                                         <AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กำลังดำเนินการ
                                     </span>
                                 ) : (
-                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
+                                    <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full font-medium">
                                         <AppIcon icon="check" className="inline-block h-4 w-4" /> ปิดแล้ว
                                     </span>
                                 )}
-                                <span className="text-gray-700">เหตุการณ์ EOC ที่ {selectedSession.session_number}</span>
+                                <span className="text-slate-700">เหตุการณ์ EOC ที่ {selectedSession.session_number}</span>
                             </h4>
-                            <div className="space-y-1 text-sm text-gray-600">
+                            <div className="space-y-1 text-sm text-slate-600">
                                 <p><strong>เปิด:</strong> {formatDate(selectedSession.opened_at)} โดย {selectedSession.opened_by_name}</p>
                                 {selectedSession.closed_at && (
                                     <p><strong>ปิด:</strong> {formatDate(selectedSession.closed_at)} โดย {selectedSession.closed_by_name}</p>
@@ -315,13 +315,13 @@ export default function FloodSessionSelector({
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-center ml-4">
-                            <div className="bg-white rounded p-2 border border-gray-200">
+                            <div className="bg-white rounded p-2 border border-slate-200">
                                 <p className="text-lg font-bold text-[#0b4c86]">{selectedSession.total_activities || 0}</p>
-                                <p className="text-xs text-gray-600">กิจกรรม</p>
+                                <p className="text-xs text-slate-600">กิจกรรม</p>
                             </div>
-                            <div className="bg-white rounded p-2 border border-gray-200">
+                            <div className="bg-white rounded p-2 border border-slate-200">
                                 <p className="text-lg font-bold text-green-600">{selectedSession.total_data_entries || 0}</p>
-                                <p className="text-xs text-gray-600">บันทึก</p>
+                                <p className="text-xs text-slate-600">บันทึก</p>
                             </div>
                         </div>
                     </div>

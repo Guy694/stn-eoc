@@ -37,16 +37,16 @@ export default function HelpButton() {
                             <Link
                                 key={index}
                                 href={link.href}
-                                className="block p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                                className="block p-3 hover:bg-slate-50 rounded-lg transition-colors"
                                 onClick={() => setIsOpen(false)}
                             >
                                 <div className="flex items-center gap-3">
                                     <AppIcon icon={link.icon} className="h-6 w-6 text-blue-600" />
                                     <div>
-                                        <div className="font-semibold text-gray-800 text-sm">
+                                        <div className="font-semibold text-slate-800 text-sm">
                                             {link.title}
                                         </div>
-                                        <div className="text-xs text-gray-500">
+                                        <div className="text-xs text-slate-500">
                                             {link.description}
                                         </div>
                                     </div>
@@ -55,18 +55,18 @@ export default function HelpButton() {
                         ))}
 
                         {/* Contact */}
-                        <div className="pt-3 border-t border-gray-200">
+                        <div className="pt-3 border-t border-slate-200">
                             <a
                                 href="tel:074-711-555"
-                                className="block p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                                className="block p-3 hover:bg-slate-50 rounded-lg transition-colors"
                             >
                                 <div className="flex items-center gap-3">
                                     <AppIcon icon="phone" className="h-6 w-6 text-red-600" />
                                     <div>
-                                        <div className="font-semibold text-gray-800 text-sm">
+                                        <div className="font-semibold text-slate-800 text-sm">
                                             ติดต่อฉุกเฉิน
                                         </div>
-                                        <div className="text-xs text-gray-500">
+                                        <div className="text-xs text-slate-500">
                                             074-711-555
                                         </div>
                                     </div>
@@ -95,9 +95,9 @@ export default function HelpButton() {
 
             {/* Tooltip */}
             {!isOpen && (
-                <div className="fixed bottom-6 right-24 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg z-40 animate-fade-in-up pointer-events-none">
+                <div className="fixed bottom-6 right-24 bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg z-40 animate-fade-in-up pointer-events-none">
                     ต้องการความช่วยเหลือ?
-                    <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                    <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
                 </div>
             )}
         </>

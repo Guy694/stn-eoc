@@ -62,12 +62,12 @@ export default function Breadcrumb() {
     }
 
     return (
-        <nav className="bg-white border-b border-gray-200 px-6 py-3">
+        <nav className="bg-white border-b border-slate-200 px-6 py-3">
             <ol className="flex items-center space-x-2 text-sm">
                 {breadcrumbs.map((crumb, index) => (
                     <li key={crumb.href} className="flex items-center">
                         {index > 0 && (
-                            <AppIcon icon="chevronRight" className="mx-2 h-4 w-4 text-gray-400" />
+                            <AppIcon icon="chevronRight" className="mx-2 h-4 w-4 text-slate-400" />
                         )}
                         {crumb.isLast ? (
                             <span className="font-semibold text-green-600">
@@ -76,7 +76,7 @@ export default function Breadcrumb() {
                         ) : (
                             <Link
                                 href={crumb.href}
-                                className="text-gray-600 hover:text-green-600 transition-colors"
+                                className="text-slate-600 hover:text-green-600 transition-colors"
                             >
                                 {crumb.label}
                             </Link>

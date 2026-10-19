@@ -34,7 +34,7 @@ function PlanPreview({ plan }) {
   const s = plan.summary;
   const rows = [...plan.rows].sort((a, b) => GROUP_ORDER.indexOf(a.action) - GROUP_ORDER.indexOf(b.action) || String(a.name).localeCompare(String(b.name)));
   return (
-    <section className="space-y-3 rounded-lg border border-[#c9dcee] bg-white p-3" aria-label="ผลการตรวจก่อนบันทึก">
+    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3" aria-label="ผลการตรวจก่อนบันทึก">
       <h3 className="text-base font-bold text-[#083865]">ผลการตรวจ{plan.date ? ` · ยอด ณ สิ้นวันที่ ${shortThaiDate(plan.date)}` : ""}</h3>
       {plan.blocking ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" role="alert">{plan.blocking}</p> : null}
       <p className="text-sm text-slate-700">

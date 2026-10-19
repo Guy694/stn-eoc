@@ -86,7 +86,7 @@ export default function ProfilePage() {
         <EOCLayout>
             <AdminPage title="โปรไฟล์ของฉัน" description="ข้อมูลส่วนตัวที่แสดงในระบบ สิทธิ์การใช้งาน และการรับแจ้งเตือน">
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                    <section className="overflow-hidden rounded-xl border border-[#c9dcee] bg-white shadow-sm" aria-labelledby="profile-name">
+                    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white" aria-labelledby="profile-name">
                         <div className="flex flex-wrap items-center gap-4 border-b border-slate-100 bg-[#edf5fc] px-5 py-5 sm:px-6">
                             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#0b4c86] text-2xl font-black text-white" aria-hidden="true">{initial}</div>
                             <div className="min-w-0 flex-1">
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                     </section>
 
                     <div className="space-y-4">
-                        <section className="rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm" aria-labelledby="perm-title">
+                        <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="perm-title">
                             <h3 id="perm-title" className="font-black text-slate-900">สิทธิ์การใช้งาน</h3>
                             <p className="mt-0.5 text-xs text-slate-500">ตามบทบาท {user.roleDisplay || user.role} — ขอเปลี่ยนบทบาทได้ที่ผู้ดูแลระบบ</p>
                             <ul className="mt-3 space-y-1.5">
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                             </ul>
                         </section>
 
-                        <Link href="/settings" className="flex items-center gap-3 rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm hover:bg-[#edf5fc]">
+                        <Link href="/settings" className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 hover:bg-[#edf5fc]">
                             <KeyRound className="h-5 w-5 shrink-0 text-[#0b4c86]" aria-hidden="true" />
                             <span>
                                 <span className="block font-black text-slate-900">เปลี่ยนรหัสผ่าน</span>

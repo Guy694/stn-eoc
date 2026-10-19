@@ -152,7 +152,7 @@ export default function PublishPanel({ report, canEdit, onChanged }) {
             <p className="mt-1 text-xs text-slate-500">เลือกเฉพาะรูปที่ไม่เห็นใบหน้า ทะเบียนรถ หรือเลขที่บ้าน ระบบลบพิกัดในไฟล์ให้อัตโนมัติ{published && report.public_photo_path ? " · ตอนนี้ใช้รูปอยู่ 1 รูป" : ""}</p>
           </fieldset>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm">
             <div className="text-xs font-semibold text-slate-500">ตัวอย่างที่ประชาชนจะเห็น</div>
             <div className="mt-1 font-black text-slate-900">{title || "—"}</div>
             {text ? <div className="text-slate-700">{text}</div> : null}

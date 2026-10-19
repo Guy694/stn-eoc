@@ -36,7 +36,7 @@ export default function AlertsPanel({ eocType = "flood" }) {
   const data = state.data;
   if (!data?.session) return null;
   return (
-    <section className="rounded-xl border border-[#c9dcee] bg-white p-4 print:hidden">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
       {notice}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>

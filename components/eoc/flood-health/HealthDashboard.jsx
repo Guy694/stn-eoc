@@ -45,7 +45,7 @@ const ACTION_STYLE = {
 
 function Panel({ title, subtitle, children, right }) {
   return (
-    <section className="rounded-xl border border-[#c9dcee] bg-white p-5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-base font-black text-slate-900">{title}</h3>

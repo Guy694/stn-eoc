@@ -31,7 +31,7 @@ export default function EventBar() {
   const items = definition.items({ sessionId: status?.session_id || null });
 
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border border-[#c9dcee] bg-white shadow-sm" data-testid="event-bar">
+    <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white" data-testid="event-bar">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-[#0b4c86] px-4 py-2.5 text-white">
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${open ? "bg-emerald-400/90 text-emerald-950" : "bg-white/20 text-white"}`}>
           <span className={`h-2 w-2 rounded-full ${open ? "bg-emerald-900" : "bg-slate-300"}`} aria-hidden="true" />

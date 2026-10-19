@@ -22,7 +22,7 @@ export default function TambonCoverage({ rows, summary, loading, canOperate, onP
   }, [rows, showComplete]);
 
   return (
-    <section aria-labelledby="coverage-title" className="rounded-xl border border-slate-200 bg-white">
+    <section aria-labelledby="coverage-title" className="rounded-2xl border border-slate-200 bg-white">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
         <div>
           <h2 id="coverage-title" className="text-base font-black text-slate-900">ความครบของรายงานรายตำบล</h2>

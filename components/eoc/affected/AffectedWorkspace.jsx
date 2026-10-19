@@ -81,7 +81,7 @@ function DistrictTable({ rows, prefix, title }) {
   const columns = [...IMPACT_GROUPS.flatMap((group) => IMPACT_FIELDS.map(([field]) => `${group.key}_${field}`)), ...ASSIST_FIELDS.map(([key]) => key)];
   const critical = (key) => /_(deaths|missing)$/.test(key);
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 px-4 py-3">
         <h2 className="font-black text-slate-900">สรุปรายอำเภอ</h2>
         <span className="text-xs text-slate-500">{title}</span>
@@ -147,7 +147,7 @@ function CasualtyChart({ rows, prefix }) {
     }
   };
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4">
       <h2 className="font-black text-slate-900">เสียชีวิต สูญหาย บาดเจ็บ รายอำเภอ</h2>
       <p className="text-xs text-slate-500">รวมประชาชน อสม. และบุคลากร · ยอดทรัพย์สินเสียหายดูในตารางสรุป</p>
       <div className="mt-3 h-64"><Bar data={data} options={options} /></div>
@@ -302,7 +302,7 @@ export default function AffectedWorkspace() {
       <ReadOnlyNotice message={state.permissions.can_edit ? null : state.permissions.read_only_message} />
 
       {/* ช่วงเวลา */}
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-3">
         <div role="group" aria-label="รูปแบบช่วงเวลา" className="inline-flex overflow-hidden rounded-lg border border-slate-300">
           {[["range", "สะสมตามช่วง"], ["daily", "รายวัน"]].map(([key, label]) => (
             <button key={key} type="button" aria-pressed={mode === key} onClick={() => setMode(key)}

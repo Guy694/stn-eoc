@@ -57,7 +57,7 @@ export default function DiseaseDailyRiskPage() {
             'medium': 'bg-yellow-100 border-yellow-400 text-yellow-800',
             'low': 'bg-green-100 border-green-400 text-green-800'
         };
-        return colors[severity] || 'bg-gray-100 border-gray-400 text-gray-800';
+        return colors[severity] || 'bg-slate-100 border-slate-400 text-slate-800';
     };
 
     const getSeverityIcon = (severity) => {
@@ -84,7 +84,7 @@ export default function DiseaseDailyRiskPage() {
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
-                        <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+                        <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -96,7 +96,7 @@ export default function DiseaseDailyRiskPage() {
             <EOCLayout>
                 <div className="mx-auto max-w-7xl">
                     <div className="text-center py-12">
-                        <p className="text-gray-600">ไม่พบข้อมูล</p>
+                        <p className="text-slate-600">ไม่พบข้อมูล</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -134,13 +134,13 @@ export default function DiseaseDailyRiskPage() {
                         <span className="text-3xl md:text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         สรุปสถานการณ์โรครายวัน
                     </h1>
-                    <p className="text-gray-600">แสดงข้อมูลวันที่: {formatDate}</p>
+                    <p className="text-slate-600">แสดงข้อมูลวันที่: {formatDate}</p>
                 </div>
 
                 {/* Date Selector */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
                     <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium text-slate-700">
                             เลือกวันที่ต้องการดู:
                         </label>
                         <button
@@ -155,13 +155,13 @@ export default function DiseaseDailyRiskPage() {
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         max={new Date().toISOString().split('T')[0]}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 text-gray-700 w-full md:w-auto"
+                        className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 text-slate-700 w-full md:w-auto"
                     />
 
                     {/* Available Dates List */}
                     {showAllDates && availableDates.length > 0 && (
                         <div className="mt-4 border-t pt-4">
-                            <h3 className="font-semibold text-gray-700 mb-3"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
+                            <h3 className="font-semibold text-slate-700 mb-3"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 max-h-96 overflow-y-auto">
                                 {availableDates.map((date, index) => {
                                     const dateObj = new Date(date);
@@ -181,7 +181,7 @@ export default function DiseaseDailyRiskPage() {
                                             }}
                                             className={`p-3 rounded-lg text-sm transition-all ${isSelected
                                                 ? 'bg-[#0b4c86] text-white shadow-lg font-bold'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                 }`}
                                         >
                                             <div className="font-medium">วันที่ {availableDates.length - index}</div>
@@ -196,7 +196,7 @@ export default function DiseaseDailyRiskPage() {
 
                 {/* Active EOC Session Info */}
                 {data.activeSession && (
-                    <div className="bg-gradient-to-r from-[#0b4c86] to-pink-500 text-white rounded-lg shadow-lg p-4 mb-6 md:p-6">
+                    <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-4 mb-6 md:p-6">
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div className="min-w-0">
                                 <h3 className="text-lg font-bold mb-2 md:text-xl">
@@ -268,8 +268,8 @@ export default function DiseaseDailyRiskPage() {
                 </div>
 
                 {/* Disease Summary */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-6 md:p-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">สรุปตามประเภทโรค</h2>
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6 md:p-6">
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">สรุปตามประเภทโรค</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {data.diseaseSummary?.map((item, index) => (
                             <div
@@ -292,58 +292,58 @@ export default function DiseaseDailyRiskPage() {
                 </div>
 
                 {/* District Summary */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-6 md:p-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">สรุปตามอำเภอ</h2>
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6 md:p-6">
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">สรุปตามอำเภอ</h2>
                     <div className="grid gap-2 md:hidden">
                         {data.districtSummary?.map((district, index) => (
-                            <div key={index} className="rounded-lg border border-gray-200 bg-white p-3">
-                                <div className="font-bold text-gray-900">{district.district}</div>
+                            <div key={index} className="rounded-2xl border border-slate-200 bg-white p-3">
+                                <div className="font-bold text-slate-900">{district.district}</div>
                                 <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                                    <div className="rounded bg-gray-50 p-2"><div className="text-xs text-gray-500">ประเภทโรค</div><div className="font-bold text-gray-800">{district.diseases_count}</div></div>
-                                    <div className="rounded bg-gray-50 p-2"><div className="text-xs text-gray-500">หน่วยบริการ</div><div className="font-bold text-gray-800">{district.facilities_count}</div></div>
-                                    <div className="rounded bg-gray-50 p-2"><div className="text-xs text-gray-500">ผู้ป่วย</div><div className="font-bold text-gray-800">{(district.total_patients || 0).toLocaleString()}</div></div>
-                                    <div className="rounded bg-gray-50 p-2"><div className="text-xs text-gray-500">รายงาน</div><div className="font-bold text-gray-800">{district.report_count}</div></div>
+                                    <div className="rounded bg-slate-50 p-2"><div className="text-xs text-slate-500">ประเภทโรค</div><div className="font-bold text-slate-800">{district.diseases_count}</div></div>
+                                    <div className="rounded bg-slate-50 p-2"><div className="text-xs text-slate-500">หน่วยบริการ</div><div className="font-bold text-slate-800">{district.facilities_count}</div></div>
+                                    <div className="rounded bg-slate-50 p-2"><div className="text-xs text-slate-500">ผู้ป่วย</div><div className="font-bold text-slate-800">{(district.total_patients || 0).toLocaleString()}</div></div>
+                                    <div className="rounded bg-slate-50 p-2"><div className="text-xs text-slate-500">รายงาน</div><div className="font-bold text-slate-800">{district.report_count}</div></div>
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="hidden overflow-x-auto md:block">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead className="bg-slate-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                         อำเภอ
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                                         ประเภทโรค
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                                         หน่วยบริการ
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                                         ผู้ป่วย
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                                         รายงาน
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white divide-y divide-slate-200">
                                 {data.districtSummary?.map((district, index) => (
-                                    <tr key={index} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <tr key={index} className="hover:bg-slate-50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                                             {district.district}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-center">
                                             {district.diseases_count}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-center">
                                             {district.facilities_count}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-center">
                                             {(district.total_patients || 0).toLocaleString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-center">
                                             {district.report_count}
                                         </td>
                                     </tr>
@@ -354,20 +354,20 @@ export default function DiseaseDailyRiskPage() {
                 </div>
 
                 {/* Detailed List */}
-                <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">รายละเอียดรายงาน</h2>
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 md:p-6">
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">รายละเอียดรายงาน</h2>
                     <div className="space-y-3">
                         {paginatedDetails.map((item, index) => (
                             <div
                                 key={index}
-                                className="bg-gray-50 border border-[#0b4c86] p-4 rounded-r-lg"
+                                className="bg-slate-50 border border-[#0b4c86] p-4 rounded-r-lg"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <h3 className="font-bold text-lg mb-1">
                                             <AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.disease_name}
                                         </h3>
-                                        <p className="text-sm text-gray-600 mb-2">
+                                        <p className="text-sm text-slate-600 mb-2">
                                             <AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.facility_name} | <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.district_name}
                                         </p>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
@@ -389,7 +389,7 @@ export default function DiseaseDailyRiskPage() {
                         ))}
 
                         {(!data.details || data.details.length === 0) && (
-                            <div className="text-center py-8 text-gray-500">
+                            <div className="text-center py-8 text-slate-500">
                                 <p className="text-4xl mb-2"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></p>
                                 <p>ไม่มีรายงานในวันนี้</p>
                             </div>

@@ -180,7 +180,7 @@ export default function DashboardPage() {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#c9dcee] border-t-[#0b4c86] mx-auto mb-4"></div>
-                    <p className="text-gray-600">กำลังโหลด...</p>
+                    <p className="text-slate-600">กำลังโหลด...</p>
                 </div>
             </div>
         );
@@ -214,7 +214,7 @@ export default function DashboardPage() {
                                     {activeModules ? 'เหตุการณ์ที่กำลังปฏิบัติงาน' : 'ยังไม่มีเหตุการณ์ที่เปิดอยู่'}
                                 </h1>
                             </div>
-                            <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                            <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
                                 <CalendarClock className="h-4 w-4" aria-hidden="true" />
                                 {currentDateLabel}
                             </div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                         />
 
                         {/* EOC Event Modules */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                             <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                                 <div>
                                     <h2 className="text-xl font-black text-slate-900">ทุกประเภทเหตุการณ์</h2>

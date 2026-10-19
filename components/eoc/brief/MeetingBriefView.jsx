@@ -21,7 +21,7 @@ const LEVEL_STYLE = {
 
 function Section({ title, href, children }) {
   return (
-    <section className="break-inside-avoid rounded-xl border border-[#c9dcee] bg-white p-4 print:rounded-none print:border-slate-300">
+    <section className="break-inside-avoid rounded-2xl border border-slate-200 bg-white p-4 print:rounded-none print:border-slate-300">
       <div className="mb-2 flex items-baseline justify-between gap-2">
         <h2 className="text-base font-black text-slate-900">{title}</h2>
         {href ? <Link href={href} className="inline-flex items-center gap-1 text-xs font-bold text-[#0b4c86] hover:underline print:hidden">รายละเอียด <ArrowRight className="h-3 w-3" /></Link> : null}

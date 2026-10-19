@@ -208,11 +208,11 @@ export default function DailyDiseaseChart({ sessionId }) {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                 <div className="flex items-center justify-center h-96">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b border-red-500 mx-auto mb-4"></div>
-                        <p className="text-gray-600">กำลังโหลดข้อมูลกราฟ...</p>
+                        <p className="text-slate-600">กำลังโหลดข้อมูลกราฟ...</p>
                     </div>
                 </div>
             </div>
@@ -221,10 +221,10 @@ export default function DailyDiseaseChart({ sessionId }) {
 
     if (error) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                 <div className="text-center py-12">
                     <AppIcon icon="alert" className="mx-auto h-16 w-16 text-yellow-600" />
-                    <p className="text-gray-600 mt-4">{error}</p>
+                    <p className="text-slate-600 mt-4">{error}</p>
                 </div>
             </div>
         );
@@ -232,10 +232,10 @@ export default function DailyDiseaseChart({ sessionId }) {
 
     if (!chartData || !data) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                 <div className="text-center py-12">
                     <AppIcon icon="barChart" className="mx-auto h-16 w-16 text-blue-600" />
-                    <p className="text-gray-600 mt-4">ไม่มีข้อมูลสำหรับแสดงกราฟ</p>
+                    <p className="text-slate-600 mt-4">ไม่มีข้อมูลสำหรับแสดงกราฟ</p>
                 </div>
             </div>
         );
@@ -243,13 +243,13 @@ export default function DailyDiseaseChart({ sessionId }) {
 
     if (data.summary.total_patients === 0) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                 <div className="text-center py-12">
                     <AppIcon icon="clipboard" className="mx-auto h-16 w-16 text-slate-500" />
-                    <h3 className="text-xl font-bold text-gray-700 mt-4">
+                    <h3 className="text-xl font-bold text-slate-700 mt-4">
                         ยังไม่มีรายงานโรคในช่วงนี้
                     </h3>
-                    <p className="text-gray-500 mt-2">
+                    <p className="text-slate-500 mt-2">
                         เมื่อมีการบันทึกรายงานโรค กราฟจะแสดงที่นี่
                     </p>
                 </div>
@@ -258,15 +258,15 @@ export default function DailyDiseaseChart({ sessionId }) {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
             <div className="h-96">
                 <Line data={chartData} options={options} />
             </div>
 
             {/* Disease breakdown */}
             {data.disease_stats && data.disease_stats.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4">
                         สรุปข้อมูลโรค
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -278,10 +278,10 @@ export default function DailyDiseaseChart({ sessionId }) {
                                     className="border rounded-lg p-4 hover:shadow-md transition-shadow"
                                     style={{ borderLeftWidth: '4px', borderLeftColor: color.border }}
                                 >
-                                    <h4 className="font-bold text-gray-800 mb-2">
+                                    <h4 className="font-bold text-slate-800 mb-2">
                                         {disease.disease_name}
                                     </h4>
-                                    <div className="space-y-1 text-sm text-gray-600">
+                                    <div className="space-y-1 text-sm text-slate-600">
                                         <p>
                                             <span className="font-medium">ผู้ป่วย:</span>{' '}
                                             <span className="text-red-600 font-bold">

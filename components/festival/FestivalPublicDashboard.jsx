@@ -7,7 +7,7 @@ import AppIcon from "@/components/icons/AppIcon";
 const FestivalMap = dynamic(() => import("./FestivalMap"), {
     ssr: false,
     loading: () => (
-        <div className="h-72 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600">
+        <div className="h-72 flex items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600">
             <div className="text-center">
                 <div className="animate-spin h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
                 <p className="text-sm">กำลังโหลดแผนที่...</p>
@@ -63,7 +63,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
             {/* Section Header */}
             <div className="flex items-center gap-3 mb-3">
                 <div className={`w-1.5 h-6 ${ac.bar} rounded-full`}></div>
-                <h2 className="text-lg md:text-xl font-bold text-gray-800">
+                <h2 className="text-lg md:text-xl font-bold text-slate-800">
                     <AppIcon icon={festivalIcon} className="inline-block h-8 w-8" /> สถิติอุบัติเหตุ{festivalLabel}
                 </h2>
                 <Link
@@ -75,9 +75,9 @@ export default function FestivalPublicDashboard({ festivalSession }) {
             </div>
 
             {loading ? (
-                <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
                     <div className="animate-spin h-8 w-8 border-4 border-red-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-                    <p className="text-gray-500 text-sm">กำลังโหลดข้อมูล...</p>
+                    <p className="text-slate-500 text-sm">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : !data?.hasActiveSession ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center text-yellow-900 text-sm">
@@ -93,10 +93,10 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalAccidents || 0).toLocaleString()}</div>
                             <div className="text-red-100 text-xs">อุบัติเหตุ (ครั้ง)</div>
                         </div>
-                        <div className="eoc-bg-gray-900 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
+                        <div className="eoc-bg-slate-900 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
                             <div className="text-xl mb-0.5"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <div className="text-2xl md:text-3xl font-bold">{(data.stats?.totalDeaths || 0).toLocaleString()}</div>
-                            <div className="text-gray-300 text-xs">เสียชีวิต (ราย)</div>
+                            <div className="text-slate-300 text-xs">เสียชีวิต (ราย)</div>
                         </div>
                         <div className="eoc-bg-amber-700 text-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow text-center">
                             <div className="text-xl mb-0.5"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
@@ -106,12 +106,12 @@ export default function FestivalPublicDashboard({ festivalSession }) {
                     </div>
 
                     {/* Map */}
-                    <div className="bg-white rounded-xl shadow-md p-4">
+                    <div className="border border-slate-200 bg-white rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                            <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
                                 <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่จุดเกิดเหตุ & จุดบริการ
                             </h3>
-                            <div className="flex items-center gap-3 text-xs text-gray-600">
+                            <div className="flex items-center gap-3 text-xs text-slate-600">
                                 <span className="flex items-center gap-1">
                                     <span className="w-2 h-2 rounded-full bg-red-600 inline-block"></span> จุดเกิดเหตุ
                                 </span>

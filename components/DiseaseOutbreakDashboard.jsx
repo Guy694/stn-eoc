@@ -171,7 +171,7 @@ export default function DiseaseOutbreakDashboard({
 
     if (loadingLiveData && !dashboardData) {
         return (
-            <section className="rounded-xl border border-rose-100 bg-white p-8 text-center shadow-sm">
+            <section className="rounded-2xl border border-rose-100 bg-white p-8 text-center">
                 <AppIcon icon="loader" className="mx-auto mb-3 h-10 w-10 animate-spin text-rose-600" />
                 <p className="font-bold text-slate-700">กำลังโหลดข้อมูลไข้เลือดออกจากฐานข้อมูล...</p>
             </section>
@@ -388,7 +388,7 @@ export default function DiseaseOutbreakDashboard({
                 <ChartPanel title="รหัสโรคและกลุ่มโรคที่ใช้ในการเฝ้าระวัง">
                     <div className="grid gap-2 md:hidden">
                         {paginatedCodeRows.map((row) => (
-                            <div key={row.disease_code} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                            <div key={row.disease_code} className="rounded-2xl border border-slate-200 bg-white p-3">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
                                         <div className="font-black text-rose-700">{row.disease_code}</div>
@@ -469,7 +469,7 @@ function SummaryCard({ label, value, unit, icon, risk, signed, digits = 0, textV
 
 function ChartPanel({ title, action, children }) {
     return (
-        <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:rounded-xl sm:p-4">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:rounded-xl sm:p-4">
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-sm font-black leading-6 text-slate-900 sm:text-base md:text-lg">{title}</h3>
                 {action}
@@ -498,7 +498,7 @@ function WeeklyTooltip({ active, payload, label }) {
     const delta = Number(current?.value || 0) - Number(previous?.value || 0);
 
     return (
-        <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-lg">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm">
             <div className="mb-2 font-black text-slate-900">สัปดาห์ที่ {label}</div>
             <div className="space-y-1">
                 {payload.map((item) => (
@@ -517,7 +517,7 @@ function WeeklyTooltip({ active, payload, label }) {
 
 function DistrictPublicTable({ rows }) {
     return (
-        <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:rounded-xl sm:p-4">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:rounded-xl sm:p-4">
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-sm font-black leading-6 text-slate-900 sm:text-lg">ตารางสรุปข้อมูลสาธารณะรายอำเภอ</h3>
                 <input
@@ -528,7 +528,7 @@ function DistrictPublicTable({ rows }) {
             </div>
             <div className="grid gap-2 md:hidden">
                 {rows.map((row) => (
-                    <div key={row.district_name} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                    <div key={row.district_name} className="rounded-2xl border border-slate-200 bg-white p-3">
                         <div className="flex items-start justify-between gap-3">
                             <div>
                                 <div className="font-black text-slate-900">{row.district_name}</div>
@@ -610,7 +610,7 @@ function PublicAdvicePanel({ topDistrict, lastUpdated }) {
                     <li className="rounded-lg bg-white/60 px-3 py-2">หลีกเลี่ยงการซื้อยากลุ่ม NSAIDs รับประทานเองเมื่อสงสัยไข้เลือดออก</li>
                     <li className="rounded-lg bg-white/60 px-3 py-2">ติดต่อหน่วยบริการใกล้บ้านหรือสายด่วน 1669 เมื่อมีอาการรุนแรง</li>
                 </ul>
-                <div className="rounded-lg border border-[#c9dcee] bg-white px-3 py-2 text-xs font-bold text-[#083865]">
+                <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#083865]">
                     อัปเดตประกาศล่าสุด {formatDateTime(lastUpdated)}
                 </div>
             </div>

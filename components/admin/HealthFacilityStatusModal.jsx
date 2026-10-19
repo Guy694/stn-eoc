@@ -7,7 +7,7 @@ import { FLOOD_STATUSES, SERVICE_STATUSES, facilityTypeInfo } from '@/lib/health
 function ChoiceGroup({ legend, name, options, value, onChange }) {
     return (
         <fieldset>
-            <legend className="mb-1.5 text-sm font-semibold text-gray-700">{legend}</legend>
+            <legend className="mb-1.5 text-sm font-semibold text-slate-700">{legend}</legend>
             <div className="grid gap-2 sm:grid-cols-3">
                 {options.map((option) => {
                     const checked = value === option.value;
@@ -76,17 +76,17 @@ export default function HealthFacilityStatusModal({ facility, onClose, onSaved }
 
     return (
         <div className="app-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="facility-status-title">
-            <form onSubmit={save} className="max-h-[90vh] w-full max-w-2xl space-y-5 overflow-y-auto rounded-lg bg-white p-6 text-gray-800">
+            <form onSubmit={save} className="max-h-[90vh] w-full max-w-2xl space-y-5 overflow-y-auto rounded-lg bg-white p-6 text-slate-800">
                 <div>
-                    <h2 id="facility-status-title" className="text-xl font-bold text-gray-800">อัปเดตสถานะ {facility.name}</h2>
-                    <p className="mt-0.5 text-sm text-gray-500">{type.label} • อ.{facility.district_name || '-'} — ประชาชนจะเห็นสถานะนี้บนแผนที่สถานการณ์</p>
+                    <h2 id="facility-status-title" className="text-xl font-bold text-slate-800">อัปเดตสถานะ {facility.name}</h2>
+                    <p className="mt-0.5 text-sm text-slate-500">{type.label} • อ.{facility.district_name || '-'} — ประชาชนจะเห็นสถานะนี้บนแผนที่สถานการณ์</p>
                 </div>
 
                 <ChoiceGroup legend="การให้บริการ *" name="service_status" options={SERVICE_STATUSES} value={serviceStatus} onChange={setServiceStatus} />
                 <ChoiceGroup legend="น้ำท่วมที่ตั้ง" name="flood_status" options={FLOOD_STATUSES} value={floodStatus} onChange={setFloodStatus} />
 
                 <div>
-                    <label htmlFor="facility-note" className="mb-1 block text-sm font-semibold text-gray-700">หมายเหตุถึงประชาชน</label>
+                    <label htmlFor="facility-note" className="mb-1 block text-sm font-semibold text-slate-700">หมายเหตุถึงประชาชน</label>
                     <input
                         id="facility-note"
                         type="text"
@@ -98,7 +98,7 @@ export default function HealthFacilityStatusModal({ facility, onClose, onSaved }
                     />
                 </div>
                 <div>
-                    <label htmlFor="facility-phone" className="mb-1 block text-sm font-semibold text-gray-700">เบอร์โทรติดต่อ</label>
+                    <label htmlFor="facility-phone" className="mb-1 block text-sm font-semibold text-slate-700">เบอร์โทรติดต่อ</label>
                     <input
                         id="facility-phone"
                         type="text"
@@ -114,7 +114,7 @@ export default function HealthFacilityStatusModal({ facility, onClose, onSaved }
                     <button type="submit" disabled={saving} className="flex-1 rounded-lg bg-[#0b4c86] py-2 font-semibold text-white hover:bg-[#093d6c] disabled:opacity-60">
                         {saving ? 'กำลังบันทึก…' : 'บันทึกสถานะ'}
                     </button>
-                    <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 py-2 font-semibold text-gray-700 hover:bg-gray-50">
+                    <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-slate-300 py-2 font-semibold text-slate-700 hover:bg-slate-50">
                         ยกเลิก
                     </button>
                 </div>

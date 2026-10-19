@@ -88,7 +88,7 @@ export default function UserEOCDashboard() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-2xl font-bold text-slate-800">
                     <span className="inline-flex items-center gap-2">
                         <AppIcon icon="mapPin" className="h-6 w-6 text-blue-600" />
                         EOC ที่คุณรับผิดชอบ
@@ -111,7 +111,7 @@ export default function UserEOCDashboard() {
                     className="bg-white rounded-lg shadow-md border border-blue-500 overflow-hidden"
                 >
                     {/* Session Header */}
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
+                    <div className="bg-[#0b4c86] text-white p-4">
                         <h3 className="flex items-center gap-2 text-xl font-bold">
                             <AppIcon icon={getEOCIcon(session.eoc_type)} className="h-6 w-6" />
                             {session.eoc_name} ครั้งที่ {session.session_number}
@@ -129,10 +129,10 @@ export default function UserEOCDashboard() {
                                 <div className="flex items-center space-x-3 pb-2 border-b">
                                     <AppIcon icon={getTeamIcon(team.team_code)} className="h-7 w-7 text-blue-600" />
                                     <div>
-                                        <h4 className="font-semibold text-gray-800">
+                                        <h4 className="font-semibold text-slate-800">
                                             {team.team_name_th}
                                         </h4>
-                                        <p className="text-sm text-gray-600">
+                                        <p className="text-sm text-slate-600">
                                             {team.team_code} • {team.role_in_team || 'สมาชิก'}
                                         </p>
                                     </div>
@@ -145,23 +145,23 @@ export default function UserEOCDashboard() {
                                             <Link
                                                 key={module.module_code}
                                                 href={module.route_path}
-                                                className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition group"
+                                                className="flex items-center space-x-3 p-4 border-2 border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition group"
                                             >
                                                 <AppIcon icon={module.icon || 'file'} className="h-8 w-8 text-blue-600 transition group-hover:scale-110" />
                                                 <div className="flex-1">
-                                                    <div className="font-medium text-gray-800 group-hover:text-blue-600">
+                                                    <div className="font-medium text-slate-800 group-hover:text-blue-600">
                                                         {module.module_name_th}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 mt-1">
+                                                    <div className="text-xs text-slate-500 mt-1">
                                                         {getPermissionBadges(module)}
                                                     </div>
                                                 </div>
-                                                <AppIcon icon="arrowRight" className="h-5 w-5 text-gray-400 group-hover:text-blue-600" />
+                                                <AppIcon icon="arrowRight" className="h-5 w-5 text-slate-400 group-hover:text-blue-600" />
                                             </Link>
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-center text-gray-500 py-4 bg-gray-50 rounded">
+                                    <div className="text-center text-slate-500 py-4 bg-slate-50 rounded">
                                         ไม่มี Modules ที่กำหนดสำหรับทีมนี้
                                     </div>
                                 )}

@@ -55,7 +55,7 @@ export default function MaintenanceSettings() {
   };
 
   if (state.error) return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error}</p>;
-  if (state.loading) return <p className="rounded-xl border border-[#c9dcee] bg-white p-10 text-center text-sm text-slate-500">กำลังโหลด…</p>;
+  if (state.loading) return <p className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังโหลด…</p>;
   const enabled = Boolean(state.data?.enabled);
 
   return (
@@ -86,7 +86,7 @@ export default function MaintenanceSettings() {
         ) : null}
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h3 className="text-base font-black text-slate-900">ข้อความบนหน้าปิดปรับปรุง</h3>
         <div className="mt-3 grid gap-4">
           <Field label="ข้อความถึงผู้ใช้" hint="เช่น ปรับปรุงฐานข้อมูล คาดว่าจะใช้เวลาประมาณ 1 ชั่วโมง">

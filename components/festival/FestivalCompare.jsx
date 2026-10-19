@@ -94,7 +94,7 @@ export default function FestivalCompare() {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#0b4c86] border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-gray-600 text-lg">กำลังโหลดข้อมูล...</p>
+                    <p className="text-slate-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
         );
@@ -103,7 +103,7 @@ export default function FestivalCompare() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#0b4c86] via-indigo-500 to-[#11466e] rounded-2xl p-6 text-white shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-6">
                 <h1 className="text-3xl font-bold flex items-center gap-3">
                     <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปรียบเทียบสถิติอุบัติเหตุช่วงเทศกาล
                 </h1>
@@ -111,12 +111,12 @@ export default function FestivalCompare() {
             </div>
 
             {/* Session Selector */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
                     <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลือก Session ที่ต้องการเปรียบเทียบ
                 </h3>
                 {sessions.length === 0 ? (
-                    <p className="text-gray-500">ไม่พบเหตุการณ์สำหรับเปรียบเทียบ</p>
+                    <p className="text-slate-500">ไม่พบเหตุการณ์สำหรับเปรียบเทียบ</p>
                 ) : (
                     <div className="flex flex-wrap gap-2">
                         {sessions.map(s => (
@@ -129,8 +129,8 @@ export default function FestivalCompare() {
                                             ? 'bg-[#dbeaf7] border-[#0b4c86] text-[#0b4c86]'
                                             : s.festival_type === 'songkran'
                                                 ? 'bg-orange-100 border-orange-500 text-orange-700'
-                                                : 'bg-gray-100 border-gray-500 text-gray-700'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-400'
+                                                : 'bg-slate-100 border-slate-500 text-slate-700'
+                                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-400'
                                 }`}
                             >
                                 <AppIcon icon={s.festival_type === 'newyear' ? "treePalm" : s.festival_type === 'songkran' ? "droplets" : "barChart"} className="inline-block h-5 w-5" />
@@ -146,7 +146,7 @@ export default function FestivalCompare() {
             {comparing && (
                 <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
-                    <p className="text-gray-500 text-sm">กำลังเปรียบเทียบ...</p>
+                    <p className="text-slate-500 text-sm">กำลังเปรียบเทียบ...</p>
                 </div>
             )}
 
@@ -157,11 +157,11 @@ export default function FestivalCompare() {
                         {comparisons.map((c, idx) => {
                             const colorSet = COMPARE_COLORS[idx % COMPARE_COLORS.length];
                             return (
-                                <div key={c.session.id} className="bg-white rounded-xl shadow-lg overflow-hidden border-t" 
+                                <div key={c.session.id} className="border border-slate-200 bg-white rounded-2xl overflow-hidden border-t" 
                                      style={{ borderColor: colorSet.border }}>
                                     <div className="p-5">
                                         <div className="flex items-center justify-between mb-4">
-                                            <h3 className="font-bold text-gray-800 text-sm">
+                                            <h3 className="font-bold text-slate-800 text-sm">
                                                 <AppIcon icon={c.session.festivalType === 'newyear' ? "treePalm" : "droplets"} className="inline-block h-5 w-5" />
                                                 {' '}{c.session.openReason || c.session.festivalName}
                                             </h3>
@@ -177,9 +177,9 @@ export default function FestivalCompare() {
                                                 <div className="text-2xl font-bold text-red-600">{c.stats.totalAccidents}</div>
                                                 <div className="text-xs text-red-500"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อุบัติเหตุ</div>
                                             </div>
-                                            <div className="bg-gray-100 rounded-lg p-3 text-center">
-                                                <div className="text-2xl font-bold text-gray-800">{c.stats.totalDeaths}</div>
-                                                <div className="text-xs text-gray-500"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เสียชีวิต</div>
+                                            <div className="bg-slate-100 rounded-lg p-3 text-center">
+                                                <div className="text-2xl font-bold text-slate-800">{c.stats.totalDeaths}</div>
+                                                <div className="text-xs text-slate-500"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เสียชีวิต</div>
                                             </div>
                                             <div className="bg-amber-50 rounded-lg p-3 text-center">
                                                 <div className="text-2xl font-bold text-amber-600">{c.stats.totalInjuries}</div>
@@ -198,7 +198,7 @@ export default function FestivalCompare() {
                                         </div>
 
                                         {c.stats.checkpoints > 0 && (
-                                            <div className="mt-3 text-xs text-gray-500">
+                                            <div className="mt-3 text-xs text-slate-500">
                                                 <AppIcon icon="route" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จุดตรวจ: {c.stats.checkpoints} จุด
                                             </div>
                                         )}
@@ -209,8 +209,8 @@ export default function FestivalCompare() {
                     </div>
 
                     {/* Comparison Bar Chart */}
-                    <div className="bg-white rounded-xl shadow-md p-6">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กราฟเปรียบเทียบ
                         </h3>
                         <div className="h-80">
@@ -236,10 +236,10 @@ export default function FestivalCompare() {
             )}
 
             {comparisons.length === 0 && !comparing && (
-                <div className="bg-gray-50 rounded-xl p-12 text-center">
+                <div className="bg-slate-50 rounded-xl p-12 text-center">
                     <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                    <h3 className="text-xl font-bold text-gray-700 mb-2">เลือกเหตุการณ์เพื่อเปรียบเทียบ</h3>
-                    <p className="text-gray-500">คลิกที่เหตุการณ์ด้านบนเพื่อเริ่มเปรียบเทียบข้อมูล</p>
+                    <h3 className="text-xl font-bold text-slate-700 mb-2">เลือกเหตุการณ์เพื่อเปรียบเทียบ</h3>
+                    <p className="text-slate-500">คลิกที่เหตุการณ์ด้านบนเพื่อเริ่มเปรียบเทียบข้อมูล</p>
                 </div>
             )}
         </div>

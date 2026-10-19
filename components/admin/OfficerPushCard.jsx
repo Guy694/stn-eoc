@@ -63,7 +63,7 @@ export default function OfficerPushCard({ className = "" }) {
   );
 
   return (
-    <section className={`rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm sm:p-6 ${className}`} aria-labelledby="officer-push-title">
+    <section className={`rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 ${className}`} aria-labelledby="officer-push-title">
       <h3 id="officer-push-title" className="flex flex-wrap items-center gap-2 font-black text-slate-900">
         <Smartphone className="h-5 w-5 text-[#0b4c86]" aria-hidden="true" />แจ้งเตือนเข้ามือถือ (ไม่ต้องใช้ Telegram)
         {status ? (on ? <StatusPill tone="green">เครื่องนี้เปิดอยู่</StatusPill> : <StatusPill tone="gray">เครื่องนี้ยังไม่เปิด</StatusPill>) : null}

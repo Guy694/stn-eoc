@@ -74,7 +74,7 @@ export default function SettingsPage() {
         <EOCLayout>
             <AdminPage title="ตั้งค่าบัญชีของฉัน" description="เปลี่ยนรหัสผ่านสำหรับเข้าสู่ระบบ">
                 <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-                    <section className="rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm sm:p-6">
+                    <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
                         <h2 className="text-lg font-black text-slate-900">เปลี่ยนรหัสผ่าน</h2>
                         {user.mustChangePassword && (
                             <div role="alert" className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
@@ -103,12 +103,12 @@ export default function SettingsPage() {
                         </form>
                     </section>
                     <aside className="space-y-3">
-                        <Link href="/profile" className="block rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm hover:bg-[#edf5fc]">
+                        <Link href="/profile" className="block rounded-2xl border border-slate-200 bg-white p-4 hover:bg-[#edf5fc]">
                             <p className="font-black text-slate-900">โปรไฟล์</p>
                             <p className="text-sm text-slate-600">ชื่อ อีเมล เบอร์โทร หน่วยงาน และสิทธิ์ของฉัน</p>
                         </Link>
                         {user.role === "admin" ? (
-                            <Link href="/admin/settings" className="block rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm hover:bg-[#edf5fc]">
+                            <Link href="/admin/settings" className="block rounded-2xl border border-slate-200 bg-white p-4 hover:bg-[#edf5fc]">
                                 <p className="font-black text-slate-900">ตั้งค่าระบบ</p>
                                 <p className="text-sm text-slate-600">สถานะระบบ การแจ้งเตือน การเชื่อมต่อ ความปลอดภัย สำรองข้อมูล และสถิติผู้เข้าชม</p>
                             </Link>

@@ -69,7 +69,7 @@ export default function DisasterDashboard() {
         return (
             <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+                <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
             </div>
         );
     }
@@ -152,10 +152,10 @@ export default function DisasterDashboard() {
                 const sessionData = activeSessions[type] || { active: 0 };
                 return sessionData.active > 0;
             }).length === 0 && (
-                    <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
+                    <div className="col-span-full text-center py-12 bg-slate-50 rounded-lg">
                         <div className="text-6xl mb-4"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-700 mb-2">ไม่มี EOC ที่เปิดอยู่ในขณะนี้</h3>
-                        <p className="text-gray-600">ขณะนี้ไม่มีสถานการณ์ภัยพิบัติที่ต้องเปิด EOC</p>
+                        <h3 className="text-xl font-bold text-slate-700 mb-2">ไม่มี EOC ที่เปิดอยู่ในขณะนี้</h3>
+                        <p className="text-slate-600">ขณะนี้ไม่มีสถานการณ์ภัยพิบัติที่ต้องเปิด EOC</p>
                     </div>
                 )}
         </div>

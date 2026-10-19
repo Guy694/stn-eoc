@@ -20,7 +20,7 @@ export default function DisasterSessionSelector({
 
     const config = getDisasterConfig(disasterType);
     const disasterIcon = getDisasterIcon(disasterType);
-    const colorGradient = config?.color.gradient || 'from-gray-500 to-gray-600';
+    const colorGradient = config?.color.gradient || 'from-slate-500 to-slate-600';
 
     const fetchAvailableYears = useCallback(async () => {
         try {
@@ -182,8 +182,8 @@ export default function DisasterSessionSelector({
 
     // โหมดข้อมูลย้อนหลัง
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <AppIcon icon={disasterIcon} className="h-5 w-5" />
                 <AppIcon icon="barChart" className="h-5 w-5" />
                 ข้อมูลย้อนหลัง - {config?.name || disasterType}
@@ -191,13 +191,13 @@ export default function DisasterSessionSelector({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                         เลือกปี
                     </label>
                     <select
                         value={selectedYear || ''}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-700"
                     >
                         <option value="">-- เลือกปี --</option>
                         {years.map(year => (
@@ -210,7 +210,7 @@ export default function DisasterSessionSelector({
 
                 {sessions.length > 0 && (
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
                             เลือกเหตุการณ์ EOC
                         </label>
                         <select
@@ -219,7 +219,7 @@ export default function DisasterSessionSelector({
                                 const session = sessions.find(s => s.id === parseInt(e.target.value));
                                 handleSessionChange(session);
                             }}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-700"
+                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-700"
                         >
                             <option value="">-- เลือกเหตุการณ์ --</option>
                             {sessions.map(session => (
@@ -236,7 +236,7 @@ export default function DisasterSessionSelector({
             {loading ? (
                 <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-b border-teal-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+                    <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : yearSummary && (
                 <div className="bg-teal-50 rounded-lg p-4">
@@ -255,15 +255,15 @@ export default function DisasterSessionSelector({
             )}
 
             {selectedSession && (
-                <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="mt-4 bg-slate-50 rounded-lg p-4 border border-slate-200">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
-                            <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
                                 <AppIcon icon={selectedSession.status === 'active' ? "statusGreen" : "statusBlack"} className="h-4 w-4" />
                                 <AppIcon icon={disasterIcon} className="h-4 w-4" />
                                 เหตุการณ์ EOC ที่ {selectedSession.session_number}
                             </h4>
-                            <div className="space-y-1 text-sm text-gray-600">
+                            <div className="space-y-1 text-sm text-slate-600">
                                 <p><strong>เปิด:</strong> {formatDate(selectedSession.opened_at)} โดย {selectedSession.opened_by_name}</p>
                                 {selectedSession.closed_at && (
                                     <p><strong>ปิด:</strong> {formatDate(selectedSession.closed_at)} โดย {selectedSession.closed_by_name}</p>
@@ -278,13 +278,13 @@ export default function DisasterSessionSelector({
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-center ml-4">
-                            <div className="bg-white rounded p-2 border border-gray-200">
+                            <div className="bg-white rounded p-2 border border-slate-200">
                                 <p className="text-lg font-bold text-blue-600">{selectedSession.total_activities || 0}</p>
-                                <p className="text-xs text-gray-600">กิจกรรม</p>
+                                <p className="text-xs text-slate-600">กิจกรรม</p>
                             </div>
-                            <div className="bg-white rounded p-2 border border-gray-200">
+                            <div className="bg-white rounded p-2 border border-slate-200">
                                 <p className="text-lg font-bold text-green-600">{selectedSession.total_data_entries || 0}</p>
-                                <p className="text-xs text-gray-600">บันทึก</p>
+                                <p className="text-xs text-slate-600">บันทึก</p>
                             </div>
                         </div>
                     </div>

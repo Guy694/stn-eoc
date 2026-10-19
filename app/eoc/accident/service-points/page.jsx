@@ -8,7 +8,7 @@ import AppIcon from "@/components/icons/AppIcon";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
-    loading: () => <div className="h-[400px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">กำลังโหลดแผนที่...</div>
+    loading: () => <div className="h-[400px] bg-slate-100 rounded-lg animate-pulse flex items-center justify-center">กำลังโหลดแผนที่...</div>
 });
 
 const pointTypes = ['จุดตรวจ', 'จุดบริการ', 'จุดพักรถ', 'ด่านชุมชน'];
@@ -211,8 +211,8 @@ export default function ServicePointsPage() {
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
-                        <p className="text-gray-600">กรุณาเปิดเหตุการณ์ EOC ก่อนจัดการจุดบริการ</p>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                        <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนจัดการจุดบริการ</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -229,7 +229,7 @@ export default function ServicePointsPage() {
                             <span className="text-4xl"><AppIcon icon="route" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             จุดบริการชั่วคราว
                         </h1>
-                        <p className="text-gray-600">
+                        <p className="text-slate-600">
                             เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย
                         </p>
                     </div>
@@ -243,21 +243,21 @@ export default function ServicePointsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg p-4 shadow border border-orange-500">
+                    <div className="bg-white rounded-2xl p-4 border border-orange-500">
                         <div className="text-3xl font-bold text-orange-600">{stats.total}</div>
-                        <div className="text-sm text-gray-600">จุดบริการทั้งหมด</div>
+                        <div className="text-sm text-slate-600">จุดบริการทั้งหมด</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-green-500">
+                    <div className="bg-white rounded-2xl p-4 border border-green-500">
                         <div className="text-3xl font-bold text-green-600">{stats.active}</div>
-                        <div className="text-sm text-gray-600"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปิดให้บริการ</div>
+                        <div className="text-sm text-slate-600"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปิดให้บริการ</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-[#0b4c86]">
+                    <div className="bg-white rounded-2xl p-4 border border-[#0b4c86]">
                         <div className="text-3xl font-bold text-[#0b4c86]">{stats.officers}</div>
-                        <div className="text-sm text-gray-600"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
+                        <div className="text-sm text-slate-600"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-[#0b4c86]">
+                    <div className="bg-white rounded-2xl p-4 border border-[#0b4c86]">
                         <div className="text-3xl font-bold text-[#0b4c86]">{stats.vehicles}</div>
-                        <div className="text-sm text-gray-600"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
+                        <div className="text-sm text-slate-600"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
                     </div>
                 </div>
 
@@ -265,29 +265,29 @@ export default function ServicePointsPage() {
                 {loading ? (
                     <div className="text-center py-12">
                         <div className="animate-spin rounded-full h-12 w-12 border-b border-orange-500 mx-auto mb-4"></div>
-                        <p className="text-gray-600">กำลังโหลด...</p>
+                        <p className="text-slate-600">กำลังโหลด...</p>
                     </div>
                 ) : points.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow p-12 text-center">
+                    <div className="border border-slate-200 bg-white rounded-2xl p-12 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-700 mb-2">ยังไม่มีจุดบริการ</h3>
-                        <p className="text-gray-500 mb-4">คลิกปุ่ม &quot;เพิ่มจุดบริการ&quot; เพื่อเริ่มต้น</p>
+                        <h3 className="text-xl font-bold text-slate-700 mb-2">ยังไม่มีจุดบริการ</h3>
+                        <p className="text-slate-500 mb-4">คลิกปุ่ม &quot;เพิ่มจุดบริการ&quot; เพื่อเริ่มต้น</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {points.map((point) => (
                             <div
                                 key={point.id}
-                                className={`bg-white rounded-lg shadow-md overflow-hidden border ${point.is_active ? 'border-green-500' : 'border-gray-300'
+                                className={`bg-white rounded-2xl overflow-hidden border ${point.is_active ? 'border-green-500' : 'border-slate-300'
                                     }`}
                             >
                                 <div className="p-4">
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
-                                            <h3 className="font-bold text-gray-900 text-lg">{point.name}</h3>
+                                            <h3 className="font-bold text-slate-900 text-lg">{point.name}</h3>
                                             <span className={`inline-block px-2 py-1 text-xs rounded-full ${point.is_active
                                                 ? 'bg-green-100 text-green-700'
-                                                : 'bg-gray-100 text-gray-600'
+                                                : 'bg-slate-100 text-slate-600'
                                                 }`}>
                                                 {point.is_active ? "เปิดให้บริการ" : "ปิดบริการ"}
                                             </span>
@@ -297,9 +297,9 @@ export default function ServicePointsPage() {
                                         </span>
                                     </div>
 
-                                    <div className="text-sm text-gray-600 mb-3">
+                                    <div className="text-sm text-slate-600 mb-3">
                                         {point.address && <p className="mb-1"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.address}</p>}
-                                        {point.district && <p className="text-xs text-gray-500">อ.{point.district} ต.{point.tambon}</p>}
+                                        {point.district && <p className="text-xs text-slate-500">อ.{point.district} ต.{point.tambon}</p>}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 text-sm mb-3">
@@ -314,14 +314,14 @@ export default function ServicePointsPage() {
                                     </div>
 
                                     {point.operating_hours && (
-                                        <p className="text-xs text-gray-500 mb-3"><AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.operating_hours}</p>
+                                        <p className="text-xs text-slate-500 mb-3"><AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.operating_hours}</p>
                                     )}
 
                                     <div className="flex gap-2 pt-2 border-t">
                                         <button
                                             onClick={() => toggleActive(point)}
                                             className={`flex-1 py-2 rounded text-sm font-medium ${point.is_active
-                                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                 : 'bg-green-100 text-green-700 hover:bg-green-200'
                                                 }`}
                                         >
@@ -351,29 +351,29 @@ export default function ServicePointsPage() {
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-gray-700 text-2xl font-bold mb-4">
+                                <h2 className="text-slate-700 text-2xl font-bold mb-4">
                                     {editingPoint ? 'แก้ไขจุดบริการ' : "เพิ่มจุดบริการ"}
                                 </h2>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อจุดบริการ *</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">ชื่อจุดบริการ *</label>
                                             <input
                                                 type="text"
                                                 value={formData.name}
                                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                                 required
                                                 placeholder="เช่น ด่านตรวจหน้า อบต."
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ประเภท *</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">ประเภท *</label>
                                             <select
                                                 value={formData.point_type}
                                                 onChange={(e) => setFormData({ ...formData, point_type: e.target.value })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             >
                                                 {pointTypes.map(t => <option key={t} value={t}>{t}</option>)}
                                             </select>
@@ -381,35 +381,35 @@ export default function ServicePointsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">ที่อยู่/ตำแหน่ง</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">ที่อยู่/ตำแหน่ง</label>
                                         <input
                                             type="text"
                                             value={formData.address}
                                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                             placeholder="ถนน/ซอย/หมู่บ้าน"
-                                            className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                            className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">อำเภอ</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">อำเภอ</label>
                                             <select
                                                 value={formData.district}
                                                 onChange={(e) => setFormData({ ...formData, district: e.target.value, tambon: '' })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             >
                                                 <option value="">เลือกอำเภอ</option>
                                                 {satunDistricts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ตำบล</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">ตำบล</label>
                                             <select
                                                 value={formData.tambon}
                                                 onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
                                                 disabled={!formData.district}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg disabled:bg-gray-100"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg disabled:bg-slate-100"
                                             >
                                                 <option value="">เลือกตำบล</option>
                                                 {tambonOptions.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
@@ -417,33 +417,33 @@ export default function ServicePointsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">พิกัดจุดบริการ (ปักหมุดบนแผนที่)</label>
+                                    <div className="bg-slate-50 rounded-lg p-4">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">พิกัดจุดบริการ (ปักหมุดบนแผนที่)</label>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">ละติจูด</label>
+                                                <label className="block text-xs text-slate-500 mb-1">ละติจูด</label>
                                                 <input
                                                     type="number"
                                                     step="any"
                                                     value={formData.lat}
                                                     onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
                                                     placeholder="6.xxxx"
-                                                    className="text-gray-600 w-full px-3 py-2 border rounded-lg bg-white"
+                                                    className="text-slate-600 w-full px-3 py-2 border rounded-lg bg-white"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">ลองจิจูด</label>
+                                                <label className="block text-xs text-slate-500 mb-1">ลองจิจูด</label>
                                                 <input
                                                     type="number"
                                                     step="any"
                                                     value={formData.lng}
                                                     onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
                                                     placeholder="100.xxxx"
-                                                    className="text-gray-600 w-full px-3 py-2 border rounded-lg bg-white"
+                                                    className="text-slate-600 w-full px-3 py-2 border rounded-lg bg-white"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="border border-gray-200 rounded-lg overflow-hidden relative z-0">
+                                        <div className="border border-slate-200 rounded-lg overflow-hidden relative z-0">
                                             <MapSelector
                                                 position={formData.lat && formData.lng ? {
                                                     lat: parseFloat(formData.lat) || 6.6238,
@@ -456,66 +456,66 @@ export default function ServicePointsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเจ้าหน้าที่</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเจ้าหน้าที่</label>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={formData.officer_count}
                                                 onChange={(e) => setFormData({ ...formData, officer_count: parseInt(e.target.value) || 0 })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนรถตรวจ</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนรถตรวจ</label>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={formData.vehicle_count}
                                                 onChange={(e) => setFormData({ ...formData, vehicle_count: parseInt(e.target.value) || 0 })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">วันเริ่มเปิด</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">วันเริ่มเปิด</label>
                                             <input
                                                 type="date"
                                                 value={formData.start_date}
                                                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">วันสิ้นสุด</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">วันสิ้นสุด</label>
                                             <input
                                                 type="date"
                                                 value={formData.end_date}
                                                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">เวลาเปิดบริการ</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">เวลาเปิดบริการ</label>
                                             <input
                                                 type="text"
                                                 value={formData.operating_hours}
                                                 onChange={(e) => setFormData({ ...formData, operating_hours: e.target.value })}
                                                 placeholder="00:00-24:00"
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เบอร์ติดต่อ</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เบอร์ติดต่อ</label>
                                         <input
                                             type="text"
                                             value={formData.contact_phone}
                                             onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
                                             placeholder="074-xxx-xxx"
-                                            className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                            className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                         />
                                     </div>
 
@@ -523,7 +523,7 @@ export default function ServicePointsPage() {
                                         <button
                                             type="button"
                                             onClick={() => { setShowModal(false); setEditingPoint(null); resetForm(); }}
-                                            className="px-6 py-2 bg-gray-500 rounded-lg text-white hover:bg-gray-600"
+                                            className="px-6 py-2 bg-slate-500 rounded-lg text-white hover:bg-slate-600"
                                         >
                                             ยกเลิก
                                         </button>

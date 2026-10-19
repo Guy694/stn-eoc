@@ -146,37 +146,37 @@ export default function VillagePolygonsPage() {
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">
                         <AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการข้อมูลหมู่บ้าน
                     </h1>
-                    <p className="text-gray-600">ระบบจัดการข้อมูลขอบเขตพื้นที่และพิกัดหมู่บ้าน</p>
+                    <p className="text-slate-600">ระบบจัดการข้อมูลขอบเขตพื้นที่และพิกัดหมู่บ้าน</p>
                 </div>
 
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
-                        <div className="text-sm text-gray-600 mb-1">จำนวนหมู่บ้านทั้งหมด</div>
-                        <div className="text-3xl font-bold text-gray-800">
+                    <div className="bg-white rounded-2xl p-4 border border-blue-500">
+                        <div className="text-sm text-slate-600 mb-1">จำนวนหมู่บ้านทั้งหมด</div>
+                        <div className="text-3xl font-bold text-slate-800">
                             {stats.total || 0}
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border border-green-500">
-                        <div className="text-sm text-gray-600 mb-1">จำนวนอำเภอ</div>
-                        <div className="text-3xl font-bold text-gray-800">
+                    <div className="bg-white rounded-2xl p-4 border border-green-500">
+                        <div className="text-sm text-slate-600 mb-1">จำนวนอำเภอ</div>
+                        <div className="text-3xl font-bold text-slate-800">
                             {stats.districts || 0}
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border border-yellow-500">
-                        <div className="text-sm text-gray-600 mb-1">จำนวนตำบล</div>
-                        <div className="text-3xl font-bold text-gray-800">
+                    <div className="bg-white rounded-2xl p-4 border border-yellow-500">
+                        <div className="text-sm text-slate-600 mb-1">จำนวนตำบล</div>
+                        <div className="text-3xl font-bold text-slate-800">
                             {stats.tambons || 0}
                         </div>
                     </div>
                 </div>
 
                 {/* Search and Filter */}
-                <div className="bg-white p-4 rounded-lg shadow mb-6 text-gray-800">
+                <div className="border border-slate-200 bg-white p-4 rounded-2xl mb-6 text-slate-800">
                     <div className="flex flex-wrap gap-4">
                         <input
                             type="text"
@@ -233,48 +233,48 @@ export default function VillagePolygonsPage() {
                 </div>
 
                 {/* Polygons Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                     {loading ? (
-                        <div className="p-8 text-center text-gray-500">
+                        <div className="p-8 text-center text-slate-500">
                             กำลังโหลดข้อมูล...
                         </div>
                     ) : polygons.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">
+                        <div className="p-8 text-center text-slate-500">
                             ไม่พบข้อมูลหมู่บ้าน
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50 border-b">
+                                <thead className="bg-slate-50 border-b">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อหมู่บ้าน</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">หมู่</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ตำบล</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พิกัดขอบเขตพื้นที่</th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ID</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ชื่อหมู่บ้าน</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">หมู่</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">อำเภอ</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ตำบล</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">พิกัดขอบเขตพื้นที่</th>
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">จัดการ</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200">
+                                <tbody className="divide-y divide-slate-200">
                                     {polygons.map((polygon) => (
-                                        <tr key={polygon.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <tr key={polygon.id} className="hover:bg-slate-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                                                 {polygon.id}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">{polygon.villname}</div>
+                                                <div className="font-medium text-slate-900">{polygon.villname}</div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                                 {polygon.moo || '-'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                                 {polygon.distname}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                                 {polygon.subdistnam}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                            <td className="px-6 py-4 text-sm text-slate-600">
                                                 <div className="max-w-xs truncate">
                                                     {polygon.coordinates
                                                         ? `${polygon.coordinates.substring(0, 50)}...`
@@ -305,8 +305,8 @@ export default function VillagePolygonsPage() {
 
                     {/* Pagination */}
                     {pagination.totalPages > 1 && (
-                        <div className="bg-gray-50 px-6 py-4 border-t flex items-center justify-between">
-                            <div className="text-sm text-gray-600">
+                        <div className="bg-slate-50 px-6 py-4 border-t flex items-center justify-between">
+                            <div className="text-sm text-slate-600">
                                 แสดง {polygons.length} จาก {pagination.totalRecords} รายการ
                                 (หน้า {pagination.currentPage} / {pagination.totalPages})
                             </div>
@@ -314,31 +314,31 @@ export default function VillagePolygonsPage() {
                                 <button
                                     onClick={() => setCurrentPage(1)}
                                     disabled={currentPage === 1}
-                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                    className="px-3 py-1 border rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700"
                                 >
                                     ««
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(currentPage - 1)}
                                     disabled={currentPage === 1}
-                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                    className="px-3 py-1 border rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700"
                                 >
                                     « ก่อนหน้า
                                 </button>
-                                <span className="px-4 py-1 text-gray-700">
+                                <span className="px-4 py-1 text-slate-700">
                                     {currentPage} / {pagination.totalPages}
                                 </span>
                                 <button
                                     onClick={() => setCurrentPage(currentPage + 1)}
                                     disabled={currentPage === pagination.totalPages}
-                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                    className="px-3 py-1 border rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700"
                                 >
                                     ถัดไป »
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(pagination.totalPages)}
                                     disabled={currentPage === pagination.totalPages}
-                                    className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                    className="px-3 py-1 border rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700"
                                 >
                                     »»
                                 </button>
@@ -352,13 +352,13 @@ export default function VillagePolygonsPage() {
             {showModal && (
                 <div className="app-modal-overlay" role="dialog" aria-modal="true">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4 text-gray-700">
+                        <h2 className="text-xl font-bold mb-4 text-slate-700">
                             {editingPolygon ? "แก้ไขข้อมูลหมู่บ้าน" : "เพิ่มข้อมูลหมู่บ้านใหม่"}
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
                                     ชื่อหมู่บ้าน *
                                 </label>
                                 <input
@@ -366,25 +366,25 @@ export default function VillagePolygonsPage() {
                                     required
                                     value={formData.villname}
                                     onChange={(e) => setFormData({ ...formData, villname: e.target.value })}
-                                    className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         หมู่
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.moo}
                                         onChange={(e) => setFormData({ ...formData, moo: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         อำเภอ *
                                     </label>
                                     <input
@@ -392,12 +392,12 @@ export default function VillagePolygonsPage() {
                                         required
                                         value={formData.distname}
                                         onChange={(e) => setFormData({ ...formData, distname: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         ตำบล *
                                     </label>
                                     <input
@@ -405,23 +405,23 @@ export default function VillagePolygonsPage() {
                                         required
                                         value={formData.subdistnam}
                                         onChange={(e) => setFormData({ ...formData, subdistnam: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
                                     พิกัด Polygon (GeoJSON coordinates)
                                 </label>
                                 <textarea
                                     value={formData.coordinates}
                                     onChange={(e) => setFormData({ ...formData, coordinates: e.target.value })}
                                     rows={6}
-                                    className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                    className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                                     placeholder='[[[100.123, 6.456], [100.124, 6.457], ...]]'
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-slate-500 mt-1">
                                     รูปแบบ: GeoJSON coordinates array (Polygon หรือ MultiPolygon)
                                 </p>
                             </div>

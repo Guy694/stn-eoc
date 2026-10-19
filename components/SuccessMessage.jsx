@@ -50,24 +50,24 @@ export default function SuccessMessage({
                 {/* Content */}
                 <div className="p-6">
                     {message && (
-                        <p className="text-gray-700 text-center mb-4">{message}</p>
+                        <p className="text-slate-700 text-center mb-4">{message}</p>
                     )}
 
                     {referenceNumber && (
                         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
-                            <p className="text-sm text-gray-600 mb-1">เลขที่รายงาน</p>
+                            <p className="text-sm text-slate-600 mb-1">เลขที่รายงาน</p>
                             <p className="text-2xl font-bold text-green-700 font-mono">{referenceNumber}</p>
-                            <p className="text-xs text-gray-500 mt-1">กรุณาเก็บเลขนี้ไว้เพื่อตรวจสอบสถานะ</p>
+                            <p className="text-xs text-slate-500 mt-1">กรุณาเก็บเลขนี้ไว้เพื่อตรวจสอบสถานะ</p>
                         </div>
                     )}
 
                     {nextActions.length > 0 && (
                         <div className="space-y-2">
-                            <p className="text-sm font-semibold text-gray-700 mb-2">ขั้นตอนถัดไป:</p>
+                            <p className="text-sm font-semibold text-slate-700 mb-2">ขั้นตอนถัดไป:</p>
                             {nextActions.map((action, index) => (
                                 <div key={index} className="flex items-start gap-2">
                                     <AppIcon icon="check" className="mt-0.5 h-4 w-4 text-green-600" />
-                                    <p className="text-sm text-gray-600">{action}</p>
+                                    <p className="text-sm text-slate-600">{action}</p>
                                 </div>
                             ))}
                         </div>

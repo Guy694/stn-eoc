@@ -47,7 +47,7 @@ export default function TestDataSettings() {
   return (
     <div className="space-y-4">
       {notice}
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700"><FlaskConical className="h-5 w-5" aria-hidden="true" /></span>
           <div>
@@ -61,7 +61,7 @@ export default function TestDataSettings() {
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
       {data ? (
         data.total ? (
-          <div className="rounded-xl border border-amber-200 bg-white">
+          <div className="rounded-2xl border border-amber-200 bg-white">
             <p className="border-b border-amber-100 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">พบข้อมูลทดสอบ {formatNumber(data.total)} แถว</p>
             <ul className="divide-y divide-slate-100">
               {rows.map((row) => (

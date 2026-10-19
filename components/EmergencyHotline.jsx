@@ -16,7 +16,7 @@ export default function EmergencyHotline() {
                 </div>
                 <a
                     href="tel:074-711-555"
-                    className="bg-white text-red-600 px-8 py-4 rounded-lg font-bold text-2xl hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
+                    className="bg-white text-red-600 px-8 py-4 rounded-lg font-bold text-2xl hover:bg-slate-100 transition-all hover:scale-105 shadow-lg"
                 >
                     074-711-555
                 </a>

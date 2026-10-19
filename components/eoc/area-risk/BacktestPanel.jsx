@@ -46,7 +46,7 @@ function EventCard({ event }) {
   const scored = event.areas.length;
   const hits = event.areas.filter((a) => a.hit).length;
   return (
-    <article className="rounded-xl border border-slate-200 bg-white">
+    <article className="rounded-2xl border border-slate-200 bg-white">
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-slate-100 px-4 py-3">
         <h4 className="text-sm font-black text-slate-900">{event.label}</h4>
         <span className="text-xs text-slate-500">{thaiDate(event.start)} – {thaiDate(event.end)}</span>
@@ -126,7 +126,7 @@ export default function BacktestPanel({ initialData = null }) {
 
   return (
     <div className="space-y-3">
-      <section className="rounded-xl border border-slate-200 bg-white p-4">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-start gap-3">
           <History className="mt-0.5 h-5 w-5 shrink-0 text-[#0b4c86]" aria-hidden="true" />
           <div className="min-w-0 flex-1">
@@ -157,7 +157,7 @@ export default function BacktestPanel({ initialData = null }) {
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-black text-slate-800">รายละเอียดรายเหตุการณ์</span>
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-xs font-bold" role="group" aria-label="เลือกชุดเกณฑ์ที่จะแสดง">
+        <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-0.5 text-xs font-bold" role="group" aria-label="เลือกชุดเกณฑ์ที่จะแสดง">
           {[["best", "เกณฑ์ที่แนะนำ"], ["current", "เกณฑ์ที่ใช้อยู่"]].map(([value, label]) => (
             <button key={value} type="button" aria-pressed={view === value} onClick={() => setView(value)} className={`rounded-md px-3 py-1 ${view === value ? "bg-[#0b4c86] text-white" : "text-slate-600 hover:bg-slate-50"}`}>{label}</button>
           ))}
@@ -165,7 +165,7 @@ export default function BacktestPanel({ initialData = null }) {
       </div>
       {[...shown.per_event].reverse().map((event) => <EventCard key={event.id} event={event} />)}
 
-      <section className="rounded-xl border border-slate-200 bg-white">
+      <section className="rounded-2xl border border-slate-200 bg-white">
         <h4 className="border-b border-slate-100 px-4 py-3 text-sm font-black text-slate-900">เตือนแล้วไม่มีบันทึกน้ำท่วม (สูงสุด 15 ครั้ง)</h4>
         {shown.false_alarm_list.length ? (
           <ul className="divide-y divide-slate-100 text-xs">
@@ -182,7 +182,7 @@ export default function BacktestPanel({ initialData = null }) {
         <p className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500">ถ้าวันไหนในรายการนี้มีน้ำท่วมจริงแต่ไม่ได้บันทึก ให้เพิ่มบันทึกน้ำท่วมใน EOC — ระบบจะนับเป็น &quot;เตือนถูก&quot; ในการทดสอบครั้งต่อไป</p>
       </section>
 
-      <details className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+      <details className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
         <summary className="cursor-pointer font-black text-slate-800">แหล่งข้อมูลและข้อควรรู้</summary>
         <ul className="mt-2 space-y-1">
           {data.sources.map((s) => (

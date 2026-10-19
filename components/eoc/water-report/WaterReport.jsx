@@ -500,7 +500,7 @@ export default function WaterReport() {
       {layout === "full" && extrasError ? <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 print:hidden">หัวข้อ 2–3: {extrasError}</p> : null}
 
       {editing ? (
-        <div className="space-y-2 rounded-xl border border-[#c9dcee] bg-white p-4 print:hidden">
+        <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
           <label htmlFor="water-recommendations" className="text-sm font-semibold text-[#083865]">ข้อเสนอเพื่อการเตรียมพร้อม (บรรทัดละ 1 ข้อ)</label>
           <textarea id="water-recommendations" value={draft} onChange={(event) => setDraft(event.target.value)} rows={5} className="w-full rounded-lg border border-slate-300 p-2 text-base" />
           <div className="flex flex-wrap gap-2">

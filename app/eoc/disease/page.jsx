@@ -58,7 +58,7 @@ export default function DiseasePage() {
                 <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div>
                         <h1 className="text-2xl font-black text-slate-900">ภาพรวมสถานการณ์</h1>
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className="mt-1 text-sm text-slate-600">
                             ติดตามข้อมูลผู้ป่วย รายงานจากหน่วยบริการ และชนิดโรคของเหตุการณ์ EOC
                         </p>
                     </div>
@@ -72,9 +72,9 @@ export default function DiseasePage() {
                 <ReportingCompleteness eocType="disease" />
 
                 {loading ? (
-                    <div className="rounded-xl bg-white p-10 text-center shadow-sm">
+                    <div className="border border-slate-200 rounded-2xl bg-white p-10 text-center">
                         <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-[#0b4c86] border-t-transparent"></div>
-                        <p className="text-gray-600">กำลังโหลดข้อมูลโรคระบาด...</p>
+                        <p className="text-slate-600">กำลังโหลดข้อมูลโรคระบาด...</p>
                     </div>
                 ) : !data?.success ? (
                     <div className="rounded-xl border border-dashed border-[#c9dcee] bg-[#edf5fc] p-6 text-center">
@@ -89,7 +89,7 @@ export default function DiseasePage() {
                 ) : (
                     <>
                         {activeSession && (
-                            <section className="mb-6 rounded-xl bg-gradient-to-r from-[#0b4c86] to-[#11466e] p-5 text-white shadow-sm">
+                            <section className="mb-6 relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-5">
                                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px] md:items-center">
                                     <div>
                                         <div className="text-sm font-semibold text-white/85">ครั้งที่ {activeSession.session_number}</div>
@@ -122,14 +122,14 @@ export default function DiseasePage() {
                             <StatCard label="ผู้ป่วยรวม" value={stats.total_patients || 0} strong />
                         </section>
 
-                        <section className="mb-6 rounded-xl bg-white p-4 shadow-sm">
+                        <section className="border border-slate-200 mb-6 rounded-2xl bg-white p-4">
                             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                <h2 className="text-lg font-black text-gray-900">ข้อมูลประจำวันที่เลือก</h2>
+                                <h2 className="text-lg font-black text-slate-900">ข้อมูลประจำวันที่เลือก</h2>
                                 <input
                                     type="date"
                                     value={selectedDate}
                                     onChange={(event) => setSelectedDate(event.target.value)}
-                                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-[#0b4c86] focus:outline-none"
+                                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-[#0b4c86] focus:outline-none"
                                 />
                             </div>
                             <div className="grid gap-4 lg:grid-cols-2">
@@ -139,8 +139,8 @@ export default function DiseasePage() {
                                     rows={data.diseaseSummary || []}
                                     renderRow={(item) => (
                                         <>
-                                            <span className="font-bold text-gray-800">{item.disease_name}</span>
-                                            <span className="text-sm text-gray-600">{Number(item.total_patients || 0).toLocaleString()} ราย</span>
+                                            <span className="font-bold text-slate-800">{item.disease_name}</span>
+                                            <span className="text-sm text-slate-600">{Number(item.total_patients || 0).toLocaleString()} ราย</span>
                                         </>
                                     )}
                                 />
@@ -150,8 +150,8 @@ export default function DiseasePage() {
                                     rows={data.districtSummary || []}
                                     renderRow={(item) => (
                                         <>
-                                            <span className="font-bold text-gray-800">{item.district || "-"}</span>
-                                            <span className="text-sm text-gray-600">{Number(item.total_patients || 0).toLocaleString()} ราย</span>
+                                            <span className="font-bold text-slate-800">{item.district || "-"}</span>
+                                            <span className="text-sm text-slate-600">{Number(item.total_patients || 0).toLocaleString()} ราย</span>
                                         </>
                                     )}
                                 />
@@ -159,9 +159,9 @@ export default function DiseasePage() {
                         </section>
 
                         <section>
-                            <div className="mb-6 rounded-xl bg-white p-4 shadow-sm">
+                            <div className="border border-slate-200 mb-6 rounded-2xl bg-white p-4">
 
-                                 <h2 className="text-lg font-black text-gray-900">ทีมปฏิบัติการ</h2>
+                                 <h2 className="text-lg font-black text-slate-900">ทีมปฏิบัติการ</h2>
 
                             </div>
 
@@ -184,8 +184,8 @@ function MiniStat({ label, value }) {
 
 function StatCard({ label, value, strong = false }) {
     return (
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
-            <div className="text-xs font-bold text-gray-500">{label}</div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="text-xs font-bold text-slate-500">{label}</div>
             <div className={`mt-2 text-3xl font-black ${strong ? "text-rose-600" : "text-[#0b4c86]"}`}>
                 {Number(value || 0).toLocaleString()}
             </div>
@@ -195,10 +195,10 @@ function StatCard({ label, value, strong = false }) {
 
 function SummaryList({ title, rows, emptyText, renderRow }) {
     return (
-        <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-            <h3 className="mb-3 font-black text-gray-900">{title}</h3>
+        <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+            <h3 className="mb-3 font-black text-slate-900">{title}</h3>
             {rows.length === 0 ? (
-                <p className="rounded-lg bg-white p-4 text-center text-sm text-gray-500">{emptyText}</p>
+                <p className="rounded-lg bg-white p-4 text-center text-sm text-slate-500">{emptyText}</p>
             ) : (
                 <div className="space-y-2">
                     {rows.map((item, index) => (

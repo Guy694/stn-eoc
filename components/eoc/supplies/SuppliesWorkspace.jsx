@@ -230,7 +230,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
     return (
       <AdminPage title="เวชภัณฑ์และคลังยา" context={context} description="ติดตามยอดเวชภัณฑ์ของแต่ละหน่วยบริการตลอดเหตุการณ์ รับเข้า เบิกจ่าย และรู้ทันทีว่ารายการไหนใกล้หมด">
         {notice}
-        <div className="rounded-xl border border-dashed border-[#c9dcee] bg-white px-6 py-10 text-center">
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
           <PackageOpen className="mx-auto h-10 w-10 text-slate-300" />
           <h2 className="mt-3 text-lg font-black text-slate-900">{session ? "ยังไม่ได้เปิดบัญชีคลังของเหตุการณ์นี้" : data.message}</h2>
           {session ? (
@@ -276,7 +276,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
         <StockSummary summary={summary} levelFilter={levelFilter} onFilter={setLevelFilter} />
       ) : null}
 
-      <div className="rounded-xl border border-[#c9dcee] bg-white px-2">
+      <div className="rounded-2xl border border-slate-200 bg-white px-2">
         <Tabs value={tab} onChange={setTab} items={TABS} />
       </div>
 
@@ -299,7 +299,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
             <FacilitySelect facilities={facilities} value={facilityFilter} onChange={setFacilityFilter} getValue={facilityName} allLabel="ทุกหน่วยบริการ" className="min-w-[14rem]" />
           </Toolbar>
           {perms.can_delete && stock.length ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm">
               <span className="text-slate-600">{selected.size ? `เลือกอยู่ ${selected.size.toLocaleString("th-TH")} รายการ` : "ติ๊กเลือกรายการที่ต้องการลบ"}</span>
               <Button variant="danger" className="min-h-9 px-3" disabled={!selected.size || busy} onClick={() => { setDeleteError(""); setDeleteTarget({ mode: "selected" }); }}><Trash2 className="h-4 w-4" />ลบที่เลือก</Button>
               {selected.size ? <Button variant="ghost" className="min-h-9 px-3" onClick={() => setSelected(new Set())}>ยกเลิกการเลือก</Button> : null}

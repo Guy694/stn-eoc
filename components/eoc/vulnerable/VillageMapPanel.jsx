@@ -25,7 +25,7 @@ export default function VillageMapPanel({ session }) {
 
   if (!session) return null;
   return (
-    <details className="group rounded-xl border border-[#c9dcee] bg-white" onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details className="group rounded-2xl border border-slate-200 bg-white" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
         <span>
           <span className="block font-black text-slate-900">แผนที่รายหมู่บ้าน</span>

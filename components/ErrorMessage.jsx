@@ -47,7 +47,7 @@ export default function ErrorMessage({
                         {onClose && (
                             <button
                                 onClick={onClose}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
                             >
                                 ปิด
                             </button>

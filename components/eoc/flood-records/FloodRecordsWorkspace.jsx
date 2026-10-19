@@ -134,7 +134,7 @@ export default function FloodRecordsWorkspace() {
   };
 
   if (sessionsState.loading) {
-    return <AdminPage context="บันทึกข้อมูล" title="บันทึกพื้นที่น้ำท่วม"><div className="h-40 animate-pulse rounded-xl border border-slate-200 bg-white" /></AdminPage>;
+    return <AdminPage context="บันทึกข้อมูล" title="บันทึกพื้นที่น้ำท่วม"><div className="h-40 animate-pulse rounded-2xl border border-slate-200 bg-white" /></AdminPage>;
   }
   if (!session) {
     return (
@@ -161,7 +161,7 @@ export default function FloodRecordsWorkspace() {
         </>
       ) : null}
     >
-      <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 lg:flex-row lg:items-center" aria-label="เลือกเหตุการณ์และวันที่">
+      <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 lg:flex-row lg:items-center" aria-label="เลือกเหตุการณ์และวันที่">
         {sessions.length > 1 ? (
           <label className="block lg:w-80">
             <span className="sr-only">เหตุการณ์</span>

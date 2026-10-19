@@ -93,10 +93,10 @@ export default function SessionStats({ session, year }) {
 
     if (loading) {
         return (
-            <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                 <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
-                    <p className="text-gray-600 text-sm">กำลังโหลดสถิติ...</p>
+                    <p className="text-slate-600 text-sm">กำลังโหลดสถิติ...</p>
                 </div>
             </div>
         );
@@ -104,7 +104,7 @@ export default function SessionStats({ session, year }) {
 
     if (error) {
         return (
-            <div className="bg-white shadow-md rounded-lg p-6 mb-6 border border-red-200">
+            <div className="bg-white rounded-2xl p-6 mb-6 border border-red-200">
                 <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
         );
@@ -112,7 +112,7 @@ export default function SessionStats({ session, year }) {
 
     return (
         <div className="bg-linear-to-r from-teal-50 to-blue-50 shadow-md rounded-lg p-6 mb-6 border border-[#c9dcee]">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <AppIcon icon="barChart" className="h-5 w-5 text-[#0b4c86]" />
                 สถิติสรุป - เหตุการณ์ครั้งที่ {session.session_number} (พ.ศ. {year + 543})
             </h3>
@@ -164,7 +164,7 @@ export default function SessionStats({ session, year }) {
             </div>
 
             <div className="mt-4 pt-4 border-t border-[#c9dcee]">
-                <div className="flex items-center justify-between text-sm text-gray-600">
+                <div className="flex items-center justify-between text-sm text-slate-600">
                     <div className="flex items-center gap-4">
                         <span>
                             <strong>ระยะเวลา:</strong> {formatDuration(session.duration_hours)}
@@ -178,7 +178,7 @@ export default function SessionStats({ session, year }) {
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${session.status === 'active'
                             ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700'
+                            : 'bg-slate-100 text-slate-700'
                         }`}>
                         <span className="inline-flex items-center gap-1.5">
                             <AppIcon icon={session.status === 'active' ? "statusGreen" : "statusBlack"} className="h-3 w-3" />

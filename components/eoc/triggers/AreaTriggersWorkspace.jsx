@@ -63,7 +63,7 @@ function DeclarationCard({ item, targets, canDeclare, canTick, onAdjust, onCance
   if (item.district) params.set("district", item.district);
   if (item.tambon) params.set("tambon", item.tambon);
   return (
-    <article className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: style.color }}>
+    <article className="overflow-hidden border-slate-200 rounded-2xl border bg-white" style={{ borderColor: style.color }}>
       <header className="flex flex-wrap items-center gap-2 px-4 py-3" style={{ background: style.soft }}>
         <h3 className="text-lg font-black text-slate-900">{areaLabel(item)}</h3>
         <StageBadge stage={item.stage} />
@@ -236,7 +236,7 @@ function DeclareDialog({ open, initial, areas, sessionId, onClose, onSaved }) {
 
 function StageReference() {
   return (
-    <details className="group rounded-xl border border-slate-200 bg-white">
+    <details className="group rounded-2xl border border-slate-200 bg-white">
       <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 font-bold text-slate-900">
         <ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden="true" />เกณฑ์ Trigger และความหมายของธง (ทีม SAT)
       </summary>
@@ -363,7 +363,7 @@ export default function AreaTriggersWorkspace() {
       ) : null}
 
       {session && !state.loading && !current.length ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
           <Flag className="mx-auto h-10 w-10 text-slate-300" aria-hidden="true" />
           <p className="mt-2 font-bold text-slate-900">ยังไม่มีพื้นที่ที่ประกาศธง/Trigger</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">เมื่อ SAT ประเมินจากระดับน้ำ ฝน และเส้นทางแล้ว ให้ประกาศระดับรายอำเภอหรือตำบล ระบบจะดึงรายชื่อกลุ่มเปราะบางที่ต้องดำเนินการให้</p>
@@ -389,7 +389,7 @@ export default function AreaTriggersWorkspace() {
       <StageReference />
 
       {data?.history?.length ? (
-        <details className="group rounded-xl border border-slate-200 bg-white">
+        <details className="group rounded-2xl border border-slate-200 bg-white">
           <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 font-bold text-slate-900"><ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden="true" />ประวัติการประกาศ ({formatNumber(data.history.length)})</summary>
           <ul className="divide-y divide-slate-100 border-t border-slate-100 text-sm">
             {data.history.map((row) => (

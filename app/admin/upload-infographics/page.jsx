@@ -145,18 +145,18 @@ export default function UploadInfographics() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-slate-50 py-8">
             <div className="container mx-auto px-4 max-w-6xl">
                 {/* Header */}
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อัปโหลด Infographics</h1>
-                            <p className="text-gray-600">สำหรับฝ่าย สื่อสารความเสี่ยง</p>
+                            <h1 className="text-3xl font-bold text-slate-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อัปโหลด Infographics</h1>
+                            <p className="text-slate-600">สำหรับฝ่าย สื่อสารความเสี่ยง</p>
                         </div>
                         <button
                             onClick={() => router.push('/dashboard')}
-                            className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
+                            className="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg transition-colors"
                         >
                             ← กลับ
                         </button>
@@ -164,13 +164,13 @@ export default function UploadInfographics() {
                 </div>
 
                 {/* Upload Form */}
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">อัปโหลดรูปภาพอินโฟกราฟิก</h2>
+                <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">อัปโหลดรูปภาพอินโฟกราฟิก</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* EOC Type Selection */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                 เลือกประเภท EOC
                             </label>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -181,7 +181,7 @@ export default function UploadInfographics() {
                                         onClick={() => setFormData({ ...formData, eocType: type.value })}
                                         className={`p-4 rounded-lg border-2 transition-all ${formData.eocType === type.value
                                             ? 'border-blue-500 bg-blue-50'
-                                            : 'border-gray-200 hover:border-gray-300'
+                                            : 'border-slate-200 hover:border-slate-300'
                                             }`}
                                     >
                                         <AppIcon icon={type.icon} className="mx-auto mb-2 h-8 w-8" />
@@ -193,7 +193,7 @@ export default function UploadInfographics() {
 
                         {/* File Input */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                 เลือกไฟล์รูปภาพ (PNG, JPG, JPEG)
                             </label>
                             <input
@@ -204,11 +204,11 @@ export default function UploadInfographics() {
                                 onChange={handleFileChange}
                                 className="block w-full text-sm text-blue-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-slate-500 mt-2">
                                 * สามารถเลือกหลายไฟล์พร้อมกันได้
                             </p>
                             {formData.files.length > 0 && (
-                                <div className="mt-3 text-sm text-gray-600">
+                                <div className="mt-3 text-sm text-slate-600">
                                     เลือกแล้ว {formData.files.length} ไฟล์: {formData.files.map(f => f.name).join(', ')}
                                 </div>
                             )}
@@ -218,7 +218,7 @@ export default function UploadInfographics() {
                         <button
                             type="submit"
                             disabled={uploading || formData.files.length === 0}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                         >
                             {uploading ? 'กำลังอัปโหลด...' : 'อัปโหลด'}
                         </button>
@@ -226,11 +226,11 @@ export default function UploadInfographics() {
                 </div>
 
                 {/* Existing Files */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">ไฟล์อินโฟกราฟิกที่มีอยู่</h2>
+                <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">ไฟล์อินโฟกราฟิกที่มีอยู่</h2>
 
                     {Object.keys(existingFiles).length === 0 ? (
-                        <p className="text-gray-500 text-center py-8">ยังไม่มีไฟล์</p>
+                        <p className="text-slate-500 text-center py-8">ยังไม่มีไฟล์</p>
                     ) : (
                         <div className="space-y-6">
                             {eocTypes.map((type) => {
@@ -239,7 +239,7 @@ export default function UploadInfographics() {
 
                                 return (
                                     <div key={type.value} className="border-b pb-6 last:border-b-0">
-                                        <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <h3 className="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
                                             <AppIcon icon={type.icon} className="h-7 w-7" />
                                             {type.label} ({files.length} ไฟล์)
                                         </h3>
@@ -254,7 +254,7 @@ export default function UploadInfographics() {
                                                         className="w-full h-40 object-cover rounded-lg border shadow-sm"
                                                         unoptimized
                                                     />
-                                                    <div className="mt-2 text-xs text-gray-600 truncate">{file}</div>
+                                                    <div className="mt-2 text-xs text-slate-600 truncate">{file}</div>
                                                     <button
                                                         onClick={() => handleDelete(type.value, file)}
                                                         className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"

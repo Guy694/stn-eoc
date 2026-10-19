@@ -136,13 +136,13 @@ export default function ModulePermissions() {
     }
   };
 
-  if (state.loading) return <p className="rounded-xl border border-[#c9dcee] bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดสิทธิ์กลุ่มภารกิจ…</p>;
+  if (state.loading) return <p className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดสิทธิ์กลุ่มภารกิจ…</p>;
   if (state.error) return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error} <button type="button" onClick={load} className="ml-2 font-bold underline">ลองใหม่</button></p>;
 
   return (
     <section className="space-y-4">
       {notice}
-      <div className="rounded-xl border border-[#c9dcee] bg-white p-4 text-sm text-slate-700">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
         <p>
           กำหนดว่ากลุ่มภารกิจไหน <strong>บันทึกและแก้ไข</strong> ข้อมูลในแต่ละเมนูของเหตุการณ์ได้ ทีมอื่นที่ได้รับมอบหมายในเหตุการณ์ยังเปิดดูได้ทุกเมนู (เมนูข้างแสดงไอคอนรูปตา)
         </p>
@@ -150,7 +150,7 @@ export default function ModulePermissions() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-1 rounded-xl border border-[#c9dcee] bg-white p-1" role="tablist" aria-label="ประเภทเหตุการณ์">
+        <div className="flex gap-1 rounded-2xl border border-slate-200 bg-white p-1" role="tablist" aria-label="ประเภทเหตุการณ์">
           {state.data.types.map((item) => (
             <button
               key={item.eocType}

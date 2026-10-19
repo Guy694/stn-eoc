@@ -21,7 +21,7 @@ export default function PaginationControls({
     }
 
     return (
-        <div className="flex flex-col gap-3 border-t bg-gray-50 px-4 py-3 text-sm text-gray-700 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t bg-slate-50 px-4 py-3 text-sm text-slate-700 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 แสดง <span className="font-bold">{start.toLocaleString('th-TH')}</span> ถึง <span className="font-bold">{end.toLocaleString('th-TH')}</span>
                 {' '}จาก <span className="font-bold">{Number(totalItems || 0).toLocaleString('th-TH')}</span> {itemLabel}
@@ -35,7 +35,7 @@ export default function PaginationControls({
                             onPageSizeChange(Number(event.target.value));
                             onPageChange(1);
                         }}
-                        className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700"
+                        className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700"
                     >
                         {pageSizeOptions.map((option) => (
                             <option key={option} value={option}>{option} / หน้า</option>
@@ -47,7 +47,7 @@ export default function PaginationControls({
                     type="button"
                     onClick={() => onPageChange(1)}
                     disabled={safePage === 1}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     แรก
                 </button>
@@ -55,7 +55,7 @@ export default function PaginationControls({
                     type="button"
                     onClick={() => onPageChange(Math.max(1, safePage - 1))}
                     disabled={safePage === 1}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     ก่อนหน้า
                 </button>
@@ -66,7 +66,7 @@ export default function PaginationControls({
                     type="button"
                     onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
                     disabled={safePage === totalPages}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     ถัดไป
                 </button>
@@ -74,7 +74,7 @@ export default function PaginationControls({
                     type="button"
                     onClick={() => onPageChange(totalPages)}
                     disabled={safePage === totalPages}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-1 font-bold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     สุดท้าย
                 </button>

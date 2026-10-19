@@ -87,7 +87,7 @@ export default function FloodDiseaseSummaryPanel({ sessionId, reportDate }) {
             : formatThaiDate(reportDate || data?.report_date));
 
     return (
-        <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
+        <section className="rounded-2xl border-slate-200 border border-cyan-100 bg-white">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
                 <div>
                     <p className="text-xs font-black tracking-wide text-cyan-700">เฝ้าระวังสุขภาพจากอุทกภัยน้ำท่วม</p>
@@ -177,7 +177,7 @@ export default function FloodDiseaseSummaryPanel({ sessionId, reportDate }) {
                                     </div>
                                     <div className="space-y-3">
                                         {(data?.by_disease || []).map((item) => (
-                                            <div key={item.disease_name} className="rounded-lg bg-white p-3 shadow-sm">
+                                            <div key={item.disease_name} className="border border-slate-200 rounded-2xl bg-white p-3">
                                                 <div className="mb-2 flex items-center justify-between gap-3">
                                                     <div className="font-black text-slate-800">{item.disease_name}</div>
                                                     <div className="text-sm font-black text-rose-700">{formatNumber(item.new_cases)} ราย</div>
@@ -248,7 +248,7 @@ function ChartCard({ title, subtitle, children }) {
                 <h3 className="font-black text-slate-900">{title}</h3>
                 {subtitle && <p className="mt-0.5 text-xs font-semibold text-slate-500">{subtitle}</p>}
             </div>
-            <div className="rounded-lg bg-white p-2 shadow-sm">
+            <div className="border border-slate-200 rounded-2xl bg-white p-2">
                 {children}
             </div>
         </div>
@@ -260,7 +260,7 @@ function TrendTooltip({ active, payload, label }) {
     const value = payload.find((item) => item.dataKey === "new_cases")?.value || 0;
 
     return (
-        <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-lg">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm">
             <div className="font-black text-slate-900">{formatThaiDate(label)}</div>
             <div className="mt-1 font-bold text-cyan-700">ผู้ป่วย {formatNumber(value)} ราย</div>
         </div>

@@ -90,7 +90,7 @@ export default function EOCOverview() {
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
-                        <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+                        <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -137,7 +137,7 @@ export default function EOCOverview() {
             <div className="mx-auto max-w-7xl">
                 {/* หัวเรื่อง — สถานะเหตุการณ์แสดงอยู่แล้วในแถบเหตุการณ์ด้านบน จึงไม่ซ้ำ */}
                 <header className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">ภาพรวมสถานการณ์ {getEocTypeLabel(session.eoc_type || 'flood')} ครั้งที่ {session.session_number}</h1>
+                    <h1 className="text-2xl font-black text-slate-900 sm:text-[1.7rem]">ภาพรวมสถานการณ์ <span className="font-semibold text-[#0b4c86]">{getEocTypeLabel(session.eoc_type || 'flood')} ครั้งที่ {session.session_number}</span></h1>
                     <p className="text-sm text-slate-600">
                         {session.status === 'active' ? 'เปิดอยู่ · ' : 'ปิดแล้ว · '}
                         {session.opened_by_name ? `เปิดโดย ${session.opened_by_name} ` : 'เปิด'}เมื่อ {new Date(session.open_time).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -146,9 +146,9 @@ export default function EOCOverview() {
                 </header>
 
                 {/* ทางลัดไปยังหัวข้อในหน้า */}
-                <nav aria-label="ไปยังหัวข้อ" className="sticky top-0 z-20 -mx-1 mb-6 flex gap-1.5 overflow-x-auto rounded-xl border border-[#c9dcee] bg-white/95 px-2 py-2 shadow-sm backdrop-blur">
+                <nav aria-label="ไปยังหัวข้อ" className="sticky top-0 z-20 -mx-1 mb-5 flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white/90 p-1.5 font-[family-name:var(--font-kanit)] shadow-[0_8px_20px_-16px_rgba(15,23,42,.5)] backdrop-blur [scrollbar-width:none]">
                     {SECTION_LINKS.map((item) => (
-                        <a key={item.id} href={`#${item.id}`} className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-[#edf5fc] hover:text-[#0b4c86]">
+                        <a key={item.id} href={`#${item.id}`} className="shrink-0 rounded-xl px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-[#edf5fc] hover:text-[#0b4c86]">
                             {item.label}
                         </a>
                     ))}
@@ -164,7 +164,7 @@ export default function EOCOverview() {
                         <p className="text-sm text-slate-600">{impactScopeLabel} · เลือก &ldquo;รายวัน&rdquo; เพื่อดูย้อนหลังว่าแต่ละวันเกิดอะไรขึ้นบ้าง{loading ? ' · กำลังโหลด…' : ''}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="inline-flex overflow-hidden rounded-lg border border-[#c9dcee] bg-white p-1" role="group" aria-label="ช่วงข้อมูลของรายละเอียด">
+                        <div className="inline-flex overflow-hidden rounded-2xl border border-slate-200 bg-white p-1" role="group" aria-label="ช่วงข้อมูลของรายละเอียด">
                             <button type="button" onClick={() => setViewMode('cumulative')} aria-pressed={viewMode === 'cumulative'}
                                 className={`rounded-md px-3 py-1.5 text-sm font-bold ${viewMode === 'cumulative' ? 'bg-[#0b4c86] text-white' : 'text-slate-700 hover:bg-[#edf5fc]'}`}>
                                 สะสมทั้งเหตุการณ์
@@ -195,10 +195,10 @@ export default function EOCOverview() {
 
                 {/* ความครบของรายงาน: ตัวเลขอยู่ในแผงสรุปและตารางรายอำเภอแล้ว — เก็บไว้แบบพับเพื่อใช้ "ส่งเตือนทาง Telegram" และดูรายชื่อตำบลที่ยังไม่ส่ง
                     (กลุ่มภารกิจย้ายไปดูที่เมนูทีมปฏิบัติการ ไม่แสดงที่หน้านี้แล้ว) */}
-                <details id="sec-completeness" className="group mb-6 scroll-mt-20 rounded-xl border border-[#c9dcee] bg-white shadow-sm">
+                <details id="sec-completeness" className="group mb-6 scroll-mt-20 rounded-2xl border border-slate-200 bg-white font-[family-name:var(--font-kanit)]">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 [&::-webkit-details-marker]:hidden">
                         <span>
-                            <span className="block font-black text-slate-900">ตำบลที่ยังไม่ส่งรายงาน และส่งเตือนทาง Telegram</span>
+                            <span className="block font-semibold text-slate-900">ตำบลที่ยังไม่ส่งรายงาน และส่งเตือนทาง Telegram</span>
                             <span className="block text-sm text-slate-600">ดูรายชื่อตำบลรายวัน แล้วส่งรายชื่อเตือนเข้ากลุ่มของศูนย์ในคลิกเดียว</span>
                         </span>
                         <span className="shrink-0 text-sm font-bold text-[#0b4c86] group-open:hidden">แสดง</span>

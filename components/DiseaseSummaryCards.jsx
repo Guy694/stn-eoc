@@ -35,9 +35,9 @@ export default function DiseaseSummaryCards({ sessionId }) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                        <div className="h-8 bg-gray-300 rounded w-1/2"></div>
+                    <div key={i} className="border border-slate-200 bg-white rounded-2xl p-6 animate-pulse">
+                        <div className="h-4 bg-slate-200 rounded w-3/4 mb-4"></div>
+                        <div className="h-8 bg-slate-300 rounded w-1/2"></div>
                     </div>
                 ))}
             </div>
@@ -98,14 +98,14 @@ export default function DiseaseSummaryCards({ sessionId }) {
                         <div className="flex items-center justify-between mb-2">
                             <AppIcon icon={card.icon} className={`h-8 w-8 ${card.iconColor}`} />
                         </div>
-                        <h3 className="text-sm font-medium text-gray-600 mb-1">
+                        <h3 className="text-sm font-medium text-slate-600 mb-1">
                             {card.title}
                         </h3>
                         <div className="flex items-baseline gap-2">
                             <span className={`text-3xl font-bold ${card.textColor}`}>
                                 {card.value}
                             </span>
-                            <span className="text-sm text-gray-500">{card.suffix}</span>
+                            <span className="text-sm text-slate-500">{card.suffix}</span>
                         </div>
                     </div>
                 ))}

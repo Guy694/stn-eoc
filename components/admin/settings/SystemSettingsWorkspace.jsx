@@ -45,7 +45,7 @@ const TONE = {
 
 function Panel({ title, description, children, actions }) {
   return (
-    <section className="rounded-xl border border-[#c9dcee] bg-white shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div className="min-w-0">
           <h3 className="font-black text-slate-900">{title}</h3>
@@ -81,7 +81,7 @@ function Overview({ data }) {
           const tone = TONE[check.tone] || TONE.warn;
           const Icon = tone.icon;
           return (
-            <div key={check.key} className={`flex gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-4 shadow-sm ${tone.border}`}>
+            <div key={check.key} className={`flex gap-3 rounded-2xl border border-l-4 border-slate-200 bg-white p-4 ${tone.border}`}>
               <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${tone.cls}`} aria-hidden="true" />
               <div className="min-w-0">
                 <p className="font-black text-slate-900">{check.title} <span className="sr-only">({tone.label})</span></p>
@@ -303,7 +303,7 @@ function DataLinks() {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {DATA_LINKS.map((item) => (
-        <Link key={item.href} href={item.href} className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm hover:bg-[#edf5fc]">
+        <Link key={item.href} href={item.href} className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-[#edf5fc]">
           <p className="font-black text-slate-900">{item.title}</p>
           <p className="text-sm text-slate-600">{item.detail}</p>
         </Link>
@@ -358,7 +358,7 @@ export default function SystemSettingsWorkspace() {
     >
       {notice}
       <div className="grid gap-4 lg:grid-cols-[16rem_1fr]">
-        <nav aria-label="หมวดการตั้งค่า" className="flex gap-1 overflow-x-auto rounded-xl border border-[#c9dcee] bg-white p-1.5 shadow-sm lg:flex-col lg:self-start">
+        <nav aria-label="หมวดการตั้งค่า" className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 lg:flex-col lg:self-start">
           {SECTIONS.map((item) => {
             const Icon = item.icon;
             const active = item.value === section;
@@ -388,7 +388,7 @@ export default function SystemSettingsWorkspace() {
           {section === "test-data" ? <TestDataSettings /> : null}
           {needsData ? (
             state.error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error} <button type="button" onClick={load} className="ml-2 font-bold underline">ลองใหม่</button></p>
-              : !state.data ? <p className="rounded-xl border border-[#c9dcee] bg-white p-10 text-center text-sm text-slate-500">กำลังตรวจสถานะระบบ…</p>
+              : !state.data ? <p className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังตรวจสถานะระบบ…</p>
                 : <>
                   {section === "overview" ? <Overview data={state.data} /> : null}
                   {section === "alerts" ? <Alerts data={state.data} onTest={() => setConfirmTest(true)} /> : null}

@@ -78,7 +78,7 @@ function RequestQueue({ rows, loading, approveRole, onRoleChange, onApprove, onE
       ) : <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-6 text-center text-sm text-slate-600">ไม่มีคำขอรออนุมัติ</p>}
 
       {rejected.length ? (
-        <details className="rounded-xl border border-slate-200 bg-white">
+        <details className="rounded-2xl border border-slate-200 bg-white">
           <summary className="cursor-pointer px-4 py-3 text-sm font-bold text-slate-700">คำขอที่ปฏิเสธแล้ว ({rejected.length})</summary>
           <ul className="divide-y divide-slate-100 border-t border-slate-100">
             {rejected.map((row) => (
@@ -324,7 +324,7 @@ export default function OfficerWorkspace() {
         { icon: ShieldCheck, label: "ผู้ดูแลระบบ", value: (roleStats.admin || 0).toLocaleString("th-TH") }
       ]} />
 
-      <div className="rounded-xl border border-[#c9dcee] bg-white px-2">
+      <div className="rounded-2xl border border-slate-200 bg-white px-2">
         <Tabs value={tab} onChange={setTab} items={[
           { value: "all", label: "เจ้าหน้าที่ทั้งหมด" },
           { value: "requests", label: regStats.waiting ? `คำขอรออนุมัติ (${regStats.waiting})` : "คำขอรออนุมัติ" }

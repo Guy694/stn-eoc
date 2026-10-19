@@ -128,7 +128,7 @@ export default function DailyDirectivesBoard({ sessionId }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
       {notice}
-      <section className="rounded-xl border border-[#c9dcee] bg-white shadow-sm print:border-0 print:shadow-none">
+      <section className="rounded-2xl border border-slate-200 bg-white print:border-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
           <div>
             <p className="text-xs font-semibold text-[#0b4c86]">สถานการณ์/ข้อสั่งการ ประจำวัน</p>
@@ -181,7 +181,7 @@ export default function DailyDirectivesBoard({ sessionId }) {
         ) : null}
       </section>
 
-      <aside className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm print:hidden">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
         <h3 className="text-sm font-black text-slate-900">วันที่มีบันทึก</h3>
         {days.length ? (
           <ul className="mt-2 space-y-1">

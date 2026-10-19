@@ -376,16 +376,16 @@ function AnnouncementsContent() {
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2 flex items-center gap-3">
                             <span className="text-4xl"><AppIcon icon="megaphone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             จัดการประชาสัมพันธ์/แบนเนอร์
                             {filters.eoc_type && (
-                                <span className="text-xl text-gray-600">
+                                <span className="text-xl text-slate-600">
                                     ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label})
                                 </span>
                             )}
                         </h1>
-                        <p className="text-gray-600">จัดการแบนเนอร์และประกาศข่าวสารต่างๆ</p>
+                        <p className="text-slate-600">จัดการแบนเนอร์และประกาศข่าวสารต่างๆ</p>
                     </div>
                     <button
                         onClick={openCreateModal}
@@ -398,21 +398,21 @@ function AnnouncementsContent() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
-                        <div className="text-sm text-gray-600 mb-1">ทั้งหมด</div>
-                        <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+                    <div className="bg-white rounded-2xl p-4 border border-blue-500">
+                        <div className="text-sm text-slate-600 mb-1">ทั้งหมด</div>
+                        <div className="text-2xl font-bold text-slate-800">{stats.total}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border border-green-500">
-                        <div className="text-sm text-gray-600 mb-1">เปิดใช้งาน</div>
+                    <div className="bg-white rounded-2xl p-4 border border-green-500">
+                        <div className="text-sm text-slate-600 mb-1">เปิดใช้งาน</div>
                         <div className="text-2xl font-bold text-green-600">{stats.active}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border border-blue-500">
-                        <div className="text-sm text-gray-600 mb-1">แสดงหน้าต่างแจ้งเตือน</div>
+                    <div className="bg-white rounded-2xl p-4 border border-blue-500">
+                        <div className="text-sm text-slate-600 mb-1">แสดงหน้าต่างแจ้งเตือน</div>
                         <div className="text-2xl font-bold text-blue-600">{stats.popup}</div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4 border border-gray-500">
-                        <div className="text-sm text-gray-600 mb-1">ปิดใช้งาน</div>
-                        <div className="text-2xl font-bold text-gray-600">{stats.inactive}</div>
+                    <div className="bg-white rounded-2xl p-4 border border-slate-500">
+                        <div className="text-sm text-slate-600 mb-1">ปิดใช้งาน</div>
+                        <div className="text-2xl font-bold text-slate-600">{stats.inactive}</div>
                     </div>
                 </div>
 
@@ -420,11 +420,11 @@ function AnnouncementsContent() {
                 {Object.keys(eocStats).length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                         {EOC_TYPES.map(type => (
-                            <div key={type.value} className="bg-white rounded-lg shadow p-4 border border-gray-300">
-                                <div className="text-sm text-gray-600 mb-1">{type.label}</div>
-                                <div className="text-xl font-bold text-gray-800">
+                            <div key={type.value} className="bg-white rounded-2xl p-4 border border-slate-200">
+                                <div className="text-sm text-slate-600 mb-1">{type.label}</div>
+                                <div className="text-xl font-bold text-slate-800">
                                     {eocStats[type.value]?.count || 0}
-                                    <span className="text-sm text-gray-500 ml-1">
+                                    <span className="text-sm text-slate-500 ml-1">
                                         ({eocStats[type.value]?.active || 0} เปิด)
                                     </span>
                                 </div>
@@ -434,16 +434,16 @@ function AnnouncementsContent() {
                 )}
 
                 {/* Filters */}
-                <div className="bg-white rounded-lg shadow p-4 mb-6">
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                 ประเภท EOC
                             </label>
                             <select
                                 value={filters.eoc_type}
                                 onChange={(e) => setFilters({ ...filters, eoc_type: e.target.value })}
-                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 <option value="">ทั้งหมด</option>
                                 {EOC_TYPES.map(type => (
@@ -452,13 +452,13 @@ function AnnouncementsContent() {
                             </select>
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                 เหตุการณ์ EOC
                             </label>
                             <select
                                 value={filters.session_id}
                                 onChange={(e) => setFilters({ ...filters, session_id: e.target.value })}
-                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 <option value="">ทั้งหมด</option>
                                 {eocSessions.map(session => (
@@ -467,13 +467,13 @@ function AnnouncementsContent() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                 สถานะการใช้งาน
                             </label>
                             <select
                                 value={filters.is_active}
                                 onChange={(e) => setFilters({ ...filters, is_active: e.target.value })}
-                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 <option value="">ทั้งหมด</option>
                                 <option value="true">เปิดใช้งาน</option>
@@ -481,13 +481,13 @@ function AnnouncementsContent() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                 แสดง Popup
                             </label>
                             <select
                                 value={filters.show_popup}
                                 onChange={(e) => setFilters({ ...filters, show_popup: e.target.value })}
-                                className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 <option value="">ทั้งหมด</option>
                                 <option value="true">แสดง</option>
@@ -497,7 +497,7 @@ function AnnouncementsContent() {
                         <div className="flex items-end">
                             <button
                                 onClick={() => setFilters({ eoc_type: '', session_id: '', is_active: '', show_popup: '' })}
-                                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-colors"
                             >
                                 ล้างตัวกรอง
                             </button>
@@ -506,55 +506,55 @@ function AnnouncementsContent() {
                 </div>
 
                 {/* Announcements List */}
-                <div className="bg-white rounded-lg shadow">
+                <div className="border border-slate-200 bg-white rounded-2xl">
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
                             <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
                         </div>
                     ) : announcements.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-slate-500">
                             ยังไม่มีแบนเนอร์
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             รูปภาพ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             หัวข้อ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             ประเภท EOC
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             เหตุการณ์ EOC
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             สถานะ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             แสดง Popup
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             ลำดับ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             ผู้ลงข่าว
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             วันที่สร้าง
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             การดำเนินการ
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-white divide-y divide-slate-200">
                                     {announcements.map((announcement) => (
-                                        <tr key={announcement.id} className="hover:bg-gray-50">
+                                        <tr key={announcement.id} className="hover:bg-slate-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="relative h-16 w-24">
                                                     <Image
@@ -568,44 +568,44 @@ function AnnouncementsContent() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-gray-900">
+                                                <div className="text-sm font-medium text-slate-900">
                                                     {announcement.title}
                                                 </div>
                                                 {announcement.description && (
-                                                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                    <div className="text-sm text-slate-500 truncate max-w-xs">
                                                         {announcement.description}
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="text-gray-600 px-6 py-4 whitespace-nowrap">
+                                            <td className="text-slate-600 px-6 py-4 whitespace-nowrap">
                                                 <span className="text-sm">
                                                     {EOC_TYPES.find(t => t.value === announcement.eoc_type)?.label || announcement.eoc_type}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 min-w-[280px] text-sm text-gray-600">
+                                            <td className="px-6 py-4 min-w-[280px] text-sm text-slate-600">
                                                 {announcement.session_id ? (
                                                     <div>
-                                                        <div className="font-semibold text-gray-900">
+                                                        <div className="font-semibold text-slate-900">
                                                             รอบที่ {announcement.session_number || announcement.session_id}
-                                                            <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${announcement.session_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                            <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${announcement.session_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
                                                                 {announcement.session_status === 'active' ? 'เปิดอยู่' : 'ปิดแล้ว'}
                                                             </span>
                                                         </div>
-                                                        <div className="mt-1 text-xs text-gray-500">
+                                                        <div className="mt-1 text-xs text-slate-500">
                                                             เปิด {formatDateTime(announcement.session_opened_at)}
                                                         </div>
-                                                        <div className="text-xs text-gray-500">
+                                                        <div className="text-xs text-slate-500">
                                                             ปิด {formatDateTime(announcement.session_closed_at)}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-400">ไม่ระบุเหตุการณ์</span>
+                                                    <span className="text-slate-400">ไม่ระบุเหตุการณ์</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${announcement.is_active
                                                     ? 'bg-green-100 text-green-800'
-                                                    : 'bg-gray-100 text-gray-800'
+                                                    : 'bg-slate-100 text-slate-800'
                                                     }`}>
                                                     {announcement.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                                                 </span>
@@ -613,19 +613,19 @@ function AnnouncementsContent() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${announcement.show_popup
                                                     ? 'bg-blue-100 text-blue-800'
-                                                    : 'bg-gray-100 text-gray-800'
+                                                    : 'bg-slate-100 text-slate-800'
                                                     }`}>
                                                     <AppIcon icon={announcement.show_popup ? 'check' : 'x'} className="mr-1 h-3.5 w-3.5" />
                                                     {announcement.show_popup ? 'แสดง' : 'ไม่แสดง'}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                                                 {announcement.priority}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                                 {announcement.created_by_name || `User ID: ${announcement.created_by}`}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                                 {new Date(announcement.created_at).toLocaleDateString('th-TH')}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -651,26 +651,26 @@ function AnnouncementsContent() {
 
                     {/* Pagination */}
                     {pagination.totalPages > 1 && (
-                        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-slate-200 sm:px-6">
                             <div className="flex-1 flex justify-between sm:hidden">
                                 <button
                                     onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
                                     disabled={pagination.page === 1}
-                                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                    className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
                                 >
                                     ก่อนหน้า
                                 </button>
                                 <button
                                     onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
                                     disabled={pagination.page === pagination.totalPages}
-                                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
                                 >
                                     ถัดไป
                                 </button>
                             </div>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-700">
+                                    <p className="text-sm text-slate-700">
                                         แสดง <span className="font-medium">{((pagination.page - 1) * pagination.limit) + 1}</span> ถึง{' '}
                                         <span className="font-medium">
                                             {Math.min(pagination.page * pagination.limit, pagination.total)}
@@ -683,17 +683,17 @@ function AnnouncementsContent() {
                                         <button
                                             onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
                                             disabled={pagination.page === 1}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
                                         >
                                             ก่อนหน้า
                                         </button>
-                                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                        <span className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">
                                             หน้า {pagination.page} / {pagination.totalPages}
                                         </span>
                                         <button
                                             onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
                                             disabled={pagination.page === pagination.totalPages}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50"
                                         >
                                             ถัดไป
                                         </button>
@@ -710,7 +710,7 @@ function AnnouncementsContent() {
                         <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-4">
-                                    <h2 className="text-2xl font-bold text-gray-800">
+                                    <h2 className="text-2xl font-bold text-slate-800">
                                         {editMode ? 'แก้ไขแบนเนอร์' : 'เพิ่มแบนเนอร์ใหม่'}
                                     </h2>
                                     <button
@@ -718,7 +718,7 @@ function AnnouncementsContent() {
                                             setShowModal(false);
                                             resetForm();
                                         }}
-                                        className="text-gray-400 hover:text-gray-600"
+                                        className="text-slate-400 hover:text-slate-600"
                                     >
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -729,27 +729,27 @@ function AnnouncementsContent() {
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     {/* Title */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
                                             หัวข้อ *
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            className="text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             required
                                         />
                                     </div>
 
                                     {/* EOC Session */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
                                             เหตุการณ์ EOC *
                                         </label>
                                         <select
                                             value={formData.session_id}
                                             onChange={(e) => handleSessionChange(e.target.value)}
-                                            className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            className="text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             required
                                         >
                                             <option value="">ไม่ระบุรอบเหตุการณ์</option>
@@ -772,32 +772,32 @@ function AnnouncementsContent() {
 
                                     {/* Description */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
                                             รายละเอียด
                                         </label>
                                         <textarea
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             rows={3}
-                                            className=" text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            className=" text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="mb-2 block text-sm font-medium text-gray-700">หมวดหมู่ข่าว</label>
+                                        <label className="mb-2 block text-sm font-medium text-slate-700">หมวดหมู่ข่าว</label>
                                         <input
                                             type="text"
                                             value={formData.category}
                                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                             placeholder="เช่น ข่าวประชาสัมพันธ์, เตือนภัย, เอกสารเผยแพร่"
-                                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             maxLength={100}
                                         />
                                     </div>
 
                                     {/* Image */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
                                             รูปภาพแบนเนอร์ {!editMode && '*'}
                                         </label>
                                         <input
@@ -805,7 +805,7 @@ function AnnouncementsContent() {
                                             accept="image/jpeg,image/jpg,image/png,image/webp"
                                             multiple={false}
                                             onChange={handleImageChange}
-                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                         />
                                         {imagePreview && (
                                             <div className="mt-2">
@@ -814,26 +814,26 @@ function AnnouncementsContent() {
                                                     alt="Preview"
                                                     width={640}
                                                     height={192}
-                                                    className="text-gray-600 max-w-full h-48 object-contain rounded border"
+                                                    className="text-slate-600 max-w-full h-48 object-contain rounded border"
                                                     unoptimized
                                                 />
                                             </div>
                                         )}
-                                        <p className="mt-1 text-xs text-gray-500">
+                                        <p className="mt-1 text-xs text-slate-500">
                                             อัปโหลดได้ 1 ภาพ รองรับ JPG, PNG, WebP ขนาดไม่เกิน 10MB
                                         </p>
                                     </div>
 
                                     {/* Checkboxes */}
                                     <div>
-                                        <label className="mb-2 block text-sm font-medium text-gray-700">เอกสารแนบ</label>
+                                        <label className="mb-2 block text-sm font-medium text-slate-700">เอกสารแนบ</label>
                                         <input
                                             type="file"
                                             accept=".pdf,.doc,.docx,.xls,.xlsx"
                                             onChange={handleAttachmentChange}
-                                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                                            className="w-full rounded-lg border border-slate-300 px-3 py-2"
                                         />
-                                        <p className="mt-1 text-xs text-gray-500">
+                                        <p className="mt-1 text-xs text-slate-500">
                                             รองรับ PDF, Word และ Excel ขนาดไม่เกิน 20MB
                                             {editMode && selectedAnnouncement?.attachment_name ? ` • ไฟล์ปัจจุบัน: ${selectedAnnouncement.attachment_name}` : ''}
                                         </p>
@@ -848,7 +848,7 @@ function AnnouncementsContent() {
                                                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                                                 className="mr-2"
                                             />
-                                            <span className="text-sm text-gray-700">เปิดใช้งาน</span>
+                                            <span className="text-sm text-slate-700">เปิดใช้งาน</span>
                                         </label>
                                         <label className="flex items-center">
                                             <input
@@ -857,45 +857,45 @@ function AnnouncementsContent() {
                                                 onChange={(e) => setFormData({ ...formData, show_popup: e.target.checked })}
                                                 className="mr-2"
                                             />
-                                            <span className="text-sm text-gray-700">แสดงเป็นหน้าต่างแจ้งเตือนหน้าแรก</span>
+                                            <span className="text-sm text-slate-700">แสดงเป็นหน้าต่างแจ้งเตือนหน้าแรก</span>
                                         </label>
                                     </div>
 
                                     {/* Priority */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
                                             ลำดับความสำคัญ (เลขมากแสดงก่อน)
                                         </label>
                                         <input
                                             type="number"
                                             value={formData.priority}
                                             onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })}
-                                            className="text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            className="text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                         />
                                     </div>
 
                                     {/* Dates */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                                 วันที่เริ่มแสดง
                                             </label>
                                             <input
                                                 type="datetime-local"
                                                 value={formData.start_date}
                                                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                                className=" text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                className=" text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
                                                 วันที่สิ้นสุด
                                             </label>
                                             <input
                                                 type="datetime-local"
                                                 value={formData.end_date}
                                                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                                                className=" text-gray-600 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                className=" text-slate-600 w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                             />
                                         </div>
                                     </div>

@@ -177,7 +177,7 @@ export default function HealthFacilitiesPage() {
 
     const getTypeColor = (type) => {
         const found = facilityTypes.find(t => t.value === type);
-        return found ? found.color : 'bg-gray-100 text-gray-700';
+        return found ? found.color : 'bg-slate-100 text-slate-700';
     };
 
     return (
@@ -185,17 +185,17 @@ export default function HealthFacilitiesPage() {
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">
                         <AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการหน่วยบริการ
                     </h1>
-                    <p className="text-gray-600">ระบบจัดการข้อมูลสถานพยาบาลและสถานีอนามัย</p>
+                    <p className="text-slate-600">ระบบจัดการข้อมูลสถานพยาบาลและสถานีอนามัย</p>
                 </div>
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
                     {facilityTypes.map(type => (
-                        <div key={type.value} className={`bg-white rounded-lg shadow p-4 border ${getTypeColor(type.value)}`}>
-                            <div className="text-sm text-gray-600 mb-1">{type.label}</div>
+                        <div key={type.value} className={`bg-white rounded-2xl p-4 border ${getTypeColor(type.value)}`}>
+                            <div className="text-sm text-slate-600 mb-1">{type.label}</div>
                             <div className="text-2xl font-bold">
                                 {stats[type.value] || 0}
                             </div>
@@ -206,10 +206,10 @@ export default function HealthFacilitiesPage() {
 
 
                 {/* สถานะการให้บริการ (แสดงบนแผนที่สถานการณ์) */}
-                <div className="mb-6 rounded-lg bg-white p-4 shadow text-gray-800">
+                <div className="border border-slate-200 mb-6 rounded-2xl bg-white p-4 text-slate-800">
                     <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
                         <h2 className="font-bold">สถานะการให้บริการวันนี้</h2>
-                        <p className="text-xs text-gray-500">ประชาชนเห็นสถานะนี้ในแผนที่สถานการณ์ • เกิน 24 ชม. จะขึ้นว่าอาจไม่เป็นปัจจุบัน</p>
+                        <p className="text-xs text-slate-500">ประชาชนเห็นสถานะนี้ในแผนที่สถานการณ์ • เกิน 24 ชม. จะขึ้นว่าอาจไม่เป็นปัจจุบัน</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {[...SERVICE_STATUSES, UNKNOWN_SERVICE].map((status) => {
@@ -232,7 +232,7 @@ export default function HealthFacilitiesPage() {
                 </div>
 
                 {/* Search and Filter */}
-                <div className="bg-white p-4 rounded-lg shadow mb-6 text-gray-800">
+                <div className="border border-slate-200 bg-white p-4 rounded-2xl mb-6 text-slate-800">
                     <div className="flex flex-wrap gap-4 ">
                         <input
                             type="text"
@@ -266,59 +266,59 @@ export default function HealthFacilitiesPage() {
                 </div>
 
                 {/* Facilities Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                     {loading ? (
-                        <div className="p-8 text-center text-gray-500">
+                        <div className="p-8 text-center text-slate-500">
                             กำลังโหลดข้อมูล...
                         </div>
                     ) : visibleFacilities.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">
+                        <div className="p-8 text-center text-slate-500">
                             ไม่พบข้อมูลสถานพยาบาล
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50 border-b">
+                                <thead className="bg-slate-50 border-b">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อสถานพยาบาล</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ประเภท</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ที่อยู่</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ/ตำบล</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">พิกัด</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">โทรศัพท์</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานะวันนี้</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ID</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ชื่อสถานพยาบาล</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ประเภท</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ที่อยู่</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">อำเภอ/ตำบล</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">พิกัด</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">โทรศัพท์</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">สถานะวันนี้</th>
 
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">จัดการ</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200">
+                                <tbody className="divide-y divide-slate-200">
                                     {paginatedFacilities.map((facility) => (
-                                        <tr key={facility.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <tr key={facility.id} className="hover:bg-slate-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                                                 {facility.id}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">{facility.name}</div>
+                                                <div className="font-medium text-slate-900">{facility.name}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(facility.typecode)}`}>
                                                     {facility.typecode}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                                            <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
                                                 {facility.address || '-'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                                 {facility.district_name || '-'} / {facility.tambon || '-'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                                 {facility.lat && facility.lon
                                                     ? `${parseFloat(facility.lat).toFixed(4)}, ${parseFloat(facility.lon).toFixed(4)}`
                                                     : '-'
                                                 }
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                                 {facility.phone || '-'}
                                             </td>
                                             <td className="px-6 py-4 text-sm">
@@ -333,7 +333,7 @@ export default function HealthFacilitiesPage() {
                                                                 <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: flood.bg, color: flood.color }}>{flood.label}</span>
                                                             )}
                                                             {facility.status_updated_at && (
-                                                                <span className={`text-[11px] ${stale ? 'font-semibold text-amber-700' : 'text-gray-500'}`}>
+                                                                <span className={`text-[11px] ${stale ? 'font-semibold text-amber-700' : 'text-slate-500'}`}>
                                                                     อัปเดต {formatUpdated(facility.status_updated_at)}{stale ? ' (เกิน 24 ชม.)' : ''}
                                                                 </span>
                                                             )}
@@ -379,14 +379,14 @@ export default function HealthFacilitiesPage() {
             {showModal && (
                 <div className="app-modal-overlay" role="dialog" aria-modal="true">
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4 text-gray-700">
+                        <h2 className="text-xl font-bold mb-4 text-slate-700">
                             {editingFacility ? "แก้ไขสถานพยาบาล" : "เพิ่มสถานพยาบาลใหม่"}
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         ชื่อสถานพยาบาล *
                                     </label>
                                     <input
@@ -394,19 +394,19 @@ export default function HealthFacilitiesPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         ประเภท *
                                     </label>
                                     <select
                                         required
                                         value={formData.typecode}
                                         onChange={(e) => setFormData({ ...formData, typecode: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="">เลือกประเภท</option>
                                         {facilityTypes.map(type => (
@@ -420,43 +420,43 @@ export default function HealthFacilitiesPage() {
 
 
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         ที่อยู่
                                     </label>
                                     <textarea
                                         value={formData.address}
                                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                         rows={2}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         อำเภอ
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.district}
                                         onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         ตำบล
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.tambon}
                                         onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Latitude (ละติจูด)
                                     </label>
                                     <input
@@ -464,13 +464,13 @@ export default function HealthFacilitiesPage() {
                                         step="any"
                                         value={formData.lat}
                                         onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="6.xxxxx"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Longitude (ลองจิจูด)
                                     </label>
                                     <input
@@ -478,13 +478,13 @@ export default function HealthFacilitiesPage() {
                                         step="any"
                                         value={formData.lon}
                                         onChange={(e) => setFormData({ ...formData, lon: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="100.xxxxx"
                                     />
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
                                         เบอร์โทรติดต่อ
                                     </label>
                                     <input
@@ -492,7 +492,7 @@ export default function HealthFacilitiesPage() {
                                         maxLength={80}
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="text-gray-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="เช่น 074-711-010"
                                     />
                                 </div>

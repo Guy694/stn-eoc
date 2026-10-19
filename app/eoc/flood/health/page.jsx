@@ -21,7 +21,7 @@ export default function FloodHealthPage() {
   const [tab, setTab] = useUrlState("tab", "overview", TABS.map((item) => item.value));
   return (
     <EOCLayout>
-      <div className="mb-4 rounded-xl border border-[#c9dcee] bg-white px-2 shadow-sm">
+      <div className="mb-4 rounded-2xl border border-slate-200 bg-white px-2">
         <Tabs value={tab} onChange={setTab} items={TABS} />
       </div>
       {tab === "overview" ? (

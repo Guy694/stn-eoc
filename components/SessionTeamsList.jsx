@@ -44,10 +44,10 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6">
                 <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b border-teal-500"></div>
-                    <span className="ml-3 text-gray-600">กำลังโหลดข้อมูลทีม...</span>
+                    <span className="ml-3 text-slate-600">กำลังโหลดข้อมูลทีม...</span>
                 </div>
             </div>
         );
@@ -55,7 +55,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
 
     if (error) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6">
                 <div className="text-center text-red-500 py-4">
                     <span className="inline-flex items-center gap-2">
                         <AppIcon icon="xCircle" className="h-5 w-5" />
@@ -68,8 +68,8 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
 
     if (!teams || teams.length === 0) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="text-center text-gray-500 py-8">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                <div className="text-center text-slate-500 py-8">
                     <AppIcon icon="users" className="mx-auto mb-2 h-10 w-10" />
                     <p>ไม่มีข้อมูลทีมงานในเซสชันนี้</p>
                 </div>
@@ -80,7 +80,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
     return (
         <div className="space-y-4">
             {/* {showTitle && (
-                <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg shadow-md p-4">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                         <AppIcon icon="users" className="h-7 w-7" />
                         ทีมงานที่เปิดใช้งาน
@@ -113,7 +113,7 @@ function TeamCard({ team }) {
 
     return (
         <div
-            className={`bg-white rounded-lg shadow-md border overflow-hidden transition-all hover:shadow-lg`}
+            className={`bg-white rounded-2xl border overflow-hidden transition-all hover:shadow-lg`}
             style={{ borderLeftColor: getColorClass(team.color) }}
         >
             {/* Team Header */}
@@ -122,10 +122,10 @@ function TeamCard({ team }) {
                     <div className="flex items-center gap-3 flex-1">
                         <AppIcon icon={team.icon || 'users'} className="h-8 w-8 text-blue-600" />
                         <div className="flex-1">
-                            <h4 className="font-semibold text-gray-800 text-sm">
+                            <h4 className="font-semibold text-slate-800 text-sm">
                                 {team.team_name_th}
                             </h4>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500">
                                 {team.team_code}
                             </p>
                         </div>
@@ -134,15 +134,15 @@ function TeamCard({ team }) {
 
                 {/* Team Lead */}
                 {team.team_lead_name && (
-                    <div className="mb-3 bg-gray-50 rounded p-2">
-                        <p className="text-xs text-gray-600 mb-1">หัวหน้าทีม:</p>
+                    <div className="mb-3 bg-slate-50 rounded p-2">
+                        <p className="text-xs text-slate-600 mb-1">หัวหน้าทีม:</p>
                         <div className="flex items-center gap-2">
                             <span className="text-lg"><AppIcon icon="userCog" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-800 truncate">
+                                <p className="text-sm font-medium text-slate-800 truncate">
                                     {team.team_lead_name} {team.team_lead_family_name}
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-slate-500">
                                     {team.team_lead_role || 'เจ้าหน้าที่'}
                                 </p>
                             </div>
@@ -152,7 +152,7 @@ function TeamCard({ team }) {
 
                 {/* Member Count */}
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-slate-600">
                         สมาชิก: <strong>{team.member_count}</strong> คน
                     </span>
                     {team.members && team.members.length > 0 && (
@@ -167,24 +167,24 @@ function TeamCard({ team }) {
 
                 {/* Members List */}
                 {expanded && team.members && team.members.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                        <p className="text-xs font-medium text-gray-700 mb-2">
+                    <div className="mt-3 pt-3 border-t border-slate-200">
+                        <p className="text-xs font-medium text-slate-700 mb-2">
                             รายชื่อสมาชิก:
                         </p>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                             {team.members.map((member, index) => (
                                 <div
                                     key={member.id}
-                                    className="flex items-start gap-2 bg-gray-50 rounded p-2 text-xs"
+                                    className="flex items-start gap-2 bg-slate-50 rounded p-2 text-xs"
                                 >
-                                    <span className="text-gray-400 font-mono min-w-[20px]">
+                                    <span className="text-slate-400 font-mono min-w-[20px]">
                                         {index + 1}.
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-gray-800 truncate">
+                                        <p className="font-medium text-slate-800 truncate">
                                             {member.full_name}
                                         </p>
-                                        <div className="flex items-center gap-2 text-gray-600">
+                                        <div className="flex items-center gap-2 text-slate-600">
                                             <span className="truncate">
                                                 {member.role_in_team}
                                             </span>
@@ -206,7 +206,7 @@ function TeamCard({ team }) {
 
                 {/* Description (if exists) */}
                 {team.description && !expanded && (
-                    <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                    <p className="text-xs text-slate-600 mt-2 line-clamp-2">
                         {team.description}
                     </p>
                 )}

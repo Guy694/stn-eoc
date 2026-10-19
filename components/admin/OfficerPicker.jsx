@@ -85,7 +85,7 @@ export function OfficerPicker({ options = [], value, onChange, placeholder = "à¸
 
   if (selected && !changing) {
     return (
-      <div className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1">
+      <div className="flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-1">
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold text-slate-900">{officerName(selected)}</span>
           {officerDetail(selected) ? <span className="block truncate text-[11px] text-slate-500">{officerDetail(selected)}</span> : null}

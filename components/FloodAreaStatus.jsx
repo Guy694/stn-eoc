@@ -219,10 +219,10 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="border border-slate-200 bg-white rounded-2xl p-6">
                 <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86]"></div>
-                    <span className="ml-3 text-gray-600">กำลังโหลดข้อมูล...</span>
+                    <span className="ml-3 text-slate-600">กำลังโหลดข้อมูล...</span>
                 </div>
             </div>
         );
@@ -232,8 +232,8 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         return (
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                 <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                <p className="text-slate-600">
                     ไม่พบ เหตุการณ์ EOC อุทกภัยน้ำท่วมที่กำลังดำเนินการอยู่ในขณะนี้
                 </p>
             </div>
@@ -456,7 +456,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             safe: 'bg-green-100 text-green-800 border-green-300'
         };
         return (
-            <span className={`px-2 py-1 rounded text-xs font-medium border ${badges[level] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+            <span className={`px-2 py-1 rounded text-xs font-medium border ${badges[level] || 'bg-slate-100 text-slate-800 border-slate-300'}`}>
                 {LEGACY_FLOOD_LEVELS[level]?.label || level}
             </span>
         );
@@ -566,12 +566,12 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         <div className="space-y-6">
             {/* Timeline รายวัน */}
             {activeSession && dates.length > 0 && (
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="border border-slate-200 bg-white rounded-2xl p-6">
                     <div className="mb-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-2">
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">
                             <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600">
                             ครั้งที่ {activeSession.session_number} - ตั้งแต่ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
                             {activeSession.closed_at && ` ถึง ${new Date(activeSession.closed_at).toLocaleDateString('th-TH')}`}
                             {' '}(รวม {dates.length} วัน)
@@ -579,12 +579,12 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                     </div>
                     <div className="space-y-4">
                         <div className="flex flex-wrap gap-2">
-                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="text-slate-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <span className="font-semibold">แผนที่พื้นหลัง</span>
                                 <select
                                     value={baseMap}
                                     onChange={(e) => setBaseMap(e.target.value)}
-                                    className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-[#0b4c86]"
+                                    className="rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:border-[#0b4c86]"
                                 >
                                     {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
                                         <option key={key} value={key}>{layer.label}</option>
@@ -604,7 +604,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                         onClick={() => setSelectedDate(d)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-all ${isSelected
                                             ? 'bg-green-600 text-white shadow-lg transform scale-105'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                             }`}
                                     >
                                         <div className="text-xs">วันที่ {idx + 1}</div>
@@ -644,9 +644,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
 
             {/* ฟิลเตอร์ข้อมูล */}
-            <div className="bg-white text-gray-700 rounded-lg shadow p-4">
+            <div className="border border-slate-200 bg-white text-slate-700 rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                    <label className="font-semibold text-gray-700 flex items-center gap-2">
+                    <label className="font-semibold text-slate-700 flex items-center gap-2">
                         <span><AppIcon icon="search" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>ฟิลเตอร์ข้อมูล
                     </label>
                     <button
@@ -667,7 +667,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className="text-sm text-gray-600 block mb-1">อำเภอ:</label>
+                        <label className="text-sm text-slate-600 block mb-1">อำเภอ:</label>
                         <select
                             value={districtFilter}
                             onChange={(e) => {
@@ -675,7 +675,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 setTambonFilter('all');
                                 setVillageFilter('all');
                             }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40"
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40"
                         >
                             <option value="all">ทั้งหมด ({allDistricts.length} อำเภอ)</option>
                             {allDistricts.map(district => (
@@ -684,7 +684,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </select>
                     </div>
                     <div>
-                        <label className="text-sm text-gray-600 block mb-1">ตำบล:</label>
+                        <label className="text-sm text-slate-600 block mb-1">ตำบล:</label>
                         <select
                             value={tambonFilter}
                             onChange={(e) => {
@@ -692,7 +692,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 setVillageFilter('all');
                             }}
                             disabled={districtFilter === 'all'}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40 disabled:bg-slate-100 disabled:cursor-not-allowed"
                         >
                             <option value="all">{districtFilter === 'all' ? 'กรุณาเลือกอำเภอก่อน' : `ทั้งหมด (${allTambons.length} ตำบล)`}</option>
                             {allTambons.map(tambon => (
@@ -701,12 +701,12 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </select>
                     </div>
                     <div>
-                        <label className="text-sm text-gray-600 block mb-1">หมู่บ้าน:</label>
+                        <label className="text-sm text-slate-600 block mb-1">หมู่บ้าน:</label>
                         <select
                             value={villageFilter}
                             onChange={(e) => setVillageFilter(e.target.value)}
                             disabled={tambonFilter === 'all'}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40 disabled:bg-slate-100 disabled:cursor-not-allowed"
                         >
                             <option value="all">{tambonFilter === 'all' ? 'กรุณาเลือกตำบลก่อน' : `ทั้งหมด (${allVillages.length} หมู่บ้าน)`}</option>
                             {allVillages.map(village => (
@@ -722,13 +722,13 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             {/* แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับตำบล) */}
             {
                 polygons && polygons.length > 0 && (
-                    <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-6">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
                         {/* Header */}
                         <div className="text-center mb-4">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">
                                 สถานการณ์อุทกภัยน้ำท่วม จังหวัดสตูล (ระดับตำบล)
                             </h3>
-                            <p className="text-lg text-gray-600">
+                            <p className="text-lg text-slate-600">
                                 {selectedDate ? selectedDate.toLocaleDateString('th-TH', {
                                     year: 'numeric',
                                     month: 'long',
@@ -736,14 +736,14 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                     weekday: 'long'
                                 }) : ''}
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-sm text-slate-500 mt-1">
                                 แสดงสีตามระดับความรุนแรงสูงสุดของตำบล
                             </p>
                         </div>
 
                         {/* Controls */}
                         <div className="flex flex-wrap justify-end gap-2 mb-4">
-                            <label className="flex items-center gap-2 text-sm text-gray-700 bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="flex items-center gap-2 text-sm text-slate-700 bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
                                     checked={showVillageLabels}
@@ -754,7 +754,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             </label>
 
 
-                            <label className="flex items-center gap-2 text-sm text-gray-700 bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="flex items-center gap-2 text-sm text-slate-700 bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
                                     checked={showTambonLabels}
@@ -763,7 +763,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 />
                                 แสดงชื่อตำบล
                             </label>
-                            <label className="flex items-center gap-2 text-gray-700 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="flex items-center gap-2 text-slate-700 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
                                     checked={showDistrictLabels}
@@ -772,7 +772,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 />
                                 แสดงชื่ออำเภอ
                             </label>
-                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="text-slate-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
                                     checked={showFacilities}
@@ -781,7 +781,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 />
                                 แสดงสถานพยาบาล
                             </label>
-                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="text-slate-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
                                     checked={showWaterways}
@@ -790,7 +790,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 />
                                 เส้นทางน้ำ/คลอง
                             </label>
-                            <label className="text-gray-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
+                            <label className="text-slate-700 flex items-center gap-2 text-sm bg-white px-3 py-2 rounded-lg shadow">
                                 <input
                                     type="checkbox"
                                     checked={showHillshade}
@@ -802,7 +802,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                         </div>
 
                         {/* Map */}
-                        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6" style={{ height: '600px' }}>
+                        <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden mb-6" style={{ height: '600px' }}>
                             {isMounted && !loading && polygons && (
                                 <MapContainer
                                     key={`tambon-map-${selectedDate?.getTime() || 'default'}`}
@@ -1326,7 +1326,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
                         {/* Legend */}
                         <div className="mb-4 mt-4">
-                            <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์พื้นที่อุทกภัยน้ำท่วม:</h3>
+                            <h3 className="text-sm font-semibold text-slate-700 mb-2">สัญลักษณ์พื้นที่อุทกภัยน้ำท่วม:</h3>
                             <div className="flex justify-start gap-4 flex-wrap">
                                 {Object.entries(LEGACY_FLOOD_LEVELS).filter(([key]) => key !== 'nodata').map(([key, meta]) => <LegendItem key={key} color={meta.color} label={meta.label} />)}
                                 <div className="flex items-center gap-2">
@@ -1334,24 +1334,24 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                         className="w-6 h-6 rounded border-2 border-black"
                                         style={{ backgroundColor: 'transparent' }}
                                     />
-                                    <span className="text-sm font-medium text-gray-700">ไม่มีข้อมูล</span>
+                                    <span className="text-sm font-medium text-slate-700">ไม่มีข้อมูล</span>
                                 </div>
                             </div>
                         </div>
 
                         {showTambonBoundaries && (
                             <div className="mb-4">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
+                                <h3 className="text-sm font-semibold text-slate-700 mb-2">สัญลักษณ์เขตตำบล:</h3>
                                 <div className="flex items-center gap-2">
                                     <div className="w-12 h-1 border-2 border-[#0b4c86]" style={{ borderStyle: 'dashed' }}></div>
-                                    <span className="text-sm text-gray-700">เส้นขอบเขตตำบล</span>
+                                    <span className="text-sm text-slate-700">เส้นขอบเขตตำบล</span>
                                 </div>
                             </div>
                         )}
 
                         {showFacilities && (
                             <div className="mb-6">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">สัญลักษณ์สถานพยาบาล:</h3>
+                                <h3 className="text-sm font-semibold text-slate-700 mb-2">สัญลักษณ์สถานพยาบาล:</h3>
                                 <div className="flex justify-start gap-4 flex-wrap">
                                     <FacilityLegendItem color="#DC2626" label="รพ.ทั่วไป" />
                                     <FacilityLegendItem color="#F59E0B" label="รพ.ชุมชน" />
@@ -1427,19 +1427,19 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
 
             {/* รายการพื้นที่ */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="border border-slate-200 bg-white rounded-2xl">
                 <div className="p-6 border-b">
-                    <h3 className="text-lg font-bold text-gray-700">รายการพื้นที่ ({filteredData.length})</h3>
+                    <h3 className="text-lg font-bold text-slate-700">รายการพื้นที่ ({filteredData.length})</h3>
                 </div>
                 <div className="divide-y max-h-96 overflow-y-auto">
                     {filteredData.map((area) => (
-                        <div key={area.id} className="p-4 hover:bg-gray-50 transition-colors">
+                        <div key={area.id} className="p-4 hover:bg-slate-50 transition-colors">
                             <div className="flex justify-between items-start mb-2">
                                 <div className="flex-1">
-                                    <h4 className="font-medium text-gray-900">
+                                    <h4 className="font-medium text-slate-900">
                                         {area.villname || area.villcode}
                                     </h4>
-                                    <p className="text-sm text-gray-600">
+                                    <p className="text-sm text-slate-600">
                                         ต.{area.tambon} อ.{area.district}
                                     </p>
                                 </div>
@@ -1448,22 +1448,22 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                                 </div>
                             </div>
                             {area.water_level && Number(area.water_level) > 0 && (
-                                <div className="text-sm text-gray-700 mb-1">
+                                <div className="text-sm text-slate-700 mb-1">
                                     <AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระดับน้ำ: <span className="font-medium">{Number(area.water_level).toFixed(2)} เมตร</span>
                                 </div>
                             )}
                             {area.affected_population > 0 && (
-                                <div className="text-sm text-gray-700 mb-1">
+                                <div className="text-sm text-slate-700 mb-1">
                                     <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประชากรได้รับผลกระทบ: <span className="font-medium">{area.affected_population.toLocaleString()} คน</span>
                                     {' '}({area.affected_households} ครัวเรือน)
                                 </div>
                             )}
                             {area.notes && (
-                                <div className="text-sm text-gray-600 mt-2 p-2 bg-gray-50 rounded">
+                                <div className="text-sm text-slate-600 mt-2 p-2 bg-slate-50 rounded">
                                     <AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {area.notes}
                                 </div>
                             )}
-                            <div className="text-xs text-gray-400 mt-2">
+                            <div className="text-xs text-slate-400 mt-2">
                                 อัพเดทล่าสุด: {new Date(area.updated_at).toLocaleString('th-TH')}
                             </div>
                         </div>
@@ -1500,10 +1500,10 @@ function LegendItem({ color, label }) {
     return (
         <div className="flex items-center gap-2">
             <div
-                className="w-6 h-6 rounded border-2 border-gray-300"
+                className="w-6 h-6 rounded border-2 border-slate-300"
                 style={{ backgroundColor: color }}
             />
-            <span className="text-sm font-medium text-gray-700">{label}</span>
+            <span className="text-sm font-medium text-slate-700">{label}</span>
         </div>
     );
 }
@@ -1519,7 +1519,7 @@ function FacilityLegendItem({ color, label }) {
                     <path d="M5 0h2v5h5v2H7v5H5V7H0V5h5V0z" />
                 </svg>
             </div>
-            <span className="text-sm font-medium text-gray-700">{label}</span>
+            <span className="text-sm font-medium text-slate-700">{label}</span>
         </div>
     );
 }

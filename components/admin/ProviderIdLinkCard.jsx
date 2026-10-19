@@ -66,7 +66,7 @@ export default function ProviderIdLinkCard({ className = "" }) {
   );
 
   return (
-    <section className={`rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm sm:p-6 ${className}`} aria-labelledby="provider-id-title">
+    <section className={`rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 ${className}`} aria-labelledby="provider-id-title">
       <h3 id="provider-id-title" className="flex flex-wrap items-center gap-2 font-black text-slate-900">
         <Image src="/stn-eoc/img/provider-id.png" alt="" width={326} height={128} className="h-7 w-auto" />เข้าสู่ระบบด้วย Provider ID
         {status && !status.migration_required ? (status.linked ? <StatusPill tone="green">เชื่อมแล้ว</StatusPill> : <StatusPill tone="gray">ยังไม่เชื่อม</StatusPill>) : null}

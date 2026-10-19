@@ -27,7 +27,7 @@ import { SHELTER_CAPABILITIES, SHELTER_TYPES, capabilityLabel, parseCapabilities
 // แผนที่ใช้ Leaflet (ทำงานเฉพาะในเบราว์เซอร์) — โหลดเมื่อเปิดแท็บแผนที่เท่านั้น
 const ShelterCenterMap = dynamic(() => import("@/components/ShelterCenterMap"), {
   ssr: false,
-  loading: () => <div className="flex h-96 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-500">กำลังโหลดแผนที่…</div>
+  loading: () => <div className="flex h-96 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-500">กำลังโหลดแผนที่…</div>
 });
 
 
@@ -298,7 +298,7 @@ export default function ShelterWorkspace() {
 
       {tab === "session" ? (
         !currentEvent ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
             <p className="font-bold text-slate-800">ยังไม่มีเหตุการณ์ที่เปิดอยู่</p>
             <p className="mt-1 text-sm text-slate-600">การเปิดใช้ศูนย์และบันทึกยอดผู้พักพิงทำได้เมื่อเปิด EOC แล้ว ระหว่างนี้จัดการรายชื่อศูนย์ได้ที่แท็บทะเบียนกลาง</p>
             <div className="mt-4 flex justify-center gap-2">
@@ -358,7 +358,7 @@ export default function ShelterWorkspace() {
           </>
         )
       ) : tab === "map" ? (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <ShelterCenterMap eocType={currentEvent?.type || readQuery("eoc") || "flood"} sessionId={currentEvent?.sessionId || null} />
         </div>
       ) : (

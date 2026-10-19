@@ -138,7 +138,7 @@ export function StatStrip({ items, compact }) {
 
 export function Toolbar({ search, onSearchChange, searchPlaceholder = "ค้นหา", children, right }) {
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 lg:flex-row lg:flex-wrap lg:items-center">
+    <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-3 lg:flex-row lg:flex-wrap lg:items-center">
       {onSearchChange ? (
         <label className="relative block min-w-0 flex-1 lg:min-w-[14rem]">
           <span className="sr-only">{searchPlaceholder}</span>
@@ -258,7 +258,7 @@ export function DataTable({
 
   if (loading && rows.length === 0) {
     return (
-      <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-4" aria-busy="true">
+      <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4" aria-busy="true">
         {[0, 1, 2, 3].map((index) => <div key={index} className="h-10 animate-pulse rounded-lg bg-slate-100" />)}
       </div>
     );
@@ -266,7 +266,7 @@ export function DataTable({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+      <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
         <p className="text-sm text-slate-600">{emptyText}</p>
         {emptyAction ? <div className="mt-3">{emptyAction}</div> : null}
       </div>
@@ -274,7 +274,7 @@ export function DataTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
       {/* จอใหญ่ */}
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left text-sm">

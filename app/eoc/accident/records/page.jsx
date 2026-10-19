@@ -9,7 +9,7 @@ import AppIcon from "@/components/icons/AppIcon";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
-    loading: () => <div className="h-[400px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">กำลังโหลดแผนที่...</div>
+    loading: () => <div className="h-[400px] bg-slate-100 rounded-lg animate-pulse flex items-center justify-center">กำลังโหลดแผนที่...</div>
 });
 
 const accidentTypes = ['รถยนต์', 'จักรยานยนต์', 'รถจักรยาน', 'คนเดินเท้า', 'อื่นๆ'];
@@ -214,8 +214,8 @@ export default function AccidentRecordsPage() {
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
-                        <p className="text-gray-600">กรุณาเปิดเหตุการณ์ EOC ก่อนบันทึกข้อมูล</p>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                        <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนบันทึกข้อมูล</p>
                     </div>
                 </div>
             </EOCLayout>
@@ -232,7 +232,7 @@ export default function AccidentRecordsPage() {
                             <span className="text-4xl"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             บันทึกอุบัติเหตุ
                         </h1>
-                        <p className="text-gray-600">
+                        <p className="text-slate-600">
                             เหตุการณ์ครั้งที่ {activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}
                         </p>
                     </div>
@@ -246,33 +246,33 @@ export default function AccidentRecordsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg p-4 shadow border border-red-500">
+                    <div className="bg-white rounded-2xl p-4 border border-red-500">
                         <div className="text-3xl font-bold text-red-600">{stats.total}</div>
-                        <div className="text-sm text-gray-600">อุบัติเหตุทั้งหมด</div>
+                        <div className="text-sm text-slate-600">อุบัติเหตุทั้งหมด</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-gray-800">
-                        <div className="text-3xl font-bold text-gray-800">{stats.deaths}</div>
-                        <div className="text-sm text-gray-600"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เสียชีวิต</div>
+                    <div className="bg-white rounded-2xl p-4 border border-slate-800">
+                        <div className="text-3xl font-bold text-slate-800">{stats.deaths}</div>
+                        <div className="text-sm text-slate-600"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เสียชีวิต</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-yellow-500">
+                    <div className="bg-white rounded-2xl p-4 border border-yellow-500">
                         <div className="text-3xl font-bold text-yellow-600">{stats.injuries}</div>
-                        <div className="text-sm text-gray-600"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บาดเจ็บ</div>
+                        <div className="text-sm text-slate-600"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บาดเจ็บ</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow border border-[#0b4c86]">
+                    <div className="bg-white rounded-2xl p-4 border border-[#0b4c86]">
                         <div className="text-3xl font-bold text-[#0b4c86]">{stats.drunk}</div>
-                        <div className="text-sm text-gray-600"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</div>
+                        <div className="text-sm text-slate-600"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</div>
                     </div>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white rounded-lg shadow p-4 mb-6">
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">อำเภอ</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">อำเภอ</label>
                             <select
                                 value={filters.district}
                                 onChange={(e) => setFilters({ ...filters, district: e.target.value })}
-                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                             >
                                 <option value="all">ทั้งหมด</option>
                                 {satunDistricts.map(d => (
@@ -281,56 +281,56 @@ export default function AccidentRecordsPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">วันที่</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">วันที่</label>
                             <input
                                 type="date"
                                 value={filters.date}
                                 onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                             />
                         </div>
                     </div>
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <div className="p-4 bg-gray-50 border-b">
-                        <h3 className="font-bold text-gray-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายการอุบัติเหตุ ({records.length} รายการ)</h3>
+                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
+                    <div className="p-4 bg-slate-50 border-b">
+                        <h3 className="font-bold text-slate-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายการอุบัติเหตุ ({records.length} รายการ)</h3>
                     </div>
 
                     {loading ? (
                         <div className="text-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b border-red-500 mx-auto mb-2"></div>
-                            <p className="text-gray-600 text-sm">กำลังโหลด...</p>
+                            <p className="text-slate-600 text-sm">กำลังโหลด...</p>
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                            <p className="text-gray-500">ยังไม่มีรายงานอุบัติเหตุ</p>
+                            <p className="text-slate-500">ยังไม่มีรายงานอุบัติเหตุ</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">วัน/เวลา</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ประเภท</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานที่</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ผลกระทบ</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">สาเหตุ</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">#</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">วัน/เวลา</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">ประเภท</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">สถานที่</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">ผลกระทบ</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">สาเหตุ</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">จัดการ</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-white divide-y divide-slate-200">
                                     {paginatedRecords.map((r, idx) => (
-                                        <tr key={r.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-sm text-gray-500">{((currentPage - 1) * pageSize) + idx + 1}</td>
+                                        <tr key={r.id} className="hover:bg-slate-50">
+                                            <td className="px-4 py-3 text-sm text-slate-500">{((currentPage - 1) * pageSize) + idx + 1}</td>
                                             <td className="px-4 py-3 text-sm">
-                                                <div className="font-medium text-gray-900">
+                                                <div className="font-medium text-slate-900">
                                                     {r.report_date ? new Date(r.report_date).toLocaleDateString('th-TH') : '-'}
                                                 </div>
-                                                <div className="text-gray-500">{r.report_time || '-'}</div>
+                                                <div className="text-slate-500">{r.report_time || '-'}</div>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
@@ -338,12 +338,12 @@ export default function AccidentRecordsPage() {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-sm">
-                                                <div className="font-medium text-gray-900">{r.location_name || '-'}</div>
-                                                <div className="text-gray-500">อ.{r.district} ต.{r.tambon}</div>
+                                                <div className="font-medium text-slate-900">{r.location_name || '-'}</div>
+                                                <div className="text-slate-500">อ.{r.district} ต.{r.tambon}</div>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
-                                                    <span className="px-2 py-1 text-xs rounded bg-gray-100"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {r.deaths}</span>
+                                                    <span className="px-2 py-1 text-xs rounded bg-slate-100"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {r.deaths}</span>
                                                     <span className="px-2 py-1 text-xs rounded bg-yellow-100"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {r.injuries}</span>
                                                 </div>
                                             </td>
@@ -378,37 +378,37 @@ export default function AccidentRecordsPage() {
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-gray-700 text-2xl font-bold mb-4">
+                                <h2 className="text-slate-700 text-2xl font-bold mb-4">
                                     {editingRecord ? 'แก้ไขข้อมูล' : "บันทึกอุบัติเหตุ"}
                                 </h2>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ *</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">วันที่ *</label>
                                             <input
                                                 type="date"
                                                 value={formData.report_date}
                                                 onChange={(e) => setFormData({ ...formData, report_date: e.target.value })}
                                                 required
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">เวลา</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">เวลา</label>
                                             <input
                                                 type="time"
                                                 value={formData.report_time}
                                                 onChange={(e) => setFormData({ ...formData, report_time: e.target.value })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ประเภท *</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">ประเภท *</label>
                                             <select
                                                 value={formData.accident_type}
                                                 onChange={(e) => setFormData({ ...formData, accident_type: e.target.value })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             >
                                                 {accidentTypes.map(t => <option key={t} value={t}>{t}</option>)}
                                             </select>
@@ -416,35 +416,35 @@ export default function AccidentRecordsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">สถานที่ / ถนน</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">สถานที่ / ถนน</label>
                                         <input
                                             type="text"
                                             value={formData.location_name}
                                             onChange={(e) => setFormData({ ...formData, location_name: e.target.value })}
                                             placeholder="เช่น ถนน 406 กม.5"
-                                            className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                            className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">อำเภอ</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">อำเภอ</label>
                                             <select
                                                 value={formData.district}
                                                 onChange={(e) => setFormData({ ...formData, district: e.target.value, tambon: '' })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             >
                                                 <option value="">เลือกอำเภอ</option>
                                                 {satunDistricts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ตำบล</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">ตำบล</label>
                                             <select
                                                 value={formData.tambon}
                                                 onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
                                                 disabled={!formData.district}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg disabled:bg-gray-100"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg disabled:bg-slate-100"
                                             >
                                                 <option value="">เลือกตำบล</option>
                                                 {tambonOptions.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
@@ -452,33 +452,33 @@ export default function AccidentRecordsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">พิกัดสถานที่เกิดเหตุ (ปักหมุดบนแผนที่)</label>
+                                    <div className="bg-slate-50 rounded-lg p-4">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">พิกัดสถานที่เกิดเหตุ (ปักหมุดบนแผนที่)</label>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">ละติจูด</label>
+                                                <label className="block text-xs text-slate-500 mb-1">ละติจูด</label>
                                                 <input
                                                     type="number"
                                                     step="any"
                                                     value={formData.lat}
                                                     onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
                                                     placeholder="6.xxxx"
-                                                    className="text-gray-600 w-full px-3 py-2 border rounded-lg bg-white"
+                                                    className="text-slate-600 w-full px-3 py-2 border rounded-lg bg-white"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">ลองจิจูด</label>
+                                                <label className="block text-xs text-slate-500 mb-1">ลองจิจูด</label>
                                                 <input
                                                     type="number"
                                                     step="any"
                                                     value={formData.lng}
                                                     onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
                                                     placeholder="100.xxxx"
-                                                    className="text-gray-600 w-full px-3 py-2 border rounded-lg bg-white"
+                                                    className="text-slate-600 w-full px-3 py-2 border rounded-lg bg-white"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="border border-gray-200 rounded-lg overflow-hidden relative z-0">
+                                        <div className="border border-slate-200 rounded-lg overflow-hidden relative z-0">
                                             <MapSelector
                                                 position={formData.lat && formData.lng ? {
                                                     lat: parseFloat(formData.lat) || 6.6238,
@@ -491,29 +491,29 @@ export default function AccidentRecordsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเสียชีวิต</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเสียชีวิต</label>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={formData.deaths}
                                                 onChange={(e) => setFormData({ ...formData, deaths: parseInt(e.target.value) || 0 })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนบาดเจ็บ</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนบาดเจ็บ</label>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={formData.injuries}
                                                 onChange={(e) => setFormData({ ...formData, injuries: parseInt(e.target.value) || 0 })}
-                                                className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-3">สาเหตุ/ปัจจัยเสี่ยงหลัก (บันทึกสถิติ)</label>
+                                    <div className="bg-slate-50 rounded-lg p-4">
+                                        <label className="block text-sm font-medium text-slate-700 mb-3">สาเหตุ/ปัจจัยเสี่ยงหลัก (บันทึกสถิติ)</label>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -555,12 +555,12 @@ export default function AccidentRecordsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">สาเหตุอื่นๆ / รายละเอียดเพิ่มเติม</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">สาเหตุอื่นๆ / รายละเอียดเพิ่มเติม</label>
                                         <textarea
                                             value={formData.notes}
                                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                             rows="3"
-                                            className="text-gray-600 w-full px-3 py-2 border rounded-lg"
+                                            className="text-slate-600 w-full px-3 py-2 border rounded-lg"
                                             placeholder="เช่น สุนัขวิ่งตัดหน้า, หลับใน, ฝนตกถนนลื่น, สภาพรถไม่พร้อมใช้งาน..."
                                         />
                                     </div>
@@ -569,7 +569,7 @@ export default function AccidentRecordsPage() {
                                         <button
                                             type="button"
                                             onClick={() => { setShowModal(false); setEditingRecord(null); resetForm(); }}
-                                            className="px-6 py-2 bg-gray-500 rounded-lg text-white hover:bg-gray-600"
+                                            className="px-6 py-2 bg-slate-500 rounded-lg text-white hover:bg-slate-600"
                                         >
                                             ยกเลิก
                                         </button>

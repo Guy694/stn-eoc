@@ -168,7 +168,7 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
 
       {summary?.byCategory?.length || summary?.unitsWithProblems?.length ? (
         <div className="grid gap-3 lg:grid-cols-2">
-          <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <h3 className="text-sm font-black text-slate-900">ปัญหาแยกตามประเภท</h3>
             <ul className="mt-2 space-y-2">
               {summary.byCategory.map((row) => (
@@ -179,7 +179,7 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
               ))}
             </ul>
           </div>
-          <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <h3 className="text-sm font-black text-slate-900">หน่วยงานที่ยังมีปัญหา</h3>
             {summary.unitsWithProblems.length ? (
               <ul className="mt-2 flex flex-wrap gap-1.5">
@@ -192,7 +192,7 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-[#c9dcee] bg-white px-2">
+      <div className="rounded-2xl border border-slate-200 bg-white px-2">
         <Tabs value={tab} onChange={setTab} items={[
           { value: "tickets", label: "เรื่องแจ้งปัญหา", count: summary?.open },
           { value: "resources", label: "สถานะระบบและอุปกรณ์", count: summary?.resources?.offline || undefined }

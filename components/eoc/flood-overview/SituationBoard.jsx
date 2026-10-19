@@ -3,7 +3,7 @@
 // แผงสรุปสถานการณ์ (บนสุดของหน้าภาพรวม): อ่านจากบนลงล่าง = สถานการณ์รวม → ตัวชี้วัดหลัก → เรื่องที่ต้องตัดสินใจ → อำเภอไหนต้องไปก่อน
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, CheckCircle2, Circle, ClipboardList, FileSpreadsheet, RefreshCw } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, Boxes, CalendarRange, CheckCircle2, ChevronRight, Circle, ClipboardList, FileSpreadsheet, Flag, HeartCrack, HeartPulse, LineChart, ListChecks, MapPinned, MonitorCog, PersonStanding, RefreshCw, Tent, Users, Wind } from "lucide-react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip } from "chart.js";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
@@ -73,29 +73,60 @@ function Sparkline({ values, tone }) {
   );
 }
 
-// การ์ดตัวชี้วัด: เน้นสีเฉพาะที่ต้องสนใจ (แดง/เหลือง) — ปกติ/ไม่มีข้อมูลเป็นโทนกลาง ให้การ์ดที่มีปัญหาเด่นขึ้นมา
+// การ์ดตัวชี้วัด (ธีมเดียวกับการ์ดทั้งระบบ): ไอคอนในกรอบสี · ตัวเลข · แนวโน้ม · เปลี่ยนแปลง · รายละเอียด
+const KPI_ICONS = { impact: Users, casualties: HeartCrack, shelters: Tent, health: HeartPulse, vulnerable: PersonStanding, supplies: Boxes, it: MonitorCog, oxygen: Wind, teams: ListChecks };
+const KPI_TONE = {
+  red: { tile: "bg-red-50 text-red-700 ring-red-100", value: "text-red-700", ring: "border-red-200 hover:border-red-300" },
+  amber: { tile: "bg-amber-50 text-amber-700 ring-amber-100", value: "text-amber-700", ring: "border-amber-200 hover:border-amber-300" },
+  green: { tile: "bg-emerald-50 text-emerald-700 ring-emerald-100", value: "text-slate-900", ring: "border-slate-200 hover:border-emerald-200" },
+  gray: { tile: "bg-slate-50 text-slate-400 ring-slate-200", value: "text-slate-400", ring: "border-slate-200 hover:border-slate-300" }
+};
+
 function KpiCard({ kpi }) {
-  const t = TONE[kpi.tone] || TONE.gray;
+  const tone = KPI_TONE[kpi.tone] || KPI_TONE.gray;
+  const Icon = KPI_ICONS[kpi.key] || Activity;
   const alert = kpi.tone === "red" || kpi.tone === "amber";
-  const muted = kpi.tone === "gray";
   return (
-    <Link href={kpi.href} className={`group flex flex-col rounded-xl border border-l-4 p-4 shadow-sm transition hover:border-[#0b4c86]/40 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4c86] ${alert ? t.bar : "border-l-slate-200"} ${kpi.tone === "red" ? "border-red-100 bg-red-50/40" : "border-slate-200 bg-white"}`}>
+    <Link href={kpi.href} className={`group flex h-full flex-col rounded-2xl border bg-white p-4 font-[family-name:var(--font-kanit)] transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,23,42,.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b4c86] ${tone.ring}`}>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold leading-snug text-slate-600">{kpi.label}</p>
-        {alert ? <StatusPill tone={kpi.tone} /> : <span className="shrink-0 text-[11px] font-semibold text-slate-400">{t.label}</span>}
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${tone.tile}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+        {alert ? <StatusPill tone={kpi.tone} /> : <span className="text-[11px] font-medium text-slate-400">{(TONE[kpi.tone] || TONE.gray).label}</span>}
       </div>
-      <div className="mt-2 flex items-end justify-between gap-3">
-        <p className={`text-3xl font-black tabular-nums ${muted ? "text-slate-400" : kpi.tone === "red" ? "text-red-800" : "text-slate-900"}`}>
+      <p className="mt-3 text-[13px] font-medium leading-snug text-slate-600">{kpi.label}</p>
+      <div className="mt-1 flex items-end justify-between gap-3">
+        <p className={`text-[1.7rem] font-bold leading-none tabular-nums ${tone.value}`}>
           {typeof kpi.value === "number" ? formatNumber(kpi.value) : kpi.value}
-          <span className="ml-1 text-sm font-semibold text-slate-500">{kpi.unit}</span>
+          <span className="ml-1 text-sm font-medium text-slate-500">{kpi.unit}</span>
         </p>
         <Sparkline values={kpi.spark} tone={kpi.tone} />
       </div>
       <Delta kpi={kpi} />
-      <p className="mt-2 text-xs leading-relaxed text-slate-600">{kpi.detail}</p>
+      <p className="mt-2 border-t border-slate-100 pt-2 text-xs leading-relaxed text-slate-500">{kpi.detail}</p>
+      <span className="mt-auto flex items-center gap-0.5 pt-2 text-xs font-semibold text-[#0b4c86] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">เปิดดู<ChevronRight className="h-3.5 w-3.5" aria-hidden="true" /></span>
     </Link>
   );
 }
+
+/** กล่องเนื้อหาธีมเดียวกัน: หัวข้อมีไอคอน + ลิงก์ด้านขวา */
+function Panel({ icon: Icon, title, subtitle, action, children, className = "", bodyClassName = "" }) {
+  return (
+    <section className={`overflow-hidden rounded-2xl border border-slate-200 bg-white font-[family-name:var(--font-kanit)] ${className}`}>
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          {Icon ? <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><Icon className="h-4 w-4" aria-hidden="true" /></span> : null}
+          <div className="min-w-0">
+            <h3 className="font-semibold text-slate-900">{title}</h3>
+            {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
+          </div>
+        </div>
+        {action}
+      </header>
+      <div className={bodyClassName}>{children}</div>
+    </section>
+  );
+}
+
+const panelLink = "inline-flex items-center gap-0.5 text-sm font-semibold text-[#0b4c86] hover:underline";
 
 function TrendChart({ trend }) {
   if (!trend?.length) return <p className="py-10 text-center text-sm text-slate-500">ยังไม่มีรายงานผู้ป่วย</p>;
@@ -150,7 +181,7 @@ function DistrictMatrix({ rows }) {
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full text-sm">
           <caption className="sr-only">สถานการณ์รายอำเภอ เรียงตามความเร่งด่วน</caption>
-          <thead className="bg-slate-50 text-xs text-slate-600">
+          <thead className="bg-slate-50/80 text-xs text-slate-500">
             <tr>
               <th scope="col" className="px-4 py-2.5 text-left font-semibold">อำเภอ</th>
               <th scope="col" className="px-3 py-2.5 text-right font-semibold">ได้รับผลกระทบ</th>
@@ -168,7 +199,7 @@ function DistrictMatrix({ rows }) {
               return (
                 <tr key={row.district} className="align-top">
                   <th scope="row" className="px-4 py-3 text-left">
-                    <span className="block font-bold text-slate-900">อ.{row.district}</span>
+                    <span className="block font-semibold text-slate-900">อ.{row.district}</span>
                     <span className="mt-1 inline-block"><StatusPill tone={row.tone} /></span>
                   </th>
                   <td className="px-3 py-3 text-right tabular-nums" style={heat(row.people, maxPeople)}>
@@ -247,8 +278,9 @@ function TriggerStrip({ sessionId }) {
   }, [sessionId]);
   if (current === null) return null;
   return (
-    <Link href="/eoc/flood/triggers" className="flex flex-wrap items-center gap-2 rounded-xl border border-[#c9dcee] bg-white px-3 py-2.5 shadow-sm hover:shadow">
-      <span className="font-black text-slate-900">ธงเตือนภัย/Trigger</span>
+    <Link href="/eoc/flood/triggers" className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 font-[family-name:var(--font-kanit)] hover:shadow-[0_12px_28px_-20px_rgba(15,23,42,.55)]">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-100"><Flag className="h-4 w-4" aria-hidden="true" /></span>
+      <span className="font-semibold text-slate-900">ธงเตือนภัย/Trigger</span>
       {current.length ? current.map((item) => {
         const meta = stageMeta(item.stage);
         const flag = flagMeta(meta?.flag);
@@ -259,7 +291,7 @@ function TriggerStrip({ sessionId }) {
           </span>
         );
       }) : <span className="text-sm text-slate-600">ยังไม่มีพื้นที่ที่ประกาศ</span>}
-      <span className="ml-auto text-xs font-bold text-[#0b4c86]">ประกาศ/ดูรายชื่อเป้าหมาย</span>
+      <span className="ml-auto inline-flex items-center text-xs font-semibold text-[#0b4c86]">ประกาศ/ดูรายชื่อเป้าหมาย<ChevronRight className="h-3.5 w-3.5" aria-hidden="true" /></span>
     </Link>
   );
 }
@@ -286,16 +318,19 @@ function ForecastStrip() {
   });
   const label = (date) => new Date(`${date}T00:00:00`).toLocaleDateString("th-TH", { weekday: "short", day: "numeric" });
   return (
-    <Link href="/eoc/flood/area-risk" className="block rounded-xl border border-[#c9dcee] bg-white p-3 shadow-sm hover:shadow">
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="font-black text-slate-900">พยากรณ์ตำบลเสี่ยงน้ำท่วม 7 วัน</h3>
-        <span className="text-xs font-bold text-[#0b4c86]">ดูรายตำบลและเหตุผล</span>
+    <Link href="/eoc/flood/area-risk" className="block rounded-2xl border border-slate-200 bg-white p-4 font-[family-name:var(--font-kanit)] hover:shadow-[0_12px_28px_-20px_rgba(15,23,42,.55)]">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><CalendarRange className="h-4 w-4" aria-hidden="true" /></span>
+          <h3 className="font-semibold text-slate-900">พยากรณ์ตำบลเสี่ยงน้ำท่วม 7 วัน</h3>
+        </span>
+        <span className="inline-flex items-center text-xs font-semibold text-[#0b4c86]">ดูรายตำบลและเหตุผล<ChevronRight className="h-3.5 w-3.5" aria-hidden="true" /></span>
       </div>
       <ol className="grid grid-cols-7 gap-1.5">
         {days.map((day) => (
-          <li key={day.date} className={`rounded-lg px-1 py-2 text-center ${OUTLOOK_TONE[day.worst]}`} title={`เฝ้าระวัง ${day.count.watch} · สูง ${day.count.high} · วิกฤต ${day.count.critical} ตำบล`}>
+          <li key={day.date} className={`rounded-xl px-1 py-2.5 text-center ${OUTLOOK_TONE[day.worst]}`} title={`เฝ้าระวัง ${day.count.watch} · สูง ${day.count.high} · วิกฤต ${day.count.critical} ตำบล`}>
             <span className="block text-[11px] font-semibold opacity-90">{label(day.date)}</span>
-            <span className="block text-lg font-black tabular-nums leading-tight">{day.total || "–"}</span>
+            <span className="block text-xl font-bold tabular-nums leading-tight">{day.total || "–"}</span>
             <span className="block text-[10px] opacity-80">{day.total ? "ตำบล" : "ปกติ"}</span>
           </li>
         ))}
@@ -311,10 +346,10 @@ function SetupChecklist({ setup }) {
   const done = setup.items.filter((item) => item.done);
   const percent = Math.round((setup.done / setup.total) * 100);
   return (
-    <details open={missingRequired > 0} className={`group rounded-xl border bg-white shadow-sm ${missingRequired ? "border-amber-300" : "border-[#c9dcee]"}`}>
+    <details open={missingRequired > 0} className={`group rounded-2xl border bg-white font-[family-name:var(--font-kanit)] ${missingRequired ? "border-amber-300" : "border-slate-200"}`}>
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
-          <span className="block font-black text-slate-900">ตั้งค่าเหตุการณ์ให้พร้อมใช้งาน</span>
+          <span className="block font-semibold text-slate-900">ตั้งค่าเหตุการณ์ให้พร้อมใช้งาน</span>
           <span className={`block text-sm ${missingRequired ? "font-semibold text-amber-900" : "text-slate-600"}`}>
             {missingRequired ? `ยังขาดข้อจำเป็น ${missingRequired} ข้อ — บางเมนูจะยังบันทึกข้อมูลไม่ได้` : `ทำแล้ว ${setup.done} จาก ${setup.total} ข้อ`}
           </span>
@@ -378,7 +413,7 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
 
   const { data } = state;
   if (state.loading && !data) {
-    return <div className="mb-6 rounded-xl border border-[#c9dcee] bg-white p-10 text-center text-sm text-slate-500">กำลังสรุปสถานการณ์…</div>;
+    return <div className="mb-6 space-y-4" aria-busy="true"><div className="h-40 animate-pulse rounded-2xl bg-[#0b4c86]/20" /><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-36 animate-pulse rounded-2xl bg-slate-100" />)}</div><p className="sr-only">กำลังสรุปสถานการณ์…</p></div>;
   }
   if (state.error) {
     return (
@@ -388,45 +423,76 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
     );
   }
   if (!data?.session) return null;
-  const banner = TONE[data.headline?.tone] || TONE.gray;
+  const headlineTone = data.headline?.tone || "gray";
+  const HERO_DOT = { red: "bg-red-400", amber: "bg-amber-300", green: "bg-emerald-400", gray: "bg-slate-300" };
+  const completeness = data.completeness;
+  const heroButton = "inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-60";
 
   return (
     <section id="sec-situation" aria-labelledby="situation-title" className="mb-8 scroll-mt-20 space-y-4">
       <SetupChecklist setup={data.setup} />
-      <div className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${banner.banner}`}>
-        <div className="min-w-0">
-          <h2 id="situation-title" className="text-lg font-black leading-snug">{data.headline?.text}</h2>
-          <p className="text-xs opacity-80">สถานการณ์ล่าสุด ณ {formatDateTime(data.generated_at)} · อัปเดตอัตโนมัติทุก 5 นาที</p>
+
+      {/* การ์ดหลัก: สถานการณ์รวม + ความครบของรายงานวันนี้ */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
+        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" aria-hidden="true" />
+        <div className="absolute -bottom-24 right-40 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
+        <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-sm font-medium text-blue-100">
+              <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+                {headlineTone === "red" ? <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70 motion-reduce:animate-none" /> : null}
+                <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${HERO_DOT[headlineTone] || HERO_DOT.gray}`} />
+              </span>
+              สถานการณ์ตอนนี้ · {(TONE[headlineTone] || TONE.gray).label}
+            </p>
+            <h2 id="situation-title" className="mt-2 text-xl font-semibold leading-snug sm:text-2xl">{data.headline?.text}</h2>
+            <p className="mt-2 text-xs text-blue-100">ข้อมูล ณ {formatDateTime(data.generated_at)} · อัปเดตอัตโนมัติทุก 5 นาที</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" onClick={load} disabled={state.loading} className={heroButton}>
+                <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ดึงข้อมูลล่าสุด
+              </button>
+              {eocType === "flood" ? (
+                <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download title="แบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล 14 แผ่นงาน" className={heroButton}>
+                  <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
+                </a>
+              ) : null}
+            </div>
+          </div>
+          {completeness ? (
+            <Link href="/eoc/flood/records" className="block rounded-xl bg-white/10 p-4 ring-1 ring-white/15 hover:bg-white/15">
+              <span className="flex items-baseline justify-between gap-2">
+                <span className="text-sm font-medium text-blue-100">ความครบของรายงานวันนี้</span>
+                <span className="text-3xl font-bold tabular-nums">{completeness.percent}<span className="ml-0.5 text-base font-medium text-blue-100">%</span></span>
+              </span>
+              <span className="mt-2 block h-2 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+                <span className={`block h-full rounded-full ${completeness.percent >= 80 ? "bg-emerald-400" : completeness.percent > 0 ? "bg-amber-300" : "bg-red-400"}`} style={{ width: `${completeness.percent}%` }} />
+              </span>
+              <span className="mt-2 block text-xs text-blue-100">ส่งแล้ว {formatNumber(completeness.reported)} จาก {formatNumber(completeness.total)} ตำบล{completeness.percent < 100 ? " — ตัวเลขด้านล่างอาจยังไม่ครบ" : ""}</span>
+            </Link>
+          ) : null}
         </div>
-        <button type="button" onClick={load} disabled={state.loading} className="inline-flex items-center gap-1.5 rounded-lg border border-current/20 bg-white/70 px-3 py-1.5 text-sm font-bold hover:bg-white disabled:opacity-60">
-          <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ดึงข้อมูลล่าสุด
-        </button>
-        {eocType === "flood" ? (
-          <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download title="แบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล 14 แผ่นงาน"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-current/20 bg-white/70 px-3 py-1.5 text-sm font-bold hover:bg-white">
-            <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
-          </a>
-        ) : null}
       </div>
 
       {eocType === "flood" ? <TriggerStrip sessionId={data?.session?.id} /> : null}
 
+      {/* ตัวชี้วัดหลัก */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {data.kpis.map((kpi) => <KpiCard key={kpi.key} kpi={kpi.key === "health" ? { ...kpi, spark: (data.trend || []).map((row) => Number(row.total) || 0) } : kpi} />)}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-5">
-        <div className="rounded-xl border border-[#c9dcee] bg-white shadow-sm lg:col-span-3">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-            <h3 className="font-black text-slate-900">เรื่องที่ต้องตัดสินใจและติดตาม</h3>
-            <Link href="/eoc/flood/meeting-brief" className="text-sm font-bold text-[#0b4c86] hover:underline">ดูทั้งหมด {formatNumber(data.agendaTotal)} เรื่อง</Link>
-          </div>
+        <Panel icon={ClipboardList} title="เรื่องที่ต้องตัดสินใจและติดตาม" className="lg:col-span-3"
+          action={<Link href="/eoc/flood/meeting-brief" className={panelLink}>ดูทั้งหมด {formatNumber(data.agendaTotal)} เรื่อง<ChevronRight className="h-4 w-4" aria-hidden="true" /></Link>}>
           {data.agenda.length ? (
             <ol className="divide-y divide-slate-100">
               {data.agenda.map((item, index) => {
                 const level = LEVEL[item.level] || LEVEL.info;
                 return (
                   <li key={`${item.title}-${index}`}>
-                    <Link href={item.href || "#"} className="flex gap-3 px-4 py-3 hover:bg-[#edf5fc]">
-                      <span className={`mt-0.5 h-fit shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold ${level.cls}`}>{level.label}</span>
+                    <Link href={item.href || "#"} className="flex gap-3 px-4 py-3 hover:bg-[#f5f9fd]">
+                      <span className={`mt-0.5 h-fit shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${level.cls}`}>{level.label}</span>
                       <span className="min-w-0">
-                        <span className="block text-sm font-bold text-slate-900"><span className="font-semibold text-slate-500">{item.module} · </span>{item.title}</span>
+                        <span className="block text-sm font-semibold text-slate-900"><span className="font-medium text-slate-500">{item.module} · </span>{item.title}</span>
                         <span className="block text-xs leading-relaxed text-slate-600">{item.detail}</span>
                       </span>
                     </Link>
@@ -434,52 +500,37 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
                 );
               })}
             </ol>
-          ) : <p className="p-6 text-sm text-slate-500">ยังไม่มีเรื่องเร่งด่วน</p>}
-        </div>
+          ) : (
+            <p className="flex items-center gap-2 p-6 text-sm text-slate-500"><CheckCircle2 className="h-5 w-5 text-emerald-600" aria-hidden="true" />ยังไม่มีเรื่องเร่งด่วน</p>
+          )}
+        </Panel>
 
         <div className="space-y-4 lg:col-span-2">
-          <div className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h3 className="font-black text-slate-900">ผู้ป่วยรายวัน 14 วันล่าสุด</h3>
-              <Link href="/eoc/flood/health" className="text-sm font-bold text-[#0b4c86] hover:underline">รายละเอียด</Link>
-            </div>
+          <Panel icon={LineChart} title="ผู้ป่วยรายวัน 14 วันล่าสุด" bodyClassName="p-4"
+            action={<Link href="/eoc/flood/health" className={panelLink}>รายละเอียด<ChevronRight className="h-4 w-4" aria-hidden="true" /></Link>}>
             <TrendChart trend={data.trend} />
-          </div>
-          <Link href="/eoc/flood/management/directives" className="flex items-center gap-3 rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm hover:bg-[#edf5fc]">
-            <ClipboardList className="h-8 w-8 shrink-0 text-[#0b4c86]" aria-hidden="true" />
-            <span className="min-w-0">
-              <span className="block font-black text-slate-900">สถานการณ์/ข้อสั่งการ</span>
+          </Panel>
+          <Link href="/eoc/flood/management/directives" className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 font-[family-name:var(--font-kanit)] hover:shadow-[0_12px_28px_-20px_rgba(15,23,42,.55)]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><ClipboardList className="h-5 w-5" aria-hidden="true" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-slate-900">สถานการณ์/ข้อสั่งการ</span>
               <span className="block text-sm text-slate-600">
                 {data.directives.date
-                  ? <>ฉบับวันที่ {new Date(`${data.directives.date}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" })} · <b className={data.directives.open ? "text-amber-800" : "text-emerald-700"}>ยังไม่ดำเนินการ {data.directives.open} จาก {data.directives.total} ข้อ</b></>
+                  ? <>ฉบับวันที่ {new Date(`${data.directives.date}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" })} · <b className={data.directives.open ? "font-semibold text-amber-800" : "font-semibold text-emerald-700"}>ยังไม่ดำเนินการ {data.directives.open} จาก {data.directives.total} ข้อ</b></>
                   : "ยังไม่มีบันทึกข้อสั่งการ"}
               </span>
             </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
           </Link>
         </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {data.kpis.map((kpi) => <KpiCard key={kpi.key} kpi={kpi.key === "health" ? { ...kpi, spark: (data.trend || []).map((row) => Number(row.total) || 0) } : kpi} />)}
-        {data.completeness ? (
-          <Link href="/eoc/flood/records" className={`flex flex-col rounded-xl border border-l-4 border-slate-200 bg-white p-4 shadow-sm hover:shadow ${data.completeness.percent >= 80 ? TONE.green.bar : data.completeness.percent > 0 ? TONE.amber.bar : TONE.red.bar}`}>
-            <p className="text-sm font-semibold text-slate-600">ความครบของรายงานวันนี้</p>
-            <p className="mt-2 text-3xl font-black tabular-nums text-slate-900">{data.completeness.percent}<span className="ml-1 text-sm font-semibold text-slate-500">%</span></p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true"><div className="h-full bg-[#0b4c86]" style={{ width: `${data.completeness.percent}%` }} /></div>
-            <p className="mt-2 text-xs text-slate-600">ส่งแล้ว {formatNumber(data.completeness.reported)} จาก {formatNumber(data.completeness.total)} ตำบล — ตัวเลขด้านบนอาจยังไม่ครบถ้ารายงานไม่ครบ</p>
-          </Link>
-        ) : null}
       </div>
 
       {eocType === "flood" ? <ForecastStrip /> : null}
 
-
-      <div id="sec-districts" className="scroll-mt-20 overflow-hidden rounded-xl border border-[#c9dcee] bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="font-black text-slate-900">สถานการณ์รายอำเภอ</h3>
-          <p className="text-xs text-slate-600">เรียงอำเภอที่ต้องส่งทีมและทรัพยากรไปก่อนไว้บนสุด · สีพื้นเข้ม = ตัวเลขสูงเมื่อเทียบอำเภออื่น · ผลกระทบใช้รายงานวันล่าสุด</p>
-        </div>
-        <DistrictMatrix rows={data.matrix} />
+      <div id="sec-districts" className="scroll-mt-20">
+        <Panel icon={MapPinned} title="สถานการณ์รายอำเภอ" subtitle="เรียงอำเภอที่ต้องส่งทีมและทรัพยากรไปก่อนไว้บนสุด · สีพื้นเข้ม = ตัวเลขสูงเมื่อเทียบอำเภออื่น · ผลกระทบใช้รายงานวันล่าสุด">
+          <DistrictMatrix rows={data.matrix} />
+        </Panel>
       </div>
     </section>
   );

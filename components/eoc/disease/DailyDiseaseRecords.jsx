@@ -465,8 +465,8 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                 <div className="p-6">
                     <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
-                        <p className="text-gray-600">
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                        <p className="text-slate-600">
                             {eocType === 'flood' ? 'บันทึกโรคในพื้นที่ได้เมื่อเปิด EOC อุทกภัยน้ำท่วมแล้ว' : 'กรุณาเปิดเหตุการณ์ EOC โรคระบาดก่อนบันทึกข้อมูล'}
                         </p>
                     </div>
@@ -485,7 +485,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                             <span className="text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                             {eocType === 'disease' ? `บันทึกพื้นที่ ${activeDiseaseEocName}` : activeDiseaseEocName}
                         </h1>
-                        <p className="text-gray-600">
+                        <p className="text-slate-600">
                             {subtitle ? `${subtitle} · ` : ''}เหตุการณ์ครั้งที่ {activeSession.session_number} เปิดเมื่อ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
                         </p>
                         {eocType === 'disease' && activeSession.disease_name && (
@@ -513,18 +513,18 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                 {/* สถานะการบันทึกตำบลวันนี้ */}
                 <div className="mb-6">
                     <div className="flex items-center gap-4 mb-4">
-                        <h3 className="font-bold text-gray-800"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะการบันทึกวันนี้</h3>
+                        <h3 className="font-bold text-slate-800"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะการบันทึกวันนี้</h3>
                         <div className="flex gap-2 text-sm">
-                            <span className="text-gray-600 flex items-center gap-1">
+                            <span className="text-slate-600 flex items-center gap-1">
                                 <span className="w-3 h-3 bg-green-500 rounded-full"></span>
                                 บันทึกครบ ({getCompletedTambons().length})
                             </span>
-                            <span className="text-gray-600 flex items-center gap-1">
+                            <span className="text-slate-600 flex items-center gap-1">
                                 <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
                                 บันทึกบางส่วน ({getAllTambonsStatus().filter(t => t.status === 'partial').length})
                             </span>
-                            <span className="text-gray-600 flex items-center gap-1">
-                                <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
+                            <span className="text-slate-600 flex items-center gap-1">
+                                <span className="w-3 h-3 bg-slate-400 rounded-full"></span>
                                 ยังไม่ได้บันทึก ({getAllTambonsStatus().filter(t => t.status === 'empty').length})
                             </span>
                         </div>
@@ -557,7 +557,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                     {/* ตำบลที่ยังบันทึกไม่ครบ (สีเหลือง) */}
                     {getUnrecordedTambons().length > 0 && (
                         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
-                            <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                            <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
                                 <span><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                 ตำบลที่ยังบันทึกไม่ครบ ({getUnrecordedTambons().length} ตำบล) - คลิกเพื่อบันทึก
                             </h4>
@@ -585,9 +585,9 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                             : 'bg-white border border-yellow-300 hover:bg-yellow-50'
                                             }`}
                                     >
-                                        <div className="font-medium text-gray-800">{item.tambon}</div>
-                                        <div className="text-xs text-gray-500">อ.{item.district}</div>
-                                        <div className={`text-xs font-medium mt-1 ${item.status === 'partial' ? 'text-orange-600' : 'text-gray-500'
+                                        <div className="font-medium text-slate-800">{item.tambon}</div>
+                                        <div className="text-xs text-slate-500">อ.{item.district}</div>
+                                        <div className={`text-xs font-medium mt-1 ${item.status === 'partial' ? 'text-orange-600' : 'text-slate-500'
                                             }`}>
                                             {item.totalVillages} หมู่บ้าน
                                         </div>
@@ -599,14 +599,14 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white rounded-lg shadow p-4 mb-6">
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">อำเภอ</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">อำเภอ</label>
                             <select
                                 value={filters.district}
                                 onChange={(e) => setFilters({ ...filters, district: e.target.value, tambon: 'all' })}
-                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                             >
                                 <option value="all">ทั้งหมด</option>
                                 {satunDistricts.map(d => (
@@ -615,12 +615,12 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">ตำบล</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">ตำบล</label>
                             <select
                                 value={filters.tambon}
                                 onChange={(e) => setFilters({ ...filters, tambon: e.target.value })}
                                 disabled={filters.district === 'all'}
-                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100"
                             >
                                 <option value="all">ทั้งหมด</option>
                                 {filters.district !== 'all' && satunDistricts.find(d => d.name === filters.district)?.tambons.map(t => (
@@ -629,11 +629,11 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">ระดับการระบาด</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">ระดับการระบาด</label>
                             <select
                                 value={filters.severity_level}
                                 onChange={(e) => setFilters({ ...filters, severity_level: e.target.value })}
-                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                             >
                                 <option value="all">ทั้งหมด</option>
                                 <option value="safe">ปลอดภัย (0 คน)</option>
@@ -646,16 +646,16 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <div className="p-4 bg-gray-50 border-b border-gray-200">
-                        <h3 className="font-bold text-gray-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางข้อมูลที่บันทึกแล้ว</h3>
-                        <p className="text-sm text-gray-600 mt-1">แสดงข้อมูลทั้งหมด {records.length} รายการ</p>
+                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
+                    <div className="p-4 bg-slate-50 border-b border-slate-200">
+                        <h3 className="font-bold text-slate-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางข้อมูลที่บันทึกแล้ว</h3>
+                        <p className="text-sm text-slate-600 mt-1">แสดงข้อมูลทั้งหมด {records.length} รายการ</p>
                     </div>
 
                     {loading ? (
                         <div className="text-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
-                            <p className="text-gray-600 text-sm">กำลังโหลดข้อมูล...</p>
+                            <p className="text-slate-600 text-sm">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
@@ -675,47 +675,47 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             #
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             พื้นที่
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             โรค
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             วันที่
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             จำนวนผู้ป่วย
                                         </th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                                             จัดการ
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-white divide-y divide-slate-200">
                                     {paginatedRecords.map((record, index) => (
-                                        <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <tr key={record.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                                 {((currentPage - 1) * pageSize) + index + 1}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-gray-900">
+                                                <div className="text-sm font-medium text-slate-900">
                                                     {record.facility_name || (record.moo || record.village_name ? `หมู่ ${record.moo || '-'} ${record.village_name || ''}` : '-')}
                                                 </div>
-                                                <div className="text-sm text-gray-500">ต.{record.tambon_name} อ.{record.district_name}</div>
+                                                <div className="text-sm text-slate-500">ต.{record.tambon_name} อ.{record.district_name}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="px-3 py-1 text-xs font-medium rounded-full bg-[#dbeaf7] text-[#083865]">
                                                     <AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {record.disease_name}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                                 {record.report_date ? new Date(record.report_date).toLocaleDateString('th-TH', {
                                                     year: 'numeric',
                                                     month: 'long',
@@ -765,7 +765,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
                         <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-gray-700 text-2xl font-bold mb-4">
+                                <h2 className="text-slate-700 text-2xl font-bold mb-4">
                                     {editingRecord ? 'แก้ไขข้อมูล' : isTambonMode ? 'บันทึกข้อมูลทั้งตำบล' : 'เพิ่มข้อมูลใหม่'}
                                 </h2>
 
@@ -787,14 +787,14 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
                                                 อำเภอ <span className="text-red-500">*</span>
                                             </label>
                                             <select
                                                 value={formData.district}
                                                 onChange={(e) => setFormData({ ...formData, district: e.target.value, tambon: '', village: '' })}
                                                 required
-                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                                             >
                                                 <option value="">เลือกอำเภอ</option>
                                                 {satunDistricts.map(d => (
@@ -803,7 +803,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
                                                 ตำบล <span className="text-red-500">*</span>
                                             </label>
                                             <select
@@ -811,7 +811,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                 onChange={(e) => setFormData({ ...formData, tambon: e.target.value, village: '' })}
                                                 required
                                                 disabled={!formData.district}
-                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100"
                                             >
                                                 <option value="">เลือกตำบล</option>
                                                 {tambonOptions.map(t => (
@@ -821,7 +821,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                         </div>
                                         {!isTambonMode && (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">
                                                     หมู่บ้าน / หมู่ <span className="text-red-500">*</span>
                                                 </label>
                                                 <select
@@ -829,7 +829,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                     onChange={(e) => setFormData({ ...formData, village: e.target.value })}
                                                     required={!isTambonMode}
                                                     disabled={!formData.district || !formData.tambon}
-                                                    className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                                                    className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100"
                                                 >
                                                     <option value="">เลือกหมู่บ้าน/หมู่</option>
                                                     {villageOptions.map(village => (
@@ -838,13 +838,13 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                         </option>
                                                     ))}
                                                 </select>
-                                                <p className="mt-1 text-xs text-gray-500">
+                                                <p className="mt-1 text-xs text-slate-500">
                                                     ใช้บันทึกข้อมูลระดับหมู่ให้ตรงกับช่อง “หมู่ขณะป่วย” ใน Google Sheet
                                                 </p>
                                             </div>
                                         )}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
                                                 โรค <span className="text-red-500">*</span>
                                             </label>
                                             <select
@@ -860,7 +860,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                     }
                                                 }}
                                                 required
-                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                                             >
                                                 <option value="">เลือกโรค</option>
                                                 {commonDiseases.map(disease => (
@@ -873,13 +873,13 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                     value={customDisease}
                                                     onChange={(e) => setCustomDisease(e.target.value)}
                                                     placeholder="กรอกชื่อโรค..."
-                                                    className="mt-2 text-gray-600 w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                                    className="mt-2 text-slate-600 w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                                                     required
                                                 />
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
                                                 วันที่รายงาน <span className="text-red-500">*</span>
                                             </label>
                                             <input
@@ -887,11 +887,11 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                 value={formData.report_date}
                                                 onChange={(e) => setFormData({ ...formData, report_date: e.target.value })}
                                                 required
-                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
                                                 จำนวนผู้ป่วย <span className="text-red-500">*</span>
                                             </label>
                                             <input
@@ -900,20 +900,20 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                                 value={formData.patient_count}
                                                 onChange={(e) => setFormData({ ...formData, patient_count: parseInt(e.target.value) || 0 })}
                                                 required
-                                                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                                className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                                             />
-                                            <p className="text-xs text-gray-500 mt-1">
+                                            <p className="text-xs text-slate-500 mt-1">
                                                 ระดับ: {getSeverityLabel(formData.patient_count)}
                                             </p>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">หมายเหตุ</label>
                                         <textarea
                                             value={formData.notes}
                                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                             rows="3"
-                                            className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                            className="text-slate-600 w-full px-3 py-2 border border-slate-300 rounded-lg"
                                             placeholder="รายละเอียดเพิ่มเติม..."
                                         />
                                     </div>

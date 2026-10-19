@@ -53,7 +53,7 @@ export default function ITResourcesPage() {
         { value: 'online', label: "ออนไลน์", color: 'bg-green-100 text-green-800' },
         { value: 'offline', label: "ออฟไลน์", color: 'bg-red-100 text-red-800' },
         { value: 'maintenance', label: "ซ่อมบำรุง", color: 'bg-yellow-100 text-yellow-800' },
-        { value: 'unknown', label: "ไม่ทราบ", color: 'bg-gray-100 text-gray-800' }
+        { value: 'unknown', label: "ไม่ทราบ", color: 'bg-slate-100 text-slate-800' }
     ];
 
     const ispProviders = ['AIS', 'TRUE', 'DTAC', 'TOT', '3BB', 'CAT', 'NT', 'อื่นๆ'];
@@ -192,9 +192,9 @@ export default function ITResourcesPage() {
     };
 
     const getTypeLabel = (type) => resourceTypes.find(t => t.value === type)?.label || type;
-    const getTypeColor = (type) => resourceTypes.find(t => t.value === type)?.color || 'bg-gray-100 text-gray-800';
+    const getTypeColor = (type) => resourceTypes.find(t => t.value === type)?.color || 'bg-slate-100 text-slate-800';
     const getStatusLabel = (status) => statusTypes.find(s => s.value === status)?.label || status;
-    const getStatusColor = (status) => statusTypes.find(s => s.value === status)?.color || 'bg-gray-100 text-gray-800';
+    const getStatusColor = (status) => statusTypes.find(s => s.value === status)?.color || 'bg-slate-100 text-slate-800';
 
     const formatDate = (dateString) => {
         if (!dateString) return '-';
@@ -209,17 +209,17 @@ export default function ITResourcesPage() {
             <div className="p-6">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                    <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
                         <AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการทรัพยากร IT Support
                     </h1>
-                    <p className="text-gray-600 mt-1">ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ</p>
+                    <p className="text-slate-600 mt-1">ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ</p>
                 </div>
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4 text-center">
-                        <div className="text-3xl font-bold text-gray-800">{stats.total}</div>
-                        <div className="text-sm text-gray-600">ทั้งหมด</div>
+                    <div className="border border-slate-200 bg-white rounded-2xl p-4 text-center">
+                        <div className="text-3xl font-bold text-slate-800">{stats.total}</div>
+                        <div className="text-sm text-slate-600">ทั้งหมด</div>
                     </div>
                     <div className="bg-green-50 rounded-lg shadow p-4 text-center">
                         <div className="text-3xl font-bold text-green-600">{stats.online}</div>
@@ -233,17 +233,17 @@ export default function ITResourcesPage() {
                         <div className="text-3xl font-bold text-yellow-600">{stats.maintenance}</div>
                         <div className="text-sm text-yellow-700"><AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ซ่อมบำรุง</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg shadow p-4 text-center">
-                        <div className="text-3xl font-bold text-gray-600">{stats.unknown}</div>
-                        <div className="text-sm text-gray-700"><AppIcon icon="statusGray" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่ทราบ</div>
+                    <div className="bg-slate-50 rounded-lg shadow p-4 text-center">
+                        <div className="text-3xl font-bold text-slate-600">{stats.unknown}</div>
+                        <div className="text-sm text-slate-700"><AppIcon icon="statusGray" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่ทราบ</div>
                     </div>
                 </div>
 
                 {/* Charts Section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {/* Status Pie Chart */}
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะทั้งหมด</h3>
+                    <div className="border border-slate-200 bg-white rounded-2xl p-4">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะทั้งหมด</h3>
                         <div className="h-64">
                             <Pie
                                 data={{
@@ -282,8 +282,8 @@ export default function ITResourcesPage() {
                     </div>
 
                     {/* ISP Providers Bar Chart */}
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการอินเทอร์เน็ต (ISP)</h3>
+                    <div className="border border-slate-200 bg-white rounded-2xl p-4">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการอินเทอร์เน็ต (ISP)</h3>
                         <div className="h-64">
                             {stats.byIsp && stats.byIsp.length > 0 ? (
                                 <Bar
@@ -318,7 +318,7 @@ export default function ITResourcesPage() {
                                     }}
                                 />
                             ) : (
-                                <div className="h-full flex items-center justify-center text-gray-500">
+                                <div className="h-full flex items-center justify-center text-slate-500">
                                     ยังไม่มีข้อมูล ISP
                                 </div>
                             )}
@@ -326,8 +326,8 @@ export default function ITResourcesPage() {
                     </div>
 
                     {/* Resource Types Bar Chart */}
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4"><AppIcon icon="package" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แยกตามประเภททรัพยากร</h3>
+                    <div className="border border-slate-200 bg-white rounded-2xl p-4">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4"><AppIcon icon="package" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แยกตามประเภททรัพยากร</h3>
                         <div className="h-64">
                             {stats.byType && stats.byType.length > 0 ? (
                                 <Bar
@@ -371,7 +371,7 @@ export default function ITResourcesPage() {
                                     }}
                                 />
                             ) : (
-                                <div className="h-full flex items-center justify-center text-gray-500">
+                                <div className="h-full flex items-center justify-center text-slate-500">
                                     ยังไม่มีข้อมูล
                                 </div>
                             )}
@@ -380,13 +380,13 @@ export default function ITResourcesPage() {
                 </div>
 
                 {/* Filters and Add Button */}
-                <div className="bg-white rounded-lg shadow p-4 mb-6">
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
                     <div className="flex flex-wrap gap-4 items-center justify-between">
                         <div className="flex flex-wrap gap-4">
                             <select
                                 value={filterType}
                                 onChange={(e) => setFilterType(e.target.value)}
-                                className="px-4 py-2 border rounded-lg text-gray-700"
+                                className="px-4 py-2 border rounded-lg text-slate-700"
                             >
                                 <option value="">ทุกประเภท</option>
                                 {resourceTypes.map(type => (
@@ -396,7 +396,7 @@ export default function ITResourcesPage() {
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="px-4 py-2 border rounded-lg text-gray-700"
+                                className="px-4 py-2 border rounded-lg text-slate-700"
                             >
                                 <option value="">ทุกสถานะ</option>
                                 {statusTypes.map(status => (
@@ -414,62 +414,62 @@ export default function ITResourcesPage() {
                 </div>
 
                 {/* Resources Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                     {loading ? (
                         <div className="p-8 text-center">
                             <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto"></div>
                         </div>
                     ) : resources.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">
+                        <div className="p-8 text-center text-slate-500">
                             <div className="text-5xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <p>ยังไม่มีข้อมูลทรัพยากร IT</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ประเภท</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">หน่วยบริการ</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">รายละเอียด</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานะ</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ตรวจสอบล่าสุด</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ผู้รับผิดชอบ</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">ประเภท</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">หน่วยบริการ</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">รายละเอียด</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">สถานะ</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">ตรวจสอบล่าสุด</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">ผู้รับผิดชอบ</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">จัดการ</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-white divide-y divide-slate-200">
                                     {paginatedResources.map((resource) => (
-                                        <tr key={resource.id} className="hover:bg-gray-50">
+                                        <tr key={resource.id} className="hover:bg-slate-50">
                                             <td className="px-4 py-3">
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(resource.resource_type)}`}>
                                                     {getTypeLabel(resource.resource_type)}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <div className="font-medium text-gray-900">{resource.unit_name}</div>
+                                                <div className="font-medium text-slate-900">{resource.unit_name}</div>
                                                 {resource.unit_code && (
-                                                    <div className="text-xs text-gray-500">{resource.unit_code}</div>
+                                                    <div className="text-xs text-slate-500">{resource.unit_code}</div>
                                                 )}
                                                 {resource.location && (
-                                                    <div className="text-xs text-gray-400"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.location}</div>
+                                                    <div className="text-xs text-slate-400"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.location}</div>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-gray-700">
+                                            <td className="px-4 py-3 text-sm text-slate-700">
                                                 {resource.resource_type === 'server' ? (
                                                     <div>
                                                         {resource.server_name && <div><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.server_name}</div>}
-                                                        {resource.server_ip && <div className="text-xs text-gray-500">IP: {resource.server_ip}</div>}
-                                                        {resource.server_os && <div className="text-xs text-gray-400">{resource.server_os}</div>}
+                                                        {resource.server_ip && <div className="text-xs text-slate-500">IP: {resource.server_ip}</div>}
+                                                        {resource.server_os && <div className="text-xs text-slate-400">{resource.server_os}</div>}
                                                     </div>
                                                 ) : resource.resource_type === 'internet' ? (
                                                     <div>
                                                         {resource.isp_provider && <div><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.isp_provider}</div>}
-                                                        {resource.connection_type && <div className="text-xs text-gray-500">{resource.connection_type}</div>}
-                                                        {resource.bandwidth && <div className="text-xs text-gray-400">{resource.bandwidth}</div>}
+                                                        {resource.connection_type && <div className="text-xs text-slate-500">{resource.connection_type}</div>}
+                                                        {resource.bandwidth && <div className="text-xs text-slate-400">{resource.bandwidth}</div>}
                                                     </div>
                                                 ) : (
-                                                    <div className="text-gray-400">-</div>
+                                                    <div className="text-slate-400">-</div>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3">
@@ -477,12 +477,12 @@ export default function ITResourcesPage() {
                                                     {getStatusLabel(resource.status)}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-gray-500">
+                                            <td className="px-4 py-3 text-sm text-slate-500">
                                                 {formatDate(resource.last_check)}
                                             </td>
                                             <td className="px-4 py-3 text-sm">
                                                 {resource.contact_person && <div>{resource.contact_person}</div>}
-                                                {resource.contact_phone && <div className="text-xs text-gray-500"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.contact_phone}</div>}
+                                                {resource.contact_phone && <div className="text-xs text-slate-500"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.contact_phone}</div>}
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex justify-center gap-2">
@@ -520,7 +520,7 @@ export default function ITResourcesPage() {
                     <AppDialogFrame open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) resetForm(); }}>
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                                <h2 className="text-xl font-bold text-slate-800 mb-4">
                                     {editingResource ? "แก้ไขทรัพยากร IT" : "เพิ่มทรัพยากร IT"}
                                 </h2>
 
@@ -528,12 +528,12 @@ export default function ITResourcesPage() {
                                     {/* Resource Type and Status */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ประเภททรัพยากร *</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">ประเภททรัพยากร *</label>
                                             <select
                                                 required
                                                 value={formData.resource_type}
                                                 onChange={(e) => setFormData({ ...formData, resource_type: e.target.value })}
-                                                className="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                                className="w-full px-3 py-2 border rounded-lg text-slate-700"
                                             >
                                                 {resourceTypes.map(type => (
                                                     <option key={type.value} value={type.value}>{type.label}</option>
@@ -541,12 +541,12 @@ export default function ITResourcesPage() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">สถานะ *</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">สถานะ *</label>
                                             <select
                                                 required
                                                 value={formData.status}
                                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                                className="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                                className="w-full px-3 py-2 border rounded-lg text-slate-700"
                                             >
                                                 {statusTypes.map(status => (
                                                     <option key={status.value} value={status.value}>{status.label}</option>
@@ -557,13 +557,13 @@ export default function ITResourcesPage() {
 
                                     {/* Unit Info */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">หน่วยบริการ *</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">หน่วยบริการ *</label>
                                         <FacilitySelect
                                             facilities={healthFacilities}
                                             value={formData.unit_name}
                                             onChange={(value) => setFormData({ ...formData, unit_name: value })}
                                             getValue={facilityName}
-                                            selectClassName="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                            selectClassName="w-full px-3 py-2 border rounded-lg text-slate-700"
                                             required
                                         />
                                     </div>
@@ -576,11 +576,11 @@ export default function ITResourcesPage() {
                                             <h3 className="font-medium text-green-800"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลอินเทอร์เน็ต</h3>
                                             <div className="grid grid-cols-3 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">ผู้ให้บริการ (ISP)</label>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">ผู้ให้บริการ (ISP)</label>
                                                     <select
                                                         value={formData.isp_provider}
                                                         onChange={(e) => setFormData({ ...formData, isp_provider: e.target.value })}
-                                                        className="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                                        className="w-full px-3 py-2 border rounded-lg text-slate-700"
                                                     >
                                                         <option value="">-- เลือก --</option>
                                                         {ispProviders.map(isp => (
@@ -589,11 +589,11 @@ export default function ITResourcesPage() {
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทการเชื่อมต่อ</label>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">ประเภทการเชื่อมต่อ</label>
                                                     <select
                                                         value={formData.connection_type}
                                                         onChange={(e) => setFormData({ ...formData, connection_type: e.target.value })}
-                                                        className="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                                        className="w-full px-3 py-2 border rounded-lg text-slate-700"
                                                     >
                                                         <option value="">-- เลือก --</option>
                                                         {connectionTypes.map(type => (
@@ -602,12 +602,12 @@ export default function ITResourcesPage() {
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">ความเร็ว</label>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">ความเร็ว</label>
                                                     <input
                                                         type="text"
                                                         value={formData.bandwidth}
                                                         onChange={(e) => setFormData({ ...formData, bandwidth: e.target.value })}
-                                                        className="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                                        className="w-full px-3 py-2 border rounded-lg text-slate-700"
                                                         placeholder="100Mbps"
                                                     />
                                                 </div>
@@ -619,12 +619,12 @@ export default function ITResourcesPage() {
 
                                     {/* Notes */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">หมายเหตุ</label>
                                         <textarea
                                             value={formData.notes}
                                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                             rows={3}
-                                            className="w-full px-3 py-2 border rounded-lg text-gray-700"
+                                            className="w-full px-3 py-2 border rounded-lg text-slate-700"
                                         />
                                     </div>
 
@@ -633,7 +633,7 @@ export default function ITResourcesPage() {
                                         <button
                                             type="button"
                                             onClick={() => { setShowModal(false); resetForm(); }}
-                                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                                            className="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400"
                                         >
                                             ยกเลิก
                                         </button>

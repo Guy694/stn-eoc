@@ -10,7 +10,7 @@ import { MetricCard } from "@/components/common/MetricCards";
 
 const FestivalMap = dynamic(() => import('./FestivalMap'), {
     ssr: false,
-    loading: () => <div className="h-[500px] flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 text-gray-400">กำลังโหลดแผนที่...</div>
+    loading: () => <div className="h-[500px] flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200 text-slate-400">กำลังโหลดแผนที่...</div>
 });
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
@@ -153,7 +153,7 @@ export default function FestivalDashboard() {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-500 border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-gray-600 text-lg">กำลังโหลดข้อมูล...</p>
+                    <p className="text-slate-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
         );
@@ -162,7 +162,7 @@ export default function FestivalDashboard() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-2xl p-6 text-white shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -187,7 +187,7 @@ export default function FestivalDashboard() {
             </div>
 
             {/* Festival Tabs & Session Selector */}
-            <div className="bg-white rounded-xl shadow-md p-4">
+            <div className="border border-slate-200 bg-white rounded-2xl p-4">
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     {/* Festival Tabs */}
                     <div className="flex gap-2">
@@ -203,8 +203,8 @@ export default function FestivalDashboard() {
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${festivalType === tab.key
                                     ? tab.key === 'newyear' ? 'bg-[#0b4c86] text-white shadow-md'
                                         : tab.key === 'songkran' ? 'bg-orange-500 text-white shadow-md'
-                                            : 'bg-gray-700 text-white shadow-md'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            : 'bg-slate-700 text-white shadow-md'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                     }`}
                             >
                                 <AppIcon icon={tab.icon} className="inline-block h-5 w-5" /> {tab.label}
@@ -217,7 +217,7 @@ export default function FestivalDashboard() {
                         <select
                             value={selectedSession}
                             onChange={(e) => setSelectedSession(e.target.value)}
-                            className="text-gray-700 px-4 py-2 border border-gray-300 rounded-lg text-sm flex-1 max-w-xs"
+                            className="text-slate-700 px-4 py-2 border border-slate-300 rounded-lg text-sm flex-1 max-w-xs"
                         >
                             <option value="">-- เหตุการณ์ล่าสุด --</option>
                             {data.sessions.map(s => (
@@ -234,28 +234,28 @@ export default function FestivalDashboard() {
             {!data?.hasActiveSession && (
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
                     <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">ไม่มีข้อมูลเทศกาล</h3>
-                    <p className="text-gray-600">ยังไม่มีเหตุการณ์ EOC สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
-                    <p className="text-gray-500 text-sm mt-1">กรุณาเปิดเหตุการณ์ EOC ประเภท &quot;festival-accidents&quot; จากหน้าจัดการ EOC</p>
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีข้อมูลเทศกาล</h3>
+                    <p className="text-slate-600">ยังไม่มีเหตุการณ์ EOC สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
+                    <p className="text-slate-500 text-sm mt-1">กรุณาเปิดเหตุการณ์ EOC ประเภท &quot;festival-accidents&quot; จากหน้าจัดการ EOC</p>
                 </div>
             )}
 
             {data?.hasActiveSession && (
                 <>
                     {/* Active Session Banner */}
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 px-5 py-3 flex items-center justify-between">
+                    <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${data.activeSession?.status === 'active'
                                 ? 'bg-green-100 text-green-700 animate-pulse'
-                                : 'bg-gray-200 text-gray-600'
+                                : 'bg-slate-200 text-slate-600'
                                 }`}>
                                 {data.activeSession?.status === 'active' ? "กำลังดำเนินการ" : "ปิดแล้ว"}
                             </span>
-                            <span className="text-gray-700 font-medium">
+                            <span className="text-slate-700 font-medium">
                                 {data.activeSession?.open_reason || `ครั้งที่ ${data.activeSession?.session_number}`}
                             </span>
                         </div>
-                        <span className="text-gray-500 text-sm">
+                        <span className="text-slate-500 text-sm">
                             {data.activeSession?.festival_type === 'newyear' ? "ปีใหม่" :
                                 data.activeSession?.festival_type === 'songkran' ? "สงกรานต์" : ''}
                         </span>
@@ -303,8 +303,8 @@ export default function FestivalDashboard() {
                     {/* Charts Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Daily Trend Chart */}
-                        <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <div className="border border-slate-200 lg:col-span-2 bg-white rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                                 <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติรายวัน (7 วันอันตราย)
                             </h3>
                             {data?.dailySummary?.length > 0 ? (
@@ -327,7 +327,7 @@ export default function FestivalDashboard() {
                                     />
                                 </div>
                             ) : (
-                                <div className="h-72 flex items-center justify-center text-gray-400">
+                                <div className="h-72 flex items-center justify-center text-slate-400">
                                     <div className="text-center">
                                         <div className="text-4xl mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                         <p>ยังไม่มีข้อมูล</p>
@@ -337,8 +337,8 @@ export default function FestivalDashboard() {
                         </div>
 
                         {/* Accident Type Doughnut */}
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                                 <AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประเภทอุบัติเหตุ
                             </h3>
                             {data?.accidentTypeBreakdown?.length > 0 ? (
@@ -355,7 +355,7 @@ export default function FestivalDashboard() {
                                     />
                                 </div>
                             ) : (
-                                <div className="h-72 flex items-center justify-center text-gray-400">
+                                <div className="h-72 flex items-center justify-center text-slate-400">
                                     <div className="text-center">
                                         <div className="text-4xl mb-2"><AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                         <p>ยังไม่มีข้อมูล</p>
@@ -366,18 +366,18 @@ export default function FestivalDashboard() {
                     </div>
 
                     {/* Cause Analysis */}
-                    <div className="bg-white rounded-xl shadow-md p-6">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ปัจจัยเสี่ยง / สาเหตุ
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {data?.causeAnalysis?.map(c => (
-                                <div key={c.cause} className="bg-gray-50 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
+                                <div key={c.cause} className="bg-slate-50 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
                                     <AppIcon icon={c.icon} className="mx-auto mb-2 h-8 w-8" />
-                                    <div className="text-2xl font-bold text-gray-800">{c.count}</div>
-                                    <div className="text-sm text-gray-600 mt-1">{c.cause}</div>
+                                    <div className="text-2xl font-bold text-slate-800">{c.count}</div>
+                                    <div className="text-sm text-slate-600 mt-1">{c.cause}</div>
                                     {data.stats?.totalAccidents > 0 && (
-                                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                        <div className="mt-2 w-full bg-slate-200 rounded-full h-2">
                                             <div
                                                 className={`h-2 rounded-full transition-all duration-500 ${c.color === 'purple' ? 'bg-[#0b4c86]' :
                                                     c.color === 'orange' ? 'bg-orange-500' :
@@ -396,30 +396,30 @@ export default function FestivalDashboard() {
                     {/* District Breakdown & Recent */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* District Heatmap Table */}
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                            <div className="px-6 py-4 bg-gray-50 border-b">
-                                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
+                            <div className="px-6 py-4 bg-slate-50 border-b">
+                                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                     <AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติแยกตามอำเภอ
                                 </h3>
                             </div>
                             {data?.districtBreakdown?.length > 0 ? (
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
-                                        <thead className="bg-gray-50">
+                                        <thead className="bg-slate-50">
                                             <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">อำเภอ</th>
-                                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">อุบัติเหตุ</th>
-                                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">เสียชีวิต</th>
-                                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">บาดเจ็บ</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">อำเภอ</th>
+                                                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">อุบัติเหตุ</th>
+                                                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">เสียชีวิต</th>
+                                                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">บาดเจ็บ</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-200">
+                                        <tbody className="divide-y divide-slate-200">
                                             {data.districtBreakdown.map((d, idx) => {
                                                 const maxAcc = Math.max(...data.districtBreakdown.map(x => x.accidents));
                                                 const intensity = maxAcc > 0 ? (d.accidents / maxAcc) : 0;
                                                 return (
-                                                    <tr key={d.district} className="hover:bg-gray-50">
-                                                        <td className="px-4 py-3 font-medium text-gray-900 text-sm">
+                                                    <tr key={d.district} className="hover:bg-slate-50">
+                                                        <td className="px-4 py-3 font-medium text-slate-900 text-sm">
                                                             <span
                                                                 className="inline-block w-3 h-3 rounded-full mr-2"
                                                                 style={{ backgroundColor: `rgba(239, 68, 68, ${0.2 + intensity * 0.8})` }}
@@ -430,7 +430,7 @@ export default function FestivalDashboard() {
                                                             <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-sm font-bold">{d.accidents}</span>
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
-                                                            <span className={`px-2 py-1 rounded-full text-sm font-bold ${d.deaths > 0 ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                            <span className={`px-2 py-1 rounded-full text-sm font-bold ${d.deaths > 0 ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>
                                                                 {d.deaths}
                                                             </span>
                                                         </td>
@@ -444,7 +444,7 @@ export default function FestivalDashboard() {
                                     </table>
                                 </div>
                             ) : (
-                                <div className="p-8 text-center text-gray-400">
+                                <div className="p-8 text-center text-slate-400">
                                     <div className="text-4xl mb-2"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     <p>ยังไม่มีข้อมูล</p>
                                 </div>
@@ -452,35 +452,35 @@ export default function FestivalDashboard() {
                         </div>
 
                         {/* Recent Accidents */}
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                            <div className="px-6 py-4 bg-gray-50 border-b">
-                                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
+                            <div className="px-6 py-4 bg-slate-50 border-b">
+                                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                     <AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เหตุการณ์ล่าสุด
                                 </h3>
                             </div>
                             {data?.recentAccidents?.length > 0 ? (
-                                <div className="divide-y divide-gray-100">
+                                <div className="divide-y divide-slate-100">
                                     {data.recentAccidents.map((a, idx) => (
-                                        <div key={a.id || idx} className="p-4 hover:bg-gray-50 transition-colors">
+                                        <div key={a.id || idx} className="p-4 hover:bg-slate-50 transition-colors">
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
                                                             {a.accident_type}
                                                         </span>
-                                                        <span className="text-xs text-gray-500">
+                                                        <span className="text-xs text-slate-500">
                                                             {a.report_date ? new Date(a.report_date).toLocaleDateString('th-TH') : ''} {a.report_time || ''}
                                                         </span>
                                                     </div>
-                                                    <p className="text-sm text-gray-800 font-medium">
+                                                    <p className="text-sm text-slate-800 font-medium">
                                                         <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {a.location_name || 'ไม่ระบุสถานที่'}
                                                     </p>
-                                                    <p className="text-xs text-gray-500">
+                                                    <p className="text-xs text-slate-500">
                                                         อ.{a.district || '-'} ต.{a.tambon || '-'}
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-2 text-xs">
-                                                    {a.deaths > 0 && <span className="px-2 py-1 bg-gray-800 text-white rounded"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {a.deaths}</span>}
+                                                    {a.deaths > 0 && <span className="px-2 py-1 bg-slate-800 text-white rounded"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {a.deaths}</span>}
                                                     {a.injuries > 0 && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {a.injuries}</span>}
                                                 </div>
                                             </div>
@@ -493,7 +493,7 @@ export default function FestivalDashboard() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="p-8 text-center text-gray-400">
+                                <div className="p-8 text-center text-slate-400">
                                     <div className="text-4xl mb-2"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                     <p>ยังไม่มีรายงาน</p>
                                 </div>
@@ -503,8 +503,8 @@ export default function FestivalDashboard() {
 
                     {/* Map Section */}
                     {data?.mapData && (
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <div className="border border-slate-200 bg-white rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                                 <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่แสดงจุดเกิดเหตุและจุดบริการ (Session: {data.activeSession?.session_number || ''})
                             </h3>
                             <div className="mb-4 flex gap-4 text-sm">

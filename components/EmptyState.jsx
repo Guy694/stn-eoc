@@ -13,14 +13,14 @@ export default function EmptyState({
         <div className="flex flex-col items-center justify-center py-16 px-4">
             {/* Animated Icon */}
             <div className="mb-6 animate-float-soft">
-                <AppIcon icon={icon} className="h-24 w-24 opacity-50 text-gray-500" />
+                <AppIcon icon={icon} className="h-24 w-24 opacity-50 text-slate-500" />
             </div>
 
             {/* Content */}
-            <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
+            <h3 className="text-2xl font-bold text-slate-800 mb-2 text-center">
                 {title}
             </h3>
-            <p className="text-gray-600 mb-8 text-center max-w-md">
+            <p className="text-slate-600 mb-8 text-center max-w-md">
                 {message}
             </p>
 

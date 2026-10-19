@@ -35,7 +35,7 @@ import dynamic from "next/dynamic";
 // แท็บ AI โหลดเฉพาะเมื่อเปิดใช้ (ไม่ถ่วงการเปิดหน้าครั้งแรก)
 const AnalyticsAIChat = dynamic(() => import("@/components/analytics/AnalyticsAIChat"), {
     ssr: false,
-    loading: () => <div className="h-64 animate-pulse rounded-xl border border-slate-200 bg-white" />
+    loading: () => <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />
 });
 import { useAuth } from "@/context/AuthContext";
 

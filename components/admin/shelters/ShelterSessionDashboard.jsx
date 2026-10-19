@@ -47,7 +47,7 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
       </div>
 
       {summary.activeCount ? (
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="text-base font-black text-slate-900">การใช้ความจุรวม</h3>
             <p className="text-sm tabular-nums text-slate-600"><b className="text-slate-900">{formatNumber(summary.occupancy)}</b> / {formatNumber(summary.capacity)} คน ({summary.usePercent}%)</p>
@@ -57,7 +57,7 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[1.15fr_.85fr]">
-        <div className="overflow-x-auto rounded-xl border border-[#c9dcee] bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <table className="w-full min-w-[34rem] text-left text-sm">
             <caption className="px-5 pt-4 text-left text-base font-black text-slate-900">แยกตามอำเภอ</caption>
             <thead className="text-xs text-slate-500">
@@ -77,7 +77,7 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
           </table>
         </div>
 
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h3 className="text-base font-black text-slate-900">ศูนย์ที่ต้องติดตาม</h3>
           {summary.attention.length ? (
             <ul className="mt-2 divide-y divide-slate-100">
@@ -96,7 +96,7 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="text-base font-black text-slate-900">โรคที่พบในศูนย์</h3>
             <Link href="/eoc/flood/health?tab=shelter" className="text-sm font-bold text-[#0b4c86] hover:underline">บันทึกรายงานโรค</Link>
@@ -118,7 +118,7 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
           ) : null}
         </div>
 
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h3 className="text-base font-black text-slate-900">กลุ่มที่ต้องดูแลพิเศษในศูนย์</h3>
           <p className="text-xs text-slate-500">ตามข้อมูลผู้พักพิงรายกลุ่มในทะเบียนศูนย์ (รวมเฉพาะศูนย์ที่เปิดใช้)</p>
           {summary.hasGroupData ? (

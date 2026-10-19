@@ -60,7 +60,7 @@ export default function ReportingCompleteness({ eocType, sessionId = null, id })
   const missingDistricts = data?.districts?.filter((item) => item.missing.length) || [];
 
   return (
-    <section id={id} className="mb-6 scroll-mt-20 rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm">
+    <section id={id} className="mb-6 scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-5">
       {notice}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

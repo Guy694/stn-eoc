@@ -23,7 +23,7 @@ function fileUrl(path) {
 
 function Section({ title, children, aside }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white">
+    <section className="rounded-2xl border border-slate-200 bg-white">
       <header className="flex items-baseline justify-between gap-2 border-b border-slate-200 px-4 py-3">
         <h2 className="text-base font-black text-slate-900">{title}</h2>
         {aside ? <span className="text-xs text-slate-500">{aside}</span> : null}
@@ -97,7 +97,7 @@ export default function EventHistoryDetail({ sessionId }) {
   );
 
   if (state.loading) {
-    return <AdminPage context={back} title="กำลังโหลดสรุปเหตุการณ์…"><div className="h-48 animate-pulse rounded-xl border border-slate-200 bg-white" /></AdminPage>;
+    return <AdminPage context={back} title="กำลังโหลดสรุปเหตุการณ์…"><div className="h-48 animate-pulse rounded-2xl border border-slate-200 bg-white" /></AdminPage>;
   }
   if (!data) {
     return <AdminPage context={back} title="ไม่พบเหตุการณ์"><p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error || "ไม่พบเหตุการณ์นี้"}</p></AdminPage>;
@@ -141,7 +141,7 @@ export default function EventHistoryDetail({ sessionId }) {
         </>
       )}
     >
-      <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2">
+      <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2">
         <div>
           <div className="text-xs text-slate-500">เปิดเหตุการณ์</div>
           <div className="font-semibold text-slate-900">{formatDateTime(session.opened_at)}{session.opened_by_name ? ` · ${session.opened_by_name}` : ""}</div>

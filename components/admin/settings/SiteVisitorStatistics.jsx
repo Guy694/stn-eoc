@@ -20,7 +20,7 @@ function Stat({ icon, label, value, note, tone }) {
 function RankList({ title, rows, label, valueKey, unit = "ครั้ง" }) {
   const max = Math.max(1, ...rows.map((row) => row[valueKey] || 0));
   return (
-    <div className="rounded-xl border border-[#c9dcee] bg-white">
+    <div className="rounded-2xl border border-slate-200 bg-white">
       <h4 className="border-b border-slate-100 px-4 py-3 font-black text-slate-900">{title}</h4>
       {rows.length ? (
         <ul className="divide-y divide-slate-100">
@@ -87,7 +87,7 @@ export default function SiteVisitorStatistics() {
             <Stat icon={CalendarDays} label="วันนี้" value={formatNumber(stats.todayVisits)} />
             <Stat icon={CalendarRange} label="7 วันล่าสุด" value={formatNumber(stats.last7DaysVisits)} />
           </div>
-          <div className="rounded-xl border border-[#c9dcee] bg-white p-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <h4 className="mb-2 font-black text-slate-900">ยอดเข้าชมรายวัน 30 วันล่าสุด</h4>
             {daily.length ? (
               <div className="h-56" role="img" aria-label="กราฟยอดผู้เข้าชมรายวัน 30 วันล่าสุด">

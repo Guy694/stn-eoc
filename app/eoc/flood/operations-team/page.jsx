@@ -446,7 +446,7 @@ export default function FloodOperationsTeamPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-[1500px] space-y-5">
-                <section className="rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5">
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
                         <div>
                             <div className="flex items-center gap-2 text-sm font-black text-[#0b4c86]">
@@ -511,7 +511,7 @@ export default function FloodOperationsTeamPage() {
                     <SummaryCard icon={Users} label="ทีม / บุคลากร" value={`${teams.length.toLocaleString("th-TH")} ทีม / ${totalMembers.toLocaleString("th-TH")} คน`} />
                 </section>
 
-                <section className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
+                <section className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <h2 className="text-lg font-black text-slate-900">หัวหน้าผังบัญชาการ</h2>
@@ -545,7 +545,7 @@ export default function FloodOperationsTeamPage() {
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
+                <section className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <h2 className="text-lg font-black text-slate-900">ทีมในเหตุการณ์ EOC</h2>
@@ -623,7 +623,7 @@ export default function FloodOperationsTeamPage() {
 
 function SummaryCard({ icon: Icon, label, value }) {
     return (
-        <div className="rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#edf5fc] text-[#0b4c86]">
                     <Icon className="h-5 w-5" />
@@ -639,7 +639,7 @@ function SummaryCard({ icon: Icon, label, value }) {
 
 function EmptyState({ title, description }) {
     return (
-        <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed border-[#c9dcee] bg-white p-8 text-center">
+        <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
             <div>
                 <Users className="mx-auto h-12 w-12 text-blue-300" />
                 <h2 className="mt-3 text-xl font-black text-slate-800">{title}</h2>
@@ -699,7 +699,7 @@ function OperationsFlow({
                             ))}
                         </div>
                     ) : (
-                        <div className="mx-auto max-w-lg rounded-xl border border-dashed border-[#c9dcee] bg-white p-4 text-center text-sm text-slate-500">
+                        <div className="mx-auto max-w-lg rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-center text-sm text-slate-500">
                             ยังไม่กำหนดรองผู้บัญชาการเหตุการณ์
                             {canManage && (
                                 <button
@@ -718,7 +718,7 @@ function OperationsFlow({
                 <div className="mx-12 h-px bg-blue-300" />
 
                 {teams.length === 0 ? (
-                    <div className="mx-auto mt-8 max-w-lg rounded-xl border border-dashed border-[#c9dcee] bg-white p-6 text-center text-slate-500">
+                    <div className="mx-auto mt-8 max-w-lg rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center text-slate-500">
                         ยังไม่มีข้อมูลทีมปฏิบัติการใน session นี้
                     </div>
                 ) : (
@@ -813,7 +813,7 @@ function TeamNode({ team, canManage, onEdit, onDelete }) {
     const leadName = team.team_lead_name?.trim() || "ยังไม่ระบุหัวหน้าทีม";
 
     return (
-        <article className="relative rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
+        <article className="relative rounded-2xl border border-slate-200 bg-white p-4">
             <div className="absolute -top-8 left-1/2 h-8 w-px -translate-x-1/2 bg-blue-200" />
             <div className="flex items-start gap-3">
                 <div

@@ -9,7 +9,7 @@ export default function VulnerableViewTabs({ eocType = "flood", current }) {
     { key: "persons", label: "รายบุคคลและแผนที่", href: `/eoc/${eocType}/vulnerable-persons` }
   ];
   return (
-    <nav aria-label="มุมมองกลุ่มเปราะบาง" className="flex gap-1 overflow-x-auto rounded-xl border border-[#c9dcee] bg-white px-2">
+    <nav aria-label="มุมมองกลุ่มเปราะบาง" className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-2">
       {tabs.map((tab) => {
         const active = tab.key === current;
         return (

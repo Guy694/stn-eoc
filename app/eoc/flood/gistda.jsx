@@ -96,7 +96,7 @@ export default function GistdaFloodMapPage() {
         return (
             <EOCLayout>
                 <div className="flex items-center justify-center h-screen">
-                    <div className="text-gray-500">กำลังโหลด...</div>
+                    <div className="text-slate-500">กำลังโหลด...</div>
                 </div>
             </EOCLayout>
         );
@@ -112,7 +112,7 @@ export default function GistdaFloodMapPage() {
                             <h1 className="text-2xl font-black text-slate-900">
                                 <AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่อุทกภัยน้ำท่วม GISTDA
                             </h1>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-slate-600">
                                 {`ข้อมูลจาก GISTDA - อัปเดตล่าสุด: ${floodData?.summary?.lastUpdate ? new Date(floodData.summary.lastUpdate).toLocaleString('th-TH') : '-'}`}
                             </p>
                         </div>
@@ -140,22 +140,22 @@ export default function GistdaFloodMapPage() {
 
                 {/* Stats Bar */}
                 {floodData && (
-                    <div className="bg-gray-50 border-b p-4">
+                    <div className="bg-slate-50 border-b p-4">
                         <div className="max-w-7xl mx-auto grid grid-cols-3 gap-4">
-                            <div className="bg-white p-3 rounded-lg shadow">
-                                <div className="text-sm text-gray-600">พื้นที่อุทกภัยน้ำท่วมทั้งหมด</div>
+                            <div className="border border-slate-200 bg-white p-3 rounded-2xl">
+                                <div className="text-sm text-slate-600">พื้นที่อุทกภัยน้ำท่วมทั้งหมด</div>
                                 <div className="text-2xl font-bold text-[#0b4c86]">
                                     {floodData.summary?.totalAreas || 0}
                                 </div>
                             </div>
-                            <div className="bg-white p-3 rounded-lg shadow">
-                                <div className="text-sm text-gray-600">จังหวัดที่ได้รับผลกระทบ</div>
+                            <div className="border border-slate-200 bg-white p-3 rounded-2xl">
+                                <div className="text-sm text-slate-600">จังหวัดที่ได้รับผลกระทบ</div>
                                 <div className="text-2xl font-bold text-orange-600">
                                     {floodData.summary?.provinces?.length || 0}
                                 </div>
                             </div>
-                            <div className="bg-white p-3 rounded-lg shadow">
-                                <div className="text-sm text-gray-600">แหล่งข้อมูล</div>
+                            <div className="border border-slate-200 bg-white p-3 rounded-2xl">
+                                <div className="text-sm text-slate-600">แหล่งข้อมูล</div>
                                 <div className="text-xl font-bold text-green-600">
                                     {floodData.source}
                                 </div>
@@ -167,14 +167,14 @@ export default function GistdaFloodMapPage() {
                 {/* Map */}
                 <div className="flex-1 relative">
                     {loading ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
                             <div className="text-center">
                                 <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
-                                <div className="text-gray-600">กำลังโหลดข้อมูล...</div>
+                                <div className="text-slate-600">กำลังโหลดข้อมูล...</div>
                             </div>
                         </div>
                     ) : error ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
                             <div className="text-center text-red-600">
                                 <div className="text-4xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                                 <div className="text-xl font-semibold mb-2">เกิดข้อผิดพลาด</div>
@@ -237,7 +237,7 @@ export default function GistdaFloodMapPage() {
                                             >
                                                 <Popup>
                                                     <div className="min-w-[250px]">
-                                                        <h3 className="font-bold text-lg mb-2 text-gray-800">
+                                                        <h3 className="font-bold text-lg mb-2 text-slate-800">
                                                             {props.tambon || props.name || 'พื้นที่อุทกภัยน้ำท่วม'}
                                                         </h3>
                                                         <div className="space-y-1 text-sm">
@@ -259,10 +259,10 @@ export default function GistdaFloodMapPage() {
                                                                 <p><strong>พื้นที่:</strong> {props.affected_area.toLocaleString()} ตร.ม.</p>
                                                             )}
                                                             {props.description && (
-                                                                <p className="text-gray-600 mt-2">{props.description}</p>
+                                                                <p className="text-slate-600 mt-2">{props.description}</p>
                                                             )}
                                                             {props.date && (
-                                                                <p className="text-xs text-gray-500 mt-2">
+                                                                <p className="text-xs text-slate-500 mt-2">
                                                                     วันที่: {new Date(props.date).toLocaleDateString('th-TH')}
                                                                 </p>
                                                             )}
@@ -286,7 +286,7 @@ export default function GistdaFloodMapPage() {
                                             >
                                                 <Popup>
                                                     <div className="min-w-[250px]">
-                                                        <h3 className="font-bold text-lg mb-2 text-gray-800">
+                                                        <h3 className="font-bold text-lg mb-2 text-slate-800">
                                                             {props.tambon || props.name || 'พื้นที่อุทกภัยน้ำท่วม'}
                                                         </h3>
                                                         <div className="space-y-1 text-sm">
@@ -308,10 +308,10 @@ export default function GistdaFloodMapPage() {
                                                                 <p><strong>พื้นที่ได้รับผลกระทบ:</strong> {props.affected_area.toLocaleString()} ตร.ม.</p>
                                                             )}
                                                             {props.description && (
-                                                                <p className="text-gray-600 mt-2">{props.description}</p>
+                                                                <p className="text-slate-600 mt-2">{props.description}</p>
                                                             )}
                                                             {props.date && (
-                                                                <p className="text-xs text-gray-500 mt-2">
+                                                                <p className="text-xs text-slate-500 mt-2">
                                                                     วันที่: {new Date(props.date).toLocaleDateString('th-TH')}
                                                                 </p>
                                                             )}
@@ -329,7 +329,7 @@ export default function GistdaFloodMapPage() {
                     {/* Legend */}
                     {!loading && !error && (
                         <div className="absolute bottom-6 left-6 bg-white p-4 rounded-lg shadow-lg z-[1000]">
-                            <h4 className="font-bold mb-3 text-gray-800">ระดับน้ำเทียบกับผู้ใหญ่ที่ยืนในน้ำ</h4>
+                            <h4 className="font-bold mb-3 text-slate-800">ระดับน้ำเทียบกับผู้ใหญ่ที่ยืนในน้ำ</h4>
                             <div className="space-y-2">
                                 {FLOOD_LEVEL_LEGEND.map((level) => (
                                     <div key={level.value} className="flex items-center gap-2">
@@ -338,7 +338,7 @@ export default function GistdaFloodMapPage() {
                                     </div>
                                 ))}
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">จุดที่ไม่มีค่าความลึกแสดงระดับประเมินเดิมใน popup</p>
+                            <p className="mt-2 text-xs text-slate-500">จุดที่ไม่มีค่าความลึกแสดงระดับประเมินเดิมใน popup</p>
                         </div>
                     )}
                 </div>

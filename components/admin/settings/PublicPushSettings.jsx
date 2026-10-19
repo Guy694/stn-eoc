@@ -73,7 +73,7 @@ export default function PublicPushSettings() {
   });
 
   if (state.error) return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error}</p>;
-  if (state.loading) return <p className="rounded-xl border border-[#c9dcee] bg-white p-10 text-center text-sm text-slate-500">กำลังโหลด…</p>;
+  if (state.loading) return <p className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังโหลด…</p>;
   const { vapid_ready: vapidReady, table_ready: tableReady, settings, stats } = state.data;
   const ready = vapidReady && tableReady;
   const target = form.districts.length ? form.districts.map((d) => `อ.${d}`).join(", ") : "ทุกคนที่สมัครไว้";
@@ -95,13 +95,13 @@ export default function PublicPushSettings() {
       ) : null}
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs text-slate-500">เครื่องที่รับแจ้งเตือน</p>
           <p className="text-3xl font-black tabular-nums text-slate-900">{formatNumber(stats?.total || 0)}</p>
           <p className="text-xs text-slate-500">ทั้งจังหวัด {formatNumber(stats?.whole_province || 0)} เครื่อง</p>
           {stats?.officers ? <p className="mt-1 text-xs text-slate-500">เจ้าหน้าที่รับแจ้งคำขอช่วยเหลือ {formatNumber(stats.officers.officers)} คน ({formatNumber(stats.officers.devices)} เครื่อง)</p> : null}
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
           <p className="text-xs text-slate-500">เลือกเฉพาะพื้นที่ (รายอำเภอ)</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {SATUN_DISTRICT_NAMES.map((d) => <span key={d} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">อ.{d} <b className="tabular-nums">{formatNumber(stats?.by_district?.[d] || 0)}</b></span>)}
@@ -129,7 +129,7 @@ export default function PublicPushSettings() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h3 className="text-base font-black text-slate-900">ส่งข้อความถึงประชาชน</h3>
         <p className="mt-0.5 text-xs text-slate-500">ใช้กับเรื่องสำคัญเท่านั้น เช่น ประกาศอพยพ เปิดศูนย์พักพิง — ส่งบ่อยเกินไปคนจะปิดการแจ้งเตือน</p>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -164,7 +164,7 @@ export default function PublicPushSettings() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white">
+      <section className="rounded-2xl border border-slate-200 bg-white">
         <h3 className="border-b border-slate-100 px-5 py-3 text-base font-black text-slate-900">ประวัติการส่ง (20 ครั้งล่าสุด)</h3>
         {stats?.log?.length ? (
           <ul className="divide-y divide-slate-100">

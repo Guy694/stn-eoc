@@ -102,7 +102,7 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
           ) : null}
         </header>
 
-        <nav className="flex gap-1 overflow-x-auto rounded-xl border border-[#c9dcee] bg-white p-1 shadow-sm" aria-label="เมนูภารกิจและข้อสั่งการ">
+        <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1" aria-label="เมนูภารกิจและข้อสั่งการ">
           {VIEWS.map((item) => {
             const Icon = item.icon;
             const active = item.key === view;
@@ -115,7 +115,7 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
           })}
         </nav>
 
-        {state.loading ? <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">กำลังโหลดข้อมูล…</div> : null}
+        {state.loading ? <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">กำลังโหลดข้อมูล…</div> : null}
         {state.error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800" role="alert">
             {state.error}
@@ -135,7 +135,7 @@ function TeamStatusView({ data }) {
     return <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">ยังไม่มีกลุ่มภารกิจในเหตุการณ์นี้ — เพิ่มได้ที่ <Link href="/eoc/flood/operations-team" className="font-bold text-[#0b4c86] underline">ทีมปฏิบัติการ</Link></p>;
   }
   return (
-    <div className="overflow-x-auto rounded-xl border border-[#c9dcee] bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
       <table className="min-w-full text-left text-sm">
         <caption className="sr-only">สถานะรายงานประจำวันของแต่ละกลุ่มภารกิจ</caption>
         <thead className="bg-slate-50 text-xs text-slate-600">
@@ -258,12 +258,12 @@ function OperationalResourceView({ view, sessionId }) {
   }[view];
   return <div className="space-y-4">
     {resource.error ? <div className="border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{resource.error}</div> : null}
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#c9dcee] bg-white p-4 shadow-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
       <p className="text-sm text-slate-600">{resource.rows.length ? `${resource.rows.length.toLocaleString("th-TH")} รายการในเหตุการณ์นี้` : "บันทึกของเหตุการณ์ที่เปิดอยู่"}</p>
       {resource.permissions.canOperate ? <button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]">{showForm ? "ปิดแบบฟอร์ม" : `เพิ่ม${labels[view]}`}</button> : null}
     </div>
     {showForm ? <ResourceForm view={view} form={form} setForm={setForm} submit={submit} saving={saving} /> : null}
-    {!resource.rows.length ? <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center"><CalendarClock className="mx-auto h-8 w-8 text-slate-400" aria-hidden="true" /><p className="mt-3 font-bold text-slate-900">ยังไม่มี{labels[view]}ในเหตุการณ์นี้</p><p className="mt-1 text-sm text-slate-500">{resource.permissions.canOperate ? `กด "เพิ่ม${labels[view]}" เพื่อเริ่มบันทึก` : "เมื่อมีการบันทึกจะแสดงที่นี่"}</p></div> :
+    {!resource.rows.length ? <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"><CalendarClock className="mx-auto h-8 w-8 text-slate-400" aria-hidden="true" /><p className="mt-3 font-bold text-slate-900">ยังไม่มี{labels[view]}ในเหตุการณ์นี้</p><p className="mt-1 text-sm text-slate-500">{resource.permissions.canOperate ? `กด "เพิ่ม${labels[view]}" เพื่อเริ่มบันทึก` : "เมื่อมีการบันทึกจะแสดงที่นี่"}</p></div> :
       <div className="overflow-x-auto border border-slate-200 bg-white shadow-sm"><table className="min-w-full text-left text-sm">
         <thead className="bg-slate-900 text-white"><tr>{columns.map(([, label]) => <th key={label} className="px-4 py-3">{label}</th>)}{view === "missions" ? <th className="px-4 py-3">ขั้นตอนงาน</th> : null}</tr></thead>
         <tbody>{resource.rows.map((row) => <tr key={row.id} className="border-t border-slate-100">{columns.map(([key]) => <td key={key} className="max-w-xs px-4 py-3">{key === "progress_percent" ? `${row[key] ?? 0}%` : row[key] ?? "-"}</td>)}{view === "missions" ? <td className="px-4 py-3"><MissionActions row={row} canVerify={resource.permissions.canVerify} onMove={moveMission} /></td> : null}</tr>)}</tbody>
