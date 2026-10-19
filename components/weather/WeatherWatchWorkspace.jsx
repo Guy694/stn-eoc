@@ -360,7 +360,7 @@ export default function WeatherWatchWorkspace() {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-slate-900">
-      <PublicTopNavigation activeMenu="weather" showWeatherMenu />
+      <PublicTopNavigation activeMenu="weather" showWeatherMenu bottomBar="off" />
 
       <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่พยากรณ์และความเสี่ยง">
         <div className={`absolute inset-0 ${isWindy ? "invisible" : ""}`} aria-hidden={isWindy}>

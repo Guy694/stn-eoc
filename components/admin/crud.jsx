@@ -7,7 +7,8 @@ import { ChevronLeft, ChevronRight, Clock, Pencil, Plus, Search, Trash2 } from "
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { cn } from "@/lib/utils";
 import { formatDateTime, formatRelative, parseDateValue } from "@/lib/adminApi";
-import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
+import { notify } from "@/lib/notify";
+import { MetricCard, MetricGrid, toneFromClass } from "@/components/common/MetricCards";
 
 export const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#0b4c86] focus:ring-2 focus:ring-[#0b4c86]/15 disabled:bg-slate-100 disabled:text-slate-500";
@@ -126,15 +127,12 @@ export function Tabs({ value, onChange, items }) {
  * ตัวเลขสรุปเหนือตาราง (ไม่เกิน 4–6 ตัว) แสดงเป็นการ์ดธีมกลาง (components/common/MetricCards)
  * item: { label, value, unit?, icon?, tone? | className? (สีแบบเดิม เช่น "text-red-700"), note?, tag?, share?, onClick?, active? }
  */
-export function StatStrip({ items }) {
+export function StatStrip({ items, compact }) {
   const list = items.filter(Boolean);
-  const cols = list.length >= 5 ? "lg:grid-cols-5" : list.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4";
   return (
-    <ul className={cn("grid grid-cols-2 gap-2.5", cols)}>
-      {list.map(({ className, tone, ...item }) => (
-        <li key={item.label}><MetricCard {...item} tone={tone || toneFromClass(className)} /></li>
-      ))}
-    </ul>
+    <MetricGrid as="ul" compact={compact}>
+      {list.map(({ className, tone, ...item }) => <MetricCard key={item.label} {...item} tone={tone || toneFromClass(className)} />)}
+    </MetricGrid>
   );
 }
 
@@ -398,6 +396,7 @@ export function FormSection({ title, children }) {
 
 /** ฟอร์มในหน้าต่าง: ปุ่มบันทึก/ยกเลิกอยู่ที่เดิมทุกหน้า และแสดงข้อผิดพลาดจากเซิร์ฟเวอร์ในหน้าต่าง */
 export function FormDialog({ open, onOpenChange, title, description, onSubmit, busy = false, error = "", submitText = "บันทึก", size = "lg", children }) {
+  useErrorToast(open ? error : "");
   const submit = async (event) => {
     event.preventDefault();
     await onSubmit?.();
@@ -406,7 +405,6 @@ export function FormDialog({ open, onOpenChange, title, description, onSubmit, b
     <AppDialog open={open} onOpenChange={onOpenChange} title={title} description={description} size={size} busy={busy} contentClassName="p-0 sm:p-0">
       <form onSubmit={submit} className="flex min-h-0 flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
-          {error ? <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" role="alert">{error}</p> : null}
           {children}
         </div>
         <AppDialogActions className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:px-6">
@@ -424,6 +422,7 @@ export function FormDialog({ open, onOpenChange, title, description, onSubmit, b
 export function DeleteDialog({ open, onOpenChange, itemType = "ข้อมูล", itemLabel, onConfirm, busy = false, error = "", note }) {
   const [reason, setReason] = useState("");
   const [localError, setLocalError] = useState("");
+  useErrorToast(open ? error : "");
   useEffect(() => {
     if (open) {
       setReason("");
@@ -456,7 +455,7 @@ export function DeleteDialog({ open, onOpenChange, itemType = "ข้อมู�
             <span className="mb-1 block text-sm font-bold text-slate-800">เหตุผลที่ลบ <span className="text-red-600">*</span></span>
             <textarea rows={3} autoFocus value={reason} onChange={(event) => setReason(event.target.value)} className={inputClass} placeholder="เช่น บันทึกซ้ำ / ข้อมูลผิดพื้นที่" />
           </label>
-          {localError || error ? <p className="text-sm font-semibold text-red-700" role="alert">{localError || error}</p> : null}
+          {localError ? <p className="text-sm font-semibold text-red-700" role="alert">{localError}</p> : null}
         </div>
         <AppDialogActions className="border-t border-slate-200 bg-slate-50 px-5 py-4 sm:px-6">
           <AppDialogCancel disabled={busy} />
@@ -476,25 +475,20 @@ export function ReadOnlyNotice({ message }) {
   );
 }
 
+/**
+ * แจ้งผลการทำงาน — ส่งไป toast มุมขวาบนแบบเดียวกันทั้งระบบ (lib/notify)
+ * คืน notice: null ไว้เพื่อให้หน้าที่ยังวาง {notice} อยู่ทำงานได้เหมือนเดิม
+ */
 export function useNotice() {
-  const [notice, setNotice] = useState(null);
+  const success = useCallback((message) => notify.success(message), []);
+  const fail = useCallback((message) => notify.error(message), []);
+  const warn = useCallback((message) => notify.warning(message), []);
+  return { notice: null, success, fail, warn };
+}
+
+/** error ของฟอร์ม/การลบ → toast (dialog ยังเปิดอยู่ให้แก้แล้วกดใหม่ได้) */
+function useErrorToast(error) {
   useEffect(() => {
-    if (!notice) return undefined;
-    const timer = setTimeout(() => setNotice(null), notice.tone === "error" ? 6000 : 3500);
-    return () => clearTimeout(timer);
-  }, [notice]);
-  const element = notice ? (
-    <div
-      role={notice.tone === "error" ? "alert" : "status"}
-      className={cn(
-        "fixed bottom-5 left-1/2 z-[1300] w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl px-4 py-3 text-sm font-semibold shadow-xl",
-        notice.tone === "error" ? "bg-red-700 text-white" : "bg-slate-900 text-white"
-      )}
-    >
-      {notice.message}
-    </div>
-  ) : null;
-  const success = useCallback((message) => setNotice({ tone: "success", message }), []);
-  const fail = useCallback((message) => setNotice({ tone: "error", message }), []);
-  return { notice: element, success, fail };
+    if (error) notify.error(error);
+  }, [error]);
 }

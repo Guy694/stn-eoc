@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getDisasterConfig, getDisasterIcon } from '@/lib/disasterConfig';
 import SessionTeamsList from './SessionTeamsList';
 import AppIcon from './icons/AppIcon';
+import { MetricCard } from "@/components/common/MetricCards";
 
 export default function DisasterSessionSelector({
     disasterType = 'flood',
@@ -301,13 +302,5 @@ export default function DisasterSessionSelector({
 }
 
 function SummaryItem({ label, value, icon }) {
-    return (
-        <div className="bg-white rounded p-3 border border-teal-200">
-            <div className="flex items-center gap-2 mb-1">
-                <AppIcon icon={icon} className="h-4 w-4 text-teal-700" />
-                <span className="text-xs text-gray-600">{label}</span>
-            </div>
-            <p className="text-lg font-bold text-teal-700">{value}</p>
-        </div>
-    );
+    return <MetricCard icon={icon} label={label} value={value} tone="blue" compact />;
 }

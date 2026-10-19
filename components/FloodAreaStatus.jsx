@@ -6,6 +6,7 @@ import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 import AppIcon from "@/components/icons/AppIcon";
 import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -1474,20 +1475,8 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 }
 
 function StatCard({ label, value, icon, color }) {
-    const colors = {
-        blue: 'from-[#0b4c86] to-[#11466e]',
-        indigo: 'from-[#0b4c86] to-[#11466e]',
-        purple: 'from-[#0b4c86] to-[#11466e]',
-        pink: 'from-pink-500 to-pink-600'
-    };
-
-    return (
-        <div className={`bg-gradient-to-br ${colors[color]} text-white rounded-lg p-4 shadow`}>
-            <AppIcon icon={icon} className="mx-auto mb-2 h-8 w-8" />
-            <div className="text-2xl font-bold">{value.toLocaleString()}</div>
-            <div className="text-sm opacity-90">{label}</div>
-        </div>
-    );
+    const tone = color === 'pink' ? 'red' : 'blue';
+    return <MetricCard icon={icon} label={label} value={Number(value || 0).toLocaleString()} tone={tone} />;
 }
 
 function LevelCard({ label, count, color, icon }) {
@@ -1536,13 +1525,5 @@ function FacilityLegendItem({ color, label }) {
 }
 
 function StatBox({ label, value, color, unit = "" }) {
-    return (
-        <div className={`${color} p-4 rounded-lg text-center`}>
-            <div className="text-2xl font-bold">{value}</div>
-            <div className="text-sm">
-                {label}
-                {unit && <span className="text-xs ml-1">({unit})</span>}
-            </div>
-        </div>
-    );
+    return <MetricCard label={label} value={value} unit={unit} tone={toneFromClass(color)} />;
 }

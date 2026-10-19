@@ -2,6 +2,13 @@ import { render, screen, fireEvent, waitFor, within } from "@testing-library/rea
 import OfficerWorkspace from "@/components/admin/officers/OfficerWorkspace";
 
 jest.mock("@/lib/sweetAlert", () => ({ showDeleteConfirm: jest.fn(async () => true), showConfirm: jest.fn(async () => true) }));
+// ผลการทำงานแสดงเป็น toast มุมขวาบน (lib/notify) — ตรวจจากการเรียก notify
+jest.mock("@/lib/notify", () => {
+  const notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn(), info: jest.fn() };
+  return { __esModule: true, notify, default: notify };
+});
+const { notify } = require("@/lib/notify");
+const toasted = (pattern) => waitFor(() => expect([...notify.error.mock.calls, ...notify.warning.mock.calls, ...notify.success.mock.calls].some(([text]) => pattern.test(String(text)))).toBe(true));
 
 const officer = { id: 331, username: "eoc2569_008", title: "นางสาว", given_name: "นุสรีย์", family_name: "ปะดุกา", email: "", phone: "", role: "staff", is_approved: 1, created_at: "2026-10-01T00:00:00Z" };
 const teams = [
@@ -58,7 +65,7 @@ describe("OfficerWorkspace", () => {
     setup({ assignmentsPut: { success: false, message: "เลือกกลุ่มภารกิจที่ปิดแล้ว" } });
     await openEdit();
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "บันทึกการแก้ไข" }));
-    expect(await screen.findByText(/บันทึกข้อมูลเจ้าหน้าที่แล้ว แต่บันทึกกลุ่มภารกิจไม่สำเร็จ/)).toBeTruthy();
+    await toasted(/บันทึกข้อมูลเจ้าหน้าที่แล้ว แต่บันทึกกลุ่มภารกิจไม่สำเร็จ/);
   });
 
   it("ตรวจรหัสผ่านใหม่ก่อนส่ง", async () => {
@@ -67,7 +74,8 @@ describe("OfficerWorkspace", () => {
     const dialog = screen.getByRole("dialog");
     fireEvent.change(dialog.querySelector('input[type="password"]'), { target: { value: "short1" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "บันทึกการแก้ไข" }));
-    expect(await within(dialog).findByText(/อย่างน้อย 10 ตัวอักษร/)).toBeTruthy();
+    await toasted(/อย่างน้อย 10 ตัวอักษร/);
+    expect(screen.getByRole("dialog")).toBeTruthy(); // dialog ยังเปิดให้แก้ต่อ
     expect(calls.some((call) => call.method === "PUT")).toBe(false);
   });
 });

@@ -498,7 +498,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-slate-900">
-      <PublicTopNavigation activeMenu="map" showWeatherMenu />
+      <PublicTopNavigation activeMenu="map" showWeatherMenu bottomBar="off" />
 
       <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่สถานการณ์">
         <div className="absolute inset-0">

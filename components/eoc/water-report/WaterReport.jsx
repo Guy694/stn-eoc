@@ -10,6 +10,7 @@ import FullReportSheet from "@/components/eoc/water-report/FullReportSheet";
 import ReportConfigEditor from "@/components/eoc/water-report/ReportConfigEditor";
 import { normalizeReportConfig } from "@/lib/waterReportExtras";
 import { Arrow, BRAND, DEFAULT_FOOTER, DOWN, NAVY, SectionHead, StatusFlag, STEADY, UP } from "@/components/eoc/water-report/sheetParts";
+import { notify } from "@/lib/notify";
 
 const SHEET_WIDTH_PX = 794; // 210mm ที่ 96dpi
 const A4_HEIGHT_PX = 1123; // 297mm ที่ 96dpi
@@ -398,7 +399,7 @@ export default function WaterReport() {
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (err) {
-      setError(`บันทึกรูปไม่สำเร็จ: ${err.message}`);
+      notify.error(`บันทึกรูปไม่สำเร็จ: ${err.message}`);
     } finally {
       baselineFix.remove();
       setSaving(false);

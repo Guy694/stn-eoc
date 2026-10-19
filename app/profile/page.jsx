@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BellRing, Check, KeyRound, Minus, Pencil } from "lucide-react";
+import { Check, KeyRound, Minus, Pencil } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { AdminPage, StatusPill, inputClass } from "@/components/admin/crud";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import OfficerPushCard from "@/components/admin/OfficerPushCard";
+import TelegramLinkCard from "@/components/admin/TelegramLinkCard";
 import ProviderIdLinkCard from "@/components/admin/ProviderIdLinkCard";
 
 const TITLES = ["นาย", "นาง", "นางสาว", "ดร."];
@@ -29,21 +30,11 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState(fromUser(null));
-    const [telegramSettings, setTelegramSettings] = useState({ telegramChatId: "", telegramNotifyEnabled: false, botLink: "" });
-    const [telegramSaving, setTelegramSaving] = useState(false);
 
     useEffect(() => {
         if (!loading && !user) router.push("/login");
         else if (user && !isEditing) setFormData(fromUser(user));
     }, [user, loading, router, isEditing]);
-
-    useEffect(() => {
-        if (!user) return;
-        fetch("/stn-eoc/api/officer/telegram")
-            .then((response) => response.json())
-            .then((data) => { if (data.success) setTelegramSettings(data.data); })
-            .catch((error) => console.error("Error loading Telegram settings:", error));
-    }, [user]);
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -73,30 +64,6 @@ export default function ProfilePage() {
         }
     };
 
-    const handleTelegramSubmit = async (event) => {
-        event.preventDefault();
-        setTelegramSaving(true);
-        try {
-            const response = await fetch("/stn-eoc/api/officer/telegram", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(telegramSettings)
-            });
-            const data = await response.json();
-            if (data.success) {
-                setTelegramSettings((current) => ({ ...current, ...data.data }));
-                showSuccess("บันทึกการแจ้งเตือน Telegram แล้ว");
-            } else {
-                showError(data.message || "บันทึก Telegram ไม่สำเร็จ");
-            }
-        } catch (error) {
-            console.error("Error saving Telegram settings:", error);
-            showError("เกิดข้อผิดพลาดในการบันทึก Telegram");
-        } finally {
-            setTelegramSaving(false);
-        }
-    };
-
     if (loading) {
         return <div className="flex min-h-screen items-center justify-center"><p className="text-sm text-slate-500">กำลังโหลด…</p></div>;
     }
@@ -114,7 +81,6 @@ export default function ProfilePage() {
         { label: "ดูรายงาน", allowed: user.permissions?.reports?.view },
         { label: "ส่งออกรายงาน", allowed: user.permissions?.reports?.export }
     ];
-    const telegramOn = Boolean(telegramSettings.telegramNotifyEnabled && telegramSettings.telegramChatId);
 
     return (
         <EOCLayout>
@@ -206,58 +172,7 @@ export default function ProfilePage() {
                         </Link>
                     </div>
 
-                    <form onSubmit={handleTelegramSubmit} className="rounded-xl border border-[#c9dcee] bg-white p-5 shadow-sm sm:p-6 lg:col-span-2" aria-labelledby="tg-title">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <h3 id="tg-title" className="flex items-center gap-2 font-black text-slate-900">
-                                    <BellRing className="h-5 w-5 text-[#0b4c86]" aria-hidden="true" />รับแจ้งเตือนทาง Telegram
-                                    {telegramOn ? <StatusPill tone="green">เปิดรับอยู่</StatusPill> : <StatusPill tone="gray">ยังไม่รับ</StatusPill>}
-                                </h3>
-                                <p className="mt-1 text-sm text-slate-600">รับข้อความส่วนตัวเมื่อประชาชนส่งคำขอความช่วยเหลือ (แยกจากกลุ่มแจ้งเตือนของศูนย์)</p>
-                            </div>
-                            {telegramSettings.botLink ? (
-                                <a href={telegramSettings.botLink} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-[#c9dcee] bg-white px-3 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]">
-                                    เปิด Bot ใน Telegram
-                                </a>
-                            ) : (
-                                <span className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-500">ผู้ดูแลยังไม่ได้ตั้งค่า Bot</span>
-                            )}
-                        </div>
-
-                        <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-slate-700">
-                            {telegramSettings.botLink
-                                ? <li>กด &ldquo;เปิด Bot ใน Telegram&rdquo; แล้วกด Start หรือส่งข้อความหา Bot</li>
-                                : <li>ขอชื่อ Bot ของศูนย์จากผู้ดูแลระบบ แล้วส่งข้อความหา Bot ใน Telegram</li>}
-                            <li>นำรหัสแชต (Chat ID) ที่ Bot ตอบกลับ หรือที่ผู้ดูแลให้มา ใส่ในช่องด้านล่าง</li>
-                            <li>เลือก &ldquo;รับแจ้งเตือน&rdquo; แล้วกดบันทึก</li>
-                        </ol>
-
-                        <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,22rem)_auto_auto] sm:items-end">
-                            <label className="block">
-                                <span className="mb-1 block text-sm font-semibold text-slate-700">รหัสแชต Telegram (Chat ID)</span>
-                                <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    value={telegramSettings.telegramChatId || ""}
-                                    onChange={(event) => setTelegramSettings((current) => ({ ...current, telegramChatId: event.target.value }))}
-                                    placeholder="เช่น 123456789"
-                                    className={inputClass}
-                                />
-                            </label>
-                            <label className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                                <input
-                                    type="checkbox"
-                                    checked={Boolean(telegramSettings.telegramNotifyEnabled)}
-                                    onChange={(event) => setTelegramSettings((current) => ({ ...current, telegramNotifyEnabled: event.target.checked }))}
-                                    className="h-4 w-4 accent-[#0b4c86]"
-                                />
-                                รับแจ้งเตือน
-                            </label>
-                            <button type="submit" disabled={telegramSaving} className="min-h-10 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865] disabled:opacity-60">
-                                {telegramSaving ? "กำลังบันทึก…" : "บันทึกการแจ้งเตือน"}
-                            </button>
-                        </div>
-                    </form>
+                    <TelegramLinkCard className="lg:col-span-2" />
                     <OfficerPushCard className="lg:col-span-2" />
                     <ProviderIdLinkCard className="lg:col-span-2" />
                 </div>

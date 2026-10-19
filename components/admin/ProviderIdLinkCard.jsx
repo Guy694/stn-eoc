@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Link2, Unlink } from "lucide-react";
 import { StatusPill } from "@/components/admin/crud";
 import { formatDateTime } from "@/lib/adminApi";
+import { notify } from "@/lib/notify";
 
 const PROVIDER_ERRORS = new Set(["provider_config", "provider_failed", "provider_none", "provider_taken", "provider_link", "provider_profile"]);
 
@@ -12,7 +13,6 @@ const PROVIDER_ERRORS = new Set(["provider_config", "provider_failed", "provider
 export default function ProviderIdLinkCard({ className = "" }) {
   const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState({ tone: "", text: "" });
 
   const load = useCallback(async () => {
     try {
@@ -28,8 +28,8 @@ export default function ProviderIdLinkCard({ className = "" }) {
     load();
     // ผลจากการเชื่อมบัญชี (Health ID redirect กลับมาที่หน้าโปรไฟล์)
     const params = new URLSearchParams(window.location.search);
-    if (params.get("provider") === "linked") setMessage({ tone: "ok", text: "เชื่อมบัญชี Provider ID แล้ว ครั้งต่อไปกด “เข้าสู่ระบบด้วย Provider ID” ที่หน้าเข้าสู่ระบบได้เลย" });
-    else if (PROVIDER_ERRORS.has(params.get("error"))) setMessage({ tone: "error", text: params.get("message") || "เชื่อมบัญชีไม่สำเร็จ" });
+    if (params.get("provider") === "linked") notify.success("เชื่อมบัญชี Provider ID แล้ว ครั้งต่อไปกด “เข้าสู่ระบบด้วย Provider ID” ที่หน้าเข้าสู่ระบบได้เลย");
+    else if (PROVIDER_ERRORS.has(params.get("error"))) notify.error(params.get("message") || "เชื่อมบัญชีไม่สำเร็จ");
   }, [load]);
 
   const unlink = async () => {
@@ -37,7 +37,7 @@ export default function ProviderIdLinkCard({ className = "" }) {
     try {
       const response = await fetch("/stn-eoc/api/auth/provider-id/link/", { method: "DELETE" });
       const json = await response.json();
-      setMessage({ tone: json.success ? "ok" : "error", text: json.message || (json.success ? "ยกเลิกแล้ว" : "ยกเลิกไม่สำเร็จ") });
+      (json.success ? notify.success : notify.error)(json.message || (json.success ? "ยกเลิกแล้ว" : "ยกเลิกไม่สำเร็จ"));
       await load();
     } finally {
       setBusy(false);
@@ -75,7 +75,6 @@ export default function ProviderIdLinkCard({ className = "" }) {
         บุคลากรสาธารณสุขที่มีบัญชี Health ID / Provider ID ของกระทรวงสาธารณสุข เชื่อมครั้งเดียวแล้วเข้าสู่ระบบได้โดยไม่ต้องใช้รหัสผ่าน
       </p>
       {body}
-      {message.text ? <p className={`mt-2 text-sm ${message.tone === "error" ? "font-semibold text-red-700" : "text-[#0b6b4f]"}`} role={message.tone === "error" ? "alert" : "status"}>{message.text}</p> : null}
     </section>
   );
 }

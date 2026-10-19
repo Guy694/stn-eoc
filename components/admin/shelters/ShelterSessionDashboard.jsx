@@ -19,7 +19,7 @@ function usageTone(percent) {
 }
 
 function Kpi({ icon, label, value, unit, hint, tone = "text-slate-900" }) {
-  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} />;
+  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} compact />;
 }
 
 function Meter({ percent, label }) {

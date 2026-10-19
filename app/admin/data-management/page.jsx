@@ -6,6 +6,7 @@ import { AlertTriangle, Archive, ChevronLeft, ChevronRight, Database, Pencil, Pl
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
 import { showConfirm, showError, showSuccess } from "@/lib/sweetAlert";
+import { MetricCard } from "@/components/common/MetricCards";
 
 const EMPTY_FORM = {
   province_code: "91",
@@ -220,7 +221,7 @@ export default function DataManagementPage() {
   </EOCLayout>;
 }
 
-function Metric({ label, value }) { return <div className="bg-white p-4 shadow-sm"><p className="text-xs font-bold text-slate-500">{label}</p><p className="mt-2 text-2xl font-black text-slate-900">{value}</p></div>; }
+function Metric({ label, value }) { return <MetricCard label={label} value={value} />; }
 function Field({ label, wide, children }) { return <label className={`text-sm font-bold text-slate-700 ${wide ? "md:col-span-2" : ""}`}>{label}{children}</label>; }
 function QualityView({ quality, loading }) {
   const types = Object.entries(quality.summary?.by_type || {});

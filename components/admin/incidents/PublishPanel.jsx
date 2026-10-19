@@ -8,6 +8,7 @@ import { Eye, EyeOff, GitMerge, Megaphone, RotateCcw, Undo2 } from "lucide-react
 import { Button, StatusPill, inputClass } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { canPublish, categoryMeta, defaultExpiryHours, publicPhotoUrl, suggestTitle, titleTemplates } from "@/lib/incidentPublishing";
+import { notify } from "@/lib/notify";
 
 const API = "/stn-eoc/api/admin/incident-reports/publish";
 const EXPIRY_CHOICES = [6, 12, 24, 48, 72];
@@ -28,7 +29,6 @@ export default function PublishPanel({ report, canEdit, onChanged }) {
   const [hours, setHours] = useState(12);
   const [photo, setPhoto] = useState("");
   const [busy, setBusy] = useState("");
-  const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -45,18 +45,16 @@ export default function PublishPanel({ report, canEdit, onChanged }) {
     setText(report.public_detail || "");
     setHours(defaultExpiryHours(report));
     setPhoto("");
-    setError("");
     load();
   }, [report, load]);
 
   const run = async (action, body = {}) => {
     setBusy(action);
-    setError("");
     try {
       const json = await apiRequest(API, { method: "POST", body: { reportId: report.id, action, ...body } });
       onChanged?.(json.message, action);
     } catch (err) {
-      setError(err.message);
+      notify.error(err.message);
     } finally {
       setBusy("");
     }
@@ -162,8 +160,6 @@ export default function PublishPanel({ report, canEdit, onChanged }) {
               {report.report_type === "problem_point" ? `${categoryMeta(report.problem_category).label} · ` : ""}{areaShort(report)} · พิกัดโดยประมาณ · ข้อมูลจากประชาชน{count > 1 ? ` · แจ้ง ${count} ราย` : ""} · ตรวจสอบแล้ว
             </div>
           </div>
-
-          {error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" role="alert">{error}</p> : null}
 
           {canEdit ? (
             <div className="flex flex-wrap gap-2">

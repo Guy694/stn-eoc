@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
 import AppIcon from './icons/AppIcon';
+import { MetricCard } from "@/components/common/MetricCards";
 
 export default function SessionStats({ session, year }) {
     const [floodData, setFloodData] = useState(null);
@@ -191,25 +192,8 @@ export default function SessionStats({ session, year }) {
 }
 
 function StatsCard({ label, value, icon, color, subLabel = '' }) {
-    const colorClasses = {
-        blue: 'bg-[#dbeaf7] border-[#c9dcee] text-[#0b4c86]',
-        green: 'bg-green-100 border-green-300 text-green-700',
-        purple: 'bg-[#dbeaf7] border-[#c9dcee] text-[#0b4c86]',
-        orange: 'bg-orange-100 border-orange-300 text-orange-700',
-        red: 'bg-red-100 border-red-300 text-red-700',
-        yellow: 'bg-yellow-100 border-yellow-300 text-yellow-700',
-    };
-
-    return (
-        <div className={`${colorClasses[color]} rounded-lg p-3 border-2 transition-transform hover:scale-105`}>
-            <div className="text-center">
-                <AppIcon icon={icon} className="mx-auto mb-1 h-6 w-6" />
-                <p className="text-lg font-bold">{value}</p>
-                <p className="text-xs opacity-80">{label}</p>
-                {subLabel && <p className="text-xs opacity-60">{subLabel}</p>}
-            </div>
-        </div>
-    );
+    const tone = { blue: 'blue', purple: 'blue', green: 'green', orange: 'amber', yellow: 'amber', red: 'red' }[color] || 'slate';
+    return <MetricCard icon={icon} label={label} value={value} note={subLabel || null} tone={tone} compact />;
 }
 
 function formatDuration(hours) {

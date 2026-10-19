@@ -30,7 +30,7 @@ const EMPTY = {
 };
 
 function Kpi({ icon, label, value, hint, tone = "text-slate-900" }) {
-  return <MetricCard icon={icon} label={label} value={value} note={hint} tone={toneFromClass(tone)} />;
+  return <MetricCard icon={icon} label={label} value={value} note={hint} tone={toneFromClass(tone)} compact />;
 }
 
 export default function ItSupportWorkspace({ eocType = "flood" }) {

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import PublicBottomBar from "@/components/public/PublicBottomBar";
+import LanguageSwitch from "@/components/public/LanguageSwitch";
 import {
   Bell,
   Bot,
@@ -25,8 +26,9 @@ import {
 // เมนูสำหรับประชาชน: เรียงตามสิ่งที่ประชาชนต้องการรู้ก่อน
 // (ลิงก์เข้าสู่ระบบเจ้าหน้าที่และหน่วยงานย้ายไปอยู่ใน footer)
 // (prop showWeatherMenu เดิมไม่มีผลแล้ว — เมนูสภาพอากาศแสดงตลอด)
-// showBottomBar: บนมือถือ เมื่อเลื่อนลงพ้น navbar แสดงแถบล่างแทน (หน้าแรก)
-// หน้าที่อยู่ในแถบล่างเอง (BOTTOM_BAR_ROUTES) แสดงแถบล่างตลอดบนมือถือ พร้อมไฮไลต์หน้าปัจจุบัน
+// มือถือ: ปุ่มรายงานระดับน้ำ/ขอความช่วยเหลืออยู่ที่แถบล่าง (แสดงตลอด) และอยู่ในเมนูด้วย
+// หน้าแผนที่เต็มจอส่ง bottomBar="off" (แถบล่างจะบังเครื่องมือแผนที่) · หน้าใน BOTTOM_BAR_ROUTES ไฮไลต์ปุ่มของตัวเอง
+// showBottomBar: หน้าที่เว้นที่ท้ายหน้าไว้เองแล้ว (PublicOpsScaffold)
 export const BOTTOM_BAR_ROUTES = {
   "/public/report-water": "water",
   "/public/my-risk": "myrisk",
@@ -40,26 +42,16 @@ export function bottomBarKey(pathname) {
   return BOTTOM_BAR_ROUTES[path] || null;
 }
 
-export default function PublicTopNavigation({ activeMenu, showBottomBar = false }) {
+export default function PublicTopNavigation({ activeMenu, showBottomBar = false, bottomBar = "on" }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [pastNav, setPastNav] = useState(false);
   const navRef = useRef(null);
   const { sheltersOpen } = useHelpAvailability();
   const barKey = bottomBarKey(pathname);
-  const barAlways = Boolean(barKey);
-  const barEnabled = showBottomBar || barAlways;
+  const barEnabled = bottomBar !== "off";
 
   useEffect(() => setIsOpen(false), [pathname]);
 
-  useEffect(() => {
-    if (!showBottomBar || !navRef.current || typeof IntersectionObserver === "undefined") return undefined;
-    const observer = new IntersectionObserver(([entry]) => {
-      setPastNav(!entry.isIntersecting && entry.boundingClientRect.bottom <= 0);
-    });
-    observer.observe(navRef.current);
-    return () => observer.disconnect();
-  }, [showBottomBar]);
 
 
   const openAssistant = () => {
@@ -137,23 +129,17 @@ export default function PublicTopNavigation({ activeMenu, showBottomBar = false 
         <div className="hidden min-h-14 items-center gap-1 overflow-x-auto py-1.5 lg:flex">
           {items.filter(item => !item.emphasis).map(item => renderItem(item))}
           <div className="ml-auto flex items-center gap-1.5">
-            <Link href="/public/en" lang="en" className="flex h-10 shrink-0 items-center rounded-lg px-2.5 text-sm font-bold text-blue-50 hover:bg-white/10" title="Emergency information in English">EN</Link>
+            <LanguageSwitch />
             {items.filter(item => item.emphasis).map(item => renderItem(item))}
           </div>
         </div>
 
-        {/* มือถือ/แท็บเล็ต: ปุ่มหลัก 2 ปุ่มกว้างเท่ากัน สูงเท่ากัน + ปุ่มเมนูเป็นไอคอนจัตุรัส */}
+        {/* มือถือ/แท็บเล็ต: ชื่อหน้า + สวิตช์ TH/EN + ปุ่มเมนู (ปุ่มรายงานระดับน้ำ/ขอความช่วยเหลืออยู่ที่แถบล่างและในเมนู) */}
         <div className="flex min-h-14 items-center gap-2 py-2 lg:hidden">
-          <Building2 className="hidden h-5 w-5 shrink-0 sm:block" aria-hidden="true" />
+          <Building2 className="h-5 w-5 shrink-0" aria-hidden="true" />
           <span className="hidden text-sm font-black md:inline">ข้อมูลสาธารณะ</span>
-          <div className="flex min-w-0 flex-1 items-stretch gap-2 sm:ml-auto sm:max-w-md sm:flex-none">
-            <HelpRequestLink kind="water" className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-2 text-[13px] font-black leading-none text-white shadow-sm hover:bg-sky-400 sm:px-4 sm:text-sm" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! shadow-none! hover:bg-white/15!">
-              <Waves className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">รายงานระดับน้ำ</span>
-            </HelpRequestLink>
-            <HelpRequestLink className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-600 px-2 text-[13px] font-black leading-none text-white shadow-sm hover:bg-red-500 sm:px-4 sm:text-sm" disabledClassName="cursor-not-allowed bg-white/15! text-white/60! shadow-none! hover:bg-white/15!">
-              <Siren className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">ขอความช่วยเหลือ</span>
-            </HelpRequestLink>
-          </div>
+          <span className="min-w-0 flex-1 truncate text-sm font-black md:hidden">ข้อมูลสาธารณะ จ.สตูล</span>
+          <LanguageSwitch className="md:ml-auto" />
           <button
             type="button"
             onClick={() => setIsOpen(value => !value)}
@@ -169,18 +155,16 @@ export default function PublicTopNavigation({ activeMenu, showBottomBar = false 
 
         {isOpen && (
           <div id="public-mobile-menu" className="grid gap-1 border-t border-white/10 py-3 sm:grid-cols-2 lg:hidden">
+            {items.filter(item => item.emphasis).map(item => renderItem(item, true))}
             {items.filter(item => !item.emphasis).map(item => renderItem(item, true))}
             <Link href="/public/agencies" onClick={() => setIsOpen(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-3 text-sm font-bold text-blue-50 hover:bg-white/10">
               <Building2 className="h-4 w-4 shrink-0" aria-hidden="true" /> ติดต่อหน่วยงาน
-            </Link>
-            <Link href="/public/en" lang="en" onClick={() => setIsOpen(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-3 text-sm font-bold text-blue-50 hover:bg-white/10">
-              <span className="flex h-4 w-6 items-center justify-center rounded bg-white/20 text-[10px]">EN</span> Emergency info in English
             </Link>
           </div>
         )}
       </div>
     </nav>
-    {barEnabled ? <PublicBottomBar visible={(barAlways || pastNav) && !isOpen} activeMenu={barKey || activeMenu} reserveSpace={barAlways} /> : null}
+    {barEnabled ? <PublicBottomBar visible={!isOpen} activeMenu={barKey || activeMenu} reserveSpace={!showBottomBar} /> : null}
     </>
   );
 }

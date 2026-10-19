@@ -5,12 +5,12 @@ import { useCallback, useEffect, useState } from "react";
 import { BellOff, BellRing, Smartphone, Volume2 } from "lucide-react";
 import { playAlert, showSystemAlert, unlockAlertAudio } from "@/lib/alertSound";
 import { StatusPill } from "@/components/admin/crud";
+import { notify } from "@/lib/notify";
 import { isIos, isStandalone, officerPushStatus, subscribeOfficerPush, unsubscribeOfficerPush } from "@/lib/pwaClient";
 
 export default function OfficerPushCard({ className = "" }) {
   const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
   const [iosNeedsInstall, setIosNeedsInstall] = useState(false);
 
   const refresh = useCallback(() => officerPushStatus().then(setStatus).catch(() => setStatus({ supported: false })), []);
@@ -21,13 +21,12 @@ export default function OfficerPushCard({ className = "" }) {
 
   const run = async (fn, done) => {
     setBusy(true);
-    setMessage("");
     try {
       await fn();
-      setMessage(done);
+      notify.success(done);
       await refresh();
     } catch (error) {
-      setMessage(error.message);
+      notify.error(error.message);
     } finally {
       setBusy(false);
     }
@@ -35,17 +34,16 @@ export default function OfficerPushCard({ className = "" }) {
 
   // ทดสอบบนเครื่องนี้: สัญญาณเสียงในหน้าเว็บ + แจ้งเตือนของระบบ (เสียง/สั่นตามการตั้งค่าเครื่อง)
   const testAlert = async () => {
-    setMessage("");
     await unlockAlertAudio();
     const sounded = await playAlert("critical");
     const shown = await showSystemAlert("🔔 ทดสอบแจ้งเตือน Satun Geo-EOC", {
       body: "ถ้าได้ยินเสียงและเห็นข้อความนี้ แปลว่าเครื่องนี้พร้อมรับแจ้งเตือนคำขอความช่วยเหลือ",
       tag: "stn-test-alert", renotify: true, data: { url: "/stn-eoc/profile/" }
     });
-    setMessage([
-      sounded ? "เล่นเสียงในหน้าเว็บแล้ว" : "เครื่องยังไม่อนุญาตให้เล่นเสียง ลองเปิดเสียงเครื่องแล้วกดอีกครั้ง",
-      shown ? "ส่งแจ้งเตือนของระบบแล้ว ถ้าเด้งแต่ไม่มีเสียง ให้เปิดเสียงของแอปในการตั้งค่าการแจ้งเตือนของเครื่อง" : "ยังแสดงแจ้งเตือนของระบบไม่ได้ (ต้องเปิดแจ้งเตือนบนเครื่องนี้ก่อน)"
-    ].join(" · "));
+    if (sounded) notify.success("เล่นเสียงในหน้าเว็บแล้ว");
+    else notify.warning("เครื่องยังไม่อนุญาตให้เล่นเสียง ลองเปิดเสียงเครื่องแล้วกดอีกครั้ง");
+    if (shown) notify.info("ส่งแจ้งเตือนของระบบแล้ว ถ้าเด้งแต่ไม่มีเสียง ให้เปิดเสียงของแอปในการตั้งค่าการแจ้งเตือนของเครื่อง");
+    else notify.warning("ยังแสดงแจ้งเตือนของระบบไม่ได้ (ต้องเปิดแจ้งเตือนบนเครื่องนี้ก่อน)");
   };
 
   const on = Boolean(status?.subscribed);
@@ -77,7 +75,6 @@ export default function OfficerPushCard({ className = "" }) {
       <p className="mt-3 text-xs leading-relaxed text-slate-500">
         เสียงของแจ้งเตือนที่เด้งตอนปิดแอปมาจากการตั้งค่าเครื่อง: iPhone ต้องติดตั้งจากปุ่มแชร์ › เพิ่มไปยังหน้าจอโฮม (iOS 16.4 ขึ้นไป) แล้วเปิด การตั้งค่า › การแจ้งเตือน › สตูล EOC › เสียง · Android เปิดเสียงที่ การตั้งค่า › แอป › Chrome (หรือแอปที่ติดตั้ง) › การแจ้งเตือน · ปิดโหมดเงียบ/โฟกัส
       </p>
-      {message ? <p className="mt-2 text-sm text-[#11466e]" role="status">{message}</p> : null}
     </section>
   );
 }

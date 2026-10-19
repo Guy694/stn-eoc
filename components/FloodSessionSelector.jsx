@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SessionTeamsList from './SessionTeamsList';
 import AppIcon from "@/components/icons/AppIcon";
+import { MetricCard } from "@/components/common/MetricCards";
 
 export default function FloodSessionSelector({
     onSessionChange,
@@ -339,18 +340,7 @@ export default function FloodSessionSelector({
 
 // Helper component
 function SummaryItem({ label, value, icon, subtext }) {
-    return (
-        <div className="bg-white rounded p-3 border border-[#c9dcee]">
-            <div className="flex items-center gap-2 mb-1">
-                <AppIcon icon={icon} className="h-5 w-5" />
-                <span className="text-xs text-gray-600">{label}</span>
-            </div>
-            <p className="text-lg font-bold text-[#0b4c86]">{value}</p>
-            {subtext && (
-                <p className="text-xs text-gray-500 mt-1">{subtext}</p>
-            )}
-        </div>
-    );
+    return <MetricCard icon={icon} label={label} value={value} note={subtext || null} tone="blue" compact />;
 }
 
 // Helper function

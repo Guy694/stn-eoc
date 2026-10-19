@@ -4,21 +4,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { CloudOff, RefreshCw, X } from "lucide-react";
 import { flushQueue, getQueue, onQueueChange, removeFromQueue } from "@/lib/offlineQueue";
+import { notify } from "@/lib/notify";
 
 export default function OfflineSyncBar() {
   const [items, setItems] = useState([]);
   const [online, setOnline] = useState(true);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
 
   const sync = useCallback(async () => {
     if (!getQueue().length) return;
     setBusy(true);
     try {
       const result = await flushQueue();
-      if (result.sent) setMessage(`ส่งข้อมูลที่ค้างไว้แล้ว ${result.sent} รายการ`);
-      else if (result.failed) setMessage("บางรายการส่งไม่สำเร็จ ตรวจรายละเอียดด้านล่าง");
+      if (result.sent) notify.success(`ส่งข้อมูลที่ค้างไว้แล้ว ${result.sent} รายการ`);
+      if (result.failed) notify.error("บางรายการส่งไม่สำเร็จ ตรวจรายละเอียดในแถบข้อมูลรอส่ง");
     } finally {
       setBusy(false);
     }
@@ -36,19 +36,13 @@ export default function OfflineSyncBar() {
     return () => { stop(); window.removeEventListener("online", goOnline); window.removeEventListener("offline", goOffline); };
   }, [sync]);
 
-  useEffect(() => {
-    if (!message) return undefined;
-    const timer = setTimeout(() => setMessage(""), 5000);
-    return () => clearTimeout(timer);
-  }, [message]);
-
-  if (online && !items.length && !message) return null;
+  if (online && !items.length) return null;
   return (
     <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-950 print:hidden" role="status">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex items-center gap-2 font-semibold">
           <CloudOff className="h-4 w-4" aria-hidden="true" />
-          {!online ? "ไม่มีอินเทอร์เน็ต — ข้อมูลที่บันทึกจะเก็บไว้ในเครื่องก่อน" : items.length ? `มีข้อมูลรอส่ง ${items.length} รายการ` : message}
+          {!online ? "ไม่มีอินเทอร์เน็ต — ข้อมูลที่บันทึกจะเก็บไว้ในเครื่องก่อน" : `มีข้อมูลรอส่ง ${items.length} รายการ`}
         </span>
         {items.length ? (
           <span className="flex gap-2">

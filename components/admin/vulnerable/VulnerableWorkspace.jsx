@@ -16,6 +16,7 @@ import AreaFields from "@/components/admin/AreaFields";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { readQuery } from "@/components/admin/useUrlState";
 import { VULNERABLE_TYPES, affectedOf } from "@/lib/vulnerableEvent";
+import { MetricCard } from "@/components/common/MetricCards";
 
 const BASELINE_API = "/stn-eoc/api/eoc/vulnerable-groups/baseline";
 const BASELINE_EDITORS = ["admin", "commander", "SAT", "SeRHT"];
@@ -63,26 +64,15 @@ function VulnerableSummary({ totals, areaCount, districtLabel }) {
           {formatNumber(areaCount)} พื้นที่ · {districtLabel}
         </p>
       </div>
-      <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {types.map((type) => {
-          const Icon = TYPE_ICONS[type.key] || PersonStanding;
-          const tone = PRIORITY_TONES[type.priority] || PRIORITY_TONES[1];
+          const tone = type.priority >= 3 ? "red" : type.priority === 2 ? "amber" : "blue";
           const value = Number(totals[type.key]) || 0;
           const share = totals.all ? Math.round((value / totals.all) * 1000) / 10 : 0;
           return (
-            <li key={type.key} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-3.5 font-[family-name:var(--font-kanit)] transition-shadow hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,.5)]">
-              <div className="flex items-start justify-between gap-2">
-                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ${tone.tile}`}><Icon className="h-[18px] w-[18px]" aria-hidden="true" /></span>
-                {tone.label ? <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">{tone.label}</span> : null}
-              </div>
-              <p className="mt-2.5 min-h-[2.5em] text-[13px] font-medium leading-tight text-slate-600">{type.label}</p>
-              <p className="mt-1 text-2xl font-bold leading-none tabular-nums text-slate-900">{formatNumber(value)}</p>
-              <div className="mt-3 flex items-center gap-2" title={`${share}% ของผู้เปราะบางทั้งหมด`}>
-                <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                  <span className={`block h-full rounded-full ${tone.bar}`} style={{ width: `${Math.min(100, share)}%` }} />
-                </span>
-                <span className="w-11 text-right text-xs tabular-nums text-slate-500">{share}%</span>
-              </div>
+            <li key={type.key}>
+              <MetricCard compact icon={TYPE_ICONS[type.key] || PersonStanding} label={type.label} value={formatNumber(value)} unit="คน" tone={value ? tone : "slate"}
+                tag={(PRIORITY_TONES[type.priority] || PRIORITY_TONES[1]).label || null} share={share} shareLabel={`${share}% ของผู้เปราะบางทั้งหมด`} />
             </li>
           );
         })}

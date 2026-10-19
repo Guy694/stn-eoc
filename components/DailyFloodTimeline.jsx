@@ -4,6 +4,7 @@ import html2canvas from "html2canvas";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import AppIcon from "@/components/icons/AppIcon";
 import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 export default function DailyFloodTimeline({ startDate, polygons }) {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -362,10 +363,5 @@ function LegendItem({ color, label }) {
 }
 
 function StatBox({ label, value, color }) {
-    return (
-        <div className={`${color} p-4 rounded-lg text-center`}>
-            <div className="text-2xl font-bold">{value}</div>
-            <div className="text-sm">{label}</div>
-        </div>
-    );
+    return <MetricCard label={label} value={value} tone={toneFromClass(color)} />;
 }

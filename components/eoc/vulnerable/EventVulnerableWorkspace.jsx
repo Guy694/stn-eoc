@@ -35,7 +35,7 @@ function Meter({ value, max, tone = "bg-[#0b4c86]", label }) {
 }
 
 function Kpi({ icon, label, value, unit = "คน", hint, tone = "text-slate-900" }) {
-  return <MetricCard icon={icon} label={label} value={formatNumber(value)} unit={unit} note={hint} tone={toneFromClass(tone)} />;
+  return <MetricCard icon={icon} label={label} value={formatNumber(value)} unit={unit} note={hint} tone={toneFromClass(tone)} compact />;
 }
 
 function Dashboard({ summary }) {

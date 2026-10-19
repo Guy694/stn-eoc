@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import AppIcon from "@/components/icons/AppIcon";
 import { VULNERABLE_TYPES } from "@/lib/vulnerableEvent";
+import { MetricCard } from "@/components/common/MetricCards";
 
 const MapContainer = dynamic(
     () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -315,18 +316,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
 
 // กล่องสรุป = ปุ่มเลือกว่าจะระบายสีแผนที่ตามประเภทไหน
 function SummaryBox({ label, value, tone = "slate", active = false, onClick }) {
-    const toneClass = active
-        ? "border-[#0b4c86] bg-[#0b4c86] text-white"
-        : tone === "emerald"
-            ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-400"
-            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-400";
-    return (
-        <button type="button" onClick={onClick} aria-pressed={active} className={`rounded-lg border p-3 text-left transition ${toneClass}`}>
-            <div className="text-xs font-black opacity-80">{label}</div>
-            <div className="mt-1 text-2xl font-black">{formatNumber(value)}</div>
-            <div className="text-xs font-semibold opacity-70">คน</div>
-        </button>
-    );
+    return <MetricCard label={label} value={formatNumber(value)} unit="คน" tone={tone === "emerald" ? "green" : "blue"} active={active} onClick={onClick} compact />;
 }
 
 function LegendItem({ color, label }) {

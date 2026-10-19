@@ -33,7 +33,7 @@ function Change({ value, suffix = "" }) {
 }
 
 function Kpi({ icon, label, value, unit = "ราย", hint, tone = "text-slate-900" }) {
-  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} />;
+  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} compact />;
 }
 
 const ACTION_STYLE = {

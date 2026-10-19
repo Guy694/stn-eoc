@@ -5,6 +5,8 @@
 #   ./scripts/docker-migrate.sh backup            สำรองฐานข้อมูลไว้ที่ ./db-backups/
 #   ./scripts/docker-migrate.sh up --dry-run      ดูว่าจะรันไฟล์อะไร (ยังไม่แตะฐานข้อมูล)
 #   ./scripts/docker-migrate.sh up                สำรองอัตโนมัติก่อน แล้วรันไฟล์ที่ค้าง
+#   ./scripts/docker-migrate.sh reset [ตัวเลือก]     ดูว่าจะล้างข้อมูลช่วงทดลองอะไรบ้าง (ไม่แตะข้อมูล) — ดู scripts/reset-for-production.mjs
+#   ./scripts/docker-migrate.sh reset --apply ...  สำรองอัตโนมัติ แล้วล้างจริง
 #   ./scripts/docker-migrate.sh baseline --through <ไฟล์>   (ใช้เฉพาะฐานข้อมูลที่สร้างจากไฟล์ .sql ทั้งก้อน — ดู docs/database-migration.md)
 # ค่าที่ปรับได้: DB_CONTAINER (ค่าเริ่มต้น stn-eoc-db), DB_SERVICE_HOST (ค่าเริ่มต้น db), MIGRATE_NETWORK (ค่าเริ่มต้น หาเอง)
 set -euo pipefail
@@ -37,6 +39,14 @@ backup() {
   echo "สำรองแล้ว ($(du -h "$file" | cut -f1))"
 }
 
+run_node() {
+  local script="$1"; shift
+  docker run --rm --network "$MIGRATE_NETWORK" -v "$PWD":/src:ro -w /work \
+    -e DB_HOST="$DB_SERVICE_HOST" -e DB_PORT=3306 -e DB_USER=root \
+    -e DB_PASSWORD="$DB_PASS_EFFECTIVE" -e DB_NAME="$DB_NAME_EFFECTIVE" \
+    node:20-alpine sh -c 'cp -r /src/scripts /work/ && echo "{\"type\":\"module\"}" > package.json && npm i --silent --no-save mysql2 >/dev/null 2>&1 && node "scripts/$0" "$@"' "$script" "$@"
+}
+
 run_migrate() {
   docker run --rm --network "$MIGRATE_NETWORK" -v "$PWD":/src:ro -w /work \
     -e DB_HOST="$DB_SERVICE_HOST" -e DB_PORT=3306 -e DB_USER=root \
@@ -54,5 +64,10 @@ case "$COMMAND" in
     run_migrate up "$@"
     ;;
   status|baseline|check) run_migrate "$@" ;;
-  *) echo "ไม่รู้จักคำสั่ง: $COMMAND (ใช้ได้: status, backup, up, up --dry-run, baseline)"; exit 1 ;;
+  reset)
+    shift
+    if [[ " $* " == *" --apply "* ]]; then backup; fi
+    run_node reset-for-production.mjs "$@"
+    ;;
+  *) echo "ไม่รู้จักคำสั่ง: $COMMAND (ใช้ได้: status, backup, up, up --dry-run, baseline, reset)"; exit 1 ;;
 esac

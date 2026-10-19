@@ -19,6 +19,7 @@ import {
 import AppIcon from "@/components/icons/AppIcon";
 import { enrichDistrictOutbreakData } from "@/lib/diseaseOutbreakMetrics";
 import PaginationControls, { paginateRows } from "@/components/common/PaginationControls";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 const yearColors = {
     "2566": "#64748b",
@@ -463,21 +464,7 @@ function SummaryCard({ label, value, unit, icon, risk, signed, digits = 0, textV
     const displayedValue = value === null || value === undefined
         ? "-"
         : textValue ? value : `${signed && Number(value) > 0 ? "+" : ""}${formatNumber(value, digits)}`;
-
-    return (
-        <div className={`rounded-xl border bg-white p-4 shadow-sm ${getRiskClass(risk)}`}>
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <div className="text-xs font-black opacity-80">{label}</div>
-                    <div className="mt-2 text-2xl font-black leading-tight">{displayedValue}</div>
-                    <div className="mt-1 text-xs font-bold opacity-75">{unit}</div>
-                </div>
-                <div className="rounded-lg bg-white/70 p-2 shadow-sm">
-                    <AppIcon icon={icon} className="h-5 w-5" />
-                </div>
-            </div>
-        </div>
-    );
+    return <MetricCard icon={icon} label={label} value={displayedValue} unit={unit} tone={risk ? toneFromClass(getRiskClass(risk)) : "slate"} tag={risk && risk !== "ปกติ" ? risk : null} />;
 }
 
 function ChartPanel({ title, action, children }) {

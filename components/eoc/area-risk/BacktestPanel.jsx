@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { CANAL_STATES, SEA_STATES } from "@/lib/floodForecast";
 import { RISK_META } from "@/lib/weatherRiskConfig";
+import { notify } from "@/lib/notify";
 
 const CANAL_LABEL = Object.fromEntries(CANAL_STATES.map((s) => [s.key, s.label]));
 const SEA_LABEL = Object.fromEntries(SEA_STATES.map((s) => [s.key, s.label]));
@@ -86,7 +87,6 @@ export default function BacktestPanel({ initialData = null }) {
   const [state, setState] = useState({ loading: !initialData, data: initialData, error: "" });
   const [view, setView] = useState("best");
   const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState("");
 
   const load = useCallback(async (fresh = false) => {
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -102,16 +102,15 @@ export default function BacktestPanel({ initialData = null }) {
   const apply = async (action) => {
     const best = state.data?.best;
     setSaving(true);
-    setNotice("");
     try {
       await apiRequest("/stn-eoc/api/eoc/area-risk/backtest", {
         method: "POST",
         body: action === "apply" ? { action, thresholds: best.thresholds, factor_floor: best.factor_floor, metrics: best } : { action }
       });
-      setNotice(action === "apply" ? "ใช้เกณฑ์ที่ปรับเทียบแล้ว — พยากรณ์ 7 วันและการจำลองจะใช้เกณฑ์นี้ทันทีเมื่อกด \"วิเคราะห์ใหม่\"" : "กลับไปใช้เกณฑ์ค่าเริ่มต้นแล้ว");
+      notify.success(action === "apply" ? "ใช้เกณฑ์ที่ปรับเทียบแล้ว — พยากรณ์ 7 วันและการจำลองจะใช้เกณฑ์นี้ทันทีเมื่อกด \"วิเคราะห์ใหม่\"" : "กลับไปใช้เกณฑ์ค่าเริ่มต้นแล้ว");
       await load();
     } catch (error) {
-      setNotice(error.message);
+      notify.error(error.message);
     } finally {
       setSaving(false);
     }
@@ -153,7 +152,6 @@ export default function BacktestPanel({ initialData = null }) {
           ) : <p className="text-xs text-slate-500">ผู้ดูแลระบบเป็นผู้เลือกใช้เกณฑ์ที่ปรับเทียบ</p>}
           {active.source === "backtest" && active.calibrated_at ? <span className="text-xs text-slate-500">ปรับเทียบเมื่อ {formatDateTime(active.calibrated_at)}{active.by ? ` โดย ${active.by}` : ""}</span> : null}
         </div>
-        {notice ? <p className="mt-2 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900" role="status">{notice}</p> : null}
         {data.confidence === "low" ? <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">ยังมีเหตุการณ์จริงให้เทียบน้อย ผลปรับเทียบจึงเป็นค่าเบื้องต้น — ยิ่งบันทึกน้ำท่วมใน EOC ครบทุกตำบล (พร้อมวันที่เริ่มท่วม) ผลยิ่งน่าเชื่อถือ</p> : null}
       </section>
 

@@ -7,6 +7,7 @@ import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 import AppIcon from "@/components/icons/AppIcon";
 import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
+import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
 // Import Leaflet แบบ dynamic
 const MapContainer = dynamic(
@@ -876,13 +877,5 @@ function FacilityLegendItem({ color, label }) {
 }
 
 function StatBox({ label, value, color, unit = "" }) {
-    return (
-        <div className={`${color} p-4 rounded-lg text-center`}>
-            <div className="text-2xl font-bold">{value}</div>
-            <div className="text-sm">
-                {label}
-                {unit && <span className="text-xs ml-1">({unit})</span>}
-            </div>
-        </div>
-    );
+    return <MetricCard label={label} value={value} unit={unit} tone={toneFromClass(color)} />;
 }

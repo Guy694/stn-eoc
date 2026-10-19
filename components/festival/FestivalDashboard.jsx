@@ -6,6 +6,7 @@ import { Bar, Doughnut } from 'react-chartjs-2';
 import dynamic from 'next/dynamic';
 import { downloadCsv } from '@/lib/exportCsv';
 import AppIcon from "@/components/icons/AppIcon";
+import { MetricCard } from "@/components/common/MetricCards";
 
 const FestivalMap = dynamic(() => import('./FestivalMap'), {
     ssr: false,
@@ -524,22 +525,6 @@ export default function FestivalDashboard() {
 
 // Stat Card Component
 function StatCard({ icon, label, value, color, unit }) {
-    const colorClasses = {
-        red: 'from-red-500 to-red-600 border-red-300',
-        gray: 'from-gray-700 to-gray-800 border-gray-400',
-        yellow: 'from-amber-500 to-amber-600 border-amber-300',
-        purple: 'from-[#0b4c86] to-[#11466e] border-[#c9dcee]',
-        green: 'from-emerald-500 to-emerald-600 border-emerald-300',
-    };
-
-    return (
-        <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl p-5 text-white shadow-lg hover:shadow-xl transition-shadow`}>
-            <div className="flex items-center justify-between mb-2">
-                <AppIcon icon={icon} className="h-7 w-7" />
-                <span className="text-xs font-medium opacity-80">{unit}</span>
-            </div>
-            <div className="text-3xl font-bold">{value.toLocaleString()}</div>
-            <div className="text-sm opacity-90 mt-1">{label}</div>
-        </div>
-    );
+    const tone = { red: 'red', gray: 'slate', yellow: 'amber', purple: 'blue', green: 'green' }[color] || 'slate';
+    return <MetricCard icon={icon} label={label} value={Number(value || 0).toLocaleString()} unit={unit} tone={tone} compact />;
 }
