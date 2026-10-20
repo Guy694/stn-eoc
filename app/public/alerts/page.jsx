@@ -7,6 +7,7 @@ import { BellRing, ExternalLink, Siren } from 'lucide-react';
 import PublicOpsScaffold from '@/components/public/PublicOpsScaffold';
 import AlertGuide from '@/components/public/alerts/AlertGuide';
 import AlertSubscribeCard from '@/components/public/AlertSubscribeCard';
+import AlertSoundSettings from '@/components/common/AlertSoundSettings';
 
 // หน้า "แจ้งเตือนที่ได้รับ": เปิดเมื่อกดแจ้งเตือนบนมือถือ แสดงข้อความเต็ม + แจ้งเตือน 30 วันล่าสุด
 const HIGH = new Set(['high', 'critical']);
@@ -63,6 +64,7 @@ export default function PublicAlertsPage() {
         <div className="mx-auto max-w-3xl space-y-6">
           <Suspense fallback={null}><Received /></Suspense>
           <AlertSubscribeCard />
+          <AlertSoundSettings className="rounded-3xl" />
           <section id="how-to" aria-labelledby="howto-title" className="scroll-mt-24 rounded-3xl bg-white p-5 ring-1 ring-[#d6e3ea] sm:p-6">
             <h2 id="howto-title" className="font-[family-name:var(--font-kanit)] text-xl font-bold text-[#0c2f4a]">วิธีรับแจ้งเตือนภัยบนมือถือ</h2>
             <p className="mt-1 text-slate-600">ทำครั้งเดียว ใช้เวลาไม่ถึง 1 นาที</p>

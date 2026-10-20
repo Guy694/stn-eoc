@@ -11,6 +11,7 @@ import { getAlertAudioContext, showSystemAlert, unlockAlertAudio } from "@/lib/a
 import { speak, speechSupported, thaiVoice, waitForVoices } from "@/lib/alertSpeech";
 import { isIos, isStandalone, pushStatus, pushSupported, subscribePush } from "@/lib/pwaClient";
 import { showConfirm } from "@/lib/sweetAlert";
+import AlertSoundSettings from "@/components/common/AlertSoundSettings";
 
 const API = "/stn-eoc/api/admin/alert-test";
 const PUSH_API = "/stn-eoc/api/admin/public-push";
@@ -202,6 +203,8 @@ export default function AlertTestWorkspace() {
         <p className="mt-3 text-sm text-slate-500">น้ำล้นตลิ่งจะดังซ้ำทุก 2 นาทีจนกว่าจะกด “รับทราบ” (สูงสุด 5 ครั้ง) เหมือนของจริง</p>
       </Section>
 
+      <AlertSoundSettings tone="admin" />
+
       <Section icon={Monitor} title="2. ทดสอบหน้าจอเจ้าหน้าที่ทุกเครื่อง" description="สร้างแจ้งเตือน [ทดสอบ] ในระบบจริง ใช้ตรวจเส้นทางทั้งหมดตั้งแต่เซิร์ฟเวอร์ถึงหน้าจอ: ทุกเครื่องที่เปิดหน้าเจ้าหน้าที่อยู่จะเด้งภายใน 1 นาที">
         <div className="flex flex-wrap gap-2">
           <Button disabled={busy === "officers"} onClick={() => testAllOfficers("water", "critical")}><Siren className="h-4 w-4" aria-hidden="true" />ส่งทดสอบ น้ำล้นตลิ่ง</Button>
@@ -217,7 +220,8 @@ export default function AlertTestWorkspace() {
           <p className="font-bold text-slate-900">ประชาชนจะได้รับแจ้งเตือนอัตโนมัติเมื่อ</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-5">
             <li>เปิด “ส่งเตือนภัยอัตโนมัติ” ไว้ (ค่าเริ่มต้นปิด) และตั้ง VAPID แล้ว</li>
-            <li>มีเหตุระดับสูงเท่านั้น: <b>น้ำล้นตลิ่ง</b> หรือ <b>ฝน 24 ชม. ≥ 90 มม.</b> หรือประกาศเตือนระดับสูงจาก สสน. — น้ำใกล้ตลิ่ง/ฝนหนัก 60 มม. แจ้งเฉพาะเจ้าหน้าที่ (Telegram + popup) และแถบเตือนบนเว็บ</li>
+            <li>มีเหตุตามระดับที่เลือกไว้: <b>เฉพาะเหตุรุนแรง</b> (น้ำล้นตลิ่ง ฝน 24 ชม. ≥ 90 มม. ประกาศเตือนระดับสูงจาก สสน.) หรือ <b>รวมระดับเฝ้าระวัง</b> (เพิ่มน้ำใกล้ตลิ่ง ฝนหนัก ≥ 60 มม.)</li>
+            <li>น้ำลดต่ำกว่าตลิ่งแล้ว ระบบแจ้ง &quot;น้ำลดแล้ว&quot; ให้เองในอำเภอนั้น</li>
             <li>อยู่ในพื้นที่ที่สมัครไว้ (เลือกอำเภอ) เรื่องเดียวกันส่งวันละครั้ง</li>
           </ul>
           <p className="mt-2">ส่งข้อความถึงประชาชนเอง หรือเปิด/ปิดการส่งอัตโนมัติ ได้ที่ <Link href="/admin/settings" className="font-bold text-[#0b4c86] underline">ตั้งค่าระบบ › แจ้งเตือนประชาชน</Link></p>

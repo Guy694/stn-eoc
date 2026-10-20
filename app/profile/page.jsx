@@ -9,6 +9,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { AdminPage, StatusPill, inputClass } from "@/components/admin/crud";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import OfficerPushCard from "@/components/admin/OfficerPushCard";
+import AlertSoundSettings from "@/components/common/AlertSoundSettings";
 import TelegramLinkCard from "@/components/admin/TelegramLinkCard";
 import ProviderIdLinkCard from "@/components/admin/ProviderIdLinkCard";
 
@@ -174,6 +175,7 @@ export default function ProfilePage() {
 
                     <TelegramLinkCard className="lg:col-span-2" />
                     <OfficerPushCard className="lg:col-span-2" />
+                    <AlertSoundSettings tone="admin" className="lg:col-span-2" showDeviceNote={false} />
                     <ProviderIdLinkCard className="lg:col-span-2" />
                 </div>
             </AdminPage>

@@ -56,3 +56,53 @@ describe("publicPush", () => {
     expect(validateBroadcastInput({ title: "ท", body: "x" }).error).toBeTruthy();
   });
 });
+
+describe("ระดับการส่งอัตโนมัติ / น้ำลดแล้ว / ข้อความสำเร็จรูป", () => {
+  const { resolvedCandidates, normalizePushSettings } = jest.requireActual("@/lib/publicPush");
+  const { PUSH_TEMPLATES, fillTemplate, unfilledPlaceholders, AUTO_LEVELS } = jest.requireActual("@/lib/pushTemplates");
+  const now = Date.parse("2026-10-20T10:00:00+07:00");
+  const warnings = [
+    { level: "watch", message: "[ทดสอบ] น้ำใกล้ตลิ่ง สถานีA อ.ละงู ต่ำกว่าตลิ่ง 0.30 ม." },
+    { level: "high", message: "[ทดสอบ] น้ำล้นตลิ่ง สถานีB อ.ควนโดน สูงกว่าตลิ่ง 0.10 ม." }
+  ];
+
+  test("ค่าเริ่มต้นส่งเฉพาะเหตุรุนแรง, เลือก watch ได้รวมเฝ้าระวัง", () => {
+    expect(warningCandidates(warnings, now)).toHaveLength(1);
+    const both = warningCandidates(warnings, now, { level: "watch" });
+    expect(both.map((w) => w.level)).toEqual(["watch", "high"]);
+    expect(normalizePushSettings({ auto_enabled: true }).auto_level).toBe("high");
+    expect(normalizePushSettings({ auto_level: "watch" }).auto_level).toBe("watch");
+    expect(Object.keys(AUTO_LEVELS)).toEqual(["high", "watch"]);
+  });
+
+  test("เฝ้าระวังอย่างเดียว = แจ้งเตือนไม่เร่งด่วน, มีเหตุรุนแรงปน = เตือนภัย", () => {
+    const watchOnly = buildWarningPayload(warningCandidates(warnings.slice(0, 1), now, { level: "watch" }), now);
+    expect(watchOnly).toMatchObject({ level: "info", title: "เฝ้าระวัง จ.สตูล" });
+    const mixed = buildWarningPayload(warningCandidates(warnings, now, { level: "watch" }), now);
+    expect(mixed.level).toBe("high");
+    expect(mixed.body.indexOf("ล้นตลิ่ง")).toBeLessThan(mixed.body.indexOf("ใกล้ตลิ่ง"));
+  });
+
+  test("น้ำลดแล้ว: เฉพาะสถานีที่พ้นล้นตลิ่ง ส่งถึงอำเภอนั้น วันละครั้งต่อสถานี", () => {
+    const items = resolvedCandidates([
+      { kind: "water", stationId: "T1", stationName: "[ทดสอบ] บ้านปันจอร์", amphoe: "ควนโดน", previousState: "overflow", state: "near", bankDiff: -0.2 },
+      { kind: "water", stationId: "T2", stationName: "x", amphoe: "ละงู", previousState: "normal", state: "near" },
+      { kind: "rain", stationId: "rain:1", previousState: "severe", state: "watch" }
+    ], now);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ key: "r:2026-10-20:T1", districts: ["ควนโดน"], level: "info" });
+    expect(items[0].message).toContain("ต่ำกว่าตลิ่ง 0.20 ม.");
+  });
+
+  test("ข้อความสำเร็จรูป: เติมอำเภอ ยาวไม่เกินกำหนด และบอกส่วนที่ต้องแก้", () => {
+    for (const template of PUSH_TEMPLATES) {
+      const filled = fillTemplate(template, ["ควนโดน"]);
+      expect(filled.title.length).toBeLessThanOrEqual(100);
+      expect(filled.body.length).toBeLessThanOrEqual(400);
+      expect(filled.title).not.toContain("{อำเภอ}");
+      expect(validateBroadcastInput({ ...filled, districts: ["ควนโดน"] }).error).toBeUndefined();
+    }
+    expect(fillTemplate(PUSH_TEMPLATES[0], []).title).toContain("จ.สตูล");
+    expect(unfilledPlaceholders("[ทดสอบ] อพยพ [หมู่ที่] [ตำบล] [ตำบล]")).toEqual(["[หมู่ที่]", "[ตำบล]"]);
+  });
+});

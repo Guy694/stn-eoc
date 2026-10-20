@@ -29,8 +29,15 @@ export async function PUT(request) {
   try {
     const body = await request.json().catch(() => ({}));
     const before = await getPushSettings();
-    const data = await savePushSettings({ auto_enabled: body.auto_enabled === true }, auth.user);
-    await recordChange({ request, user: auth.user, action: "data_update", table: "system_settings", id: "public_push", description: data.auto_enabled ? "เปิดส่งแจ้งเตือนภัยถึงประชาชนอัตโนมัติ" : "ปิดส่งแจ้งเตือนภัยถึงประชาชนอัตโนมัติ", oldValues: before, newValues: data });
+    const next = {
+      auto_enabled: typeof body.auto_enabled === "boolean" ? body.auto_enabled : before.auto_enabled,
+      auto_level: body.auto_level === "watch" || body.auto_level === "high" ? body.auto_level : before.auto_level
+    };
+    const data = await savePushSettings(next, auth.user);
+    const description = before.auto_level !== data.auto_level
+      ? `เปลี่ยนระดับการส่งเตือนภัยอัตโนมัติเป็น "${data.auto_level === "watch" ? "รวมระดับเฝ้าระวัง" : "เฉพาะเหตุรุนแรง"}"`
+      : data.auto_enabled ? "เปิดส่งแจ้งเตือนภัยถึงประชาชนอัตโนมัติ" : "ปิดส่งแจ้งเตือนภัยถึงประชาชนอัตโนมัติ";
+    await recordChange({ request, user: auth.user, action: "data_update", table: "system_settings", id: "public_push", description, oldValues: before, newValues: data });
     return NextResponse.json({ success: true, data });
   } catch (error) {
     if (error?.code === "ER_NO_SUCH_TABLE") return NextResponse.json({ success: false, message: "ยังไม่ได้รัน migration 20261009_system_settings.sql" }, { status: 503 });

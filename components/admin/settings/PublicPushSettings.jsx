@@ -7,6 +7,7 @@ import { Button, Field, StatusPill, inputClass, useNotice } from "@/components/a
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { SATUN_DISTRICT_NAMES } from "@/lib/satunDistricts";
+import { AUTO_LEVELS, PUSH_TEMPLATES, fillTemplate, unfilledPlaceholders } from "@/lib/pushTemplates";
 import { pushStatus, subscribePush } from "@/lib/pwaClient";
 
 const API = "/stn-eoc/api/admin/public-push";
@@ -50,6 +51,13 @@ export default function PublicPushSettings() {
     success(json.data.auto_enabled ? "เปิดส่งเตือนภัยอัตโนมัติแล้ว" : "ปิดส่งเตือนภัยอัตโนมัติแล้ว");
     await load();
   });
+  const setLevel = (level) => run(async () => {
+    if (level === state.data.settings.auto_level) return;
+    const json = await apiRequest(API, { method: "PUT", body: { auto_level: level } });
+    success(`ส่งอัตโนมัติ: ${AUTO_LEVELS[json.data.auto_level].label}`);
+    await load();
+  });
+  const applyTemplate = (template) => setForm((f) => ({ ...fillTemplate(template, f.districts), districts: f.districts }));
   const checkNow = () => run(async () => {
     const json = await apiRequest(API, { method: "POST", body: { action: "run" } });
     success(json.message);
@@ -76,6 +84,7 @@ export default function PublicPushSettings() {
   if (state.loading) return <p className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังโหลด…</p>;
   const { vapid_ready: vapidReady, table_ready: tableReady, settings, stats } = state.data;
   const ready = vapidReady && tableReady;
+  const pending = unfilledPlaceholders(`${form.title} ${form.body}`);
   const target = form.districts.length ? form.districts.map((d) => `อ.${d}`).join(", ") : "ทุกคนที่สมัครไว้";
   const recipients = !stats ? 0 : form.districts.length
     ? stats.whole_province + form.districts.reduce((s, d) => s + (stats.by_district[d] || 0), 0)
@@ -119,6 +128,19 @@ export default function PublicPushSettings() {
                 ตรวจทุก 5 นาที เมื่อมีประกาศเตือนระดับสูง (น้ำล้นตลิ่ง ฝนตกหนักมาก ประกาศ สสน.) จะส่งถึงผู้ที่สมัครในอำเภอนั้น
                 เรื่องเดียวกันส่งวันละครั้ง ถ้ามีหลายเรื่องพร้อมกันรวมเป็นแจ้งเตือนเดียว
               </p>
+              <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="ระดับที่ส่งอัตโนมัติ">
+                {Object.entries(AUTO_LEVELS).map(([key, item]) => {
+                  const on = (settings.auto_level || "high") === key;
+                  return (
+                    <button key={key} type="button" role="radio" aria-checked={on} disabled={busy || !ready} onClick={() => setLevel(key)}
+                      className={`max-w-xs rounded-xl px-3 py-2 text-left ring-1 transition disabled:opacity-60 ${on ? "bg-white ring-2 ring-[#0b4c86]" : "bg-white/60 ring-slate-200 hover:ring-slate-300"}`}>
+                      <span className="flex items-center gap-1.5 text-sm font-bold text-slate-900"><span className={`h-3 w-3 rounded-full ring-2 ${on ? "bg-[#0b4c86] ring-[#0b4c86]/30" : "bg-white ring-slate-300"}`} aria-hidden="true" />{item.label}</span>
+                      <span className="mt-0.5 block text-xs leading-5 text-slate-600">{item.detail}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-slate-600">เมื่อน้ำลดลงต่ำกว่าตลิ่ง ระบบแจ้ง &quot;น้ำลดแล้ว&quot; ถึงผู้ที่สมัครในอำเภอนั้นอัตโนมัติ (แบบไม่เร่งด่วน)</p>
               {settings.updated_at ? <p className="text-xs text-slate-500">เปลี่ยนล่าสุด {formatDateTime(settings.updated_at)}{settings.updated_by_name ? ` โดย ${settings.updated_by_name}` : ""}</p> : null}
             </div>
           </div>
@@ -132,7 +154,19 @@ export default function PublicPushSettings() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h3 className="text-base font-black text-slate-900">ส่งข้อความถึงประชาชน</h3>
         <p className="mt-0.5 text-xs text-slate-500">ใช้กับเรื่องสำคัญเท่านั้น เช่น ประกาศอพยพ เปิดศูนย์พักพิง — ส่งบ่อยเกินไปคนจะปิดการแจ้งเตือน</p>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+        <div className="mt-3">
+          <p className="text-sm font-bold text-slate-800">ข้อความสำเร็จรูป</p>
+          <p className="text-xs text-slate-500">เลือกอำเภอใน &quot;ส่งถึง&quot; ก่อน ระบบจะใส่ชื่ออำเภอให้ แล้วแก้ส่วนในวงเล็บ [ ] ให้ตรงพื้นที่จริง</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {PUSH_TEMPLATES.map((template) => (
+              <button key={template.key} type="button" onClick={() => applyTemplate(template)}
+                className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3.5 text-sm font-bold ring-1 ${template.tone}`}>
+                <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />{template.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="หัวข้อ" required hint="ไม่เกิน 100 ตัวอักษร เห็นเป็นตัวหนาบนจอมือถือ">
             <input className={inputClass} maxLength={100} value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="เช่น ประกาศอพยพ ต.ฉลุง" />
           </Field>
@@ -158,7 +192,8 @@ export default function PublicPushSettings() {
           </label>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Button disabled={busy || !ready || form.title.trim().length < 4 || form.body.trim().length < 8} onClick={() => setConfirm(true)}><Send className="h-4 w-4" aria-hidden="true" />ส่งถึงประชาชน</Button>
+          {pending.length ? <p className="w-full rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900" role="status">ยังมีส่วนที่ต้องแก้: {pending.join(" ")} — แก้ให้เป็นข้อมูลจริงก่อนส่ง</p> : null}
+          <Button disabled={busy || !ready || pending.length > 0 || form.title.trim().length < 4 || form.body.trim().length < 8} onClick={() => setConfirm(true)}><Send className="h-4 w-4" aria-hidden="true" />ส่งถึงประชาชน</Button>
           <Button variant="secondary" disabled={busy || !ready || !device?.supported || device?.permission === "denied"} onClick={sendTest}><Smartphone className="h-4 w-4" aria-hidden="true" />ทดสอบส่งถึงเครื่องนี้</Button>
           {device && !device.supported ? <span className="text-xs text-slate-500">เบราว์เซอร์นี้รับแจ้งเตือนไม่ได้</span> : null}
         </div>

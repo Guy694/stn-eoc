@@ -2,6 +2,7 @@
 // สถานการณ์จำลอง [ทดสอบ]: ฝนตกหนัก / น้ำขึ้นใกล้ตลิ่ง → ระบบบันทึกแจ้งเตือน (popup เจ้าหน้าที่) + Telegram + เตือนประชาชน
 jest.mock("@/lib/db", () => ({ query: jest.fn(), getPool: jest.fn() }));
 jest.mock("@/lib/thaiWaterClient", () => ({ getSatunWaterLevels: jest.fn(), getSatunRainfall: jest.fn() }));
+jest.mock("@/lib/publicPushServer", () => ({ sendResolvedAlerts: jest.fn(async () => ({ sent: 1, delivered: 1, recipients: 1 })) }));
 jest.mock("@/lib/telegram", () => ({
   escapeTelegramHtml: (v) => String(v),
   getTelegramHelpNotifyChatIds: jest.fn(() => ["-100test"]),
@@ -11,6 +12,7 @@ jest.mock("@/lib/telegram", () => ({
 import { query } from "@/lib/db";
 import { getSatunRainfall, getSatunWaterLevels } from "@/lib/thaiWaterClient";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { sendResolvedAlerts } from "@/lib/publicPushServer";
 import { runWaterAlerts } from "@/lib/waterAlertRunner";
 import { measuredWarnings } from "@/lib/weatherWatch";
 import { warningCandidates } from "@/lib/publicPush";
@@ -88,4 +90,13 @@ test("เตือนประชาชน (Web Push): ส่งเฉพาะ�
   const push = warningCandidates(warnings, now);
   expect(push).toHaveLength(2);
   expect(push.map((p) => p.message).join(" ")).toMatch(/น้ำล้นตลิ่ง.*ฝนตกหนัก/);
+});
+
+test("น้ำลดจากล้นตลิ่ง → แจ้งประชาชนว่าน้ำลดแล้ว (ส่งต่อให้ระบบ push)", async () => {
+  jest.spyOn(console, "info").mockImplementation(() => {});
+  await round([water(0.2)], []);
+  expect(sendResolvedAlerts).not.toHaveBeenCalled();
+  await round([water(-0.3)], []);
+  expect(sendResolvedAlerts).toHaveBeenCalledTimes(1);
+  expect(sendResolvedAlerts.mock.calls[0][0][0]).toMatchObject({ previousState: "overflow", state: "near", amphoe: "ควนโดน" });
 });

@@ -51,3 +51,19 @@ test("ยังไม่อนุญาตแจ้งเตือน → ไม
   const { showSystemAlert } = require("@/lib/alertSound");
   expect(await showSystemAlert("x")).toBe(false);
 });
+
+test("เลือกแบบเสียงต่อระดับได้ จำไว้ในเครื่อง และ 'ไม่มีเสียงสัญญาณ' ไม่เล่นอะไร", () => {
+  const sound = require("@/lib/alertSound");
+  window.localStorage.clear();
+  expect(sound.readSoundPrefs()).toEqual(sound.DEFAULT_SOUND_PREFS);
+  const saved = sound.saveSoundPrefs({ critical: "emergency", serious: "none", info: "bogus", volume: 5 });
+  expect(saved).toEqual({ critical: "emergency", serious: "none", info: "chime", volume: 1 });
+  expect(sound.readSoundPrefs()).toEqual(saved);
+  const ctx = new FakeContext();
+  FakeContext.tones = 0;
+  sound.playPattern(ctx, "serious");
+  expect(FakeContext.tones).toBe(0);
+  sound.playPattern(ctx, "critical");
+  expect(FakeContext.tones).toBe(6); // โทนคู่ 3 ช่วง
+  for (const style of Object.keys(sound.SOUND_STYLES)) expect(() => sound.playStyle(ctx, style, { volume: 0.3 })).not.toThrow();
+});
