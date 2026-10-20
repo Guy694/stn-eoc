@@ -24,6 +24,7 @@ import {
 } from "@/lib/vulnerablePersons";
 import { areaLabel, matchesStageTarget, stageMeta, stageTitle } from "@/lib/floodTriggers";
 import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
+import Link from "next/link";
 
 const API = "/stn-eoc/api/eoc/vulnerable-persons";
 const AREA_API = "/stn-eoc/api/eoc/vulnerable-event";
@@ -105,7 +106,8 @@ function MapLegend({ showShelters = false }) {
         {CARE_GROUPS.map((group) => (
           <li key={group.key} className="flex items-center gap-1 text-slate-700"><span dangerouslySetInnerHTML={{ __html: pinSvg("waiting", 12, group.color) }} aria-hidden="true" />{group.label}</li>
         ))}
-        <li className="flex items-center gap-1 text-slate-700"><span dangerouslySetInnerHTML={{ __html: pinSvg("assisted", 12, "#9aa6b5") }} aria-hidden="true" />จัดการแล้ว</li>
+        <li className="flex items-center gap-1 text-slate-700"><span dangerouslySetInnerHTML={{ __html: pinSvg("assisted", 12, caseStatus("assisted").color) }} aria-hidden="true" />ช่วยเหลือแล้ว/ปลอดภัย</li>
+        <li className="flex items-center gap-1 text-slate-700"><span dangerouslySetInnerHTML={{ __html: pinSvg("moved", 12, "#9aa6b5") }} aria-hidden="true" />เคลื่อนย้าย/ติดตามแล้ว</li>
       </ul>
       <p className="mb-1 font-bold text-slate-700">สัญลักษณ์ในหมุด = สถานะ</p>
       <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
@@ -234,7 +236,7 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
   const pregnancy = pregnancyAlert(person, today);
   const followUp = followUpState(person);
   return (
-    <li>
+    <li id={`vp-card-${person.id}`} className="scroll-mt-3">
       <article
         className={`rounded-2xl border border-l-4 bg-white p-3 transition ${selected ? "border-[#0b4c86] shadow-md ring-1 ring-[#0b4c86]" : "border-slate-200 hover:border-slate-300"}`}
         style={{ borderLeftColor: careGroupMeta(effectiveCareGroup(person))?.color }}
@@ -531,12 +533,27 @@ function PersonDialog({ open, editing, areas, sessionId, onClose, onSaved }) {
   );
 }
 
-export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
+export default function VulnerablePersonsWorkspace({ eocType = "flood", registry = false }) {
   const { notice, success, fail } = useNotice();
   const [state, setState] = useState({ loading: true, data: null, error: "" });
   const [areas, setAreas] = useState([]);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [selectedId, setSelectedId] = useState(null);
+  const [scrollTarget, setScrollTarget] = useState(null);
+  // กดหมุดครั้งเดียว: เปิดการ์ดของคนนั้น และเลื่อนรายชื่อไปที่การ์ด (มือถือเลื่อนหน้าลงไปที่การ์ด)
+  const selectFromMap = useCallback((id) => {
+    setSelectedId(id);
+    setScrollTarget(id);
+  }, []);
+  useEffect(() => {
+    if (!scrollTarget) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById(`vp-card-${scrollTarget}`)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      setScrollTarget(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [scrollTarget]);
   const [statusTarget, setStatusTarget] = useState(null);
   const [personDialog, setPersonDialog] = useState({ open: false, editing: null });
   const [importOpen, setImportOpen] = useState(false);
@@ -638,22 +655,25 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
     }
   };
 
-  const context = session ? `${getEocTypeLabel(eocType)} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : null;
+  const context = registry ? "ข้อมูลกลาง" : session ? `${getEocTypeLabel(eocType)} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : null;
 
   return (
     <AdminPage
       context={context}
-      title="แผนที่กลุ่มเปราะบางรายบุคคล"
+      title={registry ? "ทะเบียนกลุ่มเปราะบางรายบุคคล" : "แผนที่กลุ่มเปราะบางรายบุคคล"}
       freshness={session ? { value: latestTime(persons.map((person) => person.status_updated_at)), staleHours: 6, label: "อัปเดตสถานะล่าสุด", emptyText: "ยังไม่มีการอัปเดตสถานะในเหตุการณ์นี้" } : null}
       description="ดูว่าใครยังไม่ได้รับการช่วยเหลือ อยู่ตรงไหน และอัปเดตสถานะเมื่อเจ้าหน้าที่เข้าพื้นที่"
       actions={(
         <div className="flex flex-wrap gap-2">
-          {perms.can_edit_registry ? <ImportExcelButton onClick={() => setImportOpen(true)} /> : null}
+          {registry && perms.can_edit_registry ? <ImportExcelButton onClick={() => setImportOpen(true)} /> : null}
           {perms.can_edit_registry ? <AddButton onClick={() => setPersonDialog({ open: true, editing: null })}>เพิ่มรายชื่อ</AddButton> : null}
         </div>
       )}
     >
-      <VulnerableViewTabs eocType={eocType} current="persons" />
+      <VulnerableViewTabs eocType={eocType} current="persons" registry={registry} />
+      {!registry && perms.can_edit_registry ? (
+        <p className="text-xs text-slate-500">นำเข้ารายชื่อจาก Excel ได้ที่ <Link href="/eoc/vulnerable-groups/persons" className="font-semibold text-[#0b4c86] hover:underline">ทะเบียนกลุ่มเปราะบาง › รายบุคคลและแผนที่</Link> รายชื่อชุดเดียวกันใช้ได้ทุกเหตุการณ์</p>
+      ) : null}
       {notice}
       <p className="flex items-start gap-2 rounded-xl border border-[#c9dcee] bg-[#f3f8fc] px-3 py-2 text-xs text-slate-700">
         <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#0b4c86]" aria-hidden="true" />
@@ -714,7 +734,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="relative h-[55vh] min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white lg:h-[calc(100vh-17rem)] lg:min-h-[520px]">
-          <VulnerablePersonsMap people={filtered} selectedId={selectedId} onSelect={setSelectedId} fitKey={fitKey} floodAreas={floodAreas} shelters={shelters} layers={layers} />
+          <VulnerablePersonsMap people={filtered} selectedId={selectedId} onSelect={selectFromMap} fitKey={fitKey} floodAreas={floodAreas} shelters={shelters} layers={layers} />
           <MapLegend showShelters={layers.shelters && shelters.length > 0} />
           {session ? <LayerToggles layers={layers} onChange={setLayers} floodCount={floodAreas.length} shelterCount={activeShelterCount} canFlood={eocType === "flood"} /> : null}
           {!state.loading && filtered.length && !filtered.some((person) => person.location) ? (

@@ -13,7 +13,24 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 [ -f .env ] || { echo "ไม่พบไฟล์ .env ในโฟลเดอร์ $(pwd)"; exit 1; }
-set -a; . ./.env; set +a
+# อ่านเฉพาะค่าที่สคริปต์ใช้จาก .env โดยไม่รันไฟล์เป็นคำสั่ง (กัน "KEY = value", ค่ามีช่องว่าง, หรืออักขระพิเศษในรหัสผ่าน)
+# ค่าที่ตั้งไว้ใน environment ของ shell อยู่แล้วมีลำดับความสำคัญสูงกว่า
+read_env() {
+  local name="$1" line value
+  line=$(grep -E "^[[:space:]]*(export[[:space:]]+)?${name}[[:space:]]*=" .env | tail -n 1) || return 0
+  value="${line#*=}"
+  value="${value#"${value%%[![:space:]]*}"}"   # ตัดช่องว่างหน้า
+  value="${value%"${value##*[![:space:]]}"}"   # ตัดช่องว่างท้าย
+  value="${value%$'\r'}"                       # ไฟล์จาก Windows
+  if [[ "$value" == \"*\" || "$value" == \'*\' ]]; then value="${value:1:${#value}-2}"; fi
+  printf '%s' "$value"
+}
+for name in MYSQL_DATABASE DB_NAME MYSQL_ROOT_PASSWORD DB_CONTAINER DB_SERVICE_HOST MIGRATE_NETWORK; do
+  if [ -z "${!name:-}" ]; then
+    value="$(read_env "$name")"
+    [ -n "$value" ] && export "$name=$value"
+  fi
+done
 
 DB_CONTAINER="${DB_CONTAINER:-stn-eoc-db}"
 DB_SERVICE_HOST="${DB_SERVICE_HOST:-db}"

@@ -4,6 +4,8 @@ import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
 import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
 import { VULNERABLE_TYPES } from '@/lib/vulnerableEvent';
+import { summarizeRegistry } from '@/lib/vulnerableRegistry';
+import { loadMergedRegistry } from '@/lib/vulnerableRegistryServer';
 
 const pool = getPool();
 
@@ -32,56 +34,12 @@ export async function GET(request) {
         const district = searchParams.get('district');
         const tambon = searchParams.get('tambon');
 
-        connection = await pool.getConnection();
-
-        const whereParts = ['1=1'];
-        const params = [];
-
-        if (district && district !== 'all') {
-            whereParts.push('district = ?');
-            params.push(district);
-        }
-
-        if (tambon && tambon !== 'all') {
-            whereParts.push('tambon = ?');
-            params.push(tambon);
-        }
-
-        const [rows] = await connection.execute(`
-            SELECT
-                id,
-                province,
-                district,
-                tambon,
-                village,
-                ${TYPE_KEYS.join(', ')},
-                total_cared,
-                moved,
-                notes,
-                needs,
-                import_source,
-                source_as_of_date,
-                created_by,
-                created_at,
-                updated_at
-            FROM vulnerable_group_baselines
-            WHERE ${whereParts.join(' AND ')}
-            ORDER BY district, tambon, village
-        `, params);
-
-        const [summary] = await connection.execute(`
-            SELECT
-                ${TYPE_KEYS.map((key) => `SUM(${key}) as total_${key}`).join(',\n                ')},
-                SUM(${SUM_TYPES}) as grand_total,
-                COUNT(*) as location_count
-            FROM vulnerable_group_baselines
-            WHERE ${whereParts.join(' AND ')}
-        `, params);
-
+        // ยอดรายหมู่บ้าน = ที่กรอกเอง รวมกับจำนวนคนในทะเบียนรายบุคคล (ค่าที่มากกว่า) — lib/vulnerableRegistry.js
+        const rows = await loadMergedRegistry({ district, tambon });
         return NextResponse.json({
             success: true,
             data: rows,
-            summary: summary[0] || {},
+            summary: summarizeRegistry(rows),
             count: rows.length
         });
     } catch (error) {

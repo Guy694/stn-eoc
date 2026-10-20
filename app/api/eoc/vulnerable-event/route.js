@@ -6,6 +6,7 @@ import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { modulePermissions, requireModuleEdit } from "@/lib/eocModuleAccess";
 import { handleArchiveDelete, recordChange } from "@/lib/recordArchive";
 import { VULNERABLE_TYPES, affectedOf, differsFromRegistry, findBaselineFor, summarizeVulnerableEvent, validateEventRecord } from "@/lib/vulnerableEvent";
+import { loadMergedRegistry } from "@/lib/vulnerableRegistryServer";
 
 // กลุ่มเปราะบาง "ในเหตุการณ์ที่เปิด"
 // - จำนวนแต่ละประเภทดึงจากทะเบียนกลาง (vulnerable_group_baselines) ตอนเพิ่มหมู่บ้าน / กดอัปเดตจากทะเบียน
@@ -58,7 +59,7 @@ export async function GET(request) {
          FROM vulnerable_groups WHERE session_id = ? ORDER BY district, tambon, village`,
         [session.id]
       ),
-      query(`SELECT district, tambon, village, ${TYPE_KEYS.join(", ")} FROM vulnerable_group_baselines ORDER BY district, tambon, village`).catch(() => [])
+      loadMergedRegistry().catch(() => [])
     ]);
     const records = rows.map((row) => ({ ...row, cared_count: row.cared_count ?? 0, moved_count: row.moved_count ?? 0, affected: affectedOf(row), registry_changed: differsFromRegistry(row, baseline), in_registry: Boolean(findBaselineFor(baseline, row)) }));
     const active = session.status === "active";
@@ -92,8 +93,9 @@ async function activeSessionOr409(sessionId) {
   return null;
 }
 
+// ทะเบียนที่รวมรายชื่อรายบุคคลแล้ว — เพิ่มหมู่บ้านในเหตุการณ์จะได้จำนวนชุดเดียวกับหน้าทะเบียน
 async function loadRegistry() {
-  return query(`SELECT district, tambon, village, ${TYPE_KEYS.join(", ")} FROM vulnerable_group_baselines`);
+  return loadMergedRegistry();
 }
 
 // POST action:

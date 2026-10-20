@@ -28,9 +28,13 @@ export function pinSvg(statusKey, size = 30, fill = null) {
   </svg>`;
 }
 
-/** สีหมุดบนแผนที่: จัดการแล้ว = เทา, นอกนั้น = กลุ่มสี */
+// สถานะที่แสดงเป็นสีเขียว (เขียวเข้มกว่ากลุ่มสีเขียว และมีเครื่องหมาย ✓ ในหมุด)
+export const GREEN_DONE = new Set(["assisted", "safe"]);
+
+/** สีหมุดบนแผนที่: ช่วยเหลือแล้ว/ปลอดภัย = เขียว, จัดการแล้วอื่น ๆ = เทา, นอกนั้น = กลุ่มสี */
 export function pinFill(person) {
   const status = caseStatus(person.status);
+  if (GREEN_DONE.has(status.key)) return status.color;
   if (status.group === "done") return "#9aa6b5";
   return careGroupMeta(effectiveCareGroup(person))?.color || status.color;
 }

@@ -17,6 +17,7 @@ import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { readQuery } from "@/components/admin/useUrlState";
 import { VULNERABLE_TYPES, affectedOf } from "@/lib/vulnerableEvent";
 import { MetricCard } from "@/components/common/MetricCards";
+import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
 
 const BASELINE_API = "/stn-eoc/api/eoc/vulnerable-groups/baseline";
 const BASELINE_EDITORS = ["admin", "commander", "SAT", "SeRHT"];
@@ -81,6 +82,17 @@ function VulnerableSummary({ totals, areaCount, districtLabel }) {
   );
 }
 
+const SOURCE_LABELS = {
+  persons: { text: "จากรายชื่อ", className: "bg-sky-50 text-[#0b4c86] ring-sky-100" },
+  both: { text: "กรอกเอง + รายชื่อ", className: "bg-emerald-50 text-emerald-800 ring-emerald-100" },
+  manual: { text: "กรอกเอง", className: "bg-slate-100 text-slate-600 ring-slate-200" }
+};
+
+function SourceChip({ source }) {
+  const meta = SOURCE_LABELS[source] || SOURCE_LABELS.manual;
+  return <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${meta.className}`}>{meta.text}</span>;
+}
+
 function area(row) {
   return { main: row.village || `ต.${row.tambon}`, sub: [row.village && `ต.${row.tambon}`, `อ.${row.district}`].filter(Boolean).join(" ") };
 }
@@ -143,9 +155,13 @@ export default function VulnerableWorkspace() {
   const [deleting, setDeleting] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const updateForm = (patch) => setForm((current) => ({ ...current, ...patch }));
+  // ฟอร์มแก้เฉพาะ "ยอดที่กรอกเอง" — จำนวนจากรายชื่อรายบุคคลนับให้อัตโนมัติ (ระบบใช้ค่าที่มากกว่า)
   const openForm = (row = null) => {
     setEditing(row || {});
-    setForm(row ? { ...EMPTY, ...Object.fromEntries(Object.keys(EMPTY).map((key) => [key, row[key] ?? EMPTY[key]])) } : EMPTY);
+    const manual = row?.manual_counts || (row?.id ? row : null);
+    setForm(row
+      ? { ...EMPTY, district: row.district || "", tambon: row.tambon || "", village: row.village || "", ...Object.fromEntries(VULNERABLE_TYPES.map((type) => [type.key, manual ? Number(manual[type.key]) || 0 : 0])) }
+      : EMPTY);
     setFormError("");
   };
 
@@ -157,7 +173,8 @@ export default function VulnerableWorkspace() {
     try {
       const counts = Object.fromEntries(VULNERABLE_TYPES.map((type) => [type.key, Number(form[type.key]) || 0]));
       // แก้ไข: ส่งค่าเดิมที่ไม่ได้แสดงในฟอร์มกลับไปด้วย (ไม่ให้ข้อมูลเก่าหาย)
-      const body = { ...(editing?.id ? editing : {}), ...form, ...counts, village: form.village || null };
+      const { person_counts: _personCounts, manual_counts: _manualCounts, person_total: _personTotal, source: _source, moo: _moo, ...stored } = editing?.id ? editing : {};
+      const body = { ...stored, ...form, ...counts, village: form.village || null };
       if (editing?.id) await apiRequest(BASELINE_API, { method: "PUT", body: { ...body, id: editing.id } });
       else await apiRequest(BASELINE_API, { method: "POST", body });
       success(editing?.id ? "บันทึกการแก้ไขแล้ว" : "เพิ่มข้อมูลแล้ว");
@@ -187,7 +204,19 @@ export default function VulnerableWorkspace() {
   const columns = [
     { key: "area", label: "พื้นที่", render: (row) => { const label = area(row); return (<div><div className="font-semibold text-slate-900">{label.main}</div><div className="text-xs text-slate-500">{label.sub}</div></div>); } },
     { key: "total", label: "รวม", className: "text-right", render: (row) => <strong className="text-base">{formatNumber(affectedOf(row))}</strong> },
-    ...VULNERABLE_TYPES.map((type) => ({ key: type.key, label: type.short, className: "text-right tabular-nums", render: (row) => formatNumber(row[type.key]) })),
+    ...VULNERABLE_TYPES.map((type) => ({
+      key: type.key, label: type.short, className: "text-right tabular-nums",
+      render: (row) => {
+        const fromList = Number(row.person_counts?.[type.key]) || 0;
+        return (
+          <span title={fromList ? `จากรายชื่อรายบุคคล ${fromList} คน${row.manual_counts ? ` · กรอกเอง ${Number(row.manual_counts[type.key]) || 0}` : ""} (ใช้ค่าที่มากกว่า)` : undefined}>
+            {formatNumber(row[type.key])}
+            {fromList ? <span className="block text-[11px] font-medium text-[#0b4c86]">รายชื่อ {formatNumber(fromList)}</span> : null}
+          </span>
+        );
+      }
+    })),
+    { key: "source", label: "ที่มา", render: (row) => <SourceChip source={row.source} /> },
     { key: "updated_at", label: "อัปเดต", render: (row) => <UpdatedAt value={row.updated_at} staleHours={24 * 90} /> }
   ];
 
@@ -195,9 +224,10 @@ export default function VulnerableWorkspace() {
     <AdminPage
       context="ข้อมูลกลาง"
       title="ทะเบียนกลุ่มเปราะบาง"
-      description="จำนวนผู้เปราะบางแต่ละประเภทรายหมู่บ้าน เมื่อเปิด EOC เมนูกลุ่มเปราะบางของเหตุการณ์จะดึงจำนวนจากทะเบียนนี้ไปใช้"
+      description="จำนวนผู้เปราะบางแต่ละประเภทรายหมู่บ้าน รวมยอดที่กรอกเองกับรายชื่อรายบุคคลที่นำเข้า (ใช้ค่าที่มากกว่า) เมื่อเปิด EOC เมนูกลุ่มเปราะบางของเหตุการณ์จะดึงจำนวนจากทะเบียนนี้ไปใช้"
       actions={canEdit ? <AddButton onClick={() => openForm()}>เพิ่มพื้นที่</AddButton> : null}
     >
+      <VulnerableViewTabs registry current="villages" />
       {openEvents.length ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
           <span>มี EOC เปิดอยู่ ดูผู้ได้รับผลกระทบ การดูแล และการเคลื่อนย้ายได้ที่</span>
@@ -215,22 +245,26 @@ export default function VulnerableWorkspace() {
       </Toolbar>
       <DataTable
         caption="ทะเบียนกลุ่มเปราะบาง"
+        rowKey={(row) => row.id ?? `p:${row.district}|${row.tambon}|${row.moo || row.village}`}
         loading={loading}
         rows={filtered}
         emptyText="ยังไม่มีข้อมูลในพื้นที่ที่เลือก"
         columns={columns}
-        rowActions={canEdit ? (row) => <RowActions onEdit={() => openForm(row)} onDelete={isAdmin ? () => { setDeleteError(""); setDeleting(row); } : undefined} /> : undefined}
+        rowActions={canEdit ? (row) => <RowActions onEdit={() => openForm(row)} editLabel={row.id ? "แก้ไข" : "เพิ่มยอดกรอกเอง"} onDelete={isAdmin && row.id ? () => { setDeleteError(""); setDeleting(row); } : undefined} /> : undefined}
       />
 
       <FormDialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)} title={editing?.id ? "แก้ไขทะเบียนกลุ่มเปราะบาง" : "เพิ่มพื้นที่"} description="ข้อมูลกลาง" onSubmit={save} busy={busy} error={formError}>
         <FormGrid>
           <FormSection title="พื้นที่"><AreaFields value={form} onChange={updateForm} /></FormSection>
           <FormSection title={`จำนวนคน (รวม ${formatNumber(affectedOf(form))} คน)`}>
-            {VULNERABLE_TYPES.map((type) => (
-              <Field key={type.key} label={type.label}>
-                <input type="number" min={0} className={inputClass} value={form[type.key]} onChange={(event) => updateForm({ [type.key]: event.target.value })} />
-              </Field>
-            ))}
+            {VULNERABLE_TYPES.map((type) => {
+              const fromList = Number(editing?.person_counts?.[type.key]) || 0;
+              return (
+                <Field key={type.key} label={type.label} hint={fromList ? `มีในรายชื่อรายบุคคล ${formatNumber(fromList)} คน — ระบบใช้ค่าที่มากกว่าระหว่างยอดนี้กับรายชื่อ` : undefined}>
+                  <input type="number" min={0} className={inputClass} value={form[type.key]} onChange={(event) => updateForm({ [type.key]: event.target.value })} />
+                </Field>
+              );
+            })}
           </FormSection>
         </FormGrid>
       </FormDialog>

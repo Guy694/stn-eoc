@@ -31,3 +31,20 @@ describe("พิกัดโดยประมาณ (กลางหมู่�
     }
   });
 });
+
+import { pinFill } from "@/components/eoc/vulnerable/vulnerablePins";
+import { caseStatus } from "@/lib/vulnerablePersons";
+
+describe("สีหมุดสถานะจัดการแล้ว", () => {
+  const person = (status) => ({ status, vulnerable_type: "dialysis_hd", care_group: "red" });
+  test("ช่วยเหลือแล้ว/ปลอดภัย = เขียว (ต่างจากกลุ่มสีเขียว)", () => {
+    expect(pinFill(person("assisted"))).toBe(caseStatus("assisted").color);
+    expect(pinFill(person("safe"))).toBe(caseStatus("safe").color);
+    expect(caseStatus("assisted").color).not.toBe("#16a34a");
+  });
+  test("เคลื่อนย้าย/ติดตามแล้ว ยังเป็นเทา · ยังไม่จัดการ = สีกลุ่ม", () => {
+    expect(pinFill(person("moved"))).toBe("#9aa6b5");
+    expect(pinFill(person("followed_up"))).toBe("#9aa6b5");
+    expect(pinFill(person("waiting"))).toBe("#dc2626");
+  });
+});

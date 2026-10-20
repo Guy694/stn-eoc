@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth";
+import { loadMergedRegistry } from '@/lib/vulnerableRegistryServer';
 
 const pool = getPool();
 
@@ -524,7 +525,17 @@ export async function GET(request) {
             const shelter = shelterStatsRows[0] || {};
             const shelterByType = new Map((shelterByTypeRows || []).map((row) => [row.eoc_type, row]));
             const incidents = publicIncidentStatsRows[0] || {};
-            const vulnerable = vulnerableStatsRows[0] || {};
+            // ยอดกลุ่มเปราะบางรวมรายชื่อรายบุคคลที่นำเข้าแล้ว (ค่าที่มากกว่าต่อหมู่บ้าน) — lib/vulnerableRegistry.js
+            const registryRows = await loadMergedRegistry().catch(() => null);
+            const vulnerable = registryRows
+                ? {
+                    ...(vulnerableStatsRows[0] || {}),
+                    locations: registryRows.length,
+                    elderly: registryRows.reduce((sum, row) => sum + (Number(row.elderly) || 0), 0),
+                    disabled: registryRows.reduce((sum, row) => sum + (Number(row.disabled) || 0), 0),
+                    bedridden: registryRows.reduce((sum, row) => sum + (Number(row.bedridden) || 0), 0)
+                }
+                : vulnerableStatsRows[0] || {};
             const sessionImpactById = new Map(
                 (eocSessions || []).map((session) => [String(session.id), session])
             );

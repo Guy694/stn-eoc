@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 
-// สองมุมมองของกลุ่มเปราะบางในเหตุการณ์ อยู่ใต้เมนูเดียวกัน: ยอดรายหมู่บ้าน ↔ รายบุคคลบนแผนที่
-export default function VulnerableViewTabs({ eocType = "flood", current }) {
-  const tabs = [
-    { key: "villages", label: "ยอดรายหมู่บ้าน", href: `/eoc/${eocType}/vulnerable-groups` },
-    { key: "persons", label: "รายบุคคลและแผนที่", href: `/eoc/${eocType}/vulnerable-persons` }
-  ];
+// สองมุมมองของกลุ่มเปราะบาง: ยอดรายหมู่บ้าน ↔ รายบุคคลบนแผนที่
+// registry = ทะเบียนกลาง (ข้อมูลช่วงปกติ ที่นำเข้ารายชื่อ) · ไม่ระบุ = เมนูของเหตุการณ์ EOC
+export default function VulnerableViewTabs({ eocType = "flood", current, registry = false }) {
+  const tabs = registry
+    ? [
+      { key: "villages", label: "จำนวนรายหมู่บ้าน", href: "/eoc/vulnerable-groups" },
+      { key: "persons", label: "รายบุคคลและแผนที่", href: "/eoc/vulnerable-groups/persons" }
+    ]
+    : [
+      { key: "villages", label: "ยอดรายหมู่บ้าน", href: `/eoc/${eocType}/vulnerable-groups` },
+      { key: "persons", label: "รายบุคคลและแผนที่", href: `/eoc/${eocType}/vulnerable-persons` }
+    ];
   return (
     <nav aria-label="มุมมองกลุ่มเปราะบาง" className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-2">
       {tabs.map((tab) => {
