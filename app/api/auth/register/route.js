@@ -68,7 +68,8 @@ async function assertRateLimit(connection, ipAddress) {
     const hourlyCount = Number(recentRows[0]?.hourly_count || 0);
     const dailyCount = Number(recentRows[0]?.daily_count || 0);
 
-    if (hourlyCount >= 5 || dailyCount >= 20) {
+    // นับเฉพาะคำขอที่ส่งสำเร็จ — รพ. หนึ่งแห่งอาจสมัครพร้อมกันหลายสิบคนจากเน็ตเดียวกัน
+    if (hourlyCount >= 30 || dailyCount >= 100) {
         return {
             allowed: false,
             message: 'มีการลงทะเบียนจาก IP นี้บ่อยเกินไป กรุณาลองใหม่ภายหลัง'
