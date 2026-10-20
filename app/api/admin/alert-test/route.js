@@ -24,8 +24,12 @@ export async function GET(request) {
       safe(query("SELECT COUNT(*) AS n FROM water_alert_log WHERE created_at >= NOW() - INTERVAL 24 HOUR", []), null),
       safe(query("SELECT COUNT(*) AS n, SUM(audience = 'officer') AS officers FROM push_subscriptions WHERE is_active = 1", []), [{ n: 0, officers: 0 }])
         .catch(() => query("SELECT COUNT(*) AS n, 0 AS officers FROM push_subscriptions WHERE is_active = 1", []).catch(() => [{ n: 0, officers: 0 }])),
-      getPushSettings()
+      getPushSettings(),
     ]);
+    const apple = await query(
+      `SELECT COUNT(*) AS n, SUM(fail_count > 0) AS failing, MAX(CASE WHEN fail_count > 0 THEN last_status END) AS status, MAX(last_sent_at) AS last_ok
+       FROM push_subscriptions WHERE is_active = 1 AND endpoint LIKE 'https://web.push.apple.com/%'`, []
+    ).catch(() => [{}]);
     const scheduled = process.env.NODE_ENV === "production" || String(process.env.WATER_ALERTS_SCHEDULER || "").toLowerCase() === "on";
     const interval = String(process.env.WATER_ALERTS_INTERVAL_MIN || "10").trim().toLowerCase();
     const info = {
@@ -37,6 +41,12 @@ export async function GET(request) {
       telegramReady: telegramReady(),
       sendingEnabled: alertSendingEnabled(),
       vapidReady: Boolean(vapidConfig()),
+      vapidSubjectOk: vapidConfig()?.subjectOk !== false,
+      vapidSubject: vapidConfig()?.subject || null,
+      appleDevices: Number(apple?.[0]?.n || 0),
+      appleFailing: Number(apple?.[0]?.failing || 0),
+      appleStatus: apple?.[0]?.status ?? null,
+      appleLastOk: apple?.[0]?.last_ok || null,
       pushAuto: settings.auto_enabled === true,
       subscriptions: Number(subs?.[0]?.n || 0),
       officerDevices: Number(subs?.[0]?.officers || 0)

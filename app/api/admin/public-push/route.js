@@ -57,7 +57,7 @@ export async function POST(request) {
     if (!test) {
       await recordChange({ request, user: auth.user, action: "data_create", table: "public_push_log", id: "-", description: `ส่งแจ้งเตือนถึงประชาชน "${checked.value.title}" ${stats.delivered}/${stats.recipients} เครื่อง`, newValues: checked.value }).catch(() => {});
     }
-    return NextResponse.json({ success: true, data: stats, message: test ? (stats.delivered ? "ส่งทดสอบถึงเครื่องนี้แล้ว" : "ส่งทดสอบไม่สำเร็จ (เครื่องนี้ยังไม่ได้สมัคร หรือสมัครด้วยกุญแจเก่า)") : `ส่งแล้ว ${stats.delivered} จาก ${stats.recipients} เครื่อง` });
+    return NextResponse.json({ success: true, data: stats, message: test ? (stats.delivered ? "ส่งทดสอบถึงเครื่องนี้แล้ว" : stats.errors ? `ส่งทดสอบไม่สำเร็จ: ผู้ให้บริการตอบ ${Object.keys(stats.errors).join(", ")}${/BadJwtToken/.test(Object.keys(stats.errors).join(" ")) ? " — ตั้ง VAPID_SUBJECT เป็นอีเมลหรือเว็บจริงของหน่วยงาน" : ""}` : "ส่งทดสอบไม่สำเร็จ (เครื่องนี้ยังไม่ได้สมัคร หรือสมัครด้วยกุญแจเก่า)") : `ส่งแล้ว ${stats.delivered} จาก ${stats.recipients} เครื่อง` });
   } catch (error) {
     if (error?.code === "NO_VAPID") return NextResponse.json({ success: false, message: error.message }, { status: 503 });
     if (error?.code === "ER_NO_SUCH_TABLE") return migrationMessage();

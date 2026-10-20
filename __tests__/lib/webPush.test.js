@@ -61,7 +61,7 @@ describe("webPush", () => {
 
   test("vapidConfig validates key lengths", () => {
     const keys = generateVapidKeys();
-    expect(vapidConfig({ VAPID_PUBLIC_KEY: keys.publicKey, VAPID_PRIVATE_KEY: keys.privateKey, VAPID_SUBJECT: "mailto:a@b.c" })).toMatchObject({ subject: "mailto:a@b.c" });
+    expect(vapidConfig({ VAPID_PUBLIC_KEY: keys.publicKey, VAPID_PRIVATE_KEY: keys.privateKey, VAPID_SUBJECT: "mailto:a@b.co" })).toMatchObject({ subject: "mailto:a@b.co" });
     expect(vapidConfig({ VAPID_PUBLIC_KEY: "x", VAPID_PRIVATE_KEY: keys.privateKey })).toBeNull();
   });
 
@@ -73,11 +73,35 @@ describe("webPush", () => {
     const calls = [];
     const fetchImpl = async (url, init) => { calls.push({ url, init }); return { status: 410 }; };
     const result = await sendWebPush(sub, { title: "x" }, { vapid: { ...keys, subject: "mailto:a@b.c" }, fetchImpl, topic: "flood alert!" });
-    expect(result).toEqual({ ok: false, status: 410, gone: true });
+    expect(result).toMatchObject({ ok: false, status: 410, gone: true });
     expect(calls[0].init.headers["Content-Encoding"]).toBe("aes128gcm");
     expect(calls[0].init.headers.Topic).toBe("floodalert");
     const blocked = await sendWebPush({ ...sub, endpoint: "https://evil.example/x" }, {}, { vapid: { ...keys, subject: "x" }, fetchImpl });
     expect(blocked.gone).toBe(true);
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe("VAPID subject สำหรับ Apple", () => {
+  const { usableSubject, vapidSubject } = jest.requireActual("@/lib/webPush");
+  test("ไม่รับ localhost/ค่าว่าง แต่รับอีเมลและเว็บจริง", () => {
+    expect(usableSubject("mailto:admin@localhost")).toBeNull();
+    expect(usableSubject("mailto:eoc@satun.local")).toBeNull();
+    expect(usableSubject("")).toBeNull();
+    expect(usableSubject("http://eoc.go.th")).toBeNull();
+    expect(usableSubject("mailto:eoc@stn.moph.go.th")).toBe("mailto:eoc@stn.moph.go.th");
+    expect(usableSubject("https://eoc.stn.go.th/stn-eoc/")).toBe("https://eoc.stn.go.th");
+  });
+  test("VAPID_SUBJECT ใช้ไม่ได้ → ใช้ที่อยู่เว็บจริงแทน", () => {
+    expect(vapidSubject({ VAPID_SUBJECT: "mailto:admin@localhost", NEXT_PUBLIC_APP_URL: "https://eoc.stn.go.th" })).toBe("https://eoc.stn.go.th");
+    expect(vapidSubject({})).toBeNull();
+  });
+  test("เก็บเหตุผลที่ Apple ปฏิเสธ", async () => {
+    const keys = generateVapidKeys();
+    const ua = require("crypto").createECDH("prime256v1"); ua.generateKeys();
+    const sub = { endpoint: "https://web.push.apple.com/QAbc", keys: { p256dh: ua.getPublicKey().toString("base64url"), auth: require("crypto").randomBytes(16).toString("base64url") } };
+    const fetchImpl = jest.fn(async () => ({ status: 403, text: async () => '{"reason":"BadJwtToken"}' }));
+    const result = await sendWebPush(sub, { title: "[ทดสอบ]" }, { vapid: { ...keys, subject: "mailto:a@b.co" }, fetchImpl });
+    expect(result).toMatchObject({ ok: false, status: 403, reason: "BadJwtToken", gone: false });
   });
 });
