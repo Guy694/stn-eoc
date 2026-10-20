@@ -104,6 +104,21 @@ function safeUrl(value) {
   }
 }
 
+// กดแจ้งเตือนแล้วเปิดหน้า "แจ้งเตือนที่ได้รับ" ซึ่งแสดงข้อความเต็ม (บนมือถือ/Windows ข้อความในแถบแจ้งเตือนมักถูกตัด)
+// ยกเว้นงานของเจ้าหน้าที่ (หน้า /eoc, /admin, /dashboard) ให้เปิดหน้านั้นตรง ๆ
+function readerUrl(info) {
+  const target = safeUrl(info.url);
+  const path = new URL(target).pathname;
+  if (/^\/stn-eoc\/(eoc|admin|dashboard|commander|officer)(\/|$)/.test(path)) return target;
+  const url = new URL(`${BASE}public/alerts/`, self.location.origin);
+  if (info.title) url.searchParams.set("t", String(info.title).slice(0, 120));
+  if (info.body) url.searchParams.set("b", String(info.body).slice(0, 600));
+  if (info.at) url.searchParams.set("at", String(info.at).slice(0, 40));
+  if (info.level) url.searchParams.set("l", String(info.level).slice(0, 12));
+  if (path !== BASE) url.searchParams.set("go", path + new URL(target).search);
+  return url.href;
+}
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -113,26 +128,34 @@ self.addEventListener("push", (event) => {
   }
   const high = data.level === "high" || data.level === "critical";
   const title = data.title || "แจ้งเตือนภัย จ.สตูล";
+  const body = data.body || "มีประกาศใหม่จากศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล";
+  const at = data.at || new Date().toISOString();
   event.waitUntil(Promise.all([
     self.registration.showNotification(title, {
-      body: data.body || "มีประกาศใหม่จากศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล",
+      body,
       icon: `${BASE}pwa/icon-192.png`,
       badge: `${BASE}pwa/badge-96.png`,
       tag: data.tag || undefined,
       renotify: Boolean(data.tag),
       requireInteraction: high,
+      silent: false, // ใช้เสียงแจ้งเตือนของเครื่อง (ถ้าเครื่องไม่ได้ปิดเสียงของเบราว์เซอร์ไว้)
       vibrate: high ? [300, 150, 300, 150, 600] : [200],
       lang: "th",
-      timestamp: data.at ? Date.parse(data.at) : Date.now(),
-      data: { url: safeUrl(data.url) }
+      timestamp: Date.parse(at) || Date.now(),
+      data: { url: safeUrl(data.url), title, body, at, level: data.level || "info" }
     }),
+    // หน้าเว็บของระบบที่เปิดอยู่: ส่งให้หน้าเว็บเด้งหน้าต่างพร้อมเสียงเตือน (service worker เล่นเสียงเองไม่ได้)
+    self.clients.matchAll({ type: "window", includeUncontrolled: true })
+      .then((windows) => windows.forEach((client) => client.postMessage({ type: "stn-push", payload: { title, body, at, level: data.level || "info", url: safeUrl(data.url), tag: data.tag || null } })))
+      .catch(() => {}),
     refreshPack(true).catch(() => {})
   ]));
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = safeUrl(event.notification.data?.url);
+  const info = event.notification.data || {};
+  const target = readerUrl(info.title ? info : { url: info.url, title: event.notification.title, body: event.notification.body });
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const client of windows) {

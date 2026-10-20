@@ -188,6 +188,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       defaultExpanded: false,
       items: [
         { name: "ตั้งค่าระบบ", path: "/admin/settings", iconKey: "settings", description: "สถานะระบบ แจ้งเตือน การเชื่อมต่อ ความปลอดภัย สำรองข้อมูล" },
+        { name: "ทดสอบการแจ้งเตือน", path: "/admin/alert-test", iconKey: "megaphone", description: "ตรวจความพร้อม ทดสอบเสียง popup และแจ้งเตือนเข้ามือถือ" },
         { name: "เปิด/ปิด EOC", path: "/admin/eoc-management", iconKey: "power" },
         { name: "ประวัติเหตุการณ์", path: "/admin/eoc-sessions", iconKey: "history" },
         { name: "เจ้าหน้าที่และสิทธิ์", path: "/admin/officers", iconKey: "users" },

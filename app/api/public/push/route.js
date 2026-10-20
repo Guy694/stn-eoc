@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { publicInternalError } from "@/lib/apiResponse";
 import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { validateSubscriptionInput } from "@/lib/publicPush";
-import { findSubscription, removeSubscription, replaceSubscription, saveSubscription } from "@/lib/publicPushServer";
+import { findSubscription, publicAlertHistory, removeSubscription, replaceSubscription, saveSubscription } from "@/lib/publicPushServer";
 import { isAllowedPushEndpoint, vapidConfig } from "@/lib/webPush";
 
 // สมัครรับแจ้งเตือนภัย (Web Push) — ไม่ต้องเข้าสู่ระบบ ไม่เก็บข้อมูลส่วนตัว
 // GET  ?endpoint= → สถานะ + กุญแจสาธารณะ VAPID
+// GET  ?history=1 → แจ้งเตือนที่ส่งถึงประชาชน 30 วันล่าสุด (หน้า "แจ้งเตือนที่ได้รับ")
 // POST { subscription, scope, districts, tambons } สมัคร/แก้พื้นที่
 // PUT  { old_endpoint, subscription } (service worker ย้ายปลายทาง)
 // DELETE { endpoint } ยกเลิก
@@ -16,8 +17,16 @@ const tableMissing = (error) => error?.code === "ER_NO_SUCH_TABLE";
 const unavailable = () => NextResponse.json({ success: false, message: "ระบบแจ้งเตือนยังไม่พร้อม (ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์)" }, { status: 503, headers: noStore });
 
 export async function GET(request) {
+  const params = new URL(request.url).searchParams;
+  if (params.get("history") === "1") {
+    const data = await publicAlertHistory().catch((error) => {
+      if (!tableMissing(error)) console.error("Public push history error:", error?.message || error);
+      return [];
+    });
+    return NextResponse.json({ success: true, data }, { headers: { "Cache-Control": "public, max-age=60" } });
+  }
   const vapid = vapidConfig();
-  const endpoint = new URL(request.url).searchParams.get("endpoint");
+  const endpoint = params.get("endpoint");
   let subscription = null;
   if (vapid && endpoint && isAllowedPushEndpoint(endpoint)) subscription = await findSubscription(endpoint).catch(() => null);
   return NextResponse.json({ success: true, enabled: Boolean(vapid), public_key: vapid?.publicKey || null, subscription }, { headers: noStore });

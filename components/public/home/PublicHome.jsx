@@ -32,6 +32,7 @@ import { OpsTodayCard, RoadAlerts } from "@/components/public/home/OpsToday";
 import { citizenWaterReports, roadAlerts, shelterSummary } from "@/lib/homeSignals";
 import CitizenWaterReports from "@/components/public/home/CitizenWaterReports";
 import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
+import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
 import SeaTodayCard from "@/components/public/home/SeaTodayCard";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
@@ -430,6 +431,8 @@ export default function PublicHome() {
     <>
     <HomeSplashScreen ready={!loading} />
     <HomePopup popup={popup} onClose={closePopup} />
+    {/* ชวนรับแจ้งเตือนภัย: หลังหน้าโลโก้และ popup ประกาศ เฉพาะเครื่องที่ยังไม่ได้รับ */}
+    <AlertSubscribePrompt blocked={loading || Boolean(popup)} district={districtName} />
     <PublicOpsScaffold
       title="หน้าหลัก"
       activeMenu="home"
