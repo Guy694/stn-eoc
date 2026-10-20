@@ -11,7 +11,7 @@ describe("floodTriggers", () => {
 
   test("targets by colour group and status", () => {
     const red = { vulnerable_type: "bedridden", status: "waiting" };
-    const yellow = { vulnerable_type: "pregnant", status: "waiting" };
+    const yellow = { vulnerable_type: "pregnant", care_group: "yellow", status: "waiting" };
     const green = { vulnerable_type: "elderly", care_group: "green", status: "waiting" };
     expect(matchesStageTarget(red, "t1_yellow")).toBe(true);
     expect(matchesStageTarget(yellow, "t1_yellow")).toBe(false);

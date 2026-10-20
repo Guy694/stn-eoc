@@ -34,10 +34,10 @@ describe("quick filters for vulnerable persons", () => {
   const { filterPersons, matchesQuickFilter, validateStatusChange } = require("@/lib/vulnerablePersons");
   const people = [
     { id: 1, vulnerable_type: "bedridden", status: "waiting", location: { lat: 1, lng: 1 }, in_flood_area: true },
-    { id: 2, vulnerable_type: "elderly", status: "waiting", location: { lat: 1, lng: 1 }, in_flood_area: true },
+    { id: 2, vulnerable_type: "elderly", care_group: "yellow", status: "waiting", location: { lat: 1, lng: 1 }, in_flood_area: true },
     { id: 3, vulnerable_type: "dialysis_hd", status: "assisted", location: null },
     { id: 4, vulnerable_type: "pregnant", status: "waiting", due_date: "2026-10-20", location: null },
-    { id: 5, vulnerable_type: "children", status: "waiting", due_date: "2026-10-20", location: null }
+    { id: 5, vulnerable_type: "children", care_group: "yellow", status: "waiting", due_date: "2026-10-20", location: null }
   ];
   test("priority = pending high-priority types", () => {
     expect(filterPersons(people, { quick: "priority", today: "2026-10-12" }).map((p) => p.id)).toEqual([1, 4]);

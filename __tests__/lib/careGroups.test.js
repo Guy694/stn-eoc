@@ -7,15 +7,18 @@ describe("careGroups", () => {
     for (const type of VULNERABLE_TYPES) expect(isCareGroup(defaultCareGroup(type.key))).toBe(true);
     expect(defaultCareGroup("bedridden")).toBe("red");
     expect(defaultCareGroup("dialysis_hd")).toBe("red");
-    expect(defaultCareGroup("pregnant")).toBe("yellow");
+    expect(defaultCareGroup("pregnant")).toBe("red");
+    expect(defaultCareGroup("dialysis_pd")).toBe("red");
+    for (const type of VULNERABLE_TYPES) expect(defaultCareGroup(type.key)).toBe("red");
     expect(defaultCareGroup("elderly", true)).toBe("red");
     expect(CARE_GROUPS.map((group) => group.key)).toEqual(["red", "yellow", "green"]);
   });
 
   test("assessed colour wins over default", () => {
-    expect(effectiveCareGroup({ vulnerable_type: "elderly" })).toBe("yellow");
+    expect(effectiveCareGroup({ vulnerable_type: "elderly" })).toBe("red");
     expect(effectiveCareGroup({ vulnerable_type: "elderly", care_group: "green" })).toBe("green");
-    expect(effectiveCareGroup({ vulnerable_type: "elderly", care_group: "bogus" })).toBe("yellow");
+    expect(effectiveCareGroup({ vulnerable_type: "elderly", care_group: "bogus" })).toBe("red");
+    expect(effectiveCareGroup({ vulnerable_type: "pregnant", care_group: "yellow" })).toBe("yellow");
     expect(effectiveCareGroup({ vulnerable_type: "chronic_illness", power_dependent: true })).toBe("red");
     expect(careGroupRank({ vulnerable_type: "bedridden" })).toBe(3);
   });
@@ -29,10 +32,10 @@ describe("careGroups", () => {
 
   test("priority, filter, sort and summary use colour groups", () => {
     const people = [
-      { id: 1, name: "ก", vulnerable_type: "elderly", status: "waiting" },
+      { id: 1, name: "ก", vulnerable_type: "elderly", care_group: "yellow", status: "waiting" },
       { id: 2, name: "ข", vulnerable_type: "elderly", care_group: "red", status: "waiting" },
       { id: 3, name: "ค", vulnerable_type: "bedridden", care_group: "green", status: "waiting" },
-      { id: 4, name: "ง", vulnerable_type: "disabled", status: "waiting" }
+      { id: 4, name: "ง", vulnerable_type: "disabled", care_group: "yellow", status: "waiting" }
     ];
     expect(isPriorityPerson(people[1])).toBe(true);
     expect(isPriorityPerson(people[2])).toBe(false);
