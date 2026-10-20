@@ -4,7 +4,7 @@
 // 1) เครื่องนี้ (เสียง popup เสียงพูด แจ้งเตือนของระบบ) 2) หน้าจอเจ้าหน้าที่ทุกเครื่อง 3) แจ้งเตือนเข้ามือถือ (Web Push)
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BellRing, CheckCircle2, CloudRain, Monitor, RefreshCw, Siren, Smartphone, Speech, TriangleAlert, Volume2, XCircle } from "lucide-react";
+import { BellRing, CheckCircle2, CloudRain, Globe, Monitor, RefreshCw, Siren, Smartphone, Speech, TriangleAlert, Volume2, XCircle } from "lucide-react";
 import { AdminPage, Button, useNotice } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { getAlertAudioContext, showSystemAlert, unlockAlertAudio } from "@/lib/alertSound";
@@ -71,6 +71,19 @@ export default function AlertTestWorkspace() {
   const [server, setServer] = useState(null);
   const [device, setDevice] = useState(null);
   const [busy, setBusy] = useState("");
+  const [links, setLinks] = useState(null);
+
+  const checkLinks = async () => {
+    setBusy("links");
+    try {
+      const json = await apiRequest(API, { method: "POST", body: { action: "connectivity" } });
+      setLinks(json.data);
+    } catch (error) {
+      fail(error.message || "ทดสอบการเชื่อมต่อไม่สำเร็จ");
+    } finally {
+      setBusy("");
+    }
+  };
 
   const refresh = useCallback(async () => {
     setBusy("refresh");
@@ -159,6 +172,23 @@ export default function AlertTestWorkspace() {
           </ul>
         </Section>
       </div>
+
+      <Section icon={Globe} title="การเชื่อมต่อจากเซิร์ฟเวอร์" description="เซิร์ฟเวอร์ต้องออกอินเทอร์เน็ตไปยังผู้ให้บริการเหล่านี้ได้ ถ้า Apple เชื่อมต่อไม่ได้ iPhone/iPad จะไม่ได้รับแจ้งเตือนเลย (Android ยังได้)">
+        <Button variant="secondary" disabled={busy === "links"} onClick={checkLinks}><Globe className={`h-4 w-4 ${busy === "links" ? "animate-pulse" : ""}`} aria-hidden="true" />{busy === "links" ? "กำลังทดสอบ (ไม่เกิน 15 วินาที)…" : "ทดสอบการเชื่อมต่อ"}</Button>
+        {links ? (
+          <ul className="mt-3 divide-y divide-slate-100">
+            {links.map((item) => (
+              <Check
+                key={item.key}
+                ok={item.ok}
+                label={item.label}
+                detail={item.ok ? `เชื่อมต่อได้ (${(item.ms / 1000).toFixed(1)} วินาที)` : `เชื่อมต่อไม่ได้: ${item.reason} (${(item.ms / 1000).toFixed(1)} วินาที)`}
+                fix={item.reason === "ENOTFOUND" || item.reason === "EAI_AGAIN" ? "เซิร์ฟเวอร์หาชื่อโดเมนไม่เจอ ตรวจ DNS ของเครื่อง/Docker" : "ให้ฝ่ายเครือข่ายเปิดทางออก HTTPS (443) ไปยังโดเมนนี้ (Apple: *.push.apple.com) หรือตรวจ firewall/proxy ของหน่วยงาน"}
+              />
+            ))}
+          </ul>
+        ) : null}
+      </Section>
 
       <Section icon={Volume2} title="1. ทดสอบบนเครื่องนี้" description="เด้ง popup พร้อมเสียงเหมือนแจ้งเตือนจริง เฉพาะเครื่องนี้ ไม่บันทึกและไม่ส่งหาใคร">
         <div className="flex flex-wrap gap-2">

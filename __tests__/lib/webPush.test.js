@@ -105,3 +105,29 @@ describe("VAPID subject สำหรับ Apple", () => {
     expect(result).toMatchObject({ ok: false, status: 403, reason: "BadJwtToken", gone: false });
   });
 });
+
+test("ใช้ JWT ซ้ำต่อผู้ให้บริการ (Apple ห้ามสร้างใหม่ถี่กว่าชั่วโมงละครั้ง)", () => {
+  const { cachedVapidAuthorization, resetVapidCache } = jest.requireActual("@/lib/webPush");
+  resetVapidCache();
+  const vapid = { ...generateVapidKeys(), subject: "mailto:eoc@stn.go.th" };
+  const t0 = 1_800_000_000_000;
+  const a = cachedVapidAuthorization("https://web.push.apple.com/QAbc", vapid, t0);
+  expect(cachedVapidAuthorization("https://web.push.apple.com/QXyz", vapid, t0 + 30 * 60000)).toBe(a);
+  expect(cachedVapidAuthorization("https://fcm.googleapis.com/fcm/send/1", vapid, t0)).not.toBe(a);
+  expect(cachedVapidAuthorization("https://web.push.apple.com/QAbc", vapid, t0 + 7 * 3600000)).not.toBe(a);
+});
+
+test("เชื่อมต่อไม่ได้: ลองใหม่ 1 ครั้ง แล้วบอกรหัสสาเหตุ", async () => {
+  const { networkReason } = jest.requireActual("@/lib/webPush");
+  expect(networkReason(Object.assign(new TypeError("fetch failed"), { cause: { code: "ETIMEDOUT" } }))).toBe("ETIMEDOUT");
+  expect(networkReason(Object.assign(new Error("x"), { name: "TimeoutError" }))).toBe("timeout");
+  const keys = generateVapidKeys();
+  const ua = crypto.createECDH("prime256v1"); ua.generateKeys();
+  const sub = { endpoint: "https://web.push.apple.com/QRetry", keys: { p256dh: ua.getPublicKey().toString("base64url"), auth: crypto.randomBytes(16).toString("base64url") } };
+  const fetchImpl = jest.fn()
+    .mockRejectedValueOnce(Object.assign(new TypeError("fetch failed"), { cause: { code: "ECONNRESET" } }))
+    .mockResolvedValueOnce({ status: 201 });
+  const result = await sendWebPush(sub, { title: "[ทดสอบ]" }, { vapid: { ...keys, subject: "mailto:eoc@stn.go.th" }, fetchImpl });
+  expect(result.ok).toBe(true);
+  expect(fetchImpl).toHaveBeenCalledTimes(2);
+});

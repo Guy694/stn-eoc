@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
-import { buildTestAlert, serverChecklist } from "@/lib/alertTest";
+import { CONNECTIVITY_TARGETS, buildTestAlert, serverChecklist } from "@/lib/alertTest";
+import { networkReason } from "@/lib/webPush";
 import { alertSendingEnabled, telegramReady } from "@/lib/eocAlertRunner";
 import { getPushSettings } from "@/lib/publicPushServer";
 import { vapidConfig } from "@/lib/webPush";
@@ -63,6 +64,18 @@ export async function POST(request) {
   if (!auth.success) return auth.response;
   try {
     const body = await request.json().catch(() => ({}));
+    if (body.action === "connectivity") {
+      const data = await Promise.all(CONNECTIVITY_TARGETS.map(async (target) => {
+        const started = Date.now();
+        try {
+          const response = await fetch(target.url, { method: target.method, signal: AbortSignal.timeout(15000), redirect: "manual", cache: "no-store" });
+          return { key: target.key, label: target.label, ok: true, status: response.status, ms: Date.now() - started };
+        } catch (error) {
+          return { key: target.key, label: target.label, ok: false, reason: networkReason(error), ms: Date.now() - started };
+        }
+      }));
+      return NextResponse.json({ success: true, data });
+    }
     const by = [auth.user.givenName || auth.user.given_name, auth.user.familyName || auth.user.family_name].filter(Boolean).join(" ") || auth.user.username || "";
     const alert = buildTestAlert({ kind: body.kind, level: body.level, by });
     const result = await query(
