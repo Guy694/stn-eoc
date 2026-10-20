@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor, within } from "@testing-library/rea
 import OfficerWorkspace from "@/components/admin/officers/OfficerWorkspace";
 
 jest.mock("@/lib/sweetAlert", () => ({ showDeleteConfirm: jest.fn(async () => true), showConfirm: jest.fn(async () => true) }));
+jest.mock("@/context/AuthContext", () => ({ useAuth: () => ({ user: { id: 1, role: "admin" } }) }));
 // ผลการทำงานแสดงเป็น toast มุมขวาบน (lib/notify) — ตรวจจากการเรียก notify
 jest.mock("@/lib/notify", () => {
   const notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn(), info: jest.fn() };
@@ -120,5 +121,34 @@ describe("OfficerWorkspace คำขอรออนุมัติ", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "ปฏิเสธคำขอ" }));
     await waitFor(() => expect(calls.some((call) => call.method === "PATCH")).toBe(true));
     expect(calls.find((call) => call.method === "PATCH").body).toEqual({ officer_id: 500, action: "reject", reason: "ลงทะเบียนซ้ำ" });
+  });
+});
+
+describe("OfficerWorkspace ลบหลายรายการ", () => {
+  const others = [
+    { ...officer, id: 401, username: "test_a", given_name: "[ทดสอบ] เอ" },
+    { ...officer, id: 402, username: "test_b", given_name: "[ทดสอบ] บี" },
+    { ...officer, id: 1, username: "me_admin", given_name: "[ทดสอบ] ผู้ดูแล", role: "admin" }
+  ];
+  it("เลือกหลายคนแล้วลบ: ข้ามบัญชีตัวเอง ลบทีละคนผ่าน API เดิม", async () => {
+    const calls = [];
+    global.fetch = jest.fn((url, init = {}) => {
+      calls.push({ url, method: init.method || "GET" });
+      if (url.includes("/registrations")) return respond({ success: true, data: [], stats: {} });
+      if ((init.method || "GET") === "DELETE") return respond({ success: true, message: "ลบบัญชีแล้ว" });
+      return respond({ success: true, data: others, stats: { staff: 2, admin: 1 } });
+    });
+    render(<OfficerWorkspace />);
+    await screen.findAllByText(/test_a/);
+    const rowBoxes = screen.getAllByRole("checkbox", { name: "เลือกแถวนี้" });
+    const boxFor = (text) => rowBoxes.find((box) => (box.closest("tr") || box.closest("li"))?.textContent.includes(text));
+    fireEvent.click(boxFor("test_a"));
+    fireEvent.click(boxFor("test_b"));
+    fireEvent.click(boxFor("me_admin"));
+    fireEvent.click(await screen.findByRole("button", { name: /ลบที่เลือก \(3\)/ }));
+    await waitFor(() => expect(calls.filter((call) => call.method === "DELETE").map((call) => call.url)).toEqual([
+      expect.stringMatching(/officers\/401\/?$/), expect.stringMatching(/officers\/402\/?$/)
+    ]));
+    await toasted(/ลบบัญชีแล้ว 2 คน/);
   });
 });

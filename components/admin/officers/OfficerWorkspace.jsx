@@ -7,6 +7,8 @@ import {
   inputClass, useNotice
 } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
+import { useAuth } from "@/context/AuthContext";
+import { deleteOfficersInBatch } from "@/lib/officerBatch";
 import { useUrlState } from "@/components/admin/useUrlState";
 import { showConfirm, showDeleteConfirm } from "@/lib/sweetAlert";
 import { TEAM_ROLE_OPTIONS } from "@/lib/eocRoles";
@@ -96,7 +98,11 @@ function RequestQueue({ rows, loading, approveRole, onRoleChange, onApprove, onE
 
 // จัดการเจ้าหน้าที่: บัญชีผู้ใช้ สิทธิ์ระบบ และกลุ่มภารกิจ EOC ที่ได้รับมอบหมาย
 export default function OfficerWorkspace() {
-  const { notice, success, fail } = useNotice();
+  const { notice, success, fail, warn } = useNotice();
+  const { user: currentUser } = useAuth();
+  // เลือกหลายรายการเพื่อลบพร้อมกัน (ลบผ่าน API ทีละคน — ใช้เงื่อนไขเดียวกับลบทีละคน)
+  const [picked, setPicked] = useState(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [officers, setOfficers] = useState([]);
   const [roleStats, setRoleStats] = useState({});
   const [registrations, setRegistrations] = useState({ rows: [], stats: {} });
@@ -271,6 +277,59 @@ export default function OfficerWorkspace() {
     }
   };
 
+  const pickedRows = useMemo(() => officers.filter((row) => picked.has(row.id)), [officers, picked]);
+  const selection = useMemo(() => ({
+    selected: picked,
+    onToggle: (row) => setPicked((current) => {
+      const next = new Set(current);
+      if (next.has(row.id)) next.delete(row.id); else next.add(row.id);
+      return next;
+    }),
+    onTogglePage: (pageRows, checked) => setPicked((current) => {
+      const next = new Set(current);
+      for (const row of pageRows) { if (checked) next.add(row.id); else next.delete(row.id); }
+      return next;
+    })
+  }), [picked]);
+
+  const removeMany = async () => {
+    const targets = pickedRows.filter((row) => String(row.id) !== String(currentUser?.id));
+    const skippedSelf = pickedRows.length - targets.length;
+    if (!targets.length) { warn("ลบบัญชีของตัวเองไม่ได้"); return; }
+    const names = targets.slice(0, 5).map((row) => fullName(row) || row.username).join(", ");
+    const more = targets.length > 5 ? ` และอีก ${targets.length - 5} คน` : "";
+    if (!await showDeleteConfirm(`ลบบัญชีเจ้าหน้าที่ ${targets.length} คน: ${names}${more}${skippedSelf ? " (ไม่รวมบัญชีของคุณเอง)" : ""}`)) return;
+    setBulkBusy(true);
+    const result = await deleteOfficersInBatch(targets, (officer) => apiRequest(`${API}/${officer.id}`, { method: "DELETE" }));
+    setBulkBusy(false);
+    setPicked(new Set(result.failed.map((item) => item.officer.id).concat(result.withHistory.map((officer) => officer.id))));
+    await load();
+    if (result.deleted.length) success(`ลบบัญชีแล้ว ${result.deleted.length} คน`);
+    if (result.failed.length) fail(`ลบไม่สำเร็จ ${result.failed.length} คน: ${result.failed[0].message}`);
+    if (result.withHistory.length) {
+      const list = result.withHistory.slice(0, 5).map((officer) => officer.username).join(", ");
+      if (await showConfirm(
+        "บางบัญชีลบไม่ได้",
+        `${result.withHistory.length} บัญชีมีประวัติการทำงานในระบบ (${list}${result.withHistory.length > 5 ? " …" : ""}) ระงับการใช้งานบัญชีเหล่านี้แทนหรือไม่?`,
+        "ระงับการใช้งาน", "ยกเลิก"
+      )) {
+        let suspended = 0;
+        for (const officer of result.withHistory) {
+          try {
+            await apiRequest(`${API}/${officer.id}`, { method: "PATCH", body: { action: "suspend" } });
+            suspended += 1;
+          } catch {
+            // แจ้งรวมด้านล่าง
+          }
+        }
+        setPicked(new Set());
+        await load();
+        if (suspended) success(`ระงับการใช้งานแล้ว ${suspended} บัญชี`);
+        if (suspended < result.withHistory.length) fail(`ระงับไม่สำเร็จ ${result.withHistory.length - suspended} บัญชี`);
+      }
+    }
+  };
+
   const reviewRequest = async (officer, action, reason = "") => {
     try {
       const result = await apiRequest("/stn-eoc/api/admin/registrations", { method: "PATCH", body: { officer_id: officer.id, action, reason } });
@@ -352,7 +411,17 @@ export default function OfficerWorkspace() {
       </Toolbar>
 
       {loadError ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{loadError}</p> : null}
+      {picked.size ? (
+        <div className="sticky top-2 z-20 flex flex-wrap items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50/95 px-4 py-2.5 text-sm text-[#083865] shadow-[0_10px_24px_-18px_rgba(15,23,42,.55)] backdrop-blur" role="region" aria-label="รายการที่เลือก">
+          <span className="font-semibold">เลือกไว้ {picked.size} คน</span>
+          <Button variant="secondary" className="min-h-9 px-3" onClick={() => setPicked(new Set())} disabled={bulkBusy}>ล้างการเลือก</Button>
+          <Button variant="danger" className="ml-auto min-h-9 px-3" onClick={removeMany} disabled={bulkBusy}>
+            <Trash2 className="h-4 w-4" aria-hidden="true" />{bulkBusy ? "กำลังลบ…" : `ลบที่เลือก (${picked.size})`}
+          </Button>
+        </div>
+      ) : null}
       <DataTable
+        selection={selection}
         columns={columns}
         rows={rows}
         loading={loading}
