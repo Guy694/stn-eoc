@@ -5,6 +5,7 @@ import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import dynamic from 'next/dynamic';
 import AppIcon from "@/components/icons/AppIcon";
+import { MetricCard } from "@/components/common/MetricCards";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
@@ -209,9 +210,9 @@ export default function ServicePointsPage() {
         return (
             <EOCLayout>
                 <div className="p-6">
-                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+                    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                        <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
                         <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนจัดการจุดบริการ</p>
                     </div>
                 </div>
@@ -223,19 +224,19 @@ export default function ServicePointsPage() {
         <EOCLayout>
             <div className="p-6">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
-                            <span className="text-4xl"><AppIcon icon="route" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                        <h1 className="text-xl font-semibold text-white mb-2 flex items-center gap-3 sm:text-2xl">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="route" className="h-5 w-5" /></span>
                             จุดบริการชั่วคราว
                         </h1>
-                        <p className="text-slate-600">
+                        <p className="text-blue-100">
                             เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย
                         </p>
                     </div>
                     <button
                         onClick={() => { setEditingPoint(null); resetForm(); setShowModal(true); }}
-                        className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 flex items-center gap-2"
+                        className="bg-white text-[#0b4c86] px-6 py-3 rounded-lg hover:bg-blue-50 flex items-center gap-2"
                     >
                         <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มจุดบริการ
                     </button>
@@ -243,22 +244,10 @@ export default function ServicePointsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-2xl p-4 border border-orange-500">
-                        <div className="text-3xl font-bold text-orange-600">{stats.total}</div>
-                        <div className="text-sm text-slate-600">จุดบริการทั้งหมด</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-green-500">
-                        <div className="text-3xl font-bold text-green-600">{stats.active}</div>
-                        <div className="text-sm text-slate-600"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปิดให้บริการ</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-[#0b4c86]">
-                        <div className="text-3xl font-bold text-[#0b4c86]">{stats.officers}</div>
-                        <div className="text-sm text-slate-600"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-[#0b4c86]">
-                        <div className="text-3xl font-bold text-[#0b4c86]">{stats.vehicles}</div>
-                        <div className="text-sm text-slate-600"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
-                    </div>
+                    <MetricCard label="จุดบริการทั้งหมด" value={stats.total} tone="amber" />
+                    <MetricCard icon="statusGreen" label="เปิดให้บริการ" value={stats.active} tone="green" />
+                    <MetricCard icon="shield" label="เจ้าหน้าที่" value={stats.officers} tone="blue" />
+                    <MetricCard icon="car" label="รถตรวจ" value={stats.vehicles} tone="blue" />
                 </div>
 
                 {/* Cards View */}
@@ -349,7 +338,7 @@ export default function ServicePointsPage() {
                 {/* Modal */}
                 {showModal && (
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-slate-700 text-2xl font-bold mb-4">
                                     {editingPoint ? 'แก้ไขจุดบริการ' : "เพิ่มจุดบริการ"}

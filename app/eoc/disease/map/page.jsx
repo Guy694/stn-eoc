@@ -81,20 +81,20 @@ export default function DiseaseMapPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-[1600px] space-y-4">
-                <section className="rounded-2xl border border-slate-200 bg-white p-4">
+                <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <p className="text-sm font-bold text-[#0b4c86]">{eocName}</p>
-                            <h1 className="text-2xl font-black text-slate-900 md:text-3xl">แผนที่และสถานการณ์โรคระบาด</h1>
-                            <p className="mt-1 text-sm text-slate-600">
+                            <p className="text-sm font-bold text-blue-100">{eocName}</p>
+                            <h1 className="text-2xl font-semibold text-white md:text-3xl">แผนที่และสถานการณ์โรคระบาด</h1>
+                            <p className="mt-1 text-sm text-blue-100">
                                 ติดตามรายงานโรคระบาดจากหน่วยบริการร่วมกับรายงานเหตุการณ์จากประชาชน
                             </p>
-                            <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
-                                <span className="rounded-full bg-[#edf5fc] px-3 py-1 text-[#0b4c86]">
+                            <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-blue-100">
+                                <span className="rounded-full bg-white/15 px-3 py-1 text-blue-100">
                                     {activeSession ? "เปิด EOC อยู่" : loadingSession ? "กำลังตรวจสอบสถานะ" : "ยังไม่มี EOC ที่เปิดอยู่"}
                                 </span>
                                 {activeSession && (
-                                    <span className="rounded-full bg-slate-100 px-3 py-1">
+                                    <span className="rounded-full bg-white/10 px-3 py-1">
                                         ครั้งที่ {activeSession.session_number || activeSession.id} เปิดเมื่อ {formatDateTime(activeSession.opened_at)}
                                     </span>
                                 )}
@@ -103,15 +103,15 @@ export default function DiseaseMapPage() {
 
                         <div className="flex flex-col gap-2 sm:flex-row">
                             <label className="block">
-                                <span className="mb-1 block text-xs font-bold text-slate-500">วันที่</span>
+                                <span className="mb-1 block text-xs font-bold text-blue-100">วันที่</span>
                                 <input
                                     type="date"
                                     value={selectedDate}
                                     onChange={(event) => setSelectedDate(event.target.value)}
-                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#0b4c86]"
+                                    className="h-10 rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-semibold text-white outline-none [color-scheme:dark] focus:border-white"
                                 />
                             </label>
-                            <Link href="/eoc/disease/records" className="flex h-10 items-center justify-center rounded-lg bg-[#0b4c86] px-4 text-sm font-bold text-white hover:bg-[#083865] sm:self-end">
+                            <Link href="/eoc/disease/records" className="flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-bold text-[#0b4c86] hover:bg-blue-50 sm:self-end">
                                 บันทึกรายงานผู้ป่วย
                             </Link>
                         </div>

@@ -141,7 +141,7 @@ const MapSelector = ({ position, onPositionChange }) => {
                         </>
                     )}
                 </button>
-                <span className="text-xs text-gray-500">หรือคลิกบนแผนที่ / ลากหมุดเพื่อเลือกตำแหน่ง</span>
+                <span className="text-xs text-slate-500">หรือคลิกบนแผนที่ / ลากหมุดเพื่อเลือกตำแหน่ง</span>
             </div>
             {gpsError && (
                 <div className="mb-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">

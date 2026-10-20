@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import { GeoJSON, MapContainer, Marker, TileLayer, Tooltip, useMap } from "react-leaflet";
-import { pinHtml, pinLabel, shelterPinHtml } from "@/components/eoc/vulnerable/vulnerablePins";
+import { pinHtml, pinLabel, shelterPinHtml, spreadApproxPositions } from "@/components/eoc/vulnerable/vulnerablePins";
 import { caseStatus, typeMeta } from "@/lib/vulnerablePersons";
 import { capabilityLabel, parseCapabilities, shelterTypeMeta } from "@/lib/shelterSuitability";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
@@ -18,6 +18,7 @@ const PIN_CSS = `
 .vp-pin svg{display:block}
 .vp-pin--selected{z-index:2}
 .vp-pin--urgent::before{content:"";position:absolute;left:50%;top:38%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:9999px;background:rgba(220,38,38,.35);animation:vp-pulse 1.6s ease-out infinite}
+.vp-pin--approx svg path:first-child{stroke-dasharray:3 2;opacity:.82}.vp-pin--approx::after{content:"";position:absolute;left:50%;bottom:-3px;width:10px;height:4px;margin-left:-5px;border-radius:9999px;background:rgba(15,23,42,.25)}
 .vp-tag{position:absolute;left:62%;top:-6px;white-space:nowrap;border-radius:9999px;background:#fff;color:#0f172a;font:700 10px/1 var(--font-kanit),system-ui,sans-serif;padding:2px 5px;box-shadow:0 0 0 1px #94a3b8}
 
 .vp-shelter{position:relative;width:26px;height:26px;filter:drop-shadow(0 2px 2px rgba(15,23,42,.35))}
@@ -93,6 +94,7 @@ export default function VulnerablePersonsMap({ people, selectedId, onSelect, fit
       type: "Feature", geometry: area.geometry, properties: { level: area.flood_level, name: area.villname, tambon: area.tambon, people: area.affected_population }
     }))
   }), [floodAreas]);
+  const spread = useMemo(() => spreadApproxPositions(mapped), [mapped]);
   const visibleShelters = useMemo(() => shelters.filter((shelter) => shelter.lat != null && (layers.allShelters || Number(shelter.active) === 1)), [shelters, layers.allShelters]);
 
   return (
@@ -132,7 +134,7 @@ export default function VulnerablePersonsMap({ people, selectedId, onSelect, fit
           return (
             <Marker
               key={`${person.id}-${person.status}-${isSelected ? 1 : 0}`}
-              position={[person.location.lat, person.location.lng]}
+              position={spread.get(person.id) || [person.location.lat, person.location.lng]}
               icon={iconFor(person, isSelected)}
               title={pinLabel(person)}
               alt={pinLabel(person)}
@@ -144,6 +146,7 @@ export default function VulnerablePersonsMap({ people, selectedId, onSelect, fit
                 <span className="font-bold">{person.name}</span>
                 <span className="block text-xs">{typeMeta(person.vulnerable_type)?.label} • {caseStatus(person.status).label}</span>
                 {person.in_flood_area ? <span className="block text-xs font-bold text-red-700">บ้านอยู่ในพื้นที่น้ำท่วม</span> : null}
+                {person.location?.approx ? <span className="block text-xs text-slate-500">ตำแหน่งประมาณ ({person.village ? `กลาง${person.village}` : `กลาง ต.${person.tambon}`}) — ยังไม่ใช่บ้านจริง</span> : null}
               </Tooltip>
             </Marker>
           );

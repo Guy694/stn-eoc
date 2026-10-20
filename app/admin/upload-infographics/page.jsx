@@ -148,11 +148,11 @@ export default function UploadInfographics() {
         <div className="min-h-screen bg-slate-50 py-8">
             <div className="container mx-auto px-4 max-w-6xl">
                 {/* Header */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อัปโหลด Infographics</h1>
-                            <p className="text-slate-600">สำหรับฝ่าย สื่อสารความเสี่ยง</p>
+                            <h1 className="text-3xl font-bold text-white mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อัปโหลด Infographics</h1>
+                            <p className="text-blue-100">สำหรับฝ่าย สื่อสารความเสี่ยง</p>
                         </div>
                         <button
                             onClick={() => router.push('/dashboard')}
@@ -165,7 +165,7 @@ export default function UploadInfographics() {
 
                 {/* Upload Form */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4">อัปโหลดรูปภาพอินโฟกราฟิก</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">อัปโหลดรูปภาพอินโฟกราฟิก</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* EOC Type Selection */}
@@ -227,7 +227,7 @@ export default function UploadInfographics() {
 
                 {/* Existing Files */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4">ไฟล์อินโฟกราฟิกที่มีอยู่</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">ไฟล์อินโฟกราฟิกที่มีอยู่</h2>
 
                     {Object.keys(existingFiles).length === 0 ? (
                         <p className="text-slate-500 text-center py-8">ยังไม่มีไฟล์</p>

@@ -112,7 +112,7 @@ export default function FestivalCompare() {
 
             {/* Session Selector */}
             <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
                     <AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลือก Session ที่ต้องการเปรียบเทียบ
                 </h3>
                 {sessions.length === 0 ? (
@@ -161,7 +161,7 @@ export default function FestivalCompare() {
                                      style={{ borderColor: colorSet.border }}>
                                     <div className="p-5">
                                         <div className="flex items-center justify-between mb-4">
-                                            <h3 className="font-bold text-slate-800 text-sm">
+                                            <h3 className="font-semibold text-slate-900 text-sm">
                                                 <AppIcon icon={c.session.festivalType === 'newyear' ? "treePalm" : "droplets"} className="inline-block h-5 w-5" />
                                                 {' '}{c.session.openReason || c.session.festivalName}
                                             </h3>
@@ -210,7 +210,7 @@ export default function FestivalCompare() {
 
                     {/* Comparison Bar Chart */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                             <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กราฟเปรียบเทียบ
                         </h3>
                         <div className="h-80">

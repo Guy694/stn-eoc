@@ -232,9 +232,9 @@ export default function FestivalDashboard() {
 
             {/* No Active Session */}
             {!data?.hasActiveSession && (
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
+                <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-8 text-center">
                     <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีข้อมูลเทศกาล</h3>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีข้อมูลเทศกาล</h3>
                     <p className="text-slate-600">ยังไม่มีเหตุการณ์ EOC สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
                     <p className="text-slate-500 text-sm mt-1">กรุณาเปิดเหตุการณ์ EOC ประเภท &quot;festival-accidents&quot; จากหน้าจัดการ EOC</p>
                 </div>
@@ -304,7 +304,7 @@ export default function FestivalDashboard() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Daily Trend Chart */}
                         <div className="border border-slate-200 lg:col-span-2 bg-white rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                                 <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติรายวัน (7 วันอันตราย)
                             </h3>
                             {data?.dailySummary?.length > 0 ? (
@@ -338,7 +338,7 @@ export default function FestivalDashboard() {
 
                         {/* Accident Type Doughnut */}
                         <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                                 <AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประเภทอุบัติเหตุ
                             </h3>
                             {data?.accidentTypeBreakdown?.length > 0 ? (
@@ -367,7 +367,7 @@ export default function FestivalDashboard() {
 
                     {/* Cause Analysis */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                             <AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ปัจจัยเสี่ยง / สาเหตุ
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -398,7 +398,7 @@ export default function FestivalDashboard() {
                         {/* District Heatmap Table */}
                         <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                             <div className="px-6 py-4 bg-slate-50 border-b">
-                                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                     <AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติแยกตามอำเภอ
                                 </h3>
                             </div>
@@ -454,7 +454,7 @@ export default function FestivalDashboard() {
                         {/* Recent Accidents */}
                         <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                             <div className="px-6 py-4 bg-slate-50 border-b">
-                                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                     <AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เหตุการณ์ล่าสุด
                                 </h3>
                             </div>
@@ -504,7 +504,7 @@ export default function FestivalDashboard() {
                     {/* Map Section */}
                     {data?.mapData && (
                         <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                                 <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่แสดงจุดเกิดเหตุและจุดบริการ (Session: {data.activeSession?.session_number || ''})
                             </h3>
                             <div className="mb-4 flex gap-4 text-sm">

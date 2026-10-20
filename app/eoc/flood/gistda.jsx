@@ -106,13 +106,13 @@ export default function GistdaFloodMapPage() {
         <EOCLayout>
             <div className="h-screen flex flex-col">
                 {/* Header */}
-                <div className="bg-white shadow-md p-4">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
                     <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900">
+                            <h1 className="text-xl font-semibold text-white sm:text-2xl">
                                 <AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่อุทกภัยน้ำท่วม GISTDA
                             </h1>
-                            <p className="text-sm text-slate-600">
+                            <p className="text-sm text-blue-100">
                                 {`ข้อมูลจาก GISTDA - อัปเดตล่าสุด: ${floodData?.summary?.lastUpdate ? new Date(floodData.summary.lastUpdate).toLocaleString('th-TH') : '-'}`}
                             </p>
                         </div>
@@ -121,7 +121,7 @@ export default function GistdaFloodMapPage() {
                             <select
                                 value={selectedDays}
                                 onChange={(e) => setSelectedDays(e.target.value)}
-                                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40"
+                                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/40 text-white [color-scheme:dark]"
                             >
                                 <option value="1">1 วันล่าสุด</option>
                                 <option value="7">7 วันล่าสุด</option>

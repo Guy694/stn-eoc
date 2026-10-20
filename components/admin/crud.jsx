@@ -77,17 +77,25 @@ export function latestTime(values = []) {
   return best ? best.toISOString() : null;
 }
 
+/**
+ * โครงหน้ามาตรฐาน: หัวหน้าพื้นน้ำเงิน (ธีมเดียวกับ "ภาพรวมสถานการณ์") + เนื้อหา
+ * - context: ลิงก์ย้อนกลับ/ที่อยู่ของหน้า · actions: ปุ่มหลัก (วางบนถาดสีขาว ใช้ Button เดิมได้เลย)
+ */
 export function AdminPage({ title, description, context, actions, freshness, children }) {
   return (
     <div className="mx-auto max-w-7xl space-y-4">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          {context ? <div className="mb-1 text-sm font-semibold text-[#0b4c86]">{context}</div> : null}
-          <h1 className="text-2xl font-black text-slate-900 sm:text-[1.7rem]">{title}</h1>
-          {description ? <p className="mt-1 max-w-3xl text-sm text-slate-600">{description}</p> : null}
-          {freshness ? <div className="mt-2"><FreshnessBadge {...freshness} /></div> : null}
+      <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
+        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" aria-hidden="true" />
+        <div className="absolute -bottom-24 right-40 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            {context ? <div className="mb-1 text-sm font-medium text-blue-100 [&_a]:text-blue-100 [&_a:hover]:text-white">{context}</div> : null}
+            <h1 className="text-xl font-semibold leading-snug sm:text-2xl">{title}</h1>
+            {description ? <p className="mt-1 max-w-3xl text-sm text-blue-100">{description}</p> : null}
+            {freshness ? <div className="mt-3"><FreshnessBadge {...freshness} /></div> : null}
+          </div>
+          {actions ? <div className="flex shrink-0 flex-wrap gap-2 self-start rounded-xl bg-white p-1.5 text-slate-900 shadow-[0_10px_24px_-16px_rgba(2,6,23,.6)] lg:self-auto">{actions}</div> : null}
         </div>
-        {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
       </header>
       {children}
     </div>

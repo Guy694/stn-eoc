@@ -188,7 +188,7 @@ export default function PolygonMap({
                     >
                         <Popup>
                             <div className="min-w-[200px]">
-                                <h3 className="font-bold text-lg mb-2 text-gray-800">
+                                <h3 className="font-bold text-lg mb-2 text-slate-800">
                                     {polygon.villname}
                                 </h3>
                                 <div className="space-y-1 text-sm">
@@ -270,8 +270,8 @@ export default function PolygonMap({
             </MapContainer>
 
             {/* Controls สำหรับแสดง/ซ่อน labels */}
-            <div className="absolute top-6 right-6 bg-white p-3 rounded-lg shadow-lg z-[1000] space-y-2">
-                <h4 className="font-bold text-sm text-gray-800 mb-2">แสดงชื่อ</h4>
+            <div className="absolute top-6 right-6 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_28px_-16px_rgba(15,23,42,.55)] z-[1000] space-y-2">
+                <h4 className="font-bold text-sm text-slate-800 mb-2">แสดงชื่อ</h4>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
                         type="checkbox"
@@ -302,8 +302,8 @@ export default function PolygonMap({
             </div>
 
             {/* Legend */}
-            <div className="absolute bottom-6 right-6 bg-white p-4 rounded-lg shadow-lg z-[1000] max-w-xs">
-                <h4 className="font-bold mb-3 text-gray-800">
+            <div className="absolute bottom-6 right-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_28px_-16px_rgba(15,23,42,.55)] z-[1000] max-w-xs">
+                <h4 className="font-bold mb-3 text-slate-800">
                     {colorMode === 'district' ? 'อำเภอ' : 'จำนวนครัวเรือน'}
                 </h4>
                 <div className="space-y-2">
@@ -330,19 +330,19 @@ export default function PolygonMap({
 
             {/* Selected Info */}
             {selectedPolygon && (
-                <div className="absolute top-6 right-6 bg-white p-4 rounded-lg shadow-lg z-[1000] max-w-sm">
+                <div className="absolute top-6 right-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_28px_-16px_rgba(15,23,42,.55)] z-[1000] max-w-sm">
                     <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-lg text-gray-800">
+                        <h4 className="font-bold text-lg text-slate-800">
                             {selectedPolygon.villname}
                         </h4>
                         <button
                             onClick={() => setSelectedPolygon(null)}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-slate-500 hover:text-slate-700"
                         >
                             <AppIcon icon="x" className="h-5 w-5" />
                         </button>
                     </div>
-                    <div className="space-y-1 text-sm text-gray-600">
+                    <div className="space-y-1 text-sm text-slate-600">
                         {selectedPolygon.moo && <p>หมู่ {selectedPolygon.moo}</p>}
                         <p>{selectedPolygon.subdistnam}, {selectedPolygon.distname}</p>
                         <p className="font-semibold text-blue-600">
@@ -360,10 +360,10 @@ function LegendItem({ color, label }) {
     return (
         <div className="flex items-center gap-2 text-sm">
             <div
-                className="w-6 h-6 rounded border border-gray-300"
+                className="w-6 h-6 rounded border border-slate-300"
                 style={{ backgroundColor: color }}
             />
-            <span className="text-gray-700">{label}</span>
+            <span className="text-slate-700">{label}</span>
         </div>
     );
 }

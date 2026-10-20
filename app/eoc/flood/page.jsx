@@ -152,14 +152,14 @@ export default function FloodMapPage() {
         <EOCLayout>
             <div className="mx-auto max-w-7xl">
                 {/* Page Header */}
-                <div className="mb-6">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 mb-4 flex items-center gap-3">
-                                <span className="text-4xl"><AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                            <h1 className="text-xl font-semibold text-white mb-4 flex items-center gap-3 sm:text-2xl">
+                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="droplet" className="h-5 w-5" /></span>
                                 {mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}
                             </h1>
-                            <p className="text-slate-600">
+                            <p className="text-blue-100">
                                 {mode === "realtime"
                                     ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์"
                                     : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}
@@ -179,9 +179,9 @@ export default function FloodMapPage() {
 
                 {/* แสดงทีมงาน EOC ที่เปิดใช้งาน - Realtime Mode */}
                 {mode === "realtime" && hasActiveSession && activeSessionData && sessionTeams.length > 0 && (
-                    <div className="mb-6 bg-[#edf5fc] border border-[#0b4c86] rounded-lg p-6 shadow-sm">
-                        <h2 className="text-xl font-bold text-[#083865] mb-4 flex items-center gap-2">
-                            <span className="text-2xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                    <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50/60 p-5">
+                        <h2 className="text-lg font-semibold text-[#083865] mb-4 flex items-center gap-2">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="users" className="h-4 w-4" /></span>
                             ทีมงาน EOC ที่ปฏิบัติงาน
                             <span className="text-sm font-normal text-[#0b4c86] ml-2">
                                 (ครั้งที่ {activeSessionData.session_number})
@@ -329,8 +329,8 @@ export default function FloodMapPage() {
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
                             <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h2 className=" text-center text-xl md:text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                    <span className="text-3xl"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="mapPin" className="h-4 w-4" /></span>
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
                                 <p className="text-slate-600 mb-4">
@@ -356,9 +356,9 @@ export default function FloodMapPage() {
 
                         {/* แสดงทีมงานของ session ที่เลือก */}
                         {selectedSession && sessionTeams.length > 0 && (
-                            <div className="mt-6 mb-6 bg-amber-50 border border-amber-500 rounded-lg p-6 shadow-sm">
-                                <h2 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2">
-                                    <span className="text-2xl"><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                            <div className="mt-6 mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
+                                <h2 className="text-lg font-semibold text-amber-900 mb-4 flex items-center gap-2">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="users" className="h-4 w-4" /></span>
                                     ทีมงาน EOC ในช่วงเวลานี้
                                     <span className="text-sm font-normal text-amber-700 ml-2">
                                         (ครั้งที่ {selectedSession.session_number})
@@ -478,8 +478,8 @@ export default function FloodMapPage() {
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
                             <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h2 className="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                    <span className="text-3xl"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="mapPin" className="h-4 w-4" /></span>
                                     รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
                                 </h2>
                                 <p className="text-slate-600 mb-4">

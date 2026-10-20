@@ -20,7 +20,7 @@ export default function Header() {
     };
 
     return (
-        <header className="bg-[#083865] text-white shadow-md">
+        <header className="bg-[#083865] font-[family-name:var(--font-kanit)] text-white shadow-[0_10px_24px_-18px_rgba(2,6,23,.8)]">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex items-center justify-between">
                     {/* Logo and Title */}
@@ -49,7 +49,7 @@ export default function Header() {
                             <div className="relative">
                                 <button
                                     onClick={() => setShowMenu(!showMenu)}
-                                    className="flex items-center gap-2 bg-[#0b4c86] hover:bg-[#0f5c9f] px-3 py-2 rounded-lg transition-colors"
+                                    className="flex items-center gap-2 bg-[#0b4c86] hover:bg-[#0f5c9f] px-3 py-2 rounded-xl ring-1 ring-white/15 transition-colors"
                                 >
                                     <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                                         <span className="text-[#083865] font-bold text-sm">
@@ -75,19 +75,19 @@ export default function Header() {
                                         ></div>
 
                                         {/* Menu */}
-                                        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-20 overflow-hidden">
+                                        <div className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white font-[family-name:var(--font-kanit)] shadow-[0_18px_40px_-20px_rgba(15,23,42,.45)]">
                                             {/* User Info */}
                                             <div className="bg-blue-50 px-4 py-3 border-b border-blue-100">
-                                                <p className="font-semibold text-gray-800">
+                                                <p className="font-semibold text-slate-800">
                                                     {`${user.title || ''} ${user.givenName || ''} ${user.familyName || ''}`.trim() || user.username}
                                                 </p>
-                                                <p className="text-sm text-gray-600">{user.email}</p>
+                                                <p className="text-sm text-slate-600">{user.email}</p>
                                                 <p className="text-xs text-blue-700 mt-1">{user.roleDisplay}</p>
                                                 {user.department && (
-                                                    <p className="text-xs text-gray-500">{user.department}</p>
+                                                    <p className="text-xs text-slate-500">{user.department}</p>
                                                 )}
                                                 {user.thaiIdData && (
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="text-xs text-slate-500 mt-1">
                                                         เข้าสู่ระบบด้วย ThaID
                                                     </p>
                                                 )}
@@ -97,7 +97,7 @@ export default function Header() {
                                             <div className="py-2">
                                                 <a
                                                     href="/stn-eoc/dashboard"
-                                                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                                    className="block px-4 py-2 text-slate-700 hover:bg-slate-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >
                                                     <AppIcon icon="home" className="mr-2 inline h-4 w-4" />
@@ -105,7 +105,7 @@ export default function Header() {
                                                 </a>
                                                 <a
                                                     href="/profile"
-                                                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                                    className="block px-4 py-2 text-slate-700 hover:bg-slate-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >
                                                     <AppIcon icon="user" className="mr-2 inline h-4 w-4" />
@@ -113,7 +113,7 @@ export default function Header() {
                                                 </a>
                                                 <a
                                                     href="/settings"
-                                                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                                                    className="block px-4 py-2 text-slate-700 hover:bg-slate-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >
                                                     <AppIcon icon="settings" className="mr-2 inline h-4 w-4" />
@@ -122,7 +122,7 @@ export default function Header() {
                                             </div>
 
                                             {/* Logout */}
-                                            <div className="border-t border-gray-200">
+                                            <div className="border-t border-slate-200">
                                                 <button
                                                     onClick={handleLogout}
                                                     className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-medium"
@@ -138,7 +138,7 @@ export default function Header() {
                         ) : (
                             <a
                                 href="/login"
-                                className="bg-[#0b4c86] hover:bg-[#0f5c9f] px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                                className="bg-[#0b4c86] hover:bg-[#0f5c9f] px-4 py-2 rounded-xl ring-1 ring-white/15 transition-colors text-sm font-medium"
                             >
                                 <span className="inline-flex items-center gap-2">
                                     <AppIcon icon="lock" className="h-4 w-4" />

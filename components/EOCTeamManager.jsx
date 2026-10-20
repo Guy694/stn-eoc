@@ -200,7 +200,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
             <div className="border border-slate-200 bg-white rounded-2xl p-4 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
+                        <h2 className="text-lg font-semibold text-slate-900 sm:text-2xl">
                             จัดการทีมงาน EOC {session.eoc_name}
                         </h2>
                         <p className="text-slate-600">
@@ -284,7 +284,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                     <div className="flex min-w-0 items-center space-x-3">
                         <AppIcon icon={team.icon || 'users'} className="h-8 w-8 text-[#0b4c86]" />
                         <div className="min-w-0">
-                            <h3 className="text-lg font-bold text-slate-800">
+                            <h3 className="text-lg font-semibold text-slate-900">
                                 {team.team_name_th}
                             </h3>
                             <p className="text-sm text-slate-600">
@@ -450,7 +450,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
 
     return (
         <AppDialogFrame open onOpenChange={(open) => { if (!open) onClose(); }}>
-            <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md sm:p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white-xl p-4 w-full max-w-md sm:p-6">
                 <h3 className="text-slate-600 text-xl font-bold mb-4">เพิ่มทีมเข้าเหตุการณ์</h3>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
@@ -496,7 +496,7 @@ function AddTeamModal({ availableTeams, availableOfficers, onSubmit, onClose }) 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 bg-red-500 rounded-lg hover:bg-slate-100"
+                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
                         >
                             ยกเลิก
                         </button>
@@ -534,7 +534,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
 
     return (
         <AppDialogFrame open onOpenChange={(open) => { if (!open) onClose(); }}>
-            <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-md sm:p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white-xl p-4 w-full max-w-md sm:p-6">
                 <h3 className="text-xl text-slate-600 font-bold mb-4">
                     เพิ่มสมาชิกเข้าทีม {team.team_name_th}
                 </h3>
@@ -578,7 +578,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
                         >
                             ยกเลิก
                         </button>

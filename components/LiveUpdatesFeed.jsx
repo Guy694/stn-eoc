@@ -61,7 +61,7 @@ export default function LiveUpdatesFeed() {
     return (
         <div className="border border-slate-200 bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
                     <span className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
                     รายงานล่าสุด
                 </h3>

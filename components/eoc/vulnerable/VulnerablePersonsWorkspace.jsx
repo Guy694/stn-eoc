@@ -35,7 +35,8 @@ const VulnerablePersonsMap = dynamic(() => import("@/components/eoc/vulnerable/V
 
 const EMPTY_FORM = {
   name: "", vulnerable_type: "bedridden", phone: "", district: "", tambon: "", village: "", address: "", needs: "",
-  caregiver_name: "", caregiver_phone: "", lat: "", lng: "", due_date: "", preterm_history: false, care_group: "", power_dependent: false
+  caregiver_name: "", caregiver_phone: "", lat: "", lng: "", due_date: "", preterm_history: false, care_group: "", power_dependent: false,
+  location_approx: false
 };
 const bangkokToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
 const EMPTY_FILTERS = { group: "all", status: "all", type: "all", care: "all", district: "all", tambon: "all", search: "", quick: "all" };
@@ -203,7 +204,7 @@ function QuickFilterBar({ counts, value, onChange }) {
           <button key={item.key} type="button" onClick={() => onChange(active ? "all" : item.key)} aria-pressed={active} title={item.hint}
             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold transition ${active ? "border-[#0b4c86] bg-[#0b4c86] text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"}`}>
             {item.label}
-            {count !== undefined && item.key !== "all" ? <span className={`rounded-full px-1.5 text-xs tabular-nums ${active ? "bg-white/20" : item.key === "unmapped" ? "bg-slate-100" : count ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-500"}`}>{formatNumber(count)}</span> : null}
+            {count !== undefined && item.key !== "all" ? <span className={`rounded-full px-1.5 text-xs tabular-nums ${active ? "bg-white/20" : item.key === "unmapped" || item.key === "approx_location" ? "bg-slate-100" : count ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-500"}`}>{formatNumber(count)}</span> : null}
           </button>
         );
       })}
@@ -253,6 +254,7 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
               {pregnancy ? <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 ring-1 ring-rose-200">{pregnancy.text}</span> : null}
               {person.in_flood_area && caseStatus(person.status).group !== "done" ? <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800 ring-1 ring-sky-200">บ้านอยู่ในพื้นที่น้ำท่วม</span> : null}
               {!person.location ? <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-700"><MapPinOff className="h-3 w-3" aria-hidden="true" />ไม่มีพิกัด</span> : null}
+              {person.location?.approx ? <span className="text-[11px] font-semibold text-slate-500" title="พิกัดกลางหมู่บ้านจากการนำเข้า ยังไม่ใช่บ้านจริง">ตำแหน่งประมาณ</span> : null}
             </span>
             <span className="block truncate text-xs text-slate-500">{areaText(person)}</span>
             <span className="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
@@ -405,7 +407,7 @@ function StatusDialog({ target, sessionId, shelters = [], onClose, onSaved }) {
             <textarea rows={2} className={inputClass} value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
           </Field>
           <section aria-label="ประวัติสถานะ">
-            <h3 className="mb-1.5 text-sm font-bold text-slate-800">ประวัติในเหตุการณ์นี้</h3>
+            <h3 className="mb-1.5 text-sm font-semibold text-slate-900">ประวัติในเหตุการณ์นี้</h3>
             {history.loading ? <p className="text-xs text-slate-500">กำลังโหลด…</p> : history.rows.length ? (
               <ol className="space-y-1.5 border-l-2 border-slate-200 pl-3">
                 {history.rows.map((row) => (
@@ -440,7 +442,9 @@ function PersonDialog({ open, editing, areas, sessionId, onClose, onSaved }) {
       care_group: editing.care_group || "",
       power_dependent: Boolean(editing.power_dependent),
       lat: editing.location?.lat ?? "",
-      lng: editing.location?.lng ?? ""
+      lng: editing.location?.lng ?? "",
+      // คงสถานะ "ตำแหน่งประมาณ" ไว้จนกว่าจะปักหมุดใหม่ (แก้ข้อมูลอื่นแล้วบันทึก ไม่กลายเป็นพิกัดบ้านจริง)
+      location_approx: Boolean(editing.location?.approx)
     } : EMPTY_FORM);
   }, [open, editing]);
 
@@ -517,7 +521,10 @@ function PersonDialog({ open, editing, areas, sessionId, onClose, onSaved }) {
           <Field label="ตำบล" required><input className={inputClass} list="vp-tambons" value={form.tambon} onChange={(event) => setForm((current) => ({ ...current, tambon: event.target.value, village: "" }))} /></Field>
           <Field label="หมู่บ้าน"><input className={inputClass} list="vp-villages" value={form.village} onChange={set("village")} /></Field>
           <Field label="บ้านเลขที่/จุดสังเกต"><input className={inputClass} value={form.address} onChange={set("address")} /></Field>
-          <LocationPicker lat={form.lat} lon={form.lng} onChange={(next) => setForm((current) => ({ ...current, ...(next.lat !== undefined ? { lat: next.lat } : {}), ...(next.lon !== undefined ? { lng: next.lon } : {}) }))} />
+          {form.location_approx ? (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">พิกัดตอนนี้เป็นตำแหน่งประมาณ (กลางหมู่บ้าน) — ปักหมุดที่บ้านจริงเมื่อทราบ แล้วระบบจะเลิกแสดงเป็นหมุดประมาณ</p>
+          ) : null}
+          <LocationPicker lat={form.lat} lon={form.lng} onChange={(next) => setForm((current) => ({ ...current, location_approx: false, ...(next.lat !== undefined ? { lat: next.lat } : {}), ...(next.lon !== undefined ? { lng: next.lon } : {}) }))} />
         </FormSection>
       </FormGrid>
     </FormDialog>
@@ -575,7 +582,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood" }) {
   const restricted = Boolean(data?.restricted);
   const summary = useMemo(() => (restricted && data?.summary ? data.summary : summarizePersons(persons)), [restricted, data, persons]);
   const quickCounts = useMemo(() => {
-    const counts = { priority: persons.filter((person) => matchesQuickFilter(person, "priority", today)).length, unmapped: persons.filter((person) => !person.location).length };
+    const counts = { priority: persons.filter((person) => matchesQuickFilter(person, "priority", today)).length, unmapped: persons.filter((person) => !person.location).length, approx_location: persons.filter((person) => person.location?.approx).length };
     if (floodAreas.length) counts.flood_pending = persons.filter((person) => matchesQuickFilter(person, "flood_pending", today)).length;
     const followUp = persons.filter((person) => matchesQuickFilter(person, "follow_up", today)).length;
     if (followUp) counts.follow_up = followUp;

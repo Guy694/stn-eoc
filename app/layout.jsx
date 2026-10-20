@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { EOCProvider } from "@/context/EOCContext";
 import AppToaster from "@/components/providers/AppToaster";
+import ConfirmHost from "@/components/providers/ConfirmHost";
 import PwaRegister from "@/components/PwaRegister";
 import { getSiteUrl } from "@/lib/siteUrl";
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }) {
           <EOCProvider>
             {children}
             <AppToaster />
+            <ConfirmHost />
             <PwaRegister />
           </EOCProvider>
         </AuthProvider>

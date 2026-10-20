@@ -40,3 +40,6 @@ database_analysis.json
 
 # สำรองฐานข้อมูล (มีข้อมูลส่วนบุคคล ห้ามเข้า image)
 db-backups
+
+# ข้อมูลรายบุคคลที่นำเข้า (ชื่อผู้ป่วย) — ห้ามเข้า git/image
+/datatable/

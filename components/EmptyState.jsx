@@ -17,7 +17,7 @@ export default function EmptyState({
             </div>
 
             {/* Content */}
-            <h3 className="text-2xl font-bold text-slate-800 mb-2 text-center">
+            <h3 className="text-2xl font-semibold text-slate-900 mb-2 text-center">
                 {title}
             </h3>
             <p className="text-slate-600 mb-8 text-center max-w-md">

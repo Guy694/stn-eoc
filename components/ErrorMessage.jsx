@@ -18,7 +18,7 @@ export default function ErrorMessage({
     };
 
     return (
-        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 shadow-md">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-md">
             <div className="flex items-start gap-4">
                 {/* Error Icon */}
                 <div className="flex-shrink-0">

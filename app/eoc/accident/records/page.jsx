@@ -6,6 +6,7 @@ import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import dynamic from 'next/dynamic';
 import AppIcon from "@/components/icons/AppIcon";
+import { MetricCard } from "@/components/common/MetricCards";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
@@ -212,9 +213,9 @@ export default function AccidentRecordsPage() {
         return (
             <EOCLayout>
                 <div className="p-6">
-                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+                    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                        <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
                         <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนบันทึกข้อมูล</p>
                     </div>
                 </div>
@@ -226,19 +227,19 @@ export default function AccidentRecordsPage() {
         <EOCLayout>
             <div className="p-6">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
-                            <span className="text-4xl"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                        <h1 className="text-xl font-semibold text-white mb-2 flex items-center gap-3 sm:text-2xl">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="car" className="h-5 w-5" /></span>
                             บันทึกอุบัติเหตุ
                         </h1>
-                        <p className="text-slate-600">
+                        <p className="text-blue-100">
                             เหตุการณ์ครั้งที่ {activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}
                         </p>
                     </div>
                     <button
                         onClick={() => { setEditingRecord(null); resetForm(); setShowModal(true); }}
-                        className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 flex items-center gap-2"
+                        className="bg-white text-[#0b4c86] px-6 py-3 rounded-lg hover:bg-blue-50 flex items-center gap-2"
                     >
                         <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึกอุบัติเหตุ
                     </button>
@@ -246,22 +247,10 @@ export default function AccidentRecordsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-2xl p-4 border border-red-500">
-                        <div className="text-3xl font-bold text-red-600">{stats.total}</div>
-                        <div className="text-sm text-slate-600">อุบัติเหตุทั้งหมด</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-slate-800">
-                        <div className="text-3xl font-bold text-slate-800">{stats.deaths}</div>
-                        <div className="text-sm text-slate-600"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เสียชีวิต</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-yellow-500">
-                        <div className="text-3xl font-bold text-yellow-600">{stats.injuries}</div>
-                        <div className="text-sm text-slate-600"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บาดเจ็บ</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-[#0b4c86]">
-                        <div className="text-3xl font-bold text-[#0b4c86]">{stats.drunk}</div>
-                        <div className="text-sm text-slate-600"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</div>
-                    </div>
+                    <MetricCard label="อุบัติเหตุทั้งหมด" value={stats.total} tone="red" />
+                    <MetricCard icon="skull" label="เสียชีวิต" value={stats.deaths} tone="slate" />
+                    <MetricCard icon="stethoscope" label="บาดเจ็บ" value={stats.injuries} tone="amber" />
+                    <MetricCard icon="beer" label="เมาแล้วขับ" value={stats.drunk} tone="blue" />
                 </div>
 
                 {/* Filters */}
@@ -295,7 +284,7 @@ export default function AccidentRecordsPage() {
                 {/* Table */}
                 <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                     <div className="p-4 bg-slate-50 border-b">
-                        <h3 className="font-bold text-slate-800"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายการอุบัติเหตุ ({records.length} รายการ)</h3>
+                        <h3 className="font-semibold text-slate-900"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายการอุบัติเหตุ ({records.length} รายการ)</h3>
                     </div>
 
                     {loading ? (
@@ -376,7 +365,7 @@ export default function AccidentRecordsPage() {
                 {/* Modal */}
                 {showModal && (
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                        <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
                                 <h2 className="text-slate-700 text-2xl font-bold mb-4">
                                     {editingRecord ? 'แก้ไขข้อมูล' : "บันทึกอุบัติเหตุ"}

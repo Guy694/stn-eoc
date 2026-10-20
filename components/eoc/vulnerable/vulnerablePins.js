@@ -37,7 +37,36 @@ export function pinFill(person) {
 
 /** ข้อความกำกับหมุดสำหรับโปรแกรมอ่านหน้าจอ */
 export function pinLabel(person) {
-  return `${careGroupMeta(effectiveCareGroup(person))?.label || ""} • ${caseStatus(person.status).label} • ${typeMeta(person.vulnerable_type)?.short || ""} • ${person.name || ""}`;
+  return `${careGroupMeta(effectiveCareGroup(person))?.label || ""} • ${caseStatus(person.status).label} • ${typeMeta(person.vulnerable_type)?.short || ""} • ${person.name || ""}${person.location?.approx ? " • ตำแหน่งประมาณ ยังไม่ใช่บ้านจริง" : ""}`;
+}
+
+/**
+ * คนที่มีพิกัดโดยประมาณจุดเดียวกัน (กลางหมู่บ้าน) → กระจายหมุดเป็นวงรอบจุดนั้นเพื่อให้กดได้ทีละคน
+ * ระยะ ~35–90 ม. (ไม่ใช่ตำแหน่งบ้านจริง) · คนที่ปักหมุดบ้านจริงแล้วไม่ขยับ
+ */
+export function spreadApproxPositions(people) {
+  const groups = new Map();
+  for (const person of people) {
+    if (!person.location?.approx) continue;
+    const key = `${person.location.lat.toFixed(6)},${person.location.lng.toFixed(6)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(person);
+  }
+  const positions = new Map();
+  for (const members of groups.values()) {
+    if (members.length < 2) continue;
+    const sorted = [...members].sort((a, b) => a.id - b.id);
+    sorted.forEach((person, index) => {
+      const ring = Math.floor(index / 8);
+      const slots = Math.min(8, sorted.length - ring * 8);
+      const angle = (2 * Math.PI * (index % 8)) / slots + ring * 0.4;
+      const meters = 35 + ring * 30;
+      const dLat = (meters * Math.cos(angle)) / 111320;
+      const dLng = (meters * Math.sin(angle)) / (111320 * Math.cos((person.location.lat * Math.PI) / 180));
+      positions.set(person.id, [person.location.lat + dLat, person.location.lng + dLng]);
+    });
+  }
+  return positions;
 }
 
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
@@ -53,7 +82,8 @@ export function pinHtml(person, { selected = false } = {}) {
   const size = selected ? 38 : 30;
   const label = `${type?.tag || ""}${person.power_dependent ? " ⚡" : ""}`.trim();
   const tag = label ? `<span class="vp-tag">${escapeHtml(label)}</span>` : "";
-  return `<div class="vp-pin${urgent ? " vp-pin--urgent" : ""}${selected ? " vp-pin--selected" : ""}" style="width:${size}px;height:${Math.round(size * 1.33)}px">${pinSvg(person.status, size, pinFill(person))}${tag}</div>`;
+  const approx = person.location?.approx ? " vp-pin--approx" : "";
+  return `<div class="vp-pin${urgent ? " vp-pin--urgent" : ""}${selected ? " vp-pin--selected" : ""}${approx}" style="width:${size}px;height:${Math.round(size * 1.33)}px">${pinSvg(person.status, size, pinFill(person))}${tag}</div>`;
 }
 
 /** หมุดศูนย์พักพิง: สี่เหลี่ยมสีตามประเภทศูนย์ + ตัวเลขที่ว่าง */

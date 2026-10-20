@@ -4,13 +4,14 @@
 // - PageHero: หัวหน้าพื้นน้ำเงิน มีไอคอน ชื่อ คำอธิบาย ข้อมูลประกอบ ปุ่ม และช่องด้านขวา (aside)
 // - Panel: กล่องขาวมีหัว (ไอคอน · ชื่อ · คำอธิบาย · ปุ่มขวา)
 // - heroButtonClass / heroInputClass: ปุ่มและช่องกรอกบนพื้นน้ำเงิน
+// - tray: วางปุ่ม/ช่องกรอกเดิมบนถาดสีขาว (ไม่ต้องเปลี่ยนสไตล์ปุ่ม)
 import AppIcon from "@/components/icons/AppIcon";
 
 export const heroButtonClass = "inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-60";
 export const heroPrimaryButtonClass = "inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#0b4c86] transition hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-60";
 export const heroInputClass = "min-h-10 rounded-xl border-0 bg-white/10 px-3 py-2 text-sm font-medium text-white ring-1 ring-white/20 [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-white/60";
 
-export function PageHero({ icon, eyebrow, title, subtitle, meta, actions, aside, titleId, className = "" }) {
+export function PageHero({ icon, eyebrow, title, subtitle, meta, actions, aside, titleId, tray = false, className = "" }) {
   return (
     <div className={`relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 ${className}`}>
       <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" aria-hidden="true" />
@@ -30,7 +31,9 @@ export function PageHero({ icon, eyebrow, title, subtitle, meta, actions, aside,
             </div>
           </div>
           {meta ? <div className="mt-3 text-xs text-blue-100">{meta}</div> : null}
-          {actions ? <div className="mt-4 flex flex-wrap items-center gap-2">{actions}</div> : null}
+          {actions ? (
+            <div className={tray ? "mt-4 inline-flex max-w-full flex-wrap items-center gap-2 rounded-xl bg-white p-1.5 text-slate-900 shadow-[0_10px_24px_-16px_rgba(2,6,23,.6)]" : "mt-4 flex flex-wrap items-center gap-2"}>{actions}</div>
+          ) : null}
         </div>
         {aside ? <div className="min-w-0">{aside}</div> : null}
       </div>

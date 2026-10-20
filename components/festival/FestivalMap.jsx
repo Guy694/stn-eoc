@@ -85,7 +85,7 @@ export default function FestivalMap({ accidents = [], servicePoints = [] }) {
       <button
         onClick={toggleFullscreen}
         title={isFullscreen ? 'ออกจากเต็มจอ' : 'ดูแบบเต็มจอ'}
-        className="absolute top-3 right-3 z-[9999] bg-white hover:bg-gray-100 border border-gray-300 shadow-md rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 flex items-center gap-1.5 transition"
+        className="absolute top-3 right-3 z-[9999] bg-white hover:bg-slate-100 border border-slate-300 shadow-md rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 flex items-center gap-1.5 transition"
       >
         <AppIcon icon={isFullscreen ? 'x' : 'fullscreen'} className="h-4 w-4" />
         {isFullscreen ? 'ออกจากเต็มจอ' : 'เต็มจอ'}
@@ -115,7 +115,7 @@ export default function FestivalMap({ accidents = [], servicePoints = [] }) {
                   <h3 className="font-bold text-green-700 mb-1"><AppIcon icon="tentTree" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.name}</h3>
                   <p className="text-sm">ประเภท: {point.point_type}</p>
                   <p className="text-sm">อ.{point.district} ต.{point.tambon}</p>
-                  <p className="text-xs text-gray-500 mt-1">เจ้าหน้าที่: {point.officer_count} นาย</p>
+                  <p className="text-xs text-slate-500 mt-1">เจ้าหน้าที่: {point.officer_count} นาย</p>
                 </div>
               </Popup>
             </Marker>
@@ -136,7 +136,7 @@ export default function FestivalMap({ accidents = [], servicePoints = [] }) {
                   <p className="text-sm">วันที่: {accident.report_date ? new Date(accident.report_date).toLocaleDateString('th-TH') : ''} {accident.report_time || ''}</p>
                   <p className="text-sm">สถานที่: {accident.location_name || 'ไม่ระบุ'}</p>
                   <div className="flex gap-2 mt-1">
-                    {accident.deaths > 0 && <span className="bg-gray-800 text-white text-xs px-2 rounded-full">เสียชีวิต: {accident.deaths}</span>}
+                    {accident.deaths > 0 && <span className="bg-slate-800 text-white text-xs px-2 rounded-full">เสียชีวิต: {accident.deaths}</span>}
                     {accident.injuries > 0 && <span className="bg-yellow-100 text-yellow-800 text-xs px-2 rounded-full border border-yellow-200">บาดเจ็บ: {accident.injuries}</span>}
                   </div>
                   {(accident.drunk_driving || accident.no_helmet || accident.speeding) && (

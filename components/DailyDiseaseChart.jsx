@@ -266,7 +266,7 @@ export default function DailyDiseaseChart({ sessionId }) {
             {/* Disease breakdown */}
             {data.disease_stats && data.disease_stats.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-slate-200">
-                    <h3 className="text-lg font-bold text-slate-800 mb-4">
+                    <h3 className="text-lg font-semibold text-slate-900 mb-4">
                         สรุปข้อมูลโรค
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

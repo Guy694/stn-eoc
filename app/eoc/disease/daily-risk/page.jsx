@@ -129,12 +129,12 @@ export default function DiseaseDailyRiskPage() {
         <EOCLayout>
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3 md:text-3xl">
-                        <span className="text-3xl md:text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
+                    <h1 className="text-xl font-semibold text-white mb-2 flex items-center gap-3 sm:text-2xl">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="biohazard" className="h-5 w-5" /></span>
                         สรุปสถานการณ์โรครายวัน
                     </h1>
-                    <p className="text-slate-600">แสดงข้อมูลวันที่: {formatDate}</p>
+                    <p className="text-blue-100">แสดงข้อมูลวันที่: {formatDate}</p>
                 </div>
 
                 {/* Date Selector */}
@@ -269,7 +269,7 @@ export default function DiseaseDailyRiskPage() {
 
                 {/* Disease Summary */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6 md:p-6">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4">สรุปตามประเภทโรค</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">สรุปตามประเภทโรค</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {data.diseaseSummary?.map((item, index) => (
                             <div
@@ -293,7 +293,7 @@ export default function DiseaseDailyRiskPage() {
 
                 {/* District Summary */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6 md:p-6">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4">สรุปตามอำเภอ</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">สรุปตามอำเภอ</h2>
                     <div className="grid gap-2 md:hidden">
                         {data.districtSummary?.map((district, index) => (
                             <div key={index} className="rounded-2xl border border-slate-200 bg-white p-3">
@@ -311,19 +311,19 @@ export default function DiseaseDailyRiskPage() {
                         <table className="min-w-full divide-y divide-slate-200">
                             <thead className="bg-slate-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                         อำเภอ
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-500">
                                         ประเภทโรค
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-500">
                                         หน่วยบริการ
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-500">
                                         ผู้ป่วย
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-500">
                                         รายงาน
                                     </th>
                                 </tr>
@@ -355,7 +355,7 @@ export default function DiseaseDailyRiskPage() {
 
                 {/* Detailed List */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-4 md:p-6">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4">รายละเอียดรายงาน</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">รายละเอียดรายงาน</h2>
                     <div className="space-y-3">
                         {paginatedDetails.map((item, index) => (
                             <div

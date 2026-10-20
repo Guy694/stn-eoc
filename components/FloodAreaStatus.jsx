@@ -230,9 +230,9 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
     if (!hasActiveSession) {
         return (
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+            <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
                 <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
                 <p className="text-slate-600">
                     ไม่พบ เหตุการณ์ EOC อุทกภัยน้ำท่วมที่กำลังดำเนินการอยู่ในขณะนี้
                 </p>
@@ -242,7 +242,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
     if (error) {
         return (
-            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
                 <h3 className="text-lg font-bold text-red-800 mb-2">เกิดข้อผิดพลาด</h3>
                 <p className="text-red-600">{error}</p>
             </div>
@@ -568,7 +568,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             {activeSession && dates.length > 0 && (
                 <div className="border border-slate-200 bg-white rounded-2xl p-6">
                     <div className="mb-4">
-                        <h3 className="text-lg font-bold text-slate-800 mb-2">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">
                             <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                         </h3>
                         <p className="text-sm text-slate-600">
@@ -725,7 +725,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
                         {/* Header */}
                         <div className="text-center mb-4">
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                            <h3 className="text-2xl font-semibold text-slate-900 mb-2">
                                 สถานการณ์อุทกภัยน้ำท่วม จังหวัดสตูล (ระดับตำบล)
                             </h3>
                             <p className="text-lg text-slate-600">

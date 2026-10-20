@@ -52,7 +52,7 @@ export default function UserEOCDashboard() {
 
     if (assignments.length === 0) {
         return (
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+            <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
                 <AppIcon icon="alert" className="mx-auto mb-3 h-10 w-10 text-yellow-700" />
                 <h3 className="text-lg font-semibold text-yellow-800 mb-2">
                     ยังไม่มีการมอบหมายงาน
@@ -88,7 +88,7 @@ export default function UserEOCDashboard() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-slate-800">
+                <h2 className="text-lg font-semibold text-slate-900">
                     <span className="inline-flex items-center gap-2">
                         <AppIcon icon="mapPin" className="h-6 w-6 text-blue-600" />
                         EOC ที่คุณรับผิดชอบ
@@ -108,7 +108,7 @@ export default function UserEOCDashboard() {
             {sessions.map((session) => (
                 <div
                     key={`${session.session_id}-${session.eoc_type}`}
-                    className="bg-white rounded-lg shadow-md border border-blue-500 overflow-hidden"
+                    className="rounded-2xl border border-slate-200 bg-white border border-blue-500 overflow-hidden"
                 >
                     {/* Session Header */}
                     <div className="bg-[#0b4c86] text-white p-4">

@@ -374,22 +374,22 @@ function AnnouncementsContent() {
         <EOCLayout>
             <div className="container mx-auto px-4">
                 {/* Header */}
-                <div className="mb-6 flex justify-between items-center">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6 flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl"><AppIcon icon="megaphone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="megaphone" className="h-5 w-5" /></span>
                             จัดการประชาสัมพันธ์/แบนเนอร์
                             {filters.eoc_type && (
-                                <span className="text-xl text-slate-600">
+                                <span className="text-xl text-blue-100">
                                     ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label})
                                 </span>
                             )}
                         </h1>
-                        <p className="text-slate-600">จัดการแบนเนอร์และประกาศข่าวสารต่างๆ</p>
+                        <p className="text-blue-100">จัดการแบนเนอร์และประกาศข่าวสารต่างๆ</p>
                     </div>
                     <button
                         onClick={openCreateModal}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        className="px-6 py-3 bg-white text-[#0b4c86] rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
                     >
                         <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                         เพิ่มแบนเนอร์ใหม่
@@ -520,34 +520,34 @@ function AnnouncementsContent() {
                             <table className="min-w-full divide-y divide-slate-200">
                                 <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             รูปภาพ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             หัวข้อ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             ประเภท EOC
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             เหตุการณ์ EOC
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             สถานะ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             แสดง Popup
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             ลำดับ
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             ผู้ลงข่าว
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             วันที่สร้าง
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500">
                                             การดำเนินการ
                                         </th>
                                     </tr>
@@ -707,10 +707,10 @@ function AnnouncementsContent() {
                 {/* Create/Edit Modal */}
                 {showModal && (
                     <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-4">
-                                    <h2 className="text-2xl font-bold text-slate-800">
+                                    <h2 className="text-lg font-semibold text-slate-900">
                                         {editMode ? 'แก้ไขแบนเนอร์' : 'เพิ่มแบนเนอร์ใหม่'}
                                     </h2>
                                     <button
@@ -908,7 +908,7 @@ function AnnouncementsContent() {
                                                 setShowModal(false);
                                                 resetForm();
                                             }}
-                                            className="px-4 py-2 bg-red-500 rounded-lg text-white hover:bg-red-600"
+                                            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
                                         >
                                             ยกเลิก
                                         </button>

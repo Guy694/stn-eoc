@@ -11,7 +11,7 @@ const PolygonMap = dynamic(() => import("@/components/PolygonMap"), {
         <div className="flex items-center justify-center h-full">
             <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">กำลังโหลดแผนที่...</p>
+                <p className="text-slate-600">กำลังโหลดแผนที่...</p>
             </div>
         </div>
     ),
@@ -58,10 +58,10 @@ export default function VillageMapPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="flex items-center justify-center min-h-screen bg-slate-50">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 text-lg">กำลังโหลดข้อมูลหมู่บ้าน...</p>
+                    <p className="text-slate-600 text-lg">กำลังโหลดข้อมูลหมู่บ้าน...</p>
                 </div>
             </div>
         );
@@ -70,12 +70,12 @@ export default function VillageMapPage() {
     return (
         <EOCLayout>
             {/* Header */}
-            <div className="bg-white shadow-sm border-b -mx-6 -mt-6 mb-4">
-                <div className="px-4 sm:px-6 lg:px-8 py-6">
-                    <h1 className="text-3xl font-bold text-gray-900">
+            <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-4">
+                <div>
+                    <h1 className="text-xl font-semibold text-white sm:text-2xl">
                         แผนที่หมู่บ้านจังหวัดสตูล
                     </h1>
-                    <p className="mt-1 text-gray-600">
+                    <p className="mt-1 text-sm text-blue-100">
                         ข้อมูลพื้นที่และประชากรแบบ Polygon
                     </p>
                 </div>
@@ -118,7 +118,7 @@ export default function VillageMapPage() {
                 <div className="px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <label className="font-semibold text-gray-700">
+                            <label className="font-semibold text-slate-700">
                                 แสดงสีตาม:
                             </label>
                             <div className="flex gap-2">
@@ -126,7 +126,7 @@ export default function VillageMapPage() {
                                     onClick={() => setColorMode('district')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${colorMode === 'district'
                                         ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                                         }`}
                                 >
                                     อำเภอ
@@ -135,14 +135,14 @@ export default function VillageMapPage() {
                                     onClick={() => setColorMode('population')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${colorMode === 'population'
                                         ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                                         }`}
                                 >
                                     จำนวนครัวเรือน
                                 </button>
                             </div>
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-slate-600">
                             คลิกที่พื้นที่เพื่อดูรายละเอียด
                         </div>
                     </div>

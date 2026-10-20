@@ -446,27 +446,27 @@ export default function FloodOperationsTeamPage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-[1500px] space-y-5">
-                <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
                         <div>
-                            <div className="flex items-center gap-2 text-sm font-black text-[#0b4c86]">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-blue-100">
                                 <Network className="h-4 w-4" />
                                 EOC อุทกภัยน้ำท่วม
                             </div>
-                            <h1 className="mt-2 text-2xl font-black text-slate-900 md:text-3xl">ทีมปฏิบัติการ</h1>
-                            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                            <h1 className="mt-2 text-xl font-semibold text-white sm:text-2xl">ทีมปฏิบัติการ</h1>
+                            <p className="mt-1 max-w-3xl text-sm leading-6 text-blue-100">
                                 ผังบทบาทของทีมปฏิบัติการในแต่ละเหตุการณ์ EOC โดยให้ผู้บัญชาการเหตุการณ์และรองผู้บัญชาการเหตุการณ์เป็นหัวหน้าของโครงสร้าง ไม่อ้างอิงผู้ดูแลระบบ
                             </p>
                         </div>
 
                         <div className="flex flex-col gap-2">
                             <label className="block">
-                                <span className="mb-1 block text-xs font-bold text-slate-500">เลือกเหตุการณ์ EOC</span>
+                                <span className="mb-1 block text-xs font-bold text-blue-100">เลือกเหตุการณ์ EOC</span>
                                 <select
                                     value={selectedSessionId}
                                     onChange={(event) => setSelectedSessionId(event.target.value)}
                                     disabled={loadingSessions || sessions.length === 0}
-                                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-[#0b4c86] disabled:bg-slate-100"
+                                    className="h-11 w-full rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-bold text-blue-100 outline-none focus:border-white disabled:bg-white/10 text-white [color-scheme:dark]"
                                 >
                                     {sessions.length === 0 && <option value="">ไม่มีเหตุการณ์</option>}
                                     {sessions.map((session) => (
@@ -479,7 +479,7 @@ export default function FloodOperationsTeamPage() {
                             <button
                                 type="button"
                                 onClick={refreshAll}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#c9dcee] bg-[#edf5fc] px-4 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]"
+                                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#c9dcee] bg-white/15 px-4 text-sm font-bold text-blue-100 hover:bg-white/15"
                             >
                                 <RefreshCw className="h-4 w-4" />
                                 รีเฟรชข้อมูล

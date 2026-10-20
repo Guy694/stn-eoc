@@ -101,8 +101,8 @@ export default function EOCOverview() {
         return (
             <EOCLayout>
                 <div className="mx-auto max-w-7xl">
-                    <h1 className="mb-6 text-2xl font-black text-slate-900"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ภาพรวม EOC</h1>
-                    <div className="bg-yellow-50 border border-yellow-400 p-6 rounded-lg">
+                    <h1 className="mb-6 flex items-center gap-2.5 font-[family-name:var(--font-kanit)] text-2xl font-semibold text-slate-900"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="barChart" className="h-5 w-5" /></span>ภาพรวม EOC</h1>
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
                         <div className="flex items-center">
                             <div className="text-4xl mr-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
                             <div>

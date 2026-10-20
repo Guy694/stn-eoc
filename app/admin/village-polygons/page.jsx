@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import AppIcon from "@/components/icons/AppIcon";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 
 export default function VillagePolygonsPage() {
     const [polygons, setPolygons] = useState([]);
@@ -145,35 +146,20 @@ export default function VillagePolygonsPage() {
         <EOCLayout>
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-slate-800 mb-2">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
+                    <h1 className="text-3xl font-bold text-white mb-2">
                         <AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการข้อมูลหมู่บ้าน
                     </h1>
-                    <p className="text-slate-600">ระบบจัดการข้อมูลขอบเขตพื้นที่และพิกัดหมู่บ้าน</p>
+                    <p className="text-blue-100">ระบบจัดการข้อมูลขอบเขตพื้นที่และพิกัดหมู่บ้าน</p>
                 </div>
 
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white rounded-2xl p-4 border border-blue-500">
-                        <div className="text-sm text-slate-600 mb-1">จำนวนหมู่บ้านทั้งหมด</div>
-                        <div className="text-3xl font-bold text-slate-800">
-                            {stats.total || 0}
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-green-500">
-                        <div className="text-sm text-slate-600 mb-1">จำนวนอำเภอ</div>
-                        <div className="text-3xl font-bold text-slate-800">
-                            {stats.districts || 0}
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 border border-yellow-500">
-                        <div className="text-sm text-slate-600 mb-1">จำนวนตำบล</div>
-                        <div className="text-3xl font-bold text-slate-800">
-                            {stats.tambons || 0}
-                        </div>
-                    </div>
-                </div>
+                <MetricGrid className="mb-6">
+                    <MetricCard icon="home" label="จำนวนหมู่บ้านทั้งหมด" value={stats.total || 0} unit="แปลง" tone="blue" />
+                    <MetricCard icon="map" label="จำนวนอำเภอ" value={stats.districts || 0} tone="green" />
+                    <MetricCard icon="mapPin" label="จำนวนตำบล" value={stats.tambons || 0} tone="amber" />
+                </MetricGrid>
 
                 {/* Search and Filter */}
                 <div className="border border-slate-200 bg-white p-4 rounded-2xl mb-6 text-slate-800">
@@ -351,7 +337,7 @@ export default function VillagePolygonsPage() {
             {/* Modal */}
             {showModal && (
                 <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                    <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-slate-700">
                             {editingPolygon ? "แก้ไขข้อมูลหมู่บ้าน" : "เพิ่มข้อมูลหมู่บ้านใหม่"}
                         </h2>
@@ -439,7 +425,7 @@ export default function VillagePolygonsPage() {
                                         setShowModal(false);
                                         resetForm();
                                     }}
-                                    className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
+                                    className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
                                 >
                                     <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
                                 </button>

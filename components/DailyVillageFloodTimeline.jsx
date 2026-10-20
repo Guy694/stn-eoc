@@ -346,7 +346,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         return (
             <div className="bg-[#edf5fc] border-2 border-[#c9dcee] rounded-lg p-6 text-center">
                 <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
                 <p className="text-slate-600">
                     เลือกปีและ เหตุการณ์ EOC จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
                 </p>
@@ -360,7 +360,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     return (
         <div className="border border-slate-200 bg-white rounded-2xl p-6">
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                <h2 className="text-lg font-semibold text-slate-900 mb-2">
                     <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
                 </h2>
                 <p className="text-slate-600">
@@ -468,7 +468,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
             <div ref={mapRef} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
                 {/* Header */}
                 <div className="text-center mb-4">
-                    <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                    <h3 className="text-2xl font-semibold text-slate-900 mb-2">
                         สถานการณ์อุทกภัยน้ำท่วม จังหวัดสตูล (ระดับหมู่บ้าน)
                     </h3>
                     <p className="text-lg text-slate-600">

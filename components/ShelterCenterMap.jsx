@@ -156,7 +156,7 @@ export default function ShelterCenterMap({
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
                 <div className="flex items-center justify-center h-96">
                     <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
                 </div>
@@ -165,10 +165,10 @@ export default function ShelterCenterMap({
     }
 
     return (
-        <div className={`text-gray-800 overflow-hidden ${embedded ? 'bg-transparent' : 'bg-white rounded-lg shadow-md'}`}>
+        <div className={`text-slate-800 overflow-hidden ${embedded ? 'bg-transparent' : 'bg-white rounded-lg shadow-md'}`}>
             {!embedded && (
                 <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
-                    <h3 className="text-2xl font-bold text-gray-800"><AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์พักพิงชั่วคราว</h3>
+                    <h3 className="text-2xl font-bold text-slate-800"><AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์พักพิงชั่วคราว</h3>
                     <p className="text-lg mt-1">
                         แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
                     </p>
@@ -222,14 +222,14 @@ export default function ShelterCenterMap({
                     <div className="mb-4 bg-white p-3 rounded-lg shadow">
                         <label className="text-sm font-medium block mb-2">ขอบเขตอำเภอ:</label>
                         <div className="flex items-center gap-2 text-xs">
-                            <div className="h-1 w-8 rounded bg-gray-900"></div>
+                            <div className="h-1 w-8 rounded bg-slate-900"></div>
                             <span>เส้นขอบเขตอำเภอสีดำ</span>
                         </div>
                     </div>
                 )}
 
                 {/* Map */}
-                <div className={`${heightClass} rounded-lg overflow-hidden border border-gray-200`}>
+                <div className={`${heightClass} rounded-lg overflow-hidden border border-slate-200`}>
                     <MapContainer center={[6.6238, 100.0673]} zoom={10} style={{ height: '100%', width: '100%' }}>
                         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -289,7 +289,7 @@ export default function ShelterCenterMap({
                 </div>
 
                 {shelters.length === 0 && (
-                    <div className="mt-4 text-center text-gray-500 p-4 bg-white rounded-lg">
+                    <div className="mt-4 text-center text-slate-500 p-4 bg-white rounded-lg">
                         <p>ไม่พบศูนย์พักพิงที่เปิดใช้งานในเงื่อนไขนี้</p>
                     </div>
                 )}

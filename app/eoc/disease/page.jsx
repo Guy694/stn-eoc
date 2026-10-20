@@ -6,6 +6,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import DiseaseOutbreakDashboard from "@/components/DiseaseOutbreakDashboard";
 import ReportingCompleteness from "@/components/eoc/ReportingCompleteness";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
+import { PageHero } from "@/components/common/ThemePanels";
 
 function formatDateTime(value) {
     if (!value) return "-";
@@ -55,19 +56,18 @@ export default function DiseasePage() {
     return (
         <EOCLayout>
             <div className="mx-auto max-w-7xl">
-                <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-900">ภาพรวมสถานการณ์</h1>
-                        <p className="mt-1 text-sm text-slate-600">
-                            ติดตามข้อมูลผู้ป่วย รายงานจากหน่วยบริการ และชนิดโรคของเหตุการณ์ EOC
-                        </p>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                        <Link href="/eoc/disease/daily-risk" className="rounded-lg border border-[#c9dcee] bg-white px-4 py-2 text-center text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]">
+                <PageHero
+                    className="mb-6"
+                    icon="biohazard"
+                    eyebrow="EOC โรคระบาด"
+                    title="ภาพรวมสถานการณ์"
+                    subtitle="ติดตามข้อมูลผู้ป่วย รายงานจากหน่วยบริการ และชนิดโรคของเหตุการณ์ EOC"
+                    actions={(
+                        <Link href="/eoc/disease/daily-risk" className="inline-flex min-h-10 items-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#0b4c86] hover:bg-blue-50">
                             สรุปรายวัน
                         </Link>
-                    </div>
-                </div>
+                    )}
+                />
 
                 <ReportingCompleteness eocType="disease" />
 

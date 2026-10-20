@@ -103,14 +103,14 @@ export default function StaffEocOverviewPage() {
     return (
         <EOCLayout>
             <section className=" mx-auto max-w-7xl space-y-5">
-                <header className="rounded-lg border-b-4 border-cyan-600 bg-white px-5 py-6 shadow-sm">
-                    <p className="text-sm font-bold text-cyan-700">ศูนย์งานเจ้าหน้าที่</p>
+                <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
+                    <p className="text-sm font-bold text-[#0b4c86]">ศูนย์งานเจ้าหน้าที่</p>
                     <div className=" mt-1 flex flex-wrap items-end justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900">ศูนย์ปฏิบัติงานเจ้าหน้าที่ EOC</h1>
-                            <p className="mt-1 text-sm text-slate-600">เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมายเพื่อดูแดชบอร์ดและรายงานผล</p>
+                            <h1 className="text-xl font-semibold text-white sm:text-2xl">ศูนย์ปฏิบัติงานเจ้าหน้าที่ EOC</h1>
+                            <p className="mt-1 text-sm text-blue-100">เลือก EOC และกลุ่มภารกิจที่ได้รับมอบหมายเพื่อดูแดชบอร์ดและรายงานผล</p>
                         </div>
-                        <button type="button" onClick={loadSessions} className="inline-flex h-10 items-center gap-2 border border-slate-300 px-3 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                        <button type="button" onClick={loadSessions} className="inline-flex h-10 items-center gap-2 border border-white/25 px-3 text-sm font-bold text-blue-100 hover:bg-white/10">
                             <RefreshCw className="h-4 w-4" /> รีเฟรช
                         </button>
                     </div>
@@ -118,12 +118,12 @@ export default function StaffEocOverviewPage() {
 
                 <div className="border border-slate-200 rounded-2xl grid gap-3 bg-white p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                     <label className="grid gap-1 text-sm font-bold text-slate-700">โมดูล EOC
-                        <select value={moduleType} onChange={(event) => setModuleType(event.target.value)} className="h-11 border border-slate-300 bg-white px-3 font-medium">
+                        <select value={moduleType} onChange={(event) => setModuleType(event.target.value)} className="h-11 border border-slate-300 bg-white px-3 font-medium rounded-lg">
                             {MODULES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
                         </select>
                     </label>
                     <label className="rounded-lg grid gap-1 text-sm font-bold text-slate-700">เหตุการณ์ EOC
-                        <select value={selectedSessionId} onChange={(event) => setSelectedSessionId(event.target.value)} disabled={!sessions.length} className="h-11 border border-slate-300 bg-white px-3 font-medium disabled:bg-slate-100">
+                        <select value={selectedSessionId} onChange={(event) => setSelectedSessionId(event.target.value)} disabled={!sessions.length} className="h-11 border border-slate-300 bg-white px-3 font-medium disabled:bg-slate-100 rounded-lg">
                             {!sessions.length && <option value="">ไม่พบเหตุการณ์</option>}
                             {sessions.map((item) => <option key={item.id} value={item.id}>#{item.session_number || item.id} · {item.status === "active" ? "เปิดอยู่" : "ปิดแล้ว"} · {formatDate(item.opened_at)}</option>)}
                         </select>
@@ -140,11 +140,11 @@ export default function StaffEocOverviewPage() {
                 </div>}
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div><h2 className="text-lg font-black text-slate-900">กลุ่มภารกิจที่เปิดใช้งาน</h2><p className="text-sm text-slate-600">แสดงตามสิทธิ์และการเป็นสมาชิกในเหตุการณ์ EOC นี้</p></div>
-                    <label className="relative block"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ค้นหากลุ่มภารกิจ" className="h-10 border border-slate-300 pl-9 pr-3 text-sm" /></label>
+                    <div><h2 className="text-lg font-semibold text-slate-900">กลุ่มภารกิจที่เปิดใช้งาน</h2><p className="text-sm text-slate-600">แสดงตามสิทธิ์และการเป็นสมาชิกในเหตุการณ์ EOC นี้</p></div>
+                    <label className="relative block"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ค้นหากลุ่มภารกิจ" className="h-10 border border-slate-300 pl-9 pr-3 text-sm rounded-lg" /></label>
                 </div>
 
-                {loading ? <div className="bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : !session ? <div className="bg-white p-10 text-center text-sm text-slate-500">เลือกเหตุการณ์ EOC เพื่อเริ่มทำงาน</div> : !visibleTeams.length ? <div className="bg-white p-10 text-center text-sm text-slate-500">ยังไม่มีกลุ่มภารกิจที่คุณเข้าถึงได้ในเหตุการณ์นี้</div> : <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {loading ? <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : !session ? <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">เลือกเหตุการณ์ EOC เพื่อเริ่มทำงาน</div> : !visibleTeams.length ? <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">ยังไม่มีกลุ่มภารกิจที่คุณเข้าถึงได้ในเหตุการณ์นี้</div> : <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {visibleTeams.map((team) => <Link key={team.session_team_id} href={`/eoc/staff/${session.id}/teams/${team.session_team_id}`} className={`group border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${COLOR_STYLES[team.color] || "border-slate-200 bg-white text-slate-800"}`}>
                         <div className="flex items-start justify-between gap-3"><span className="text-2xl">{team.icon || "ทีม"}</span><ChevronRight className="h-5 w-5 transition group-hover:translate-x-1" /></div>
                         <p className="mt-4 text-xs font-black">{team.team_code}</p><h3 className="mt-1 text-base font-black">{team.team_name_th}</h3>
@@ -158,5 +158,5 @@ export default function StaffEocOverviewPage() {
 }
 
 function Metric({ label, value, icon, text = false }) {
-    return <div className="flex items-center gap-3 bg-white p-4 shadow-sm"><span className="grid h-10 w-10 place-items-center bg-cyan-50 text-cyan-700">{icon}</span><div><p className="text-xs font-bold text-slate-500">{label}</p><p className={text ? "mt-1 text-base font-black text-slate-900" : "mt-1 text-2xl font-black text-slate-900"}>{value}</p></div></div>;
+    return <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4"><span className="grid h-10 w-10 place-items-center bg-cyan-50 text-[#0b4c86]">{icon}</span><div><p className="text-xs font-bold text-slate-500">{label}</p><p className={text ? "mt-1 text-base font-black text-slate-900" : "mt-1 text-2xl font-black text-slate-900"}>{value}</p></div></div>;
 }

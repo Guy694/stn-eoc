@@ -17,6 +17,7 @@ import {
 import { Bar, Pie } from 'react-chartjs-2';
 import AppIcon from "@/components/icons/AppIcon";
 import FacilitySelect from "@/components/common/FacilitySelect";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 
 ChartJS.register(
     CategoryScale,
@@ -208,42 +209,27 @@ export default function ITResourcesPage() {
         <EOCLayout>
             <div className="p-6">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-2">
                         <AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการทรัพยากร IT Support
                     </h1>
-                    <p className="text-slate-600 mt-1">ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ</p>
+                    <p className="text-blue-100 mt-1">ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ</p>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                    <div className="border border-slate-200 bg-white rounded-2xl p-4 text-center">
-                        <div className="text-3xl font-bold text-slate-800">{stats.total}</div>
-                        <div className="text-sm text-slate-600">ทั้งหมด</div>
-                    </div>
-                    <div className="bg-green-50 rounded-lg shadow p-4 text-center">
-                        <div className="text-3xl font-bold text-green-600">{stats.online}</div>
-                        <div className="text-sm text-green-700"><AppIcon icon="statusGreen" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ออนไลน์</div>
-                    </div>
-                    <div className="bg-red-50 rounded-lg shadow p-4 text-center">
-                        <div className="text-3xl font-bold text-red-600">{stats.offline}</div>
-                        <div className="text-sm text-red-700"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ออฟไลน์</div>
-                    </div>
-                    <div className="bg-yellow-50 rounded-lg shadow p-4 text-center">
-                        <div className="text-3xl font-bold text-yellow-600">{stats.maintenance}</div>
-                        <div className="text-sm text-yellow-700"><AppIcon icon="statusYellow" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ซ่อมบำรุง</div>
-                    </div>
-                    <div className="bg-slate-50 rounded-lg shadow p-4 text-center">
-                        <div className="text-3xl font-bold text-slate-600">{stats.unknown}</div>
-                        <div className="text-sm text-slate-700"><AppIcon icon="statusGray" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่ทราบ</div>
-                    </div>
-                </div>
+                <MetricGrid className="mb-6">
+                    <MetricCard icon="monitor" label="ทั้งหมด" value={stats.total} tone="blue" />
+                    <MetricCard icon="statusGreen" label="ออนไลน์" value={stats.online} tone="green" />
+                    <MetricCard icon="statusRed" label="ออฟไลน์" value={stats.offline} tone={stats.offline ? "red" : "muted"} />
+                    <MetricCard icon="statusYellow" label="ซ่อมบำรุง" value={stats.maintenance} tone={stats.maintenance ? "amber" : "muted"} />
+                    <MetricCard icon="statusGray" label="ไม่ทราบสถานะ" value={stats.unknown} tone="slate" />
+                </MetricGrid>
 
                 {/* Charts Section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {/* Status Pie Chart */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-4">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะทั้งหมด</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะทั้งหมด</h3>
                         <div className="h-64">
                             <Pie
                                 data={{
@@ -283,7 +269,7 @@ export default function ITResourcesPage() {
 
                     {/* ISP Providers Bar Chart */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-4">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการอินเทอร์เน็ต (ISP)</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการอินเทอร์เน็ต (ISP)</h3>
                         <div className="h-64">
                             {stats.byIsp && stats.byIsp.length > 0 ? (
                                 <Bar
@@ -327,7 +313,7 @@ export default function ITResourcesPage() {
 
                     {/* Resource Types Bar Chart */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-4">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4"><AppIcon icon="package" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แยกตามประเภททรัพยากร</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4"><AppIcon icon="package" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แยกตามประเภททรัพยากร</h3>
                         <div className="h-64">
                             {stats.byType && stats.byType.length > 0 ? (
                                 <Bar
@@ -518,9 +504,9 @@ export default function ITResourcesPage() {
                 {/* Modal */}
                 {showModal && (
                     <AppDialogFrame open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) resetForm(); }}>
-                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="rounded-2xl border border-slate-200 bg-white-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-xl font-bold text-slate-800 mb-4">
+                                <h2 className="text-lg font-semibold text-slate-900 mb-4">
                                     {editingResource ? "แก้ไขทรัพยากร IT" : "เพิ่มทรัพยากร IT"}
                                 </h2>
 

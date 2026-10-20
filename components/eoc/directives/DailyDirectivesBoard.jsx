@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, CalendarDays, Eye, PencilLine, Printer, RefreshCw, Save } from "lucide-react";
 import { Button, useNotice } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
+import { showConfirm } from "@/lib/sweetAlert";
 import DirectiveListEditor, { newItem } from "@/components/eoc/directives/DirectiveListEditor";
 
 const API = "/stn-eoc/api/eoc/daily-directives";
@@ -95,8 +96,8 @@ export default function DailyDirectivesBoard({ sessionId }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [mode, canEdit, dirty, busy, save]);
 
-  const changeDate = (next) => {
-    if (dirty && !window.confirm("มีข้อความที่ยังไม่ได้บันทึก ต้องการเปลี่ยนวันโดยไม่บันทึกหรือไม่?")) return;
+  const changeDate = async (next) => {
+    if (dirty && !(await showConfirm("ยังไม่ได้บันทึก", "มีข้อความที่ยังไม่ได้บันทึก ต้องการเปลี่ยนวันโดยไม่บันทึกหรือไม่?", "เปลี่ยนวัน", "อยู่ต่อ"))) return;
     setDate(next || todayKey());
   };
 

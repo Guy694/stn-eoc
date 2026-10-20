@@ -623,10 +623,10 @@ export default function PublicIncidentMap({
 
     if (loading) {
         return (
-            <div className={`${chrome === 'full' ? 'h-full bg-slate-950/90' : 'min-h-[420px] rounded-xl border border-gray-200 bg-white'} flex items-center justify-center`}>
+            <div className={`${chrome === 'full' ? 'h-full bg-slate-950/90' : 'min-h-[420px] rounded-xl border border-slate-200 bg-white'} flex items-center justify-center`}>
                 <div className="text-center">
                     <AppIcon icon="loader" className="mx-auto h-12 w-12 animate-spin text-blue-500" />
-                    <p className="mt-3 text-sm font-medium text-gray-600">กำลังโหลดแผนที่</p>
+                    <p className="mt-3 text-sm font-medium text-slate-600">กำลังโหลดแผนที่</p>
                 </div>
             </div>
         );
@@ -650,22 +650,22 @@ export default function PublicIncidentMap({
     };
 
     return (
-        <div ref={mapContainerRef} className={`public-incident-map text-gray-800 overflow-visible ${chrome === 'full' ? 'h-full w-full seics-map-surface' : ''}`}>
+        <div ref={mapContainerRef} className={`public-incident-map text-slate-800 overflow-visible ${chrome === 'full' ? 'h-full w-full seics-map-surface' : ''}`}>
             {chrome !== 'full' && (
-            <div className="relative rounded-t-xl border border-b-0 border-gray-200 bg-white p-4 md:p-5">
+            <div className="relative rounded-t-xl border border-b-0 border-slate-200 bg-white p-4 md:p-5">
                 <div className="pr-12">
                     <p className="text-xs font-bold uppercase tracking-wide text-blue-700">รายงานจากประชาชนที่ตรวจสอบแล้ว</p>
-                    <h3 className="flex items-center gap-2 text-xl md:text-2xl font-bold text-gray-900">
+                    <h3 className="flex items-center gap-2 text-xl md:text-2xl font-bold text-slate-900">
                         <AppIcon icon="mapPin" className="h-6 w-6 text-blue-700" />
                         รายงานจากประชาชนที่ยืนยันแล้ว
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงานทั้งหมด {filteredIncidents.length} จุด</p>
+                    <p className="text-sm text-slate-600 mt-1">จุดปักหมุดแสดงตำแหน่งที่ประชาชนรายงานทั้งหมด {filteredIncidents.length} จุด</p>
                 </div>
 
                 {/* Fullscreen Button */}
                 <button
                     onClick={toggleFullscreen}
-                    className="absolute top-4 right-4 bg-white hover:bg-gray-100 text-gray-800 p-2 rounded-lg border border-gray-200 shadow-sm transition-colors"
+                    className="absolute top-4 right-4 bg-white hover:bg-slate-100 text-slate-800 p-2 rounded-lg border border-slate-200 shadow-sm transition-colors"
                     title={isFullscreen ? "ออกจากโหมดเต็มจอ" : "เปิดแบบเต็มจอ"}
                     aria-label={isFullscreen ? "ออกจากโหมดเต็มจอ" : "เปิดแผนที่แบบเต็มจอ"}
                 >
@@ -678,24 +678,24 @@ export default function PublicIncidentMap({
             </div>
             )}
 
-            <div className={chrome === 'full' ? 'h-full w-full' : 'rounded-b-xl border border-gray-200 bg-white p-3 md:p-4'}>
+            <div className={chrome === 'full' ? 'h-full w-full' : 'rounded-b-xl border border-slate-200 bg-white p-3 md:p-4'}>
                 {chrome !== 'full' && (
                 <details className="mb-3" open>
-                    <summary className="cursor-pointer select-none py-2 text-sm font-bold text-gray-800">
+                    <summary className="cursor-pointer select-none py-2 text-sm font-bold text-slate-800">
                         <span className="inline-flex items-center gap-2">
                             <AppIcon icon="map" className="h-4 w-4" />
                             ตัวกรองชั้นข้อมูลและคำอธิบายสัญลักษณ์
                         </span>
                     </summary>
-                    <div className="grid gap-3 border-t border-gray-200 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
+                    <div className="grid gap-3 border-t border-slate-200 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
                         <div>
-                            <p className="text-sm font-semibold text-gray-800 mb-2">แสดงชั้นข้อมูลพื้นที่</p>
+                            <p className="text-sm font-semibold text-slate-800 mb-2">แสดงชั้นข้อมูลพื้นที่</p>
                             <label className="mb-3 block max-w-xs">
-                                <span className="mb-1 block text-xs font-bold text-gray-500">แผนที่พื้นหลัง</span>
+                                <span className="mb-1 block text-xs font-bold text-slate-500">แผนที่พื้นหลัง</span>
                                 <select
                                     value={activeBaseMap}
                                     onChange={(event) => setBaseMap(event.target.value)}
-                                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-blue-400"
+                                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-blue-400"
                                 >
                                     {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
                                         <option key={key} value={key}>{layer.label}</option>
@@ -723,8 +723,8 @@ export default function PublicIncidentMap({
                                     <input type="checkbox" checked={showTambonLayer} onChange={(e) => setLayer('tambon', e.target.checked)} className="w-4 h-4 accent-emerald-600" />
                                     <span className="inline-flex items-center gap-1.5"><AppIcon icon="mapPin" className="h-4 w-4" /> ตำบล</span>
                                 </label>
-                                <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 cursor-pointer">
-                                    <input type="checkbox" checked={showVillageLayer} onChange={(e) => setLayer('village', e.target.checked)} className="w-4 h-4 accent-gray-700" />
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 cursor-pointer">
+                                    <input type="checkbox" checked={showVillageLayer} onChange={(e) => setLayer('village', e.target.checked)} className="w-4 h-4 accent-slate-700" />
                                     <span className="inline-flex items-center gap-1.5"><AppIcon icon="home" className="h-4 w-4" /> ขอบเขตหมู่บ้าน</span>
                                 </label>
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900 cursor-pointer">
@@ -754,19 +754,19 @@ export default function PublicIncidentMap({
                             </div>
                         </div>
 
-                        <div className="space-y-3 text-sm text-gray-700">
+                        <div className="space-y-3 text-sm text-slate-700">
                             {showDistrictLayer && (
                                 <div>
-                                    <p className="font-semibold text-gray-800 mb-2">ขอบเขตอำเภอ</p>
+                                    <p className="font-semibold text-slate-800 mb-2">ขอบเขตอำเภอ</p>
                                     <div className="inline-flex items-center gap-1.5 text-xs">
-                                        <span className="h-1 w-8 rounded bg-gray-900" aria-hidden="true"></span>
+                                        <span className="h-1 w-8 rounded bg-slate-900" aria-hidden="true"></span>
                                         <span>เส้นขอบเขตอำเภอสีดำ</span>
                                     </div>
                                 </div>
                             )}
                             {showFloodAreaLayer && (
                                 <div>
-                                    <p className="font-semibold text-gray-800 mb-2">ระดับน้ำเทียบกับผู้ใหญ่ที่ยืนในน้ำ</p>
+                                    <p className="font-semibold text-slate-800 mb-2">ระดับน้ำเทียบกับผู้ใหญ่ที่ยืนในน้ำ</p>
                                     <div className="flex flex-wrap gap-2 text-xs">
                                         {FLOOD_LEVEL_LEGEND.map((level) => (
                                             <div key={level.value} className="inline-flex items-center gap-1.5">
@@ -775,12 +775,12 @@ export default function PublicIncidentMap({
                                             </div>
                                         ))}
                                     </div>
-                                    <p className="mt-1 text-xs text-gray-500">พื้นที่ที่ไม่มีค่าความลึกใช้ระดับประเมินเดิม โดยระบุไว้ใน popup</p>
+                                    <p className="mt-1 text-xs text-slate-500">พื้นที่ที่ไม่มีค่าความลึกใช้ระดับประเมินเดิม โดยระบุไว้ใน popup</p>
                                 </div>
                             )}
                             {showDiseaseReportLayer && (
                                 <div>
-                                    <p className="font-semibold text-gray-800 mb-2">ระดับรายงานโรคระบาด</p>
+                                    <p className="font-semibold text-slate-800 mb-2">ระดับรายงานโรคระบาด</p>
                                     <div className="flex flex-wrap gap-2 text-xs">
                                         {['severe', 'moderate', 'mild'].map((level) => {
                                             const meta = getDiseaseSeverityMeta(level);
@@ -796,7 +796,7 @@ export default function PublicIncidentMap({
                             )}
                             {showWaterwayLayer && (
                                 <div>
-                                    <p className="font-semibold text-gray-800 mb-2">เส้นทางน้ำ</p>
+                                    <p className="font-semibold text-slate-800 mb-2">เส้นทางน้ำ</p>
                                     <div className="flex flex-wrap gap-2 text-xs">
                                         <div className="inline-flex items-center gap-1.5">
                                             <span className="h-1 w-8 rounded bg-sky-700" aria-hidden="true"></span>
@@ -810,13 +810,13 @@ export default function PublicIncidentMap({
                                 </div>
                             )}
                             <div>
-                                <p className="font-semibold text-gray-800 mb-2">ประเภทรายงาน</p>
+                                <p className="font-semibold text-slate-800 mb-2">ประเภทรายงาน</p>
                                 <div className="grid gap-1.5">
                                     <div className="flex items-center gap-2">
                                         <span className="h-3 w-3 rounded-full bg-red-500" aria-hidden="true"></span>
                                         <span className="inline-flex items-center gap-1.5"><AppIcon icon="siren" className="h-4 w-4" /> แจ้งความช่วยเหลือ</span>
                                     </div>
-                                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+                                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
                                         <span className="inline-flex items-center gap-1"><AppIcon icon="checkCircle" className="h-3.5 w-3.5 text-green-600" /> สัญจรได้</span>
                                         <span className="inline-flex items-center gap-1"><AppIcon icon="alert" className="h-3.5 w-3.5 text-yellow-600" /> สัญจรลำบาก</span>
                                         <span className="inline-flex items-center gap-1"><AppIcon icon="xCircle" className="h-3.5 w-3.5 text-red-600" /> สัญจรไม่ได้</span>
@@ -958,8 +958,8 @@ export default function PublicIncidentMap({
                                 <Marker key={`disease-report-${report.id}`} position={[lat, lon]} icon={createDiseaseReportIcon(report)}>
                                     <Popup maxWidth={260} autoPanPaddingTopLeft={popupPanPadding} autoPanPaddingBottomRight={[72, 90]}>
                                         <div className="p-2" style={{ fontFamily: 'var(--font-kanit)' }}>
-                                            <h4 className="font-bold text-gray-800">{report.disease_name || 'รายงานโรคระบาด'}</h4>
-                                            <p className="mt-1 text-sm text-gray-600">
+                                            <h4 className="font-bold text-slate-800">{report.disease_name || 'รายงานโรคระบาด'}</h4>
+                                            <p className="mt-1 text-sm text-slate-600">
                                                 {report.village_name
                                                     ? `หมู่ ${report.moo || '-'} ${report.village_name}`
                                                     : report.facility_name || (report.moo ? `หมู่ ${report.moo}` : 'พื้นที่รายงานโรค')}
@@ -1050,7 +1050,7 @@ export default function PublicIncidentMap({
                 </div>
 
                 {filteredIncidents.length === 0 && chrome !== 'full' && (
-                    <div className="mt-4 text-center text-gray-500 p-4 bg-white rounded-lg">
+                    <div className="mt-4 text-center text-slate-500 p-4 bg-white rounded-lg">
                         <p>ไม่มีรายงานที่ยืนยันแล้วในช่วงเวลานี้</p>
                     </div>
                 )}

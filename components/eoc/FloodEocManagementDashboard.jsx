@@ -92,11 +92,11 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
   return (
     <EOCLayout>
       <section className="mx-auto max-w-7xl space-y-4">
-        <header>
-          <p className="text-sm font-semibold text-[#0b4c86]">ภารกิจและข้อสั่งการ</p>
-          <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">{viewMeta.label}</h1>
+        <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 space-y-1">
+          <p className="text-sm font-semibold text-blue-100">ภารกิจและข้อสั่งการ</p>
+          <h1 className="text-xl font-semibold text-white sm:text-3xl sm:text-2xl">{viewMeta.label}</h1>
           {state.data?.session?.status === "closed" ? (
-            <p className="mt-2 rounded-lg border border-[#c9dcee] bg-[#edf5fc] px-3 py-2 text-sm text-[#083865]">
+            <p className="mt-2 rounded-lg border border-[#c9dcee] bg-white/15 px-3 py-2 text-sm text-white">
               เหตุการณ์นี้ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่ยังจัดทำ แก้ไข ส่ง และตรวจรายงานย้อนหลังได้
             </p>
           ) : null}

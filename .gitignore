@@ -70,3 +70,6 @@ next-env.d.ts
 
 # สำรองฐานข้อมูลจาก scripts/docker-migrate.sh (มีข้อมูลส่วนบุคคล ห้าม commit)
 db-backups/
+
+# ข้อมูลรายบุคคลที่นำเข้า (ชื่อผู้ป่วย) — ห้ามเข้า git/image
+/datatable/

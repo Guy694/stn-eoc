@@ -57,7 +57,7 @@ export function useFullscreenMap() {
     <button
       onClick={toggle}
       title={isFullscreen ? "ออกจากเต็มจอ (Esc)" : "ดูแบบเต็มจอ"}
-      className="absolute top-3 right-3 z-[9999] bg-white hover:bg-gray-100 border border-gray-300 shadow-md rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-700 flex items-center gap-1.5 transition"
+      className="absolute top-3 right-3 z-[9999] bg-white hover:bg-slate-100 border border-slate-300 shadow-md rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 flex items-center gap-1.5 transition"
     >
       <AppIcon icon={isFullscreen ? "x" : "fullscreen"} className="h-4 w-4" />
       {isFullscreen ? "ออกจากเต็มจอ" : "เต็มจอ"}
@@ -75,7 +75,7 @@ export default function FullscreenMapWrapper({ children, height = "500px", class
       ref={containerRef}
       className={isFullscreen
         ? `fixed inset-0 z-[99999] bg-black ${className}`
-        : `relative w-full rounded-xl overflow-hidden shadow-md border border-gray-200 ${className}`}
+        : `relative w-full rounded-xl overflow-hidden shadow-md border border-slate-200 ${className}`}
       style={{ height: isFullscreen ? "100vh" : height }}
     >
       {buttonEl}

@@ -206,20 +206,20 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
         <section className="rounded-lg bg-white p-6 shadow-lg">
             <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <h2 className="mb-2 flex items-center gap-2 text-2xl font-bold text-gray-800">
-                        <span className="text-3xl"><AppIcon icon="accessibility" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                    <h2 className="mb-2 flex items-center gap-2 text-2xl font-bold text-slate-800">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="accessibility" className="h-4 w-4" /></span>
                         แผนที่ข้อมูลกลุ่มเปราะบาง (ระดับหมู่บ้าน)
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-slate-600">
                         ครั้งที่ {session.session_number} • ระบายสีตาม{metricLabel} จาก{sourceLabel} • กดกล่องตัวเลขด้านล่างเพื่อเลือกประเภท
                     </p>
                 </div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                     แผนที่พื้นหลัง
                     <select
                         value={baseMap}
                         onChange={(event) => setBaseMap(event.target.value)}
-                        className="rounded border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-emerald-500"
+                        className="rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:border-emerald-500"
                     >
                         {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
                             <option key={key} value={key}>{layer.label}</option>
@@ -244,7 +244,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                     <div className="flex h-[520px] items-center justify-center">
                         <div className="text-center">
                             <div className="mx-auto mb-3 h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
-                            <p className="font-semibold text-gray-600">กำลังโหลดข้อมูลกลุ่มเปราะบาง...</p>
+                            <p className="font-semibold text-slate-600">กำลังโหลดข้อมูลกลุ่มเปราะบาง...</p>
                         </div>
                     </div>
                 ) : (
@@ -302,7 +302,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                     </div>
                 )}
 
-                <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-700">
+                <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-700">
                     <LegendItem color="#DC2626" label="มากที่สุด" />
                     <LegendItem color="#F97316" label="สูง" />
                     <LegendItem color="#FBBF24" label="ปานกลาง" />

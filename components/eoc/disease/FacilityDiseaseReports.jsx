@@ -434,13 +434,13 @@ export default function FacilityDiseaseReports() {
 
             <div className="container mx-auto px-4">
                 {/* Header */}
-                <div className="mb-6 flex justify-between items-center">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6 flex justify-between items-center">
                     <div>
-                        <h1 className="text-xl md:text-3xl font-bold text-slate-800 mb-2 flex items-center gap-3">
-                            <span className="text-4xl"><AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                        <h1 className="text-xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="biohazard" className="h-5 w-5" /></span>
                             สถานการณ์โรครายวัน
                         </h1>
-                        <p className="text-slate-600">บันทึกและติดตามสถานการณ์โรคจากหน่วยบริการ</p>
+                        <p className="text-blue-100">บันทึกและติดตามสถานการณ์โรคจากหน่วยบริการ</p>
                     </div>
                     <button
                         onClick={() => {
@@ -489,9 +489,9 @@ export default function FacilityDiseaseReports() {
                 </div>
 
                 {!selectedSession ? (
-                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-8 text-center">
+                    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-8 text-center">
                         <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
+                        <h3 className="text-xl font-semibold text-slate-900 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
                         <p className="text-slate-600">
                             เลือกเหตุการณ์ EOC ที่ต้องการดูรายงานโรค
                         </p>
@@ -532,7 +532,7 @@ export default function FacilityDiseaseReports() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             {/* กราฟแท่งตามอำเภอ */}
                             <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h3 className="text-xl font-bold text-slate-800 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์แยกตามอำเภอ (วันนี้)</h3>
+                                <h3 className="text-xl font-semibold text-slate-900 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์แยกตามอำเภอ (วันนี้)</h3>
                                 {summary.today.length > 0 ? (
                                     <Bar
                                         data={getDistrictChartData()}
@@ -605,7 +605,7 @@ export default function FacilityDiseaseReports() {
 
                             {/* กราฟวงกลมรายโรค */}
                             <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h3 className="text-xl font-bold text-slate-800 mb-4"><AppIcon icon="pieChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สัดส่วนผู้ป่วยรายโรค (สะสม)</h3>
+                                <h3 className="text-xl font-semibold text-slate-900 mb-4"><AppIcon icon="pieChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สัดส่วนผู้ป่วยรายโรค (สะสม)</h3>
                                 {summary.byDisease.length > 0 ? (
                                     <Pie
                                         data={getDiseaseChartData()}
@@ -630,7 +630,7 @@ export default function FacilityDiseaseReports() {
 
                         {/* ตารางสรุปรายโรคแบบ 7 อำเภอ */}
                         <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
-                            <h3 className="text-xl font-bold text-slate-800 mb-4"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางสรุปรายโรคตามอำเภอ</h3>
+                            <h3 className="text-xl font-semibold text-slate-900 mb-4"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางสรุปรายโรคตามอำเภอ</h3>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full border-collapse border border-slate-300 text-sm">
                                     <thead>
@@ -863,10 +863,10 @@ export default function FacilityDiseaseReports() {
                         {/* Modal */}
                         {showModal && (
                             <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                                <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                                <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                                     <div className="p-6">
                                         <div className="flex justify-between items-start mb-4">
-                                            <h2 className="text-2xl font-bold text-slate-800">
+                                            <h2 className="text-lg font-semibold text-slate-900">
                                                 {editingReport ? 'แก้ไขรายงานโรค' : 'เพิ่มรายงานโรค'}
                                             </h2>
                                             <button
@@ -976,7 +976,7 @@ export default function FacilityDiseaseReports() {
                                                         setShowModal(false);
                                                         resetForm();
                                                     }}
-                                                    className="px-6 py-3 bg-red-500 rounded-lg hover:bg-slate-50"
+                                                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
                                                 >
                                                     ยกเลิก
                                                 </button>

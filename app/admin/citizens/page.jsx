@@ -5,6 +5,7 @@ import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showWarning } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 
 export default function CitizensManagementPage() {
     const [citizens, setCitizens] = useState([]);
@@ -132,27 +133,19 @@ export default function CitizensManagementPage() {
         <EOCLayout>
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-slate-800 mb-2">
+                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
+                    <h1 className="text-3xl font-bold text-white mb-2">
                         <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการผู้ใช้ประชาชน
                     </h1>
-                    <p className="text-slate-600">
+                    <p className="text-blue-100">
                         รายชื่อประชาชนที่ลงทะเบียนผ่าน ThaiD และสามารถเลื่อนตำแหน่งเป็นเจ้าหน้าที่
                     </p>
                 </div>
 
                 {/* Stats Card */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-6 mb-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="text-sm opacity-90 mb-1">จำนวนประชาชนทั้งหมด</div>
-                            <div className="text-4xl font-bold">{citizens.length}</div>
-                        </div>
-                        <div className="text-6xl opacity-50">
-                            🇹🇭
-                        </div>
-                    </div>
-                </div>
+                <MetricGrid className="mb-6" cols="grid-cols-1 sm:grid-cols-3">
+                    <MetricCard icon="users" label="ประชาชนที่ลงทะเบียน" value={citizens.length.toLocaleString("th-TH")} unit="คน" tone="blue" />
+                </MetricGrid>
 
                 {/* Search */}
                 <div className="border border-slate-200 bg-white p-4 rounded-2xl mb-6">
@@ -241,12 +234,12 @@ export default function CitizensManagementPage() {
             {/* Promote Modal */}
             {showPromoteModal && selectedCitizen && (
                 <div className="app-modal-overlay" role="dialog" aria-modal="true">
-                    <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl">
+                    <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-md w-full p-6 shadow-2xl">
                         <h2 className="text-xl font-bold mb-4 text-slate-800">
                             <AppIcon icon="arrowUp" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เลื่อนตำแหน่งเป็นเจ้าหน้าที่
                         </h2>
 
-                        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
+                        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 mb-4">
                             <div className="text-sm text-slate-600 mb-1">ประชาชน:</div>
                             <div className="font-bold text-slate-800">
                                 {selectedCitizen.title} {selectedCitizen.given_name} {selectedCitizen.family_name}
