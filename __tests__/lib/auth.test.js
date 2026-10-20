@@ -91,7 +91,7 @@ describe('auth helpers', () => {
         expect(auth.success).toBe(true);
         expect(auth.user.id).toBe(7);
         expect(auth.user.role).toBe('admin');
-        expect(auth.remainingMinutes).toBe(7);
+        expect(auth.remainingMinutes).toBe(27);
         expect(query).toHaveBeenLastCalledWith(
             'UPDATE user_sessions SET last_activity = NOW() WHERE session_token = ?',
             [hashSessionToken('valid-token')]
@@ -164,7 +164,7 @@ describe('auth helpers', () => {
 
     test('expires idle sessions using the configured idle limit', async () => {
         query.mockResolvedValueOnce([{
-            user_id: 3, username: 'idle', role: 'staff', idle_minutes: 10, is_approved: 1
+            user_id: 3, username: 'idle', role: 'staff', idle_minutes: 30, is_approved: 1
         }]).mockResolvedValueOnce([]);
 
         const auth = await getAuthSession(createRequest({ token: 'valid-token' }));

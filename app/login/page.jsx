@@ -18,7 +18,7 @@ function ThaiDErrorHandler({ setError }) {
 
         // ตรวจสอบ session timeout
         if (timeout === 'true') {
-            setError('การเข้าสู่ระบบหมดอายุเนื่องจากไม่มีการใช้งานเกิน 10 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+            setError('การเข้าสู่ระบบหมดอายุเนื่องจากไม่มีการใช้งานเกิน 30 นาที\nกรุณาเข้าสู่ระบบใหม่อีกครั้ง');
             return;
         }
 
@@ -190,7 +190,7 @@ function LoginForm() {
                                 <div role="alert" className={`mb-4 rounded-xl border px-3 py-2.5 text-sm ${expired ? "border-amber-200 bg-amber-50 text-amber-900" : "border-red-200 bg-red-50 text-red-700"}`}>
                                     <div className="flex items-start gap-2">
                                         <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                                        <div className="flex-1 whitespace-pre-line">{expired ? "หมดเวลาใช้งาน (ไม่ได้ใช้งานเกิน 10 นาที) กรุณาเข้าสู่ระบบอีกครั้ง" : error}</div>
+                                        <div className="flex-1 whitespace-pre-line">{expired ? "หมดเวลาใช้งาน (ไม่ได้ใช้งานเกิน 30 นาที) กรุณาเข้าสู่ระบบอีกครั้ง" : error}</div>
                                     </div>
                                 </div>
                             );

@@ -13,6 +13,7 @@ export const EVENT_MODULES = {
     items: (ctx) => [
       { key: "overview", group: "ประเมินสถานการณ์", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
       { key: "water-report", group: "ประเมินสถานการณ์", name: "รายงานระดับน้ำ", path: "/eoc/flood/water-report", iconKey: "flood", description: "ระดับน้ำสถานีเฝ้าระวัง ปภ. เทียบย้อนหลัง บันทึกเป็น PDF/รูป A4" },
+      { key: "risk-map", group: "ประเมินสถานการณ์", name: "แผนที่สถานการณ์และความเสี่ยง", path: "/eoc/flood/risk-map", iconKey: "map", description: "ชุดเดียวกับหน้าประชาชน: ระดับน้ำ ฝน น้ำขึ้น–ลง น้ำท่วมซ้ำซาก ความเสี่ยงรายอำเภอ และ Windy" },
       { key: "area-risk", group: "ประเมินสถานการณ์", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
       { key: "triggers", group: "สั่งการ", name: "ธงเตือนภัยและ Trigger", path: "/eoc/flood/triggers", iconKey: "flag", description: "ประกาศธงเขียว/เหลือง/แดง และ Trigger เคลื่อนย้ายกลุ่มเปราะบาง รายพื้นที่" },
       { key: "command", group: "สั่งการ", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },

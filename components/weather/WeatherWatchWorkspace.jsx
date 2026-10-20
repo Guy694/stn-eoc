@@ -38,7 +38,8 @@ import {
   Landmark,
   MapPinned,
   Route,
-  Signpost
+  Signpost,
+  History
 } from "lucide-react";
 import AIChatbot from "@/components/AIChatbot";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
@@ -52,6 +53,7 @@ import {
   buildWindyWebsiteUrl
 } from "@/components/public/disaster-map/windyLayers";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
+import { FLOOD_FREQ_CLASSES } from "@/lib/floodFreq";
 import ElevationLegend from "@/components/public/map/ElevationLegend";
 import { DISCHARGE_LEVELS } from "@/lib/forecastSignals";
 import { PM25_UNIT } from "@/lib/pm25";
@@ -78,6 +80,7 @@ const SITUATION_ITEMS = [
   { key: "rainStations", label: "ฝนวัดจริง (ThaiWater)", icon: Umbrella, tone: "from-sky-300 to-indigo-600" },
   { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-emerald-400 to-green-600", title: "สีตามสถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
   { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600", title: "รายงานการสัญจรที่เจ้าหน้าที่ตรวจแล้ว: เขียว ผ่านได้ · เหลือง ผ่านลำบาก · แดง ผ่านไม่ได้" },
+  { key: "floodFreq", label: "น้ำท่วมซ้ำซาก (GISTDA)", icon: History, tone: "from-sky-400 to-violet-800", title: "พื้นที่ที่เคยถูกน้ำท่วมจากภาพดาวเทียม GISTDA พ.ศ. 2554–2567 สีเข้มขึ้นเมื่อท่วมหลายปี ใช้ประกอบการเตรียมรับมือ ไม่ใช่สถานการณ์น้ำตอนนี้" },
   { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "from-cyan-400 to-sky-600" },
   { key: "tambon", label: "ขอบเขตตำบล", icon: MapPinned, tone: "from-emerald-300 to-teal-600" },
   { key: "district", label: "ขอบเขตอำเภอ", icon: Landmark, tone: "from-slate-400 to-slate-700" }
@@ -212,7 +215,8 @@ function MediaThumb({ item, label }) {
   );
 }
 
-export default function WeatherWatchWorkspace() {
+/** embedded = แสดงในหน้าเจ้าหน้าที่ (ใน EOCLayout): ไม่มีแถบเมนูประชาชนและผู้ช่วย AI ของหน้าประชาชน */
+export default function WeatherWatchWorkspace({ embedded = false }) {
   const [data, setData] = useState(null);
   const { sheltersOpen } = useHelpAvailability();
   const [loading, setLoading] = useState(true);
@@ -231,6 +235,8 @@ export default function WeatherWatchWorkspace() {
 
   // หน้านี้ = แผนที่สถานการณ์และความเสี่ยง: ความเสี่ยง/พยากรณ์รายอำเภอ + ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์)
   const [situationLayers, setSituationLayers] = useState({ tide: true, waterStations: true, rainStations: true });
+  const [floodFreqStatus, setFloodFreqStatus] = useState(null);
+  const onFloodFreqStatus = useCallback((status) => setFloodFreqStatus(status), []);
   const toggleSituation = (key) => {
     setViewMode("risk");
     setSituationLayers((current) => ({ ...current, [key]: !current[key] }));
@@ -381,8 +387,8 @@ export default function WeatherWatchWorkspace() {
   };
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-slate-900">
-      <PublicTopNavigation activeMenu="weather" showWeatherMenu bottomBar="off" />
+    <div className={embedded ? "flex h-[calc(100dvh-12rem)] min-h-[560px] flex-col overflow-hidden rounded-2xl bg-slate-900" : "flex h-dvh flex-col overflow-hidden bg-slate-900"}>
+      {embedded ? null : <PublicTopNavigation activeMenu="weather" showWeatherMenu bottomBar="off" />}
 
       <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่สถานการณ์และความเสี่ยง">
         <div className={`absolute inset-0 ${isWindy ? "invisible" : ""}`} aria-hidden={isWindy}>
@@ -398,6 +404,7 @@ export default function WeatherWatchWorkspace() {
             pm25={pm25}
             situationLayers={situationLayers}
             tide={situationLayers.tide ? seaLevel : null}
+            onFloodFreqStatus={onFloodFreqStatus}
           />
         </div>
         {isWindy && <WindyFrame src={windyUrl} />}
@@ -877,6 +884,18 @@ export default function WeatherWatchWorkspace() {
         {!isWindy && (
           <div className={`absolute bottom-[5.75rem] left-[384px] z-[650] hidden max-h-[calc(100%-13rem)] max-w-[360px] overflow-y-auto rounded-xl px-2.5 py-1.5 text-[11px] [scrollbar-width:thin] md:block ${GLASS}`}>
             {elevationEnabled && <ElevationLegend className="mb-1.5 max-w-[320px] border-b border-white/10 pb-1.5" />}
+            {situationLayers.floodFreq ? (
+              <div className="mb-1.5 border-b border-white/10 pb-1.5">
+                <p className="mb-1 font-bold">น้ำท่วมซ้ำซาก พ.ศ. 2554–2567 (GISTDA){floodFreqStatus?.state === "loading" ? " • กำลังโหลด…" : ""}</p>
+                {floodFreqStatus?.state === "error" ? <p className="text-amber-200">{floodFreqStatus.message || "โหลดข้อมูลไม่สำเร็จ"}</p> : (
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    {FLOOD_FREQ_CLASSES.map((item) => (
+                      <span key={item.key} className="flex items-center gap-1 font-bold"><span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.label}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
             {situationLayers.hospitals || situationLayers.traffic ? (
               <div className="mb-1.5 flex flex-wrap gap-x-2 gap-y-1 border-b border-white/10 pb-1.5">
                 {situationLayers.hospitals ? [["#15803d", "สถานพยาบาลเปิดปกติ"], ["#b45309", "จำกัดบริการ/ถนนท่วม"], ["#b91c1c", "ปิด/น้ำท่วม"]].map(([color, text]) => (
@@ -951,7 +970,7 @@ export default function WeatherWatchWorkspace() {
         )}
       </main>
 
-      <AIChatbot showLauncher={false} />
+      {embedded ? null : <AIChatbot showLauncher={false} />}
     </div>
   );
 }

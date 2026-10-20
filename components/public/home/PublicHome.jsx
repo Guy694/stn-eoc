@@ -35,6 +35,7 @@ import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 import SeaTodayCard from "@/components/public/home/SeaTodayCard";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
+import { mergeAnnouncementSources } from "@/lib/riskcomMedia";
 
 // หน้าแรกสำหรับประชาชน
 // จุดเด่นเดียวของหน้า: แผนที่ 7 อำเภอที่ระบายสีตามความเสี่ยงวันนี้ แตะแล้วเห็น "พื้นที่ของฉัน" ทันที
@@ -316,12 +317,14 @@ export default function PublicHome() {
     Promise.all([
       load("/stn-eoc/api/public/situation"),
       load("/stn-eoc/api/public/weather-watch?view=home"),
-      load("/stn-eoc/api/public/announcements?limit=6")
-    ]).then(([situationJson, weatherJson, announcementJson]) => {
+      load("/stn-eoc/api/public/announcements?limit=6"),
+      load("/stn-eoc/api/public/riskcom-media?limit=6")
+    ]).then(([situationJson, weatherJson, announcementJson, riskcomJson]) => {
       if (controller.signal.aborted) return;
       setSituation(situationJson);
       setWeather(weatherJson);
-      setAnnouncements((announcementJson?.data || []).slice(0, 6));
+      // ประกาศของศูนย์ฯ ที่กำลังเผยแพร่ขึ้นก่อน ตามด้วยสื่อความรู้จาก สสจ.สตูล (ดึงคลังสื่อไม่ได้ = ใช้ประกาศเดิม)
+      setAnnouncements(mergeAnnouncementSources(announcementJson?.data || [], riskcomJson ? riskcomJson.data || [] : null).slice(0, 6));
       setLoading(false);
     });
     // ข้อมูลประกอบ: โหลดแยก ไม่ให้หน้าแรกรอ
@@ -686,17 +689,17 @@ export default function PublicHome() {
               <ul className="-mx-4 mt-5 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
                 {announcements.slice(0, 3).map((item) => (
                   <li key={item.id} className="w-[78%] shrink-0 snap-start sm:w-auto">
-                    <Link href={`/public/announcements/${item.id}`} className="group block">
+                    <Link href={item.href || `/public/announcements/${item.id}`} className="group block">
                       <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-[#e3f1f4]">
-                        {item.image_path ? (
+                        {item.image_url || item.image_path ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img {...responsiveImage(`/stn-eoc${item.image_path}`, [384, 640], "(min-width: 640px) 30vw, 78vw")} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                          <img {...(item.image_url ? { src: item.image_url } : responsiveImage(`/stn-eoc${item.image_path}`, [384, 640], "(min-width: 640px) 30vw, 78vw"))} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                         ) : (
                           <div className="flex h-full items-center justify-center font-[family-name:var(--font-kanit)] text-lg text-[#11466e]">ประกาศจากหน่วยงาน</div>
                         )}
                       </div>
                       <p className="mt-3 line-clamp-2 font-[family-name:var(--font-kanit)] text-lg font-semibold leading-snug group-hover:text-[#11466e]">{item.title}</p>
-                      <p className="mt-1 text-sm text-slate-500">{formatThaiDate(item.start_date || item.created_at)}</p>
+                      <p className="mt-1 text-sm text-slate-500">{formatThaiDate(item.start_date || item.created_at)}{item.source === "riskcom" ? ` • ที่มา: ${item.credit}` : ""}</p>
                     </Link>
                   </li>
                 ))}

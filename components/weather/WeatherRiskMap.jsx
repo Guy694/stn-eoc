@@ -13,6 +13,7 @@ import WaterReportMarker from "@/components/public/map/WaterReportMarker";
 import ElevationLayer from "@/components/public/map/ElevationLayer";
 import SituationLayers from "@/components/public/map/SituationLayers";
 import TideMarker from "@/components/weather/TideMarker";
+import FloodFreqLayer from "@/components/public/map/FloodFreqLayer";
 
 const CENTER = [6.86, 99.98];
 
@@ -78,7 +79,8 @@ export default function WeatherRiskMap({
   colorBy = "risk",
   pm25 = null,
   situationLayers = null,
-  tide = null
+  tide = null,
+  onFloodFreqStatus
 }) {
   const byPm25 = colorBy === "pm25" && Boolean(pm25);
   const [boundaries, setBoundaries] = useState([]);
@@ -167,6 +169,9 @@ export default function WeatherRiskMap({
 
       {/* ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์) */}
       {situationLayers ? <SituationLayers layers={situationLayers} /> : null}
+
+      {/* พื้นที่น้ำท่วมซ้ำซาก (GISTDA) — สถิติย้อนหลัง ไม่ใช่สถานการณ์ตอนนี้ */}
+      {situationLayers?.floodFreq ? <FloodFreqLayer onStatus={onFloodFreqStatus} /> : null}
 
       {/* น้ำขึ้น–น้ำลง ทะเลอันดามันหน้าสตูล */}
       {tide ? <TideMarker data={tide} /> : null}

@@ -34,7 +34,7 @@
 
 2. **ตั้งค่า environment ใหม่** (ดู `.env.example`)
    - `TRUST_PROXY=1` ถ้าแอปอยู่หลัง nginx ชั้นเดียว และต้องให้ nginx ส่ง `X-Forwarded-For` / `X-Real-IP`
-   - `SESSION_IDLE_MINUTES` (ไม่บังคับ ค่าเริ่มต้น 10 นาที)
+   - `SESSION_IDLE_MINUTES` (ไม่บังคับ ค่าเริ่มต้น 30 นาที)
    - เปลี่ยน `DB_USER` จาก `root` เป็น user เฉพาะแอป:
 
      ```sql
