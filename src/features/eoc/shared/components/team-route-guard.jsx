@@ -59,7 +59,7 @@ export default function TeamRouteGuard({ eocType, teamCode, children }) {
           title="ไม่มีสิทธิ์เข้าถึงกลุ่มภารกิจนี้"
           detail={assignmentError || "บัญชีของคุณไม่ได้รับมอบหมายให้ทำงานในกลุ่มภารกิจนี้"}
         >
-          <Link href="/eoc/staff" className="mt-4 inline-flex bg-cyan-700 px-4 py-2 text-sm font-bold text-white hover:bg-cyan-800">
+          <Link href="/eoc/staff" className="mt-4 inline-flex bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865] rounded-lg">
             กลับไปยังศูนย์งานเจ้าหน้าที่
           </Link>
         </RouteMessage>
@@ -72,8 +72,8 @@ export default function TeamRouteGuard({ eocType, teamCode, children }) {
 
 function RouteMessage({ title, detail, children }) {
   return (
-    <section className="mx-auto max-w-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-      <h1 className="text-xl font-black text-slate-900">{title}</h1>
+    <section className="mx-auto max-w-2xl border border-slate-200 bg-white p-8 text-center rounded-xl">
+      <h1 className="text-xl font-bold text-slate-900">{title}</h1>
       <p className="mt-2 text-sm text-slate-600">{detail}</p>
       {children}
     </section>

@@ -37,8 +37,8 @@ export default function BaseTeamDashboard({ eocType, teamCode }) {
           <SummaryCard label="รอตรวจสอบ" value={summary.submitted || 0} />
           <SummaryCard label="อนุมัติแล้ว" value={summary.approved || 0} />
         </div>
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-black text-slate-900">รายงานล่าสุดของ {team?.shortName}</h2>
+        <article className="rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="text-lg font-bold text-slate-900">รายงานล่าสุดของ {team?.shortName}</h2>
           {state.reports?.data.length ? <div className="mt-4 overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-slate-100"><tr><th className="px-3 py-2">หัวข้อ</th><th className="px-3 py-2">ผู้บันทึก</th><th className="px-3 py-2">สถานะ</th></tr></thead><tbody>{state.reports.data.slice(0, 5).map((report) => <tr key={report.id} className="border-t border-slate-100"><td className="px-3 py-3 font-bold">{report.title}</td><td className="px-3 py-3">{report.created_by_name || "-"}</td><td className="px-3 py-3">{report.status}</td></tr>)}</tbody></table></div> : <div className="mt-4"><EmptyState title="ยังไม่มีรายงาน" description="สร้างรายงานจากแท็บรายงานผล" /></div>}
         </article>
       </>}

@@ -51,25 +51,25 @@ export default function ThaiDCallbackPage() {
     }, [router, setUser]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
+        <div className="min-h-screen bg-[#edf5fc] font-[family-name:var(--font-kanit)] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_24px_60px_-36px_rgba(11,76,134,.55)] p-8 max-w-md w-full text-center">
                 {status === 'processing' && (
                     <>
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AppIcon icon="loader" className="h-10 w-10 animate-spin text-green-700" />
+                        <div className="w-20 h-20 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AppIcon icon="loader" className="h-10 w-10 animate-spin text-[#0b4c86]" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">กำลังเข้าสู่ระบบ...</h2>
-                        <p className="text-gray-600">กรุณารอสักครู่</p>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">กำลังเข้าสู่ระบบ...</h2>
+                        <p className="text-slate-600">กรุณารอสักครู่</p>
                     </>
                 )}
 
                 {status === 'success' && (
                     <>
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AppIcon icon="checkCircle" className="h-10 w-10 text-green-700" />
+                        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AppIcon icon="checkCircle" className="h-10 w-10 text-emerald-700" />
                         </div>
-                        <h2 className="text-2xl font-bold text-green-700 mb-2">เข้าสู่ระบบสำเร็จ!</h2>
-                        <p className="text-gray-600">กำลังนำคุณไปยังหน้าหลัก...</p>
+                        <h2 className="text-2xl font-bold text-emerald-700 mb-2">เข้าสู่ระบบสำเร็จ!</h2>
+                        <p className="text-slate-600">กำลังนำคุณไปยังหน้าหลัก...</p>
                     </>
                 )}
 
@@ -79,10 +79,10 @@ export default function ThaiDCallbackPage() {
                             <AppIcon icon="xCircle" className="h-10 w-10 text-red-700" />
                         </div>
                         <h2 className="text-2xl font-bold text-red-700 mb-2">เกิดข้อผิดพลาด</h2>
-                        <p className="text-gray-600 mb-4">ไม่สามารถเข้าสู่ระบบได้</p>
+                        <p className="text-slate-600 mb-4">ไม่สามารถเข้าสู่ระบบได้</p>
                         <button
                             onClick={() => router.push('/login')}
-                            className="bg-green-700 hover:bg-green-800 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+                            className="bg-[#0b4c86] hover:bg-[#083865] text-white font-semibold py-2 px-6 rounded-xl transition-colors"
                         >
                             กลับไปหน้า Login
                         </button>

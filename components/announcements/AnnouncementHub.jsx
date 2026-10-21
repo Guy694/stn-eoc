@@ -8,6 +8,7 @@ import AnnouncementFilters from './AnnouncementFilters';
 import AnnouncementGrid from './AnnouncementGrid';
 import { getAnnouncementCategory } from './announcementUtils';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
+import { PageHero, heroPrimaryButtonClass } from '@/components/common/ThemePanels';
 
 const EMPTY_FILTERS = { search: '', category: '', status: '', dateFrom: '', dateTo: '' };
 
@@ -55,18 +56,21 @@ export default function AnnouncementHub({ canManage = false, detailBasePath = '/
     window.requestAnimationFrame(() => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
 
-  return <div className="mx-auto max-w-[1500px] space-y-6">
-    <header className="flex flex-col justify-between gap-4 rounded-3xl bg-gradient-to-r from-blue-950 via-blue-900 to-cyan-800 p-6 text-white shadow-lg md:flex-row md:items-center md:p-8">
-      <div><div className="mb-2 inline-flex items-center gap-2 text-sm font-bold text-cyan-200"><BellRing className="h-5 w-5" />ศูนย์ข่าวประชาสัมพันธ์ EOC</div><h1 className="text-3xl font-black md:text-4xl">ประกาศและข่าวสาร</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100 md:text-base">ติดตามประกาศสำคัญ ข่าวประชาสัมพันธ์ แบนเนอร์ และเอกสารเผยแพร่ รวมถึงข่าวย้อนหลังจากระบบ EOC</p></div>
-      {canManage && <Link href="/admin/announcements" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-blue-900 shadow hover:bg-blue-50"><Plus className="h-4 w-4" />จัดการประกาศ</Link>}
-    </header>
+  return <div className="mx-auto max-w-[1500px] space-y-4">
+    <PageHero
+      icon="megaphone"
+      eyebrow="ศูนย์ข่าวประชาสัมพันธ์ EOC"
+      title="ประกาศและข่าวสาร"
+      subtitle="ประกาศสำคัญ ข่าวประชาสัมพันธ์ แบนเนอร์ และเอกสารเผยแพร่ รวมถึงข่าวย้อนหลังจากระบบ EOC"
+      actions={canManage ? <Link href="/admin/announcements" className={heroPrimaryButtonClass}><Plus className="h-4 w-4" aria-hidden="true" />จัดการประกาศ</Link> : null}
+    />
 
-    {!loading && <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-blue-100 bg-white p-4"><LayoutGrid className="h-6 w-6 text-blue-600" /><p className="mt-2 text-2xl font-black text-slate-900">{items.length.toLocaleString('th-TH')}</p><p className="text-sm text-slate-500">ประกาศทั้งหมด</p></div><div className="rounded-2xl border border-emerald-100 bg-white p-4"><BellRing className="h-6 w-6 text-emerald-600" /><p className="mt-2 text-2xl font-black text-slate-900">{currentCount.toLocaleString('th-TH')}</p><p className="text-sm text-slate-500">กำลังเผยแพร่</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><Archive className="h-6 w-6 text-slate-500" /><p className="mt-2 text-2xl font-black text-slate-900">{archiveCount.toLocaleString('th-TH')}</p><p className="text-sm text-slate-500">ข่าวย้อนหลัง</p></div></div>}
+    {!loading && <div className="grid gap-3 font-[family-name:var(--font-kanit)] sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 bg-white p-4"><LayoutGrid className="h-6 w-6 text-[#0b4c86]" /><p className="mt-2 text-2xl font-bold tabular-nums text-slate-900">{items.length.toLocaleString('th-TH')}</p><p className="text-sm text-slate-500">ประกาศทั้งหมด</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><BellRing className="h-6 w-6 text-emerald-600" /><p className="mt-2 text-2xl font-bold tabular-nums text-slate-900">{currentCount.toLocaleString('th-TH')}</p><p className="text-sm text-slate-500">กำลังเผยแพร่</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><Archive className="h-6 w-6 text-slate-500" /><p className="mt-2 text-2xl font-bold tabular-nums text-slate-900">{archiveCount.toLocaleString('th-TH')}</p><p className="text-sm text-slate-500">ข่าวย้อนหลัง</p></div></div>}
     <AnnouncementCarousel items={featured.length ? featured : items.filter((item) => item.display_status === 'current')} detailBasePath={detailBasePath} />
     <AnnouncementFilters filters={filters} setFilters={handleFilterChange} categories={categories} />
-    <div ref={listRef} className="scroll-mt-5 flex items-end justify-between"><div><h2 className="text-2xl font-black text-slate-900">ข่าวและประกาศทั้งหมด</h2><p className="mt-1 text-sm text-slate-500">พบ {filteredItems.length.toLocaleString('th-TH')} รายการ</p></div></div>
+    <div ref={listRef} className="scroll-mt-5 flex items-end justify-between"><div><h2 className="font-[family-name:var(--font-kanit)] text-xl font-semibold text-slate-900">ข่าวและประกาศทั้งหมด</h2><p className="mt-1 text-sm text-slate-500">พบ {filteredItems.length.toLocaleString('th-TH')} รายการ</p></div></div>
     <AnnouncementGrid items={paginatedItems} loading={loading} detailBasePath={detailBasePath} />
-    {filteredItems.length > 9 && <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+    {filteredItems.length > 9 && <div className="overflow-hidden rounded-2xl border border-slate-200">
       <PaginationControls
         page={page}
         pageSize={pageSize}

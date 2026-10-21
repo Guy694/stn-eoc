@@ -184,8 +184,7 @@ export default function Sidebar() {
 
     const accountItems = [
         { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
-        { name: "ตั้งค่าบัญชี", path: "/settings", iconKey: "lock" },
-        { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", iconKey: "guide" }
+        { name: "คู่มือการใช้งาน", path: "/eoc/guide", iconKey: "guide" }
     ];
 
     // ผู้ใช้ที่รออนุมัติ
@@ -210,7 +209,9 @@ export default function Sidebar() {
             title: "ภาพรวม",
             items: [
                 { name: "หน้าหลัก", path: "/dashboard", iconKey: "home", description: "เลือกเหตุการณ์ก่อนเข้าสู่หน้าปฏิบัติการ" },
-                { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" }
+                { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
+                // ผู้บัญชาการเหตุการณ์ส่งเตือนภัยถึงประชาชนได้
+                ...(user.role === "commander" ? [{ name: "แจ้งเตือนประชาชน", path: "/admin/public-alerts", iconKey: "announcements" }] : [])
             ]
         },
         ...(officerEventSections.length ? [{ section: "events-heading", title: "เหตุการณ์ที่เปิดอยู่", group: "events-heading", items: [] }, ...officerEventSections] : []),

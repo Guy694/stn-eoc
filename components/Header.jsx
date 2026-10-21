@@ -111,14 +111,6 @@ export default function Header() {
                                                     <AppIcon icon="user" className="mr-2 inline h-4 w-4" />
                                                     โปรไฟล์
                                                 </a>
-                                                <a
-                                                    href="/settings"
-                                                    className="block px-4 py-2 text-slate-700 hover:bg-slate-100 transition-colors"
-                                                    onClick={() => setShowMenu(false)}
-                                                >
-                                                    <AppIcon icon="settings" className="mr-2 inline h-4 w-4" />
-                                                    ตั้งค่า
-                                                </a>
                                             </div>
 
                                             {/* Logout */}

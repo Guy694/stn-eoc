@@ -52,13 +52,13 @@ test("ยังไม่อนุญาตแจ้งเตือน → ไม
   expect(await showSystemAlert("x")).toBe(false);
 });
 
-test("เลือกแบบเสียงต่อระดับได้ จำไว้ในเครื่อง และ 'ไม่มีเสียงสัญญาณ' ไม่เล่นอะไร", () => {
+test("เสียงตามที่แอดมินตั้ง (ทั้งระบบ) และ 'ไม่มีเสียงสัญญาณ' ไม่เล่นอะไร", async () => {
   const sound = require("@/lib/alertSound");
-  window.localStorage.clear();
   expect(sound.readSoundPrefs()).toEqual(sound.DEFAULT_SOUND_PREFS);
-  const saved = sound.saveSoundPrefs({ critical: "emergency", serious: "none", info: "bogus", volume: 5 });
-  expect(saved).toEqual({ critical: "emergency", serious: "none", info: "chime", volume: 1 });
-  expect(sound.readSoundPrefs()).toEqual(saved);
+  const fetchImpl = jest.fn(async () => ({ json: async () => ({ success: true, data: { critical: "emergency", serious: "none", info: "bogus", volume: 5, voice: false } }) }));
+  const loaded = await sound.loadSystemSoundPrefs({ fresh: true, fetchImpl });
+  expect(loaded).toEqual({ critical: "emergency", serious: "none", info: "chime", volume: 1, voice: false });
+  expect(sound.readSoundPrefs()).toEqual(loaded);
   const ctx = new FakeContext();
   FakeContext.tones = 0;
   sound.playPattern(ctx, "serious");
@@ -66,4 +66,5 @@ test("เลือกแบบเสียงต่อระดับได้ �
   sound.playPattern(ctx, "critical");
   expect(FakeContext.tones).toBe(6); // โทนคู่ 3 ช่วง
   for (const style of Object.keys(sound.SOUND_STYLES)) expect(() => sound.playStyle(ctx, style, { volume: 0.3 })).not.toThrow();
+  expect(sound.normalizeSoundPrefs({ volume: 0.04 }).volume).toBe(0.1);
 });

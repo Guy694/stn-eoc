@@ -28,13 +28,13 @@ export default function FloodSatDashboard({ eocType = "flood", teamCode = "sat" 
   const stats = state.data?.totalStats || {};
   return (
     <TeamPageShell eocType={eocType} teamCode={teamCode} activeSection="dashboard">
-      <div className="flex flex-wrap items-end justify-between gap-3 border border-slate-200 bg-white p-4 shadow-sm">
-        <div><h2 className="text-lg font-black text-slate-900">สรุปสถานการณ์อุทกภัย</h2><p className="text-sm text-slate-600">แดชบอร์ดเฉพาะกลุ่มภารกิจ SAT</p></div>
+      <div className="flex flex-wrap items-end justify-between gap-3 border border-slate-200 bg-white p-4 rounded-xl">
+        <div><h2 className="text-lg font-bold text-slate-900">สรุปสถานการณ์อุทกภัย</h2><p className="text-sm text-slate-600">แดชบอร์ดเฉพาะกลุ่มภารกิจ SAT</p></div>
         <label className="text-sm font-bold text-slate-700">วันที่
-          <input type="date" value={date} onChange={(event) => { setState((current) => ({ ...current, loading: true, error: "" })); setDate(event.target.value); }} className="ml-2 border border-slate-300 px-3 py-2" />
+          <input type="date" value={date} onChange={(event) => { setState((current) => ({ ...current, loading: true, error: "" })); setDate(event.target.value); }} className="ml-2 border border-slate-300 px-3 py-2 rounded-lg" />
         </label>
       </div>
-      {state.loading ? <div className="bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : state.error ? <div className="border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800">{state.error}</div> : (
+      {state.loading ? <div className="bg-white p-10 text-center text-sm text-slate-500 rounded-xl">กำลังโหลดข้อมูล...</div> : state.error ? <div className="border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800 rounded-xl">{state.error}</div> : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="อำเภอได้รับผลกระทบ" value={(stats.affected_districts || 0).toLocaleString()} />
           <SummaryCard label="หมู่บ้านได้รับผลกระทบ" value={(stats.affected_villages || 0).toLocaleString()} />

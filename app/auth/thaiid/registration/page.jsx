@@ -78,10 +78,10 @@ export default function ThaiDRegistrationPage() {
     };
 
     if (authLoading || initialLoad) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        return <div className="min-h-screen bg-[#edf5fc] flex items-center justify-center">
             <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b border-green-700 mx-auto"></div>
-                <p className="mt-4 text-gray-600">กำลังตรวจสอบข้อมูล...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#0b4c86]/20 border-t-[#0b4c86] mx-auto"></div>
+                <p className="mt-4 text-slate-600">กำลังตรวจสอบข้อมูล...</p>
             </div>
         </div>;
     }
@@ -91,22 +91,22 @@ export default function ThaiDRegistrationPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-12 px-4">
+        <div className="min-h-screen bg-[#edf5fc] font-[family-name:var(--font-kanit)] py-12 px-4">
             <div className="max-w-2xl mx-auto">
-                <div className="bg-white rounded-lg shadow-xl p-8">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_24px_60px_-36px_rgba(11,76,134,.55)] p-8">
                     <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AppIcon icon="user" className="h-10 w-10 text-green-700" />
+                        <div className="w-20 h-20 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AppIcon icon="user" className="h-10 w-10 text-[#0b4c86]" />
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">ยินดีต้อนรับ</h1>
-                        <p className="text-xl text-green-700 mb-2">
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">ยินดีต้อนรับ</h1>
+                        <p className="text-xl text-[#0b4c86] mb-2">
                             {user.givenName || user.thaiIdData?.given_name || user.username}
                         </p>
-                        <p className="text-gray-600">กรุณากรอกข้อมูลเพื่อขอสิทธิ์เข้าใช้งานระบบ</p>
+                        <p className="text-slate-600">กรุณากรอกข้อมูลเพื่อขอสิทธิ์เข้าใช้งานระบบ</p>
                     </div>
 
                     {error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
                             {error}
                         </div>
                     )}
@@ -114,11 +114,11 @@ export default function ThaiDRegistrationPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* คำนำหน้า */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 คำนำหน้า
                             </label>
                             <select
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             >
@@ -135,13 +135,13 @@ export default function ThaiDRegistrationPage() {
 
                         {/* ชื่อ */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 ชื่อ <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 placeholder="เช่น สมชาย"
                                 value={formData.given_name}
                                 onChange={(e) => setFormData({ ...formData, given_name: e.target.value })}
@@ -150,13 +150,13 @@ export default function ThaiDRegistrationPage() {
 
                         {/* นามสกุล */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 นามสกุล <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 placeholder="เช่น ใจดี"
                                 value={formData.family_name}
                                 onChange={(e) => setFormData({ ...formData, family_name: e.target.value })}
@@ -165,13 +165,13 @@ export default function ThaiDRegistrationPage() {
 
                         {/* ตำแหน่งที่ปฏิบัติงาน */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 ตำแหน่งที่ปฏิบัติงาน <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 placeholder="เช่น นักวิชาการสาธารณสุข"
                                 value={formData.position}
                                 onChange={(e) => setFormData({ ...formData, position: e.target.value })}
@@ -180,13 +180,13 @@ export default function ThaiDRegistrationPage() {
 
                         {/* หน่วยงาน */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 หน่วยงาน <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 placeholder="เช่น สำนักงานสาธารณสุขจังหวัดสตูล"
                                 value={formData.department}
                                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
@@ -195,12 +195,12 @@ export default function ThaiDRegistrationPage() {
 
                         {/* สิทธิ์ที่ต้องการ */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 สิทธิ์การเข้าใช้งานที่ต้องการ <span className="text-red-500">*</span>
                             </label>
                             <select
                                 required
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 value={formData.requested_role}
                                 onChange={(e) => setFormData({ ...formData, requested_role: e.target.value })}
                             >
@@ -209,20 +209,20 @@ export default function ThaiDRegistrationPage() {
                                 <option value="SAT">ทีม SAT</option>
                                 <option value="MCATT">ทีม MCATT</option>
                             </select>
-                            <p className="mt-2 text-sm text-gray-600">
+                            <p className="mt-2 text-sm text-slate-600">
                                 หมายเหตุ: สิทธิ์ผู้ดูแลระบบต้องติดต่อขออนุมัติโดยตรง
                             </p>
                         </div>
 
                         {/* เบอร์โทรศัพท์ */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="tel"
                                 required
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 placeholder="เช่น 074-123456"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -231,13 +231,13 @@ export default function ThaiDRegistrationPage() {
 
                         {/* อีเมล */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-2">
+                            <label className="block text-slate-700 font-semibold mb-2">
                                 อีเมล <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="email"
                                 required
-                                className="text-gray-600 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="text-slate-600 w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:outline-none focus:ring-2 focus:ring-[#0b4c86]/30 focus:border-[#0b4c86]"
                                 placeholder="เช่น example@satun.go.th"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -249,14 +249,14 @@ export default function ThaiDRegistrationPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="w-full bg-[#0b4c86] hover:bg-[#083865] text-white font-semibold py-3 px-6 rounded-xl transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'กำลังส่งข้อมูล...' : 'ส่งคำขอเข้าใช้งาน'}
                             </button>
                         </div>
                     </form>
 
-                    <div className="mt-6 text-center text-sm text-gray-600">
+                    <div className="mt-6 text-center text-sm text-slate-600">
                         <p>ข้อมูลของคุณจะถูกส่งไปยังผู้ดูแลระบบเพื่อพิจารณาอนุมัติ</p>
                         <p className="mt-1">คุณจะได้รับการแจ้งเตือนผ่านอีเมลเมื่อได้รับการอนุมัติ</p>
                     </div>

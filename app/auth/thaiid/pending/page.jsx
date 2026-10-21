@@ -25,37 +25,37 @@ export default function PendingApprovalPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-                <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <AppIcon icon="clock" className="h-10 w-10 text-yellow-600" />
+        <div className="min-h-screen bg-[#edf5fc] font-[family-name:var(--font-kanit)] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_24px_60px_-36px_rgba(11,76,134,.55)] p-8 max-w-md w-full text-center">
+                <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AppIcon icon="clock" className="h-10 w-10 text-amber-600" />
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">รอการอนุมัติ</h2>
+                <h2 className="text-2xl font-bold text-slate-800 mb-4">รอการอนุมัติ</h2>
 
-                <div className="text-left bg-gray-50 rounded-lg p-4 mb-6">
-                    <p className="text-gray-700 mb-2">
+                <div className="text-left bg-slate-50 rounded-xl p-4 mb-6">
+                    <p className="text-slate-700 mb-2">
                         <span className="font-semibold">ชื่อ:</span> {`${user?.title || ''} ${user?.givenName || ''} ${user?.familyName || ''}`.trim() || user?.username}
                     </p>
-                    <p className="text-gray-700 mb-2">
+                    <p className="text-slate-700 mb-2">
                         <span className="font-semibold">ตำแหน่ง:</span> {user?.position || '-'}
                     </p>
-                    <p className="text-gray-700 mb-2">
+                    <p className="text-slate-700 mb-2">
                         <span className="font-semibold">หน่วยงาน:</span> {user?.department || '-'}
                     </p>
-                    <p className="text-gray-700">
+                    <p className="text-slate-700">
                         <span className="font-semibold">สิทธิ์ที่ขอ:</span> {user?.requested_role || '-'}
                     </p>
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                    <p className="text-yellow-800 text-sm">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                    <p className="text-amber-900 text-sm">
                         <span className="inline-flex items-center gap-2">
                             <AppIcon icon="clock" className="h-4 w-4" />
                             คำขอของคุณอยู่ระหว่างการพิจารณาจากผู้ดูแลระบบ
                         </span>
                     </p>
-                    <p className="text-yellow-700 text-sm mt-2">
+                    <p className="text-amber-800 text-sm mt-2">
                         คุณจะได้รับการแจ้งเตือนทางอีเมลเมื่อได้รับการอนุมัติ
                     </p>
                 </div>
@@ -63,22 +63,22 @@ export default function PendingApprovalPage() {
                 <div className="space-y-3">
                     <button
                         onClick={() => router.push('/auth/thaiid/registration')}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                        className="w-full bg-[#0b4c86] hover:bg-[#083865] text-white font-semibold py-2 px-4 rounded-xl transition-colors"
                     >
                         แก้ไขข้อมูล
                     </button>
 
                     <button
                         onClick={handleLogout}
-                        className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"
+                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-xl transition-colors"
                     >
                         ออกจากระบบ
                     </button>
                 </div>
 
-                <div className="mt-6 text-sm text-gray-600">
+                <div className="mt-6 text-sm text-slate-600">
                     <p>หากมีข้อสงสัย กรุณาติดต่อ:</p>
-                    <p className="font-semibold text-green-700">admin@eoc.satun.go.th</p>
+                    <p className="font-semibold text-[#0b4c86]">admin@eoc.satun.go.th</p>
                 </div>
             </div>
         </div>

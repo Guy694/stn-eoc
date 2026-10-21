@@ -5,13 +5,12 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BellRing, CheckCircle2, CloudRain, Globe, Monitor, RefreshCw, Siren, Smartphone, Speech, TriangleAlert, Volume2, XCircle } from "lucide-react";
-import { AdminPage, Button, useNotice } from "@/components/admin/crud";
+import { Button, useNotice } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { getAlertAudioContext, showSystemAlert, unlockAlertAudio } from "@/lib/alertSound";
 import { speak, speechSupported, thaiVoice, waitForVoices } from "@/lib/alertSpeech";
 import { isIos, isStandalone, pushStatus, pushSupported, subscribePush } from "@/lib/pwaClient";
 import { showConfirm } from "@/lib/sweetAlert";
-import AlertSoundSettings from "@/components/common/AlertSoundSettings";
 
 const API = "/stn-eoc/api/admin/alert-test";
 const PUSH_API = "/stn-eoc/api/admin/public-push";
@@ -67,7 +66,7 @@ async function deviceChecks() {
   };
 }
 
-export default function AlertTestWorkspace() {
+export default function AlertTestSettings() {
   const { success, fail, warn } = useNotice();
   const [server, setServer] = useState(null);
   const [device, setDevice] = useState(null);
@@ -155,12 +154,13 @@ export default function AlertTestWorkspace() {
 
   const failing = [...(server?.checks || []), ...(device?.list || [])].filter((item) => !item.ok).length;
 
+  // ใช้เป็นหัวข้อหนึ่งในหน้าตั้งค่าระบบ (ตั้งค่าระบบ › ทดสอบการแจ้งเตือน)
   return (
-    <AdminPage
-      title="ทดสอบการแจ้งเตือน"
-      description="ตรวจว่าเสียง popup และแจ้งเตือนเข้ามือถือพร้อมใช้หรือไม่ แล้วลองทีละช่องทาง ทุกข้อความทดสอบมีคำว่า [ทดสอบ] และไม่ส่ง Telegram"
-      actions={<Button variant="secondary" onClick={refresh} disabled={busy === "refresh"}><RefreshCw className={`h-4 w-4 ${busy === "refresh" ? "animate-spin" : ""}`} aria-hidden="true" />ตรวจใหม่</Button>}
-    >
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-sm text-slate-600">ตรวจว่าเสียง popup และแจ้งเตือนเข้ามือถือพร้อมใช้หรือไม่ แล้วลองทีละช่องทาง ทุกข้อความทดสอบมีคำว่า [ทดสอบ] และไม่ส่ง Telegram · ตั้งแบบเสียงได้ที่หัวข้อ “เสียงแจ้งเตือน”</p>
+        <Button variant="secondary" onClick={refresh} disabled={busy === "refresh"}><RefreshCw className={`h-4 w-4 ${busy === "refresh" ? "animate-spin" : ""}`} aria-hidden="true" />ตรวจใหม่</Button>
+      </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <Section icon={BellRing} title="ความพร้อมของระบบ" description={server ? (failing ? `มี ${failing} ข้อที่ยังไม่พร้อม (รวมเครื่องนี้)` : "ทุกช่องทางพร้อม") : "กำลังตรวจ…"}>
           <ul className="divide-y divide-slate-100">
@@ -203,8 +203,6 @@ export default function AlertTestWorkspace() {
         <p className="mt-3 text-sm text-slate-500">น้ำล้นตลิ่งจะดังซ้ำทุก 2 นาทีจนกว่าจะกด “รับทราบ” (สูงสุด 5 ครั้ง) เหมือนของจริง</p>
       </Section>
 
-      <AlertSoundSettings tone="admin" />
-
       <Section icon={Monitor} title="2. ทดสอบหน้าจอเจ้าหน้าที่ทุกเครื่อง" description="สร้างแจ้งเตือน [ทดสอบ] ในระบบจริง ใช้ตรวจเส้นทางทั้งหมดตั้งแต่เซิร์ฟเวอร์ถึงหน้าจอ: ทุกเครื่องที่เปิดหน้าเจ้าหน้าที่อยู่จะเด้งภายใน 1 นาที">
         <div className="flex flex-wrap gap-2">
           <Button disabled={busy === "officers"} onClick={() => testAllOfficers("water", "critical")}><Siren className="h-4 w-4" aria-hidden="true" />ส่งทดสอบ น้ำล้นตลิ่ง</Button>
@@ -224,9 +222,9 @@ export default function AlertTestWorkspace() {
             <li>น้ำลดต่ำกว่าตลิ่งแล้ว ระบบแจ้ง &quot;น้ำลดแล้ว&quot; ให้เองในอำเภอนั้น</li>
             <li>อยู่ในพื้นที่ที่สมัครไว้ (เลือกอำเภอ) เรื่องเดียวกันส่งวันละครั้ง</li>
           </ul>
-          <p className="mt-2">ส่งข้อความถึงประชาชนเอง หรือเปิด/ปิดการส่งอัตโนมัติ ได้ที่ <Link href="/admin/settings" className="font-bold text-[#0b4c86] underline">ตั้งค่าระบบ › แจ้งเตือนประชาชน</Link></p>
+          <p className="mt-2">ส่งข้อความถึงประชาชนเอง หรือเปิด/ปิดการส่งอัตโนมัติ ได้ที่ <Link href="/admin/public-alerts" className="font-bold text-[#0b4c86] underline">เมนู แจ้งเตือนประชาชน</Link></p>
         </div>
       </Section>
-    </AdminPage>
+    </div>
   );
 }

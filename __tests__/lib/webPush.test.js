@@ -127,7 +127,7 @@ test("เชื่อมต่อไม่ได้: ลองใหม่ 1 ค
   const fetchImpl = jest.fn()
     .mockRejectedValueOnce(Object.assign(new TypeError("fetch failed"), { cause: { code: "ECONNRESET" } }))
     .mockResolvedValueOnce({ status: 201 });
-  const result = await sendWebPush(sub, { title: "[ทดสอบ]" }, { vapid: { ...keys, subject: "mailto:eoc@stn.go.th" }, fetchImpl });
+  const result = await sendWebPush(sub, { title: "[ทดสอบ]" }, { vapid: { ...keys, subject: "mailto:eoc@stn.go.th" }, fetchImpl, retryDelayMs: 0 });
   expect(result.ok).toBe(true);
   expect(fetchImpl).toHaveBeenCalledTimes(2);
 });

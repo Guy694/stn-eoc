@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import AppIcon from "@/components/icons/AppIcon";
+import { PageHero } from "@/components/common/ThemePanels";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -103,12 +104,7 @@ export default function FestivalCompare() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-6">
-                <h1 className="text-3xl font-bold flex items-center gap-3">
-                    <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เปรียบเทียบสถิติอุบัติเหตุช่วงเทศกาล
-                </h1>
-                <p className="text-blue-100 mt-1">เปรียบเทียบข้อมูลระหว่างเทศกาล ปีใหม่ vs สงกรานต์ หรือข้ามปี</p>
-            </div>
+            <PageHero icon="barChart" eyebrow="อุบัติเหตุช่วงเทศกาล" title="เปรียบเทียบสถิติอุบัติเหตุช่วงเทศกาล" subtitle="เปรียบเทียบข้อมูลระหว่างเทศกาล ปีใหม่ vs สงกรานต์ หรือข้ามปี" />
 
             {/* Session Selector */}
             <div className="border border-slate-200 bg-white rounded-2xl p-6">

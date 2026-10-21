@@ -7,6 +7,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import EOCTeamManager from "@/components/EOCTeamManager";
 import { teamRegistry } from "@/src/features/eoc/registries/team.registry";
 import { showConfirm, showError, showSuccess } from "@/lib/sweetAlert";
+import { PageHero, HeroProgress, heroButtonClass, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 
 export default function EOCSessionTeamsPage() {
     const router = useRouter();
@@ -60,31 +61,43 @@ export default function EOCSessionTeamsPage() {
 
     if (authLoading || !user) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
+            <div className="flex min-h-screen items-center justify-center bg-[#edf5fc]">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#0b4c86]/20 border-t-[#0b4c86]" aria-label="กำลังโหลด" />
             </div>
         );
     }
 
+    const pct = readiness?.team_count ? Math.round((readiness.ready_team_count / readiness.team_count) * 100) : 0;
+
     return (
         <EOCLayout>
-            <div className="container mx-auto p-6">
-                <section className="mb-5 border border-slate-200 bg-white p-5 shadow-sm">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl font-black text-slate-900">ความพร้อมกลุ่มภารกิจ</h1>
-                            <p className="mt-1 text-sm text-slate-600">{readiness ? `พร้อม ${readiness.ready_team_count}/${readiness.team_count} กลุ่ม` : "กำลังตรวจสอบข้อมูล"}</p>
-                        </div>
-                        <div className="flex gap-2">
-                            <button type="button" onClick={loadReadiness} disabled={checking} className="border border-slate-300 px-4 py-2 text-sm font-bold disabled:opacity-50">{checking ? "กำลังตรวจ..." : "ตรวจอีกครั้ง"}</button>
-                            <button type="button" onClick={applyStandardTemplate} className="bg-cyan-700 px-4 py-2 text-sm font-bold text-white">เพิ่ม 23 กลุ่มมาตรฐาน</button>
-                        </div>
-                    </div>
-                    {readiness?.teams?.length ? <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{readiness.teams.map((team) => <div key={team.session_team_id} className={`border p-3 text-sm ${team.ready ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}><p className="font-black">{team.team_code} · {team.team_name_th}</p><p className="mt-1 text-xs">{team.ready ? "พร้อมปฏิบัติงาน" : team.issues.join(" • ")}</p></div>)}</div> : null}
-                </section>
-                <EOCTeamManager
-                    sessionId={sessionId}
+            <div className="mx-auto max-w-7xl space-y-4">
+                <PageHero
+                    icon="users"
+                    eyebrow="เหตุการณ์ › กลุ่มภารกิจ"
+                    title="ความพร้อมกลุ่มภารกิจ"
+                    subtitle="ตรวจว่าทุกกลุ่มมีหัวหน้าและสมาชิกพร้อมปฏิบัติงาน แล้วจัดการสมาชิกด้านล่าง"
+                    actions={(
+                        <>
+                            <button type="button" onClick={loadReadiness} disabled={checking} className={heroButtonClass}>{checking ? "กำลังตรวจ…" : "ตรวจอีกครั้ง"}</button>
+                            <button type="button" onClick={applyStandardTemplate} className={heroPrimaryButtonClass}>เพิ่ม 23 กลุ่มมาตรฐาน</button>
+                        </>
+                    )}
+                    aside={readiness ? <HeroProgress label="กลุ่มที่พร้อม" value={`${readiness.ready_team_count}/${readiness.team_count}`} unit="" percent={pct} note={pct >= 100 ? "พร้อมทุกกลุ่ม" : "กลุ่มที่ยังไม่พร้อมแสดงด้านล่าง"} /> : null}
                 />
+                {readiness?.teams?.length ? (
+                    <section className="rounded-2xl border border-slate-200 bg-white p-4 font-[family-name:var(--font-kanit)]" aria-label="สถานะรายกลุ่ม">
+                        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                            {readiness.teams.map((team) => (
+                                <div key={team.session_team_id} className={`rounded-xl border p-3 text-sm ${team.ready ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+                                    <p className="font-semibold text-slate-900">{team.team_code} · {team.team_name_th}</p>
+                                    <p className={`mt-1 text-xs ${team.ready ? "text-emerald-800" : "text-amber-900"}`}>{team.ready ? "พร้อมปฏิบัติงาน" : team.issues.join(" • ")}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                ) : null}
+                <EOCTeamManager sessionId={sessionId} />
             </div>
         </EOCLayout>
     );

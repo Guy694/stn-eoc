@@ -178,7 +178,8 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       collapsible: anyOpen,
       defaultExpanded: !anyOpen,
       items: [
-        { name: "ประกาศ", path: "/announcements", iconKey: "megaphone" }
+        { name: "ประกาศ", path: "/announcements", iconKey: "megaphone" },
+        { name: "แจ้งเตือนประชาชน", path: "/admin/public-alerts", iconKey: "announcements", description: "ส่งเตือนภัยเข้ามือถือประชาชน ข้อความสำเร็จรูป การส่งอัตโนมัติ" }
       ]
     },
     {
@@ -188,7 +189,6 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       defaultExpanded: false,
       items: [
         { name: "ตั้งค่าระบบ", path: "/admin/settings", iconKey: "settings", description: "สถานะระบบ แจ้งเตือน การเชื่อมต่อ ความปลอดภัย สำรองข้อมูล" },
-        { name: "ทดสอบการแจ้งเตือน", path: "/admin/alert-test", iconKey: "megaphone", description: "ตรวจความพร้อม ทดสอบเสียง popup และแจ้งเตือนเข้ามือถือ" },
         { name: "เปิด/ปิด EOC", path: "/admin/eoc-management", iconKey: "power" },
         { name: "ประวัติเหตุการณ์", path: "/admin/eoc-sessions", iconKey: "history" },
         { name: "เจ้าหน้าที่และสิทธิ์", path: "/admin/officers", iconKey: "users" },
@@ -203,9 +203,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       title: "บัญชีของฉัน",
       items: [
         { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
-        { name: "ตั้งค่าบัญชี", path: "/settings", iconKey: "lock" },
-        { name: "คู่มือเจ้าหน้าที่", path: "/eoc/guide", iconKey: "guide" },
-        { name: "คู่มือผู้ดูแลระบบ", path: "/eoc/guide/admin", iconKey: "guide" }
+        { name: "คู่มือการใช้งาน", path: "/eoc/guide", iconKey: "guide", description: "คู่มือเจ้าหน้าที่ และคู่มือผู้ดูแลระบบ (แท็บด้านบน)", alsoActive: ["/eoc/guide/admin"] }
       ]
     }
   ];

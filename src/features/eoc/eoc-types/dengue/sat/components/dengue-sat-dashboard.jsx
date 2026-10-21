@@ -29,9 +29,9 @@ export default function DengueSatDashboard({ eocType = "dengue", teamCode = "sat
   const stats = state.data?.totalStats || {};
   return (
     <TeamPageShell eocType={eocType} teamCode={teamCode} activeSection="dashboard">
-      <div className="flex flex-wrap items-end justify-between gap-3 border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-end justify-between gap-3 border border-slate-200 bg-white p-4 rounded-xl">
         <div>
-          <h2 className="text-lg font-black text-slate-900">สรุปสถานการณ์ไข้เลือดออก</h2>
+          <h2 className="text-lg font-bold text-slate-900">สรุปสถานการณ์ไข้เลือดออก</h2>
           <p className="text-sm text-slate-600">แดชบอร์ดเฉพาะ EOC ไข้เลือดออกของทีม SAT</p>
         </div>
         <label className="text-sm font-bold text-slate-700">
@@ -39,11 +39,11 @@ export default function DengueSatDashboard({ eocType = "dengue", teamCode = "sat
           <input type="date" value={selectedDate} onChange={(event) => {
             setState((current) => ({ ...current, loading: true, error: "" }));
             setSelectedDate(event.target.value);
-          }} className="ml-2 border border-slate-300 px-3 py-2" />
+          }} className="ml-2 border border-slate-300 px-3 py-2 rounded-lg" />
         </label>
       </div>
-      {state.loading ? <div className="bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดข้อมูล...</div> : state.error ? (
-        <div className="border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800">{state.error}</div>
+      {state.loading ? <div className="bg-white p-10 text-center text-sm text-slate-500 rounded-xl">กำลังโหลดข้อมูล...</div> : state.error ? (
+        <div className="border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800 rounded-xl">{state.error}</div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="ผู้ป่วยรวมวันนี้" value={(stats.total_patients || 0).toLocaleString()} />

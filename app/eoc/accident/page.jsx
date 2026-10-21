@@ -1,26 +1,6 @@
-"use client";
-import EOCLayout from "@/components/layouts/EOCLayout";
-import AppIcon from "@/components/icons/AppIcon";
+import { redirect } from "next/navigation";
 
-export default function AccidentEOCPage() {
-    return (
-        <EOCLayout>
-            <div className="flex items-center justify-center min-h-[70vh]">
-                <div className="border border-slate-200 text-center p-8 bg-white rounded-2xl max-w-md">
-                    <div className="text-6xl mb-6"><AppIcon icon="route" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
-                    <h1 className="text-2xl font-black text-slate-900 mb-4">
-                        กำลังพัฒนาระบบ
-                    </h1>
-                    <p className="text-slate-600 text-lg mb-2">
-                        ระบบติดตามอุบัติเหตุช่วงเทศกาลอยู่ระหว่างการพัฒนา
-                    </p>
-                    <p className="text-slate-500">
-                        ขออภัยในความไม่สะดวก กรุณารอใช้งานในเร็วๆ นี้
-                    </p>
-                </div>
-            </div>
-        </EOCLayout>
-    );
+// EOC อุบัติเหตุทั่วไปยังไม่เปิดใช้ — งานอุบัติเหตุอยู่ที่ "อุบัติเหตุช่วงเทศกาล"
+export default function AccidentEOCRedirect() {
+  redirect("/eoc/festival-accidents");
 }
-
-

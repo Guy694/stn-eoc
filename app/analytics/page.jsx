@@ -38,6 +38,7 @@ const AnalyticsAIChat = dynamic(() => import("@/components/analytics/AnalyticsAI
     loading: () => <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />
 });
 import { useAuth } from "@/context/AuthContext";
+import { PageHero, heroButtonClass } from "@/components/common/ThemePanels";
 
 const TABS = [
     { id: "overview", label: "ภาพรวม", icon: BarChart3 },
@@ -107,36 +108,19 @@ export default function AnalyticsPage() {
 
     return (
         <EOCLayout>
-            <main className="mx-auto max-w-7xl p-4 sm:p-6">
-                <header className="rounded-2xl bg-slate-900 p-5 text-white shadow-lg sm:p-7">
-                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex items-start gap-4">
-                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
-                                <Activity className="h-6 w-6" />
-                            </span>
-                            <div>
-                                <p className="text-sm font-semibold text-emerald-300">ข้อมูลสนับสนุนการตัดสินใจ</p>
-                                <h1 className="mt-1 text-2xl font-black sm:text-3xl">วิเคราะห์สถานการณ์ EOC</h1>
-                                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-                                    รวมตัวชี้วัด ทีมปฏิบัติการ เวชภัณฑ์ และแนวโน้มโรคเพื่อสนับสนุนการตัดสินใจของ Incident Commander
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="rounded-xl bg-white/10 px-4 py-2 text-sm">
-                                อัปเดต {data?.generated_at ? new Date(data.generated_at).toLocaleString("th-TH") : "-"}
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => loadAnalytics(true)}
-                                disabled={loading}
-                                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
-                            >
-                                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> รีเฟรช
-                            </button>
-                        </div>
-                    </div>
-                </header>
+            <main className="mx-auto max-w-7xl font-[family-name:var(--font-kanit)]">
+                <PageHero
+                    icon="activity"
+                    eyebrow="ข้อมูลสนับสนุนการตัดสินใจ"
+                    title="วิเคราะห์สถานการณ์ EOC"
+                    subtitle="ตัวชี้วัด ทีมปฏิบัติการ เวชภัณฑ์ และแนวโน้มโรค เพื่อสนับสนุนการตัดสินใจของ Incident Commander"
+                    meta={`อัปเดต ${data?.generated_at ? new Date(data.generated_at).toLocaleString("th-TH") : "-"}`}
+                    actions={(
+                        <button type="button" onClick={() => loadAnalytics(true)} disabled={loading} className={heroButtonClass}>
+                            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} aria-hidden="true" /> รีเฟรช
+                        </button>
+                    )}
+                />
 
                 {error && (
                     <div className="mt-5 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
@@ -144,7 +128,7 @@ export default function AnalyticsPage() {
                     </div>
                 )}
 
-                <nav className="mt-5 flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+                <nav className="mt-4 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 font-[family-name:var(--font-kanit)]">
                     {TABS.map((tab) => {
                         const Icon = tab.icon;
                         return (
@@ -153,7 +137,7 @@ export default function AnalyticsPage() {
                                 type="button"
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition ${activeTab === tab.id
-                                    ? "bg-slate-900 text-white"
+                                    ? "bg-[#0b4c86] text-white"
                                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                                     }`}
                             >
@@ -196,20 +180,20 @@ function OverviewTab({ data }) {
                 {cards.map((card) => {
                     const Icon = card.icon;
                     return (
-                        <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5">
                             <span className={`flex h-10 w-10 items-center justify-center rounded-xl border ${toneClass[card.tone]}`}>
                                 <Icon className="h-5 w-5" />
                             </span>
                             <p className="mt-4 text-sm font-semibold text-slate-500">{card.label}</p>
-                            <p className="mt-1 text-3xl font-black text-slate-900">{card.value} <span className="text-sm font-semibold text-slate-500">{card.unit}</span></p>
+                            <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900">{card.value} <span className="text-sm font-semibold text-slate-500">{card.unit}</span></p>
                         </article>
                     );
                 })}
             </div>
 
             <div className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 className="flex items-center gap-2 text-lg font-black text-slate-900"><AlertTriangle className="h-5 w-5 text-amber-500" /> ข้อเสนอแนะอัตโนมัติ</h2>
+                <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900"><AlertTriangle className="h-5 w-5 text-amber-500" /> ข้อเสนอแนะอัตโนมัติ</h2>
                     <div className="mt-4 space-y-3">
                         {(data?.recommendations || []).map((item) => (
                             <article key={`${item.title}-${item.detail}`} className={`rounded-xl border p-4 ${priorityStyles[item.priority] || priorityStyles.info}`}>
@@ -220,8 +204,8 @@ function OverviewTab({ data }) {
                     </div>
                 </section>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 className="flex items-center gap-2 text-lg font-black text-slate-900"><Clock3 className="h-5 w-5 text-blue-600" /> EOC ที่กำลังเปิด</h2>
+                <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900"><Clock3 className="h-5 w-5 text-blue-600" /> EOC ที่กำลังเปิด</h2>
                     <div className="mt-4 space-y-3">
                         {(data?.active_sessions || []).length ? data.active_sessions.map((session) => (
                             <div key={session.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
@@ -251,18 +235,18 @@ function TeamsTab({ teams }) {
             {teams.map((team) => {
                 const status = statusMeta[team.status] || statusMeta.warning;
                 return (
-                    <article key={team.team_code} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <article key={team.team_code} className="rounded-2xl border border-slate-200 bg-white p-5">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <p className="text-xs font-black tracking-wider text-blue-600">{team.team_code}</p>
-                                <h2 className="mt-1 font-black text-slate-900">{team.team_name_th}</h2>
+                                <p className="text-xs font-semibold tracking-wider text-[#0b4c86]">{team.team_code}</p>
+                                <h2 className="mt-1 font-semibold text-slate-900">{team.team_name_th}</h2>
                             </div>
                             <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${status.className}`}>{status.label}</span>
                         </div>
                         <div className="mt-5 flex items-end justify-between">
                             <div>
                                 <p className="text-sm text-slate-500">คะแนนความพร้อม</p>
-                                <p className="text-3xl font-black text-slate-900">{team.readiness_score}<span className="text-sm text-slate-400">/100</span></p>
+                                <p className="text-3xl font-bold tabular-nums text-slate-900">{team.readiness_score}<span className="text-sm text-slate-400">/100</span></p>
                             </div>
                             <div className="text-right text-sm text-slate-600">
                                 <p>สมาชิก {team.member_count} คน</p>
@@ -321,7 +305,7 @@ function InventoryTab({ inventory }) {
 function DiseaseTab({ chartData, districts }) {
     return (
         <div className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="font-black text-slate-900">แนวโน้มผู้ป่วย 30 วันล่าสุด</h2>
                 <div className="mt-5 h-80">
                     <ResponsiveContainer width="100%" height="100%">
@@ -335,7 +319,7 @@ function DiseaseTab({ chartData, districts }) {
                     </ResponsiveContainer>
                 </div>
             </section>
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="font-black text-slate-900">เทียบ 7 วันรายอำเภอ</h2>
                 <div className="mt-4 space-y-3">
                     {districts.map((item) => {

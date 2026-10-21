@@ -9,9 +9,9 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { AdminPage, StatusPill, inputClass } from "@/components/admin/crud";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import OfficerPushCard from "@/components/admin/OfficerPushCard";
-import AlertSoundSettings from "@/components/common/AlertSoundSettings";
 import TelegramLinkCard from "@/components/admin/TelegramLinkCard";
 import ProviderIdLinkCard from "@/components/admin/ProviderIdLinkCard";
+import ChangePasswordCard from "@/components/account/ChangePasswordCard";
 
 const TITLES = ["นาย", "นาง", "นางสาว", "ดร."];
 
@@ -164,19 +164,19 @@ export default function ProfilePage() {
                             </ul>
                         </section>
 
-                        <Link href="/settings" className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 hover:bg-[#edf5fc]">
+                        <a href="#password" className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 hover:bg-[#edf5fc]">
                             <KeyRound className="h-5 w-5 shrink-0 text-[#0b4c86]" aria-hidden="true" />
                             <span>
                                 <span className="block font-black text-slate-900">เปลี่ยนรหัสผ่าน</span>
-                                <span className="block text-sm text-slate-600">ที่หน้าตั้งค่าบัญชี</span>
+                                <span className="block text-sm text-slate-600">อยู่ด้านล่างของหน้านี้</span>
                             </span>
-                        </Link>
+                        </a>
                     </div>
 
                     <TelegramLinkCard className="lg:col-span-2" />
                     <OfficerPushCard className="lg:col-span-2" />
-                    <AlertSoundSettings tone="admin" className="lg:col-span-2" showDeviceNote={false} />
                     <ProviderIdLinkCard className="lg:col-span-2" />
+                    <ChangePasswordCard className="lg:col-span-2" />
                 </div>
             </AdminPage>
         </EOCLayout>
