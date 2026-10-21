@@ -28,11 +28,62 @@ function Gauge({ state, delay = 0 }) {
   );
 }
 
+// แนวโน้ม 24 ชม. จากค่าที่ระบบบันทึกทุกชั่วโมง (+ ค่าล่าสุดของสถานี) — เส้นประ = ตลิ่ง (แสดงเมื่ออยู่ใกล้ช่วงของกราฟ)
+const SPARK_W = 112;
+const SPARK_H = 48;
+export function sparkPoints(history = [], station = null) {
+  const points = history.map((p) => ({ t: Date.parse(`${p.t.replace(" ", "T")}+07:00`), level: Number(p.level) }))
+    .filter((p) => Number.isFinite(p.t) && Number.isFinite(p.level));
+  const now = Date.parse(station?.observedAt || "");
+  if (Number.isFinite(now) && Number.isFinite(Number(station?.waterLevelMsl)) && (!points.length || now > points.at(-1).t)) {
+    points.push({ t: now, level: Number(station.waterLevelMsl) });
+  }
+  return points.sort((a, b) => a.t - b.t);
+}
+
+function Sparkline({ station, history }) {
+  const points = sparkPoints(history, station);
+  if (points.length < 3) {
+    return <p className="w-28 shrink-0 self-center text-right text-[11px] leading-4 text-slate-400">กำลังสะสมข้อมูล<br />แนวโน้ม 24 ชม.</p>;
+  }
+  const levels = points.map((p) => p.level);
+  let min = Math.min(...levels);
+  let max = Math.max(...levels);
+  const bank = Number(station.bankLevelMsl);
+  const showBank = Number.isFinite(bank) && bank <= max + 0.6;
+  if (showBank) max = Math.max(max, bank);
+  const pad = Math.max((max - min) * 0.15, 0.05);
+  min -= pad;
+  max += pad;
+  const t0 = points[0].t;
+  const span = Math.max(points.at(-1).t - t0, 1);
+  const x = (t) => ((t - t0) / span) * (SPARK_W - 4) + 2;
+  const y = (v) => SPARK_H - 2 - ((v - min) / (max - min)) * (SPARK_H - 4);
+  const line = points.map((p) => `${x(p.t).toFixed(1)},${y(p.level).toFixed(1)}`).join(" ");
+  const change = points.at(-1).level - points[0].level;
+  const tone = change > 0.02 ? "#c2410c" : change < -0.02 ? "#0f766e" : "#64748b";
+  const hours = Math.round(span / 3600000);
+  const last = points.at(-1);
+  return (
+    <figure className="w-28 shrink-0 self-center" aria-label={`แนวโน้ม ${hours} ชม. ${change >= 0 ? "เพิ่มขึ้น" : "ลดลง"} ${Math.abs(change).toFixed(2)} เมตร`}>
+      <svg viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} className="h-12 w-28 overflow-visible" aria-hidden="true">
+        {showBank ? <line x1="0" x2={SPARK_W} y1={y(bank)} y2={y(bank)} stroke="#0c2f4a" strokeOpacity=".55" strokeWidth="1" strokeDasharray="3 3" /> : null}
+        <polygon points={`${x(t0).toFixed(1)},${SPARK_H} ${line} ${x(last.t).toFixed(1)},${SPARK_H}`} fill={tone} fillOpacity=".1" />
+        <polyline points={line} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={x(last.t)} cy={y(last.level)} r="2.8" fill={tone} stroke="#fff" strokeWidth="1.2" />
+      </svg>
+      <figcaption className="mt-0.5 text-right text-[11px] leading-4 text-slate-500">
+        {hours} ชม. <b className="font-semibold tabular-nums" style={{ color: tone }}>{change > 0 ? "+" : ""}{change.toFixed(2)} ม.</b>
+      </figcaption>
+    </figure>
+  );
+}
+
 /** "น้ำในคลองตอนนี้": สถานีวัดระดับน้ำ ThaiWater ในสตูล เรียงจากที่น่าห่วงที่สุด */
 // จำนวนสถานีที่แสดงก่อนกด "ดูทั้งหมด" (เรียงจากน่าห่วงที่สุด จึงไม่พลาดสถานีสำคัญ)
 const INITIAL_COUNT = 6;
 
-export default function CanalStrip({ stations = [], observedAt = null, loading = false }) {
+export default function CanalStrip({ stations = [], observedAt = null, loading = false, history = {} }) {
   const [expanded, setExpanded] = useState(false);
   const sorted = sortCanals(stations);
   const visible = expanded ? sorted : sorted.slice(0, INITIAL_COUNT);
@@ -89,6 +140,7 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
                     ) : null}
                   </p>
                 </div>
+                <Sparkline station={station} history={history[station.id] || []} />
               </li>
             );
           })}
@@ -108,7 +160,7 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
       ) : (
         <p className="mt-4 rounded-3xl bg-white p-5 text-slate-600">ยังไม่มีข้อมูลจากสถานีวัดระดับน้ำ ลองใหม่อีกครั้งภายหลัง</p>
       )}
-      <p className="mt-2 text-xs text-slate-500">ตัวเลข = ระยะจากระดับน้ำถึงตลิ่ง (ติดลบ = ยังต่ำกว่าตลิ่ง) • เส้นประในเกจคือระดับตลิ่ง</p>
+      <p className="mt-2 text-xs text-slate-500">ตัวเลข = ระยะจากระดับน้ำถึงตลิ่ง (ติดลบ = ยังต่ำกว่าตลิ่ง) • เส้นประในเกจคือระดับตลิ่ง • กราฟเล็กด้านขวา = ระดับน้ำ 24 ชม.ล่าสุด (ส้ม = ขึ้น, เขียว = ลง)</p>
 
       <style>{`
         .canal-gauge__water { transform-origin: bottom; animation: canal-fill 1.1s cubic-bezier(.2,.8,.2,1) both; }

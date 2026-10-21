@@ -284,7 +284,7 @@ export default function PublicHome() {
   const [situation, setSituation] = useState(null);
   const [weather, setWeather] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
-  const [water, setWater] = useState({ loading: true, stations: [], fetchedAt: null });
+  const [water, setWater] = useState({ loading: true, stations: [], fetchedAt: null, history: {} });
   const [ops, setOps] = useState(null);
   const [roads, setRoads] = useState([]);
   const [waterReports, setWaterReports] = useState([]);
@@ -329,8 +329,8 @@ export default function PublicHome() {
       setLoading(false);
     });
     // ข้อมูลประกอบ: โหลดแยก ไม่ให้หน้าแรกรอ
-    load("/stn-eoc/api/public/water-levels").then((json) => {
-      if (!controller.signal.aborted) setWater({ loading: false, stations: json?.stations || [], fetchedAt: json?.fetchedAt || null });
+    load("/stn-eoc/api/public/water-levels?history=1").then((json) => {
+      if (!controller.signal.aborted) setWater({ loading: false, stations: json?.stations || [], fetchedAt: json?.fetchedAt || null, history: json?.history || {} });
     });
     load("/stn-eoc/api/public/ops-today").then((json) => {
       if (!controller.signal.aborted) setOps(json?.open ? json.data : null);
@@ -597,7 +597,7 @@ export default function PublicHome() {
         </nav>
 
         {/* ── น้ำในคลองตอนนี้ ── */}
-        <CanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} />
+        <CanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} history={water.history} />
 
         {/* ── รายงานน้ำจากประชาชน (มือถือ/แท็บเล็ต: แถบเลื่อนต่อจากระดับน้ำในคลอง) ── */}
         <CitizenWaterReports reports={waterReports} layout="strip" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:hidden" />

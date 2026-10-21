@@ -13,7 +13,7 @@ import { pushStatus, subscribePush } from "@/lib/pwaClient";
 const API = "/stn-eoc/api/admin/public-push";
 const KIND = { auto: ["อัตโนมัติ", "blue"], manual: ["เจ้าหน้าที่ส่ง", "amber"], test: ["ทดสอบ", "gray"] };
 const kindOf = (row) => (row.audience === "officer" ? ["ถึงเจ้าหน้าที่", "red"] : KIND[row.kind] || [row.kind, "gray"]);
-const EMPTY = { title: "", body: "", url: "/stn-eoc/", districts: [], level: "info" };
+const EMPTY = { title: "", body: "", url: "/stn-eoc/", districts: [], level: "info", audience: "public" };
 
 export default function PublicPushSettings() {
   const { notice, success, fail } = useNotice();
@@ -57,7 +57,7 @@ export default function PublicPushSettings() {
     success(`ส่งอัตโนมัติ: ${AUTO_LEVELS[json.data.auto_level].label}`);
     await load();
   });
-  const applyTemplate = (template) => setForm((f) => ({ ...fillTemplate(template, f.districts), districts: f.districts }));
+  const applyTemplate = (template) => setForm((f) => ({ ...fillTemplate(template, f.districts), districts: f.districts, audience: f.audience }));
   const checkNow = () => run(async () => {
     const json = await apiRequest(API, { method: "POST", body: { action: "run" } });
     success(json.message);
@@ -85,8 +85,9 @@ export default function PublicPushSettings() {
   const { vapid_ready: vapidReady, table_ready: tableReady, settings, stats } = state.data;
   const ready = vapidReady && tableReady;
   const pending = unfilledPlaceholders(`${form.title} ${form.body}`);
-  const target = form.districts.length ? form.districts.map((d) => `อ.${d}`).join(", ") : "ทุกคนที่สมัครไว้";
-  const recipients = !stats ? 0 : form.districts.length
+  const toOfficers = form.audience === "officers";
+  const target = toOfficers ? "เจ้าหน้าที่เท่านั้น" : form.districts.length ? form.districts.map((d) => `อ.${d}`).join(", ") : "ทุกคนที่สมัครไว้";
+  const recipients = !stats ? 0 : toOfficers ? (stats.officers?.devices || 0) : form.districts.length
     ? stats.whole_province + form.districts.reduce((s, d) => s + (stats.by_district[d] || 0), 0)
     : stats.total;
 
@@ -152,7 +153,7 @@ export default function PublicPushSettings() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h3 className="text-base font-black text-slate-900">ส่งข้อความถึงประชาชน</h3>
+        <h3 className="text-base font-black text-slate-900">ส่งข้อความแจ้งเตือน</h3>
         <p className="mt-0.5 text-xs text-slate-500">ใช้กับเรื่องสำคัญเท่านั้น เช่น ประกาศอพยพ เปิดศูนย์พักพิง — ส่งบ่อยเกินไปคนจะปิดการแจ้งเตือน</p>
         <div className="mt-3">
           <p className="text-sm font-bold text-slate-800">ข้อความสำเร็จรูป</p>
@@ -178,6 +179,16 @@ export default function PublicPushSettings() {
           </Field>
           <div className="sm:col-span-2">
             <p className="mb-1 text-sm font-bold text-slate-800">ส่งถึง</p>
+            <div className="mb-2 inline-flex rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="กลุ่มผู้รับ">
+              {[["public", "ประชาชน"], ["officers", "เจ้าหน้าที่เท่านั้น"]].map(([key, label]) => {
+                const on = form.audience === key;
+                return <button key={key} type="button" role="radio" aria-checked={on} onClick={() => setForm((f) => ({ ...f, audience: key }))} className={`min-h-9 rounded-lg px-4 text-sm font-semibold transition ${on ? "bg-white text-[#0b4c86] shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>{label}</button>;
+              })}
+            </div>
+            {toOfficers ? (
+              <p className="text-xs text-slate-500">ส่งถึงเครื่องของเจ้าหน้าที่ที่เปิด “แจ้งเตือนเข้ามือถือ” ในหน้าโปรไฟล์ ({formatNumber(stats?.officers?.devices || 0)} เครื่อง จาก {formatNumber(stats?.officers?.officers || 0)} คน) — ประชาชนไม่เห็น และไม่แสดงในหน้าแจ้งเตือนย้อนหลังของประชาชน</p>
+            ) : (
+            <>
             <div className="flex flex-wrap gap-1.5">
               {SATUN_DISTRICT_NAMES.map((d) => {
                 const on = form.districts.includes(d);
@@ -185,6 +196,8 @@ export default function PublicPushSettings() {
               })}
             </div>
             <p className="mt-1 text-xs text-slate-500">ไม่เลือก = ทุกคน • ผู้ที่สมัครรับ &quot;ทั้งจังหวัด&quot; ได้รับทุกข้อความ</p>
+            </>
+            )}
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700 sm:col-span-2">
             <input type="checkbox" checked={form.level === "high"} onChange={(e) => setForm((f) => ({ ...f, level: e.target.checked ? "high" : "info" }))} />
@@ -193,7 +206,7 @@ export default function PublicPushSettings() {
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {pending.length ? <p className="w-full rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900" role="status">ยังมีส่วนที่ต้องแก้: {pending.join(" ")} — แก้ให้เป็นข้อมูลจริงก่อนส่ง</p> : null}
-          <Button disabled={busy || !ready || pending.length > 0 || form.title.trim().length < 4 || form.body.trim().length < 8} onClick={() => setConfirm(true)}><Send className="h-4 w-4" aria-hidden="true" />ส่งถึงประชาชน</Button>
+          <Button disabled={busy || !ready || pending.length > 0 || form.title.trim().length < 4 || form.body.trim().length < 8} onClick={() => setConfirm(true)}><Send className="h-4 w-4" aria-hidden="true" />{toOfficers ? "ส่งถึงเจ้าหน้าที่" : "ส่งถึงประชาชน"}</Button>
           <Button variant="secondary" disabled={busy || !ready || !device?.supported || device?.permission === "denied"} onClick={sendTest}><Smartphone className="h-4 w-4" aria-hidden="true" />ทดสอบส่งถึงเครื่องนี้</Button>
           {device && !device.supported ? <span className="text-xs text-slate-500">เบราว์เซอร์นี้รับแจ้งเตือนไม่ได้</span> : null}
         </div>
@@ -214,7 +227,7 @@ export default function PublicPushSettings() {
         ) : <p className="px-5 py-4 text-sm text-slate-500">ยังไม่เคยส่ง</p>}
       </section>
 
-      <AppDialog open={confirm} onOpenChange={(open) => !open && setConfirm(false)} title="ยืนยันส่งแจ้งเตือนถึงประชาชน"
+      <AppDialog open={confirm} onOpenChange={(open) => !open && setConfirm(false)} title={toOfficers ? "ยืนยันส่งแจ้งเตือนถึงเจ้าหน้าที่" : "ยืนยันส่งแจ้งเตือนถึงประชาชน"}
         description={`"${form.title}" จะเด้งบนมือถือของ${target} (ประมาณ ${formatNumber(recipients)} เครื่อง) ทันที และยกเลิกไม่ได้`} busy={busy}>
         <AppDialogActions className="mt-4">
           <AppDialogCancel disabled={busy} />

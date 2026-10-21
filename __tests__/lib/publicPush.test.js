@@ -106,3 +106,9 @@ describe("ระดับการส่งอัตโนมัติ / น้�
     expect(unfilledPlaceholders("[ทดสอบ] อพยพ [หมู่ที่] [ตำบล] [ตำบล]")).toEqual(["[หมู่ที่]", "[ตำบล]"]);
   });
 });
+
+test("ส่งข้อความถึงเจ้าหน้าที่เท่านั้น: ไม่แยกอำเภอ", () => {
+  const officers = validateBroadcastInput({ title: "[ทดสอบ] ประชุมด่วน", body: "[ทดสอบ] เจ้าหน้าที่ทุกทีมเข้าห้อง EOC 14.00 น.", districts: ["ละงู"], audience: "officers" });
+  expect(officers.value).toMatchObject({ audience: "officers", districts: [] });
+  expect(validateBroadcastInput({ title: "ทดสอบ", body: "ข้อความทดสอบระบบ", audience: "x" }).value.audience).toBe("public");
+});

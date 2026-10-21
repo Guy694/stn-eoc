@@ -210,6 +210,7 @@ export default function Sidebar() {
             items: [
                 { name: "หน้าหลัก", path: "/dashboard", iconKey: "home", description: "เลือกเหตุการณ์ก่อนเข้าสู่หน้าปฏิบัติการ" },
                 { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
+                { name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood" },
                 // ผู้บัญชาการเหตุการณ์ส่งเตือนภัยถึงประชาชนได้
                 ...(user.role === "commander" ? [{ name: "แจ้งเตือนประชาชน", path: "/admin/public-alerts", iconKey: "announcements" }] : [])
             ]
