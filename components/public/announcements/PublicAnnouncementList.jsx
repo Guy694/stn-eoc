@@ -114,19 +114,19 @@ function alertTime(value) {
 }
 
 /** แจ้งเตือนที่ส่งถึงประชาชน (ย้อนหลัง 30 วัน) — คอลัมน์ข้างรายการประกาศ */
-function SentAlertsPanel({ alerts }) {
+function SentAlertsPanel({ alerts, id = "sent-alerts", tall = false }) {
   if (!alerts.length) return null;
   return (
-    <aside aria-labelledby="sent-alerts-title" className="lg:sticky lg:top-4">
+    <aside aria-labelledby={`${id}-title`} className="lg:sticky lg:top-4">
       <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-[#d6e3ea]">
         <div className="flex items-center gap-3 bg-[#0c2f4a] px-5 py-4 text-white">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15"><BellRing className="h-5 w-5" aria-hidden="true" /></span>
           <div>
-            <h2 id="sent-alerts-title" className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">แจ้งเตือนที่ส่งถึงประชาชน</h2>
+            <h2 id={`${id}-title`} className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">แจ้งเตือนที่ส่งถึงประชาชน</h2>
             <p className="text-sm text-[#9fc9d6]">ข้อความเตือนภัยและข่าวด่วน 30 วันล่าสุด</p>
           </div>
         </div>
-        <ol className="relative max-h-[34rem] overflow-y-auto px-5 py-4">
+        <ol className={`relative overflow-y-auto px-5 py-4 ${tall ? "max-h-[calc(100vh-13rem)]" : "max-h-[34rem]"}`}>
           {alerts.slice(0, 8).map((alert, i) => {
             const high = alert.level === "high" || alert.level === "critical";
             return (
@@ -271,7 +271,7 @@ export default function PublicAnnouncementList() {
     <div className="bg-[#eef2f1] text-[#15232e]">
       {/* หัวหน้า + ค้นหา */}
       <section className="bg-[#0c2f4a] text-white">
-        <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 2xl:max-w-[94rem]">
           <p className="flex items-center gap-2 text-sm text-[#9fc9d6]"><Megaphone className="h-4 w-4" aria-hidden="true" /> ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล</p>
           <h1 className="mt-2 font-[family-name:var(--font-kanit)] text-[2rem] font-bold leading-tight sm:text-[2.6rem]">ประกาศและความรู้</h1>
           <p className="mt-2 max-w-2xl text-[1.05rem] leading-8 text-[#d5e7ec]">ประกาศจากศูนย์ฯ และสื่อความรู้จาก{RISKCOM_CREDIT} สำหรับดูแลตัวเองช่วงน้ำท่วม โรคระบาด และเหตุฉุกเฉิน</p>
@@ -293,7 +293,9 @@ export default function PublicAnnouncementList() {
         </div>
       </section>
 
-      <div className="mx-auto -mt-12 max-w-6xl px-4 pb-14 sm:px-6">
+      {/* จอกว้างมาก (≥1536px): แจ้งเตือนที่ส่งถึงประชาชนย้ายไปคอลัมน์ขวาสุด ข้างเรื่องเด่น · จอเล็กกว่าอยู่ข้างรายการประกาศ */}
+      <div className={`mx-auto -mt-12 max-w-6xl px-4 pb-14 sm:px-6 2xl:max-w-[94rem] ${alerts.length ? "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_23rem] 2xl:items-start 2xl:gap-8" : ""}`}>
+        <div className="min-w-0">
         {/* หมวด */}
         <div className="flex flex-wrap gap-2" role="group" aria-label="เลือกหมวด">
           {[["all", "ทั้งหมด", items.length], ...topics.map(([key, count]) => [key, TOPIC_STYLE[key].label, count])].map(([key, label, count]) => {
@@ -331,12 +333,12 @@ export default function PublicAnnouncementList() {
             {/* เรื่องเด่น (หมุนเวียน) */}
             <FeaturedCarousel items={slides} />
 
-            <div className={alerts.length ? "mt-12 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start" : ""}>
+            <div className={alerts.length ? "mt-12 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start 2xl:block" : ""}>
             <div className="min-w-0">
             {current.length > 0 ? (
               <section className={alerts.length ? "" : "mt-12"} aria-labelledby="current-title">
                 <h2 id="current-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">กำลังเผยแพร่</h2>
-                <ul className={`mt-4 grid gap-5 md:grid-cols-2 ${alerts.length ? "" : "lg:grid-cols-3"}`}>
+                <ul className={`mt-4 grid gap-5 md:grid-cols-2 ${alerts.length ? "2xl:grid-cols-3" : "lg:grid-cols-3"}`}>
                   {current.map((item, index) => <Card key={item.id} item={item} index={index} />)}
                 </ul>
               </section>
@@ -348,7 +350,7 @@ export default function PublicAnnouncementList() {
                   {pastShown.some((item) => item.source === "riskcom") ? "สื่อความรู้" : current.length || featured?.display_status === "current" ? "ความรู้และประกาศที่ผ่านมา" : "ความรู้และประกาศ"}
                 </h2>
                 <p className="mt-1 text-slate-600">สื่อความรู้สำหรับดูแลตัวเองและคนในครอบครัว</p>
-                <ul className={`mt-4 grid gap-5 md:grid-cols-2 ${alerts.length ? "" : "lg:grid-cols-3"}`}>
+                <ul className={`mt-4 grid gap-5 md:grid-cols-2 ${alerts.length ? "2xl:grid-cols-3" : "lg:grid-cols-3"}`}>
                   {pastShown.map((item, index) => <Card key={item.id} item={item} index={index} />)}
                 </ul>
               </section>
@@ -362,7 +364,7 @@ export default function PublicAnnouncementList() {
               </div>
             ) : null}
             </div>
-            <SentAlertsPanel alerts={alerts} />
+            <div className="2xl:hidden"><SentAlertsPanel alerts={alerts} id="sent-alerts-inline" /></div>
             </div>
           </>
         )}
@@ -374,6 +376,10 @@ export default function PublicAnnouncementList() {
               riskcom-stn <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /><span className="sr-only">(เปิดในแท็บใหม่)</span>
             </a>
           </p>
+        ) : null}
+        </div>
+        {alerts.length ? (
+          <div className="hidden 2xl:sticky 2xl:top-4 2xl:mt-16 2xl:block"><SentAlertsPanel alerts={alerts} id="sent-alerts-side" tall /></div>
         ) : null}
       </div>
 

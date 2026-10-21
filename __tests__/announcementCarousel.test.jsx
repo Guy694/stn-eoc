@@ -23,6 +23,6 @@ test("เรื่องเด่นหมุนเวียนเอง กด�
   expect(current().getAttribute("aria-label")).toMatch(/^2 จาก 3/);
   fireEvent.click(screen.getByLabelText("เรื่องถัดไป"));
   expect(current().getAttribute("aria-label")).toMatch(/^3 จาก 3/);
-  expect(screen.getByText("แจ้งเตือนที่ส่งถึงประชาชน")).toBeInTheDocument();
-  expect(screen.getByText(/น้ำล้นตลิ่ง สถานีA/)).toBeInTheDocument();
+  expect(screen.getAllByText("แจ้งเตือนที่ส่งถึงประชาชน")).toHaveLength(2); // ข้างรายการ (จอทั่วไป) + คอลัมน์ขวาสุด (จอกว้างมาก) — CSS เลือกแสดงทีละอัน
+  expect(screen.getAllByText(/น้ำล้นตลิ่ง สถานีA/).length).toBeGreaterThan(0);
 });
