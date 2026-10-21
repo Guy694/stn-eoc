@@ -57,6 +57,39 @@ function Segmented({ options, value, onChange, label, tone = "light" }) {
   );
 }
 
+// กราฟเส้นเล็กในการ์ดสถานี: ระดับน้ำตามช่วงที่เลือก · เส้นประ = ตลิ่ง (เมื่ออยู่ใกล้ช่วงของกราฟ)
+function MiniTrend({ station }) {
+  const points = (station.series || []).filter((p) => Number.isFinite(p.level));
+  if (points.length < 3) return <span className="shrink-0 text-[11px] text-slate-400">ข้อมูลยังน้อย</span>;
+  const W = 96;
+  const H = 30;
+  const levels = points.map((p) => p.level);
+  let min = Math.min(...levels);
+  let max = Math.max(...levels);
+  const bank = station.bank;
+  const showBank = Number.isFinite(bank) && bank <= max + 0.6;
+  if (showBank) max = Math.max(max, bank);
+  const pad = Math.max((max - min) * 0.12, 0.03);
+  min -= pad;
+  max += pad;
+  const x = (i) => (i / (points.length - 1)) * (W - 4) + 2;
+  const y = (v) => H - 2 - ((v - min) / (max - min)) * (H - 4);
+  const line = points.map((p, i) => `${x(i).toFixed(1)},${y(p.level).toFixed(1)}`).join(" ");
+  const change = levels.at(-1) - levels[0];
+  const tone = change > 0.02 ? "#c2410c" : change < -0.02 ? "#0f766e" : "#64748b";
+  return (
+    <span className="flex shrink-0 flex-col items-end" aria-label={`แนวโน้ม ${change >= 0 ? "ขึ้น" : "ลง"} ${Math.abs(change).toFixed(2)} เมตร`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-[30px] w-24 overflow-visible" aria-hidden="true">
+        {showBank ? <line x1="0" x2={W} y1={y(bank)} y2={y(bank)} stroke={C.red} strokeOpacity=".7" strokeWidth="1" strokeDasharray="3 3" /> : null}
+        <polygon points={`${x(0).toFixed(1)},${H} ${line} ${x(points.length - 1).toFixed(1)},${H}`} fill={tone} fillOpacity=".1" />
+        <polyline points={line} fill="none" stroke={tone} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={x(points.length - 1)} cy={y(levels.at(-1))} r="2.4" fill={tone} stroke="#fff" strokeWidth="1" />
+      </svg>
+      <span className="text-[11px] font-semibold tabular-nums" style={{ color: tone }}>{change > 0 ? "+" : ""}{change.toFixed(2)} ม.</span>
+    </span>
+  );
+}
+
 function CoverageNote({ coverage, from }) {
   const later = [["ฝน", coverage.rain], ["ระดับน้ำในคลอง", coverage.water], ["น้ำทะเล", coverage.sea]]
     .filter(([, start]) => !start || start.slice(0, 10) > from);
@@ -90,7 +123,10 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
   useEffect(() => { load(); }, [load]);
 
   const data = state.data;
-  const waterStations = useMemo(() => data?.water?.stations || [], [data]);
+  // สถานี ปภ. ก่อน แล้วตามด้วย ThaiWater (ในกลุ่มเดียวกันเรียงจากใกล้/เกินตลิ่งมากที่สุด)
+  const waterStations = useMemo(() => [...(data?.water?.stations || [])].sort((a, b) =>
+    (a.source === "ปภ." ? 0 : 1) - (b.source === "ปภ." ? 0 : 1) || (b.peak?.diff ?? -99) - (a.peak?.diff ?? -99)
+  ), [data]);
   const station = waterStations.find((s) => s.code === stationCode) || waterStations[0] || null;
   const rainDaily = data?.rain?.daily || [];
   const rainStations = data?.rain?.stations || [];
@@ -194,7 +230,7 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
           {/* ระดับน้ำในคลอง */}
           <Panel icon="waves" title="ระดับน้ำในคลอง" subtitle={`จุดบนกราฟ = ค่าสูงสุดของ${days <= 7 ? "แต่ละชั่วโมง" : days <= 30 ? "ทุก 3 ชั่วโมง" : "แต่ละวัน"} · เส้นแดง = ตลิ่ง`} bodyClassName="p-4">
             {waterStations.length ? (
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
                 <div className="min-w-0">
                   <label className="mb-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
                     สถานี
@@ -220,13 +256,15 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
                     </ResponsiveContainer>
                   </div>
                 </div>
-                <ul className="max-h-80 space-y-1.5 overflow-y-auto pr-1" aria-label="สถานีเรียงตามความเสี่ยง">
-                  {waterStations.map((s) => {
+                <ul className="max-h-[26rem] space-y-1.5 overflow-y-auto pr-1" aria-label="สถานี ปภ. ก่อน แล้วตามด้วย ThaiWater">
+                  {waterStations.map((s, i) => {
                     const on = s.code === station?.code;
                     const over = s.hours_over_bank > 0;
                     const near = !over && s.hours_near_bank > 0;
+                    const groupStart = i === 0 || waterStations[i - 1].source !== s.source;
                     return (
                       <li key={s.code}>
+                        {groupStart ? <p className={`px-1 pb-1 text-xs font-semibold text-slate-500 ${i ? "pt-2" : ""}`}>{s.source === "ปภ." ? "สถานี ปภ. (กล้อง CCTV ระดับน้ำ)" : "สถานี ThaiWater (สสน.)"}</p> : null}
                         <button type="button" onClick={() => setStationCode(s.code)} aria-pressed={on}
                           className={`w-full rounded-xl border px-3 py-2 text-left transition ${on ? "border-[#0b4c86] bg-sky-50" : "border-slate-200 hover:bg-slate-50"}`}>
                           <span className="flex items-start justify-between gap-2">
@@ -235,7 +273,10 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
                               {over ? `ล้น ${s.hours_over_bank} ชม.` : near ? "ใกล้ตลิ่ง" : s.source}
                             </span>
                           </span>
-                          <span className="mt-0.5 block text-xs text-slate-500">สูงสุด {fmt(s.peak?.level, 2)} ม.{s.peak?.diff !== null && s.peak?.diff !== undefined ? ` (เทียบตลิ่ง ${signed(s.peak.diff)})` : ""}</span>
+                          <span className="mt-1 flex items-end justify-between gap-2">
+                            <span className="text-xs leading-5 text-slate-500">สูงสุด {fmt(s.peak?.level, 2)} ม.{s.peak?.diff !== null && s.peak?.diff !== undefined ? <><br />เทียบตลิ่ง {signed(s.peak.diff)}</> : null}</span>
+                            <MiniTrend station={s} />
+                          </span>
                         </button>
                       </li>
                     );
