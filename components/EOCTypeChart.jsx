@@ -140,7 +140,7 @@ export default function EOCTypeChart() {
         return (
             <div className="border border-slate-200 bg-white rounded-2xl p-6">
                 <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600"></div>
+                    <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <span className="ml-3 text-slate-600">กำลังโหลดข้อมูล...</span>
                 </div>
             </div>

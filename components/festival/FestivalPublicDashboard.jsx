@@ -9,7 +9,7 @@ const FestivalMap = dynamic(() => import("./FestivalMap"), {
     loading: () => (
         <div className="h-72 flex items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600">
             <div className="text-center">
-                <div className="animate-spin h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                <div className="mx-auto mb-2 h-6 w-6 animate-spin rounded-full border-2 border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                 <p className="text-sm">กำลังโหลดแผนที่...</p>
             </div>
         </div>
@@ -76,7 +76,7 @@ export default function FestivalPublicDashboard({ festivalSession }) {
 
             {loading ? (
                 <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-red-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                    <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-slate-500 text-sm">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : !data?.hasActiveSession ? (

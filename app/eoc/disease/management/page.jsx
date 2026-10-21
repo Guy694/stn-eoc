@@ -129,11 +129,11 @@ export default function DiseaseManagementPage() {
                 <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-5">
                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
                         <div>
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-teal-100">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-blue-100">
                                 <MonitorCog className="h-4 w-4" />
-                                Officer EOC Management Dashboard
+                                ศูนย์จัดการงานเจ้าหน้าที่ EOC โรคระบาด
                             </div>
-                            <h1 className="mt-2 text-2xl font-black md:text-3xl">จัดการ EOC {eocName}</h1>
+                            <h1 className="mt-1 text-xl font-semibold leading-snug sm:text-2xl">จัดการ EOC {eocName}</h1>
                             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/90">
                                 ศูนย์รวมเมนูปฏิบัติการโรคระบาดสำหรับเจ้าหน้าที่ ตั้งแต่ภาพรวม แผนที่ สรุปรายวัน การบันทึกผู้ป่วย และข้อมูลสนับสนุน
                             </p>

@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
@@ -214,7 +216,7 @@ export default function AccidentRecordsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
-                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
                         <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
                         <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนบันทึกข้อมูล</p>
                     </div>
@@ -227,23 +229,12 @@ export default function AccidentRecordsPage() {
         <EOCLayout>
             <div className="p-6">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-xl font-semibold text-white mb-2 flex items-center gap-3 sm:text-2xl">
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="car" className="h-5 w-5" /></span>
-                            บันทึกอุบัติเหตุ
-                        </h1>
-                        <p className="text-blue-100">
-                            เหตุการณ์ครั้งที่ {activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}
-                        </p>
-                    </div>
-                    <button
+                <PageHero icon="car" title="บันทึกอุบัติเหตุ" subtitle={<>เหตุการณ์ครั้งที่ {activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}</>} actions={<><button
                         onClick={() => { setEditingRecord(null); resetForm(); setShowModal(true); }}
-                        className="bg-white text-[#0b4c86] px-6 py-3 rounded-lg hover:bg-blue-50 flex items-center gap-2"
+                        className={heroPrimaryButtonClass}
                     >
-                        <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึกอุบัติเหตุ
-                    </button>
-                </div>
+                        <AppIcon icon="plus" className="h-4 w-4" /> บันทึกอุบัติเหตุ
+                    </button></>} className="mb-6" />
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -284,17 +275,17 @@ export default function AccidentRecordsPage() {
                 {/* Table */}
                 <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                     <div className="p-4 bg-slate-50 border-b">
-                        <h3 className="font-semibold text-slate-900"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รายการอุบัติเหตุ ({records.length} รายการ)</h3>
+                        <h3 className="font-semibold text-slate-900">รายการอุบัติเหตุ ({records.length} รายการ)</h3>
                     </div>
 
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b border-red-500 mx-auto mb-2"></div>
+                            <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                             <p className="text-slate-600 text-sm">กำลังโหลด...</p>
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
                             <p className="text-slate-500">ยังไม่มีรายงานอุบัติเหตุ</p>
                         </div>
                     ) : (
@@ -332,15 +323,15 @@ export default function AccidentRecordsPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-2">
-                                                    <span className="px-2 py-1 text-xs rounded bg-slate-100"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {r.deaths}</span>
-                                                    <span className="px-2 py-1 text-xs rounded bg-yellow-100"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {r.injuries}</span>
+                                                    <span className="px-2 py-1 text-xs rounded bg-slate-100">เสียชีวิต {r.deaths}</span>
+                                                    <span className="px-2 py-1 text-xs rounded bg-yellow-100">บาดเจ็บ {r.injuries}</span>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-xs">
                                                 <div className="flex flex-wrap gap-1">
-                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-[#dbeaf7] text-[#0b4c86] rounded"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมา</span>}
-                                                    {r.no_helmet && <span className="px-1 py-0.5 bg-orange-100 text-orange-700 rounded"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก</span>}
-                                                    {r.speeding && <span className="px-1 py-0.5 bg-red-100 text-red-700 rounded"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เร็ว</span>}
+                                                    {r.drunk_driving && <span className="px-1 py-0.5 bg-[#dbeaf7] text-[#0b4c86] rounded">เมา</span>}
+                                                    {r.no_helmet && <span className="px-1 py-0.5 bg-orange-100 text-orange-700 rounded">ไม่สวมหมวก</span>}
+                                                    {r.speeding && <span className="px-1 py-0.5 bg-red-100 text-red-700 rounded">เร็ว</span>}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-center">
@@ -364,10 +355,10 @@ export default function AccidentRecordsPage() {
 
                 {/* Modal */}
                 {showModal && (
-                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
+                    <AppDialogFrame open onOpenChange={(open) => { if (!open) { setShowModal(false); setEditingRecord(null); resetForm(); } }}>
                         <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-slate-700 text-2xl font-bold mb-4">
+                                <h2 className="mb-4 text-lg font-black text-slate-900 sm:text-xl">
                                     {editingRecord ? 'แก้ไขข้อมูล' : "บันทึกอุบัติเหตุ"}
                                 </h2>
 
@@ -480,7 +471,7 @@ export default function AccidentRecordsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเสียชีวิต</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">จำนวนเสียชีวิต</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -490,7 +481,7 @@ export default function AccidentRecordsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนบาดเจ็บ</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">จำนวนบาดเจ็บ</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -511,7 +502,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, drunk_driving: e.target.checked })}
                                                     className="w-4 h-4 accent-purple-500"
                                                 />
-                                                <span className="text-sm"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมาแล้วขับ</span>
+                                                <span className="text-sm">เมาแล้วขับ</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -520,7 +511,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, no_helmet: e.target.checked })}
                                                     className="w-4 h-4 accent-orange-500"
                                                 />
-                                                <span className="text-sm"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก</span>
+                                                <span className="text-sm">ไม่สวมหมวก</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -529,7 +520,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, no_seatbelt: e.target.checked })}
                                                     className="w-4 h-4 accent-yellow-500"
                                                 />
-                                                <span className="text-sm"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่คาดเข็มขัด</span>
+                                                <span className="text-sm">ไม่คาดเข็มขัด</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -538,7 +529,7 @@ export default function AccidentRecordsPage() {
                                                     onChange={(e) => setFormData({ ...formData, speeding: e.target.checked })}
                                                     className="w-4 h-4 accent-red-500"
                                                 />
-                                                <span className="text-sm"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ขับเร็ว</span>
+                                                <span className="text-sm">ขับเร็ว</span>
                                             </label>
                                         </div>
                                     </div>
@@ -569,7 +560,7 @@ export default function AccidentRecordsPage() {
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </AppDialogFrame>
                 )}
             </div>
         </EOCLayout>

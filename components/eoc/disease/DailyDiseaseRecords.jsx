@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
-import { AlertTriangle, Biohazard, CircleCheck, CircleDashed, ClipboardList, MapPinned, Plus, Users } from "lucide-react";
-import { ReadOnlyNotice } from "@/components/admin/crud";
+import { AlertTriangle, Biohazard, CircleCheck, CircleDashed, ClipboardList, MapPinned, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { IconButton, ReadOnlyNotice } from "@/components/admin/crud";
 import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 import { EmptyPanel, HeroProgress, PageHero, Panel, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { formatNumber } from "@/lib/adminApi";
@@ -631,12 +632,12 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
 
                     {loading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
+                            <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                             <p className="text-slate-600 text-sm">กำลังโหลดข้อมูล...</p>
                         </div>
                     ) : records.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="text-6xl mb-4 text-slate-300"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
                             <h4 className="text-lg font-bold text-slate-800 mb-1">ยังไม่มีรายงานผู้ป่วยในพื้นที่</h4>
                             <p className="mx-auto max-w-md text-sm text-slate-500">
                                 บันทึกจำนวนผู้ป่วยรายหมู่บ้านจากหน่วยบริการหรือทีมลงพื้นที่ ตัวเลขจะขึ้นในหน้าภาพรวมและสรุปการประชุมทันที
@@ -689,7 +690,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
-                                                    <AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {record.disease_name}
+                                                    {record.disease_name}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
@@ -706,20 +707,10 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap text-center">
                                                 {canEdit && <>
-                                                <button
-                                                    onClick={() => handleEdit(record)}
-                                                    className="text-[#0b4c86] hover:text-[#083865] mr-3 px-3 py-1 rounded hover:bg-[#edf5fc] transition-colors"
-                                                    title="แก้ไขข้อมูล"
-                                                >
-                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(record.id)}
-                                                    className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
-                                                    title="ลบข้อมูล"
-                                                >
-                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
-                                                </button>
+                                                <div className="flex justify-center gap-0.5">
+                                                    <IconButton icon={Pencil} tone="primary" label={`แก้ไข ${record.disease_name || "รายการ"}`} onClick={() => handleEdit(record)} />
+                                                    <IconButton icon={Trash2} tone="danger" label={`ลบ ${record.disease_name || "รายการ"}`} onClick={() => handleDelete(record.id)} />
+                                                </div>
                                                 </>}
                                             </td>
                                         </tr>
@@ -739,10 +730,10 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
 
                 {/* Modal */}
                 {showModal && (
-                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
+                    <AppDialogFrame open onOpenChange={(open) => { if (!open) { setShowModal(false); setEditingRecord(null); resetForm(); } }}>
                         <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white font-[family-name:var(--font-kanit)]">
                             <div className="p-6">
-                                <h2 className="mb-4 text-xl font-semibold text-slate-900">
+                                <h2 className="mb-4 text-lg font-black text-slate-900 sm:text-xl">
                                     {editingRecord ? 'แก้ไขข้อมูล' : isTambonMode ? 'บันทึกข้อมูลทั้งตำบล' : 'เพิ่มข้อมูลใหม่'}
                                 </h2>
 
@@ -916,7 +907,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </AppDialogFrame>
                 )}
             </div>
         </>

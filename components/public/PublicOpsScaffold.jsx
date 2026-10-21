@@ -43,8 +43,8 @@ export default function PublicOpsScaffold({
         {showBottomBar ? <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] lg:hidden" aria-hidden="true" /> : null}
       </div>
 
-      {/* เปิดผู้ช่วยได้จากเมนู "ถามผู้ช่วย" / ขอความช่วยเหลือมีปุ่มใน navbar แล้ว จึงไม่ใช้ปุ่มลอย */}
-      <AIChatbot showLauncher={false} />
+      {/* น้องผู้ช่วยยืนมุมขวาล่าง (มือถือที่มีแถบล่าง ยกขึ้นเหนือแถบ) · เปิดจากเมนู "ถามผู้ช่วย" ได้เหมือนเดิม */}
+      <AIChatbot launcherRaised={showBottomBar} />
     </div>
   );
 }

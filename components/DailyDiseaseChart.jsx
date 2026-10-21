@@ -211,7 +211,7 @@ export default function DailyDiseaseChart({ sessionId }) {
             <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                 <div className="flex items-center justify-center h-96">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b border-red-500 mx-auto mb-4"></div>
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         <p className="text-slate-600">กำลังโหลดข้อมูลกราฟ...</p>
                     </div>
                 </div>

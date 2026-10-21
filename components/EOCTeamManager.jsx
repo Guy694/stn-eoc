@@ -181,7 +181,7 @@ export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
     if (loading) {
         return (
             <div className="flex justify-center items-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b border-[#0b4c86]"></div>
+                <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
             </div>
         );
     }
@@ -303,7 +303,7 @@ function TeamCard({ team, sessionStatus, onRemoveTeam, onAddMember, onRemoveMemb
                             <>
                                 <button
                                     onClick={onAddMember}
-                                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                    className="px-3 py-1 bg-[#0b4c86] text-white rounded hover:bg-[#083865]"
                                 >
                                     <span className="inline-flex items-center gap-1.5">
                                         <AppIcon icon="plus" className="h-4 w-4" />
@@ -584,7 +584,7 @@ function AddMemberModal({ team, availableOfficers, currentMembers, onSubmit, onC
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
                         >
                             เพิ่มสมาชิก
                         </button>

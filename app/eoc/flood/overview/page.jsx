@@ -89,7 +89,7 @@ export default function EOCOverview() {
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
@@ -104,7 +104,7 @@ export default function EOCOverview() {
                     <h1 className="mb-6 flex items-center gap-2.5 font-[family-name:var(--font-kanit)] text-2xl font-semibold text-slate-900"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="barChart" className="h-5 w-5" /></span>ภาพรวม EOC</h1>
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
                         <div className="flex items-center">
-                            <div className="text-4xl mr-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
                             <div>
                                 <h3 className="text-lg font-semibold text-yellow-800">ไม่มีเหตุการณ์ EOC</h3>
                                 <p className="text-yellow-700">ยังไม่มีข้อมูลเหตุการณ์สำหรับแสดงผลย้อนหลัง</p>

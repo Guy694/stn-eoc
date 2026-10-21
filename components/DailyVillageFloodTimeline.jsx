@@ -345,13 +345,13 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     if (!session) {
         return (
             <div className="bg-[#edf5fc] border-2 border-[#c9dcee] rounded-lg p-6 text-center">
-                <div className="text-6xl mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="barChart" className="h-6 w-6" /></span>
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
                 <p className="text-slate-600">
                     เลือกปีและ เหตุการณ์ EOC จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
                 </p>
                 <p className="text-sm text-slate-500 mt-2">
-                    <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
+                    ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
                 </p>
             </div>
         );
@@ -361,7 +361,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
         <div className="border border-slate-200 bg-white rounded-2xl p-6">
             <div className="mb-6">
                 <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                    <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
+                    แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
                 </h2>
                 <p className="text-slate-600">
                     ครั้งที่ {session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
@@ -417,7 +417,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                         </label>
                         <button
                             onClick={saveMapToServer}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
+                            className="bg-[#0b4c86] hover:bg-[#083865] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -484,7 +484,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                 {loading ? (
                     <div className="flex items-center justify-center h-96">
                         <div className="text-center">
-                            <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
+                            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                             <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                         </div>
                     </div>
@@ -811,7 +811,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                                                         }`}>
                                                         {getFloodLabel(village.level)}
                                                     </span>
-                                                    <span><AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {village.population?.toLocaleString() || '0'} คน</span>
+                                                    <span>ประชากร {village.population?.toLocaleString() || '0'} คน</span>
                                                 </div>
                                             </div>
                                         </div>

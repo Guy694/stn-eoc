@@ -208,20 +208,31 @@ export function UpdatedAt({ value, staleHours = 24 }) {
   );
 }
 
-export function RowActions({ onEdit, onDelete, editLabel = "แก้ไข", deleteLabel = "ลบ", children }) {
+const ICON_TONES = {
+  primary: "text-[#0b4c86] hover:bg-sky-50",
+  danger: "text-red-700 hover:bg-red-50",
+  neutral: "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+};
+
+/** ปุ่มไอคอนอย่างเดียว (แก้ไข/ลบ ฯลฯ ในแถวรายการ) — label ใช้เป็นชื่อปุ่มสำหรับโปรแกรมอ่านจอและ tooltip */
+export function IconButton({ icon: Icon, label, tone = "neutral", className, type = "button", ...props }) {
   return (
-    <div className="flex items-center justify-end gap-1">
+    <button type={type} aria-label={label} title={label}
+      className={cn("inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4c86]/40 disabled:cursor-not-allowed disabled:opacity-50", ICON_TONES[tone] || ICON_TONES.neutral, className)}
+      {...props}>
+      <Icon className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+}
+
+/** ปุ่มแก้ไข/ลบท้ายแถว เป็นไอคอนเพื่อประหยัดที่ · itemName ต่อท้ายชื่อปุ่ม เช่น "แก้ไข รพ.สตูล" */
+export function RowActions({ onEdit, onDelete, editLabel = "แก้ไข", deleteLabel = "ลบ", itemName = "", children }) {
+  const named = (label) => (itemName ? `${label} ${itemName}` : label);
+  return (
+    <div className="flex items-center justify-end gap-0.5">
       {children}
-      {onEdit ? (
-        <button type="button" onClick={onEdit} className="inline-flex h-9 items-center gap-1 rounded-lg px-2.5 text-sm font-semibold text-[#0b4c86] hover:bg-sky-50" title={editLabel}>
-          <Pencil className="h-4 w-4" aria-hidden="true" /> <span className="hidden xl:inline">{editLabel}</span><span className="sr-only xl:hidden">{editLabel}</span>
-        </button>
-      ) : null}
-      {onDelete ? (
-        <button type="button" onClick={onDelete} className="inline-flex h-9 items-center gap-1 rounded-lg px-2.5 text-sm font-semibold text-red-700 hover:bg-red-50" title={deleteLabel}>
-          <Trash2 className="h-4 w-4" aria-hidden="true" /> <span className="hidden xl:inline">{deleteLabel}</span><span className="sr-only xl:hidden">{deleteLabel}</span>
-        </button>
-      ) : null}
+      {onEdit ? <IconButton icon={Pencil} label={named(editLabel)} tone="primary" onClick={onEdit} /> : null}
+      {onDelete ? <IconButton icon={Trash2} label={named(deleteLabel)} tone="danger" onClick={onDelete} /> : null}
     </div>
   );
 }

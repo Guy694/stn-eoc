@@ -27,7 +27,7 @@ export async function GET(request) {
     const current = await loadCurrentTriggers(session.id);
     if (current === null) return NextResponse.json({ success: true, session, current: [], history: [], ready: false, can_declare: false });
     const history = await query(
-      `SELECT id, district, tambon, stage, note, declared_by_name, declared_at FROM eoc_area_triggers WHERE session_id = ? ORDER BY id DESC LIMIT 50`,
+      `SELECT id, district, tambon, stage, note, declared_by_name, declared_at FROM eoc_area_triggers WHERE session_id = ? ORDER BY id DESC LIMIT 300`,
       [session.id]
     );
     const active = current.filter((row) => row.stage);

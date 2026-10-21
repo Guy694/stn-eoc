@@ -127,11 +127,11 @@ const MapSelector = ({ position, onPositionChange }) => {
                     type="button"
                     onClick={handleGPS}
                     disabled={gpsLoading}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition disabled:opacity-60 shadow"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[#0b4c86] hover:bg-[#083865] text-white text-sm rounded-lg transition disabled:opacity-60 shadow"
                 >
                     {gpsLoading ? (
                         <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-white motion-reduce:animate-none"></div>
                             กำลังหาตำแหน่ง...
                         </>
                     ) : (

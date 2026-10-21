@@ -9,6 +9,7 @@ import { AdminPage, Button, Field, FormDialog, ReadOnlyNotice, inputClass, lates
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { CARE_GROUPS, effectiveCareGroup } from "@/lib/careGroups";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 import {
   ASSESSMENT_FACTORS, COORDINATION_CHAIN, FLOOD_FLAGS, TRIGGER_STAGES, areaLabel, declarationFor, flagMeta, matchesStageTarget, stageMeta, stageTitle
 } from "@/lib/floodTriggers";
@@ -293,6 +294,7 @@ export default function AreaTriggersWorkspace() {
   }, []);
 
   const data = state.data;
+  const { anchor: historyAnchor, ...historyPage } = usePagination(data?.history, { pageSize: 20, resetKey: data?.session?.id || "" });
   const current = useMemo(() => data?.current || [], [data]);
   const session = data?.session;
 
@@ -391,8 +393,8 @@ export default function AreaTriggersWorkspace() {
       {data?.history?.length ? (
         <details className="group rounded-2xl border border-slate-200 bg-white">
           <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 font-bold text-slate-900"><ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden="true" />ประวัติการประกาศ ({formatNumber(data.history.length)})</summary>
-          <ul className="divide-y divide-slate-100 border-t border-slate-100 text-sm">
-            {data.history.map((row) => (
+          <ul ref={historyAnchor} className="scroll-mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
+            {historyPage.visible.map((row) => (
               <li key={row.id} className="flex flex-wrap items-center gap-2 px-4 py-2">
                 <span className="w-36 shrink-0 text-xs text-slate-500">{formatDateTime(row.declared_at)}</span>
                 <span className="font-semibold text-slate-900">{areaLabel(row)}</span>
@@ -402,6 +404,7 @@ export default function AreaTriggersWorkspace() {
               </li>
             ))}
           </ul>
+          <PaginationControls {...historyPage.controls} pageSizeOptions={[20, 50, 100]} itemLabel="ครั้ง" className="rounded-b-2xl border-t border-slate-100 bg-slate-50" />
         </details>
       ) : null}
 

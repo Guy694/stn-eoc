@@ -135,7 +135,7 @@ export default function DailyFloodTimeline({ startDate, polygons }) {
         <div className="border border-slate-200 bg-white rounded-2xl p-6">
             <div className="mb-6">
                 <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                    <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
+                    แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                 </h2>
                 <p className="text-slate-600">
                     ติดตามสถานการณ์อุทกภัยน้ำท่วมตั้งแต่เปิด EOC - {dates.length} วัน

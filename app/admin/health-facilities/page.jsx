@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PageHero } from "@/components/common/ThemePanels";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from '@/components/layouts/EOCLayout';
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
@@ -184,12 +186,7 @@ export default function HealthFacilitiesPage() {
         <EOCLayout>
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
-                    <h1 className="text-3xl font-bold text-white mb-2">
-                        <AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการหน่วยบริการ
-                    </h1>
-                    <p className="text-blue-100">ระบบจัดการข้อมูลสถานพยาบาลและสถานีอนามัย</p>
-                </div>
+                <PageHero title="จัดการหน่วยบริการ" subtitle="ระบบจัดการข้อมูลสถานพยาบาลและสถานีอนามัย" className="mb-6" />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
@@ -258,7 +255,7 @@ export default function HealthFacilitiesPage() {
                                 resetForm();
                                 setShowModal(true);
                             }}
-                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors"
                         >
                             <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มสถานพยาบาล
                         </button>
@@ -377,9 +374,9 @@ export default function HealthFacilitiesPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="app-modal-overlay" role="dialog" aria-modal="true">
+                <AppDialogFrame open onOpenChange={(open) => { if (!open) { setShowModal(false); resetForm(); } }}>
                     <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4 text-slate-700">
+                        <h2 className="mb-4 text-lg font-black text-slate-900 sm:text-xl">
                             {editingFacility ? "แก้ไขสถานพยาบาล" : "เพิ่มสถานพยาบาลใหม่"}
                         </h2>
 
@@ -501,7 +498,7 @@ export default function HealthFacilitiesPage() {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
-                                    className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
+                                    className="flex-1 bg-[#0b4c86] text-white py-2 rounded-lg hover:bg-[#083865] transition-colors"
                                 >
                                     <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก
                                 </button>
@@ -518,7 +515,7 @@ export default function HealthFacilitiesPage() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </AppDialogFrame>
             )}
             {statusFacility && (
                 <HealthFacilityStatusModal

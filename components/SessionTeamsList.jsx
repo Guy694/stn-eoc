@@ -46,7 +46,7 @@ export default function SessionTeamsList({ sessionId, showTitle = true }) {
         return (
             <div className="border border-slate-200 bg-white rounded-2xl p-6">
                 <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b border-teal-500"></div>
+                    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <span className="ml-3 text-slate-600">กำลังโหลดข้อมูลทีม...</span>
                 </div>
             </div>

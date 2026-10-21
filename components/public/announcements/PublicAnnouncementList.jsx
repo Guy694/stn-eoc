@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BellRing, ChevronLeft, ChevronRight, ExternalLink, Megaphone, Pause, Paperclip, Play, Search, Siren, X } from "lucide-react";
+import { ArrowRight, BellRing, ChevronLeft, ChevronRight, ExternalLink, Images, Megaphone, Pause, Paperclip, Play, Search, Siren, X } from "lucide-react";
+import AppDialog from "@/components/ui/app-dialog";
 import { formatAnnouncementDate, getAnnouncementAsset } from "@/components/announcements/announcementUtils";
 import { TOPIC_STYLE, cleanTitle, relativeThai, topicKey, topicOf } from "./announcementTopics";
 import { optimizedImage, responsiveImage } from "@/lib/imageUrl";
@@ -207,6 +208,62 @@ function Card({ item, index }) {
   );
 }
 
+// อินโฟกราฟิกจากคลังของฝ่ายสื่อสารความเสี่ยง: ภาพย่อแนวตั้ง กดเพื่อดูภาพเต็ม
+const GALLERY_PAGE = 8;
+function InfographicGallery({ items }) {
+  const [open, setOpen] = useState(null);
+  const [all, setAll] = useState(false);
+  if (!items.length) return null;
+  const shown = all ? items : items.slice(0, GALLERY_PAGE);
+  return (
+    <section className="mt-12" aria-labelledby="infographic-title">
+      <h2 id="infographic-title" className="flex items-center gap-2 font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">
+        <Images className="h-6 w-6 text-[#2a9db0]" aria-hidden="true" />อินโฟกราฟิก
+      </h2>
+      <p className="mt-1 text-slate-600">ภาพสรุปความรู้จากศูนย์ฯ กดที่ภาพเพื่อดูขนาดเต็ม บันทึกหรือส่งต่อได้</p>
+      <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {shown.map((item) => {
+          const topic = topicOf(item);
+          return (
+            <li key={item.id}>
+              <button type="button" onClick={() => setOpen(item)} className="group block w-full overflow-hidden rounded-2xl bg-white text-left ring-1 ring-[#d6e3ea] transition hover:ring-[#2a9db0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2a9db0]">
+                <span className="block aspect-[3/4] overflow-hidden bg-[#e3eef2]">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- ภาพจากคลังของระบบ ขนาดหลากหลาย */}
+                  <img src={item.image} alt="" loading="lazy" className="poster-img h-full w-full object-cover" />
+                </span>
+                <span className="block p-3">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: topic.text }}>
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: topic.dot }} aria-hidden="true" />{topic.label}
+                  </span>
+                  <span className="mt-1 line-clamp-2 block font-semibold leading-snug text-[#0c2f4a]">{item.title}</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {items.length > GALLERY_PAGE ? (
+        <div className="mt-6 text-center">
+          <button type="button" onClick={() => setAll((value) => !value)} className="rounded-full bg-white px-6 py-3 font-semibold text-[#0b4c86] ring-1 ring-[#c9dcee] hover:bg-[#f3f7f8]">
+            {all ? "ย่อกลับ" : `ดูอินโฟกราฟิกทั้งหมด ${items.length} ภาพ`}
+          </button>
+        </div>
+      ) : null}
+      <AppDialog open={Boolean(open)} onOpenChange={(value) => { if (!value) setOpen(null); }} title={open?.title} size="lg" contentClassName="bg-slate-50 p-3 sm:p-4">
+        {open ? (
+          <div className="flex flex-col items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- ภาพเต็มจากคลังของระบบ */}
+            <img src={open.image} alt={open.title} className="max-h-[70dvh] w-auto max-w-full rounded-lg object-contain" />
+            <a href={open.image} target="_blank" rel="noopener noreferrer" download className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b4c86] px-5 font-semibold text-white hover:bg-[#083865]">
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />เปิดภาพขนาดเต็ม
+            </a>
+          </div>
+        ) : null}
+      </AppDialog>
+    </section>
+  );
+}
+
 export default function PublicAnnouncementList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,6 +271,7 @@ export default function PublicAnnouncementList() {
   const [topic, setTopic] = useState("all");
   const [shown, setShown] = useState(PAGE);
   const [alerts, setAlerts] = useState([]);
+  const [infographics, setInfographics] = useState([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -229,6 +287,10 @@ export default function PublicAnnouncementList() {
       setItems(mergeAnnouncementSources(internal || [], riskcom));
       setLoading(false);
     });
+    fetch("/stn-eoc/api/public/infographic-gallery", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((json) => { if (json.success) setInfographics(json.data || []); })
+      .catch(() => {});
     // แจ้งเตือนที่ส่งถึงประชาชน (ไม่บังคับ — โหลดไม่ได้ก็ไม่แสดงคอลัมน์นี้)
     fetch("/stn-eoc/api/public/push/?history=1", { signal: controller.signal })
       .then((response) => response.json())
@@ -251,6 +313,11 @@ export default function PublicAnnouncementList() {
       return `${item.title || ""} ${item.description || ""} ${item.category || ""} ${(item.keywords || []).join(" ")}`.toLocaleLowerCase("th").includes(text);
     });
   }, [items, query, topic]);
+
+  const shownInfographics = useMemo(() => {
+    const text = query.trim().toLocaleLowerCase("th");
+    return infographics.filter((item) => (topic === "all" || topicKey(item) === topic) && (!text || item.title.toLocaleLowerCase("th").includes(text)));
+  }, [infographics, query, topic]);
 
   // เรื่องเด่น: ที่กำลังเผยแพร่และสำคัญที่สุดก่อน ไม่มีก็ใช้เรื่องล่าสุด
   // หมุนเวียนเรื่องเด่นไม่เกิน 6 เรื่อง (ประกาศที่กำลังเผยแพร่ขึ้นก่อน แล้วตามด้วยเรื่องล่าสุดที่มีภาพ)
@@ -368,6 +435,8 @@ export default function PublicAnnouncementList() {
             </div>
           </>
         )}
+
+        {!loading ? <InfographicGallery items={shownInfographics} /> : null}
 
         {items.some((item) => item.source === "riskcom") ? (
           <p className="mt-12 border-t border-[#d6e3ea] pt-5 text-sm leading-6 text-slate-500">

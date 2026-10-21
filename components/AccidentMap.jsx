@@ -101,7 +101,7 @@ export default function AccidentMap({
         return (
             <div className="h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b border-orange-500 mx-auto mb-4"></div>
+                    <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-gray-600">กำลังโหลดแผนที่...</p>
                 </div>
             </div>

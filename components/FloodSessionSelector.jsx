@@ -116,7 +116,7 @@ export default function FloodSessionSelector({
             <div className="bg-linear-to-r from-[#0b4c86] to-[#11466e] text-white rounded-lg shadow-lg p-6 mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold mb-1"><AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์ปัจจุบัน (เรียลไทม์)</h3>
+                        <h3 className="text-lg font-semibold mb-1">สถานการณ์ปัจจุบัน (เรียลไทม์)</h3>
                         {activeSessions.length > 0 ? (
                             <div className="space-y-2">
                                 {activeSessions.map(session => (
@@ -180,7 +180,7 @@ export default function FloodSessionSelector({
     return (
         <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
             <h3 className="text-lg font-semibold text-slate-800 mb-4">
-                <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลย้อนหลัง
+                ข้อมูลย้อนหลัง
             </h3>
 
             {/* เลือกปี */}
@@ -229,7 +229,7 @@ export default function FloodSessionSelector({
                 ) : selectedYear && !loading && (
                     <div className="md:col-span-2">
                         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
-                            <p className="text-slate-600"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่พบเหตุการณ์ EOC ในปี {selectedYear + 543}</p>
+                            <p className="text-slate-600">ไม่พบเหตุการณ์ EOC ในปี {selectedYear + 543}</p>
                             <p className="text-sm text-slate-500 mt-1">ลองเลือกปีอื่น</p>
                         </div>
                     </div>
@@ -239,7 +239,7 @@ export default function FloodSessionSelector({
             {/* แสดงสรุปของปี */}
             {loading ? (
                 <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b border-[#0b4c86] mx-auto mb-4"></div>
+                    <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : yearSummary && (
@@ -291,7 +291,7 @@ export default function FloodSessionSelector({
                             <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
                                 {selectedSession.status === 'active' ? (
                                     <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                                        <AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> กำลังดำเนินการ
+                                        กำลังดำเนินการ
                                     </span>
                                 ) : (
                                     <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full font-medium">

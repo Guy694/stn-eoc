@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { PageHero } from "@/components/common/ThemePanels";
 import dynamic from "next/dynamic";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import AppIcon from "@/components/icons/AppIcon";
@@ -10,7 +11,7 @@ const PolygonMap = dynamic(() => import("@/components/PolygonMap"), {
     loading: () => (
         <div className="flex items-center justify-center h-full">
             <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto mb-4"></div>
+                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                 <p className="text-slate-600">กำลังโหลดแผนที่...</p>
             </div>
         </div>
@@ -60,7 +61,7 @@ export default function VillageMapPage() {
         return (
             <div className="flex items-center justify-center min-h-screen bg-slate-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b border-blue-500 mx-auto mb-4"></div>
+                    <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-slate-600 text-lg">กำลังโหลดข้อมูลหมู่บ้าน...</p>
                 </div>
             </div>
@@ -70,16 +71,7 @@ export default function VillageMapPage() {
     return (
         <EOCLayout>
             {/* Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-4">
-                <div>
-                    <h1 className="text-xl font-semibold text-white sm:text-2xl">
-                        แผนที่หมู่บ้านจังหวัดสตูล
-                    </h1>
-                    <p className="mt-1 text-sm text-blue-100">
-                        ข้อมูลพื้นที่และประชากรแบบ Polygon
-                    </p>
-                </div>
-            </div>
+            <PageHero title="แผนที่หมู่บ้านจังหวัดสตูล" subtitle="ข้อมูลพื้นที่และประชากรแบบ Polygon" className="mb-4" />
 
             {/* Stats Bar */}
             <div className="bg-white shadow-sm border-b -mx-6 mb-4">

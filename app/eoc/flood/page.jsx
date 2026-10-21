@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useState, useEffect } from "react";
+import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { useRouter } from "next/navigation";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
@@ -141,7 +142,7 @@ export default function FloodMapPage() {
         return (
             <div className="flex items-center justify-center min-h-screen bg-slate-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
+                    <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-slate-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
@@ -152,29 +153,14 @@ export default function FloodMapPage() {
         <EOCLayout>
             <div className="mx-auto max-w-7xl">
                 {/* Page Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
-                            <h1 className="text-xl font-semibold text-white mb-4 flex items-center gap-3 sm:text-2xl">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="droplet" className="h-5 w-5" /></span>
-                                {mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}
-                            </h1>
-                            <p className="text-blue-100">
-                                {mode === "realtime"
-                                    ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์"
-                                    : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}
-                            </p>
-                        </div>
-                        {user && (
+                <PageHero icon="droplet" title={<>{mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}</>} subtitle={<>{mode === "realtime" ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์" : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}</>} actions={<>{user && (
                             <button
                                 onClick={() => router.push('/eoc/flood/records')}
-                                className="self-start rounded-lg bg-[#0b4c86] px-5 py-3 font-medium text-white transition-colors hover:bg-[#083865]"
+                                className={heroPrimaryButtonClass}
                             >
-                                <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก/แก้ไขพื้นที่อุทกภัยน้ำท่วม
+                                <AppIcon icon="save" className="h-4 w-4" /> บันทึก/แก้ไขพื้นที่อุทกภัยน้ำท่วม
                             </button>
-                        )}
-                    </div>
-                </div>
+                        )}</>} className="mb-6" />
 
 
                 {/* แสดงทีมงาน EOC ที่เปิดใช้งาน - Realtime Mode */}
@@ -190,7 +176,7 @@ export default function FloodMapPage() {
 
                         {loadingTeams ? (
                             <div className="flex items-center gap-2 text-[#0b4c86]">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b border-[#0b4c86]"></div>
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                                 <span>กำลังโหลดข้อมูลทีม...</span>
                             </div>
                         ) : (
@@ -367,7 +353,7 @@ export default function FloodMapPage() {
 
                                 {loadingTeams ? (
                                     <div className="flex items-center gap-2 text-amber-700">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b border-amber-500"></div>
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                                         <span>กำลังโหลดข้อมูลทีม...</span>
                                     </div>
                                 ) : (

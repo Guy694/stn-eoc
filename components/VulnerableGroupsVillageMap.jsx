@@ -243,7 +243,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                 {loading ? (
                     <div className="flex h-[520px] items-center justify-center">
                         <div className="text-center">
-                            <div className="mx-auto mb-3 h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+                            <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                             <p className="font-semibold text-slate-600">กำลังโหลดข้อมูลกลุ่มเปราะบาง...</p>
                         </div>
                     </div>

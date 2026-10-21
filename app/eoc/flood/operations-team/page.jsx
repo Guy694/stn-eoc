@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { IconButton } from "@/components/admin/crud";
 import Link from "next/link";
 import {
     AlertCircle,
@@ -568,7 +569,7 @@ export default function FloodOperationsTeamPage() {
                     {loadingSessions || loadingTeams || loadingCommanders ? (
                         <div className="flex min-h-[360px] items-center justify-center rounded-xl bg-white text-slate-500">
                             <div className="text-center">
-                                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-[#0b4c86] border-t-transparent" />
+                                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none" />
                                 กำลังโหลดผังทีมปฏิบัติการ...
                             </div>
                         </div>
@@ -762,23 +763,11 @@ function CommanderNode({ commander, featured = false, canManage, onEdit, onDelet
                 </p>
             )}
             {canManage && (
-                <div className="mt-4 flex justify-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => onEdit(commander)}
-                        className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold ${featured ? "bg-white/15 text-white hover:bg-white/25" : "bg-[#edf5fc] text-[#0b4c86] hover:bg-[#edf5fc]"}`}
-                    >
-                        <Pencil className="h-3.5 w-3.5" />
-                        แก้ไข
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onDelete(commander)}
-                        className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold ${featured ? "bg-red-500/90 text-white hover:bg-red-500" : "bg-red-50 text-red-700 hover:bg-red-100"}`}
-                    >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        ลบ
-                    </button>
+                <div className="mt-4 flex justify-center gap-1">
+                    <IconButton icon={Pencil} label={`แก้ไข ${personName(commander)}`} onClick={() => onEdit(commander)}
+                        className={featured ? "bg-white/15 text-white hover:bg-white/25" : "bg-[#edf5fc] text-[#0b4c86] hover:bg-[#dbeaf7]"} />
+                    <IconButton icon={Trash2} label={`ลบ ${personName(commander)}`} onClick={() => onDelete(commander)}
+                        className={featured ? "bg-red-500/90 text-white hover:bg-red-500" : "bg-red-50 text-red-700 hover:bg-red-100"} />
                 </div>
             )}
         </article>
@@ -830,23 +819,9 @@ function TeamNode({ team, canManage, onEdit, onDelete }) {
             </div>
 
             {canManage && (
-                <div className="mt-3 flex gap-2">
-                    <button
-                        type="button"
-                        onClick={() => onEdit(team)}
-                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#edf5fc] px-3 py-1.5 text-xs font-bold text-[#0b4c86] hover:bg-[#edf5fc]"
-                    >
-                        <Pencil className="h-3.5 w-3.5" />
-                        แก้ไขทีม
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onDelete(team)}
-                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100"
-                    >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        ลบทีม
-                    </button>
+                <div className="mt-2 flex justify-end gap-0.5">
+                    <IconButton icon={Pencil} tone="primary" label={`แก้ไขทีม ${team.team_name_th || team.team_name_en || ""}`} onClick={() => onEdit(team)} />
+                    <IconButton icon={Trash2} tone="danger" label={`ลบทีม ${team.team_name_th || team.team_name_en || ""}`} onClick={() => onDelete(team)} />
                 </div>
             )}
 

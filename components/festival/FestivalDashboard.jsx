@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { useSearchParams } from "next/navigation";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
@@ -152,7 +153,7 @@ export default function FestivalDashboard() {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-500 border-t-transparent mx-auto mb-4"></div>
+                    <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-slate-600 text-lg">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
@@ -162,29 +163,13 @@ export default function FestivalDashboard() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold flex items-center gap-3">
-                            <AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อุบัติเหตุช่วงเทศกาล{data?.activeSession?.festival_type === 'newyear' ? 'ปีใหม่' : data?.activeSession?.festival_type === 'songkran' ? 'สงกรานต์' : ''}
-                        </h1>
-                        <p className="text-red-100 mt-1">
-                            {data?.activeSession?.open_reason
-                                ? data.activeSession.open_reason
-                                : '7 วันอันตราย — ระบบติดตามอุบัติเหตุทางถนนจังหวัดสตูล'}
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
+            <PageHero title={<>อุบัติเหตุช่วงเทศกาล{data?.activeSession?.festival_type === 'newyear' ? 'ปีใหม่' : data?.activeSession?.festival_type === 'songkran' ? 'สงกรานต์' : ''}</>} subtitle={<>{data?.activeSession?.open_reason ? data.activeSession.open_reason : '7 วันอันตราย — ระบบติดตามอุบัติเหตุทางถนนจังหวัดสตูล'}</>} actions={<><button
                             onClick={handleExportExcel}
                             disabled={exporting || !data?.activeSession}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 backdrop-blur-sm"
+                            className={heroPrimaryButtonClass}
                         >
                             {exporting ? "กำลังส่งออก..." : "ส่งออก Excel"}
-                        </button>
-                    </div>
-                </div>
-            </div>
+                        </button></>} />
 
             {/* Festival Tabs & Session Selector */}
             <div className="border border-slate-200 bg-white rounded-2xl p-4">
@@ -233,7 +218,7 @@ export default function FestivalDashboard() {
             {/* No Active Session */}
             {!data?.hasActiveSession && (
                 <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-8 text-center">
-                    <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                    <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
                     <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีข้อมูลเทศกาล</h3>
                     <p className="text-slate-600">ยังไม่มีเหตุการณ์ EOC สำหรับอุบัติเหตุช่วงเทศกาลที่เปิดอยู่</p>
                     <p className="text-slate-500 text-sm mt-1">กรุณาเปิดเหตุการณ์ EOC ประเภท &quot;festival-accidents&quot; จากหน้าจัดการ EOC</p>
@@ -305,7 +290,7 @@ export default function FestivalDashboard() {
                         {/* Daily Trend Chart */}
                         <div className="border border-slate-200 lg:col-span-2 bg-white rounded-2xl p-6">
                             <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                                <AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติรายวัน (7 วันอันตราย)
+                                สถิติรายวัน (7 วันอันตราย)
                             </h3>
                             {data?.dailySummary?.length > 0 ? (
                                 <div className="h-72">
@@ -329,7 +314,7 @@ export default function FestivalDashboard() {
                             ) : (
                                 <div className="h-72 flex items-center justify-center text-slate-400">
                                     <div className="text-center">
-                                        <div className="text-4xl mb-2"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                                        <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="barChart" className="h-6 w-6" /></span>
                                         <p>ยังไม่มีข้อมูล</p>
                                     </div>
                                 </div>
@@ -339,7 +324,7 @@ export default function FestivalDashboard() {
                         {/* Accident Type Doughnut */}
                         <div className="border border-slate-200 bg-white rounded-2xl p-6">
                             <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                                <AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประเภทอุบัติเหตุ
+                                ประเภทอุบัติเหตุ
                             </h3>
                             {data?.accidentTypeBreakdown?.length > 0 ? (
                                 <div className="h-72 flex items-center justify-center">
@@ -357,7 +342,7 @@ export default function FestivalDashboard() {
                             ) : (
                                 <div className="h-72 flex items-center justify-center text-slate-400">
                                     <div className="text-center">
-                                        <div className="text-4xl mb-2"><AppIcon icon="refresh" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                                        <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="refresh" className="h-6 w-6" /></span>
                                         <p>ยังไม่มีข้อมูล</p>
                                     </div>
                                 </div>
@@ -368,7 +353,7 @@ export default function FestivalDashboard() {
                     {/* Cause Analysis */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-6">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ปัจจัยเสี่ยง / สาเหตุ
+                            ปัจจัยเสี่ยง / สาเหตุ
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {data?.causeAnalysis?.map(c => (
@@ -399,7 +384,7 @@ export default function FestivalDashboard() {
                         <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                             <div className="px-6 py-4 bg-slate-50 border-b">
                                 <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                                    <AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถิติแยกตามอำเภอ
+                                    สถิติแยกตามอำเภอ
                                 </h3>
                             </div>
                             {data?.districtBreakdown?.length > 0 ? (
@@ -445,7 +430,7 @@ export default function FestivalDashboard() {
                                 </div>
                             ) : (
                                 <div className="p-8 text-center text-slate-400">
-                                    <div className="text-4xl mb-2"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                                    <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="map" className="h-6 w-6" /></span>
                                     <p>ยังไม่มีข้อมูล</p>
                                 </div>
                             )}
@@ -455,7 +440,7 @@ export default function FestivalDashboard() {
                         <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                             <div className="px-6 py-4 bg-slate-50 border-b">
                                 <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                                    <AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เหตุการณ์ล่าสุด
+                                    เหตุการณ์ล่าสุด
                                 </h3>
                             </div>
                             {data?.recentAccidents?.length > 0 ? (
@@ -473,28 +458,28 @@ export default function FestivalDashboard() {
                                                         </span>
                                                     </div>
                                                     <p className="text-sm text-slate-800 font-medium">
-                                                        <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {a.location_name || 'ไม่ระบุสถานที่'}
+                                                        {a.location_name || 'ไม่ระบุสถานที่'}
                                                     </p>
                                                     <p className="text-xs text-slate-500">
                                                         อ.{a.district || '-'} ต.{a.tambon || '-'}
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-2 text-xs">
-                                                    {a.deaths > 0 && <span className="px-2 py-1 bg-slate-800 text-white rounded"><AppIcon icon="skull" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {a.deaths}</span>}
-                                                    {a.injuries > 0 && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded"><AppIcon icon="stethoscope" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {a.injuries}</span>}
+                                                    {a.deaths > 0 && <span className="px-2 py-1 bg-slate-800 text-white rounded">เสียชีวิต {a.deaths}</span>}
+                                                    {a.injuries > 0 && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">บาดเจ็บ {a.injuries}</span>}
                                                 </div>
                                             </div>
                                             <div className="flex gap-1 mt-2">
-                                                {a.drunk_driving ? <span className="px-1.5 py-0.5 bg-[#dbeaf7] text-[#0b4c86] rounded text-xs"><AppIcon icon="beer" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เมา</span> : null}
-                                                {a.no_helmet ? <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-xs"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ไม่สวมหมวก</span> : null}
-                                                {a.speeding ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs"><AppIcon icon="rocket" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เร็ว</span> : null}
+                                                {a.drunk_driving ? <span className="px-1.5 py-0.5 bg-[#dbeaf7] text-[#0b4c86] rounded text-xs">เมา</span> : null}
+                                                {a.no_helmet ? <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">ไม่สวมหมวก</span> : null}
+                                                {a.speeding ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs">เร็ว</span> : null}
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="p-8 text-center text-slate-400">
-                                    <div className="text-4xl mb-2"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                                    <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
                                     <p>ยังไม่มีรายงาน</p>
                                 </div>
                             )}
@@ -505,7 +490,7 @@ export default function FestivalDashboard() {
                     {data?.mapData && (
                         <div className="border border-slate-200 bg-white rounded-2xl p-6">
                             <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                                <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่แสดงจุดเกิดเหตุและจุดบริการ (Session: {data.activeSession?.session_number || ''})
+                                แผนที่แสดงจุดเกิดเหตุและจุดบริการ (Session: {data.activeSession?.session_number || ''})
                             </h3>
                             <div className="mb-4 flex gap-4 text-sm">
                                 <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-600 block"></span> จุดเกิดอุบัติเหตุ</div>

@@ -181,6 +181,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       defaultExpanded: !anyOpen,
       items: [
         { name: "ประกาศ", path: "/announcements", iconKey: "megaphone" },
+        { name: "คลังอินโฟกราฟิก", path: "/admin/upload-infographics", iconKey: "image", description: "อัปโหลดภาพอินโฟกราฟิก แสดงในหน้าประกาศและความรู้ของประชาชน" },
         { name: "แจ้งเตือนประชาชน", path: "/admin/public-alerts", iconKey: "announcements", description: "ส่งเตือนภัยเข้ามือถือประชาชน ข้อความสำเร็จรูป การส่งอัตโนมัติ" }
       ]
     },

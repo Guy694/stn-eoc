@@ -15,7 +15,9 @@ export async function GET(request) {
   const auth = await requireAuth(request, MANAGERS);
   if (!auth.success) return auth.response;
   try {
-    const [settings, stats] = await Promise.all([getPushSettings(), pushStats().catch((error) => (error?.code === "ER_NO_SUCH_TABLE" ? null : Promise.reject(error)))]);
+    const { searchParams } = new URL(request.url);
+    const logOptions = { logPage: Number(searchParams.get("log_page")) || 1, logSize: Number(searchParams.get("log_size")) || 20 };
+    const [settings, stats] = await Promise.all([getPushSettings(), pushStats(logOptions).catch((error) => (error?.code === "ER_NO_SUCH_TABLE" ? null : Promise.reject(error)))]);
     return NextResponse.json({ success: true, data: { vapid_ready: Boolean(vapidConfig()), table_ready: stats !== null, settings, stats } }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Admin public push GET error:", error?.message || error);

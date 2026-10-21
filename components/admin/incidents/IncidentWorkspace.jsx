@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, Eye, Phone } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, RowActions, StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
+  AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, IconButton, RowActions, StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { useUrlState } from "@/components/admin/useUrlState";
@@ -238,9 +238,11 @@ export default function IncidentWorkspace() {
         ]}
         rowActions={(row) => (
           <RowActions onDelete={isAdmin ? () => { setDeleteError(""); setDeleting(row); } : undefined}>
-            <Button variant={row.status === "pending" && canEdit ? "primary" : "secondary"} className="min-h-9 px-3" onClick={() => open(row)}>
-              <Eye className="h-4 w-4" aria-hidden="true" /> {row.status === "pending" && canEdit ? "รับเรื่อง" : "เปิดดู"}
-            </Button>
+            {row.status === "pending" && canEdit ? (
+              <Button className="min-h-9 px-3" onClick={() => open(row)}><Eye className="h-4 w-4" aria-hidden="true" /> รับเรื่อง</Button>
+            ) : (
+              <IconButton icon={Eye} label={`เปิดดูเรื่อง #${row.id}`} tone="primary" onClick={() => open(row)} />
+            )}
           </RowActions>
         )}
       />

@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, History, Lock, MapPinOff, Navigation, Pencil, Phone, RefreshCw, Trash2, UserRound } from "lucide-react";
-import {
+import { IconButton,
   AddButton, AdminPage, Button, Field, FilterSelect, FormDialog, FormGrid, FormSection, ReadOnlyNotice, StatusPill,
   Toolbar, UpdatedAt, inputClass, latestTime, useNotice
 } from "@/components/admin/crud";
@@ -26,6 +26,7 @@ import { areaLabel, matchesStageTarget, stageMeta, stageTitle } from "@/lib/floo
 import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
 import Link from "next/link";
 import { shelterMarkerHtml } from "@/lib/shelterMarker";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 
 const API = "/stn-eoc/api/eoc/vulnerable-persons";
 const AREA_API = "/stn-eoc/api/eoc/vulnerable-event";
@@ -122,7 +123,7 @@ function MapLegend({ showShelters = false }) {
       </p>
       <p className="mt-1 flex items-center gap-1.5 text-slate-600">
         <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center" aria-hidden="true"><span className="absolute inset-0 rounded-full bg-red-500/40" /><span className="h-1.5 w-1.5 rounded-full bg-red-600" /></span>
-        วงกะพริบ = กลุ่มสีแดงที่ยังรอช่วยเหลือ
+        วงแดงรอบหมุด = กลุ่มสีแดงที่ยังรอช่วยเหลือ · ซูมออกไกลและคนเยอะ คนที่จัดการแล้วแสดงเป็นจุดเล็ก
       </p>
       {showShelters ? (
         <>
@@ -302,10 +303,10 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
                 </a>
               ) : null}
               {perms.can_edit_registry ? (
-                <Button variant="secondary" className="min-h-9 px-3 py-1 text-xs" disabled={busy} onClick={() => onEdit(person)}><Pencil className="h-3.5 w-3.5" aria-hidden="true" />แก้ไข</Button>
+                <IconButton icon={Pencil} tone="primary" label={`แก้ไข ${person.name}`} disabled={busy} onClick={() => onEdit(person)} className="ring-1 ring-slate-300" />
               ) : null}
               {perms.can_delete ? (
-                <Button variant="secondary" className="min-h-9 px-3 py-1 text-xs text-red-700" disabled={busy} onClick={() => onRemove(person)}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" />นำออก</Button>
+                <IconButton icon={Trash2} tone="danger" label={`นำ ${person.name} ออกจากทะเบียน`} disabled={busy} onClick={() => onRemove(person)} className="ring-1 ring-slate-300" />
               ) : null}
             </div>
           </div>
@@ -545,15 +546,6 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood", registry
     setSelectedId(id);
     setScrollTarget(id);
   }, []);
-  useEffect(() => {
-    if (!scrollTarget) return undefined;
-    const frame = window.requestAnimationFrame(() => {
-      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      document.getElementById(`vp-card-${scrollTarget}`)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-      setScrollTarget(null);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [scrollTarget]);
   const [statusTarget, setStatusTarget] = useState(null);
   const [personDialog, setPersonDialog] = useState({ open: false, editing: null });
   const [importOpen, setImportOpen] = useState(false);
@@ -618,6 +610,23 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood", registry
     const base = filterPersons(persons, { ...filters, today });
     return sortByUrgency(stageFilter ? base.filter((person) => matchesStageTarget(person, stageFilter.stage)) : base);
   }, [persons, filters, today, stageFilter]);
+  // รายชื่อแบ่งหน้าละ 30 คน (แผนที่ยังแสดงทุกคน) · กดหมุดของคนที่อยู่หน้าอื่น → พลิกไปหน้านั้นก่อนเลื่อนหาการ์ด
+  const { anchor: listAnchor, ...paged } = usePagination(filtered, { pageSize: 30, resetKey: `${JSON.stringify(filters)}|${stageFilter?.stage || ""}` });
+  const targetPage = scrollTarget ? paged.pageOfIndex(filtered.findIndex((person) => person.id === scrollTarget)) : null;
+  const { page: currentPage, goTo: goToPage } = paged;
+  useEffect(() => {
+    if (!scrollTarget) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      if (targetPage && targetPage !== currentPage) {
+        goToPage(targetPage, { scroll: false });
+        return; // วาดหน้าใหม่แล้วจะเข้ามาเลื่อนอีกรอบ
+      }
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById(`vp-card-${scrollTarget}`)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      setScrollTarget(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [scrollTarget, targetPage, currentPage, goToPage]);
   const activeShelterCount = shelters.filter((shelter) => Number(shelter.active) === 1).length;
   const districtOptions = useMemo(() => sortTh(persons.map((person) => person.district)), [persons]);
   const tambonOptions = useMemo(() => sortTh(persons.filter((person) => filters.district === "all" || person.district === filters.district).map((person) => person.tambon)), [persons, filters.district]);
@@ -750,8 +759,9 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood", registry
           {state.loading && !persons.length ? (
             <div className="space-y-2 p-3" aria-busy="true">{[0, 1, 2, 3].map((index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-white" />)}</div>
           ) : filtered.length ? (
-            <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 max-lg:max-h-[70vh]">
-              {filtered.map((person) => (
+            <>
+            <ul ref={listAnchor} className="min-h-0 flex-1 scroll-mt-4 space-y-2 overflow-y-auto p-3 max-lg:max-h-[70vh]">
+              {paged.visible.map((person) => (
                 <PersonCard
                   key={person.id}
                   person={person}
@@ -766,6 +776,8 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood", registry
                 />
               ))}
             </ul>
+            <PaginationControls {...paged.controls} pageSizeOptions={[30]} itemLabel="คน" compact className="shrink-0 border-t border-slate-200 bg-white" />
+            </>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center p-6 text-center text-sm text-slate-600">
               <UserRound className="h-10 w-10 text-slate-300" aria-hidden="true" />

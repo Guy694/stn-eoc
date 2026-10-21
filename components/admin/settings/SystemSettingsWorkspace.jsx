@@ -39,6 +39,15 @@ const SECTIONS = [
   { value: "data", label: "ข้อมูลพื้นที่และข้อมูลอ้างอิง", hint: "ทางลัดไปหน้าจัดการข้อมูลกลาง", icon: MapIcon }
 ];
 
+// จัดหมวดเมนูตั้งค่า: เรื่องที่ใช้บ่อยอยู่บน เรื่องที่ตั้งครั้งเดียวอยู่ล่าง
+const GROUPS = [
+  { label: null, items: ["overview"] },
+  { label: "การแจ้งเตือน", items: ["alerts", "alert-sounds", "alert-test"] },
+  { label: "ผู้ใช้และสิทธิ์", items: ["security", "roles", "modules"] },
+  { label: "ข้อมูล", items: ["data", "visitors", "test-data", "backup"] },
+  { label: "ระบบ", items: ["integrations", "maintenance"] }
+].map((group) => ({ ...group, items: group.items.map((value) => SECTIONS.find((item) => item.value === value)).filter(Boolean) }));
+
 const TONE = {
   ok: { icon: CheckCircle2, cls: "text-emerald-600", border: "border-l-emerald-600", label: "ปกติ" },
   warn: { icon: AlertTriangle, cls: "text-amber-600", border: "border-l-amber-500", label: "ควรตรวจ" },
@@ -360,24 +369,40 @@ export default function SystemSettingsWorkspace() {
     >
       {notice}
       <div className="grid gap-4 lg:grid-cols-[16rem_1fr]">
-        <nav aria-label="หมวดการตั้งค่า" className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 lg:flex-col lg:self-start">
-          {SECTIONS.map((item) => {
-            const Icon = item.icon;
-            const active = item.value === section;
-            return (
-              <button key={item.value} type="button" onClick={() => setSection(item.value)} aria-current={active ? "page" : undefined}
-                className={`flex shrink-0 items-start gap-2.5 rounded-lg px-3 py-2 text-left ${active ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc]"}`}>
-                <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>
-                  <span className="block text-sm font-bold">
-                    {item.label}
-                    {item.value === "overview" && problems ? <span className={`ml-1.5 rounded-full px-1.5 text-[11px] ${active ? "bg-white text-red-700" : "bg-red-600 text-white"}`}>{problems}</span> : null}
-                  </span>
-                  <span className={`hidden text-xs lg:block ${active ? "text-blue-100" : "text-slate-500"}`}>{item.hint}</span>
-                </span>
-              </button>
-            );
-          })}
+        <label className="block lg:hidden">
+          <span className="sr-only">หมวดการตั้งค่า</span>
+          <select value={section} onChange={(event) => setSection(event.target.value)}
+            className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-[15px] font-bold text-slate-900">
+            {GROUPS.map((group) => (group.label ? (
+              <optgroup key={group.label} label={group.label}>
+                {group.items.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              </optgroup>
+            ) : group.items.map((item) => <option key={item.value} value={item.value}>{item.label}{item.value === "overview" && problems ? ` (ต้องแก้ ${problems})` : ""}</option>)))}
+          </select>
+        </label>
+        <nav aria-label="หมวดการตั้งค่า" className="hidden rounded-2xl border border-slate-200 bg-white p-1.5 lg:block lg:self-start">
+          {GROUPS.map((group) => (
+            <div key={group.label || "top"} className={group.label ? "mt-2 border-t border-slate-100 pt-2" : ""}>
+              {group.label ? <p className="px-3 pb-1 text-xs font-bold text-slate-500">{group.label}</p> : null}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const active = item.value === section;
+                return (
+                  <button key={item.value} type="button" onClick={() => setSection(item.value)} aria-current={active ? "page" : undefined}
+                    className={`flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left ${active ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc]"}`}>
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold">
+                        {item.label}
+                        {item.value === "overview" && problems ? <span className={`ml-1.5 rounded-full px-1.5 text-[11px] ${active ? "bg-white text-red-700" : "bg-red-600 text-white"}`}>{problems}</span> : null}
+                      </span>
+                      {active ? <span className="block text-xs text-blue-100">{item.hint}</span> : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="min-w-0 space-y-4">

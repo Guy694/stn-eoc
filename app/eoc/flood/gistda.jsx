@@ -110,7 +110,7 @@ export default function GistdaFloodMapPage() {
                     <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h1 className="text-xl font-semibold text-white sm:text-2xl">
-                                <AppIcon icon="waves" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่อุทกภัยน้ำท่วม GISTDA
+                                แผนที่อุทกภัยน้ำท่วม GISTDA
                             </h1>
                             <p className="text-sm text-blue-100">
                                 {`ข้อมูลจาก GISTDA - อัปเดตล่าสุด: ${floodData?.summary?.lastUpdate ? new Date(floodData.summary.lastUpdate).toLocaleString('th-TH') : '-'}`}
@@ -169,14 +169,14 @@ export default function GistdaFloodMapPage() {
                     {loading ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
                             <div className="text-center">
-                                <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
+                                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                                 <div className="text-slate-600">กำลังโหลดข้อมูล...</div>
                             </div>
                         </div>
                     ) : error ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
                             <div className="text-center text-red-600">
-                                <div className="text-4xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                                <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
                                 <div className="text-xl font-semibold mb-2">เกิดข้อผิดพลาด</div>
                                 <div>{error}</div>
                             </div>

@@ -1,5 +1,9 @@
 "use client";
 import { getEocTypeLabel } from '@/lib/eocDisplay';
+import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { Pencil, Trash2 } from "lucide-react";
+import { IconButton } from "@/components/admin/crud";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
@@ -434,25 +438,16 @@ export default function FacilityDiseaseReports() {
 
             <div className="container mx-auto px-4">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="biohazard" className="h-5 w-5" /></span>
-                            สถานการณ์โรครายวัน
-                        </h1>
-                        <p className="text-blue-100">บันทึกและติดตามสถานการณ์โรคจากหน่วยบริการ</p>
-                    </div>
-                    <button
+                <PageHero icon="biohazard" title="สถานการณ์โรครายวัน" subtitle="บันทึกและติดตามสถานการณ์โรคจากหน่วยบริการ" actions={<><button
                         onClick={() => {
                             resetForm();
                             setShowModal(true);
                         }}
-                        className="px-2 py-1 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors flex items-center gap-2"
+                        className={heroPrimaryButtonClass}
                     >
-                        <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                        <AppIcon icon="plus" className="h-4 w-4" />
                         เพิ่มรายงานโรค
-                    </button>
-                </div>
+                    </button></>} className="mb-6" />
 
                 {/* Session Selector */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 mb-6">
@@ -490,7 +485,7 @@ export default function FacilityDiseaseReports() {
 
                 {!selectedSession ? (
                     <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-8 text-center">
-                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
                         <h3 className="text-xl font-semibold text-slate-900 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
                         <p className="text-slate-600">
                             เลือกเหตุการณ์ EOC ที่ต้องการดูรายงานโรค
@@ -532,7 +527,7 @@ export default function FacilityDiseaseReports() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             {/* กราฟแท่งตามอำเภอ */}
                             <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h3 className="text-xl font-semibold text-slate-900 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานการณ์แยกตามอำเภอ (วันนี้)</h3>
+                                <h3 className="text-xl font-semibold text-slate-900 mb-4">สถานการณ์แยกตามอำเภอ (วันนี้)</h3>
                                 {summary.today.length > 0 ? (
                                     <Bar
                                         data={getDistrictChartData()}
@@ -605,7 +600,7 @@ export default function FacilityDiseaseReports() {
 
                             {/* กราฟวงกลมรายโรค */}
                             <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h3 className="text-xl font-semibold text-slate-900 mb-4"><AppIcon icon="pieChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สัดส่วนผู้ป่วยรายโรค (สะสม)</h3>
+                                <h3 className="text-xl font-semibold text-slate-900 mb-4">สัดส่วนผู้ป่วยรายโรค (สะสม)</h3>
                                 {summary.byDisease.length > 0 ? (
                                     <Pie
                                         data={getDiseaseChartData()}
@@ -630,7 +625,7 @@ export default function FacilityDiseaseReports() {
 
                         {/* ตารางสรุปรายโรคแบบ 7 อำเภอ */}
                         <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
-                            <h3 className="text-xl font-semibold text-slate-900 mb-4"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตารางสรุปรายโรคตามอำเภอ</h3>
+                            <h3 className="text-xl font-semibold text-slate-900 mb-4">ตารางสรุปรายโรคตามอำเภอ</h3>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full border-collapse border border-slate-300 text-sm">
                                     <thead>
@@ -743,7 +738,7 @@ export default function FacilityDiseaseReports() {
                                 </table>
                             </div>
                             <div className="mt-4 text-sm text-slate-600">
-                                <p><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> หมายเหตุ: ข้อมูลจากโรงพยาบาลชุมชนและสถานีอนามัยจะถูกรวมไปยังโรงพยาบาลประจำอำเภอ</p>
+                                <p>หมายเหตุ: ข้อมูลจากโรงพยาบาลชุมชนและสถานีอนามัยจะถูกรวมไปยังโรงพยาบาลประจำอำเภอ</p>
                             </div>
                         </div>
 
@@ -794,7 +789,7 @@ export default function FacilityDiseaseReports() {
                         <div className="border border-slate-200 bg-white rounded-2xl">
                             {loading ? (
                                 <div className="flex justify-center items-center py-12">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
+                                    <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                                 </div>
                             ) : filteredReports.length === 0 ? (
                                 <div className="text-center py-12 text-slate-500">
@@ -831,19 +826,11 @@ export default function FacilityDiseaseReports() {
                                                     <td className="px-6 py-4 text-sm text-slate-600">
                                                         {report.notes || '-'}
                                                     </td>
-                                                    <td className="px-6 py-4 text-sm font-medium">
-                                                        <button
-                                                            onClick={() => handleEdit(report)}
-                                                            className="text-[#0b4c86] hover:text-[#083865] mr-3"
-                                                        >
-                                                            <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แก้ไข
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(report)}
-                                                            className="text-red-600 hover:text-red-900"
-                                                        >
-                                                            <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ลบ
-                                                        </button>
+                                                    <td className="px-4 py-2">
+                                                        <div className="flex justify-end gap-0.5">
+                                                            <IconButton icon={Pencil} tone="primary" label={`แก้ไข ${report.disease_name || "รายงาน"}`} onClick={() => handleEdit(report)} />
+                                                            <IconButton icon={Trash2} tone="danger" label={`ลบ ${report.disease_name || "รายงาน"}`} onClick={() => handleDelete(report)} />
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -862,11 +849,11 @@ export default function FacilityDiseaseReports() {
 
                         {/* Modal */}
                         {showModal && (
-                            <div className="app-modal-overlay" role="dialog" aria-modal="true">
+                            <AppDialogFrame open onOpenChange={(open) => { if (!open) { setShowModal(false); resetForm(); } }}>
                                 <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                                     <div className="p-6">
                                         <div className="flex justify-between items-start mb-4">
-                                            <h2 className="text-lg font-semibold text-slate-900">
+                                            <h2 className="text-lg font-black text-slate-900 sm:text-xl">
                                                 {editingReport ? 'แก้ไขรายงานโรค' : 'เพิ่มรายงานโรค'}
                                             </h2>
                                             <button
@@ -984,7 +971,7 @@ export default function FacilityDiseaseReports() {
                                         </form>
                                     </div>
                                 </div>
-                            </div>
+                            </AppDialogFrame>
                         )}
                     </>
                 )}

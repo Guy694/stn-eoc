@@ -62,7 +62,7 @@ export default function EOCSessionTeamsPage() {
     if (authLoading || !user) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#edf5fc]">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#0b4c86]/20 border-t-[#0b4c86]" aria-label="กำลังโหลด" />
+                <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none" aria-label="กำลังโหลด" />
             </div>
         );
     }

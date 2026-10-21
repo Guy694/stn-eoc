@@ -19,7 +19,7 @@ const unavailable = () => NextResponse.json({ success: false, message: "ระ�
 export async function GET(request) {
   const params = new URL(request.url).searchParams;
   if (params.get("history") === "1") {
-    const data = await publicAlertHistory().catch((error) => {
+    const data = await publicAlertHistory({ limit: 100 }).catch((error) => {
       if (!tableMissing(error)) console.error("Public push history error:", error?.message || error);
       return [];
     });

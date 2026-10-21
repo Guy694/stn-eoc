@@ -221,7 +221,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
         return (
             <div className="border border-slate-200 bg-white rounded-2xl p-6">
                 <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86]"></div>
+                    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <span className="ml-3 text-slate-600">กำลังโหลดข้อมูล...</span>
                 </div>
             </div>
@@ -231,7 +231,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
     if (!hasActiveSession) {
         return (
             <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
-                <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
                 <p className="text-slate-600">
                     ไม่พบ เหตุการณ์ EOC อุทกภัยน้ำท่วมที่กำลังดำเนินการอยู่ในขณะนี้
@@ -569,7 +569,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                 <div className="border border-slate-200 bg-white rounded-2xl p-6">
                     <div className="mb-4">
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                            <AppIcon icon="calendar" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
+                            แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน
                         </h3>
                         <p className="text-sm text-slate-600">
                             ครั้งที่ {activeSession.session_number} - ตั้งแต่ {new Date(activeSession.opened_at).toLocaleDateString('th-TH')}
@@ -616,7 +616,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
 
                         {selectedDate && (
                             <div className="text-sm text-[#083865] bg-[#edf5fc] p-3 rounded-lg">
-                                <AppIcon icon="lightbulb" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดงข้อมูลวันที่: <strong>{selectedDate.toLocaleDateString('th-TH', {
+                                แสดงข้อมูลวันที่: <strong>{selectedDate.toLocaleDateString('th-TH', {
                                     weekday: 'long',
                                     day: 'numeric',
                                     month: 'long',
@@ -631,7 +631,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             {/* แสดงข้อความเมื่อไม่มีข้อมูล flood */}
             {hasNoFloodData && (
                 <div className="bg-[#edf5fc] border-2 border-[#c9dcee] rounded-lg p-4 text-center">
-                    <div className="text-2xl mb-2"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                    <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="clipboard" className="h-6 w-6" /></span>
                     <p className="text-[#0b4c86] font-medium">ยังไม่มีข้อมูลอุทกภัยน้ำท่วมในช่วงเวลาที่เลือก</p>
                     <p className="text-[#0b4c86] text-sm mt-1">
                         {latestRecordDate
@@ -647,7 +647,7 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
             <div className="border border-slate-200 bg-white text-slate-700 rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-3">
                     <label className="font-semibold text-slate-700 flex items-center gap-2">
-                        <span><AppIcon icon="search" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>ฟิลเตอร์ข้อมูล
+                        <span></span>ฟิลเตอร์ข้อมูล
                     </label>
                     <button
                         onClick={() => {
@@ -1449,18 +1449,18 @@ export default function FloodAreaStatus({ sessionId, date, polygons }) {
                             </div>
                             {area.water_level && Number(area.water_level) > 0 && (
                                 <div className="text-sm text-slate-700 mb-1">
-                                    <AppIcon icon="droplet" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ระดับน้ำ: <span className="font-medium">{Number(area.water_level).toFixed(2)} เมตร</span>
+                                    ระดับน้ำ: <span className="font-medium">{Number(area.water_level).toFixed(2)} เมตร</span>
                                 </div>
                             )}
                             {area.affected_population > 0 && (
                                 <div className="text-sm text-slate-700 mb-1">
-                                    <AppIcon icon="users" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ประชากรได้รับผลกระทบ: <span className="font-medium">{area.affected_population.toLocaleString()} คน</span>
+                                    ประชากรได้รับผลกระทบ: <span className="font-medium">{area.affected_population.toLocaleString()} คน</span>
                                     {' '}({area.affected_households} ครัวเรือน)
                                 </div>
                             )}
                             {area.notes && (
                                 <div className="text-sm text-slate-600 mt-2 p-2 bg-slate-50 rounded">
-                                    <AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {area.notes}
+                                    {area.notes}
                                 </div>
                             )}
                             <div className="text-xs text-slate-400 mt-2">

@@ -161,7 +161,7 @@ export default function CitizenDashboard() {
 
                 {loading ? (
                     <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto mb-4"></div>
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         <p className="text-slate-600">กำลังโหลดข้อมูล EOC...</p>
                     </div>
                 ) : activeEOCs.length > 0 ? (
@@ -286,7 +286,7 @@ export default function CitizenDashboard() {
 
                 {reportsLoading ? (
                     <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-600 mx-auto mb-4"></div>
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         <p className="text-slate-600">กำลังโหลดประวัติ...</p>
                     </div>
                 ) : myReports.length > 0 ? (
@@ -346,7 +346,7 @@ export default function CitizenDashboard() {
                     </div>
                 ) : (
                     <div className="border border-slate-200 bg-white rounded-2xl p-8 text-center">
-                        <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
                         <h4 className="text-xl font-bold text-slate-800 mb-2">ยังไม่มีประวัติการแจ้งเหตุ</h4>
                         <p className="text-slate-600 mb-4">คุณยังไม่เคยแจ้งเหตุภัยพิบัติ</p>
                         <HelpRequestLink

@@ -7,11 +7,11 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Power, Users } from "lucide-react";
+import { Power, PowerOff, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import {
-  AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, RowActions,
+  AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, IconButton, RowActions,
   StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import AreaFields from "@/components/admin/AreaFields";
@@ -347,7 +347,7 @@ export default function ShelterWorkspace() {
               rowActions={canEditSession ? (row) => Number(row.is_activated_for_session) === 1 ? (
                 <RowActions>
                   <Button className="min-h-9 px-3" onClick={() => openOccupancy(row)}><Users className="h-4 w-4" aria-hidden="true" /> อัปเดตยอด</Button>
-                  <Button variant="ghost" className="min-h-9 px-3" onClick={() => setToggleRow(row)}>ปิดใช้</Button>
+                  <IconButton icon={PowerOff} label={`ปิดใช้ ${row.sheltername}`} onClick={() => setToggleRow(row)} />
                 </RowActions>
               ) : (
                 <RowActions>
@@ -386,8 +386,8 @@ export default function ShelterWorkspace() {
               { key: "updated_at", label: "แก้ไขล่าสุด", render: (row) => <UpdatedAt value={row.updated_at} staleHours={24 * 180} />, mobile: false }
             ]}
             rowActions={canEdit ? (row) => (
-              <RowActions onEdit={() => openForm(row)} onDelete={isAdmin ? () => { setDeleteError(""); setDeleting(row); } : undefined}>
-                <Button variant="ghost" className="min-h-9 px-2.5" onClick={() => toggleRegistryActive(row)}>{Number(row.is_active) === 1 ? "ปิดใช้งาน" : "เปิดใช้งาน"}</Button>
+              <RowActions itemName={row.sheltername} onEdit={() => openForm(row)} onDelete={isAdmin ? () => { setDeleteError(""); setDeleting(row); } : undefined}>
+                <IconButton icon={Number(row.is_active) === 1 ? PowerOff : Power} label={`${Number(row.is_active) === 1 ? "ปิดใช้งาน" : "เปิดใช้งาน"} ${row.sheltername}`} onClick={() => toggleRegistryActive(row)} />
               </RowActions>
             ) : undefined}
           />

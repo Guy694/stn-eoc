@@ -1,11 +1,14 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
 import dynamic from 'next/dynamic';
 import AppIcon from "@/components/icons/AppIcon";
 import { MetricCard } from "@/components/common/MetricCards";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
@@ -17,6 +20,7 @@ const pointTypes = ['จุดตรวจ', 'จุดบริการ', 'จ
 export default function ServicePointsPage() {
     const satunDistricts = useSatunDistricts();
     const [points, setPoints] = useState([]);
+    const { anchor: listAnchor, ...paged } = usePagination(points, { pageSize: 12 });
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingPoint, setEditingPoint] = useState(null);
@@ -211,7 +215,7 @@ export default function ServicePointsPage() {
             <EOCLayout>
                 <div className="p-6">
                     <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
-                        <div className="text-6xl mb-4"><AppIcon icon="alert" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
                         <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
                         <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนจัดการจุดบริการ</p>
                     </div>
@@ -224,23 +228,12 @@ export default function ServicePointsPage() {
         <EOCLayout>
             <div className="p-6">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-xl font-semibold text-white mb-2 flex items-center gap-3 sm:text-2xl">
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="route" className="h-5 w-5" /></span>
-                            จุดบริการชั่วคราว
-                        </h1>
-                        <p className="text-blue-100">
-                            เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย
-                        </p>
-                    </div>
-                    <button
+                <PageHero icon="route" title="จุดบริการชั่วคราว" subtitle={<>เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย</>} actions={<><button
                         onClick={() => { setEditingPoint(null); resetForm(); setShowModal(true); }}
-                        className="bg-white text-[#0b4c86] px-6 py-3 rounded-lg hover:bg-blue-50 flex items-center gap-2"
+                        className={heroPrimaryButtonClass}
                     >
-                        <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มจุดบริการ
-                    </button>
-                </div>
+                        <AppIcon icon="plus" className="h-4 w-4" /> เพิ่มจุดบริการ
+                    </button></>} className="mb-6" />
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -253,18 +246,19 @@ export default function ServicePointsPage() {
                 {/* Cards View */}
                 {loading ? (
                     <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b border-orange-500 mx-auto mb-4"></div>
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         <p className="text-slate-600">กำลังโหลด...</p>
                     </div>
                 ) : points.length === 0 ? (
                     <div className="border border-slate-200 bg-white rounded-2xl p-12 text-center">
-                        <div className="text-6xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
                         <h3 className="text-xl font-bold text-slate-700 mb-2">ยังไม่มีจุดบริการ</h3>
                         <p className="text-slate-500 mb-4">คลิกปุ่ม &quot;เพิ่มจุดบริการ&quot; เพื่อเริ่มต้น</p>
                     </div>
                 ) : (
+                    <div ref={listAnchor} className="scroll-mt-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {points.map((point) => (
+                        {paged.visible.map((point) => (
                             <div
                                 key={point.id}
                                 className={`bg-white rounded-2xl overflow-hidden border ${point.is_active ? 'border-green-500' : 'border-slate-300'
@@ -287,23 +281,23 @@ export default function ServicePointsPage() {
                                     </div>
 
                                     <div className="text-sm text-slate-600 mb-3">
-                                        {point.address && <p className="mb-1"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.address}</p>}
+                                        {point.address && <p className="mb-1">{point.address}</p>}
                                         {point.district && <p className="text-xs text-slate-500">อ.{point.district} ต.{point.tambon}</p>}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                                         <div className="bg-[#edf5fc] rounded p-2 text-center">
                                             <div className="font-bold text-[#0b4c86]">{point.officer_count || 0}</div>
-                                            <div className="text-xs text-[#0b4c86]"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เจ้าหน้าที่</div>
+                                            <div className="text-xs text-[#0b4c86]">เจ้าหน้าที่</div>
                                         </div>
                                         <div className="bg-[#edf5fc] rounded p-2 text-center">
                                             <div className="font-bold text-[#0b4c86]">{point.vehicle_count || 0}</div>
-                                            <div className="text-xs text-[#0b4c86]"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> รถตรวจ</div>
+                                            <div className="text-xs text-[#0b4c86]">รถตรวจ</div>
                                         </div>
                                     </div>
 
                                     {point.operating_hours && (
-                                        <p className="text-xs text-slate-500 mb-3"><AppIcon icon="clock" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {point.operating_hours}</p>
+                                        <p className="text-xs text-slate-500 mb-3">เวลา {point.operating_hours}</p>
                                     )}
 
                                     <div className="flex gap-2 pt-2 border-t">
@@ -333,14 +327,16 @@ export default function ServicePointsPage() {
                             </div>
                         ))}
                     </div>
+                    <PaginationControls {...paged.controls} pageSizeOptions={[12, 24, 48]} itemLabel="จุดบริการ" className="mt-4 rounded-2xl border border-slate-200 bg-white" />
+                    </div>
                 )}
 
                 {/* Modal */}
                 {showModal && (
-                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
+                    <AppDialogFrame open onOpenChange={(open) => { if (!open) { setShowModal(false); setEditingPoint(null); resetForm(); } }}>
                         <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="p-6">
-                                <h2 className="text-slate-700 text-2xl font-bold mb-4">
+                                <h2 className="mb-4 text-lg font-black text-slate-900 sm:text-xl">
                                     {editingPoint ? 'แก้ไขจุดบริการ' : "เพิ่มจุดบริการ"}
                                 </h2>
 
@@ -445,7 +441,7 @@ export default function ServicePointsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="shield" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนเจ้าหน้าที่</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">จำนวนเจ้าหน้าที่</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -455,7 +451,7 @@ export default function ServicePointsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="car" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จำนวนรถตรวจ</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">จำนวนรถตรวจ</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -498,7 +494,7 @@ export default function ServicePointsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เบอร์ติดต่อ</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">เบอร์ติดต่อ</label>
                                         <input
                                             type="text"
                                             value={formData.contact_phone}
@@ -516,14 +512,14 @@ export default function ServicePointsPage() {
                                         >
                                             ยกเลิก
                                         </button>
-                                        <button type="submit" className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                                        <button type="submit" className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]">
                                             {editingPoint ? 'บันทึกการแก้ไข' : 'บันทึก'}
                                         </button>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </AppDialogFrame>
                 )}
             </div>
         </EOCLayout>

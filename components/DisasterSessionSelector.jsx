@@ -235,7 +235,7 @@ export default function DisasterSessionSelector({
 
             {loading ? (
                 <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b border-teal-500 mx-auto mb-4"></div>
+                    <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                 </div>
             ) : yearSummary && (

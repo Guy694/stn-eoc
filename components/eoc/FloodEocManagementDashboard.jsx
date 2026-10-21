@@ -14,6 +14,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { getOperationSessionLockByType } from "@/lib/eocSessionLock";
 import { showError, showSuccess } from "@/lib/sweetAlert";
 import ReasonDialog from "@/components/ui/reason-dialog";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 import DailyDirectivesBoard from "@/components/eoc/directives/DailyDirectivesBoard";
 
 export const FLOOD_EOC_BASE_PATH = "/eoc/flood/management";
@@ -94,7 +95,7 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
       <section className="mx-auto max-w-7xl space-y-4">
         <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 space-y-1">
           <p className="text-sm font-semibold text-blue-100">ภารกิจและข้อสั่งการ</p>
-          <h1 className="text-xl font-semibold text-white sm:text-3xl sm:text-2xl">{viewMeta.label}</h1>
+          <h1 className="text-xl font-semibold text-white sm:text-2xl">{viewMeta.label}</h1>
           {state.data?.session?.status === "closed" ? (
             <p className="mt-2 rounded-lg border border-[#c9dcee] bg-white/15 px-3 py-2 text-sm text-white">
               เหตุการณ์นี้ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่ยังจัดทำ แก้ไข ส่ง และตรวจรายงานย้อนหลังได้
@@ -169,6 +170,7 @@ function TeamStatusView({ data }) {
 
 function OperationalResourceView({ view, sessionId }) {
   const [resource, setResource] = useState({ loading: true, rows: [], permissions: {}, error: "" });
+  const { anchor: listAnchor, ...paged } = usePagination(resource.rows, { pageSize: 20, resetKey: `${view}|${sessionId}` });
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingMove, setPendingMove] = useState(null);
@@ -264,10 +266,10 @@ function OperationalResourceView({ view, sessionId }) {
     </div>
     {showForm ? <ResourceForm view={view} form={form} setForm={setForm} submit={submit} saving={saving} /> : null}
     {!resource.rows.length ? <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"><CalendarClock className="mx-auto h-8 w-8 text-slate-400" aria-hidden="true" /><p className="mt-3 font-bold text-slate-900">ยังไม่มี{labels[view]}ในเหตุการณ์นี้</p><p className="mt-1 text-sm text-slate-500">{resource.permissions.canOperate ? `กด "เพิ่ม${labels[view]}" เพื่อเริ่มบันทึก` : "เมื่อมีการบันทึกจะแสดงที่นี่"}</p></div> :
-      <div className="overflow-x-auto border border-slate-200 bg-white shadow-sm"><table className="min-w-full text-left text-sm">
+      <div ref={listAnchor} className="scroll-mt-4 border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><table className="min-w-full text-left text-sm">
         <thead className="bg-slate-900 text-white"><tr>{columns.map(([, label]) => <th key={label} className="px-4 py-3">{label}</th>)}{view === "missions" ? <th className="px-4 py-3">ขั้นตอนงาน</th> : null}</tr></thead>
-        <tbody>{resource.rows.map((row) => <tr key={row.id} className="border-t border-slate-100">{columns.map(([key]) => <td key={key} className="max-w-xs px-4 py-3">{key === "progress_percent" ? `${row[key] ?? 0}%` : row[key] ?? "-"}</td>)}{view === "missions" ? <td className="px-4 py-3"><MissionActions row={row} canVerify={resource.permissions.canVerify} onMove={moveMission} /></td> : null}</tr>)}</tbody>
-      </table></div>}
+        <tbody>{paged.visible.map((row) => <tr key={row.id} className="border-t border-slate-100">{columns.map(([key]) => <td key={key} className="max-w-xs px-4 py-3">{key === "progress_percent" ? `${row[key] ?? 0}%` : row[key] ?? "-"}</td>)}{view === "missions" ? <td className="px-4 py-3"><MissionActions row={row} canVerify={resource.permissions.canVerify} onMove={moveMission} /></td> : null}</tr>)}</tbody>
+      </table></div><PaginationControls {...paged.controls} pageSizeOptions={[20, 50, 100]} /></div>}
     <ReasonDialog
       open={Boolean(pendingMove)}
       onOpenChange={(open) => { if (!open) setPendingMove(null); }}

@@ -7,6 +7,7 @@ import { BellRing, ExternalLink, Siren } from 'lucide-react';
 import PublicOpsScaffold from '@/components/public/PublicOpsScaffold';
 import AlertGuide from '@/components/public/alerts/AlertGuide';
 import AlertSubscribeCard from '@/components/public/AlertSubscribeCard';
+import PaginationControls, { usePagination } from '@/components/common/PaginationControls';
 
 // หน้า "แจ้งเตือนที่ได้รับ": เปิดเมื่อกดแจ้งเตือนบนมือถือ แสดงข้อความเต็ม + แจ้งเตือน 30 วันล่าสุด
 const HIGH = new Set(['high', 'critical']);
@@ -57,6 +58,31 @@ export default function PublicAlertsPage() {
       .catch(() => setHistory([]));
   }, []);
 
+  // หน้าละ 10 เรื่อง · เปิดจากลิงก์ #alert-<id> (เช่น จากหน้าประกาศ) → พลิกไปหน้าที่มีเรื่องนั้นแล้วเลื่อนไปหา
+  const { anchor: listAnchor, ...paged } = usePagination(history, { pageSize: 10 });
+  const [jumpId, setJumpId] = useState(null);
+  const { pageOfIndex, goTo: goToPage, page: currentPage } = paged;
+  useEffect(() => {
+    if (!history?.length) return;
+    const match = /^#alert-(\d+)$/.exec(window.location.hash || '');
+    if (match) setJumpId(Number(match[1]));
+  }, [history]);
+  useEffect(() => {
+    if (!jumpId || !history) return undefined;
+    const index = history.findIndex((item) => Number(item.id) === jumpId);
+    if (index < 0) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const target = pageOfIndex(index);
+      if (target !== currentPage) {
+        goToPage(target, { scroll: false });
+        return;
+      }
+      document.getElementById(`alert-${jumpId}`)?.scrollIntoView({ block: 'start' });
+      setJumpId(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [jumpId, history, currentPage, pageOfIndex, goToPage]);
+
   return (
     <PublicOpsScaffold title="แจ้งเตือนที่ได้รับ" subtitle="แจ้งเตือนภัยและข่าวจากศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล" activeMenu="announce" showPageHeader={false} mainClassName="p-0!">
       <div className="min-h-[70vh] bg-[#eef2f1] px-4 py-8 sm:px-6">
@@ -75,8 +101,9 @@ export default function PublicAlertsPage() {
             ) : history.length === 0 ? (
               <p className="mt-3 rounded-2xl bg-white px-5 py-8 text-center text-slate-500">ยังไม่มีแจ้งเตือนในช่วงนี้</p>
             ) : (
-              <ul className="mt-3 space-y-3">
-                {history.map((item) => (
+              <>
+              <ul ref={listAnchor} className="mt-3 scroll-mt-24 space-y-3">
+                {paged.visible.map((item) => (
                   <li key={item.id} id={`alert-${item.id}`} className="scroll-mt-24 rounded-2xl bg-white p-4 ring-1 ring-[#d6e3ea] target:ring-2 target:ring-[#0b4c86]">
                     <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
                       {HIGH.has(item.level) ? <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">เตือนภัย</span> : <span className="rounded-full bg-[#e3f3f5] px-2.5 py-0.5 text-xs font-bold text-[#11586a]">ข่าวจากศูนย์ฯ</span>}
@@ -89,6 +116,8 @@ export default function PublicAlertsPage() {
                   </li>
                 ))}
               </ul>
+              <PaginationControls {...paged.controls} pageSizeOptions={[10]} itemLabel="เรื่อง" className="mt-3 rounded-2xl bg-white ring-1 ring-[#d6e3ea]" />
+              </>
             )}
           </section>
         </div>

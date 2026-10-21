@@ -1,6 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, Suspense, useState } from 'react';
+import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { Pencil, Trash2 } from "lucide-react";
+import { IconButton } from "@/components/admin/crud";
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
@@ -374,27 +378,13 @@ function AnnouncementsContent() {
         <EOCLayout>
             <div className="container mx-auto px-4">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="megaphone" className="h-5 w-5" /></span>
-                            จัดการประชาสัมพันธ์/แบนเนอร์
-                            {filters.eoc_type && (
-                                <span className="text-xl text-blue-100">
-                                    ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label})
-                                </span>
-                            )}
-                        </h1>
-                        <p className="text-blue-100">จัดการแบนเนอร์และประกาศข่าวสารต่างๆ</p>
-                    </div>
-                    <button
+                <PageHero icon="megaphone" title={<>จัดการประชาสัมพันธ์/แบนเนอร์ {filters.eoc_type && ( <span className="text-xl text-blue-100"> ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label}) </span> )}</>} subtitle="จัดการแบนเนอร์และประกาศข่าวสารต่างๆ" actions={<><button
                         onClick={openCreateModal}
-                        className="px-6 py-3 bg-white text-[#0b4c86] rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+                        className={heroPrimaryButtonClass}
                     >
-                        <span className="text-xl"><AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                        <AppIcon icon="plus" className="h-4 w-4" />
                         เพิ่มแบนเนอร์ใหม่
-                    </button>
-                </div>
+                    </button></>} className="mb-6" />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -509,7 +499,7 @@ function AnnouncementsContent() {
                 <div className="border border-slate-200 bg-white rounded-2xl">
                     {loading ? (
                         <div className="flex justify-center items-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
+                            <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         </div>
                     ) : announcements.length === 0 ? (
                         <div className="text-center py-12 text-slate-500">
@@ -628,19 +618,11 @@ function AnnouncementsContent() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                                 {new Date(announcement.created_at).toLocaleDateString('th-TH')}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <button
-                                                    onClick={() => handleEdit(announcement)}
-                                                    className="text-blue-600 hover:text-blue-900 mr-3"
-                                                >
-                                                    แก้ไข
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(announcement.id)}
-                                                    className="text-red-600 hover:text-red-900"
-                                                >
-                                                    ลบ
-                                                </button>
+                                            <td className="px-4 py-2 whitespace-nowrap">
+                                                <div className="flex justify-end gap-0.5">
+                                                    <IconButton icon={Pencil} tone="primary" label={`แก้ไข ${announcement.title}`} onClick={() => handleEdit(announcement)} />
+                                                    <IconButton icon={Trash2} tone="danger" label={`ลบ ${announcement.title}`} onClick={() => handleDelete(announcement.id)} />
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -706,11 +688,11 @@ function AnnouncementsContent() {
 
                 {/* Create/Edit Modal */}
                 {showModal && (
-                    <div className="app-modal-overlay" role="dialog" aria-modal="true">
+                    <AppDialogFrame open onOpenChange={(open) => { if (!open) { setShowModal(false); resetForm(); } }}>
                         <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-4">
-                                    <h2 className="text-lg font-semibold text-slate-900">
+                                    <h2 className="text-lg font-black text-slate-900 sm:text-xl">
                                         {editMode ? 'แก้ไขแบนเนอร์' : 'เพิ่มแบนเนอร์ใหม่'}
                                     </h2>
                                     <button
@@ -914,7 +896,7 @@ function AnnouncementsContent() {
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                            className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
                                         >
                                             {editMode ? 'บันทึก' : 'สร้าง'}
                                         </button>
@@ -922,7 +904,7 @@ function AnnouncementsContent() {
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </AppDialogFrame>
                 )}
             </div>
         </EOCLayout>
@@ -934,7 +916,7 @@ export default function AnnouncementsPage() {
         <Suspense fallback={
             <EOCLayout>
                 <div className="flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b border-green-500"></div>
+                    <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                 </div>
             </EOCLayout>
         }>

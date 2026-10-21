@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import AppIcon from "@/components/icons/AppIcon";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 
 const CATEGORY_META = {
   all: { label: "ทั้งหมด", color: "bg-blue-700 text-white border-blue-700" },
@@ -107,6 +108,7 @@ export default function PublicAgenciesPage() {
       return !query || haystack.includes(query);
     });
   }, [agencies, category, district, search]);
+  const { anchor: listAnchor, ...paged } = usePagination(filteredAgencies, { pageSize: 20, resetKey: `${category}|${district}|${search}` });
 
   const stats = useMemo(() => {
     const districtCount = new Set(agencies.map((item) => item.area).filter((area) => area && area.startsWith("อ."))).size;
@@ -217,8 +219,9 @@ export default function PublicAgenciesPage() {
               ) : filteredAgencies.length === 0 ? (
                 <div className="p-6 text-center text-sm text-slate-500">ไม่พบหน่วยงานในเงื่อนไขนี้</div>
               ) : (
-                <div className="max-h-[620px] overflow-auto">
-                  {filteredAgencies.map((item) => (
+                <>
+                <div ref={listAnchor} className="max-h-[620px] scroll-mt-24 overflow-auto">
+                  {paged.visible.map((item) => (
                     <article key={item.id} className="grid grid-cols-[minmax(220px,1.2fr)_minmax(180px,0.9fr)_minmax(140px,0.7fr)_150px] gap-3 border-t border-slate-100 px-4 py-3 text-sm max-lg:block">
                       <div className="min-w-0">
                         <p className="truncate font-black text-blue-900">{item.name}</p>
@@ -237,6 +240,8 @@ export default function PublicAgenciesPage() {
                     </article>
                   ))}
                 </div>
+                <PaginationControls {...paged.controls} pageSizeOptions={[20, 50, 100]} itemLabel="หน่วยงาน" />
+                </>
               )}
             </div>
           </section>

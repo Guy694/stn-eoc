@@ -248,7 +248,7 @@ function LoginForm() {
                             >
                                 {isLoading ? (
                                     <>
-                                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/60 border-t-white" />
+                                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/60 border-t-white motion-reduce:animate-none" />
                                         กำลังเข้าสู่ระบบ...
                                     </>
                                 ) : (
@@ -322,7 +322,7 @@ export default function LoginPage() {
         <Suspense fallback={
             <div className="min-h-screen bg-[#edf5fc] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-[#0b4c86] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="mt-4 text-slate-600">กำลังโหลด...</p>
                 </div>
             </div>

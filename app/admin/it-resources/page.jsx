@@ -1,5 +1,8 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PageHero } from "@/components/common/ThemePanels";
+import { Pencil, Trash2 } from "lucide-react";
+import { IconButton } from "@/components/admin/crud";
 import EOCLayout from '@/components/layouts/EOCLayout';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import { showDeleteConfirm, showError, showSuccess } from '@/lib/sweetAlert';
@@ -209,12 +212,7 @@ export default function ITResourcesPage() {
         <EOCLayout>
             <div className="p-6">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-                        <AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> จัดการทรัพยากร IT Support
-                    </h1>
-                    <p className="text-blue-100 mt-1">ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ</p>
-                </div>
+                <PageHero title="จัดการทรัพยากร IT Support" subtitle="ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ" className="mb-6" />
 
                 {/* Stats Cards */}
                 <MetricGrid className="mb-6">
@@ -229,7 +227,7 @@ export default function ITResourcesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {/* Status Pie Chart */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-4">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-4"><AppIcon icon="barChart" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> สถานะทั้งหมด</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">สถานะทั้งหมด</h3>
                         <div className="h-64">
                             <Pie
                                 data={{
@@ -269,7 +267,7 @@ export default function ITResourcesPage() {
 
                     {/* ISP Providers Bar Chart */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-4">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-4"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ผู้ให้บริการอินเทอร์เน็ต (ISP)</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">ผู้ให้บริการอินเทอร์เน็ต (ISP)</h3>
                         <div className="h-64">
                             {stats.byIsp && stats.byIsp.length > 0 ? (
                                 <Bar
@@ -313,7 +311,7 @@ export default function ITResourcesPage() {
 
                     {/* Resource Types Bar Chart */}
                     <div className="border border-slate-200 bg-white rounded-2xl p-4">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-4"><AppIcon icon="package" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แยกตามประเภททรัพยากร</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">แยกตามประเภททรัพยากร</h3>
                         <div className="h-64">
                             {stats.byType && stats.byType.length > 0 ? (
                                 <Bar
@@ -392,7 +390,7 @@ export default function ITResourcesPage() {
                         </div>
                         <button
                             onClick={() => { resetForm(); setShowModal(true); }}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                            className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] flex items-center gap-2"
                         >
                             <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มทรัพยากร
                         </button>
@@ -403,11 +401,11 @@ export default function ITResourcesPage() {
                 <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
                     {loading ? (
                         <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500 mx-auto"></div>
+                            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         </div>
                     ) : resources.length === 0 ? (
                         <div className="p-8 text-center text-slate-500">
-                            <div className="text-5xl mb-4"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></div>
+                            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
                             <p>ยังไม่มีข้อมูลทรัพยากร IT</p>
                         </div>
                     ) : (
@@ -438,19 +436,19 @@ export default function ITResourcesPage() {
                                                     <div className="text-xs text-slate-500">{resource.unit_code}</div>
                                                 )}
                                                 {resource.location && (
-                                                    <div className="text-xs text-slate-400"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.location}</div>
+                                                    <div className="text-xs text-slate-400">{resource.location}</div>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-sm text-slate-700">
                                                 {resource.resource_type === 'server' ? (
                                                     <div>
-                                                        {resource.server_name && <div><AppIcon icon="monitor" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.server_name}</div>}
+                                                        {resource.server_name && <div>เซิร์ฟเวอร์ {resource.server_name}</div>}
                                                         {resource.server_ip && <div className="text-xs text-slate-500">IP: {resource.server_ip}</div>}
                                                         {resource.server_os && <div className="text-xs text-slate-400">{resource.server_os}</div>}
                                                     </div>
                                                 ) : resource.resource_type === 'internet' ? (
                                                     <div>
-                                                        {resource.isp_provider && <div><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.isp_provider}</div>}
+                                                        {resource.isp_provider && <div>ผู้ให้บริการ {resource.isp_provider}</div>}
                                                         {resource.connection_type && <div className="text-xs text-slate-500">{resource.connection_type}</div>}
                                                         {resource.bandwidth && <div className="text-xs text-slate-400">{resource.bandwidth}</div>}
                                                     </div>
@@ -468,22 +466,12 @@ export default function ITResourcesPage() {
                                             </td>
                                             <td className="px-4 py-3 text-sm">
                                                 {resource.contact_person && <div>{resource.contact_person}</div>}
-                                                {resource.contact_phone && <div className="text-xs text-slate-500"><AppIcon icon="phone" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {resource.contact_phone}</div>}
+                                                {resource.contact_phone && <div className="text-xs text-slate-500">โทร {resource.contact_phone}</div>}
                                             </td>
                                             <td className="px-4 py-3 text-center">
-                                                <div className="flex justify-center gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(resource)}
-                                                        className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
-                                                    >
-                                                        แก้ไข
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(resource.id)}
-                                                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-                                                    >
-                                                        ลบ
-                                                    </button>
+                                                <div className="flex justify-center gap-0.5">
+                                                    <IconButton icon={Pencil} tone="primary" label={`แก้ไข ${resource.unit_name || ""}`} onClick={() => handleEdit(resource)} />
+                                                    <IconButton icon={Trash2} tone="danger" label={`ลบ ${resource.unit_name || ""}`} onClick={() => handleDelete(resource.id)} />
                                                 </div>
                                             </td>
                                         </tr>
@@ -559,7 +547,7 @@ export default function ITResourcesPage() {
                                     {/* Internet Fields */}
                                     {formData.resource_type === 'internet' && (
                                         <div className="bg-green-50 p-4 rounded-lg space-y-4">
-                                            <h3 className="font-medium text-green-800"><AppIcon icon="earth" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ข้อมูลอินเทอร์เน็ต</h3>
+                                            <h3 className="font-medium text-green-800">ข้อมูลอินเทอร์เน็ต</h3>
                                             <div className="grid grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">ผู้ให้บริการ (ISP)</label>
@@ -625,7 +613,7 @@ export default function ITResourcesPage() {
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                            className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865]"
                                         >
                                             {editingResource ? "บันทึกการแก้ไข" : "เพิ่มข้อมูล"}
                                         </button>

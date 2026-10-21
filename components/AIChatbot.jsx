@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
+  Anchor,
   Bot,
   CloudRain,
   Database,
@@ -21,6 +22,7 @@ import {
   X
 } from "lucide-react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
+import AssistantMascot, { AssistantAvatar } from "@/components/public/AssistantMascot";
 
 // ผู้ช่วย EOC: ตอบเรื่องสถานการณ์ตอนนี้จากข้อมูลจริง (น้ำ ฝน ความเสี่ยง ศูนย์พักพิง) และความรู้ทั่วไปเรื่องน้ำท่วม/โรค
 const HISTORY_KEY = "chatbot_history";
@@ -36,7 +38,9 @@ const QUICK_QUESTIONS = [
   { icon: Umbrella, text: "พรุ่งนี้ฝนจะตกหนักไหม" },
   { icon: ShieldAlert, text: "วันนี้อำเภอไหนเสี่ยงบ้าง" },
   { icon: Tent, text: "ศูนย์พักพิงที่เปิดอยู่" },
-  { icon: Hospital, text: "โรงพยาบาลใกล้ฉันเปิดไหม" }
+  { icon: Hospital, text: "โรงพยาบาลใกล้ฉันเปิดไหม" },
+  { icon: Anchor, text: "น้ำทะเลหนุนวันนี้เป็นยังไง" },
+  { icon: Sparkles, text: "ถ้าน้ำกำลังขึ้น ควรเตรียมตัวอย่างไร" }
 ];
 
 const SOURCE_STYLE = {
@@ -98,7 +102,7 @@ function ActionLink({ action, onNavigate }) {
   return <Link href={action.href} onClick={onNavigate} className={`${base} ${tone}`}>{action.label}</Link>;
 }
 
-export default function AIChatbot({ showLauncher = true }) {
+export default function AIChatbot({ showLauncher = true, launcherRaised = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [launcherHidden, setLauncherHidden] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -217,35 +221,7 @@ export default function AIChatbot({ showLauncher = true }) {
   return (
     <>
       {showLauncher && !launcherHidden && !isOpen && (
-        <div className="eoc-assistant-launcher fixed bottom-5 right-5 z-[1100] flex items-center gap-2 lg:bottom-6">
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0c2f4a] shadow-lg ring-1 ring-[#d6e3ea] hover:bg-[#f3f7f8] sm:block"
-          >
-            ถามผู้ช่วย EOC
-          </button>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              className="group flex h-14 w-14 items-center justify-center rounded-full bg-[#0c2f4a] text-white shadow-[0_12px_30px_-8px_rgba(12,47,74,.7)] ring-4 ring-white transition-transform hover:-translate-y-0.5 motion-reduce:transition-none sm:h-16 sm:w-16"
-              aria-label="เปิดผู้ช่วย EOC"
-            >
-              <Bot className="h-8 w-8" aria-hidden="true" />
-              <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#2fd0a8] ring-2 ring-[#0c2f4a]" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={hideLauncher}
-              className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white hover:bg-slate-900"
-              aria-label="ซ่อนปุ่มผู้ช่วย EOC (เปิดได้จากเมนู ถามผู้ช่วย)"
-              title="ซ่อนปุ่มนี้"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
+        <AssistantMascot onOpen={() => setIsOpen(true)} onHide={hideLauncher} raised={launcherRaised} />
       )}
 
       {isOpen && (
@@ -258,12 +234,12 @@ export default function AIChatbot({ showLauncher = true }) {
           <header className="bg-[#0c2f4a] px-4 pb-3 pt-4 text-white">
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/10">
-                  <Bot className="h-6 w-6" aria-hidden="true" />
+                <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10">
+                  <span className="block h-full w-full overflow-hidden rounded-2xl"><AssistantAvatar /></span>
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-[#2fd0a8] ring-2 ring-[#0c2f4a]" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">ผู้ช่วย EOC</h2>
+                  <h2 className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">น้องผู้ช่วย EOC</h2>
                   <p className="truncate text-xs text-[#9fc9d6]">ตอบจากข้อมูลน้ำ ฝน และศูนย์ช่วยเหลือของสตูล</p>
                 </div>
               </div>
@@ -349,7 +325,7 @@ export default function AIChatbot({ showLauncher = true }) {
               const SourceIcon = source?.icon;
               return (
                 <div key={index} className="flex gap-2">
-                  <span className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0c2f4a] text-white" aria-hidden="true"><Bot className="h-4 w-4" /></span>
+                  <span className="mt-1 block h-7 w-7 shrink-0 overflow-hidden rounded-full bg-[#e3f1f4] ring-1 ring-[#c9dcee]" aria-hidden="true"><AssistantAvatar /></span>
                   <div className="min-w-0 max-w-[88%]">
                     <div className={`rounded-2xl rounded-tl-md px-4 py-3 ${message.isError ? "bg-red-50 text-red-900 ring-1 ring-red-200" : "bg-white text-[#15232e]"}`}>
                       <MessageText text={message.content} />
@@ -380,7 +356,7 @@ export default function AIChatbot({ showLauncher = true }) {
 
             {loading && (
               <div className="flex gap-2" role="status">
-                <span className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0c2f4a] text-white" aria-hidden="true"><Bot className="h-4 w-4" /></span>
+                <span className="mt-1 block h-7 w-7 shrink-0 overflow-hidden rounded-full bg-[#e3f1f4] ring-1 ring-[#c9dcee]" aria-hidden="true"><AssistantAvatar /></span>
                 <div className="flex items-center gap-2 rounded-2xl rounded-tl-md bg-white px-4 py-3 text-sm text-slate-500">
                   <span className="flex gap-1" aria-hidden="true">
                     <span className="eoc-assistant__dot h-2 w-2 rounded-full bg-[#2a9db0]" />

@@ -3,27 +3,39 @@
 // แผนที่กลุ่มเปราะบางรายบุคคล (เฉพาะเจ้าหน้าที่)
 // หมุด: สี/สัญลักษณ์ = สถานะการช่วยเหลือ, ป้ายเล็ก = ประเภท | ชั้นข้อมูล: พื้นที่น้ำท่วมล่าสุด, ศูนย์พักพิง (ที่ว่าง)
 // ต้องโหลดผ่าน next/dynamic (ssr: false)
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { GeoJSON, MapContainer, Marker, TileLayer, Tooltip, useMap } from "react-leaflet";
-import { pinHtml, pinLabel, spreadApproxPositions } from "@/components/eoc/vulnerable/vulnerablePins";
+import { CircleMarker, GeoJSON, MapContainer, Marker, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { pinFill, pinHtml, pinKey, pinLabel, spreadApproxPositions } from "@/components/eoc/vulnerable/vulnerablePins";
 import { caseStatus, typeMeta } from "@/lib/vulnerablePersons";
+import { effectiveCareGroup } from "@/lib/careGroups";
 import { capabilityLabel, parseCapabilities, shelterTypeMeta } from "@/lib/shelterSuitability";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
 import { shelterDivIconOptions } from "@/lib/shelterMarker";
 
 const SATUN_CENTER = [6.75, 99.95];
 
+// ประสิทธิภาพ (ข้อมูลหลักร้อย–พันคนบน iPad/คอมเครื่องเก่า):
+// - ไม่ใช้ CSS filter บนหมุด (เงาวาดใน SVG แทน)
+// - วงกะพริบเฉพาะเมื่อกลุ่มแดงที่รอช่วยเหลือมีไม่เกิน PULSE_LIMIT คน มากกว่านั้นเป็นวงนิ่ง และหยุดกะพริบระหว่างเลื่อน/ซูม
+// - ไอคอนเดียวกันใช้ซ้ำ (ไม่สร้าง DOM ใหม่ทุกครั้งที่หน้าวาดใหม่)
+// - ซูมไกล + คนเยอะ: คนที่จัดการแล้ววาดเป็นจุดบน canvas แทนหมุด
+const PULSE_LIMIT = 25;
+const LIGHT_DONE_ABOVE = 200;
+const LIGHT_ZOOM = 13;
+
 const PIN_CSS = `
-.vp-pin{position:relative;transform-origin:50% 100%;filter:drop-shadow(0 2px 2px rgba(15,23,42,.35))}
+.vp-pin{position:relative;transform-origin:50% 100%}
 .vp-pin svg{display:block}
 .vp-pin--selected{z-index:2}
-.vp-pin--urgent::before{content:"";position:absolute;left:50%;top:38%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:9999px;background:rgba(220,38,38,.35);animation:vp-pulse 1.6s ease-out infinite}
-.vp-pin--approx svg path:first-child{stroke-dasharray:3 2;opacity:.82}.vp-pin--approx::after{content:"";position:absolute;left:50%;bottom:-3px;width:10px;height:4px;margin-left:-5px;border-radius:9999px;background:rgba(15,23,42,.25)}
+.vp-pin--urgent::before{content:"";position:absolute;left:50%;top:38%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:9999px;background:rgba(220,38,38,.22);box-shadow:0 0 0 2px rgba(220,38,38,.55)}
+.vp-pulse .vp-pin--urgent::before{animation:vp-pulse 2s ease-out infinite}
+.vp-moving .vp-pin--urgent::before{animation:none}
+.vp-pin--approx svg path:nth-child(2){stroke-dasharray:3 2;opacity:.82}.vp-pin--approx::after{content:"";position:absolute;left:50%;bottom:-3px;width:10px;height:4px;margin-left:-5px;border-radius:9999px;background:rgba(15,23,42,.25)}
 .vp-tag{position:absolute;left:62%;top:-6px;white-space:nowrap;border-radius:9999px;background:#fff;color:#0f172a;font:700 10px/1 var(--font-kanit),system-ui,sans-serif;padding:2px 5px;box-shadow:0 0 0 1px #94a3b8}
 
-@keyframes vp-pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
-@media (prefers-reduced-motion: reduce){.vp-pin--urgent::before{animation:none;opacity:.5}}
+@keyframes vp-pulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+@media (prefers-reduced-motion: reduce){.vp-pulse .vp-pin--urgent::before{animation:none}}
 `;
 
 const FLOOD_STYLE = {
@@ -33,10 +45,26 @@ const FLOOD_STYLE = {
 };
 const FLOOD_LABEL = { severe: "น้ำท่วมรุนแรง", moderate: "น้ำท่วมปานกลาง", mild: "น้ำท่วมเล็กน้อย" };
 
+const ICONS = new Map();
 function iconFor(person, selected) {
-  const size = selected ? 38 : 30;
-  const height = Math.round(size * 1.33);
-  return L.divIcon({ className: "", html: pinHtml(person, { selected }), iconSize: [size, height], iconAnchor: [size / 2, height], tooltipAnchor: [0, -height + 6] });
+  const key = pinKey(person, { selected });
+  if (!ICONS.has(key)) {
+    const size = selected ? 38 : 30;
+    const height = Math.round(size * 1.33);
+    ICONS.set(key, L.divIcon({ className: "", html: pinHtml(person, { selected }), iconSize: [size, height], iconAnchor: [size / 2, height], tooltipAnchor: [0, -height + 6] }));
+  }
+  return ICONS.get(key);
+}
+
+// ติดตามระดับซูม และใส่ class ระหว่างเลื่อน/ซูม เพื่อหยุดการกะพริบชั่วคราว
+function MapActivity({ onZoom }) {
+  const map = useMapEvents({
+    movestart: () => map.getContainer().classList.add("vp-moving"),
+    zoomstart: () => map.getContainer().classList.add("vp-moving"),
+    moveend: () => map.getContainer().classList.remove("vp-moving"),
+    zoomend: () => { map.getContainer().classList.remove("vp-moving"); onZoom(map.getZoom()); }
+  });
+  return null;
 }
 
 function shelterIcon(shelter) {
@@ -88,12 +116,21 @@ export default function VulnerablePersonsMap({ people, selectedId, onSelect, fit
     }))
   }), [floodAreas]);
   const spread = useMemo(() => spreadApproxPositions(mapped), [mapped]);
+  const [zoom, setZoom] = useState(9);
+  // จำนวนหมุดที่มีวงแดง (กลุ่มสีแดงที่ยังรอช่วยเหลือ) — เงื่อนไขเดียวกับ pinHtml
+  const urgentCount = useMemo(() => mapped.filter((person) => person.status === "waiting" && effectiveCareGroup(person) === "red").length, [mapped]);
+  // ซูมไกลและคนเยอะ: คนที่จัดการแล้ว (เทา/เขียว) เป็นจุดเล็กบน canvas — คนที่ยังต้องไปยังเป็นหมุดเต็ม
+  const lightDone = mapped.length > LIGHT_DONE_ABOVE && zoom < LIGHT_ZOOM;
+  const pins = lightDone ? ordered.filter((person) => caseStatus(person.status).group !== "done" || person.id === selectedId) : ordered;
+  const dots = lightDone ? ordered.filter((person) => caseStatus(person.status).group === "done" && person.id !== selectedId) : [];
+  const canvas = useMemo(() => L.canvas({ padding: 0.3 }), []);
   const visibleShelters = useMemo(() => shelters.filter((shelter) => shelter.lat != null && (layers.allShelters || Number(shelter.active) === 1)), [shelters, layers.allShelters]);
 
   return (
     <>
       <style>{PIN_CSS}</style>
-      <MapContainer center={SATUN_CENTER} zoom={9} className="h-full w-full" scrollWheelZoom>
+      <MapContainer center={SATUN_CENTER} zoom={9} className={`h-full w-full ${urgentCount <= PULSE_LIMIT ? "vp-pulse" : ""}`} scrollWheelZoom>
+        <MapActivity onZoom={setZoom} />
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
         {layers.flood && floodFeatures.features.length ? (
           <GeoJSON
@@ -122,7 +159,19 @@ export default function VulnerablePersonsMap({ people, selectedId, onSelect, fit
             </Marker>
           );
         }) : null}
-        {ordered.map((person) => {
+        {dots.map((person) => (
+          <CircleMarker
+            key={`dot-${person.id}`}
+            renderer={canvas}
+            center={spread.get(person.id) || [person.location.lat, person.location.lng]}
+            radius={5}
+            pathOptions={{ color: "#fff", weight: 1.5, fillColor: pinFill(person), fillOpacity: 0.95 }}
+            eventHandlers={{ click: () => onSelect(person.id) }}
+          >
+            <Tooltip direction="top">{person.name} • {caseStatus(person.status).label}</Tooltip>
+          </CircleMarker>
+        ))}
+        {pins.map((person) => {
           const isSelected = person.id === selectedId;
           return (
             <Marker

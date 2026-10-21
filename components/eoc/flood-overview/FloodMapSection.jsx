@@ -83,7 +83,7 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
 
         {isDailyMode && (
             <div className="mb-6">
-                <h3 className="text-lg font-black text-slate-900 mb-3"><AppIcon icon="calendarDays" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เหตุการณ์ประจำวันที่ {effectiveDateLabel}</h3>
+                <h3 className="text-lg font-black text-slate-900 mb-3">เหตุการณ์ประจำวันที่ {effectiveDateLabel}</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5">
                         <h4 className="font-semibold text-slate-800 mb-3">ผู้ได้รับผลกระทบ</h4>

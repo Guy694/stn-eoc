@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BellRing, RefreshCw, Send, Smartphone, Trash2 } from "lucide-react";
 import { Button, Field, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
+import PaginationControls from "@/components/common/PaginationControls";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { SATUN_DISTRICT_NAMES } from "@/lib/satunDistricts";
 import { AUTO_LEVELS, PUSH_TEMPLATES, fillTemplate, unfilledPlaceholders } from "@/lib/pushTemplates";
@@ -24,18 +25,26 @@ export default function PublicPushSettings() {
   const [device, setDevice] = useState(null);
   const [removing, setRemoving] = useState(null); // { ids, label }
 
+  const [logPage, setLogPage] = useState({ page: 1, size: 20 });
+
   const load = useCallback(async () => {
     try {
-      const json = await apiRequest(API);
+      const json = await apiRequest(`${API}?log_page=${logPage.page}&log_size=${logPage.size}`);
+      // ลบรายการหมดหน้าสุดท้ายแล้ว → ถอยไปหน้าที่ยังมีข้อมูล
+      const lastPage = Math.max(1, Math.ceil((json.data?.stats?.log_total || 0) / logPage.size));
+      if (logPage.page > lastPage) {
+        setLogPage((value) => ({ ...value, page: lastPage }));
+        return;
+      }
       setState({ loading: false, data: json.data, error: "" });
     } catch (error) {
       setState({ loading: false, data: null, error: error.message });
     }
-  }, []);
+  }, [logPage]);
+  useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    load();
     pushStatus().then(setDevice).catch(() => setDevice({ supported: false }));
-  }, [load]);
+  }, []);
 
   const run = async (fn) => {
     setBusy(true);
@@ -222,9 +231,9 @@ export default function PublicPushSettings() {
 
       <section className="rounded-2xl border border-slate-200 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3">
-          <h3 className="text-base font-black text-slate-900">ประวัติการส่ง (20 ครั้งล่าสุด)</h3>
+          <h3 className="text-base font-black text-slate-900">ประวัติการส่ง{stats?.log_total ? <span className="ml-1.5 text-sm font-semibold text-slate-500">ทั้งหมด {formatNumber(stats.log_total)} ครั้ง</span> : null}</h3>
           {testIds.length ? (
-            <button type="button" disabled={busy} onClick={() => setRemoving({ ids: testIds, label: `รายการทดสอบทั้งหมด ${testIds.length} รายการ` })}
+            <button type="button" disabled={busy} onClick={() => setRemoving({ ids: testIds, label: `รายการทดสอบในหน้านี้ ${testIds.length} รายการ` })}
               className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">
               <Trash2 className="h-4 w-4" aria-hidden="true" />ลบรายการทดสอบ ({testIds.length})
             </button>
@@ -245,6 +254,16 @@ export default function PublicPushSettings() {
             ))}
           </ul>
         ) : <p className="px-5 py-4 text-sm text-slate-500">ยังไม่เคยส่ง</p>}
+        <PaginationControls
+          page={stats?.log_page || logPage.page}
+          pageSize={logPage.size}
+          totalItems={stats?.log_total || 0}
+          pageSizeOptions={[10, 20, 50]}
+          itemLabel="ครั้ง"
+          className="rounded-b-2xl border-t border-slate-100 bg-slate-50"
+          onPageChange={(page) => setLogPage((value) => ({ ...value, page }))}
+          onPageSizeChange={(size) => setLogPage({ page: 1, size })}
+        />
       </section>
 
       <AppDialog open={Boolean(removing)} onOpenChange={(open) => !open && setRemoving(null)} title="ลบออกจากประวัติการส่ง"

@@ -95,7 +95,7 @@ export default function SessionStats({ session, year }) {
         return (
             <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
                 <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b border-[#0b4c86] mx-auto mb-2"></div>
+                    <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                     <p className="text-slate-600 text-sm">กำลังโหลดสถิติ...</p>
                 </div>
             </div>

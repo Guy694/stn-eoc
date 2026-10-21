@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { LocateFixed, MapPin, Navigation, Phone, Search, Tent } from "lucide-react";
 import ShelterCenterMap from "@/components/ShelterCenterMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 const NO_DATA_MESSAGE = "ยังไม่มีข้อมูลการเปิดศูนย์พักพิง";
@@ -222,6 +223,7 @@ export default function PublicSheltersPage() {
         return getVacancy(b) - getVacancy(a);
       });
   }, [district, search, sheltersWithDistance, status, userLocation]);
+  const { anchor: listAnchor, ...paged } = usePagination(filteredShelters, { pageSize: 10, resetKey: `${district}|${search}|${status}|${selectedKey}|${Boolean(userLocation)}` });
 
   const stats = useMemo(() => {
     const totalCapacity = shelters.reduce((sum, item) => sum + getCapacity(item), 0);
@@ -407,7 +409,7 @@ export default function PublicSheltersPage() {
                 รายการศูนย์พักพิง <span className="text-base font-medium text-slate-500">({formatNumber(filteredShelters.length)} แห่ง)</span>
               </h2>
 
-              <div className="space-y-3 lg:max-h-[640px] lg:overflow-y-auto lg:pr-1">
+              <div ref={listAnchor} className="scroll-mt-24 space-y-3 lg:max-h-[640px] lg:overflow-y-auto lg:pr-1">
                 {loadingShelters && filteredShelters.length === 0 && (
                   <div className="h-28 animate-pulse rounded-2xl bg-white" aria-hidden="true" />
                 )}
@@ -417,7 +419,8 @@ export default function PublicSheltersPage() {
                   </div>
                 )}
 
-                {filteredShelters.map((shelter, index) => {
+                {paged.visible.map((shelter, pageIndex) => {
+                  const index = (paged.page - 1) * paged.pageSize + pageIndex;
                   const state = getShelterStatus(shelter);
                   const meta = getStatusMeta(state);
                   const capacity = getCapacity(shelter);
@@ -487,6 +490,7 @@ export default function PublicSheltersPage() {
                   );
                 })}
               </div>
+              <PaginationControls {...paged.controls} pageSizeOptions={[10, 20, 50]} itemLabel="แห่ง" className="mt-3 rounded-2xl bg-white ring-1 ring-slate-200" />
               <p className="mt-3 text-xs text-slate-500">ความจุและจำนวนผู้พักอาจเปลี่ยนแปลงได้ตลอดเวลา กรุณาโทรสอบถามก่อนเดินทาง</p>
             </section>
 

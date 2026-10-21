@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AppDialogFrame } from "@/components/ui/app-dialog";
 import { showError, showSuccess } from '@/lib/sweetAlert';
 import { FLOOD_STATUSES, SERVICE_STATUSES, facilityTypeInfo } from '@/lib/healthFacilityStatus';
 
@@ -75,10 +76,10 @@ export default function HealthFacilityStatusModal({ facility, onClose, onSaved }
     };
 
     return (
-        <div className="app-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="facility-status-title">
-            <form onSubmit={save} className="max-h-[90vh] w-full max-w-2xl space-y-5 overflow-y-auto rounded-lg bg-white p-6 text-slate-800">
+        <AppDialogFrame open onOpenChange={(open) => { if (!open) { onClose(); } }}>
+            <form onSubmit={save} className="max-h-[90vh] w-full max-w-2xl space-y-5 overflow-y-auto rounded-2xl bg-white p-6 text-slate-800">
                 <div>
-                    <h2 id="facility-status-title" className="text-xl font-bold text-slate-800">อัปเดตสถานะ {facility.name}</h2>
+                    <h2 id="facility-status-title" className="text-lg font-black text-slate-900 sm:text-xl">อัปเดตสถานะ {facility.name}</h2>
                     <p className="mt-0.5 text-sm text-slate-500">{type.label} • อ.{facility.district_name || '-'} — ประชาชนจะเห็นสถานะนี้บนแผนที่สถานการณ์</p>
                 </div>
 
@@ -119,6 +120,6 @@ export default function HealthFacilityStatusModal({ facility, onClose, onSaved }
                     </button>
                 </div>
             </form>
-        </div>
+        </AppDialogFrame>
     );
 }

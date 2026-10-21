@@ -73,7 +73,7 @@ export default function DiseasePage() {
 
                 {loading ? (
                     <div className="border border-slate-200 rounded-2xl bg-white p-10 text-center">
-                        <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-[#0b4c86] border-t-transparent"></div>
+                        <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         <p className="text-slate-600">กำลังโหลดข้อมูลโรคระบาด...</p>
                     </div>
                 ) : !data?.success ? (

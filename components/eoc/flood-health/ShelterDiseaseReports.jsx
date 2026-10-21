@@ -8,6 +8,7 @@ import { EmptyPanel, PageHero, Panel, heroInputClass, heroPrimaryButtonClass } f
 import { formatNumber } from "@/lib/adminApi";
 import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/sweetAlert';
 import { FLOOD_DISEASE_CHOICES, buildDiseaseChoices } from '@/lib/diseaseNames';
+import PaginationControls, { usePagination } from '@/components/common/PaginationControls';
 
 // จำนวนผู้ป่วยของรายงานหนึ่งรายการ (มือถืออยู่ใต้ชื่อโรค · จอใหญ่อยู่ด้านขวา)
 function CaseCounts({ report, className = "" }) {
@@ -31,6 +32,7 @@ export default function ShelterDiseaseReports() {
     const [saving, setSaving] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [showForm, setShowForm] = useState(false);
+    const { anchor: listAnchor, ...paged } = usePagination(reports, { pageSize: 20, resetKey: `${sessionId}|${selectedDate}` });
     // สิทธิ์จากเซิร์ฟเวอร์: CASE MGMT / SAT บันทึกได้ ทีมอื่นดูอย่างเดียว
     const [permissions, setPermissions] = useState({ can_edit: false, read_only_message: null });
     const canEdit = permissions.can_edit === true;
@@ -318,8 +320,9 @@ export default function ShelterDiseaseReports() {
                         {canEdit ? <p className="mt-1 text-sm text-slate-500">กด “เพิ่มรายงาน” ด้านบนเพื่อบันทึกผู้ป่วยในศูนย์พักพิง</p> : null}
                     </div>
                 ) : (
-                    <ul className="divide-y divide-slate-100">
-                        {reports.map((report) => {
+                    <>
+                    <ul ref={listAnchor} className="scroll-mt-4 divide-y divide-slate-100">
+                        {paged.visible.map((report) => {
                             const severity = SEVERITY[report.severity] || SEVERITY.low;
                             return (
                                 <li key={report.id} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50/70">
@@ -343,6 +346,8 @@ export default function ShelterDiseaseReports() {
                             );
                         })}
                     </ul>
+                    <PaginationControls {...paged.controls} pageSizeOptions={[20, 50, 100]} />
+                    </>
                 )}
             </Panel>
         </div>

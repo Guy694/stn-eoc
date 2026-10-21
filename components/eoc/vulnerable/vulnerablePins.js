@@ -22,7 +22,9 @@ export const STATUS_GLYPHS = {
 export function pinSvg(statusKey, size = 30, fill = null) {
   const status = caseStatus(statusKey);
   const height = Math.round(size * 1.33);
+  // เงาเป็นเส้นขอบเข้มในตัว SVG แทน CSS filter (filter บนหมุดจำนวนมากทำให้เลื่อน/ซูมแผนที่กระตุก)
   return `<svg width="${size}" height="${height}" viewBox="0 0 24 32" aria-hidden="true" focusable="false">
+    <path d="M12 31s10-10.2 10-18.5A10 10 0 0 0 2 12.5C2 20.8 12 31 12 31z" fill="none" stroke="rgba(15,23,42,.35)" stroke-width="3.2"/>
     <path d="M12 31s10-10.2 10-18.5A10 10 0 0 0 2 12.5C2 20.8 12 31 12 31z" fill="${fill || status.color}" stroke="#fff" stroke-width="1.6"/>
     <g transform="translate(0 0.5)">${STATUS_GLYPHS[status.key] || STATUS_GLYPHS.waiting}</g>
   </svg>`;
@@ -77,8 +79,13 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({
 
 /**
  * หมุด: สี = กลุ่มสี, สัญลักษณ์ = สถานะ, ป้ายมุมขวาบน = ประเภท (เตียง, HD, ครรภ์ ...) ⚡ = ใช้อุปกรณ์ไฟฟ้า
- * วงกะพริบ = กลุ่มสีแดงที่ยังรอช่วยเหลือ
+ * วงแดงรอบหมุด = กลุ่มสีแดงที่ยังรอช่วยเหลือ (กะพริบเฉพาะตอนมีไม่มาก — ดู VulnerablePersonsMap)
  */
+export function pinKey(person, { selected = false } = {}) {
+  const care = careGroupMeta(effectiveCareGroup(person))?.key || "";
+  return [person.status, care, person.vulnerable_type, person.power_dependent ? 1 : 0, person.location?.approx ? 1 : 0, selected ? 1 : 0].join("|");
+}
+
 export function pinHtml(person, { selected = false } = {}) {
   const type = typeMeta(person.vulnerable_type);
   const care = careGroupMeta(effectiveCareGroup(person));

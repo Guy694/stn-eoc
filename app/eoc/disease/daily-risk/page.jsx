@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PageHero } from "@/components/common/ThemePanels";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
@@ -83,7 +84,7 @@ export default function DiseaseDailyRiskPage() {
             <EOCLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b border-[#0b4c86] mx-auto mb-4"></div>
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                         <p className="text-slate-600">กำลังโหลดข้อมูล...</p>
                     </div>
                 </div>
@@ -129,13 +130,7 @@ export default function DiseaseDailyRiskPage() {
         <EOCLayout>
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 mb-6">
-                    <h1 className="text-xl font-semibold text-white mb-2 flex items-center gap-3 sm:text-2xl">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"><AppIcon icon="biohazard" className="h-5 w-5" /></span>
-                        สรุปสถานการณ์โรครายวัน
-                    </h1>
-                    <p className="text-blue-100">แสดงข้อมูลวันที่: {formatDate}</p>
-                </div>
+                <PageHero icon="biohazard" title="สรุปสถานการณ์โรครายวัน" subtitle={<>แสดงข้อมูลวันที่: {formatDate}</>} className="mb-6" />
 
                 {/* Date Selector */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
@@ -161,7 +156,7 @@ export default function DiseaseDailyRiskPage() {
                     {/* Available Dates List */}
                     {showAllDates && availableDates.length > 0 && (
                         <div className="mt-4 border-t pt-4">
-                            <h3 className="font-semibold text-slate-700 mb-3"><AppIcon icon="clipboard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
+                            <h3 className="font-semibold text-slate-700 mb-3">วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 max-h-96 overflow-y-auto">
                                 {availableDates.map((date, index) => {
                                     const dateObj = new Date(date);
@@ -200,7 +195,7 @@ export default function DiseaseDailyRiskPage() {
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div className="min-w-0">
                                 <h3 className="text-lg font-bold mb-2 md:text-xl">
-                                    <AppIcon icon="siren" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {activeDiseaseEocName} ครั้งที่ {data.activeSession.session_number}/2026 - กำลังดำเนินการ
+                                    {activeDiseaseEocName} ครั้งที่ {data.activeSession.session_number}/2026 - กำลังดำเนินการ
                                 </h3>
                                 <p className="opacity-90 mb-1">
                                     เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {
@@ -365,10 +360,10 @@ export default function DiseaseDailyRiskPage() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <h3 className="font-bold text-lg mb-1">
-                                            <AppIcon icon="biohazard" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.disease_name}
+                                            {item.disease_name}
                                         </h3>
                                         <p className="text-sm text-slate-600 mb-2">
-                                            <AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.facility_name} | <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.district_name}
+                                            {item.facility_name} | <AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> {item.district_name}
                                         </p>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
                                             <div>

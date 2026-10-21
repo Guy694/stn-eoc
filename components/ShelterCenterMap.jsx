@@ -151,7 +151,7 @@ export default function ShelterCenterMap({
         return (
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
                 <div className="flex items-center justify-center h-96">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b border-blue-500"></div>
+                    <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                 </div>
             </div>
         );
@@ -161,7 +161,7 @@ export default function ShelterCenterMap({
         <div className={`text-slate-800 overflow-hidden ${embedded ? 'bg-transparent' : 'bg-white rounded-lg shadow-md'}`}>
             {!embedded && (
                 <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
-                    <h3 className="text-2xl font-bold text-slate-800"><AppIcon icon="shelter" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์พักพิงชั่วคราว</h3>
+                    <h3 className="text-2xl font-bold text-slate-800">ศูนย์พักพิงชั่วคราว</h3>
                     <p className="text-lg mt-1">
                         แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
                     </p>
@@ -180,9 +180,9 @@ export default function ShelterCenterMap({
                         <div className="flex flex-wrap items-center gap-4">
                             <label className="text-sm font-medium">กรองตามประเภท EOC:</label>
                             <div className="flex gap-2 flex-wrap">
-                                <button onClick={() => setFilterType('')} className={`px-3 py-1 rounded text-sm ${filterType === '' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>ทั้งหมด</button>
+                                <button onClick={() => setFilterType('')} className={`px-3 py-1 rounded text-sm ${filterType === '' ? 'bg-[#0b4c86] text-white' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>ทั้งหมด</button>
                                 {eocTypes.map(type => (
-                                    <button key={type.value} onClick={() => setFilterType(type.value)} className={`px-3 py-1 rounded text-sm ${filterType === type.value ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>{type.label}</button>
+                                    <button key={type.value} onClick={() => setFilterType(type.value)} className={`px-3 py-1 rounded text-sm ${filterType === type.value ? 'bg-[#0b4c86] text-white' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'}`}>{type.label}</button>
                                 ))}
                             </div>
                         </div>
@@ -192,19 +192,19 @@ export default function ShelterCenterMap({
                 {/* Layer Controls */}
                 {showLayerControls && (
                 <div className={`${embedded ? 'mb-3 rounded-lg border border-slate-100 bg-white p-3' : 'mb-4 bg-white p-4 rounded-lg shadow'}`}>
-                    <label className="text-sm font-medium block mb-3"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดงชั้นข้อมูลพื้นที่:</label>
+                    <label className="text-sm font-medium block mb-3">แสดงชั้นข้อมูลพื้นที่:</label>
                     <div className="flex flex-wrap gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={showDistrictLayer} onChange={(e) => setShowDistrictLayer(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
-                            <span className="text-sm"><AppIcon icon="landmark" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> อำเภอ</span>
+                            <span className="text-sm">อำเภอ</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={showTambonLayer} onChange={(e) => setShowTambonLayer(e.target.checked)} className="w-4 h-4 text-green-600 rounded" />
-                            <span className="text-sm"><AppIcon icon="mapPin" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ตำบล</span>
+                            <span className="text-sm">ตำบล</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} className="w-4 h-4 text-teal-600 rounded" />
-                            <span className="text-sm"><AppIcon icon="tag" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> แสดงชื่อ</span>
+                            <span className="text-sm">แสดงชื่อ</span>
                         </label>
                     </div>
                 </div>
