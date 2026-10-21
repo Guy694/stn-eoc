@@ -16,7 +16,9 @@ import {
   RefreshCw,
   Search,
   Siren,
+  Square,
   Tent,
+  Volume2,
   Waves,
   X
 } from "lucide-react";
@@ -24,7 +26,7 @@ import PublicLayout from "@/components/layouts/PublicLayout";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { RISK_META } from "@/lib/weatherRiskConfig";
-import { assessHomeRisk, homeAdvice, nearest, NEAR_REPORT_KM } from "@/lib/myRisk";
+import { assessHomeRisk, homeAdvice, nearest, NEAR_REPORT_KM, riskSpeechText } from "@/lib/myRisk";
 import { distanceText, facilityTypeInfo, floodAreaAt, serviceStatusMeta, phoneLinks } from "@/lib/healthFacilityStatus";
 import { floodAreaMapMeta } from "@/lib/floodMapLevels";
 import { bandFor, elevationText } from "@/lib/elevation";
@@ -35,6 +37,7 @@ import { DISCHARGE_LEVELS } from "@/lib/forecastSignals";
 import { trackPublicUsage } from "@/lib/publicUsage";
 import FloodOutlookCard from "@/components/public/FloodOutlookCard";
 import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
+import { hasThaiVoice, primeSpeech, readAloud, stopSpeaking } from "@/lib/readAloud";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -112,6 +115,16 @@ function MyRiskContent() {
   const [report, setReport] = useState({ state: "idle" });
   const [stepsDone, setStepsDone] = useState([]);
   const searchTimer = useRef(null);
+  // อ่านผลประเมินออกเสียง: อ่านเองเมื่อประเมินเสร็จ (ปิดได้) และกดฟังซ้ำ/หยุดได้
+  const [speaking, setSpeaking] = useState(false);
+  const [thaiVoice, setThaiVoice] = useState(null);
+  const [autoRead, setAutoRead] = useState(true);
+  const spokenAt = useRef(null);
+  useEffect(() => {
+    try { setAutoRead(window.localStorage.getItem(AUTO_READ_KEY) !== "off"); } catch { /* ใช้ค่าเริ่มต้น */ }
+    hasThaiVoice().then(setThaiVoice);
+    return () => stopSpeaking();
+  }, []);
 
   const pick = useCallback((point, source) => {
     const next = { lat: Number(point.lat), lng: Number(point.lng), source };
@@ -247,8 +260,34 @@ function MyRiskContent() {
     ? [where.village && `${where.moo ? `หมู่ ${where.moo} ` : ""}บ้าน${where.village}`, where.tambon && `ต.${where.tambon}`, where.district && `อ.${where.district}`].filter(Boolean).join(" ")
     : null;
 
+  const speechFor = () => (result && meta ? riskSpeechText({
+    label: meta.label,
+    place: placeName,
+    reasons: [...result.home.reasons, ...(result.district?.risk_reasons || []).map((reason) => `อ.${result.district.district_name}: ${reason}`)],
+    advice: homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen })
+  }) : "");
+  const listen = async () => {
+    const ok = await readAloud(speechFor(), { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) });
+    if (ok) setSpeaking(true);
+    else setThaiVoice(false);
+  };
+  const stopListening = () => { stopSpeaking(); setSpeaking(false); };
+  const toggleAutoRead = () => {
+    setAutoRead((value) => {
+      try { window.localStorage.setItem(AUTO_READ_KEY, value ? "off" : "on"); } catch { /* ไม่จำก็ได้ */ }
+      if (value) stopListening();
+      return !value;
+    });
+  };
+  // ประเมินเสร็จ (หรือกด "เช็กใหม่") → อ่านผลให้ฟังครั้งเดียวต่อผลประเมิน
+  useEffect(() => {
+    if (!result || !where?.in_satun || !autoRead || !report.at || spokenAt.current === report.at) return;
+    spokenAt.current = report.at;
+    readAloud(speechFor(), { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) });
+  });
+
   return (
-    <div className="min-h-full bg-[#f4f8fc]">
+    <div className="min-h-full bg-[#f4f8fc]" onPointerDownCapture={primeSpeech}>
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5 md:py-8">
         <header>
           <h1 className="text-2xl font-black text-slate-900 md:text-3xl">บ้านฉันเสี่ยงไหม</h1>
@@ -369,12 +408,26 @@ function MyRiskContent() {
           <>
             {/* คำตอบ */}
             <section className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: meta.color }} aria-live="polite">
-              <div className="px-4 py-4 text-white md:px-5" style={{ backgroundColor: meta.color }}>
+              <div className="py-4 pl-4 pr-[150px] text-white sm:pr-[232px] md:pl-5" style={{ backgroundColor: meta.color }}>
                 <p className="text-sm font-bold opacity-90">ความเสี่ยงน้ำท่วมที่บ้านคุณตอนนี้</p>
                 <p className="text-3xl font-black">{meta.label}</p>
                 <p className="mt-0.5 text-sm opacity-90">{placeName}</p>
               </div>
               <div className="p-4 md:p-5">
+                <RiskMascot level={result.home.level} speaking={speaking} />
+                {thaiVoice !== false ? (
+                  <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <button type="button" onClick={speaking ? stopListening : listen} aria-pressed={speaking}
+                      className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-bold transition ${speaking ? "bg-slate-900 text-white hover:bg-slate-700" : "bg-[#0b4c86] text-white hover:bg-[#083865]"}`}>
+                      {speaking ? <Square className="h-4 w-4" aria-hidden="true" /> : <Volume2 className="h-4 w-4" aria-hidden="true" />}
+                      {speaking ? "หยุดอ่าน" : "ฟังผลประเมิน"}
+                    </button>
+                    <label className="inline-flex items-center gap-1.5 text-sm text-slate-600">
+                      <input type="checkbox" checked={autoRead} onChange={toggleAutoRead} className="h-4 w-4 accent-[#0b4c86]" />
+                      อ่านให้ฟังเองทุกครั้งที่ประเมิน
+                    </label>
+                  </div>
+                ) : null}
                 <ul className="space-y-1.5 text-slate-800">
                   {[...result.home.reasons, ...(result.district?.risk_reasons || []).map((reason) => `อ.${result.district.district_name}: ${reason}`)].map((reason) => (
                     <li key={reason} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />{reason}</li>
@@ -546,6 +599,42 @@ function MyRiskContent() {
         )}
       </div>
     </div>
+  );
+}
+
+const AUTO_READ_KEY = "stn-my-risk-autoread";
+
+// น้องผู้ช่วยตามระดับความเสี่ยง: ปกติ / เสี่ยง (เฝ้าระวัง) / เสี่ยงมาก (เสี่ยงสูง วิกฤต)
+// ลอยอยู่มุมขวาบนของการ์ดคำตอบ ทับขอบแถบสีเล็กน้อย ข้อความด้านล่างไหลอ้อมตัวน้อง
+const RISK_MASCOTS = {
+  normal: { src: "/stn-eoc/img/mascot/risk-normal.webp", motion: "my-risk-mascot--calm" },
+  watch: { src: "/stn-eoc/img/mascot/risk-watch.webp", motion: "my-risk-mascot--alert" },
+  high: { src: "/stn-eoc/img/mascot/risk-high.webp", motion: "my-risk-mascot--urgent" },
+  critical: { src: "/stn-eoc/img/mascot/risk-high.webp", motion: "my-risk-mascot--urgent" }
+};
+
+function RiskMascot({ level, speaking = false }) {
+  const mascot = RISK_MASCOTS[level] || RISK_MASCOTS.normal;
+  return (
+    <span key={level} className="my-risk-mascot float-right -mr-1 -mt-[96px] ml-2 block h-[150px] sm:-mt-[100px] sm:h-[215px]" aria-hidden="true">
+      <span className={`block h-full ${speaking ? "my-risk-mascot--talk" : mascot.motion}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- ภาพโปร่งใสที่เตรียมไว้แล้ว */}
+        <img src={mascot.src} alt="" className="h-full w-auto select-none drop-shadow-[0_8px_10px_rgba(15,23,42,.18)]" draggable={false} />
+      </span>
+      <style>{`
+        .my-risk-mascot { animation: my-risk-mascot-in .5s cubic-bezier(.2,.9,.3,1.2) both; transform-origin: 50% 100%; }
+        .my-risk-mascot--calm { transform-origin: 50% 100%; animation: my-risk-mascot-float 3.6s ease-in-out .5s infinite; }
+        .my-risk-mascot--alert { transform-origin: 50% 100%; animation: my-risk-mascot-sway 2.8s ease-in-out .5s infinite; }
+        .my-risk-mascot--urgent { transform-origin: 50% 100%; animation: my-risk-mascot-shake 4s ease-in-out .5s infinite; }
+        .my-risk-mascot--talk { transform-origin: 50% 100%; animation: my-risk-mascot-talk .5s ease-in-out infinite; }
+        @keyframes my-risk-mascot-talk { 0%,100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-3px) scaleY(1.015); } }
+        @keyframes my-risk-mascot-in { from { opacity: 0; transform: translateY(14px) scale(.88); } }
+        @keyframes my-risk-mascot-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes my-risk-mascot-sway { 0%,100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg) translateY(-3px); } }
+        @keyframes my-risk-mascot-shake { 0%,70%,100% { transform: translateX(0) rotate(0); } 74% { transform: translateX(-3px) rotate(-2deg); } 78% { transform: translateX(3px) rotate(2deg); } 82% { transform: translateX(-2px) rotate(-1deg); } 86% { transform: translateX(2px) rotate(1deg); } 90% { transform: translateX(0); } }
+        @media (prefers-reduced-motion: reduce) { .my-risk-mascot, .my-risk-mascot--calm, .my-risk-mascot--alert, .my-risk-mascot--urgent, .my-risk-mascot--talk { animation: none; } }
+      `}</style>
+    </span>
   );
 }
 
