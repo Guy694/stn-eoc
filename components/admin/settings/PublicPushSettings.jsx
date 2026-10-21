@@ -2,7 +2,7 @@
 
 // แจ้งเตือนภัยถึงประชาชน (Web Push): ยอดผู้รับ เปิด/ปิดการส่งอัตโนมัติ ส่งข้อความเอง และประวัติการส่ง
 import { useCallback, useEffect, useState } from "react";
-import { BellRing, RefreshCw, Send, Smartphone } from "lucide-react";
+import { BellRing, RefreshCw, Send, Smartphone, Trash2 } from "lucide-react";
 import { Button, Field, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
@@ -22,6 +22,7 @@ export default function PublicPushSettings() {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [device, setDevice] = useState(null);
+  const [removing, setRemoving] = useState(null); // { ids, label }
 
   const load = useCallback(async () => {
     try {
@@ -72,6 +73,12 @@ export default function PublicPushSettings() {
     success(json.message);
     await load();
   });
+  const removeLog = () => run(async () => {
+    const json = await apiRequest(API, { method: "DELETE", body: { ids: removing.ids } });
+    success(json.message);
+    setRemoving(null);
+    await load();
+  });
   const broadcast = () => run(async () => {
     const json = await apiRequest(API, { method: "POST", body: { ...form, action: "broadcast" } });
     success(json.message);
@@ -86,6 +93,7 @@ export default function PublicPushSettings() {
   const ready = vapidReady && tableReady;
   const pending = unfilledPlaceholders(`${form.title} ${form.body}`);
   const toOfficers = form.audience === "officers";
+  const testIds = (stats?.log || []).filter((row) => row.kind === "test" || /\[ทดสอบ\]|^ทดสอบ/.test(row.title || "")).map((row) => row.id);
   const target = toOfficers ? "เจ้าหน้าที่เท่านั้น" : form.districts.length ? form.districts.map((d) => `อ.${d}`).join(", ") : "ทุกคนที่สมัครไว้";
   const recipients = !stats ? 0 : toOfficers ? (stats.officers?.devices || 0) : form.districts.length
     ? stats.whole_province + form.districts.reduce((s, d) => s + (stats.by_district[d] || 0), 0)
@@ -213,7 +221,15 @@ export default function PublicPushSettings() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white">
-        <h3 className="border-b border-slate-100 px-5 py-3 text-base font-black text-slate-900">ประวัติการส่ง (20 ครั้งล่าสุด)</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3">
+          <h3 className="text-base font-black text-slate-900">ประวัติการส่ง (20 ครั้งล่าสุด)</h3>
+          {testIds.length ? (
+            <button type="button" disabled={busy} onClick={() => setRemoving({ ids: testIds, label: `รายการทดสอบทั้งหมด ${testIds.length} รายการ` })}
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">
+              <Trash2 className="h-4 w-4" aria-hidden="true" />ลบรายการทดสอบ ({testIds.length})
+            </button>
+          ) : null}
+        </div>
         {stats?.log?.length ? (
           <ul className="divide-y divide-slate-100">
             {stats.log.map((row) => (
@@ -221,11 +237,23 @@ export default function PublicPushSettings() {
                 <StatusPill tone={kindOf(row)[1]}>{kindOf(row)[0]}</StatusPill>
                 <span className="min-w-0 flex-1"><b>{row.title}</b> <span className="text-slate-600">— {row.body}</span></span>
                 <span className="shrink-0 text-xs text-slate-500">{formatDateTime(row.created_at)} • ถึง {formatNumber(row.delivered)}/{formatNumber(row.recipients)} เครื่อง{row.removed ? ` • ลบเครื่องที่เลิกใช้ ${row.removed}` : ""}</span>
+                <button type="button" disabled={busy} onClick={() => setRemoving({ ids: [row.id], label: `"${row.title}"` })} aria-label={`ลบ "${row.title}" ออกจากประวัติ`} title="ลบออกจากประวัติ"
+                  className="-my-1 shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-700 disabled:opacity-50">
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
               </li>
             ))}
           </ul>
         ) : <p className="px-5 py-4 text-sm text-slate-500">ยังไม่เคยส่ง</p>}
       </section>
+
+      <AppDialog open={Boolean(removing)} onOpenChange={(open) => !open && setRemoving(null)} title="ลบออกจากประวัติการส่ง"
+        description={`ลบ ${removing?.label || ""} ออกจากประวัติ และจะไม่แสดงในหน้าประกาศของประชาชนอีก ข้อความที่เด้งถึงมือถือไปแล้วเรียกคืนไม่ได้`} busy={busy}>
+        <AppDialogActions className="mt-4">
+          <AppDialogCancel disabled={busy} />
+          <Button variant="danger" disabled={busy} onClick={removeLog}><Trash2 className="h-4 w-4" aria-hidden="true" />ลบ</Button>
+        </AppDialogActions>
+      </AppDialog>
 
       <AppDialog open={confirm} onOpenChange={(open) => !open && setConfirm(false)} title={toOfficers ? "ยืนยันส่งแจ้งเตือนถึงเจ้าหน้าที่" : "ยืนยันส่งแจ้งเตือนถึงประชาชน"}
         description={`"${form.title}" จะเด้งบนมือถือของ${target} (ประมาณ ${formatNumber(recipients)} เครื่อง) ทันที และยกเลิกไม่ได้`} busy={busy}>

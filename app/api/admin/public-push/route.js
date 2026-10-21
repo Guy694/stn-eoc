@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { validateBroadcastInput } from "@/lib/publicPush";
-import { broadcast, getPushSettings, pushStats, runPublicPushAlerts, savePushSettings } from "@/lib/publicPushServer";
+import { broadcast, getPushSettings, hidePushLog, pushStats, runPublicPushAlerts, savePushSettings } from "@/lib/publicPushServer";
 import { recordChange } from "@/lib/recordArchive";
 import { isAllowedPushEndpoint, vapidConfig } from "@/lib/webPush";
 
@@ -70,5 +70,27 @@ export async function POST(request) {
     if (error?.code === "ER_NO_SUCH_TABLE") return migrationMessage();
     console.error("Admin public push POST error:", error?.message || error);
     return publicInternalError("ส่งแจ้งเตือนไม่สำเร็จ");
+  }
+}
+
+// DELETE { ids: [..] } — ลบรายการออกจากประวัติการส่ง (เช่น ข้อความทดสอบ) ไม่แสดงทั้งหน้านี้และหน้าประกาศของประชาชน
+// ข้อความที่ส่งถึงมือถือไปแล้วเรียกคืนไม่ได้ ลบได้เฉพาะประวัติ
+export async function DELETE(request) {
+  const auth = await requireAuth(request, MANAGERS);
+  if (!auth.success) return auth.response;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const ids = Array.isArray(body.ids) ? body.ids : [];
+    if (!ids.length || ids.length > 100) return NextResponse.json({ success: false, message: "เลือกรายการที่จะลบ (ไม่เกิน 100 รายการ)" }, { status: 400 });
+    const rows = await hidePushLog(ids, auth.user);
+    if (!rows.length) return NextResponse.json({ success: false, message: "ไม่พบรายการ หรือถูกลบไปแล้ว" }, { status: 404 });
+    const names = rows.slice(0, 5).map((row) => `"${row.title}"`).join(", ");
+    await recordChange({ request, user: auth.user, action: "data_delete", table: "public_push_log", id: rows.map((row) => row.id).join(","), description: `ลบประวัติการส่งแจ้งเตือน ${rows.length} รายการ: ${names}${rows.length > 5 ? " …" : ""}` }).catch(() => {});
+    return NextResponse.json({ success: true, data: { removed: rows.length }, message: `ลบออกจากประวัติแล้ว ${rows.length} รายการ` });
+  } catch (error) {
+    if (error?.code === "ER_BAD_FIELD_ERROR") return NextResponse.json({ success: false, message: "ยังไม่ได้รัน migration 20261021_push_log_hidden.sql" }, { status: 503 });
+    if (error?.code === "ER_NO_SUCH_TABLE") return migrationMessage();
+    console.error("Admin public push DELETE error:", error?.message || error);
+    return publicInternalError("ลบประวัติไม่สำเร็จ");
   }
 }

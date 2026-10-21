@@ -67,6 +67,7 @@
     "20261016_officer_role_text.sql",
     "20261019_officer_telegram_link.sql",
     "20261019_village_polygon_names.sql",
-    "20261021_hydro_history.sql"
+    "20261021_hydro_history.sql",
+    "20261021_push_log_hidden.sql"
   ]
 }
