@@ -13,6 +13,7 @@ import CitizenPointPopup from "@/components/public/map/CitizenPointPopup";
 import WaterStationLayer from "@/components/weather/WaterStationLayer";
 import RainStationLayer from "@/components/weather/RainStationLayer";
 import { facilityTypeInfo, markerTone } from "@/lib/healthFacilityStatus";
+import { healthDivIconOptions } from "@/lib/shelterMarker";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
 
 export const SITUATION_LAYER_KEYS = ["hospitals", "traffic", "waterStations", "rainStations", "waterways", "tambon", "district"];
@@ -22,17 +23,7 @@ const POPUP_PAN = typeof window !== "undefined" && window.innerWidth >= 768 ? [3
 
 function hospitalIcon(facility) {
   const type = facilityTypeInfo(facility?.typecode);
-  const tone = type.level === "office" ? { color: "#64748b" } : markerTone(facility);
-  const size = type.level === "hospital" ? 34 : type.level === "office" ? 22 : 26;
-  const name = esc(facility?.name || "");
-  const label = type.level === "hospital"
-    ? `<div style="position:absolute;left:50%;top:${size + 2}px;transform:translateX(-50%);white-space:nowrap;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.94);color:#0f172a;font:700 11px/1.35 var(--font-kanit),sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);border:1px solid ${tone.color}">${name}</div>`
-    : "";
-  return L.divIcon({
-    className: "public-hospital-icon",
-    html: `<div style="position:relative;width:${size}px;height:${size}px"><div style="width:${size}px;height:${size}px;border-radius:${type.level === "hospital" ? "10px" : "50%"};border:${type.level === "hospital" ? 3 : 2}px solid #fff;background:${tone.color};color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center">${icon("hospital", `${type.level === "hospital" ? "h-5 w-5" : "h-3.5 w-3.5"} text-white`)}</div>${label}</div>`,
-    iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2], tooltipAnchor: [0, -size / 2]
-  });
+  return L.divIcon(healthDivIconOptions({ level: type.level, statusColor: markerTone(facility).color, name: facility?.name }));
 }
 
 const TRAFFIC = {

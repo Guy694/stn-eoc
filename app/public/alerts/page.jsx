@@ -77,7 +77,7 @@ export default function PublicAlertsPage() {
             ) : (
               <ul className="mt-3 space-y-3">
                 {history.map((item) => (
-                  <li key={item.id} className="rounded-2xl bg-white p-4 ring-1 ring-[#d6e3ea]">
+                  <li key={item.id} id={`alert-${item.id}`} className="scroll-mt-24 rounded-2xl bg-white p-4 ring-1 ring-[#d6e3ea] target:ring-2 target:ring-[#0b4c86]">
                     <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
                       {HIGH.has(item.level) ? <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">เตือนภัย</span> : <span className="rounded-full bg-[#e3f3f5] px-2.5 py-0.5 text-xs font-bold text-[#11586a]">ข่าวจากศูนย์ฯ</span>}
                       <time dateTime={item.created_at}>{formatTime(item.created_at)}</time>

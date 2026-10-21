@@ -4,6 +4,7 @@ const PUBLIC_PATHS = [
   "",
   "/public/disaster-map",
   "/public/weather-watch",
+  "/public/water-trends",
   "/public/shelters",
   "/public/announcements",
   "/public/agencies",

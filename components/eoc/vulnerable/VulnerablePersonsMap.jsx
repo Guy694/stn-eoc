@@ -6,10 +6,11 @@
 import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import { GeoJSON, MapContainer, Marker, TileLayer, Tooltip, useMap } from "react-leaflet";
-import { pinHtml, pinLabel, shelterPinHtml, spreadApproxPositions } from "@/components/eoc/vulnerable/vulnerablePins";
+import { pinHtml, pinLabel, spreadApproxPositions } from "@/components/eoc/vulnerable/vulnerablePins";
 import { caseStatus, typeMeta } from "@/lib/vulnerablePersons";
 import { capabilityLabel, parseCapabilities, shelterTypeMeta } from "@/lib/shelterSuitability";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
+import { shelterDivIconOptions } from "@/lib/shelterMarker";
 
 const SATUN_CENTER = [6.75, 99.95];
 
@@ -21,10 +22,6 @@ const PIN_CSS = `
 .vp-pin--approx svg path:first-child{stroke-dasharray:3 2;opacity:.82}.vp-pin--approx::after{content:"";position:absolute;left:50%;bottom:-3px;width:10px;height:4px;margin-left:-5px;border-radius:9999px;background:rgba(15,23,42,.25)}
 .vp-tag{position:absolute;left:62%;top:-6px;white-space:nowrap;border-radius:9999px;background:#fff;color:#0f172a;font:700 10px/1 var(--font-kanit),system-ui,sans-serif;padding:2px 5px;box-shadow:0 0 0 1px #94a3b8}
 
-.vp-shelter{position:relative;width:26px;height:26px;filter:drop-shadow(0 2px 2px rgba(15,23,42,.35))}
-.vp-shelter svg{display:block}
-.vp-shelter__free{position:absolute;left:50%;top:24px;transform:translateX(-50%);white-space:nowrap;border-radius:6px;background:#fff;color:var(--c);font:800 10px/1 var(--font-kanit),system-ui,sans-serif;padding:2px 4px;box-shadow:0 0 0 1px var(--c)}
-.vp-shelter--full .vp-shelter__free{background:#fee2e2;color:#b91c1c;box-shadow:0 0 0 1px #dc2626}
 @keyframes vp-pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
 @media (prefers-reduced-motion: reduce){.vp-pin--urgent::before{animation:none;opacity:.5}}
 `;
@@ -43,14 +40,10 @@ function iconFor(person, selected) {
 }
 
 function shelterIcon(shelter) {
-  const type = shelterTypeMeta(shelter.shelter_type);
   const capacity = Number(shelter.capacity) || 0;
   const free = capacity ? capacity - (Number(shelter.occupancy) || 0) : null;
-  return L.divIcon({
-    className: "",
-    html: shelterPinHtml({ color: type.color, free, active: Number(shelter.active) === 1, full: free !== null && free <= 0 }),
-    iconSize: [26, 26], iconAnchor: [13, 13], tooltipAnchor: [0, -12]
-  });
+  // หมุดแบบเดียวทั้งระบบ (lib/shelterMarker) — ประเภทศูนย์ดูได้จากป้ายเมื่อชี้/แตะ
+  return L.divIcon(shelterDivIconOptions({ type: shelter.shelter_type, free, active: Number(shelter.active) === 1, full: free !== null && free <= 0 }));
 }
 
 // ซูมให้เห็นหมุดทั้งหมดเมื่อชุดที่กรองเปลี่ยน (ไม่ซูมตามทุกครั้งที่โหลดข้อมูลใหม่)

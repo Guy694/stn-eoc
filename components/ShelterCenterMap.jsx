@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { renderToStaticMarkup } from 'react-dom/server';
 import AppIcon from "@/components/icons/AppIcon";
 import ShelterPopup from "@/components/public/map/ShelterPopup";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
+import { isMedicalShelter, shelterDivIconOptions } from '@/lib/shelterMarker';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -57,16 +57,9 @@ export default function ShelterCenterMap({
             const L = require('leaflet');
             const icons = {};
 
-            const shelterSvg = renderToStaticMarkup(
-                <AppIcon icon="shelter" className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
-            );
-            icons.shelter = L.divIcon({
-                className: 'public-shelter-icon',
-                html: `<div style="width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:#7C3AED;box-shadow:0 1px 4px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">${shelterSvg}</div>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12],
-                popupAnchor: [0, -12]
-            });
+            // หมุดศูนย์พักพิงแบบเดียวทั้งระบบ (lib/shelterMarker)
+            icons.shelter = L.divIcon(shelterDivIconOptions());
+            icons.medical = L.divIcon(shelterDivIconOptions({ type: 'medical' }));
             setCustomIcons(icons);
         }
     }, [eocTypes]);
@@ -168,7 +161,7 @@ export default function ShelterCenterMap({
         <div className={`text-slate-800 overflow-hidden ${embedded ? 'bg-transparent' : 'bg-white rounded-lg shadow-md'}`}>
             {!embedded && (
                 <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
-                    <h3 className="text-2xl font-bold text-slate-800"><AppIcon icon="hospital" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์พักพิงชั่วคราว</h3>
+                    <h3 className="text-2xl font-bold text-slate-800"><AppIcon icon="shelter" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์พักพิงชั่วคราว</h3>
                     <p className="text-lg mt-1">
                         แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
                     </p>
@@ -278,7 +271,7 @@ export default function ShelterCenterMap({
                             <Marker
                                 key={shelter.id}
                                 position={[parseFloat(shelter.lat), parseFloat(shelter.lon)]}
-                                icon={customIcons?.shelter || undefined}
+                                icon={(isMedicalShelter(shelter.shelter_type) ? customIcons?.medical : customIcons?.shelter) || undefined}
                             >
                                 <Popup maxWidth={270} minWidth={240}>
                                     <ShelterPopup shelter={shelter} />

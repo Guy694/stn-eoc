@@ -78,7 +78,7 @@ const SITUATION_ITEMS = [
   { key: "tide", label: "น้ำขึ้น–น้ำลง (ทะเลอันดามัน)", icon: Waves, tone: "from-cyan-400 to-blue-700", title: "ระดับน้ำทะเลหน้าสตูลตอนนี้ ลูกศรบอกน้ำกำลังขึ้นหรือลง ชี้ที่สัญลักษณ์เพื่อดูเวลาน้ำขึ้นสูงสุด/ลงต่ำสุดรอบถัดไป" },
   { key: "waterStations", label: "ระดับน้ำ–ตลิ่ง (ThaiWater)", icon: Gauge, tone: "from-sky-400 to-blue-700" },
   { key: "rainStations", label: "ฝนวัดจริง (ThaiWater)", icon: Umbrella, tone: "from-sky-300 to-indigo-600" },
-  { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-emerald-400 to-green-600", title: "สีตามสถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
+  { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-blue-500 to-blue-800", title: "หมุดน้ำเงินตัว H · จุดสีที่มุม = สถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
   { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600", title: "รายงานการสัญจรที่เจ้าหน้าที่ตรวจแล้ว: เขียว ผ่านได้ · เหลือง ผ่านลำบาก · แดง ผ่านไม่ได้" },
   { key: "floodFreq", label: "น้ำท่วมซ้ำซาก (GISTDA)", icon: History, tone: "from-sky-400 to-violet-800", title: "พื้นที่ที่เคยถูกน้ำท่วมจากภาพดาวเทียม GISTDA พ.ศ. 2554–2567 สีเข้มขึ้นเมื่อท่วมหลายปี ใช้ประกอบการเตรียมรับมือ ไม่ใช่สถานการณ์น้ำตอนนี้" },
   { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "from-cyan-400 to-sky-600" },
@@ -898,7 +898,8 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
             ) : null}
             {situationLayers.hospitals || situationLayers.traffic ? (
               <div className="mb-1.5 flex flex-wrap gap-x-2 gap-y-1 border-b border-white/10 pb-1.5">
-                {situationLayers.hospitals ? [["#15803d", "สถานพยาบาลเปิดปกติ"], ["#b45309", "จำกัดบริการ/ถนนท่วม"], ["#b91c1c", "ปิด/น้ำท่วม"]].map(([color, text]) => (
+                {situationLayers.hospitals ? <span className="flex items-center gap-1 font-bold"><span className="flex h-3.5 w-3.5 items-center justify-center rounded-[3px] bg-[#1d4ed8] text-[9px] font-black leading-none text-white" aria-hidden="true">H</span>สถานพยาบาล · จุดที่มุม:</span> : null}
+                {situationLayers.hospitals ? [["#15803d", "เปิดปกติ"], ["#b45309", "จำกัดบริการ/ถนนท่วม"], ["#b91c1c", "ปิด/น้ำท่วม"]].map(([color, text]) => (
                   <span key={text} className="flex items-center gap-1 font-bold"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />{text}</span>
                 )) : null}
                 {situationLayers.traffic ? [["#10B981", "ถนนผ่านได้"], ["#F59E0B", "ผ่านลำบาก"], ["#EF4444", "ผ่านไม่ได้"]].map(([color, text]) => (

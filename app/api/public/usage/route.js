@@ -12,7 +12,7 @@ const PUBLIC_PATHS = new Set([
     "/", "/privacy-policy", "/public/agencies", "/public/announcements", "/public/disaster-map",
     "/public/disease-map", "/public/festival-accidents", "/public/festival-accidents/report", "/public/flood-map",
     "/public/help", "/public/help/citizen-guide", "/public/help/faq", "/public/insights", "/public/report-incident",
-    "/public/shelters", "/public/weather-watch",
+    "/public/shelters", "/public/weather-watch", "/public/water-trends", "/public/alerts",
     "/public/report-problem", "/public/report-water", "/public/my-risk", "/public/track"
 ]);
 

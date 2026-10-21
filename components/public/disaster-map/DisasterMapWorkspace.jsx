@@ -127,8 +127,8 @@ function getEocLayerItems(disasterType, sheltersOpen = true) {
     { key: "incidents", label: "เหตุการณ์/ขอความช่วยเหลือ", icon: TriangleAlert, tone: "from-orange-400 to-red-500" },
     { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600" },
     // ศูนย์พักพิงมีข้อมูลเฉพาะช่วงเปิด EOC
-    ...(sheltersOpen ? [{ key: "shelters", label: "ศูนย์พักพิง", icon: Tent, tone: "from-violet-400 to-purple-600" }] : []),
-    { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-emerald-400 to-green-600" },
+    ...(sheltersOpen ? [{ key: "shelters", label: "ศูนย์พักพิง", icon: Tent, tone: "from-green-500 to-green-700" }] : []),
+    { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-blue-500 to-blue-800" },
     { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "from-cyan-400 to-sky-600" },
     { key: "district", label: "ขอบเขตอำเภอ", icon: Landmark, tone: "from-slate-400 to-slate-700" },
     { key: "tambon", label: "ขอบเขตตำบล", icon: MapPinned, tone: "from-emerald-300 to-teal-600" },
@@ -171,8 +171,8 @@ const HEALTH_LEGEND = [
 
 function Legend({ disasterType, onClose, showElevation = false, showWaterStations = false, showRainStations = false, showHealth = false, showFloodFreq = false }) {
   const items = disasterType === "disease"
-    ? [["bg-red-600", "ระบาดหนัก"], ["bg-amber-400", "ระบาดปานกลาง"], ["bg-teal-500", "เฝ้าระวัง"], ["bg-emerald-600", "สถานพยาบาล"], ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"]]
-    : [...FLOOD_LEVEL_LEGEND.map((level) => [level.color, level.description, true]), ["bg-orange-500", "เหตุการณ์"], ["bg-violet-600", "ศูนย์พักพิง"], ["bg-emerald-600", "สถานพยาบาล"], ["bg-sky-700", "เส้นทางน้ำ"]];
+    ? [["bg-red-600", "ระบาดหนัก"], ["bg-amber-400", "ระบาดปานกลาง"], ["bg-teal-500", "เฝ้าระวัง"], ["bg-blue-700", "สถานพยาบาล (H)"], ["bg-orange-500", "เหตุการณ์"], ["bg-green-700", "ศูนย์พักพิง (+ = ทางการแพทย์)"]]
+    : [...FLOOD_LEVEL_LEGEND.map((level) => [level.color, level.description, true]), ["bg-orange-500", "เหตุการณ์"], ["bg-green-700", "ศูนย์พักพิง (+ = ทางการแพทย์)"], ["bg-blue-700", "สถานพยาบาล (H)"], ["bg-sky-700", "เส้นทางน้ำ"]];
   return (
     <div className={`rounded-xl p-3 text-xs ${GLASS}`}>
       <div className="mb-2 flex items-center justify-between gap-4">

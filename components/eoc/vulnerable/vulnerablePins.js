@@ -90,12 +90,3 @@ export function pinHtml(person, { selected = false } = {}) {
   return `<div class="vp-pin${urgent ? " vp-pin--urgent" : ""}${selected ? " vp-pin--selected" : ""}${approx}" style="width:${size}px;height:${Math.round(size * 1.33)}px">${pinSvg(person.status, size, pinFill(person))}${tag}</div>`;
 }
 
-/** หมุดศูนย์พักพิง: สี่เหลี่ยมสีตามประเภทศูนย์ + ตัวเลขที่ว่าง */
-export function shelterPinHtml({ color = "#0b4c86", free = null, active = true, full = false }) {
-  const label = !active ? "ปิด" : free === null ? "" : full ? "เต็ม" : String(free);
-  const bg = !active ? "#94a3b8" : color;
-  return `<div class="vp-shelter${full ? " vp-shelter--full" : ""}" style="--c:${bg}">
-    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="${bg}" stroke="#fff" stroke-width="2"/><path d="M6.5 12.5 12 7.5l5.5 5v5h-11z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
-    ${label ? `<span class="vp-shelter__free">${escapeHtml(label)}</span>` : ""}
-  </div>`;
-}

@@ -68,7 +68,9 @@ function CoverageNote({ coverage, from }) {
   );
 }
 
-export default function HydroTrendsWorkspace() {
+/** publicMode = หน้าประชาชน (/public/water-trends): ใช้ API สาธารณะ และคำอธิบายแบบประชาชน */
+export default function HydroTrendsWorkspace({ publicMode = false }) {
+  const api = publicMode ? "/stn-eoc/api/public/hydro-trends" : API;
   const [days, setDays] = useState(7);
   const [amphoe, setAmphoe] = useState("");
   const [state, setState] = useState({ loading: true, data: null, error: "" });
@@ -77,14 +79,14 @@ export default function HydroTrendsWorkspace() {
   const load = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: "" }));
     try {
-      const response = await fetch(`${API}?days=${days}${amphoe ? `&amphoe=${encodeURIComponent(amphoe)}` : ""}`, { cache: "no-store" });
+      const response = await fetch(`${api}?days=${days}${amphoe ? `&amphoe=${encodeURIComponent(amphoe)}` : ""}`, { cache: "no-store" });
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.message || "โหลดข้อมูลไม่สำเร็จ");
       setState({ loading: false, data: json.data, error: "" });
     } catch (error) {
       setState({ loading: false, data: null, error: error.message });
     }
-  }, [days, amphoe]);
+  }, [api, days, amphoe]);
   useEffect(() => { load(); }, [load]);
 
   const data = state.data;
@@ -120,9 +122,11 @@ export default function HydroTrendsWorkspace() {
     <div className="mx-auto max-w-7xl space-y-4 font-[family-name:var(--font-kanit)]">
       <PageHero
         icon="waves"
-        eyebrow="วิเคราะห์ข้อมูล"
-        title="แนวโน้มน้ำ ฝน และน้ำทะเลหนุน"
-        subtitle="จากค่าที่ระบบเก็บทุกชั่วโมง: ฝนรายสถานี (ThaiWater) ระดับน้ำในคลอง (ThaiWater, ปภ.) และระดับน้ำทะเลหน้าสตูล"
+        eyebrow={publicMode ? "ข้อมูลจากสถานีตรวจวัด จ.สตูล" : "วิเคราะห์ข้อมูล"}
+        title={publicMode ? "แนวโน้มระดับน้ำและฝน" : "แนวโน้มน้ำ ฝน และน้ำทะเลหนุน"}
+        subtitle={publicMode
+          ? "ฝนรายวัน ระดับน้ำในคลองเทียบตลิ่ง และน้ำทะเลหนุนหน้าสตูล ย้อนหลัง 7–90 วัน ใช้ประกอบการเฝ้าระวังน้ำท่วม"
+          : "จากค่าที่ระบบเก็บทุกชั่วโมง: ฝนรายสถานี (ThaiWater) ระดับน้ำในคลอง (ThaiWater, ปภ.) และระดับน้ำทะเลหน้าสตูล"}
         actions={(
           <>
             <Segmented tone="dark" label="ช่วงเวลา" value={days} onChange={setDays} options={RANGE_DAYS.map((d) => [d, `${d} วัน`])} />

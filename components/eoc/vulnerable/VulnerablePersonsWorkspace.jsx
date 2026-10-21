@@ -17,7 +17,7 @@ import { pinFill, pinSvg } from "@/components/eoc/vulnerable/vulnerablePins";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { pointInGeometry } from "@/lib/healthFacilityStatus";
-import { SHELTER_TYPES, suggestShelters, suggestionReason, shelterTypeMeta } from "@/lib/shelterSuitability";
+import { suggestShelters, suggestionReason, shelterTypeMeta } from "@/lib/shelterSuitability";
 import { CARE_GROUPS, careGroupMeta, defaultCareGroup, effectiveCareGroup } from "@/lib/careGroups";
 import {
   CASE_GROUPS, CASE_STATUSES, VULNERABLE_TYPES, QUICK_FILTERS, caseStatus, filterPersons, followUpState, maskPhone, matchesQuickFilter, pregnancyAlert, sortByUrgency, summarizePersons, typeMeta, validatePerson
@@ -25,6 +25,7 @@ import {
 import { areaLabel, matchesStageTarget, stageMeta, stageTitle } from "@/lib/floodTriggers";
 import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
 import Link from "next/link";
+import { shelterMarkerHtml } from "@/lib/shelterMarker";
 
 const API = "/stn-eoc/api/eoc/vulnerable-persons";
 const AREA_API = "/stn-eoc/api/eoc/vulnerable-event";
@@ -125,12 +126,11 @@ function MapLegend({ showShelters = false }) {
       </p>
       {showShelters ? (
         <>
-          <p className="mb-1 mt-2 font-black text-slate-800">ศูนย์พักพิง (ตัวเลข = ที่ว่าง)</p>
-          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5">
-            {SHELTER_TYPES.map((type) => (
-              <li key={type.key} className="flex items-center gap-1 text-slate-700"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: type.color }} aria-hidden="true" />{type.short}</li>
-            ))}
-          </ul>
+          <p className="mt-2 flex items-center gap-1.5 text-slate-700">
+            <span dangerouslySetInnerHTML={{ __html: shelterMarkerHtml({ size: 16, showLabel: false }) }} aria-hidden="true" />
+            <span dangerouslySetInnerHTML={{ __html: shelterMarkerHtml({ size: 16, showLabel: false, type: "medical" }) }} aria-hidden="true" />
+            <span><b className="font-black text-slate-800">ศูนย์พักพิง</b> (+ = ทางการแพทย์/รพ.สนาม) · ป้ายใต้หมุด = ที่ว่าง / เต็ม / ปิด</span>
+          </p>
         </>
       ) : null}
       </div>

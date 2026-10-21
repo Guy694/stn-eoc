@@ -105,8 +105,8 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
             )}
           </p>
         </div>
-        <Link href="/public/disaster-map" className="inline-flex items-center gap-1 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
-          ดูบนแผนที่สถานการณ์ <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        <Link href="/public/water-trends" className="inline-flex items-center gap-1 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
+          ดูแนวโน้มระดับน้ำและฝน <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
 

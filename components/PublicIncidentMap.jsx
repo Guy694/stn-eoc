@@ -13,6 +13,7 @@ import { waterLevelMeta } from '@/lib/waterReport';
 import { isWaterReport } from '@/lib/waterReportMap';
 import { problemStyle } from './public/problemCategoryIcons';
 import { escapeHtml as esc } from "@/lib/escapeHtml";
+import { healthDivIconOptions, shelterDivIconOptions } from '@/lib/shelterMarker';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -461,56 +462,20 @@ export default function PublicIncidentMap({
         });
     };
 
-    // ศูนย์พักพิง: วงกลมม่วง 24px (เล็กพอไม่บังพื้นที่ แต่ยังกดได้)
-    const createShelterIcon = () => {
+    // ศูนย์พักพิง: หมุดแบบเดียวทั้งระบบ (lib/shelterMarker)
+    const createShelterIcon = (shelter) => {
         if (typeof window === 'undefined') return null;
         const L = require('leaflet');
-        return L.divIcon({
-            className: 'public-shelter-icon',
-            html: `<div style="width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:#7C3AED;box-shadow:0 1px 4px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">${renderMapIcon("shelter", "h-3.5 w-3.5 text-white")}</div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-            popupAnchor: [0, -12]
-        });
+        return L.divIcon(shelterDivIconOptions({ type: shelter?.shelter_type, full: shelter?.occupancy_status === 'full', showLabel: shelter?.occupancy_status === 'full' }));
     };
 
-    // หมุดสถานพยาบาล: สีตามสถานะ (เขียว=เปิด, เหลือง=จำกัด/ถนนน้ำท่วม, แดง=ปิด/น้ำท่วม, เทา=ยังไม่มีรายงาน)
+    // หมุดสถานพยาบาล: พื้นน้ำเงิน ตัว H · จุดสีที่มุม = สถานะ (เขียว=เปิด, เหลือง=จำกัด/ถนนน้ำท่วม, แดง=ปิด/น้ำท่วม, เทา=ยังไม่มีรายงาน)
     // โรงพยาบาลแสดงชื่อบนแผนที่เลย ส่วน รพ.สต./สำนักงาน ชี้แล้วเห็นชื่อ (ไม่ให้ชื่อทับกันทั้งจังหวัด)
     const createHospitalIcon = (facility) => {
         if (typeof window === 'undefined') return null;
         const L = require('leaflet');
         const type = facilityTypeInfo(facility?.typecode);
-        const tone = type.level === 'office' ? { color: '#64748b' } : markerTone(facility);
-        const size = type.level === 'hospital' ? 34 : type.level === 'office' ? 22 : 26;
-        const iconSize = type.level === 'hospital' ? 'h-5 w-5' : 'h-3.5 w-3.5';
-        const name = String(facility?.name || '').replace(/[<>&"]/g, '');
-        const label = type.level === 'hospital'
-            ? `<div style="position:absolute;left:50%;top:${size + 2}px;transform:translateX(-50%);white-space:nowrap;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.94);color:#0f172a;font:700 11px/1.35 var(--font-kanit),sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);border:1px solid ${tone.color}">${name}</div>`
-            : '';
-        return L.divIcon({
-            className: 'public-hospital-icon',
-            html: `
-                <div style="position:relative;width:${size}px;height:${size}px">
-                    <div style="
-                        width: ${size}px;
-                        height: ${size}px;
-                        border-radius: ${type.level === 'hospital' ? '10px' : '50%'};
-                        border: ${type.level === 'hospital' ? 3 : 2}px solid white;
-                        background: ${tone.color};
-                        color: white;
-                        box-shadow: 0 3px 10px rgba(0,0,0,0.28);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    ">${renderMapIcon("hospital", `${iconSize} text-white`)}</div>
-                    ${label}
-                </div>
-            `,
-            iconSize: [size, size],
-            iconAnchor: [size / 2, size / 2],
-            popupAnchor: [0, -size / 2],
-            tooltipAnchor: [0, -size / 2]
-        });
+        return L.divIcon(healthDivIconOptions({ level: type.level, statusColor: markerTone(facility).color, name: facility?.name }));
     };
 
     const createDiseaseReportIcon = (report) => {
@@ -743,12 +708,12 @@ export default function PublicIncidentMap({
                                     <input type="checkbox" checked={showTrafficLayer} onChange={(e) => setLayer('traffic', e.target.checked)} className="w-4 h-4 accent-red-600" />
                                     <span className="inline-flex items-center gap-1.5"><AppIcon icon="route" className="h-4 w-4" /> เส้นทาง</span>
                                 </label>
-                                <label className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900 cursor-pointer">
-                                    <input type="checkbox" checked={showShelterLayer} onChange={(e) => setLayer('shelters', e.target.checked)} className="w-4 h-4 accent-violet-600" />
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900 cursor-pointer">
+                                    <input type="checkbox" checked={showShelterLayer} onChange={(e) => setLayer('shelters', e.target.checked)} className="w-4 h-4 accent-green-700" />
                                     <span>ศูนย์พักพิง</span>
                                 </label>
-                                <label className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 cursor-pointer">
-                                    <input type="checkbox" checked={showHospitalLayer} onChange={(e) => setLayer('hospitals', e.target.checked)} className="w-4 h-4 accent-emerald-600" />
+                                <label className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900 cursor-pointer">
+                                    <input type="checkbox" checked={showHospitalLayer} onChange={(e) => setLayer('hospitals', e.target.checked)} className="w-4 h-4 accent-blue-700" />
                                     <span>สถานพยาบาล</span>
                                 </label>
                             </div>
@@ -1013,7 +978,7 @@ export default function PublicIncidentMap({
                             const lon = Number.parseFloat(shelter.lon);
                             if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
                             return (
-                                <Marker key={`shelter-${shelter.id}`} position={[lat, lon]} icon={createShelterIcon()}>
+                                <Marker key={`shelter-${shelter.id}`} position={[lat, lon]} icon={createShelterIcon(shelter)}>
                                     <Popup maxWidth={270} minWidth={240} autoPanPaddingTopLeft={popupPanPadding} autoPanPaddingBottomRight={[72, 90]}>
                                         <ShelterPopup shelter={shelter} />
                                     </Popup>

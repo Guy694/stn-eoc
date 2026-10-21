@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ExternalLink, Megaphone, Paperclip, Search, X } from "lucide-react";
+import { ArrowRight, BellRing, ChevronLeft, ChevronRight, ExternalLink, Megaphone, Pause, Paperclip, Play, Search, Siren, X } from "lucide-react";
 import { formatAnnouncementDate, getAnnouncementAsset } from "@/components/announcements/announcementUtils";
 import { TOPIC_STYLE, cleanTitle, relativeThai, topicKey, topicOf } from "./announcementTopics";
 import { optimizedImage, responsiveImage } from "@/lib/imageUrl";
@@ -13,6 +13,144 @@ const imageOf = (item) => item.image_url || getAnnouncementAsset(item.image_path
 
 
 const PAGE = 9;
+const SLIDES = 6;
+const SLIDE_MS = 7000;
+
+function FeaturedSlide({ item, active, index, total }) {
+  return (
+    <Link
+      href={hrefOf(item)}
+      tabIndex={active ? 0 : -1}
+      aria-hidden={!active}
+      aria-roledescription="สไลด์"
+      aria-label={`${index + 1} จาก ${total}: ${cleanTitle(item.title)}`}
+      className={`featured-slide group col-start-1 row-start-1 grid overflow-hidden rounded-[2rem] bg-white ring-1 ring-[#d6e3ea] transition-[opacity,box-shadow] duration-500 hover:shadow-[0_24px_50px_-28px_rgba(12,47,74,.7)] md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] ${active ? "relative z-10 opacity-100" : "pointer-events-none opacity-0"}`}
+    >
+      <Poster src={imageOf(item)} alt={item.alt_text || item.title} sizes="(min-width: 768px) 40vw, 100vw" className="aspect-[4/3] md:aspect-auto md:min-h-[22rem]" />
+      <div className="flex flex-col p-6 pb-16 sm:p-8 sm:pb-16">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[#0c2f4a] px-2.5 py-0.5 text-xs font-semibold text-white">{item.display_status === "current" ? "ประกาศล่าสุด" : index === 0 ? "เรื่องล่าสุด" : "เรื่องแนะนำ"}</span>
+          <TopicTag item={item} />
+        </div>
+        <h2 className="mt-4 font-[family-name:var(--font-kanit)] text-2xl font-bold leading-snug text-[#0c2f4a] sm:text-[2rem]">{cleanTitle(item.title)}</h2>
+        {item.description ? <p className="mt-3 line-clamp-4 text-[1.05rem] leading-8 text-slate-700">{item.description}</p> : null}
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
+          <span className="text-sm text-slate-500">{formatAnnouncementDate(item.start_date || item.created_at)} • {relativeThai(item.start_date || item.created_at)}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0b4c86] px-4 py-2 font-semibold text-white group-hover:bg-[#083865]">
+            อ่านต่อ <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/** เรื่องเด่นแบบหมุนเวียน: เปลี่ยนเองทุก 7 วินาที หยุดเมื่อชี้/แตะ/โฟกัส หรือผู้ใช้ตั้งลดการเคลื่อนไหว */
+function FeaturedCarousel({ items }) {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [stopped, setStopped] = useState(false);
+  const touch = useRef(null);
+  const total = items.length;
+  const go = useCallback((next) => setIndex((current) => (((typeof next === "function" ? next(current) : next) % total) + total) % total), [total]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) setStopped(true);
+  }, []);
+  useEffect(() => { setIndex(0); }, [items]);
+  useEffect(() => {
+    if (total < 2 || paused || stopped) return undefined;
+    const timer = window.setInterval(() => { if (!document.hidden) go((i) => i + 1); }, SLIDE_MS);
+    return () => window.clearInterval(timer);
+  }, [total, paused, stopped, go]);
+
+  if (!total) return null;
+  return (
+    <section
+      aria-roledescription="ภาพหมุนเวียน"
+      aria-label="เรื่องเด่น"
+      className="relative mt-6"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowRight") go((i) => i + 1);
+        if (event.key === "ArrowLeft") go((i) => i - 1);
+      }}
+      onTouchStart={(event) => { touch.current = event.touches[0].clientX; setPaused(true); }}
+      onTouchEnd={(event) => {
+        const dx = event.changedTouches[0].clientX - (touch.current ?? event.changedTouches[0].clientX);
+        if (Math.abs(dx) > 40) go((i) => i + (dx < 0 ? 1 : -1));
+        touch.current = null;
+      }}
+    >
+      <div className="grid" aria-live={paused || stopped ? "polite" : "off"}>
+        {items.map((item, i) => <FeaturedSlide key={item.id} item={item} active={i === index} index={i} total={total} />)}
+      </div>
+      {total > 1 ? (
+        <div className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 rounded-full bg-white/95 p-1 shadow-[0_8px_24px_-12px_rgba(12,47,74,.6)] ring-1 ring-[#d6e3ea] md:left-[calc(45.45%+2rem)] md:right-auto">
+          <button type="button" onClick={() => go((i) => i - 1)} className="rounded-full p-1.5 text-[#0b4c86] hover:bg-[#eef6f8]" aria-label="เรื่องก่อนหน้า"><ChevronLeft className="h-4 w-4" aria-hidden="true" /></button>
+          <div className="flex items-center gap-1 px-1" role="group" aria-label="เลือกเรื่อง">
+            {items.map((item, i) => (
+              <button key={item.id} type="button" onClick={() => go(i)} aria-label={`เรื่องที่ ${i + 1}`} aria-current={i === index ? "true" : undefined}
+                className={`h-2 rounded-full transition-all ${i === index ? "w-6 bg-[#0b4c86]" : "w-2 bg-[#c9dcee] hover:bg-[#9fc9d6]"}`} />
+            ))}
+          </div>
+          <button type="button" onClick={() => go((i) => i + 1)} className="rounded-full p-1.5 text-[#0b4c86] hover:bg-[#eef6f8]" aria-label="เรื่องถัดไป"><ChevronRight className="h-4 w-4" aria-hidden="true" /></button>
+          <button type="button" onClick={() => setStopped((v) => !v)} className="rounded-full p-1.5 text-slate-500 hover:bg-[#eef6f8] hover:text-[#0b4c86]" aria-label={stopped ? "เล่นอัตโนมัติ" : "หยุดเลื่อนอัตโนมัติ"}>
+            {stopped ? <Play className="h-3.5 w-3.5" aria-hidden="true" /> : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
+          </button>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function alertTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.toLocaleDateString("th-TH", { day: "numeric", month: "short" })} ${date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`;
+}
+
+/** แจ้งเตือนที่ส่งถึงประชาชน (ย้อนหลัง 30 วัน) — คอลัมน์ข้างรายการประกาศ */
+function SentAlertsPanel({ alerts }) {
+  if (!alerts.length) return null;
+  return (
+    <aside aria-labelledby="sent-alerts-title" className="lg:sticky lg:top-4">
+      <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-[#d6e3ea]">
+        <div className="flex items-center gap-3 bg-[#0c2f4a] px-5 py-4 text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15"><BellRing className="h-5 w-5" aria-hidden="true" /></span>
+          <div>
+            <h2 id="sent-alerts-title" className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">แจ้งเตือนที่ส่งถึงประชาชน</h2>
+            <p className="text-sm text-[#9fc9d6]">ข้อความเตือนภัยและข่าวด่วน 30 วันล่าสุด</p>
+          </div>
+        </div>
+        <ol className="relative max-h-[34rem] overflow-y-auto px-5 py-4">
+          {alerts.slice(0, 8).map((alert, i) => {
+            const high = alert.level === "high" || alert.level === "critical";
+            return (
+              <li key={alert.id} className="relative pb-5 pl-6 last:pb-0">
+                {i < Math.min(alerts.length, 8) - 1 ? <span className="absolute left-[7px] top-4 h-full w-px bg-[#d6e3ea]" aria-hidden="true" /> : null}
+                <span className={`absolute left-0 top-1.5 flex h-[15px] w-[15px] items-center justify-center rounded-full ring-4 ring-white ${high ? "bg-red-600" : "bg-[#2a9db0]"}`} aria-hidden="true" />
+                <p className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                  <span className={`inline-flex items-center gap-1 font-semibold ${high ? "text-red-700" : "text-[#11586a]"}`}>{high ? <Siren className="h-3 w-3" aria-hidden="true" /> : null}{high ? "เตือนภัย" : "ข่าวจากศูนย์ฯ"}</span>
+                  <time dateTime={alert.created_at}>{alertTime(alert.created_at)}</time>
+                </p>
+                <Link href={`/public/alerts#alert-${alert.id}`} className="mt-0.5 block font-[family-name:var(--font-kanit)] font-semibold leading-snug text-[#0c2f4a] hover:text-[#0b4c86] hover:underline">{alert.title}</Link>
+                <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm leading-6 text-slate-600">{alert.body}</p>
+                {alert.districts?.length ? <p className="mt-1 text-xs text-slate-500">อ.{alert.districts.join(", อ.")}</p> : null}
+              </li>
+            );
+          })}
+        </ol>
+        <Link href="/public/alerts" className="flex items-center justify-between border-t border-[#e3edf2] px-5 py-3 text-[15px] font-semibold text-[#0b4c86] hover:bg-[#f3f7f8]">
+          ดูแจ้งเตือนทั้งหมด และรับแจ้งเตือนบนมือถือ <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </div>
+    </aside>
+  );
+}
 
 function Poster({ src, alt = "", className = "", sizes = "(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" }) {
   // อินโฟกราฟิกส่วนใหญ่เป็นภาพแนวตั้ง/จัตุรัส: แสดงทั้งภาพ บนพื้นที่เบลอจากภาพเดียวกัน แทนการครอปทิ้ง
@@ -75,6 +213,7 @@ export default function PublicAnnouncementList() {
   const [query, setQuery] = useState("");
   const [topic, setTopic] = useState("all");
   const [shown, setShown] = useState(PAGE);
+  const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -90,6 +229,11 @@ export default function PublicAnnouncementList() {
       setItems(mergeAnnouncementSources(internal || [], riskcom));
       setLoading(false);
     });
+    // แจ้งเตือนที่ส่งถึงประชาชน (ไม่บังคับ — โหลดไม่ได้ก็ไม่แสดงคอลัมน์นี้)
+    fetch("/stn-eoc/api/public/push/?history=1", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((json) => { if (json.success) setAlerts(json.data || []); })
+      .catch(() => {});
     return () => controller.abort();
   }, []);
 
@@ -109,8 +253,14 @@ export default function PublicAnnouncementList() {
   }, [items, query, topic]);
 
   // เรื่องเด่น: ที่กำลังเผยแพร่และสำคัญที่สุดก่อน ไม่มีก็ใช้เรื่องล่าสุด
-  const featured = !query && topic === "all" ? filtered[0] : null;
-  const rest = featured ? filtered.slice(1) : filtered;
+  // หมุนเวียนเรื่องเด่นไม่เกิน 6 เรื่อง (ประกาศที่กำลังเผยแพร่ขึ้นก่อน แล้วตามด้วยเรื่องล่าสุดที่มีภาพ)
+  const slides = useMemo(() => {
+    if (query || topic !== "all") return [];
+    const withImage = filtered.filter((item) => imageOf(item));
+    return [...new Set([filtered[0], ...withImage].filter(Boolean))].slice(0, SLIDES);
+  }, [filtered, query, topic]);
+  const featured = slides[0] || null;
+  const rest = featured ? filtered.filter((item) => item !== featured) : filtered;
   const current = rest.filter((item) => item.display_status === "current");
   const past = rest.filter((item) => item.display_status !== "current");
   const pastShown = past.slice(0, Math.max(0, shown - current.length));
@@ -178,46 +328,27 @@ export default function PublicAnnouncementList() {
           </div>
         ) : (
           <>
-            {/* เรื่องเด่น */}
-            {featured ? (
-              <Link
-                href={hrefOf(featured)}
-                className="announce-card group mt-6 grid overflow-hidden rounded-[2rem] bg-white ring-1 ring-[#d6e3ea] transition hover:shadow-[0_24px_50px_-28px_rgba(12,47,74,.7)] md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]"
-              >
-                <Poster src={imageOf(featured)} alt={featured.alt_text || featured.title} sizes="(min-width: 768px) 40vw, 100vw" className="aspect-[4/3] md:aspect-auto md:min-h-[22rem]" />
-                <div className="flex flex-col p-6 sm:p-8">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[#0c2f4a] px-2.5 py-0.5 text-xs font-semibold text-white">{featured.display_status === "current" ? "ประกาศล่าสุด" : "เรื่องล่าสุด"}</span>
-                    <TopicTag item={featured} />
-                  </div>
-                  <h2 className="mt-4 font-[family-name:var(--font-kanit)] text-2xl font-bold leading-snug text-[#0c2f4a] sm:text-[2rem]">{cleanTitle(featured.title)}</h2>
-                  {featured.description ? <p className="mt-3 line-clamp-4 text-[1.05rem] leading-8 text-slate-700">{featured.description}</p> : null}
-                  <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
-                    <span className="text-sm text-slate-500">{formatAnnouncementDate(featured.start_date || featured.created_at)} • {relativeThai(featured.start_date || featured.created_at)}</span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0b4c86] px-4 py-2 font-semibold text-white group-hover:bg-[#083865]">
-                      อ่านต่อ <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ) : null}
+            {/* เรื่องเด่น (หมุนเวียน) */}
+            <FeaturedCarousel items={slides} />
 
+            <div className={alerts.length ? "mt-12 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start" : ""}>
+            <div className="min-w-0">
             {current.length > 0 ? (
-              <section className="mt-12" aria-labelledby="current-title">
+              <section className={alerts.length ? "" : "mt-12"} aria-labelledby="current-title">
                 <h2 id="current-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">กำลังเผยแพร่</h2>
-                <ul className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <ul className={`mt-4 grid gap-5 md:grid-cols-2 ${alerts.length ? "" : "lg:grid-cols-3"}`}>
                   {current.map((item, index) => <Card key={item.id} item={item} index={index} />)}
                 </ul>
               </section>
             ) : null}
 
             {pastShown.length > 0 ? (
-              <section className="mt-12" aria-labelledby="past-title">
+              <section className={current.length || !alerts.length ? "mt-12" : ""} aria-labelledby="past-title">
                 <h2 id="past-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">
                   {pastShown.some((item) => item.source === "riskcom") ? "สื่อความรู้" : current.length || featured?.display_status === "current" ? "ความรู้และประกาศที่ผ่านมา" : "ความรู้และประกาศ"}
                 </h2>
                 <p className="mt-1 text-slate-600">สื่อความรู้สำหรับดูแลตัวเองและคนในครอบครัว</p>
-                <ul className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <ul className={`mt-4 grid gap-5 md:grid-cols-2 ${alerts.length ? "" : "lg:grid-cols-3"}`}>
                   {pastShown.map((item, index) => <Card key={item.id} item={item} index={index} />)}
                 </ul>
               </section>
@@ -230,6 +361,9 @@ export default function PublicAnnouncementList() {
                 </button>
               </div>
             ) : null}
+            </div>
+            <SentAlertsPanel alerts={alerts} />
+            </div>
           </>
         )}
 
