@@ -43,7 +43,7 @@ export default function PublicOpsScaffold({
         {showBottomBar ? <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] lg:hidden" aria-hidden="true" /> : null}
       </div>
 
-      {/* น้องผู้ช่วยยืนมุมขวาล่าง (มือถือที่มีแถบล่าง ยกขึ้นเหนือแถบ) · เปิดจากเมนู "ถามผู้ช่วย" ได้เหมือนเดิม */}
+      {/* น้องสจ๊วตยืนมุมขวาล่าง (มือถือที่มีแถบล่าง ยกขึ้นเหนือแถบ) · เปิดจากเมนู "ถามน้องสจ๊วต" ได้เหมือนเดิม */}
       <AIChatbot launcherRaised={showBottomBar} />
     </div>
   );

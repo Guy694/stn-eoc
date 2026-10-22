@@ -1,6 +1,6 @@
 "use client";
 
-// "น้องผู้ช่วย" มาสคอตของผู้ช่วย EOC ยืนชิดขวาล่างของจอ กดแล้วเปิดหน้าต่างถามผู้ช่วย
+// "น้องสจ๊วต" มาสคอตของน้องสจ๊วต ยืนชิดขวาล่างของจอ กดแล้วเปิดหน้าต่างถามน้องสจ๊วต
 // ขยับด้วย CSS transform/opacity อย่างเดียว (ลอยเบา ๆ โยกตัว กะพริบตา กระโดดทักทายเป็นระยะ)
 // ไม่ขยับเลยถ้าเครื่องตั้ง "ลดการเคลื่อนไหว" · หยุดเองเมื่อแท็บไม่ได้เปิดอยู่
 import { useEffect, useState } from "react";
@@ -71,7 +71,7 @@ export default function AssistantMascot({ onOpen, onHide, raised = false }) {
           className="eoc-mascot-bubble relative mb-[calc(var(--mascot-h)*.62)] mr-1 max-w-[11.5rem] rounded-2xl rounded-br-sm bg-white px-3 py-2 text-left text-sm font-semibold leading-snug text-[#0c2f4a] shadow-[0_10px_24px_-10px_rgba(12,47,74,.55)] ring-1 ring-[#c9dcee]"
         >
           {bubble}
-          <span className="mt-0.5 block text-xs font-medium text-[#0b72b9]">แตะเพื่อถามผู้ช่วย</span>
+          <span className="mt-0.5 block text-xs font-medium text-[#0b72b9]">แตะเพื่อถามน้องสจ๊วต</span>
         </button>
       ) : null}
 
@@ -81,8 +81,8 @@ export default function AssistantMascot({ onOpen, onHide, raised = false }) {
           onClick={onOpen}
           onFocus={hint}
           onBlur={() => setBubble(null)}
-          aria-label="น้องผู้ช่วย EOC — กดเพื่อถามผู้ช่วย"
-          title="ถามผู้ช่วย EOC"
+          aria-label="น้องสจ๊วต ผู้ช่วยของคุณ — กดเพื่อถามน้องสจ๊วต"
+          title="ถามน้องสจ๊วต"
           className="eoc-mascot-btn group relative block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2a9db0] focus-visible:ring-offset-2"
         >
           {/* เงาที่พื้น */}
@@ -105,8 +105,8 @@ export default function AssistantMascot({ onOpen, onHide, raised = false }) {
             type="button"
             onClick={onHide}
             className="absolute -left-3 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow ring-1 ring-slate-200 hover:bg-white hover:text-slate-900"
-            aria-label="ซ่อนน้องผู้ช่วย (เรียกกลับได้จากเมนู ถามผู้ช่วย)"
-            title="ซ่อนน้องผู้ช่วย"
+            aria-label="ซ่อนน้องสจ๊วต (เรียกกลับได้จากเมนู ถามน้องสจ๊วต)"
+            title="ซ่อนน้องสจ๊วต"
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
@@ -116,7 +116,7 @@ export default function AssistantMascot({ onOpen, onHide, raised = false }) {
   );
 }
 
-/** รูปหน้าน้องผู้ช่วย (หัวหน้าต่างแชตและข้างข้อความ) */
+/** รูปหน้าน้องสจ๊วต (หัวหน้าต่างแชตและข้างข้อความ) */
 export function AssistantAvatar({ className = "" }) {
   // eslint-disable-next-line @next/next/no-img-element -- รูปเล็กที่เตรียมไว้แล้ว
   return <img src={`${BASE}/eoc-helper-avatar.webp`} alt="" width={128} height={128} className={`h-full w-full object-cover ${className}`} />;

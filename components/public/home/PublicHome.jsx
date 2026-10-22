@@ -598,6 +598,8 @@ export default function PublicHome() {
 
         {/* ── น้ำในคลองตอนนี้ ── */}
         <CanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} history={water.history} />
+        {/* ── น้ำทะเลหนุน: ต่อจากน้ำในคลอง (น้ำทะเลขึ้นสูงทำให้คลองระบายช้า) ── */}
+        <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-6"><SeaTodayCard layout="wide" /></div>
 
         {/* ── รายงานน้ำจากประชาชน (มือถือ/แท็บเล็ต: แถบเลื่อนต่อจากระดับน้ำในคลอง) ── */}
         <CitizenWaterReports reports={waterReports} layout="strip" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:hidden" />
@@ -665,8 +667,7 @@ export default function PublicHome() {
                 </ul>
               </div>
             ))}
-            <SeaTodayCard className="mt-8" />
-            <div className="mt-6 rounded-3xl bg-[#0c2f4a] p-5 text-white">
+            <div className="mt-8 rounded-3xl bg-[#0c2f4a] p-5 text-white">
               <p className="font-[family-name:var(--font-kanit)] text-lg font-semibold">เบอร์ฉุกเฉิน โทรฟรี 24 ชม.</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {[["1669", "เจ็บป่วยฉุกเฉิน"], ["1784", "สาธารณภัย"], ["191", "เหตุด่วนเหตุร้าย"], ["199", "ดับเพลิง"]].map(([number, label]) => (

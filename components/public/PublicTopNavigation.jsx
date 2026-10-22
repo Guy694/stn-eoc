@@ -66,7 +66,7 @@ export default function PublicTopNavigation({ activeMenu, showBottomBar = false,
     // ศูนย์พักพิงแสดงเฉพาะช่วงที่เปิดศูนย์ปฏิบัติการ (EOC)
     ...(sheltersOpen ? [{ href: "/public/shelters", label: "ศูนย์พักพิง", shortLabel: "พักพิง", icon: Tent, key: "shelters" }] : []),
     { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
-    { label: "ถามผู้ช่วย", shortLabel: "ผู้ช่วย", icon: Bot, key: "assistant", action: openAssistant },
+    { label: "ถามน้องสจ๊วต", shortLabel: "ผู้ช่วย", icon: Bot, key: "assistant", action: openAssistant },
     { href: "/public/track", label: "ติดตามคำขอความช่วยเหลือ", shortLabel: "ติดตาม", icon: SearchCheck, key: "track" },
     { href: "/public/report-water", label: "รายงานระดับน้ำ", shortLabel: "ระดับน้ำ", icon: Waves, key: "water", emphasis: "water" },
     { href: "/public/report-incident", label: "ขอความช่วยเหลือ", icon: Siren, key: "help", emphasis: "help" }

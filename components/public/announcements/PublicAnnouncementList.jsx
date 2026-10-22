@@ -13,7 +13,7 @@ const hrefOf = (item) => item.href || `/public/announcements/${item.id}`;
 const imageOf = (item) => item.image_url || getAnnouncementAsset(item.image_path);
 
 
-const PAGE = 9;
+const PAGE = 12; // หาร 2/3/4 คอลัมน์ลงตัว
 const SLIDES = 6;
 const SLIDE_MS = 7000;
 
@@ -208,6 +208,41 @@ function Card({ item, index }) {
   );
 }
 
+// ใบความรู้/สื่อความรู้: การ์ดโปสเตอร์แนวตั้ง (ภาพส่วนใหญ่เป็นอินโฟกราฟิกแนวตั้ง) — 2 คอลัมน์บนมือถือ ไม่ต้องเลื่อนยาว
+function PosterCard({ item, index }) {
+  const date = item.start_date || item.created_at;
+  const topic = topicOf(item);
+  const src = imageOf(item);
+  return (
+    <li className="announce-card" style={{ animationDelay: `${Math.min(index, 8) * 50}ms` }}>
+      <Link href={hrefOf(item)} className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2a9db0] focus-visible:ring-offset-2">
+        <span className="relative block aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-[#d6e3ea] transition group-hover:ring-[#9fc9d6] group-hover:shadow-[0_16px_32px_-22px_rgba(12,47,74,.7)]" style={{ backgroundColor: topic.soft }}>
+          {src ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img {...responsiveImage(src, [384, 640], "(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 46vw")} alt={item.alt_text || ""} loading="lazy" className="poster-img h-full w-full object-cover object-top" />
+          ) : (
+            <span className="flex h-full flex-col justify-between p-4 pt-10">
+              <Megaphone className="h-8 w-8" style={{ color: topic.dot }} aria-hidden="true" />
+              <span className="line-clamp-5 font-[family-name:var(--font-kanit)] text-lg font-semibold leading-snug" style={{ color: topic.text }}>{cleanTitle(item.title)}</span>
+            </span>
+          )}
+          <span className="absolute left-2 top-2 inline-flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-semibold shadow-sm" style={{ color: topic.text }}>
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: topic.dot }} aria-hidden="true" />
+            <span className="truncate">{topic.category || topic.label}</span>
+          </span>
+          {item.display_status === "current" ? <span className="absolute bottom-2 left-2 rounded-full bg-[#15803d] px-2 py-0.5 text-[11px] font-semibold text-white">กำลังเผยแพร่</span> : null}
+        </span>
+        <span className="mt-2.5 line-clamp-2 font-[family-name:var(--font-kanit)] text-[15px] font-semibold leading-snug text-[#0c2f4a] group-hover:text-[#0b4c86] sm:text-base">{cleanTitle(item.title)}</span>
+        <span className="mt-1 block text-xs text-slate-500">
+          <time dateTime={date}>{formatAnnouncementDate(date)}</time>
+          {item.phase_label ? ` • ${item.phase_label}` : ""}
+          {item.attachment_path ? <Paperclip className="ml-1 inline h-3 w-3 align-[-1px]" aria-label="มีเอกสารแนบ" /> : null}
+        </span>
+      </Link>
+    </li>
+  );
+}
+
 // อินโฟกราฟิกจากคลังของฝ่ายสื่อสารความเสี่ยง: ภาพย่อแนวตั้ง กดเพื่อดูภาพเต็ม
 const GALLERY_PAGE = 8;
 function InfographicGallery({ items }) {
@@ -235,7 +270,7 @@ function InfographicGallery({ items }) {
                   <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: topic.text }}>
                     <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: topic.dot }} aria-hidden="true" />{topic.label}
                   </span>
-                  <span className="mt-1 line-clamp-2 block font-semibold leading-snug text-[#0c2f4a]">{item.title}</span>
+                  <span className="mt-1 line-clamp-2 font-semibold leading-snug text-[#0c2f4a]">{item.title}</span>
                 </span>
               </button>
             </li>
@@ -416,9 +451,9 @@ export default function PublicAnnouncementList() {
                 <h2 id="past-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">
                   {pastShown.some((item) => item.source === "riskcom") ? "สื่อความรู้" : current.length || featured?.display_status === "current" ? "ความรู้และประกาศที่ผ่านมา" : "ความรู้และประกาศ"}
                 </h2>
-                <p className="mt-1 text-slate-600">สื่อความรู้สำหรับดูแลตัวเองและคนในครอบครัว</p>
-                <ul className={`mt-4 grid gap-5 md:grid-cols-2 ${alerts.length ? "2xl:grid-cols-3" : "lg:grid-cols-3"}`}>
-                  {pastShown.map((item, index) => <Card key={item.id} item={item} index={index} />)}
+                <p className="mt-1 text-slate-600">ใบความรู้สำหรับดูแลตัวเองและคนในครอบครัว แตะเพื่อดูภาพเต็มและดาวน์โหลด</p>
+                <ul className={`mt-5 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 ${alerts.length ? "2xl:grid-cols-4" : "lg:grid-cols-4"}`}>
+                  {pastShown.map((item, index) => <PosterCard key={item.id} item={item} index={index} />)}
                 </ul>
               </section>
             ) : null}

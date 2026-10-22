@@ -24,7 +24,7 @@ import {
 import HelpRequestLink from "@/components/public/HelpRequestLink";
 import AssistantMascot, { AssistantAvatar } from "@/components/public/AssistantMascot";
 
-// ผู้ช่วย EOC: ตอบเรื่องสถานการณ์ตอนนี้จากข้อมูลจริง (น้ำ ฝน ความเสี่ยง ศูนย์พักพิง) และความรู้ทั่วไปเรื่องน้ำท่วม/โรค
+// น้องสจ๊วต: ตอบเรื่องสถานการณ์ตอนนี้จากข้อมูลจริง (น้ำ ฝน ความเสี่ยง ศูนย์พักพิง) และความรู้ทั่วไปเรื่องน้ำท่วม/โรค
 const HISTORY_KEY = "chatbot_history";
 const LAUNCHER_HIDDEN_KEY = "chatbot_launcher_hidden";
 const DISTRICT_KEY = "stn-eoc:my-district"; // ใช้ร่วมกับ "พื้นที่ของฉัน" ในหน้าแรก
@@ -131,7 +131,7 @@ export default function AIChatbot({ showLauncher = true, launcherRaised = false 
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading, isOpen]);
 
-  // ปุ่ม "ถามผู้ช่วย" ในหน้าอื่นเปิดหน้าต่างนี้ได้
+  // ปุ่ม "ถามน้องสจ๊วต" ในหน้าอื่นเปิดหน้าต่างนี้ได้
   useEffect(() => {
     const open = () => {
       setLauncherHidden(false);
@@ -227,7 +227,7 @@ export default function AIChatbot({ showLauncher = true, launcherRaised = false 
       {isOpen && (
         <section
           role="dialog"
-          aria-label="ผู้ช่วย EOC"
+          aria-label="น้องสจ๊วต"
           className="eoc-assistant fixed inset-x-2 bottom-2 top-16 z-[1100] flex flex-col overflow-hidden rounded-[1.5rem] bg-[#eef2f1] shadow-[0_30px_60px_-20px_rgba(12,47,74,.55)] ring-1 ring-[#c9dcee] sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[640px] sm:max-h-[calc(100dvh-7rem)] sm:w-[25rem]"
         >
           {/* หัว */}
@@ -239,7 +239,7 @@ export default function AIChatbot({ showLauncher = true, launcherRaised = false 
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-[#2fd0a8] ring-2 ring-[#0c2f4a]" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">น้องผู้ช่วย EOC</h2>
+                  <h2 className="font-[family-name:var(--font-kanit)] text-lg font-semibold leading-tight">น้องสจ๊วต ผู้ช่วยของคุณ</h2>
                   <p className="truncate text-xs text-[#9fc9d6]">ตอบจากข้อมูลน้ำ ฝน และศูนย์ช่วยเหลือของสตูล</p>
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default function AIChatbot({ showLauncher = true, launcherRaised = false 
                     <Trash2 className="h-4.5 w-4.5" />
                   </button>
                 )}
-                <button type="button" onClick={() => setIsOpen(false)} className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label="ปิดผู้ช่วย EOC">
+                <button type="button" onClick={() => setIsOpen(false)} className="rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white" aria-label="ปิดน้องสจ๊วต">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -384,7 +384,7 @@ export default function AIChatbot({ showLauncher = true, launcherRaised = false 
                 rows={1}
                 maxLength={500}
                 placeholder="พิมพ์คำถาม เช่น คลองละงูน้ำขึ้นไหม"
-                aria-label="พิมพ์คำถามถึงผู้ช่วย EOC"
+                aria-label="พิมพ์คำถามถึงน้องสจ๊วต"
                 className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-[15px] text-[#15232e] outline-none placeholder:text-slate-400 [field-sizing:content]"
               />
               <button

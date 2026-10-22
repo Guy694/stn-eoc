@@ -604,7 +604,7 @@ function MyRiskContent() {
 
 const AUTO_READ_KEY = "stn-my-risk-autoread";
 
-// น้องผู้ช่วยตามระดับความเสี่ยง: ปกติ / เสี่ยง (เฝ้าระวัง) / เสี่ยงมาก (เสี่ยงสูง วิกฤต)
+// น้องสจ๊วตตามระดับความเสี่ยง: ปกติ / เสี่ยง (เฝ้าระวัง) / เสี่ยงมาก (เสี่ยงสูง วิกฤต)
 // ลอยอยู่มุมขวาบนของการ์ดคำตอบ ทับขอบแถบสีเล็กน้อย ข้อความด้านล่างไหลอ้อมตัวน้อง
 const RISK_MASCOTS = {
   normal: { src: "/stn-eoc/img/mascot/risk-normal.webp", motion: "my-risk-mascot--calm" },

@@ -17,7 +17,7 @@ const data = {
   hotlines: [{ name: "[ทดสอบ] ศูนย์ฯ", phone: "000" }]
 };
 
-describe("ผู้ช่วย EOC: เข้าใจคำถามต่อเนื่อง", () => {
+describe("น้องสจ๊วต: เข้าใจคำถามต่อเนื่อง", () => {
   const history = [{ role: "user", content: "ระดับน้ำในคลองตอนนี้" }, { role: "assistant", content: "..." }];
 
   test("\"แล้วละงูล่ะ\" ใช้หัวข้อจากคำถามก่อนหน้า และเปลี่ยนอำเภอ", () => {
@@ -35,7 +35,7 @@ describe("ผู้ช่วย EOC: เข้าใจคำถามต่อ�
   });
 });
 
-describe("ผู้ช่วย EOC: แยกคำถามขอคำแนะนำ", () => {
+describe("น้องสจ๊วต: แยกคำถามขอคำแนะนำ", () => {
   test("คำถามขอคำแนะนำส่งให้ AI คิดต่อ ส่วนคำถามสถานะตอบจากข้อมูลได้เลย", () => {
     expect(isAdviceQuestion("ควรอพยพไหม น้ำในคลองสูงแล้ว")).toBe(true);
     expect(isAdviceQuestion("ควรเตรียมของอะไรไปศูนย์พักพิง")).toBe(true);
@@ -44,7 +44,7 @@ describe("ผู้ช่วย EOC: แยกคำถามขอคำแน�
   });
 });
 
-describe("ผู้ช่วย EOC: ข้อมูลใหม่ที่ตอบได้", () => {
+describe("น้องสจ๊วต: ข้อมูลใหม่ที่ตอบได้", () => {
   test("แนวโน้มน้ำ 24 ชม. จากประวัติ", () => {
     expect(waterChange(data.waterStations[0], data.waterHistory)).toBe(40);
     expect(waterChange(data.waterStations[1], data.waterHistory)).toBeNull();
