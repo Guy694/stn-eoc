@@ -7,7 +7,7 @@ const pool = getPool();
 
 // POST - บันทึก activity log
 export async function POST(request) {
-    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
     if (!auth.success) return auth.response;
 
     const connection = await pool.getConnection();

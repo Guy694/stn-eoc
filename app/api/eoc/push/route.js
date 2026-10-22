@@ -6,7 +6,7 @@ import { findOfficerSubscription, releaseOfficerSubscription, saveOfficerSubscri
 import { isAllowedPushEndpoint, vapidConfig } from "@/lib/webPush";
 
 // เจ้าหน้าที่เปิด/ปิด "แจ้งเตือนคำขอความช่วยเหลือเข้ามือถือ" บนเครื่องที่ใช้อยู่
-const ROLES = ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"];
+const ROLES = ["admin", "commander", "MCATT", "SAT", "SEhRT", "staff"];
 export const dynamic = "force-dynamic";
 const noStore = { "Cache-Control": "private, no-store" };
 const notReady = () => NextResponse.json({ success: false, message: "ระบบแจ้งเตือนยังไม่พร้อม (ยังไม่ได้ตั้งค่า VAPID หรือยังไม่ได้รัน migration 20261010_public_push / push_officer)" }, { status: 503, headers: noStore });

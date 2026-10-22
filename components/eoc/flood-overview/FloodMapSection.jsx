@@ -23,7 +23,7 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
             </div>
             {/* เดิมมีการ์ดตัวเลข 5 ใบตรงนี้ แต่เป็นยอดรวมทุกวันของเหตุการณ์ (หมู่บ้านเดียวกันถูกนับซ้ำทุกวันที่รายงาน)
                 และซ้ำกับแผงสรุปด้านบนซึ่งใช้รายงานวันล่าสุด จึงเอาออกเพื่อไม่ให้ตัวเลขขัดกัน */}
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="h-[560px] overflow-hidden rounded-lg border border-[#c9dcee] bg-white shadow">
                     <PublicIncidentMap
                         disasterType="flood"

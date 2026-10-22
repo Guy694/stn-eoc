@@ -443,7 +443,7 @@ function ActiveEventBanner({ module, status, onEnter }) {
             </div>
 
             {pulse && (pulse.headline || pulse.triggers?.length || pulse.agendaTotal) ? (
-                <div className="grid gap-3 border-b border-slate-100 p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
                     {pulse.headline?.text ? (
                         <button type="button" onClick={() => onEnter(module, module.path)} className={`rounded-xl border px-4 py-3 text-left ${HEADLINE_TONE[pulse.headline.tone] || HEADLINE_TONE.gray}`}>
                             <span className="block text-base font-black leading-snug">{pulse.headline.text}</span>

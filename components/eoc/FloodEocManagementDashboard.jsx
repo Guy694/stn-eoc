@@ -137,7 +137,7 @@ function TeamStatusView({ data }) {
   }
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-      <table className="min-w-full text-left text-sm">
+      <table className="stack-mobile min-w-full text-left text-sm">
         <caption className="sr-only">สถานะรายงานประจำวันของแต่ละกลุ่มภารกิจ</caption>
         <thead className="bg-slate-50 text-xs text-slate-600">
           <tr>
@@ -266,7 +266,7 @@ function OperationalResourceView({ view, sessionId }) {
     </div>
     {showForm ? <ResourceForm view={view} form={form} setForm={setForm} submit={submit} saving={saving} /> : null}
     {!resource.rows.length ? <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"><CalendarClock className="mx-auto h-8 w-8 text-slate-400" aria-hidden="true" /><p className="mt-3 font-bold text-slate-900">ยังไม่มี{labels[view]}ในเหตุการณ์นี้</p><p className="mt-1 text-sm text-slate-500">{resource.permissions.canOperate ? `กด "เพิ่ม${labels[view]}" เพื่อเริ่มบันทึก` : "เมื่อมีการบันทึกจะแสดงที่นี่"}</p></div> :
-      <div ref={listAnchor} className="scroll-mt-4 border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><table className="min-w-full text-left text-sm">
+      <div ref={listAnchor} className="scroll-mt-4 border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><table className="stack-mobile min-w-full text-left text-sm">
         <thead className="bg-slate-900 text-white"><tr>{columns.map(([, label]) => <th key={label} className="px-4 py-3">{label}</th>)}{view === "missions" ? <th className="px-4 py-3">ขั้นตอนงาน</th> : null}</tr></thead>
         <tbody>{paged.visible.map((row) => <tr key={row.id} className="border-t border-slate-100">{columns.map(([key]) => <td key={key} className="max-w-xs px-4 py-3">{key === "progress_percent" ? `${row[key] ?? 0}%` : row[key] ?? "-"}</td>)}{view === "missions" ? <td className="px-4 py-3"><MissionActions row={row} canVerify={resource.permissions.canVerify} onMove={moveMission} /></td> : null}</tr>)}</tbody>
       </table></div><PaginationControls {...paged.controls} pageSizeOptions={[20, 50, 100]} /></div>}

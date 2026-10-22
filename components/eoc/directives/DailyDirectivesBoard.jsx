@@ -127,7 +127,7 @@ export default function DailyDirectivesBoard({ sessionId }) {
   const carry = state.data?.carry_over;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
       {notice}
       <section className="rounded-2xl border border-slate-200 bg-white print:border-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">

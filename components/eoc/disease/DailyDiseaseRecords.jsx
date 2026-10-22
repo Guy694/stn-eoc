@@ -653,7 +653,7 @@ export default function DailyDiseaseRecords({ eocType = 'disease', title, subtit
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-slate-200">
+                            <table className="stack-mobile min-w-full divide-y divide-slate-200">
                                 <thead className="bg-slate-50/80">
                                     <tr>
                                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">

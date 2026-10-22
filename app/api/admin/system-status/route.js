@@ -7,7 +7,8 @@ import { query, getDbTimezone } from "@/lib/db";
 import { RATE_LIMITS } from "@/lib/rateLimit";
 import { PASSWORD_MIN_LENGTH, PASSWORD_POLICY_TEXT } from "@/lib/passwordPolicy";
 import { alertSendingEnabled, telegramReady } from "@/lib/eocAlertRunner";
-import { getTelegramHelpNotifyChatIds, getTelegramSecurityChatIds, sendTelegramMessage, escapeTelegramHtml } from "@/lib/telegram";
+import { getTelegramHelpNotifyChatIds, getTelegramSecurityChatIds, escapeTelegramHtml } from "@/lib/telegram"
+import { sendCategorized } from "@/lib/telegramChannels";
 import { recordChange } from "@/lib/recordArchive";
 import { buildRoleMatrix, healthChecks, integrationStatus, maskId, pendingMigrations } from "@/lib/systemStatus";
 
@@ -116,9 +117,10 @@ export async function GET(request) {
     const [db, migrations, backups, events] = await Promise.all([dbStatus(), migrationStatus(), backupStatus(), securityEvents()]);
     const helpChats = getTelegramHelpNotifyChatIds();
     // ถ้าไม่ได้ตั้งกลุ่มความปลอดภัยแยก ระบบส่งเข้ากลุ่มแจ้งเตือนศูนย์แทน (lib/telegram.js) — ไม่นับว่าขาด
+    // ไม่มีกลุ่มผู้ดูแลแยก: เหตุความปลอดภัยส่งถึงผู้ดูแลที่เชื่อม Telegram ส่วนตัวเท่านั้น (ไม่ส่งเข้ากลุ่มเจ้าหน้าที่)
     const integrations = integrationStatus().map((item) => (
-      item.key === "telegram-security" && !item.configured && item.missing.every((name) => name === "TELEGRAM_SECURITY_CHAT_IDS") && getTelegramSecurityChatIds().length
-        ? { ...item, configured: true, missing: [], note: "ยังไม่ได้แยกกลุ่ม — ส่งเข้ากลุ่มแจ้งเตือนศูนย์แทน" }
+      item.key === "telegram-security" && !item.configured
+        ? { ...item, note: "ยังไม่ได้ตั้งกลุ่มผู้ดูแลระบบ — ส่งถึงผู้ดูแลที่เชื่อม Telegram ในหน้าโปรไฟล์เท่านั้น" }
         : item
     ));
     const alerts = {
@@ -148,7 +150,7 @@ export async function GET(request) {
         thaidConfigured: integrations.find((item) => item.key === "thaid")?.configured || false,
         events7d: events
       },
-      roles: buildRoleMatrix(rolePermissions, roleDisplayNames, ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"]),
+      roles: buildRoleMatrix(rolePermissions, roleDisplayNames, ["admin", "commander", "MCATT", "SAT", "SEhRT", "staff"]),
       runtime: { node: process.version, env: process.env.NODE_ENV || "development" }
     });
   } catch (error) {
@@ -167,9 +169,10 @@ export async function POST(request) {
     if (!telegramReady()) return NextResponse.json({ success: false, message: "ยังไม่ได้ตั้งค่า Telegram" }, { status: 409 });
     const who = escapeTelegramHtml(auth.user.username || "ผู้ดูแลระบบ");
     const when = new Date().toLocaleString("th-TH", { timeZone: "Asia/Bangkok" });
-    const text = `🔔 <b>ข้อความทดสอบ</b>\nทดสอบการแจ้งเตือนจากหน้าตั้งค่าระบบ โดย ${who} เวลา ${when}\nไม่ต้องดำเนินการใด ๆ`;
-    const results = await Promise.all(getTelegramHelpNotifyChatIds().map((chatId) => sendTelegramMessage(chatId, text)));
-    const delivered = results.filter((result) => result.ok).length;
+    const text = `<b>ข้อความทดสอบ</b>\nทดสอบการแจ้งเตือนจากหน้าตั้งค่าระบบ โดย ${who} เวลา ${when}\nไม่ต้องดำเนินการใด ๆ`;
+    const sent = await sendCategorized("test", text);
+    const results = { length: sent.total };
+    const delivered = sent.delivered;
     await recordChange({ request, user: auth.user, action: "data_update", table: "system_settings", id: "telegram-test", description: `ส่งข้อความทดสอบ Telegram สำเร็จ ${delivered}/${results.length} กลุ่ม` });
     return NextResponse.json({ success: delivered > 0, delivered, total: results.length, message: delivered ? `ส่งข้อความทดสอบแล้ว ${delivered}/${results.length} กลุ่ม` : "ส่งไม่สำเร็จ — ตรวจว่าบอทอยู่ในกลุ่มและรหัสกลุ่มถูกต้อง" });
   } catch (error) {

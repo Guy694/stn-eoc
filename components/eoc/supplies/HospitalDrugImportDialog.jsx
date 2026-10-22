@@ -274,7 +274,7 @@ export default function HospitalDrugImportDialog({ open, onOpenChange, eocType =
               </ul>
             ) : null}
 
-            <div className="grid gap-3 sm:grid-cols-[1fr_1fr]">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr]">
               <label className="text-sm font-semibold text-slate-800">
                 หน่วยบริการของข้อมูลนี้{hospCode ? <span className="font-normal text-slate-500"> (รหัสในไฟล์ {hospCode})</span> : null}
                 <FacilitySelect facilities={context?.facilities || []} value={facilityId} onChange={setFacilityId} required className="mt-1 font-normal" />

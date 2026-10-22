@@ -88,6 +88,7 @@ function LoginForm() {
         password: "",
     });
     const [error, setError] = useState("");
+    const [pendingApproval, setPendingApproval] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -96,12 +97,14 @@ function LoginForm() {
             [e.target.name]: e.target.value,
         });
         setError("");
+        setPendingApproval(false);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
+        setPendingApproval(false);
 
         try {
             const result = await login(formData.username, formData.password);
@@ -110,10 +113,11 @@ function LoginForm() {
                 const nextPath = getSafeNextPath(searchParams.get('next'));
                 router.push(result.mustChangePassword ? "/settings/?forcePasswordChange=1" : (nextPath || "/dashboard"));
             } else {
-                setError(result.message || "เข้าสู่ระบบไม่สำเร็จ");
+                setPendingApproval(result.code === "pending_approval");
+                setError(result.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
             }
-        } catch (err) {
-            setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+        } catch {
+            setError("เชื่อมต่อระบบไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง");
         } finally {
             setIsLoading(false);
         }
@@ -185,12 +189,17 @@ function LoginForm() {
                         {error && (() => {
                             // หมดเวลาใช้งาน = แจ้งให้ทราบ (สีส้ม) ไม่ใช่ข้อผิดพลาด
                             const expired = error.startsWith("การเข้าสู่ระบบหมดอายุ");
-                            const Icon = expired ? Clock : AlertTriangle;
+                            // รออนุมัติ = แจ้งสถานะ (สีส้ม) ไม่ใช่ข้อผิดพลาด
+                            const notice = expired || pendingApproval;
+                            const Icon = notice ? Clock : AlertTriangle;
                             return (
-                                <div role="alert" className={`mb-4 rounded-xl border px-3 py-2.5 text-sm ${expired ? "border-amber-200 bg-amber-50 text-amber-900" : "border-red-200 bg-red-50 text-red-700"}`}>
+                                <div role="alert" className={`mb-4 rounded-xl border px-3 py-2.5 text-sm ${notice ? "border-amber-200 bg-amber-50 text-amber-900" : "border-red-200 bg-red-50 text-red-700"}`}>
                                     <div className="flex items-start gap-2">
                                         <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                                        <div className="flex-1 whitespace-pre-line">{expired ? "หมดเวลาใช้งาน (ไม่ได้ใช้งานเกิน 30 นาที) กรุณาเข้าสู่ระบบอีกครั้ง" : error}</div>
+                                        <div className="flex-1 whitespace-pre-line">
+                                            {pendingApproval ? <strong className="mb-0.5 block font-bold">รอเจ้าหน้าที่อนุมัติ</strong> : null}
+                                            {expired ? "หมดเวลาใช้งาน (ไม่ได้ใช้งานเกิน 30 นาที) กรุณาเข้าสู่ระบบอีกครั้ง" : error}
+                                        </div>
                                     </div>
                                 </div>
                             );

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getPool } from "@/lib/db";
 import { recordChange } from "@/lib/recordArchive";
+import { emailOutcomeText, notifyAccountDecision } from "@/lib/accountEmails";
 
 const pool = getPool();
 
@@ -106,7 +107,7 @@ export async function PATCH(request) {
     let connection;
     try {
         connection = await pool.getConnection();
-        const [officers] = await connection.execute('SELECT id, username, given_name, family_name, is_approved FROM officer WHERE id = ?', [officerId]);
+        const [officers] = await connection.execute('SELECT id, username, title, given_name, family_name, email, is_approved FROM officer WHERE id = ?', [officerId]);
         const officer = officers[0];
         if (!officer) return NextResponse.json({ success: false, message: 'ไม่พบเจ้าหน้าที่' }, { status: 404 });
         if (Number(officer.is_approved) === 1) return NextResponse.json({ success: false, message: 'บัญชีนี้อนุมัติแล้ว' }, { status: 409 });
@@ -130,7 +131,13 @@ export async function PATCH(request) {
             request, user: auth.user, action: 'data_update', table: 'officer', id: officerId,
             description: action === 'reject' ? `ปฏิเสธคำขอสมัครเจ้าหน้าที่ ${officer.username}: ${reason}` : `คืนคำขอสมัครเจ้าหน้าที่ ${officer.username} กลับเข้าคิว`
         });
-        return NextResponse.json({ success: true, message: action === 'reject' ? 'ปฏิเสธคำขอแล้ว' : 'คืนคำขอเข้าคิวแล้ว' });
+        const email = action === 'reject' ? await notifyAccountDecision(officer, 'rejected', { reason }) : null;
+        return NextResponse.json({
+            success: true,
+            message: action === 'reject' ? 'ปฏิเสธคำขอแล้ว' : 'คืนคำขอเข้าคิวแล้ว',
+            email,
+            emailMessage: emailOutcomeText(email)
+        });
     } catch (error) {
         console.error('Admin registration update error:', error);
         return NextResponse.json({ success: false, message: 'บันทึกไม่สำเร็จ' }, { status: 500 });

@@ -193,7 +193,7 @@ export default function MasterDataCatalogPage() {
 
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+            <table className="stack-mobile min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs font-bold text-slate-600">
                 <tr>
                   {columns.map((field) => <th key={field} scope="col" className="px-4 py-3">{FIELD_LABELS[field] || field}</th>)}

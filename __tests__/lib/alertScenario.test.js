@@ -38,7 +38,7 @@ const ENV = { ...process.env };
 beforeEach(() => {
   jest.clearAllMocks();
   fakeDb();
-  process.env = { ...ENV, TELEGRAM_BOT_TOKEN: "test-token", EOC_ALERTS_TELEGRAM: "" };
+  process.env = { ...ENV, TELEGRAM_BOT_TOKEN: "test-token", TELEGRAM_HELP_NOTIFY_CHAT_IDS: "-100test", EOC_ALERTS_TELEGRAM: "" };
 });
 afterAll(() => { process.env = ENV; });
 

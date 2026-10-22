@@ -356,7 +356,7 @@ export default function AffectedWorkspace() {
           ]} />
           <p className="-mt-2 text-xs text-slate-500">ยอดทั้งจังหวัด {periodLabel}</p>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
             <CasualtyChart rows={summaryRows} prefix={prefix} />
             <DistrictTable rows={summaryRows} prefix={prefix} title={periodLabel} />
           </div>

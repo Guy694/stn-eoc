@@ -191,7 +191,7 @@ function OverviewTab({ data }) {
                 })}
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.1fr_.9fr]">
                 <section className="rounded-2xl border border-slate-200 bg-white p-5">
                     <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900"><AlertTriangle className="h-5 w-5 text-amber-500" /> ข้อเสนอแนะอัตโนมัติ</h2>
                     <div className="mt-4 space-y-3">
@@ -304,7 +304,7 @@ function InventoryTab({ inventory }) {
 
 function DiseaseTab({ chartData, districts }) {
     return (
-        <div className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.25fr_.75fr]">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="font-black text-slate-900">แนวโน้มผู้ป่วย 30 วันล่าสุด</h2>
                 <div className="mt-5 h-80">

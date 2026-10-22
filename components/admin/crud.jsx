@@ -154,7 +154,8 @@ export function Toolbar({ search, onSearchChange, searchPlaceholder = "ค้น
           <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder={searchPlaceholder} className={cn(inputClass, "pl-9")} />
         </label>
       ) : null}
-      {children ? <div className="flex flex-wrap gap-2">{children}</div> : null}
+      {/* มือถือ: ตัวกรองเรียงเต็มความกว้าง กดง่าย · จอใหญ่: เรียงต่อกันในแถว */}
+      {children ? <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap [&>*]:w-full sm:[&>*]:w-auto">{children}</div> : null}
       {right ? <div className="flex flex-wrap gap-2 lg:ml-auto">{right}</div> : null}
     </div>
   );

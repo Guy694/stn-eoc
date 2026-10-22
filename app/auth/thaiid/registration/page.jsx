@@ -205,7 +205,7 @@ export default function ThaiDRegistrationPage() {
                                 onChange={(e) => setFormData({ ...formData, requested_role: e.target.value })}
                             >
                                 <option value="staff">เจ้าหน้าที่ทั่วไป (ทั่วไป)</option>
-                                <option value="SeRHT">ทีม SeRHT</option>
+                                <option value="SEhRT">ทีม SEhRT</option>
                                 <option value="SAT">ทีม SAT</option>
                                 <option value="MCATT">ทีม MCATT</option>
                             </select>

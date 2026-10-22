@@ -27,7 +27,7 @@ export async function GET(request) {
     let connection;
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);
@@ -54,7 +54,7 @@ export async function POST(request) {
     let connection;
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'SAT', 'SEhRT']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
@@ -115,7 +115,7 @@ export async function PATCH(request) {
     let connection;
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'SAT', 'SEhRT']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
@@ -166,7 +166,7 @@ export async function PUT(request) {
     let connection;
 
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'SAT', 'SEhRT']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();

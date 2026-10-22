@@ -167,7 +167,7 @@ export async function GET(request) {
         let isAuthenticatedRequest = false;
 
         if (sessionToken) {
-            const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+            const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
             isAuthenticatedRequest = auth.success;
         }
 

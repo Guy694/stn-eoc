@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { emailOutcomeText, notifyAccountDecision } from '@/lib/accountEmails';
 import { query, transaction } from '@/lib/db';
 import { recordChange } from '@/lib/recordArchive';
 import { requireAuth, revokeUserSessions } from '@/lib/auth';
@@ -176,10 +177,16 @@ export async function PUT(request, { params }) {
             [id]
         );
 
+        // อนุมัติครั้งแรก (จากรออนุมัติ → อนุมัติ) แจ้งผลทางอีเมลที่ลงทะเบียนไว้
+        const approvalGranted = Number(is_approved) === 1 && Number(existing[0].is_approved) !== 1;
+        const emailResult = approvalGranted ? await notifyAccountDecision(updated[0], 'approved') : null;
+
         return NextResponse.json({
             success: true,
             message: 'Officer updated successfully',
-            data: updated[0]
+            data: updated[0],
+            email: emailResult,
+            emailMessage: emailOutcomeText(emailResult)
         });
 
     } catch (error) {

@@ -4,7 +4,8 @@ import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { toDateKey } from "@/lib/sessionDateRange";
 import { COMPLETENESS_SOURCES, buildCompleteness, buildReminderText } from "@/lib/reportingCompleteness";
-import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage } from "@/lib/telegram";
+import { escapeTelegramHtml, getTelegramHelpNotifyChatIds } from "@/lib/telegram";
+import { sendCategorized } from "@/lib/telegramChannels";
 import { recordChange } from "@/lib/recordArchive";
 
 async function load(searchParams) {
@@ -71,8 +72,7 @@ export async function POST(request) {
       summary: result.summary,
       escape: escapeTelegramHtml
     });
-    const sent = await Promise.all(chatIds.map((chatId) => sendTelegramMessage(chatId, text)));
-    const okCount = sent.filter((item) => item.ok).length;
+    const okCount = (await sendCategorized("report", text)).delivered;
     await recordChange({
       request, user: auth.user, action: "data_update", table: "eoc_sessions", id: result.session.id,
       description: `ส่งแจ้งเตือนความครบของรายงาน${result.source.label} วันที่ ${result.date} (${okCount}/${chatIds.length} กลุ่ม)`,

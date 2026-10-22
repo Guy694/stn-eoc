@@ -100,7 +100,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <div className="grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end">
           <Field label="วันที่รายงาน">
             <input type="date" className={inputClass} value={date} max={today} onChange={(event) => setDate(event.target.value || today)} />
           </Field>
@@ -145,7 +145,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
             {canReport ? <Button variant="ghost" className="min-h-9 px-3" onClick={fillZero}>ไม่ได้ใช้ = 0 (ช่องที่ว่าง)</Button> : null}
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="stack-mobile min-w-full text-sm">
               <thead className="bg-slate-50 text-xs font-bold text-slate-600">
                 <tr>
                   <th scope="col" className="px-3 py-2 text-left">รายการ</th>

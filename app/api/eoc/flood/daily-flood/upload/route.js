@@ -16,7 +16,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 // API สำหรับอัพโหลดและบันทึกภาพแผนที่รายวัน
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT']);
         if (!auth.success) return auth.response;
 
         const formData = await request.formData();

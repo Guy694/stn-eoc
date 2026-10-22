@@ -6,6 +6,7 @@ import AppToaster from "@/components/providers/AppToaster";
 import ConfirmHost from "@/components/providers/ConfirmHost";
 import PwaRegister from "@/components/PwaRegister";
 import PushMessageHost from "@/components/providers/PushMessageHost";
+import VisitBeacon from "@/components/VisitBeacon";
 import { getSiteUrl } from "@/lib/siteUrl";
 
 const kanit = Kanit({
@@ -54,6 +55,7 @@ export default function RootLayout({ children }) {
             <ConfirmHost />
             <PwaRegister />
             <PushMessageHost />
+            <VisitBeacon />
           </EOCProvider>
         </AuthProvider>
       </body>

@@ -6,7 +6,7 @@ import { publicInternalError } from "@/lib/apiResponse";
 // GET - ดึงข้อมูล EOC Modules ทั้งหมดหรือตาม eoc_type
 export async function GET(req) {
     try {
-        const auth = await requireAuth(req, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(req, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(req.url);

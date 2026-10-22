@@ -51,7 +51,7 @@ function RequestQueue({ rows, loading, approveRole, onRoleChange, onApprove, onE
       {waiting.length ? (
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">
           {waiting.map((row) => (
-            <li key={row.id} className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-center">
+            <li key={row.id} className="grid grid-cols-1 gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_16rem_auto] lg:items-center">
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 font-bold text-slate-900">
                   {fullName(row) || row.username}
@@ -238,11 +238,19 @@ export default function OfficerWorkspace() {
   };
 
   /* ---------- อนุมัติ / ลบ ---------- */
+  // ผลการส่งอีเมลแจ้งผู้สมัคร: ส่งแล้ว = แจ้งสำเร็จ · ไม่ได้ส่ง = เตือนให้ติดต่อผู้สมัครเอง
+  const announceEmail = (email) => {
+    if (!email) return;
+    if (email.sent) success(`ส่งอีเมลแจ้งผลไปที่ ${email.to} แล้ว`);
+    else warn(`ไม่ได้ส่งอีเมลแจ้งผล (${email.reason}) กรุณาแจ้งผู้สมัครทางช่องทางอื่น`);
+  };
+
   const approve = async (officer, chosenRole) => {
     const role = chosenRole || officer.requested_role || officer.role || "staff";
     try {
-      await apiRequest(`${API}/${officer.id}`, { method: "PUT", body: { role, requested_role: role, is_approved: 1 } });
+      const result = await apiRequest(`${API}/${officer.id}`, { method: "PUT", body: { role, requested_role: role, is_approved: 1 } });
       success(`อนุมัติ ${fullName(officer) || "เจ้าหน้าที่"} แล้ว`);
+      announceEmail(result.email);
       load();
     } catch (error) {
       fail(error.message || "อนุมัติไม่สำเร็จ");
@@ -334,6 +342,7 @@ export default function OfficerWorkspace() {
     try {
       const result = await apiRequest("/stn-eoc/api/admin/registrations", { method: "PATCH", body: { officer_id: officer.id, action, reason } });
       success(result.message);
+      announceEmail(result.email);
       setRejecting(null);
       load();
     } catch (error) {

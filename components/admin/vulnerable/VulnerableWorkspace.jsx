@@ -20,7 +20,7 @@ import { MetricCard } from "@/components/common/MetricCards";
 import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
 
 const BASELINE_API = "/stn-eoc/api/eoc/vulnerable-groups/baseline";
-const BASELINE_EDITORS = ["admin", "commander", "SAT", "SeRHT"];
+const BASELINE_EDITORS = ["admin", "commander", "SAT", "SEhRT"];
 const EVENT_PAGES = { flood: { label: "อุทกภัย", path: "/eoc/flood/vulnerable-groups" }, disease: { label: "โรคระบาด", path: "/eoc/disease/vulnerable-groups" } };
 
 const EMPTY = { district: "", tambon: "", village: "", ...Object.fromEntries(VULNERABLE_TYPES.map((type) => [type.key, 0])) };
@@ -46,7 +46,7 @@ const PRIORITY_GROUPS = [
 function VulnerableSummary({ totals, areaCount, districtLabel }) {
   const types = [...VULNERABLE_TYPES].sort((a, b) => b.priority - a.priority);
   return (
-    <section className="grid gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="สรุปจำนวนผู้เปราะบาง">
+    <section className="grid grid-cols-1 gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="สรุปจำนวนผู้เปราะบาง">
       <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)]">
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" aria-hidden="true" />
         <p className="relative text-sm font-medium text-blue-100">ผู้เปราะบางทั้งหมด</p>

@@ -479,3 +479,91 @@ body {
     @apply font-sans;
   }
 }
+
+/* ตารางหน้าเจ้าหน้าที่บนมือถือ: แปลงแต่ละแถวเป็นการ์ด "หัวข้อ : ค่า"
+   ใช้กับ <table className="stack-mobile"> — ป้ายหัวข้อใส่ให้อัตโนมัติจาก <th> (components/common/StackTableLabels.jsx)
+   คอลัมน์แรกเป็นหัวการ์ด · ช่องที่ไม่ต้องการแสดงบนมือถือใส่ data-mobile="hide" */
+@media (max-width: 767px) {
+  table.stack-mobile {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+  }
+  table.stack-mobile thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  table.stack-mobile tbody,
+  table.stack-mobile tfoot {
+    display: block;
+  }
+  table.stack-mobile tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgb(241 245 249);
+  }
+  table.stack-mobile td {
+    display: block;
+    position: relative;
+    min-height: 1.25rem;
+    padding: 0 0 0 40% !important;
+    border: 0 !important;
+    max-width: none !important;
+    white-space: normal !important;
+    text-align: left !important;
+    overflow-wrap: anywhere;
+  }
+  table.stack-mobile td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    top: 0.1rem;
+    width: 37%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: rgb(100 116 139);
+  }
+  /* หัวการ์ด / ช่องเต็มแถว (ข้อความว่าง กำลังโหลด) / ช่องที่ไม่มีหัวข้อ เช่น ปุ่มจัดการ */
+  table.stack-mobile td:first-child,
+  table.stack-mobile td[data-full],
+  table.stack-mobile td[data-label=""],
+  table.stack-mobile td:not([data-label]) {
+    padding-left: 0 !important;
+  }
+  table.stack-mobile td:first-child::before,
+  table.stack-mobile td[data-full]::before,
+  table.stack-mobile td[data-label=""]::before,
+  table.stack-mobile td:not([data-label])::before {
+    content: none;
+  }
+  table.stack-mobile td:first-child {
+    font-weight: 700;
+    color: rgb(15 23 42);
+  }
+  table.stack-mobile td[data-actions] {
+    border-top: 1px solid rgb(241 245 249) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.15rem;
+  }
+  table.stack-mobile td[data-mobile="hide"] {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  table.stack-mobile tbody th,
+  table.stack-mobile tfoot th {
+    display: block;
+    padding: 0 !important;
+    text-align: left !important;
+    position: static !important;
+    font-weight: 700;
+    color: rgb(15 23 42);
+  }
+}

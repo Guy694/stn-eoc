@@ -116,7 +116,7 @@ export default function StaffEocOverviewPage() {
                     </div>
                 </header>
 
-                <div className="border border-slate-200 rounded-2xl grid gap-3 bg-white p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                <div className="border border-slate-200 rounded-2xl grid grid-cols-1 gap-3 bg-white p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                     <label className="grid gap-1 text-sm font-bold text-slate-700">โมดูล EOC
                         <select value={moduleType} onChange={(event) => setModuleType(event.target.value)} className="h-11 border border-slate-300 bg-white px-3 font-medium rounded-lg">
                             {MODULES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}

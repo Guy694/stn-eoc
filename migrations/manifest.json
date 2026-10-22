@@ -68,6 +68,10 @@
     "20261019_officer_telegram_link.sql",
     "20261019_village_polygon_names.sql",
     "20261021_hydro_history.sql",
-    "20261021_push_log_hidden.sql"
+    "20261021_push_log_hidden.sql",
+    "20261022_rename_sehrt.sql",
+    "20261022_eoc_menu_layout.sql",
+    "20261022_visitor_access_log.sql",
+    "20261022_officer_readiness.sql"
   ]
 }

@@ -63,7 +63,7 @@ async function validateFloodSessionDate(connection, sessionId, floodStartDate) {
 
 export async function GET(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);
@@ -145,7 +145,7 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
@@ -197,7 +197,7 @@ export async function POST(request) {
 
 export async function PUT(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();
@@ -261,7 +261,7 @@ export async function PUT(request) {
 
 // DELETE - ย้ายไปถังขยะ (กู้คืนได้) ทีม SAT ของเหตุการณ์ที่ยังเปิดอยู่ลบได้ ต้องระบุเหตุผล
 export async function DELETE(request) {
-    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+    const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
     if (!auth.success) return auth.response;
     return handleArchiveDelete(request, auth.user, {
         table: 'flood_records',

@@ -6,7 +6,7 @@ import { publicInternalError } from '@/lib/apiResponse';
 // GET - ดึงข้อมูล polygon หมู่บ้านตาม ID
 export async function GET(request, { params }) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { id } = params;

@@ -11,7 +11,7 @@ function validateSessionDateRange(connection, sessionId, dates) {
 
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const data = await request.json();

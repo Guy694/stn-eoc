@@ -85,7 +85,7 @@ function ReportingPanel({ reporting, onPickFacility }) {
   const today = reporting.today;
   const pending = today.facilities.filter((facility) => facility.status !== "complete");
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
       <div>
         <p className="text-sm text-slate-700">
           ครบ <b className="text-emerald-700">{formatNumber(today.complete)}</b> · ไม่ครบ <b className="text-amber-700">{formatNumber(today.partial)}</b> · ยังไม่รายงาน <b className="text-red-700">{formatNumber(today.missing)}</b> จาก {formatNumber(today.total)} หน่วยบริการ
@@ -124,7 +124,7 @@ function Matrix({ stocks, items, districts, mode }) {
   if (mode === "district") {
     return (
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+        <table className="stack-mobile min-w-full text-sm">
           <thead className="bg-slate-50 text-xs font-bold text-slate-600">
             <tr>
               <th scope="col" className="sticky left-0 bg-slate-50 px-3 py-2 text-left">อำเภอ</th>
@@ -162,7 +162,7 @@ function Matrix({ stocks, items, districts, mode }) {
   facilities.sort(compareFacilities);
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
+      <table className="stack-mobile min-w-full text-sm">
         <thead className="bg-slate-50 text-xs font-bold text-slate-600">
           <tr>
             <th scope="col" className="sticky left-0 bg-slate-50 px-3 py-2 text-left">หน่วยบริการ</th>

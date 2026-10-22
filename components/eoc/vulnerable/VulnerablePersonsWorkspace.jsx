@@ -741,7 +741,7 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood", registry
       </Toolbar>
       </MoreFilters>
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="relative h-[55vh] min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white lg:h-[calc(100vh-17rem)] lg:min-h-[520px]">
           <VulnerablePersonsMap people={filtered} selectedId={selectedId} onSelect={selectFromMap} fitKey={fitKey} floodAreas={floodAreas} shelters={shelters} layers={layers} />
           <MapLegend showShelters={layers.shelters && shelters.length > 0} />

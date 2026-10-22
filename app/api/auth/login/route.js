@@ -5,6 +5,7 @@ import { notifySecurityEvent } from "@/lib/telegram";
 import { createUserSession, getRoleDisplayName, getRolePermissions, setSessionCookie } from "@/lib/auth";
 import { getClientIp, getUserAgent } from "@/lib/clientIp";
 import { consumeRateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
+import { failedAttemptBlock, loginPolicy } from "@/lib/loginPolicy";
 import { getPool } from "@/lib/db";
 
 // hash ของรหัสผ่านสุ่มที่ไม่มีใครรู้ (cost 12 เท่าของจริง) ใช้เทียบเมื่อไม่พบชื่อผู้ใช้
@@ -35,7 +36,8 @@ export async function POST(request) {
         const user_agent = getUserAgent(request);
 
         // จำกัดจำนวนครั้งต่อ IP (กันการสุ่มรหัสผ่านไล่หลายบัญชี)
-        const ipLimit = await consumeRateLimit('login', ip_address);
+        const policy = loginPolicy();
+        const ipLimit = await consumeRateLimit('login', ip_address, { limit: policy.ipRequestLimit, windowSeconds: policy.windowMinutes * 60 });
         if (!ipLimit.allowed) {
             void notifySecurityEvent('login_ip_rate_limit_triggered', { ip: ip_address, userAgent: user_agent });
             return tooManyRequestsResponse(ipLimit, 'พยายามเข้าสู่ระบบถี่เกินไป กรุณารอสักครู่');
@@ -44,31 +46,36 @@ export async function POST(request) {
         const connection = await pool.getConnection();
 
         try {
-            // ตรวจสอบ brute force attack (มากกว่า 5 ครั้งใน 15 นาที)
+            // กันสุ่มรหัสผ่าน: นับรหัสผิดแยก "ต่อบัญชี" และ "ต่อ IP" (เกณฑ์ใน lib/loginPolicy.js)
             const [recentAttempts] = await connection.execute(
-                `SELECT COUNT(*) as count FROM login_attempts 
-                WHERE (username = ? OR ip_address = ?) 
-                AND success = 0 
-                AND attempt_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)`,
-                [username, ip_address]
+                `SELECT
+                    COALESCE(SUM(username = ?), 0) AS by_account,
+                    COALESCE(SUM(ip_address = ?), 0) AS by_ip
+                 FROM login_attempts
+                 WHERE (username = ? OR ip_address = ?)
+                   AND success = 0
+                   AND attempt_time > DATE_SUB(NOW(), INTERVAL ${Number(policy.windowMinutes)} MINUTE)`,
+                [username, ip_address, username, ip_address]
             );
+            const block = failedAttemptBlock({ byAccount: Number(recentAttempts[0]?.by_account || 0), byIp: Number(recentAttempts[0]?.by_ip || 0) }, policy);
 
-            if (recentAttempts[0].count >= 5) {
+            if (block) {
                 // บันทึก security log
                 await connection.execute(
                     `INSERT INTO security_logs (event_type, username, ip_address, user_agent, details, severity) 
                     VALUES (?, ?, ?, ?, ?, ?)`,
-                    ['suspicious_activity', username, ip_address, user_agent, 'Too many failed login attempts', 'high']
+                    ['suspicious_activity', username, ip_address, user_agent, `Too many failed login attempts (${block.scope})`, 'high']
                 );
                 void notifySecurityEvent('login_rate_limit_triggered', {
                     username,
                     ip: ip_address,
-                    userAgent: user_agent
+                    userAgent: user_agent,
+                    scope: block.scope
                 });
 
                 return NextResponse.json(
-                    { success: false, message: 'บัญชีถูกล็อคชั่วคราว กรุณาลองใหม่ในอีก 15 นาที' },
-                    { status: 429 }
+                    { success: false, message: block.message },
+                    { status: 429, headers: { 'Retry-After': String(policy.windowMinutes * 60) } }
                 );
             }
 
@@ -96,7 +103,7 @@ export async function POST(request) {
                 );
 
                 return NextResponse.json(
-                    { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
+                    { success: false, code: 'invalid_credentials', message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
                     { status: 401 }
                 );
             }
@@ -118,16 +125,19 @@ export async function POST(request) {
             }
 
             // ตรวจสอบรหัสผ่านด้วย bcrypt
-            const isPasswordValid = await bcrypt.compare(password, officer.password_hash);
+            // บัญชีที่ไม่มีรหัสผ่าน (สมัครด้วย ThaiD/Provider ID) ถือว่ารหัสผิด แทนที่จะ error
+            const isPasswordValid = officer.password_hash
+                ? await bcrypt.compare(password, officer.password_hash).catch(() => false)
+                : false;
 
             if (!isPasswordValid) {
                 // เพิ่มจำนวนครั้งที่ login ผิด
                 const failedAttempts = (officer.failed_login_attempts || 0) + 1;
                 let lockUntil = null;
 
-                // ล็อคบัญชีถ้าล้มเหลว 5 ครั้ง
-                if (failedAttempts >= 5) {
-                    lockUntil = new Date(Date.now() + 30 * 60 * 1000); // ล็อค 30 นาที
+                // ล็อคบัญชีเมื่อผิดติดกันครบเกณฑ์ (ค่าเริ่มต้น 10 ครั้ง ล็อก 15 นาที)
+                if (failedAttempts >= policy.lockAfterFailures) {
+                    lockUntil = new Date(Date.now() + policy.lockMinutes * 60 * 1000);
 
                     await connection.execute(
                         `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
@@ -155,16 +165,16 @@ export async function POST(request) {
                 await connection.execute(
                     `INSERT INTO security_logs (event_type, user_id, username, ip_address, user_agent, details, severity) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                    ['login_failed', officer.id, username, ip_address, user_agent, `Wrong password (attempt ${failedAttempts}/5)`, 'medium']
+                    ['login_failed', officer.id, username, ip_address, user_agent, `Wrong password (attempt ${failedAttempts}/${policy.lockAfterFailures})`, 'medium']
                 );
 
                 // ข้อความเดียวกับกรณีไม่มีชื่อผู้ใช้ (ไม่บอกจำนวนครั้ง เพื่อไม่ให้รู้ว่าชื่อผู้ใช้นี้มีอยู่จริง)
-                const message = failedAttempts >= 5
-                    ? 'บัญชีถูกล็อคชั่วคราว 30 นาที เนื่องจาก login ผิด 5 ครั้ง'
+                const message = failedAttempts >= policy.lockAfterFailures
+                    ? `บัญชีถูกล็อคชั่วคราว ${policy.lockMinutes} นาที เนื่องจากใส่รหัสผ่านผิด ${policy.lockAfterFailures} ครั้ง`
                     : 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
 
                 return NextResponse.json(
-                    { success: false, message },
+                    { success: false, code: failedAttempts >= policy.lockAfterFailures ? 'locked' : 'invalid_credentials', message },
                     { status: 401 }
                 );
             }
@@ -182,7 +192,11 @@ export async function POST(request) {
                 );
 
                 return NextResponse.json(
-                    { success: false, message: 'บัญชีนี้ยังรอผู้ดูแลระบบอนุมัติ กรุณายืนยันตัวตนด้วย ThaiD และรอการอนุมัติ' },
+                    {
+                        success: false,
+                        code: 'pending_approval',
+                        message: 'ลงทะเบียนเรียบร้อยแล้ว รอเจ้าหน้าที่อนุมัติการเข้าใช้ระบบ\nเมื่ออนุมัติแล้ว ระบบจะแจ้งไปที่อีเมลที่ลงทะเบียนไว้'
+                    },
                     { status: 403 }
                 );
             }

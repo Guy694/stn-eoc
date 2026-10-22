@@ -5,7 +5,7 @@ import { OfficerMultiPicker, OfficerPicker } from "@/components/admin/OfficerPic
 const officers = [
   { id: 1, given_name: "สมชาย", family_name: "ใจดี", position: "พยาบาลวิชาชีพ", department: "รพ.ละงู", role: "MCATT", username: "somchai" },
   { id: 2, given_name: "สมหญิง", family_name: "รักงาน", position: "นักวิชาการสาธารณสุข", department: "สสจ.สตูล", role: "SAT", username: "somying" },
-  { id: 3, given_name: "อนุชา", family_name: "ทองดี", position: "แพทย์", department: "รพ.สตูล", role: "SeRHT", username: "anucha" }
+  { id: 3, given_name: "อนุชา", family_name: "ทองดี", position: "แพทย์", department: "รพ.สตูล", role: "SEhRT", username: "anucha" }
 ];
 
 function MultiHarness({ initial = [], exclude = [] }) {

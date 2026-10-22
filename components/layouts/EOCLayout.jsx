@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import OfflineSyncBar from "@/components/admin/OfflineSyncBar";
 import WaterAlertWatcher from "@/components/admin/WaterAlertWatcher";
 import HelpRequestWatcher from "@/components/admin/HelpRequestWatcher";
+import StackTableLabels from "@/components/common/StackTableLabels";
 
 import { useAuth } from "@/context/AuthContext";
 
@@ -35,6 +36,8 @@ export default function EOCLayout({ children }) {
             {/* แจ้งเตือนระดับน้ำ (popup + เสียง) เฉพาะเจ้าหน้าที่ที่เข้าสู่ระบบ */}
             {showSidebar && user ? <WaterAlertWatcher /> : null}
             {showSidebar && user ? <HelpRequestWatcher /> : null}
+            {/* ตาราง class="stack-mobile" แสดงเป็นการ์ดบนมือถือ */}
+            <StackTableLabels />
         </div>
     );
 }

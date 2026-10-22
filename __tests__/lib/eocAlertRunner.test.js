@@ -13,6 +13,7 @@ const session = { id: 58, eoc_type: "flood", session_number: 5, status: "active"
 beforeEach(() => {
   jest.clearAllMocks();
   process.env.TELEGRAM_BOT_TOKEN = "x";
+  process.env.TELEGRAM_HELP_NOTIFY_CHAT_IDS = "1"; // กลุ่มเจ้าหน้าที่ (lib/telegramChannels อ่านจาก env)
   delete process.env.EOC_ALERTS_TELEGRAM;
   query.mockImplementation(async (sql) => (sql.startsWith("SELECT") ? [] : { affectedRows: 1 }));
   loadEventBrief.mockResolvedValue({});

@@ -419,7 +419,7 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
       <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
         <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" aria-hidden="true" />
         <div className="absolute -bottom-24 right-40 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
-        <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
+        <div className="relative grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-sm font-medium text-blue-100">
               <span className="relative flex h-2.5 w-2.5" aria-hidden="true">

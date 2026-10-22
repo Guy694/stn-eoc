@@ -51,7 +51,7 @@ function ModuleRow({ eocType, mod, teams, onSaved, onError }) {
   };
 
   return (
-    <li className="grid gap-3 px-4 py-3 lg:grid-cols-[13rem_minmax(0,1fr)_auto] lg:items-start">
+    <li className="grid grid-cols-1 gap-3 px-4 py-3 lg:grid-cols-[13rem_minmax(0,1fr)_auto] lg:items-start">
       <div>
         <div className="font-bold text-slate-900">{mod.label}</div>
         <div className="mt-0.5">{mod.customized ? <StatusPill tone="blue">ปรับแล้ว</StatusPill> : <span className="text-xs text-slate-500">ค่าเริ่มต้น</span>}</div>

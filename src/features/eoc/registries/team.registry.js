@@ -24,7 +24,7 @@ export const teamRegistry = Object.freeze({
   poe: team("poe", "POE", "กลุ่มภารกิจด่านควบคุมโรคระหว่างประเทศ", "POE"),
   quarantine: team("quarantine", "QUARANTINE", "กลุ่มภารกิจปฏิบัติการกักกันโรค", "QUARANTINE"),
   mert: team("mert", "MERT", "กลุ่มภารกิจปฏิบัติการฉุกเฉินทางการแพทย์", "MERT"),
-  serht: team("serht", "SeRHT", "กลุ่มภารกิจปฏิบัติการด้านอนามัยสิ่งแวดล้อม", "SeRHT"),
+  serht: team("serht", "SEhRT", "กลุ่มภารกิจปฏิบัติการด้านอนามัยสิ่งแวดล้อม", "SEhRT"),
   logistics: team("logistics", "LOGISTICS", "กลุ่มภารกิจสำรองวัสดุ เวชภัณฑ์ และส่งกำลังบำรุง", "LOGISTICS"),
   legal: team("legal", "LEGAL", "กลุ่มภารกิจกฎหมาย", "LEGAL"),
   finance: team("finance", "FINANCE", "กลุ่มภารกิจการเงินและงบประมาณ", "FINANCE"),

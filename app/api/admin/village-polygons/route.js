@@ -6,7 +6,7 @@ import { publicInternalError } from '@/lib/apiResponse';
 // GET - ดึงรายการ polygon หมู่บ้านทั้งหมด
 export async function GET(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);

@@ -183,7 +183,7 @@ function ScenarioDetail({ result, area }) {
 function ScenarioControls({ value, onChange }) {
   const set = (key) => (next) => onChange({ ...value, [key]: next });
   return (
-    <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 lg:grid-cols-[1.3fr_1fr_1fr]">
+    <section className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 lg:grid-cols-[1.3fr_1fr_1fr]">
       <div>
         <label className="flex items-baseline justify-between text-sm font-bold text-slate-800" htmlFor="sc-rain">
           <span className="flex items-center gap-1.5"><CloudRain className="h-4 w-4 text-sky-600" aria-hidden="true" />ฝน 24 ชม.</span>
@@ -399,7 +399,7 @@ export default function AreaRiskWorkspace({ initialData = null, initialBacktest 
             <FilterSelect label="อำเภอ" value={district} onChange={setDistrict} options={[{ value: "all", label: "ทุกอำเภอ" }, ...districts.map((name) => ({ value: name, label: `อ.${name}` }))]} />
           </Toolbar>
 
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_420px]">
             <div className="relative h-[55vh] min-h-[380px] overflow-hidden rounded-2xl border border-slate-200 bg-white xl:h-[660px]">
               <AreaRiskMap geometry={data.geometry} colorOf={colorOf} labelOf={labelOf} selectedKey={selected} onSelect={setSelected} version={`${mode}-${district}-${dayIndex}-${JSON.stringify(scenario)}-${data.generated_at}`} patches={patches} />
               <div className="absolute bottom-2 left-2 z-[500] rounded-lg bg-white/95 p-2 text-[11px] shadow ring-1 ring-slate-200">

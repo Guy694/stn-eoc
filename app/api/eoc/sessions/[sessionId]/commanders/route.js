@@ -73,7 +73,7 @@ async function getOfficerOptions() {
                 WHEN 'commander' THEN 1
                 WHEN 'MCATT' THEN 2
                 WHEN 'SAT' THEN 3
-                WHEN 'SeRHT' THEN 4
+                WHEN 'SEhRT' THEN 4
                 WHEN 'staff' THEN 5
                 ELSE 6
             END,
@@ -135,7 +135,7 @@ async function hasActiveIncidentCommander(sessionId, excludeId = 0) {
 
 export async function GET(request, { params }) {
     try {
-        const auth = await requireAuth(request, ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"]);
+        const auth = await requireAuth(request, ["admin", "commander", "MCATT", "SAT", "SEhRT", "staff"]);
         if (!auth.success) return auth.response;
 
         const { sessionId } = await params;

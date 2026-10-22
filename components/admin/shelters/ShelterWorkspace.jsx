@@ -33,7 +33,7 @@ const ShelterCenterMap = dynamic(() => import("@/components/ShelterCenterMap"), 
 
 const REGISTRY_API = "/stn-eoc/api/admin/shelter-center";
 const ACTIVATION_API = "/stn-eoc/api/eoc/shelter-activations";
-const EDITOR_ROLES = ["admin", "commander", "MCATT", "SAT", "SeRHT"];
+const EDITOR_ROLES = ["admin", "commander", "MCATT", "SAT", "SEhRT"];
 
 export const SHELTER_EOC_TYPES = [
   { value: "flood", label: "อุทกภัย" },

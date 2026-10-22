@@ -6,7 +6,7 @@ import { publicInternalError } from '@/lib/apiResponse';
 // GET - Fetch all IT resources
 export async function GET(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff', 'ITSUPPORT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff', 'ITSUPPORT']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);

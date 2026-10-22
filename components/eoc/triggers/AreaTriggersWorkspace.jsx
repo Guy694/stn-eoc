@@ -70,7 +70,7 @@ function DeclarationCard({ item, targets, canDeclare, canTick, onAdjust, onCance
         <StageBadge stage={item.stage} />
         <span className="ml-auto text-xs text-slate-600">ประกาศ {formatDateTime(item.declared_at)}{item.declared_by_name ? ` · ${item.declared_by_name}` : ""}</span>
       </header>
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+      <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="min-w-0 space-y-3">
           <p className="text-sm text-slate-700"><span className="font-bold text-slate-900">เกณฑ์: </span>{meta.criteria}</p>
           {item.note ? <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-800"><span className="font-bold">หมายเหตุ: </span>{item.note}</p> : null}
@@ -251,7 +251,7 @@ function StageReference() {
           ))}
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] border-collapse text-left">
+          <table className="stack-mobile w-full min-w-[640px] border-collapse text-left">
             <thead><tr className="border-b border-slate-200 text-xs text-slate-500"><th className="py-1.5 pr-3">ระยะ / Trigger</th><th className="py-1.5 pr-3">เกณฑ์กระตุ้น</th><th className="py-1.5">กลุ่มเป้าหมาย</th></tr></thead>
             <tbody>
               {TRIGGER_STAGES.map((stage) => (

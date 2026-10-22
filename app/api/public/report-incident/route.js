@@ -8,7 +8,8 @@ import { DEFAULT_MAX_IMAGE_SIZE_BYTES, createRandomFilename, getPrivateUploadDir
 import { stripImageMetadata } from '@/lib/imageSanitize';
 import { isValidCategory } from '@/lib/incidentPublishing';
 import { publicInternalError } from '@/lib/apiResponse';
-import { escapeTelegramHtml, getTelegramHelpNotifyChatIds, sendTelegramMessage, sendTelegramPhoto } from '@/lib/telegram';
+import { escapeTelegramHtml } from '@/lib/telegram';
+import { sendCategorized } from '@/lib/telegramChannels';
 import { notifyOfficersOfNewHelp } from '@/lib/helpAlertsServer';
 import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { HELP_CLOSED_MESSAGE, PROBLEM_CLOSED_MESSAGE, WATER_CLOSED_MESSAGE, getOpenEocSessions, hasOpenEoc } from '@/lib/eocOpen';
@@ -45,7 +46,7 @@ function buildTelegramHelpMessage(report, { compact = false } = {}) {
     const reason = compact ? truncateForTelegram(report.helpReason, 280) : (report.helpReason || '-');
 
     return [
-        '<b>คำขอความช่วยเหลือใหม่</b>',
+        '<b>มีคำขอใหม่ รอเจ้าหน้าที่ติดต่อกลับ</b>',
         `เลขที่: #${escapeTelegramHtml(report.id)}${report.trackingCode ? ` (ติดตาม ${escapeTelegramHtml(formatTrackingCode(report.trackingCode))})` : ''}`,
         `ประเภท: ${escapeTelegramHtml(report.helpCategoryLabel)}`,
         `ผู้แจ้ง: ${escapeTelegramHtml(`${report.firstName} ${report.lastName}`)}`,
@@ -57,46 +58,15 @@ function buildTelegramHelpMessage(report, { compact = false } = {}) {
     ].join('\n');
 }
 
+// ส่งเข้ากลุ่มเจ้าหน้าที่ + เจ้าหน้าที่ที่เชื่อม Telegram ส่วนตัว (ประเภท "คำขอความช่วยเหลือ" — lib/telegramChannels.js)
 async function notifyTelegramOfficers(pool, report) {
     if (!process.env.TELEGRAM_BOT_TOKEN) return;
-
     try {
-        const chatIds = getTelegramHelpNotifyChatIds();
-        const [columns] = await pool.execute(
-            `SELECT COLUMN_NAME
-             FROM INFORMATION_SCHEMA.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'officer'
-               AND COLUMN_NAME IN ('telegram_chat_id', 'telegram_notify_enabled')`
-        );
-        const names = new Set(columns.map((column) => column.COLUMN_NAME));
-        if (names.has('telegram_chat_id') && names.has('telegram_notify_enabled')) {
-            const [officers] = await pool.execute(
-                `SELECT telegram_chat_id
-                 FROM officer
-                 WHERE telegram_notify_enabled = 1
-                   AND telegram_chat_id IS NOT NULL
-                   AND telegram_chat_id <> ''`
-            );
-            chatIds.push(...officers.map((officer) => officer.telegram_chat_id));
-        }
-
-        const recipients = [...new Set(chatIds.map((chatId) => String(chatId || '').trim()).filter(Boolean))];
-        if (!recipients.length) return;
-
-        const text = buildTelegramHelpMessage(report);
-        const photoCaption = buildTelegramHelpMessage(report, { compact: true });
-
-        await Promise.allSettled(
-            recipients.map(async (chatId) => {
-                if (report.telegramPhoto) {
-                    const photoResult = await sendTelegramPhoto(chatId, report.telegramPhoto, photoCaption);
-                    if (photoResult.ok) return photoResult;
-                }
-
-                return sendTelegramMessage(chatId, text);
-            })
-        );
+        await sendCategorized('help', buildTelegramHelpMessage(report), {
+            photo: report.telegramPhoto || null,
+            photoCaption: report.telegramPhoto ? buildTelegramHelpMessage(report, { compact: true }) : null,
+            run: async (sql, params) => (await pool.execute(sql, params))[0]
+        });
     } catch (error) {
         console.error('Telegram notification error:', error);
     }

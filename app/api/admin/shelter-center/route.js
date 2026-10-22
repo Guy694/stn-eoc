@@ -22,7 +22,7 @@ async function saveShelterKind(pool, id, body) {
 // GET - Fetch all shelter centers
 export async function GET(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);
@@ -62,7 +62,7 @@ export async function GET(request) {
 // POST - Create new shelter center
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT']);
         if (!auth.success) return auth.response;
 
         const body = await request.json();
@@ -149,7 +149,7 @@ export async function POST(request) {
 // PUT - Update shelter center
 export async function PUT(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT']);
         if (!auth.success) return auth.response;
 
         const { searchParams } = new URL(request.url);

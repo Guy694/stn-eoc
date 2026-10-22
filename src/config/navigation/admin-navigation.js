@@ -5,6 +5,7 @@
 import { moduleEditAccess, resolveOwners } from "../../../lib/eocModulePermissions.js";
 import { createTeamWorkItems } from "./eoc-navigation.js";
 import { TEAM_CODES, normalizeTeamCode } from "../../features/eoc/registries/team.registry.js";
+import { applyMenuLayout, ownerLabel } from "../../../lib/menuLayout.js";
 
 export const EVENT_MODULES = {
   flood: {
@@ -67,7 +68,15 @@ function eventTitle(type, status) {
  * ส่วน "เหตุการณ์ที่เปิดอยู่": แสดงทุก EOC ที่เปิดอยู่ (ขยายไว้)
  * และแสดง EOC ที่ปิดแล้วเฉพาะเมื่อกำลังเปิดหน้าของ EOC นั้นอยู่ (ป้าย "ปิดแล้ว")
  */
-export function buildEventSections({ eocStatus = {}, pathname = "" }) {
+/** เมนูของเหตุการณ์หนึ่ง: จัดกลุ่ม/ลำดับตามที่แอดมินตั้ง + ป้ายทีมที่บันทึกได้ */
+export function eventMenuItems(type, { sessionId = null, overrides = {}, layout = {} } = {}) {
+  const definition = EVENT_MODULES[type];
+  if (!definition) return [];
+  return applyMenuLayout(type, definition.items({ sessionId }), layout)
+    .map((item) => ({ ...item, ownerLabel: ownerLabel(type, item.key, overrides) }));
+}
+
+export function buildEventSections({ eocStatus = {}, pathname = "", overrides = {}, layout = {} }) {
   return Object.entries(EVENT_MODULES)
     .map(([type, definition]) => {
       const status = eocStatus[type];
@@ -83,7 +92,7 @@ export function buildEventSections({ eocStatus = {}, pathname = "" }) {
         eventState: isActive ? "open" : "closed",
         collapsible: true,
         defaultExpanded: isActive || onPage,
-        items: definition.items({ sessionId: status?.session_id || null })
+        items: eventMenuItems(type, { sessionId: status?.session_id || null, overrides, layout })
       };
     })
     .filter(Boolean);
@@ -94,7 +103,7 @@ export function buildEventSections({ eocStatus = {}, pathname = "" }) {
  * - แสดงเฉพาะเหตุการณ์ที่เปิดอยู่ซึ่งผู้ใช้ได้รับมอบหมาย
  * - เมนูของกลุ่มภารกิจอื่นติดป้าย readOnly (เปิดดูได้ บันทึกไม่ได้)
  */
-export function buildOfficerEventSections({ eocStatus = {}, assignments = [], role = "staff", overrides = {} } = {}) {
+export function buildOfficerEventSections({ eocStatus = {}, assignments = [], role = "staff", overrides = {}, layout = {} } = {}) {
   return Object.entries(EVENT_MODULES)
     .map(([type, definition]) => {
       const status = eocStatus[type];
@@ -102,7 +111,7 @@ export function buildOfficerEventSections({ eocStatus = {}, assignments = [], ro
       const mine = assignments.filter((item) => item?.eoc_type === type && (!status.session_id || Number(item.session_id ?? item.eoc_session_id) === Number(status.session_id)));
       if (!mine.length && role !== "commander") return null;
       // เมนูเหมือนแอดมินทุกข้อ (ลำดับ/ชื่อเดียวกัน) — เมนูที่กำหนดทีมเจ้าของแล้วติดป้ายดูอย่างเดียวสำหรับทีมอื่น
-      const items = definition.items({ sessionId: status.session_id || null })
+      const items = eventMenuItems(type, { sessionId: status.session_id || null, overrides, layout })
         .map((item) => ({ ...item, readOnly: !moduleEditAccess({ role, memberships: mine, moduleKey: item.key, owners: resolveOwners(type, item.key, overrides) }).canEdit }));
       // งานของกลุ่มภารกิจที่ผู้ใช้สังกัด (รายงานประจำวัน + งานเฉพาะที่ยังไม่อยู่ในเมนูเหตุการณ์)
       const myTeams = new Set(mine.map((item) => normalizeTeamCode(item.team_code)).filter(Boolean));
@@ -128,16 +137,18 @@ export function buildOfficerEventSections({ eocStatus = {}, assignments = [], ro
     .filter(Boolean);
 }
 
-export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
-  const events = buildEventSections({ eocStatus, pathname });
+export function buildAdminMenu({ eocStatus = {}, pathname = "", overrides = {}, layout = {} } = {}) {
+  const events = buildEventSections({ eocStatus, pathname, overrides, layout });
   const anyOpen = events.some((section) => section.eventState === "open");
 
   return [
     {
       section: "overview",
       title: "ภาพรวม",
+      audience: "ทุกบทบาท",
       items: [
         { name: "หน้าหลัก", path: "/dashboard", iconKey: "home" },
+        { name: "สถานะความพร้อมเจ้าหน้าที่", path: "/admin/officer-readiness", iconKey: "readiness", description: "ใครพร้อม/มาไม่ได้/ต้องการความช่วยเหลือ สรุปรายทีม ปรับสถานะแทนได้" },
         { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
         { name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood", description: "กราฟฝนรายวัน ระดับน้ำในคลอง และน้ำทะเลหนุน 7/30/90 วัน" }
       ]
@@ -153,6 +164,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
     {
       section: "pending",
       title: "งานรอดำเนินการ",
+      audience: "แอดมิน",
       items: [
         { name: "คำขอจากประชาชน", path: "/admin/incident-reports", iconKey: "inbox", badge: "pendingReports", description: "คำขอความช่วยเหลือ จุดปัญหา และรายงานเส้นทาง — ตรวจก่อนเผยแพร่" },
         { name: "คำขอสมัครเจ้าหน้าที่", path: "/admin/officers?tab=requests", iconKey: "userCheck", badge: "pendingRegistrations", description: "อนุมัติหรือปฏิเสธบัญชีที่สมัครใหม่" }
@@ -161,6 +173,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
     {
       section: "registry",
       title: "ข้อมูลกลาง",
+      audience: "แอดมิน",
       collapsible: true,
       defaultExpanded: false,
       description: "ข้อมูลที่ใช้ร่วมกันทุกเหตุการณ์",
@@ -176,6 +189,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
     {
       section: "communication",
       title: "สื่อสาร",
+      audience: "แอดมิน · ผบ.",
       // ช่วงมีเหตุการณ์เปิดอยู่ พับเมนูทั่วไปไว้ ให้เมนูเหตุการณ์อยู่ใกล้มือ
       collapsible: anyOpen,
       defaultExpanded: !anyOpen,
@@ -188,6 +202,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
     {
       section: "system",
       title: "บริหารระบบ",
+      audience: "แอดมิน",
       collapsible: true,
       defaultExpanded: false,
       items: [
@@ -198,6 +213,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
         { name: "ผู้ใช้ประชาชน", path: "/admin/citizens", iconKey: "people" },
         { name: "ตรวจคุณภาพข้อมูล", path: "/admin/data-management", iconKey: "database" },
         { name: "ประวัติการใช้งาน", path: "/admin/activity-logs", iconKey: "log" },
+        { name: "ผู้เข้าชม", path: "/admin/visitors", iconKey: "visitors", description: "ใครเข้าชมระบบ จาก IP และตำแหน่งโดยประมาณใด (ประวัติความปลอดภัย)" },
         { name: "ถังขยะ", path: "/admin/trash", iconKey: "trash", description: "ข้อมูลที่ถูกลบ กู้คืนได้" }
       ]
     },
@@ -205,6 +221,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "" } = {}) {
       section: "account",
       title: "บัญชีของฉัน",
       items: [
+        { name: "สถานะของฉัน", path: "/eoc/readiness", iconKey: "myStatus", description: "รายงานว่าพร้อมปฏิบัติงานหรือไม่" },
         { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
         { name: "คู่มือการใช้งาน", path: "/eoc/guide", iconKey: "guide", description: "คู่มือเจ้าหน้าที่ และคู่มือผู้ดูแลระบบ (แท็บด้านบน)", alsoActive: ["/eoc/guide/admin"] }
       ]

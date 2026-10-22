@@ -42,7 +42,7 @@ export async function GET(request) {
 // POST - เพิ่มโรคใหม่ (ตรวจสอบซ้ำ)
 export async function POST(request) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT']);
         if (!auth.success) return auth.response;
 
         const body = await request.json();

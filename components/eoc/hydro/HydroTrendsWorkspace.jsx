@@ -230,7 +230,7 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
           {/* ระดับน้ำในคลอง */}
           <Panel icon="waves" title="ระดับน้ำในคลอง" subtitle={`จุดบนกราฟ = ค่าสูงสุดของ${days <= 7 ? "แต่ละชั่วโมง" : days <= 30 ? "ทุก 3 ชั่วโมง" : "แต่ละวัน"} · เส้นแดง = ตลิ่ง`} bodyClassName="p-4">
             {waterStations.length ? (
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
                 <div className="min-w-0">
                   <label className="mb-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
                     สถานี

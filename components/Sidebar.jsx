@@ -40,7 +40,9 @@ import {
     Waves,
     Flag,
     X,
-    KeyRound
+    KeyRound,
+    Globe2,
+    CircleCheck
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
@@ -51,6 +53,9 @@ const ICONS = {
     home: LayoutDashboard,
     command: Gauge,
     analytics: BrainCircuit,
+    visitors: Globe2,
+    readiness: UserCheck,
+    myStatus: CircleCheck,
     overview: BarChart3,
     flood: Waves,
     flag: Flag,
@@ -97,6 +102,11 @@ function MenuIcon({ item, className = "h-4 w-4 shrink-0" }) {
     return <Icon className={className} aria-hidden="true" strokeWidth={2.2} />;
 }
 
+/** ป้ายบอกว่าหมวดเมนูนี้เป็นงานของใคร */
+function AudienceChip({ label }) {
+    return <span className="rounded-full bg-slate-200/80 px-1.5 py-px text-[10px] font-semibold text-slate-600">{label}</span>;
+}
+
 export default function Sidebar() {
     const pathname = usePathname();
     const [search, setSearch] = useState("");
@@ -105,6 +115,7 @@ export default function Sidebar() {
     const [pendingRegistrationsCount, setPendingRegistrationsCount] = useState(0);
     const [teamAssignments, setTeamAssignments] = useState([]);
     const [ownerOverrides, setOwnerOverrides] = useState({});
+    const [menuLayout, setMenuLayout] = useState({});
     const [expandedSections, setExpandedSections] = useState({});
     const { user } = useAuth();
     const { eocStatus } = useEOC();
@@ -163,12 +174,15 @@ export default function Sidebar() {
     useEffect(() => {
         if (!user) return undefined;
         let active = true;
-        if (user.role !== "admin") {
-            fetch("/stn-eoc/api/eoc/module-permissions/")
-                .then((response) => (response.ok ? response.json() : null))
-                .then((result) => { if (active && result?.success) setOwnerOverrides(result.overrides || {}); })
-                .catch(() => {});
-        }
+        // สิทธิ์รายเมนู (ป้ายทีมที่บันทึกได้ / ดูอย่างเดียว) และการจัดกลุ่มเมนูที่แอดมินตั้ง
+        fetch("/stn-eoc/api/eoc/module-permissions/")
+            .then((response) => (response.ok ? response.json() : null))
+            .then((result) => {
+                if (!active || !result?.success) return;
+                setOwnerOverrides(result.overrides || {});
+                setMenuLayout(result.layout || {});
+            })
+            .catch(() => {});
         fetch("/stn-eoc/api/user/my-assignments/")
             .then((response) => response.json())
             .then((result) => { if (active && result.success) setTeamAssignments(result.assignments || []); })
@@ -204,13 +218,17 @@ export default function Sidebar() {
 
     // เจ้าหน้าที่ทีม/ผู้บัญชาการ: เห็นเมนูเหตุการณ์ที่เปิดอยู่เหมือนแอดมิน (เมนูของกลุ่มภารกิจอื่นเปิดดูได้อย่างเดียว)
     // และงานเฉพาะของกลุ่มภารกิจที่ได้รับมอบหมาย
-    const officerEventSections = buildOfficerEventSections({ eocStatus, assignments: teamAssignments, role: user.role, overrides: ownerOverrides });
+    const officerEventSections = buildOfficerEventSections({ eocStatus, assignments: teamAssignments, role: user.role, overrides: ownerOverrides, layout: menuLayout });
     const teamMenu = [
         {
             section: "team-main",
             title: "ภาพรวม",
+            audience: "ทุกบทบาท",
             items: [
                 { name: "หน้าหลัก", path: "/dashboard", iconKey: "home", description: "เลือกเหตุการณ์ก่อนเข้าสู่หน้าปฏิบัติการ" },
+                { name: "สถานะของฉัน", path: "/eoc/readiness", iconKey: "myStatus", description: "รายงานว่าพร้อมปฏิบัติงานหรือไม่" },
+                // ผู้บัญชาการดูความพร้อมของเจ้าหน้าที่ทั้งหมดได้
+                ...(user.role === "commander" ? [{ name: "สถานะความพร้อมเจ้าหน้าที่", path: "/admin/officer-readiness", iconKey: "readiness" }] : []),
                 { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
                 { name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood" },
                 // ผู้บัญชาการเหตุการณ์ส่งเตือนภัยถึงประชาชนได้
@@ -224,7 +242,7 @@ export default function Sidebar() {
     const menuSections = (user.role === "user" || user.isApproved === false)
         ? pendingUserMenu
         : user.role === "admin"
-            ? buildAdminMenu({ eocStatus, pathname })
+            ? buildAdminMenu({ eocStatus, pathname, overrides: ownerOverrides, layout: menuLayout })
             : teamMenu;
 
     const isExpanded = (section) => expandedSections[section.key || section.section] ?? section.defaultExpanded ?? false;
@@ -248,7 +266,15 @@ export default function Sidebar() {
                         }`}
                 >
                     <MenuIcon item={item} className={`h-4 w-4 shrink-0 ${active ? "text-white" : badgeCount > 0 ? "text-red-600" : "text-slate-500"}`} />
-                    <span className="flex-1 leading-snug">{item.name}</span>
+                    <span className="min-w-0 flex-1 leading-snug">
+                        {item.name}
+                        {/* ทีมที่บันทึกข้อมูลเมนูนี้ได้ (เฉพาะเมนูของเหตุการณ์) */}
+                        {nested && item.ownerLabel ? (
+                            <span className={`block truncate text-[11px] font-medium ${active ? "text-white/80" : item.readOnly ? "text-slate-400" : "text-emerald-700"}`}>
+                                บันทึก: {item.ownerLabel}
+                            </span>
+                        ) : null}
+                    </span>
                     {item.readOnly && (
                         <Eye className={`h-3.5 w-3.5 shrink-0 ${active ? "text-white/80" : "text-slate-400"}`} aria-label="ดูได้อย่างเดียว" />
                     )}
@@ -300,6 +326,9 @@ export default function Sidebar() {
                         const mine = section.items.filter((item) => item.teamWork);
                         return (
                             <div className="px-1.5 pb-2">
+                                <p className="mx-1.5 mb-1 rounded-md bg-white/70 px-2 py-1 text-[11px] leading-snug text-slate-500">
+                                    ใต้ชื่อเมนูคือทีมที่บันทึกข้อมูลได้{user.role === "admin" ? "" : " · ไอคอนรูปตา = ดูได้อย่างเดียว"}
+                                </p>
                                 {groupMenuItems(shared).map((group) => (
                                     <div key={group.title || "main"}>
                                         {group.title ? <h4 className="px-3 pb-0.5 pt-2 text-[11px] font-bold text-slate-500">{group.title}</h4> : null}
@@ -333,6 +362,7 @@ export default function Sidebar() {
                     >
                         <span className="flex items-center gap-2">
                             {section.title}
+                            {section.audience ? <AudienceChip label={section.audience} /> : null}
                             {badgeTotal > 0 && <span className="rounded-full bg-red-600 px-1.5 text-[11px] font-black text-white">{badgeTotal}</span>}
                         </span>
                         <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
@@ -344,7 +374,10 @@ export default function Sidebar() {
 
         return (
             <div key={section.section} className="mb-3">
-                <h3 className="mb-1.5 px-3 text-xs font-bold text-slate-500">{section.title}</h3>
+                <h3 className="mb-1.5 flex items-center gap-2 px-3 text-xs font-bold text-slate-500">
+                    {section.title}
+                    {section.audience ? <AudienceChip label={section.audience} /> : null}
+                </h3>
                 <ul className="space-y-0.5">{section.items.map((item) => renderItem(item))}</ul>
             </div>
         );

@@ -173,7 +173,7 @@ export default function EventHistoryDetail({ sessionId }) {
           </Section>
           <Section title="รายอำเภอ (วันที่หนักที่สุดของแต่ละอำเภอ)">
             {impact.districts.length ? (
-              <table className="w-full text-left text-sm">
+              <table className="stack-mobile w-full text-left text-sm">
                 <thead className="text-xs text-slate-500">
                   <tr><th className="pb-2 font-semibold">อำเภอ</th><th className="pb-2 text-right font-semibold">คน</th><th className="pb-2 text-right font-semibold">หมู่บ้าน</th><th className="pb-2 text-right font-semibold">ระดับสูง</th><th className="pb-2 text-right font-semibold">ลึกสุด</th></tr>
                 </thead>
@@ -273,7 +273,7 @@ export default function EventHistoryDetail({ sessionId }) {
                   <h3 className="mb-1 text-xs font-bold text-slate-500">{shortDate(date)}</h3>
                   <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
                     {logs.map((log) => (
-                      <li key={log.id} className="grid gap-1 px-3 py-2 text-sm sm:grid-cols-[3.5rem_minmax(0,1fr)_auto] sm:gap-3">
+                      <li key={log.id} className="grid grid-cols-1 gap-1 px-3 py-2 text-sm sm:grid-cols-[3.5rem_minmax(0,1fr)_auto] sm:gap-3">
                         <span className="tabular-nums text-xs text-slate-500 sm:text-sm">{String(log.created_at).slice(11, 16)}</span>
                         <span className="min-w-0">
                           <span className="font-semibold text-slate-900">{log.actionLabel}{log.targetLabel ? ` · ${log.targetLabel}` : ""}</span>

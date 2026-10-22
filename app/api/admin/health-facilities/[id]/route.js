@@ -3,11 +3,12 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import { hasFacilityStatusColumns } from '@/lib/healthFacilityDb';
+import { handleArchiveDelete, recordChange } from '@/lib/recordArchive';
 
 // GET - ดึงข้อมูลสถานพยาบาลตาม ID
 export async function GET(request, { params }) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { id } = await params;
@@ -97,37 +98,51 @@ export async function PUT(request, { params }) {
     }
 }
 
-// DELETE - ลบสถานพยาบาล
-export async function DELETE(request, { params }) {
+/** พิกัดต้องอยู่ในช่วงที่เป็นไปได้ (ว่าง = ลบพิกัด) */
+function parseCoordinate(value, min, max) {
+    if (value === null || value === undefined || String(value).trim() === '') return { value: null };
+    const number = Number.parseFloat(value);
+    if (!Number.isFinite(number) || number < min || number > max) return { error: true };
+    return { value: Number(number.toFixed(7)) };
+}
+
+// PATCH - ปักหมุด/แก้เฉพาะพิกัด (จากแผนที่ในหน้าจัดการหน่วยบริการ)
+export async function PATCH(request, { params }) {
     try {
         const auth = await requireAuth(request, ['admin']);
         if (!auth.success) return auth.response;
 
         const { id } = await params;
-
-        // ตรวจสอบว่ามีข้อมูลอยู่หรือไม่
-        const existing = await query(
-            'SELECT id FROM health_facilities WHERE id = ?',
-            [id]
-        );
-
-        if (existing.length === 0) {
-            return NextResponse.json(
-                { success: false, error: 'Health facility not found' },
-                { status: 404 }
-            );
+        const body = await request.json().catch(() => ({}));
+        const lat = parseCoordinate(body.lat, -90, 90);
+        const lon = parseCoordinate(body.lon, -180, 180);
+        if (lat.error || lon.error || (lat.value === null) !== (lon.value === null)) {
+            return NextResponse.json({ success: false, error: 'พิกัดไม่ถูกต้อง ต้องมีทั้งละติจูดและลองจิจูด' }, { status: 400 });
         }
 
-        // ลบข้อมูล
-        await query('DELETE FROM health_facilities WHERE id = ?', [id]);
+        const existing = await query('SELECT id, name, lat, lon FROM health_facilities WHERE id = ?', [id]);
+        if (existing.length === 0) {
+            return NextResponse.json({ success: false, error: 'ไม่พบหน่วยบริการนี้' }, { status: 404 });
+        }
 
-        return NextResponse.json({
-            success: true,
-            message: 'Health facility deleted successfully'
+        await query('UPDATE health_facilities SET lat = ?, lon = ? WHERE id = ?', [lat.value, lon.value, id]);
+        await recordChange({
+            request, user: auth.user, action: 'UPDATE', table: 'health_facilities', id,
+            description: `ปักพิกัด ${existing[0].name}`,
+            oldValues: { lat: existing[0].lat, lon: existing[0].lon },
+            newValues: { lat: lat.value, lon: lon.value }
         });
 
+        return NextResponse.json({ success: true, data: { id: Number(id), lat: lat.value, lon: lon.value } });
     } catch (error) {
-        console.error('Error deleting health facility:', error);
-        return publicInternalError('เกิดข้อผิดพลาดในการลบสถานพยาบาล');
+        console.error('Error updating facility location:', error);
+        return publicInternalError('เกิดข้อผิดพลาดในการบันทึกพิกัด');
     }
+}
+
+// DELETE - ย้ายสถานพยาบาลไปถังขยะ (ต้องระบุเหตุผล กู้คืนได้)
+export async function DELETE(request) {
+    const auth = await requireAuth(request, ['admin']);
+    if (!auth.success) return auth.response;
+    return handleArchiveDelete(request, auth.user, { table: 'health_facilities' });
 }

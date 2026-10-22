@@ -190,7 +190,7 @@ function getTeamIcon(teamCode) {
         RISKCOM: 'megaphone',
         MCAT: 'barChart',
         SAT: 'ambulance',
-        SeRHT: 'ambulance',
+        SEhRT: 'ambulance',
         MEDICAL: 'stethoscope',
         LOGISTICS: 'package',
         SHELTER: 'shelter'

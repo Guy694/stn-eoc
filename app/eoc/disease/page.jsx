@@ -90,7 +90,7 @@ export default function DiseasePage() {
                     <>
                         {activeSession && (
                             <section className="mb-6 relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-5">
-                                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px] md:items-center">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_280px] md:items-center">
                                     <div>
                                         <div className="text-sm font-semibold text-white/85">ครั้งที่ {activeSession.session_number}</div>
                                         <h2 className="mt-1 text-2xl font-black">

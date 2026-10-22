@@ -77,6 +77,38 @@ describe('POST /api/auth/login', () => {
         expect(mockExecute.mock.calls.some(([sql]) => sql.includes('INSERT INTO user_sessions'))).toBe(false);
     });
 
+    test('รหัสผิด: แจ้งชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (ไม่ใช่ข้อผิดพลาดของระบบ)', async () => {
+        const { POST } = require('@/app/api/auth/login/route');
+        const body = await (await POST(jsonRequest('/api/auth/login', { username: 'eoc2569_001', password: 'ผิด' }))).json();
+        expect(body).toMatchObject({ code: 'invalid_credentials', message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+    });
+
+    test('บัญชีที่ไม่มีรหัสผ่าน (สมัครด้วย ThaiD) ตอบรหัสผิด ไม่ใช่ error 500', async () => {
+        mockExecute.mockImplementation(async (sql) => {
+            if (sql.includes('FROM login_attempts')) return [[{ count: 0 }]];
+            if (sql.includes('FROM officer WHERE username')) return [[{ ...officer, password_hash: '' }]];
+            return [{ affectedRows: 1 }];
+        });
+        const { POST } = require('@/app/api/auth/login/route');
+        const response = await POST(jsonRequest('/api/auth/login', { username: 'eoc2569_001', password: 'x' }));
+        expect(response.status).toBe(401);
+    });
+
+    test('รหัสถูกแต่ยังไม่อนุมัติ: แจ้งรอเจ้าหน้าที่อนุมัติ และไม่สร้าง session', async () => {
+        mockExecute.mockImplementation(async (sql) => {
+            if (sql.includes('FROM login_attempts')) return [[{ count: 0 }]];
+            if (sql.includes('FROM officer WHERE username')) return [[{ ...officer, is_approved: 0 }]];
+            return [{ affectedRows: 1 }];
+        });
+        const { POST } = require('@/app/api/auth/login/route');
+        const response = await POST(jsonRequest('/api/auth/login', { username: 'eoc2569_001', password: 'Temp-Pass-2569' }));
+        const body = await response.json();
+        expect(response.status).toBe(403);
+        expect(body.code).toBe('pending_approval');
+        expect(body.message).toContain('รอเจ้าหน้าที่อนุมัติ');
+        expect(mockExecute.mock.calls.some(([sql]) => sql.includes('INSERT INTO user_sessions'))).toBe(false);
+    });
+
     test('returns 429 when the IP exceeds the login rate limit', async () => {
         mockQuery.mockImplementation(async (sql) => (sql.includes('SELECT hits') ? [{ hits: 999 }] : {}));
         const { POST } = require('@/app/api/auth/login/route');

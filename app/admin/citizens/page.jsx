@@ -28,7 +28,7 @@ export default function CitizensManagementPage() {
         { value: 'admin', label: 'ผู้ดูแลระบบ' },
         { value: 'MCATT', label: 'MCATT' },
         { value: 'SAT', label: 'SAT' },
-        { value: 'SeRHT', label: 'SeRHT' },
+        { value: 'SEhRT', label: 'SEhRT' },
         { value: 'staff', label: 'เจ้าหน้าที่ทั่วไป' }
     ];
 
@@ -165,7 +165,7 @@ export default function CitizensManagementPage() {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="stack-mobile w-full">
                                 <thead className="bg-slate-50 border-b">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ID</th>

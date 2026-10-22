@@ -97,7 +97,7 @@
 | liaison | ประสานงานและเลขานุการ |
 | eoc-mgmt | จัดการศูนย์ปฏิบัติการ |
 
-รองรับ mapping legacy code เช่น `ITSUPPORT → it`, `EOC_ADMIN/ADMIN → admin`, `SeRHT → serht` แต่ team admin ไม่ได้แปลว่าเป็น system admin และสมาชิกทีม commander ไม่ได้รับสิทธิ์ system commander อัตโนมัติ
+รองรับ mapping legacy code เช่น `ITSUPPORT → it`, `EOC_ADMIN/ADMIN → admin`, `SEhRT → serht` แต่ team admin ไม่ได้แปลว่าเป็น system admin และสมาชิกทีม commander ไม่ได้รับสิทธิ์ system commander อัตโนมัติ
 
 ใช้ typed registry/resolver สำหรับ navigation, dashboard, report schema และ permissions โดยลำดับ resolve คือ `(hazard, team) override → team default → shared default` ไม่เขียนเงื่อนไขชนิดภัยซ้ำทุกหน้า
 

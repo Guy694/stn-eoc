@@ -86,7 +86,7 @@ export default function ProfilePage() {
     return (
         <EOCLayout>
             <AdminPage title="โปรไฟล์ของฉัน" description="ข้อมูลส่วนตัวที่แสดงในระบบ สิทธิ์การใช้งาน และการรับแจ้งเตือน">
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
                     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white" aria-labelledby="profile-name">
                         <div className="flex flex-wrap items-center gap-4 border-b border-slate-100 bg-[#edf5fc] px-5 py-5 sm:px-6">
                             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#0b4c86] text-2xl font-black text-white" aria-hidden="true">{initial}</div>
@@ -117,7 +117,7 @@ export default function ProfilePage() {
                                 </dl>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-5">
-                                    <div className="grid gap-4 sm:grid-cols-[9rem_1fr_1fr]">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[9rem_1fr_1fr]">
                                         <label className="block">
                                             <span className="mb-1 block text-sm font-semibold text-slate-700">คำนำหน้า</span>
                                             <select name="title" value={formData.title} onChange={handleChange} className={inputClass}>

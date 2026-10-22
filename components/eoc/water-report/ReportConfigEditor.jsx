@@ -61,7 +61,7 @@ export default function ReportConfigEditor({ config, stations = [], onSave, onCa
       <fieldset className="space-y-2">
         <legend className="mb-1 text-sm font-semibold text-slate-800">หัวข้อ 2 ลุ่มน้ำหลัก (ระดับเป็นเมตร รทก.)</legend>
         {draft.basins.map((basin, index) => (
-          <div key={basin.key} className="grid gap-2 rounded-lg bg-slate-50 p-2 sm:grid-cols-[1fr_1.6fr_0.8fr_0.8fr]">
+          <div key={basin.key} className="grid grid-cols-1 gap-2 rounded-lg bg-slate-50 p-2 sm:grid-cols-[1fr_1.6fr_0.8fr_0.8fr]">
             <label className="text-sm text-slate-700">ชื่อที่แสดง
               <input value={basin.label} onChange={(event) => setBasin(index, "label", event.target.value)} className={inputClass} maxLength={60} />
             </label>
@@ -79,7 +79,7 @@ export default function ReportConfigEditor({ config, stations = [], onSave, onCa
             <label className="text-sm text-slate-700">ตลิ่ง (ถ้าต่างจาก ThaiWater)
               <input type="number" step="0.01" inputMode="decimal" value={basin.bank ?? ""} onChange={(event) => setBasin(index, "bank", event.target.value)} className={inputClass} placeholder="ตาม ThaiWater" />
             </label>
-            <div className="grid gap-2 border-t border-slate-200 pt-2 sm:col-span-4 sm:grid-cols-[1fr_1fr_1.4fr_auto]">
+            <div className="grid grid-cols-1 gap-2 border-t border-slate-200 pt-2 sm:col-span-4 sm:grid-cols-[1fr_1fr_1.4fr_auto]">
               <label className="text-sm text-slate-700">ระดับน้ำล่าสุด (กรอกเอง)
                 <input type="number" step="0.01" inputMode="decimal" value={basin.level ?? ""} onChange={(event) => setLevel(index, event.target.value)} className={inputClass} placeholder="ใช้ค่าจากสถานี" />
               </label>
@@ -102,7 +102,7 @@ export default function ReportConfigEditor({ config, stations = [], onSave, onCa
       <fieldset className="space-y-2">
         <legend className="mb-1 text-sm font-semibold text-slate-800">หัวข้อ 4 พื้นที่เฝ้าระวังสำคัญ</legend>
         {draft.areas.map((area, index) => (
-          <div key={area.key} className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+          <div key={area.key} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_2fr]">
             <input value={area.title} onChange={(event) => setArea(index, "title", event.target.value)} className={inputClass} maxLength={60} aria-label={`หัวข้อพื้นที่ ${index + 1}`} />
             <input value={area.text} onChange={(event) => setArea(index, "text", event.target.value)} className={inputClass} maxLength={300} aria-label={`รายละเอียดพื้นที่ ${index + 1}`} />
           </div>

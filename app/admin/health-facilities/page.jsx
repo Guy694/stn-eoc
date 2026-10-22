@@ -1,14 +1,33 @@
 'use client';
 
+// หน่วยบริการสุขภาพ: รายการ + แผนที่ปักพิกัด
+// ทุกบทบาทเจ้าหน้าที่ดูและอัปเดตสถานะการให้บริการได้ · เพิ่ม/แก้ไข/ปักพิกัด/ลบ เฉพาะผู้ดูแลระบบ
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageHero } from "@/components/common/ThemePanels";
-import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from '@/components/layouts/EOCLayout';
-import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
-import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
-import AppIcon from "@/components/icons/AppIcon";
+import {
+    AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid,
+    ReadOnlyNotice, RowActions, StatStrip, StatusPill, Tabs, Toolbar, inputClass, useNotice
+} from '@/components/admin/crud';
+import LocationPicker from '@/components/admin/LocationPicker';
+import FacilityPinMap, { hasCoordinates, typeColor } from '@/components/admin/health/FacilityPinMap';
 import HealthFacilityStatusModal from '@/components/admin/HealthFacilityStatusModal';
+import { useAuth } from '@/context/AuthContext';
+import { apiRequest } from '@/lib/adminApi';
 import { SERVICE_STATUSES, UNKNOWN_SERVICE, floodStatusMeta, isStatusStale, serviceStatusMeta } from '@/lib/healthFacilityStatus';
+
+const API = '/stn-eoc/api/admin/health-facilities';
+
+const FACILITY_TYPES = [
+    { value: 'รพ.ทั่วไป', label: 'โรงพยาบาลทั่วไป' },
+    { value: 'รพ.ชุมชน', label: 'โรงพยาบาลชุมชน' },
+    { value: 'รพ.สต.', label: 'โรงพยาบาลส่งเสริมสุขภาพตำบล' },
+    { value: 'ศสช.', label: 'ศูนย์สุขภาพชุมชน' },
+    { value: 'สสจ', label: 'สำนักงานสาธารณสุขจังหวัด' },
+    { value: 'สสอ.', label: 'สำนักงานสาธารณสุขอำเภอ' },
+    { value: 'สอน.', label: 'สถานีอนามัย' }
+];
+
+const EMPTY_FORM = { name: '', typecode: '', address: '', district: '', tambon: '', lat: '', lon: '', phone: '' };
 
 function formatUpdated(value) {
     if (!value) return '';
@@ -17,516 +36,311 @@ function formatUpdated(value) {
     return date.toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+function ServiceCell({ facility, onUpdate }) {
+    const service = serviceStatusMeta(facility.service_status);
+    const flood = floodStatusMeta(facility.flood_status);
+    const stale = facility.service_status && isStatusStale(facility.status_updated_at);
+    return (
+        <div className="flex min-w-[10rem] flex-col items-start gap-1">
+            <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: service.bg, color: service.color }}>{service.label}</span>
+            {flood && flood.value !== 'normal' ? (
+                <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: flood.bg, color: flood.color }}>{flood.label}</span>
+            ) : null}
+            {facility.status_updated_at ? (
+                <span className={`text-[11px] ${stale ? 'font-semibold text-amber-700' : 'text-slate-500'}`}>
+                    อัปเดต {formatUpdated(facility.status_updated_at)}{stale ? ' (เกิน 24 ชม.)' : ''}
+                </span>
+            ) : null}
+            <button type="button" onClick={() => onUpdate(facility)} className="text-xs font-semibold text-[#0b4c86] underline-offset-2 hover:underline">
+                อัปเดตสถานะ
+            </button>
+        </div>
+    );
+}
+
 export default function HealthFacilitiesPage() {
+    const { user } = useAuth();
+    const canEdit = user?.role === 'admin';
+    const { success, fail } = useNotice();
+
     const [facilities, setFacilities] = useState([]);
-    const [stats, setStats] = useState({});
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
-    const [showModal, setShowModal] = useState(false);
-    const [editingFacility, setEditingFacility] = useState(null);
-    const [statusFacility, setStatusFacility] = useState(null);
+    const [tab, setTab] = useState('list');
+    const [search, setSearch] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
-    const [formData, setFormData] = useState({
-        name: '',
-        typecode: '',
-        address: '',
-        district: '',
-        tambon: '',
-        lat: '',
-        lon: '',
-        phone: ''
-    });
+    const [pinFilter, setPinFilter] = useState('');
 
-    const facilityTypes = [
-        { value: 'รพ.ทั่วไป', label: 'โรงพยาบาลทั่วไป', color: 'bg-red-100 text-red-700' },
-        { value: 'รพ.ชุมชน', label: 'โรงพยาบาลชุมชน', color: 'bg-orange-100 text-orange-700' },
-        { value: 'รพ.สต.', label: 'โรงพยาบาลส่งเสริมสุขภาพตำบล', color: 'bg-green-100 text-green-700' },
-        { value: 'ศสช.', label: 'ศูนย์สาธารณสุข', color: 'bg-blue-100 text-blue-700' },
-        { value: 'สสจ', label: 'สำนักงานสาธารณสุขจังหวัด', color: 'bg-teal-100 text-teal-700' },
-        { value: 'สสอ.', label: 'สำนักงานสาธารณสุขอำเภอ', color: 'bg-pink-100 text-pink-700' },
-        { value: 'สอน.', label: 'สถานีอนามัย', color: 'bg-cyan-100 text-cyan-700' }
-    ];
+    const [form, setForm] = useState(EMPTY_FORM);
+    const [editing, setEditing] = useState(null);
+    const [formOpen, setFormOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [formError, setFormError] = useState('');
+    const [deleting, setDeleting] = useState(null);
+    const [deleteBusy, setDeleteBusy] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
+    const [statusFacility, setStatusFacility] = useState(null);
 
-    const fetchFacilities = useCallback(async () => {
+    const load = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const params = new URLSearchParams();
-            if (filterType) params.append('type', filterType);
-            if (searchTerm) params.append('search', searchTerm);
-
-            const response = await fetch(`/stn-eoc/api/admin/health-facilities?${params}`);
-            const data = await response.json();
-
-            if (data.success) {
-                setFacilities(data.data);
-                setStats(data.stats);
-            }
+            const json = await apiRequest(API);
+            setFacilities(json.data || []);
         } catch (error) {
-            console.error('Error fetching facilities:', error);
-            showError('ไม่สามารถโหลดข้อมูลได้');
+            fail(error.message || 'โหลดรายการหน่วยบริการไม่สำเร็จ');
         } finally {
             setLoading(false);
         }
-    }, [filterType, searchTerm]);
+    }, [fail]);
 
-    useEffect(() => {
-        fetchFacilities();
-    }, [fetchFacilities]);
+    useEffect(() => { load(); }, [load]);
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [filterType, searchTerm, statusFilter]);
-
+    const missingCount = useMemo(() => facilities.filter((item) => !hasCoordinates(item)).length, [facilities]);
     const serviceCounts = useMemo(() => facilities.reduce((acc, facility) => {
         const key = facility.service_status || 'unknown';
         acc[key] = (acc[key] || 0) + 1;
         return acc;
     }, {}), [facilities]);
-    const visibleFacilities = useMemo(
-        () => (statusFilter ? facilities.filter((facility) => (facility.service_status || 'unknown') === statusFilter) : facilities),
-        [facilities, statusFilter]
-    );
-    const paginatedFacilities = useMemo(
-        () => paginateRows(visibleFacilities, currentPage, pageSize),
-        [visibleFacilities, currentPage, pageSize]
-    );
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const rows = useMemo(() => {
+        const text = search.trim().toLowerCase();
+        return facilities.filter((facility) => {
+            if (typeFilter && facility.typecode !== typeFilter) return false;
+            if (statusFilter && (facility.service_status || 'unknown') !== statusFilter) return false;
+            if (pinFilter === 'missing' && hasCoordinates(facility)) return false;
+            if (pinFilter === 'pinned' && !hasCoordinates(facility)) return false;
+            if (!text) return true;
+            return [facility.name, facility.address, facility.district_name, facility.tambon]
+                .some((value) => String(value || '').toLowerCase().includes(text));
+        });
+    }, [facilities, search, typeFilter, statusFilter, pinFilter]);
 
-        try {
-            const url = editingFacility
-                ? `/stn-eoc/api/admin/health-facilities/${editingFacility.id}`
-                : '/stn-eoc/api/admin/health-facilities';
-
-            const method = editingFacility ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                showSuccess(editingFacility ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มสถานพยาบาลสำเร็จ');
-                setShowModal(false);
-                resetForm();
-                fetchFacilities();
-            } else {
-                showError(data.error || 'เกิดข้อผิดพลาด');
-            }
-        } catch (error) {
-            console.error('Error saving facility:', error);
-            showError('ไม่สามารถบันทึกข้อมูลได้');
-        }
+    const openCreate = () => {
+        setEditing(null);
+        setForm(EMPTY_FORM);
+        setFormError('');
+        setFormOpen(true);
     };
 
-    const handleEdit = (facility) => {
-        setEditingFacility(facility);
-        setFormData({
-            name: facility.name,
-            typecode: facility.typecode,
+    const openEdit = (facility) => {
+        setEditing(facility);
+        setForm({
+            name: facility.name || '',
+            typecode: facility.typecode || '',
             address: facility.address || '',
             district: facility.district_name || facility.district || '',
             tambon: facility.tambon || '',
-            lat: facility.lat || '',
-            lon: facility.lon || '',
+            lat: facility.lat ?? '',
+            lon: facility.lon ?? '',
             phone: facility.phone || ''
         });
-        setShowModal(true);
+        setFormError('');
+        setFormOpen(true);
     };
 
-    const handleDelete = async (facility) => {
-        if (!await showDeleteConfirm(`ต้องการลบ ${facility.name} ใช่หรือไม่?`)) return;
+    const updateForm = (patch) => setForm((current) => ({ ...current, ...patch }));
 
+    const submit = async () => {
+        if (!form.name.trim() || !form.typecode) {
+            setFormError('กรอกชื่อและเลือกประเภทหน่วยบริการ');
+            return;
+        }
+        setSaving(true);
+        setFormError('');
         try {
-            const response = await fetch(`/stn-eoc/api/admin/health-facilities/${facility.id}`, {
-                method: 'DELETE'
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                showSuccess('ลบข้อมูลสำเร็จ');
-                fetchFacilities();
-            } else {
-                showError(data.error || 'ไม่สามารถลบข้อมูลได้');
-            }
+            await apiRequest(editing ? `${API}/${editing.id}` : API, { method: editing ? 'PUT' : 'POST', body: form });
+            success(editing ? `บันทึก ${form.name} แล้ว` : `เพิ่ม ${form.name} แล้ว`);
+            setFormOpen(false);
+            await load();
         } catch (error) {
-            console.error('Error deleting facility:', error);
-            showError('ไม่สามารถลบข้อมูลได้');
+            setFormError(error.message || 'บันทึกไม่สำเร็จ');
+        } finally {
+            setSaving(false);
         }
     };
 
-    const resetForm = () => {
-        setFormData({
-            name: '',
-            typecode: '',
-            address: '',
-            district: '',
-            tambon: '',
-            lat: '',
-            lon: '',
-            phone: ''
-        });
-        setEditingFacility(null);
+    const savePin = async (facility, point) => {
+        try {
+            await apiRequest(`${API}/${facility.id}`, { method: 'PATCH', body: point });
+            setFacilities((list) => list.map((item) => (item.id === facility.id ? { ...item, ...point } : item)));
+            success(`ปักพิกัด ${facility.name} แล้ว`);
+        } catch (error) {
+            fail(error.message || 'บันทึกพิกัดไม่สำเร็จ');
+            throw error;
+        }
     };
 
-    const getTypeColor = (type) => {
-        const found = facilityTypes.find(t => t.value === type);
-        return found ? found.color : 'bg-slate-100 text-slate-700';
+    const confirmDelete = async (reason) => {
+        setDeleteBusy(true);
+        setDeleteError('');
+        try {
+            const json = await apiRequest(`${API}/${deleting.id}`, { method: 'DELETE', body: { id: deleting.id, reason } });
+            success(json.message || `ย้าย ${deleting.name} ไปถังขยะแล้ว`);
+            setDeleting(null);
+            await load();
+        } catch (error) {
+            setDeleteError(error.message || 'ลบไม่สำเร็จ');
+        } finally {
+            setDeleteBusy(false);
+        }
     };
+
+    const columns = [
+        {
+            key: 'name',
+            label: 'หน่วยบริการ',
+            render: (facility) => (
+                <div className="min-w-0">
+                    <div className="font-bold text-slate-900">{facility.name}</div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: typeColor(facility.typecode) }} aria-hidden="true" />
+                        {facility.typecode}
+                    </div>
+                </div>
+            )
+        },
+        {
+            key: 'area',
+            label: 'อำเภอ/ตำบล',
+            render: (facility) => (
+                <span className="text-slate-700">
+                    {facility.district_name ? `อ.${facility.district_name}` : '-'}
+                    {facility.tambon ? <span className="block text-xs text-slate-500">ต.{facility.tambon}</span> : null}
+                </span>
+            )
+        },
+        {
+            key: 'pin',
+            label: 'พิกัด',
+            render: (facility) => (hasCoordinates(facility)
+                ? <span className="whitespace-nowrap text-xs tabular-nums text-slate-600">{Number(facility.lat).toFixed(4)}, {Number(facility.lon).toFixed(4)}</span>
+                : <StatusPill tone="amber">ยังไม่มีพิกัด</StatusPill>)
+        },
+        { key: 'phone', label: 'โทรศัพท์', render: (facility) => facility.phone || '-' },
+        { key: 'status', label: 'สถานะวันนี้', render: (facility) => <ServiceCell facility={facility} onUpdate={setStatusFacility} /> }
+    ];
+
+    const statusOptions = [
+        { value: '', label: 'ทุกสถานะบริการ' },
+        ...[...SERVICE_STATUSES, UNKNOWN_SERVICE].map((status) => ({ value: status.value, label: `${status.label} (${serviceCounts[status.value] || 0})` }))
+    ];
 
     return (
         <EOCLayout>
-            <div className="max-w-7xl mx-auto p-6">
-                {/* Header */}
-                <PageHero title="จัดการหน่วยบริการ" subtitle="ระบบจัดการข้อมูลสถานพยาบาลและสถานีอนามัย" className="mb-6" />
+            <AdminPage
+                title="หน่วยบริการสุขภาพ"
+                description="โรงพยาบาล รพ.สต. และสำนักงานสาธารณสุข พร้อมพิกัดและสถานะการให้บริการที่แสดงบนแผนที่ประชาชน"
+                actions={canEdit ? <AddButton onClick={openCreate}>เพิ่มหน่วยบริการ</AddButton> : null}
+            >
+                {!canEdit ? <ReadOnlyNotice message="ดูข้อมูลและอัปเดตสถานะการให้บริการได้ · เพิ่ม แก้ไข หรือปักพิกัดหน่วยบริการ ให้ผู้ดูแลระบบเป็นผู้ทำ" /> : null}
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-                    {facilityTypes.map(type => (
-                        <div key={type.value} className={`bg-white rounded-2xl p-4 border ${getTypeColor(type.value)}`}>
-                            <div className="text-sm text-slate-600 mb-1">{type.label}</div>
-                            <div className="text-2xl font-bold">
-                                {stats[type.value] || 0}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <StatStrip
+                    compact
+                    items={[
+                        { label: 'หน่วยบริการทั้งหมด', value: facilities.length, unit: 'แห่ง' },
+                        { label: 'เปิดให้บริการปกติ', value: serviceCounts.open || 0, unit: 'แห่ง', tone: 'green' },
+                        { label: 'จำกัด/ปิดบริการ', value: (serviceCounts.limited || 0) + (serviceCounts.closed || 0), unit: 'แห่ง', tone: 'red' },
+                        { label: 'ยังไม่มีพิกัด', value: missingCount, unit: 'แห่ง', tone: missingCount ? 'amber' : undefined, onClick: missingCount ? () => setTab('map') : undefined }
+                    ]}
+                />
 
+                <Tabs
+                    value={tab}
+                    onChange={setTab}
+                    items={[
+                        { value: 'list', label: 'รายการ', count: facilities.length },
+                        { value: 'map', label: canEdit ? 'แผนที่และปักพิกัด' : 'แผนที่', count: missingCount || undefined }
+                    ]}
+                />
 
-
-                {/* สถานะการให้บริการ (แสดงบนแผนที่สถานการณ์) */}
-                <div className="border border-slate-200 mb-6 rounded-2xl bg-white p-4 text-slate-800">
-                    <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                        <h2 className="font-bold">สถานะการให้บริการวันนี้</h2>
-                        <p className="text-xs text-slate-500">ประชาชนเห็นสถานะนี้ในแผนที่สถานการณ์ • เกิน 24 ชม. จะขึ้นว่าอาจไม่เป็นปัจจุบัน</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {[...SERVICE_STATUSES, UNKNOWN_SERVICE].map((status) => {
-                            const active = statusFilter === status.value;
-                            return (
-                                <button
-                                    key={status.value}
-                                    type="button"
-                                    onClick={() => setStatusFilter(active ? '' : status.value)}
-                                    aria-pressed={active}
-                                    className="flex items-center gap-2 rounded-lg border-2 px-3 py-1.5 text-sm font-semibold"
-                                    style={{ borderColor: active ? status.color : 'transparent', background: status.bg, color: status.color }}
-                                >
-                                    {status.label}
-                                    <span className="rounded-md bg-white/80 px-1.5 text-xs">{serviceCounts[status.value] || 0}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Search and Filter */}
-                <div className="border border-slate-200 bg-white p-4 rounded-2xl mb-6 text-slate-800">
-                    <div className="flex flex-wrap gap-4 ">
-                        <input
-                            type="text"
-                            placeholder="ค้นหาชื่อสถานพยาบาล, ที่อยู่..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 min-w-[200px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {tab === 'map' ? (
+                    <FacilityPinMap facilities={facilities} canEdit={canEdit} onSave={savePin} onEdit={canEdit ? openEdit : undefined} />
+                ) : (
+                    <>
+                        <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อ ที่อยู่ อำเภอ ตำบล">
+                            <FilterSelect label="ประเภท" value={typeFilter} onChange={setTypeFilter} options={[{ value: '', label: 'ทุกประเภท' }, ...FACILITY_TYPES]} />
+                            <FilterSelect label="สถานะบริการ" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+                            <FilterSelect
+                                label="พิกัด"
+                                value={pinFilter}
+                                onChange={setPinFilter}
+                                options={[{ value: '', label: 'พิกัด: ทั้งหมด' }, { value: 'missing', label: `ยังไม่มีพิกัด (${missingCount})` }, { value: 'pinned', label: 'มีพิกัดแล้ว' }]}
+                            />
+                        </Toolbar>
+                        <DataTable
+                            columns={columns}
+                            rows={rows}
+                            loading={loading}
+                            pageSize={20}
+                            pageSizeOptions={[20, 50, 100]}
+                            caption="รายการหน่วยบริการสุขภาพ"
+                            emptyText={facilities.length ? 'ไม่พบหน่วยบริการที่ตรงกับตัวกรอง' : 'ยังไม่มีหน่วยบริการ'}
+                            emptyAction={canEdit && !facilities.length ? <AddButton onClick={openCreate}>เพิ่มหน่วยบริการ</AddButton> : null}
+                            rowActions={canEdit ? (facility) => (
+                                <RowActions itemName={facility.name} onEdit={() => openEdit(facility)} onDelete={() => { setDeleteError(''); setDeleting(facility); }} />
+                            ) : undefined}
                         />
-                        <select
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">ทุกประเภท</option>
-                            {facilityTypes.map(type => (
-                                <option key={type.value} value={type.value}>
-                                    {type.label}
-                                </option>
-                            ))}
+                    </>
+                )}
+            </AdminPage>
+
+            <FormDialog
+                open={formOpen}
+                onOpenChange={(open) => { if (!saving) setFormOpen(open); }}
+                title={editing ? `แก้ไข ${editing.name}` : 'เพิ่มหน่วยบริการ'}
+                onSubmit={submit}
+                busy={saving}
+                error={formError}
+                submitText={editing ? 'บันทึก' : 'เพิ่มหน่วยบริการ'}
+            >
+                <FormGrid>
+                    <Field label="ชื่อหน่วยบริการ" required wide>
+                        <input className={inputClass} value={form.name} onChange={(event) => updateForm({ name: event.target.value })} placeholder="เช่น รพ.สต.บ้านควน" />
+                    </Field>
+                    <Field label="ประเภท" required>
+                        <select className={inputClass} value={form.typecode} onChange={(event) => updateForm({ typecode: event.target.value })}>
+                            <option value="">เลือกประเภท</option>
+                            {FACILITY_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                         </select>
-                        <button
-                            onClick={() => {
-                                resetForm();
-                                setShowModal(true);
-                            }}
-                            className="px-6 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors"
-                        >
-                            <AppIcon icon="plus" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> เพิ่มสถานพยาบาล
-                        </button>
-                    </div>
-                </div>
-
-                {/* Facilities Table */}
-                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
-                    {loading ? (
-                        <div className="p-8 text-center text-slate-500">
-                            กำลังโหลดข้อมูล...
-                        </div>
-                    ) : visibleFacilities.length === 0 ? (
-                        <div className="p-8 text-center text-slate-500">
-                            ไม่พบข้อมูลสถานพยาบาล
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-slate-50 border-b">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ID</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ชื่อสถานพยาบาล</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ประเภท</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">ที่อยู่</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">อำเภอ/ตำบล</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">พิกัด</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">โทรศัพท์</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">สถานะวันนี้</th>
-
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">จัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200">
-                                    {paginatedFacilities.map((facility) => (
-                                        <tr key={facility.id} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                                {facility.id}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-slate-900">{facility.name}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(facility.typecode)}`}>
-                                                    {facility.typecode}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
-                                                {facility.address || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                                {facility.district_name || '-'} / {facility.tambon || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                                {facility.lat && facility.lon
-                                                    ? `${parseFloat(facility.lat).toFixed(4)}, ${parseFloat(facility.lon).toFixed(4)}`
-                                                    : '-'
-                                                }
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                                {facility.phone || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm">
-                                                {(() => {
-                                                    const service = serviceStatusMeta(facility.service_status);
-                                                    const flood = floodStatusMeta(facility.flood_status);
-                                                    const stale = facility.service_status && isStatusStale(facility.status_updated_at);
-                                                    return (
-                                                        <div className="flex min-w-[11rem] flex-col items-start gap-1">
-                                                            <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: service.bg, color: service.color }}>{service.label}</span>
-                                                            {flood && flood.value !== 'normal' && (
-                                                                <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: flood.bg, color: flood.color }}>{flood.label}</span>
-                                                            )}
-                                                            {facility.status_updated_at && (
-                                                                <span className={`text-[11px] ${stale ? 'font-semibold text-amber-700' : 'text-slate-500'}`}>
-                                                                    อัปเดต {formatUpdated(facility.status_updated_at)}{stale ? ' (เกิน 24 ชม.)' : ''}
-                                                                </span>
-                                                            )}
-                                                            <button type="button" onClick={() => setStatusFacility(facility)} className="text-xs font-semibold text-[#0b4c86] underline-offset-2 hover:underline">
-                                                                อัปเดตสถานะ
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <button
-                                                    onClick={() => handleEdit(facility)}
-                                                    className="text-blue-600 hover:text-blue-800 mr-3"
-                                                >
-                                                    <AppIcon icon="edit" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(facility)}
-                                                    className="text-red-600 hover:text-red-800"
-                                                >
-                                                    <AppIcon icon="trash" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                    <PaginationControls
-                        page={currentPage}
-                        pageSize={pageSize}
-                        totalItems={visibleFacilities.length}
-                        onPageChange={setCurrentPage}
-                        onPageSizeChange={setPageSize}
-                        itemLabel="แห่ง"
+                    </Field>
+                    <Field label="โทรศัพท์" hint="หลายเบอร์คั่นด้วยเครื่องหมายจุลภาค">
+                        <input className={inputClass} inputMode="tel" value={form.phone} onChange={(event) => updateForm({ phone: event.target.value })} />
+                    </Field>
+                    <Field label="อำเภอ">
+                        <input className={inputClass} value={form.district} onChange={(event) => updateForm({ district: event.target.value })} />
+                    </Field>
+                    <Field label="ตำบล">
+                        <input className={inputClass} value={form.tambon} onChange={(event) => updateForm({ tambon: event.target.value })} />
+                    </Field>
+                    <Field label="ที่อยู่" wide>
+                        <textarea rows={2} className={inputClass} value={form.address} onChange={(event) => updateForm({ address: event.target.value })} />
+                    </Field>
+                    <LocationPicker
+                        lat={form.lat}
+                        lon={form.lon}
+                        onChange={updateForm}
+                        hint="คลิกบนแผนที่ตรงที่ตั้งหน่วยบริการ ใช้แสดงบนแผนที่ประชาชนและหาหน่วยบริการใกล้บ้าน"
                     />
-                </div>
-            </div>
+                </FormGrid>
+            </FormDialog>
 
-            {/* Modal */}
-            {showModal && (
-                <AppDialogFrame open onOpenChange={(open) => { if (!open) { setShowModal(false); resetForm(); } }}>
-                    <div className="bg-white rounded-2xl font-[family-name:var(--font-kanit)] max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="mb-4 text-lg font-black text-slate-900 sm:text-xl">
-                            {editingFacility ? "แก้ไขสถานพยาบาล" : "เพิ่มสถานพยาบาลใหม่"}
-                        </h2>
+            <DeleteDialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => { if (!open && !deleteBusy) setDeleting(null); }}
+                itemType="หน่วยบริการ"
+                itemLabel={deleting?.name}
+                onConfirm={confirmDelete}
+                busy={deleteBusy}
+                error={deleteError}
+            />
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        ชื่อสถานพยาบาล *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        ประเภท *
-                                    </label>
-                                    <select
-                                        required
-                                        value={formData.typecode}
-                                        onChange={(e) => setFormData({ ...formData, typecode: e.target.value })}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">เลือกประเภท</option>
-                                        {facilityTypes.map(type => (
-                                            <option key={type.value} value={type.value}>
-                                                {type.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        ที่อยู่
-                                    </label>
-                                    <textarea
-                                        value={formData.address}
-                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                        rows={2}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        อำเภอ
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.district}
-                                        onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        ตำบล
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.tambon}
-                                        onChange={(e) => setFormData({ ...formData, tambon: e.target.value })}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Latitude (ละติจูด)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        value={formData.lat}
-                                        onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="6.xxxxx"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Longitude (ลองจิจูด)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        value={formData.lon}
-                                        onChange={(e) => setFormData({ ...formData, lon: e.target.value })}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="100.xxxxx"
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        เบอร์โทรติดต่อ
-                                    </label>
-                                    <input
-                                        type="text"
-                                        maxLength={80}
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="text-slate-700 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="เช่น 074-711-010"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-[#0b4c86] text-white py-2 rounded-lg hover:bg-[#083865] transition-colors"
-                                >
-                                    <AppIcon icon="save" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> บันทึก
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowModal(false);
-                                        resetForm();
-                                    }}
-                                    className="flex-1 inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-                                >
-                                    <AppIcon icon="xCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ยกเลิก
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </AppDialogFrame>
-            )}
-            {statusFacility && (
+            {statusFacility ? (
                 <HealthFacilityStatusModal
                     facility={statusFacility}
                     onClose={() => setStatusFacility(null)}
-                    onSaved={(updated) => {
-                        setFacilities((rows) => rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)));
-                        setStatusFacility(null);
-                    }}
+                    onSaved={() => { setStatusFacility(null); load(); }}
                 />
-            )}
+            ) : null}
         </EOCLayout>
     );
 }

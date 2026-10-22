@@ -11,7 +11,7 @@ import { publicInternalError } from '@/lib/apiResponse';
 // GET: ดึงข้อมูลทีมงานและสมาชิกทั้งหมดของ Session (สำหรับ public view)
 export async function GET(request, { params }) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { sessionId } = await params;

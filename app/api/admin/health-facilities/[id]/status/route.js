@@ -8,7 +8,7 @@ import { normalizeFloodStatus, normalizeServiceStatus } from '@/lib/healthFacili
 // PATCH - เจ้าหน้าที่อัปเดตสถานะการให้บริการ/น้ำท่วมของสถานพยาบาล (แสดงบนแผนที่สถานการณ์)
 export async function PATCH(request, { params }) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         if (!await hasFacilityStatusColumns()) {

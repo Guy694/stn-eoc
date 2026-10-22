@@ -43,7 +43,7 @@ export function DashboardSummary({ summary, reporting, today }) {
   ];
 
   return (
-    <section className="grid gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="สรุปเวชภัณฑ์และคลังยา">
+    <section className="grid grid-cols-1 gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="สรุปเวชภัณฑ์และคลังยา">
       <HeroCard
         title={`ส่งรายงานครบ วันที่ ${shortThaiDate(today)}`}
         value={`${formatNumber(rt.complete)}/${formatNumber(rt.total)}`}
@@ -77,7 +77,7 @@ export function StockSummary({ summary, levelFilter, onFilter }) {
   ];
   const toggle = (key) => onFilter?.(levelFilter === key ? "" : key);
   return (
-    <section className="grid gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="สรุปคงคลัง">
+    <section className="grid grid-cols-1 gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="สรุปคงคลัง">
       <HeroCard
         title="รายการในคลังทั้งหมด"
         value={formatNumber(rows)}

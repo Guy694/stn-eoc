@@ -1,6 +1,6 @@
 "use client";
 
-// ปักหมุดตำแหน่งบนแผนที่ (คลิกที่แผนที่ หรือใช้ตำแหน่งปัจจุบัน) — ใช้ในฟอร์มศูนย์พักพิง
+// ปักหมุดตำแหน่งบนแผนที่ (คลิกที่แผนที่ หรือใช้ตำแหน่งปัจจุบัน) — ใช้ในฟอร์มศูนย์พักพิงและหน่วยบริการสุขภาพ
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { LocateFixed } from "lucide-react";
@@ -27,7 +27,7 @@ function toNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-export default function LocationPicker({ lat, lon, onChange }) {
+export default function LocationPicker({ lat, lon, onChange, hint = "คลิกบนแผนที่เพื่อปักหมุด ใช้แสดงศูนย์บนแผนที่สาธารณะและนำทางประชาชน" }) {
   const [mounted, setMounted] = useState(false);
   const [locating, setLocating] = useState(false);
   const [message, setMessage] = useState("");
@@ -83,7 +83,7 @@ export default function LocationPicker({ lat, lon, onChange }) {
           <input className={inputClass} inputMode="decimal" value={lon ?? ""} onChange={(event) => onChange({ lon: event.target.value })} placeholder="100.06" />
         </label>
       </div>
-      <p className="mt-1 text-xs text-slate-500">{message || "คลิกบนแผนที่เพื่อปักหมุด ใช้แสดงศูนย์บนแผนที่สาธารณะและนำทางประชาชน"}</p>
+      <p className="mt-1 text-xs text-slate-500">{message || hint}</p>
     </div>
   );
 }

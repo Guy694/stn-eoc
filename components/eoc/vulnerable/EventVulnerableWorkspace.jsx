@@ -50,7 +50,7 @@ function Dashboard({ summary }) {
         <Kpi icon={Clock3} label="ยังไม่ได้ดูแล" value={summary.pending} hint={summary.pending ? "ต้องติดตาม" : "ดูแลครบแล้ว"} tone={summary.pending ? "text-red-700" : "text-emerald-700"} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_.9fr]">
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h3 className="text-base font-black text-slate-900">แยกตามประเภท</h3>
           <p className="text-xs text-slate-500">ผู้เปราะบางในหมู่บ้านที่ประสบภัย (จากทะเบียนกลาง)</p>
@@ -95,7 +95,7 @@ function Dashboard({ summary }) {
 
       {summary.districts.length ? (
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="w-full min-w-[36rem] text-left text-sm">
+          <table className="stack-mobile w-full min-w-[36rem] text-left text-sm">
             <caption className="px-5 pt-4 text-left text-base font-black text-slate-900">แยกตามอำเภอ</caption>
             <thead className="text-xs text-slate-500">
               <tr><th className="px-5 py-2">อำเภอ</th><th className="px-3 py-2 text-right">ได้รับผลกระทบ</th><th className="px-3 py-2 text-right">ดูแลแล้ว</th><th className="px-3 py-2 text-right">เคลื่อนย้าย</th><th className="px-3 py-2 text-right">ยังไม่ได้ดูแล</th><th className="w-40 px-5 py-2">ความคืบหน้าการดูแล</th></tr>

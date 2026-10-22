@@ -84,7 +84,7 @@ async function sessionOfTeam(sessionTeamId) {
 
 export async function GET(request, { params }) {
     try {
-        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SeRHT', 'staff']);
+        const auth = await requireAuth(request, ['admin', 'commander', 'MCATT', 'SAT', 'SEhRT', 'staff']);
         if (!auth.success) return auth.response;
 
         const { sessionTeamId } = await params;

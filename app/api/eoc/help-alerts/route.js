@@ -5,7 +5,7 @@ import { pendingHelpRequests } from "@/lib/helpAlertsServer";
 
 // คำขอความช่วยเหลือที่ยังไม่มีผู้รับเรื่อง — หน้าเว็บเจ้าหน้าที่ดึงทุก 45 วินาทีเพื่อเด้งเตือนพร้อมเสียง
 // สิทธิ์เดียวกับหน้า "คำขอจากประชาชน"
-const ROLES = ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"];
+const ROLES = ["admin", "commander", "MCATT", "SAT", "SEhRT", "staff"];
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {

@@ -8,7 +8,7 @@ import { createPublicPhotoCopy, parsePhotoPaths, removePublicPhotoCopy } from "@
 import { hasConfirmationColumns, hasPublishingColumns } from "@/lib/incidentPublishingDb";
 
 const pool = getPool();
-const VIEWERS = ["admin", "commander", "MCATT", "SAT", "SeRHT", "staff"];
+const VIEWERS = ["admin", "commander", "MCATT", "SAT", "SEhRT", "staff"];
 const EDITORS = ["admin", "commander", "MCATT", "SAT"];
 
 const SUMMARY_COLUMNS = `id, first_name, last_name, phone, village, sub_district, district, latitude, longitude,

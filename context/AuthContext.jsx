@@ -10,6 +10,20 @@ function getAppPath() {
     return window.location.pathname.replace(/^\/stn-eoc/, '').replace(/\/+$/, '') || '/';
 }
 
+// ข้อความเมื่อเซิร์ฟเวอร์ไม่ได้ส่งข้อความมา (เช่น proxy ตอบแทน)
+export function loginFailureCode(status) {
+    if (status === 401) return 'invalid_credentials';
+    if (status === 429) return 'rate_limited';
+    return status >= 500 ? 'server_error' : 'failed';
+}
+
+export function loginFailureMessage(status) {
+    if (status === 401 || status === 400) return 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+    if (status === 429) return 'พยายามเข้าสู่ระบบหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่';
+    if (status >= 500) return 'ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง หากยังเข้าไม่ได้ติดต่อผู้ดูแลระบบ';
+    return 'เข้าสู่ระบบไม่สำเร็จ';
+}
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -100,23 +114,22 @@ export function AuthProvider({ children }) {
                 body: JSON.stringify({ username, password })
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Login failed:', response.status, errorText);
-                return { success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' };
-            }
+            const data = await response.json().catch(() => ({}));
 
-            const data = await response.json();
+            // ใช้ข้อความจากเซิร์ฟเวอร์ (ชื่อผู้ใช้/รหัสผ่านผิด, รออนุมัติ, ถูกล็อก, ลองถี่เกินไป)
+            if (!response.ok) {
+                return { success: false, code: data.code || loginFailureCode(response.status), message: data.message || loginFailureMessage(response.status) };
+            }
 
             if (data.success && data.user) {
                 setUser(data.user);
                 return { success: true, message: data.message, mustChangePassword: Boolean(data.user.mustChangePassword) };
             } else {
-                return { success: false, message: data.message || 'เข้าสู่ระบบไม่สำเร็จ' };
+                return { success: false, code: data.code, message: data.message || 'เข้าสู่ระบบไม่สำเร็จ' };
             }
         } catch (error) {
             console.error('Login error:', error);
-            return { success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' };
+            return { success: false, code: 'network', message: 'เชื่อมต่อระบบไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง' };
         }
     };
 

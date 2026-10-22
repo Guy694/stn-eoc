@@ -56,9 +56,9 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_.85fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_.85fr]">
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="w-full min-w-[34rem] text-left text-sm">
+          <table className="stack-mobile w-full min-w-[34rem] text-left text-sm">
             <caption className="px-5 pt-4 text-left text-base font-black text-slate-900">แยกตามอำเภอ</caption>
             <thead className="text-xs text-slate-500">
               <tr><th className="px-5 py-2">อำเภอ</th><th className="px-3 py-2 text-right">ศูนย์</th><th className="px-3 py-2 text-right">ผู้พักพิง</th><th className="px-3 py-2 text-right">ที่ว่าง</th><th className="w-44 px-5 py-2">การใช้ความจุ</th></tr>
