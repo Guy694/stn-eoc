@@ -80,7 +80,7 @@ export default function DiseaseMapPage() {
 
     return (
         <EOCLayout>
-            <div className="mx-auto max-w-[1600px] space-y-4">
+            <div className="w-full space-y-4">
                 <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>

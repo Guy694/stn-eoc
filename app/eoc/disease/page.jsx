@@ -55,7 +55,7 @@ export default function DiseasePage() {
 
     return (
         <EOCLayout>
-            <div className="mx-auto max-w-7xl">
+            <div className="w-full">
                 <PageHero
                     className="mb-6"
                     icon="biohazard"

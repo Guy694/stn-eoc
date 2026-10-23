@@ -213,7 +213,7 @@ export default function ServicePointsPage() {
     if (!activeSession) {
         return (
             <EOCLayout>
-                <div className="p-6">
+                <div className="w-full">
                     <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
                         <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
                         <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
@@ -226,7 +226,7 @@ export default function ServicePointsPage() {
 
     return (
         <EOCLayout>
-            <div className="p-6">
+            <div className="w-full">
                 {/* Header */}
                 <PageHero icon="route" title="จุดบริการชั่วคราว" subtitle={<>เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย</>} actions={<><button
                         onClick={() => { setEditingPoint(null); resetForm(); setShowModal(true); }}

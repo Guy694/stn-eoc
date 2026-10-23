@@ -133,7 +133,7 @@ export default function CitizensManagementPage() {
 
     return (
         <EOCLayout>
-            <div className="max-w-7xl mx-auto p-6">
+            <div className="w-full">
                 {/* Header */}
                 <PageHero title="จัดการผู้ใช้ประชาชน" subtitle="รายชื่อประชาชนที่ลงทะเบียนผ่าน ThaiD และสามารถเลื่อนตำแหน่งเป็นเจ้าหน้าที่" className="mb-6" />
 

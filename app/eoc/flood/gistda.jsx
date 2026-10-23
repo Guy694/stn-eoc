@@ -107,7 +107,7 @@ export default function GistdaFloodMapPage() {
             <div className="h-screen flex flex-col">
                 {/* Header */}
                 <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
-                    <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                    <div className="w-full flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h1 className="text-xl font-semibold text-white sm:text-2xl">
                                 แผนที่อุทกภัยน้ำท่วม GISTDA
@@ -141,7 +141,7 @@ export default function GistdaFloodMapPage() {
                 {/* Stats Bar */}
                 {floodData && (
                     <div className="bg-slate-50 border-b p-4">
-                        <div className="max-w-7xl mx-auto grid grid-cols-3 gap-4">
+                        <div className="w-full grid grid-cols-3 gap-4">
                             <div className="border border-slate-200 bg-white p-3 rounded-2xl">
                                 <div className="text-sm text-slate-600">พื้นที่อุทกภัยน้ำท่วมทั้งหมด</div>
                                 <div className="text-2xl font-bold text-[#0b4c86]">

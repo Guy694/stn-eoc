@@ -67,7 +67,7 @@ export default function MeetingBriefView({ eocType = "flood" }) {
   const numbers = numberItems(directiveItems);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 print:max-w-none print:space-y-3 print:text-[12px]">
+    <div className="w-full space-y-4 print:max-w-none print:space-y-3 print:text-[12px]">
       <style>{"@media print { @page { size: A4; margin: 12mm; } }"}</style>
       <header className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#0b4c86] pb-3">
         <div>

@@ -108,7 +108,7 @@ export default function AnalyticsPage() {
 
     return (
         <EOCLayout>
-            <main className="mx-auto max-w-7xl font-[family-name:var(--font-kanit)]">
+            <main className="w-full font-[family-name:var(--font-kanit)]">
                 <PageHero
                     icon="activity"
                     eyebrow="ข้อมูลสนับสนุนการตัดสินใจ"

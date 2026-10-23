@@ -20,7 +20,7 @@ export default function Header() {
     };
 
     return (
-        <header className="bg-[#083865] font-[family-name:var(--font-kanit)] text-white shadow-[0_10px_24px_-18px_rgba(2,6,23,.8)]">
+        <header className="relative z-50 bg-[#083865] font-[family-name:var(--font-kanit)] text-white shadow-[0_10px_24px_-18px_rgba(2,6,23,.8)]">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex items-center justify-between">
                     {/* Logo and Title */}
@@ -104,7 +104,7 @@ export default function Header() {
                                                     หน้าหลัก
                                                 </a>
                                                 <a
-                                                    href="/profile"
+                                                    href="/stn-eoc/profile"
                                                     className="block px-4 py-2 text-slate-700 hover:bg-slate-100 transition-colors"
                                                     onClick={() => setShowMenu(false)}
                                                 >
@@ -129,7 +129,7 @@ export default function Header() {
                             </div>
                         ) : (
                             <a
-                                href="/login"
+                                href="/stn-eoc/login"
                                 className="bg-[#0b4c86] hover:bg-[#0f5c9f] px-4 py-2 rounded-xl ring-1 ring-white/15 transition-colors text-sm font-medium"
                             >
                                 <span className="inline-flex items-center gap-2">

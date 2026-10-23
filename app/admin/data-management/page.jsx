@@ -155,7 +155,7 @@ export default function DataManagementPage() {
   if (user.role !== "admin") return null;
 
   return <EOCLayout>
-    <section className="mx-auto max-w-7xl space-y-5">
+    <section className="w-full space-y-5">
       <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
         <p className="text-xs font-semibold text-blue-100">ผู้ดูแลระบบ · ข้อมูลหลักของระบบ</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">

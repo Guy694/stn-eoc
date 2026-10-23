@@ -100,7 +100,7 @@ export default function EOCOverview() {
     if (sessions.length === 0) {
         return (
             <EOCLayout>
-                <div className="mx-auto max-w-7xl">
+                <div className="w-full">
                     <h1 className="mb-6 flex items-center gap-2.5 font-[family-name:var(--font-kanit)] text-2xl font-semibold text-slate-900"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="barChart" className="h-5 w-5" /></span>ภาพรวม EOC</h1>
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
                         <div className="flex items-center">
@@ -134,7 +134,7 @@ export default function EOCOverview() {
 
     return (
         <EOCLayout>
-            <div className="mx-auto max-w-7xl">
+            <div className="w-full">
                 {/* หัวเรื่อง — สถานะเหตุการณ์แสดงอยู่แล้วในแถบเหตุการณ์ด้านบน จึงไม่ซ้ำ */}
                 <header className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <h1 className="text-2xl font-black text-slate-900 sm:text-[1.7rem]">ภาพรวมสถานการณ์ <span className="font-semibold text-[#0b4c86]">{getEocTypeLabel(session.eoc_type || 'flood')} ครั้งที่ {session.session_number}</span></h1>

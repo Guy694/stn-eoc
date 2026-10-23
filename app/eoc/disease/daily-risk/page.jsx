@@ -95,7 +95,7 @@ export default function DiseaseDailyRiskPage() {
     if (!data) {
         return (
             <EOCLayout>
-                <div className="mx-auto max-w-7xl">
+                <div className="w-full">
                     <div className="text-center py-12">
                         <p className="text-slate-600">ไม่พบข้อมูล</p>
                     </div>
@@ -107,7 +107,7 @@ export default function DiseaseDailyRiskPage() {
     if (!availableDates.length) {
         return (
             <EOCLayout>
-                <div className="mx-auto max-w-7xl">
+                <div className="w-full">
                     <div className="border border-dashed border-slate-300 bg-white py-12 text-center shadow-sm">
                         <AppIcon icon="calendar" className="mx-auto h-10 w-10 text-slate-400" />
                         <h1 className="mt-3 text-xl font-black text-slate-800">ยังไม่มีรายงานโรคในเหตุการณ์นี้</h1>
@@ -128,7 +128,7 @@ export default function DiseaseDailyRiskPage() {
 
     return (
         <EOCLayout>
-            <div className="mx-auto max-w-7xl">
+            <div className="w-full">
                 {/* Header */}
                 <PageHero icon="biohazard" title="สรุปสถานการณ์โรครายวัน" subtitle={<>แสดงข้อมูลวันที่: {formatDate}</>} className="mb-6" />
 

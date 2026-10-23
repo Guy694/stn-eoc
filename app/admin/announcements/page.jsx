@@ -376,7 +376,7 @@ function AnnouncementsContent() {
 
     return (
         <EOCLayout>
-            <div className="container mx-auto px-4">
+            <div className="w-full">
                 {/* Header */}
                 <PageHero icon="megaphone" title={<>จัดการประชาสัมพันธ์/แบนเนอร์ {filters.eoc_type && ( <span className="text-xl text-blue-100"> ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label}) </span> )}</>} subtitle="จัดการแบนเนอร์และประกาศข่าวสารต่างๆ" actions={<><button
                         onClick={openCreateModal}

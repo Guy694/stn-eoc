@@ -155,7 +155,7 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4 font-[family-name:var(--font-kanit)]">
+    <div className="w-full space-y-4 font-[family-name:var(--font-kanit)]">
       <PageHero
         icon="waves"
         eyebrow={publicMode ? "ข้อมูลจากสถานีตรวจวัด จ.สตูล" : "วิเคราะห์ข้อมูล"}

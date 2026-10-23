@@ -26,7 +26,9 @@ export default function EOCLayout({ children }) {
                 {showSidebar && <div className="contents print:hidden"><Sidebar /></div>}
                 <main data-ui-rounded className="flex-1 bg-[#edf5fc] overflow-auto w-full lg:w-auto print:overflow-visible print:bg-white">
                     {/* <Breadcrumb /> */}
-                    <div className="p-4 sm:p-6 print:p-0">
+                    {/* ความกว้าง/ระยะขอบของทุกหน้าเจ้าหน้าที่กำหนดที่นี่ที่เดียว (หน้าไม่ต้องใส่ padding/max-width ซ้ำ)
+                        มือถือเหลือขอบข้างแคบ ๆ ให้เนื้อหากว้างเต็มที่ · จอกว้างมากจำกัดไว้ไม่ให้บรรทัดยาวเกินอ่าน */}
+                    <div className="mx-auto w-full max-w-screen-2xl px-2 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5 print:max-w-none print:p-0">
                         {showSidebar && <div className="print:hidden"><EventBar /></div>}
                         {showSidebar && <OfflineSyncBar />}
                         {children}

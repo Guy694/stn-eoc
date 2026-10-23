@@ -40,14 +40,17 @@ const QUICK_QUESTIONS = [
   { icon: Tent, text: "ศูนย์พักพิงที่เปิดอยู่" },
   { icon: Hospital, text: "โรงพยาบาลใกล้ฉันเปิดไหม" },
   { icon: Anchor, text: "น้ำทะเลหนุนวันนี้เป็นยังไง" },
-  { icon: Sparkles, text: "ถ้าน้ำกำลังขึ้น ควรเตรียมตัวอย่างไร" }
+  { icon: Sparkles, text: "ถ้าน้ำกำลังขึ้น ควรเตรียมตัวอย่างไร" },
+  { icon: Hospital, text: "มีไข้หลังลุยน้ำ เป็นโรคฉี่หนูไหม" },
+  { icon: ShieldAlert, text: "งูเข้าบ้านหรือถูกงูกัดทำยังไง" }
 ];
 
 const SOURCE_STYLE = {
   database: { label: "ข้อมูลจริงจากระบบ", icon: Database, className: "bg-[#e3f1f4] text-[#11466e]" },
   calculated: { label: "คำนวณจากข้อมูลในระบบ", icon: Database, className: "bg-[#e3f1f4] text-[#11466e]" },
   ai_grounded: { label: "AI ตอบจากข้อมูลของระบบ", icon: Sparkles, className: "bg-[#efeafb] text-[#5b3a9e]" },
-  general_guidance: { label: "คำแนะนำทั่วไปจาก AI", icon: Sparkles, className: "bg-slate-100 text-slate-600" }
+  general_guidance: { label: "คำแนะนำทั่วไปจาก AI", icon: Sparkles, className: "bg-slate-100 text-slate-600" },
+  knowledge: { label: "คำแนะนำเบื้องต้นจากศูนย์ฯ", icon: Hospital, className: "bg-[#e8f5ec] text-[#166534]" }
 };
 
 function readStorage(key, fallback) {

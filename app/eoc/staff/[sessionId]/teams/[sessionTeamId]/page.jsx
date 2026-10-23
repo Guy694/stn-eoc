@@ -53,7 +53,7 @@ export default function TeamWorkspacePage() {
 
     return (
         <EOCLayout>
-            <section className="mx-auto max-w-6xl space-y-5">
+            <section className="w-full space-y-5">
                 <Link href="/eoc/staff" className="text-sm font-bold text-[#0b4c86] hover:underline">กลับไปยังเมนูกลุ่มภารกิจ</Link>
                 {loading ? <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังโหลดพื้นที่ทำงาน...</div> : error ? <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm font-medium text-red-800">{error}</div> : team && <>
                     <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">

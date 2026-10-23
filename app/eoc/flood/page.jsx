@@ -151,7 +151,7 @@ export default function FloodMapPage() {
 
     return (
         <EOCLayout>
-            <div className="mx-auto max-w-7xl">
+            <div className="w-full">
                 {/* Page Header */}
                 <PageHero icon="droplet" title={<>{mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}</>} subtitle={<>{mode === "realtime" ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์" : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}</>} actions={<>{user && (
                             <button

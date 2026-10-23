@@ -92,7 +92,7 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
 
   return (
     <EOCLayout>
-      <section className="mx-auto max-w-7xl space-y-4">
+      <section className="w-full space-y-4">
         <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 space-y-1">
           <p className="text-sm font-semibold text-blue-100">ภารกิจและข้อสั่งการ</p>
           <h1 className="text-xl font-semibold text-white sm:text-2xl">{viewMeta.label}</h1>

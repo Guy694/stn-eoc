@@ -71,7 +71,7 @@ export default function EOCSessionTeamsPage() {
 
     return (
         <EOCLayout>
-            <div className="mx-auto max-w-7xl space-y-4">
+            <div className="w-full space-y-4">
                 <PageHero
                     icon="users"
                     eyebrow="เหตุการณ์ › กลุ่มภารกิจ"

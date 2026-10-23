@@ -210,7 +210,7 @@ export default function ITResourcesPage() {
 
     return (
         <EOCLayout>
-            <div className="p-6">
+            <div className="w-full">
                 {/* Header */}
                 <PageHero title="จัดการทรัพยากร IT Support" subtitle="ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ" className="mb-6" />
 

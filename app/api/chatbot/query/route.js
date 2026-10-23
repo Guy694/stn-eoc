@@ -6,6 +6,7 @@ import { requireAuth } from '@/lib/auth';
 import { getClientIp } from '@/lib/clientIp';
 import { consumeRateLimit, tooManyRequestsResponse } from '@/lib/rateLimit';
 import { actionsForTopic, answerResolved, buildSnapshot, detectLiveIntent, isAdviceQuestion, resolveQuestion } from '@/lib/assistantLive';
+import { knowledgeAnswer, knowledgeFacts, matchKnowledge } from '@/lib/assistantKnowledge';
 import { loadAssistantData } from '@/lib/assistantData';
 
 // คำถามต่อเนื่องที่แนะนำหลังคำตอบแต่ละแบบ (ชวนถามเรื่องที่เกี่ยวข้องกันต่อ)
@@ -76,6 +77,11 @@ const DISEASE_KNOWLEDGE_PATTERNS = [
     /ฝุ่น|pm\s*2\.?5/i,
     /ยุง|ผื่น|ตาแดง|ท้องร่วง|ตัวร้อน/i,
     /อุบัติเหตุ|เมาแล้วขับ/i,
+    // สุขภาพทั่วไป อาการ การดูแลรักษาเบื้องต้น ปฐมพยาบาล
+    /ปวด|อาการ|รักษา|ป่วย|เจ็บ|บวม|แพ้|คัน|แผล|ปฐมพยาบาล|พบแพทย์|หาหมอ|ไปหมอ/i,
+    /กินยา|ใช้ยา|ยา(อะไร|ตัวไหน|แก้|ลดไข้|ฆ่าเชื้อ|ประจำตัว|หมด)/i,
+    /ตั้งครรภ์|คนท้อง|เบาหวาน|ความดัน|ฟอกไต|ติดเตียง|ผู้สูงอายุ|ทารก|เด็กเล็ก/i,
+    /เครียด|นอนไม่หลับ|สุขภาพจิต|จมน้ำ|cpr|ปั๊มหัวใจ|หมดสติ|เป็นลม/i,
     /leptospirosis/i,
     /อหิวา/i,
     /disease/i,
@@ -129,7 +135,7 @@ function detectAllowedKnowledgeDomain(message) {
 
 function getKnowledgeDomainLabel(domain) {
     if (domain === 'flood') return 'อุทกภัยน้ำท่วม';
-    if (domain === 'disease') return 'โรคและการระบาด';
+    if (domain === 'disease') return 'โรค สุขภาพ อาการ และการดูแลรักษาเบื้องต้น';
     if (domain === 'weather') return 'สภาพฟ้าฝนและอากาศ';
     if (domain === 'flood_and_weather') return 'อุทกภัยน้ำท่วม สภาพฟ้าฝน และบริการช่วยเหลือในจังหวัดสตูล';
     return 'โรค/การระบาด อุทกภัยน้ำท่วม และสภาพฟ้าฝน/อากาศ';
@@ -151,7 +157,7 @@ function buildConversationContext(conversationHistory) {
 }
 
 function buildScopeAnswer() {
-    return 'ขออภัยครับ เรื่องนี้อยู่นอกสิ่งที่น้องสจ๊วต ตอบได้\nผมช่วยได้เรื่อง น้ำท่วม ฝนและพยากรณ์ ระดับน้ำในคลอง ความเสี่ยงรายอำเภอ ศูนย์พักพิง สถานพยาบาล โรคและการระบาด การขอความช่วยเหลือ และการติดตามคำขอ ลองเลือกคำถามด้านล่างได้เลยครับ';
+    return 'ขออภัยครับ เรื่องนี้อยู่นอกสิ่งที่น้องสจ๊วต ตอบได้\nผมช่วยได้เรื่อง น้ำท่วมและการเตรียมตัว ฝนและพยากรณ์ ระดับน้ำในคลอง ความเสี่ยงรายอำเภอ ศูนย์พักพิง สถานพยาบาล โรคที่มากับน้ำท่วม อาการและการดูแลตัวเองเบื้องต้น ปฐมพยาบาล การขอความช่วยเหลือ และการติดตามคำขอ ลองเลือกคำถามด้านล่างได้เลยครับ';
 }
 
 function buildAssistantUnavailableAnswer() {
@@ -545,7 +551,10 @@ const SYSTEM_INSTRUCTION = `คุณคือ "น้องสจ๊วต" ข
 หลักการ:
 - ตัวเลขและสถานการณ์ "ตอนนี้" ใช้ได้เฉพาะจาก "ข้อมูลสถานการณ์จริงจากระบบ" และ "ข้อเท็จจริงที่เกี่ยวกับคำถาม" ที่ให้ไว้ ห้ามแต่งตัวเลข สถานที่ เบอร์โทร หรือเวลาเพิ่ม ถ้าไม่มีข้อมูลให้บอกตรง ๆ
 - คิดต่อจากข้อมูลให้ผู้ใช้: เชื่อมฝน + ระดับน้ำในคลอง + แนวโน้มขึ้น/ลง + น้ำทะเลหนุน + พยากรณ์ เป็นข้อสรุปว่าควรทำอะไร ไม่ใช่แค่ทวนตัวเลข
-- เรื่องสุขภาพ: ให้คำแนะนำเชิงสาธารณสุข ไม่วินิจฉัย ไม่สั่งยาหรือขนาดยา อาการรุนแรงให้โทร 1669 ทันที
+- เรื่องสุขภาพ: ตอบได้กว้าง ทั้งโรคที่มากับน้ำท่วม อาการ การดูแลตัวเองเบื้องต้น ปฐมพยาบาล การป้องกัน และ "อาการแบบไหนต้องพบแพทย์" ตามแนวทางกระทรวงสาธารณสุข
+  ไม่วินิจฉัยเฉพาะราย ไม่ระบุชื่อยาอันตรายหรือขนาดยา (ให้ใช้ตามฉลากหรือปรึกษาเภสัชกร/แพทย์) ปิดท้ายเรื่องสุขภาพด้วยสัญญาณอันตรายที่ต้องไปโรงพยาบาล อาการรุนแรงให้โทร 1669 ทันที
+- ถ้ามี "ความรู้มาตรฐานของศูนย์ฯ" ในข้อเท็จจริง ให้ยึดเป็นหลัก ห้ามขัดแย้ง ปรับให้ตรงกับคำถามและสถานการณ์ของผู้ใช้ได้
+- เบอร์ที่ใช้ได้: 1669 เจ็บป่วยฉุกเฉิน, 1784 ปภ., 1422 กรมควบคุมโรค, 1323 สุขภาพจิต, 1367 ศูนย์พิษวิทยา (ห้ามแต่งเบอร์อื่น)
 - อันตรายถึงชีวิต (ติดน้ำ ไฟฟ้าดูด หมดสติ) ขึ้นต้นด้วยสิ่งที่ต้องทำทันทีและเบอร์ฉุกเฉิน
 - นอกขอบเขต (การเมือง บันเทิง เขียนโค้ด ฯลฯ) ปฏิเสธสั้น ๆ แล้วชวนถามเรื่องที่ช่วยได้
 - ไม่ขอและไม่เปิดเผยข้อมูลส่วนบุคคล
@@ -595,8 +604,32 @@ function liveResponse(live, extra = {}) {
     });
 }
 
-async function createKnowledgeResponse({ model, message, conversationHistory, domain, snapshot, live = null }) {
+/** คำตอบจากคลังความรู้ของศูนย์ฯ (ไม่ใช้ AI) */
+function knowledgeResponse(kb, extra = {}) {
+    return Response.json({
+        success: true,
+        data: {
+            answer: kb.answer,
+            sql: null,
+            results: null,
+            resultCount: 0,
+            source: `knowledge_${kb.topicId}`,
+            source_type: 'knowledge',
+            source_label: 'คำแนะนำเบื้องต้นด้านสาธารณสุขและการรับมือภัย (คลังความรู้ของศูนย์ฯ)',
+            generated_at: new Date().toISOString(),
+            actions: kb.actions || [],
+            suggestions: kb.suggestions || FOLLOW_UPS.general,
+            ...extra
+        }
+    });
+}
+
+async function createKnowledgeResponse({ model, message, conversationHistory, domain, snapshot, live = null, kb = null, topics = [] }) {
     let answer;
+    const facts = [
+        live?.answer || null,
+        topics.length ? `ความรู้มาตรฐานของศูนย์ฯ:\n${knowledgeFacts(topics)}` : null
+    ].filter(Boolean).join('\n\n');
     try {
         answer = await generateKnowledgeAnswer({
             model,
@@ -604,11 +637,12 @@ async function createKnowledgeResponse({ model, message, conversationHistory, do
             conversationHistory,
             domain,
             snapshot,
-            facts: live?.answer || null
+            facts: facts || null
         });
     } catch (knowledgeError) {
         console.error('Failed to generate knowledge response:', knowledgeError?.message || knowledgeError);
-        // AI ขัดข้อง: ถ้ามีข้อมูลจริงที่เกี่ยวข้อง ตอบด้วยข้อมูลนั้นแทนการบอกว่าตอบไม่ได้
+        // AI ขัดข้อง: ตอบจากคลังความรู้ หรือข้อมูลจริงที่เกี่ยวข้อง แทนการบอกว่าตอบไม่ได้
+        if (kb) return knowledgeResponse(kb, { source_label: 'คำแนะนำเบื้องต้นจากคลังความรู้ของศูนย์ฯ (AI ไม่พร้อม)' });
         if (live) return liveResponse(live, { source_label: `${live.sourceLabel} (AI ไม่พร้อม แสดงข้อมูลจากระบบแทน)` });
         return createAssistantUnavailableResponse({
             domain,
@@ -628,8 +662,8 @@ async function createKnowledgeResponse({ model, message, conversationHistory, do
             source_label: snapshot ? 'AI ตอบจากข้อมูลสถานการณ์ของระบบ ร่วมกับความรู้ทั่วไป' : 'คำแนะนำทั่วไปจาก AI ไม่ใช่ข้อมูลสถานการณ์จาก EOC',
             generated_at: new Date().toISOString(),
             domain,
-            actions: live?.actions?.length ? live.actions : actionsForTopic(message),
-            suggestions: FOLLOW_UPS[live?.intent || detectLiveIntent(message) || 'general']
+            actions: live?.actions?.length ? live.actions : kb?.actions?.length ? kb.actions : actionsForTopic(message),
+            suggestions: kb?.suggestions || FOLLOW_UPS[live?.intent || detectLiveIntent(message) || 'general']
         }
     });
 }
@@ -707,6 +741,11 @@ export async function POST(request) {
 
         // คำถามสถานการณ์ "ตอนนี้" (น้ำ ฝน ความเสี่ยง ศูนย์พักพิง ฯลฯ) ตอบจากข้อมูลจริงทันที ไม่ต้องรอ AI
         // ยกเว้นคำถามขอคำแนะนำ ("ควรอพยพไหม" "เดินทางได้ไหม") ให้ AI คิดต่อจากข้อมูลจริงชุดเดียวกัน
+        // ความรู้ด้านสุขภาพ/การรับมือภัย: เรื่องเร่งด่วนถึงชีวิต (ไฟดูด จมน้ำ งูกัด) ตอบจากคลังความรู้ทันที ไม่รอ AI
+        const topics = analyticsContext ? [] : matchKnowledge(message);
+        const kb = knowledgeAnswer(topics);
+        if (kb?.urgent) return knowledgeResponse(kb);
+
         const assistantData = analyticsContext ? null : await loadAssistantData().catch(() => null);
         const district = resolved.district;
         const live = assistantData ? answerResolved(resolved, assistantData) : null;
@@ -714,13 +753,16 @@ export async function POST(request) {
         if (live && (!advice || !process.env.GEMINI_API_KEY)) {
             return liveResponse(live, resolved.followUp ? { follow_up: true } : {});
         }
+        // ไม่มี AI: ตอบจากคลังความรู้ได้เลย
+        if (kb && !process.env.GEMINI_API_KEY) return knowledgeResponse(kb);
+        const knowledgeDomain = allowedKnowledgeDomain || (kb ? (kb.kind === 'flood' ? 'flood' : 'disease') : null);
 
         // Database access is deliberately limited to the deterministic query
         // templates above. Free-form AI-generated SQL must never be executed.
-        if (allowedKnowledgeDomain) {
+        if (knowledgeDomain) {
             if (!process.env.GEMINI_API_KEY) {
                 return createAssistantUnavailableResponse({
-                    domain: allowedKnowledgeDomain,
+                    domain: knowledgeDomain,
                     reason: 'ai_not_configured'
                 });
             }
@@ -733,9 +775,11 @@ export async function POST(request) {
                 model: knowledgeModel,
                 message,
                 conversationHistory,
-                domain: allowedKnowledgeDomain,
+                domain: knowledgeDomain,
                 snapshot: assistantData ? buildSnapshot(assistantData, { district }) : null,
-                live
+                live,
+                kb,
+                topics
             });
         }
 

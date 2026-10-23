@@ -40,3 +40,25 @@ test("AI ขัดข้อง: ยังตอบด้วยข้อมูล
   expect(data.source).toBe("live_water");
   expect(data.source_label).toContain("AI ไม่พร้อม");
 });
+
+test("เรื่องเร่งด่วนถึงชีวิต (งูกัด) ตอบจากคลังความรู้ทันที ไม่รอ AI", async () => {
+  const data = await ask("ถูกงูกัดที่ขาต้องทำยังไง");
+  expect(data.source).toBe("knowledge_snakebite");
+  expect(data.answer).toContain("ห้ามกรีดแผล");
+  expect(mockGenerate).not.toHaveBeenCalled();
+});
+
+test("ถามโรค/การรักษา: AI ตอบโดยยึดความรู้มาตรฐานของศูนย์ฯ", async () => {
+  mockGenerate.mockResolvedValueOnce({ response: { text: () => "มีไข้หลังลุยน้ำควรรีบพบแพทย์ครับ" } });
+  const data = await ask("มีไข้ ปวดน่องหลังลุยน้ำ เป็นอะไร รักษายังไง");
+  expect(data.answer).toContain("พบแพทย์");
+  expect(mockGenerate.mock.calls[0][0]).toContain("ความรู้มาตรฐานของศูนย์ฯ");
+  expect(mockGenerate.mock.calls[0][0]).toContain("โรคฉี่หนู");
+});
+
+test("AI ขัดข้อง: ตอบจากคลังความรู้แทน", async () => {
+  mockGenerate.mockRejectedValueOnce(new Error("quota"));
+  const data = await ask("น้ำกำลังขึ้น ต้องทำยังไงบ้าง");
+  expect(data.source).toBe("knowledge_flood-rising");
+  expect(data.answer).toContain("ตัดไฟที่เบรกเกอร์");
+});

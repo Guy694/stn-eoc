@@ -446,7 +446,7 @@ export default function FloodOperationsTeamPage() {
 
     return (
         <EOCLayout>
-            <div className="mx-auto max-w-[1500px] space-y-5">
+            <div className="w-full space-y-5">
                 <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
                     <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
                         <div>
