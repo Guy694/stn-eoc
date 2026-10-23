@@ -63,8 +63,9 @@ function when(value) {
 export default function VisitorMapCanvas({ points, mode, view, onPickIp }) {
   const max = useMemo(() => Math.max(1, ...points.map((point) => point.visits)), [points]);
   return (
-    <MapContainer bounds={THAILAND} className="h-full w-full" scrollWheelZoom preferCanvas>
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap &copy; CARTO" />
+    <MapContainer bounds={THAILAND} className="h-full w-full [&_.visitor-map-tiles]:opacity-70 [&_.visitor-map-tiles]:grayscale-[60%]" scrollWheelZoom preferCanvas>
+      {/* ใช้แผนที่ OpenStreetMap แบบเดียวกับแผนที่อื่นในระบบ (CARTO ต้องใช้ API key บนโดเมนจริง) · ทำให้สีจางลงเล็กน้อยเพื่อให้เห็นจุด/ความหนาแน่นชัด */}
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" className="visitor-map-tiles" />
       <Fit points={points} view={view} />
       {mode === "heat" ? <HeatLayer points={points} /> : null}
       {/* จุดเล็ก (โหมดจุด) หรือจุดโปร่งใสให้กดดูรายละเอียดได้ (โหมด heatmap) */}
