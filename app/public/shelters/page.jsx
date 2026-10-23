@@ -6,6 +6,7 @@ import ShelterCenterMap from "@/components/ShelterCenterMap";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
+import { shareVisitGps } from "@/lib/visitorGps";
 
 const NO_DATA_MESSAGE = "ยังไม่มีข้อมูลการเปิดศูนย์พักพิง";
 const HEADING = "font-[family-name:var(--font-kanit)]";
@@ -249,6 +250,7 @@ export default function PublicSheltersPage() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setUserLocation({ lat: position.coords.latitude, lon: position.coords.longitude });
+        shareVisitGps(position.coords, "shelters");
         setLocationStatus("ready");
         setLocationMessage("เรียงจากศูนย์ที่อยู่ใกล้คุณที่สุด");
       },

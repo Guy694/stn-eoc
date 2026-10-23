@@ -10,6 +10,7 @@ import { showWarning } from "@/lib/sweetAlert";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { trackPublicUsage } from "@/lib/publicUsage";
 import TrackingCodeCard from "@/components/public/TrackingCodeCard";
+import { shareVisitGps } from "@/lib/visitorGps";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -145,6 +146,7 @@ export default function ReportIncidentPage() {
                     lng: position.coords.longitude
                 });
                 setGpsStatus("success");
+                shareVisitGps(position.coords, "report-incident");
             },
             (error) => {
                 setGpsStatus(error.code === error.PERMISSION_DENIED ? "denied" : "error");

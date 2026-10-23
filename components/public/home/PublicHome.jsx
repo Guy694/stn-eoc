@@ -37,6 +37,7 @@ import SeaTodayCard from "@/components/public/home/SeaTodayCard";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
 import { mergeAnnouncementSources } from "@/lib/riskcomMedia";
+import { shareVisitGps } from "@/lib/visitorGps";
 
 // หน้าแรกสำหรับประชาชน
 // จุดเด่นเดียวของหน้า: แผนที่ 7 อำเภอที่ระบายสีตามความเสี่ยงวันนี้ แตะแล้วเห็น "พื้นที่ของฉัน" ทันที
@@ -411,6 +412,7 @@ export default function PublicHome() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const here = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+        shareVisitGps(position.coords, "home-area");
         const nearest = districts.map((district) => ({ district, km: distanceKm(here, district) })).sort((a, b) => a.km - b.km)[0];
         if (!nearest || nearest.km > 60) {
           setLocationMessage("คุณอยู่นอกจังหวัดสตูล แตะเลือกอำเภอบนแผนที่ได้เลย");

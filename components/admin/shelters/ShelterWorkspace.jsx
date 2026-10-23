@@ -210,6 +210,25 @@ export default function ShelterWorkspace() {
     }
   };
 
+  // ---------- เปิด/ปิดทุกศูนย์ด้วยปุ่มเดียว ----------
+  const usableShelters = useMemo(() => activations.filter((row) => Number(row.is_active) === 1 || Number(row.is_activated_for_session) === 1), [activations]);
+  const allOpen = usableShelters.length > 0 && usableShelters.every((row) => Number(row.is_activated_for_session) === 1);
+  const [bulkAction, setBulkAction] = useState(null); // "open_all" | "close_all"
+  const confirmBulk = async () => {
+    setBusy(true);
+    try {
+      const json = await apiRequest(ACTIVATION_API, { method: "POST", body: { bulk: bulkAction, session_id: currentEvent.sessionId, eoc_type: currentEvent.type } });
+      success(json.message);
+      setBulkAction(null);
+      setSessionFilter(bulkAction === "open_all" ? "active" : "all");
+      loadActivations();
+    } catch (error) {
+      fail(error.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   // ---------- ทะเบียนกลาง ----------
   const [editing, setEditing] = useState(null); // null = ปิด, {} = เพิ่ม, row = แก้ไข
   const [form, setForm] = useState(EMPTY_SHELTER);
@@ -312,7 +331,27 @@ export default function ShelterWorkspace() {
               <p className="rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{sessionPerms.read_only_message}</p>
             ) : null}
             <ShelterSessionDashboard summary={dashboard} onShowShelter={(name) => { setSessionFilter("all"); setDistrict("all"); setSearch(name); }} />
-            <h3 className="pt-2 text-base font-black text-slate-900">รายชื่อศูนย์ในเหตุการณ์</h3>
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+              <h3 className="text-base font-black text-slate-900">รายชื่อศูนย์ในเหตุการณ์</h3>
+              {canEditSession && usableShelters.length ? (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={allOpen}
+                  onClick={() => setBulkAction(allOpen ? "close_all" : "open_all")}
+                  disabled={busy}
+                  className={`flex items-center gap-3 rounded-full border py-1.5 pl-1.5 pr-4 text-left text-sm font-bold transition-colors disabled:opacity-60 ${allOpen ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"}`}
+                >
+                  <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${allOpen ? "bg-emerald-600" : sessionStats.count ? "bg-amber-400" : "bg-slate-300"}`} aria-hidden="true">
+                    <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform motion-reduce:transition-none ${allOpen ? "translate-x-[22px]" : "translate-x-0.5"}`} />
+                  </span>
+                  <span className="leading-tight">
+                    {allOpen ? "ศูนย์ทั้งหมดเปิดอยู่" : "เปิดศูนย์ทั้งหมด"}
+                    <span className="block text-xs font-medium opacity-80">เปิดอยู่ {sessionStats.count}/{usableShelters.length} ศูนย์ · แตะเพื่อ{allOpen ? "ปิดทั้งหมด" : "เปิดทั้งหมด"}</span>
+                  </span>
+                </button>
+              ) : null}
+            </div>
             <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อศูนย์ ตำบล อำเภอ">
               {openEvents.length > 1 ? (
                 <FilterSelect label="เหตุการณ์" value={eventKey} onChange={setEventKey} options={openEvents.map((item) => ({ value: item.type, label: item.label }))} />
@@ -434,6 +473,27 @@ export default function ShelterWorkspace() {
           {toggleRow && Number(toggleRow.is_activated_for_session) === 1
             ? <>ปิดใช้ <strong>{toggleRow?.sheltername}</strong> ศูนย์จะไม่แสดงเป็นศูนย์ที่เปิดรับบนหน้าเว็บประชาชน (ประวัติยอดผู้พักพิงยังอยู่)</>
             : <>เปิดใช้ <strong>{toggleRow?.sheltername}</strong> ใน{currentEvent?.label} ศูนย์จะแสดงบนหน้าเว็บประชาชนทันที</>}
+        </p>
+      </AppDialog>
+
+      {/* เปิด/ปิดทุกศูนย์ */}
+      <AppDialog
+        open={Boolean(bulkAction)}
+        onOpenChange={(open) => !open && !busy && setBulkAction(null)}
+        title={bulkAction === "close_all" ? "ปิดศูนย์พักพิงทั้งหมด?" : "เปิดศูนย์พักพิงทั้งหมด?"}
+        size="sm"
+        busy={busy}
+        footer={(
+          <AppDialogActions>
+            <AppDialogCancel disabled={busy} />
+            <Button variant={bulkAction === "close_all" ? "danger" : "primary"} onClick={confirmBulk} disabled={busy}>{busy ? "กำลังบันทึก…" : bulkAction === "close_all" ? "ปิดทั้งหมด" : "เปิดทั้งหมด"}</Button>
+          </AppDialogActions>
+        )}
+      >
+        <p className="text-sm text-slate-700">
+          {bulkAction === "close_all"
+            ? <>ปิดใช้ศูนย์ที่เปิดอยู่ทั้ง <strong>{sessionStats.count} ศูนย์</strong> ใน{currentEvent?.label} ศูนย์จะหายจากหน้าเว็บประชาชนทันที (ยอดผู้พักพิงที่บันทึกไว้ยังอยู่ในประวัติ)</>
+            : <>เปิดใช้ศูนย์ในทะเบียนที่ยังไม่เปิดอีก <strong>{usableShelters.length - sessionStats.count} ศูนย์</strong> ใน{currentEvent?.label} รวมเป็น {usableShelters.length} ศูนย์ ทุกศูนย์จะแสดงบนหน้าเว็บประชาชนทันที</>}
         </p>
       </AppDialog>
 

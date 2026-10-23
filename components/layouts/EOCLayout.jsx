@@ -8,6 +8,7 @@ import OfflineSyncBar from "@/components/admin/OfflineSyncBar";
 import WaterAlertWatcher from "@/components/admin/WaterAlertWatcher";
 import HelpRequestWatcher from "@/components/admin/HelpRequestWatcher";
 import StackTableLabels from "@/components/common/StackTableLabels";
+import StaffGeoConsent from "@/components/StaffGeoConsent";
 
 import { useAuth } from "@/context/AuthContext";
 
@@ -38,6 +39,8 @@ export default function EOCLayout({ children }) {
             {showSidebar && user ? <HelpRequestWatcher /> : null}
             {/* ตาราง class="stack-mobile" แสดงเป็นการ์ดบนมือถือ */}
             <StackTableLabels />
+            {/* ขอตำแหน่ง GPS เพื่อความปลอดภัย (เจ้าหน้าที่ ไม่บังคับ) */}
+            {showSidebar && user ? <StaffGeoConsent /> : null}
         </div>
     );
 }

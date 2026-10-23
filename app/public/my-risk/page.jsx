@@ -38,6 +38,7 @@ import { trackPublicUsage } from "@/lib/publicUsage";
 import FloodOutlookCard from "@/components/public/FloodOutlookCard";
 import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 import { hasThaiVoice, primeSpeech, readAloud, stopSpeaking } from "@/lib/readAloud";
+import { shareVisitGps } from "@/lib/visitorGps";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -157,6 +158,7 @@ function MyRiskContent() {
     navigator.geolocation.getCurrentPosition(
       (result) => {
         pick({ lat: result.coords.latitude, lng: result.coords.longitude }, "gps");
+        shareVisitGps(result.coords, "my-risk");
         setGps({ state: "idle", message: "" });
       },
       () => {
@@ -264,7 +266,7 @@ function MyRiskContent() {
     label: meta.label,
     place: placeName,
     reasons: [...result.home.reasons, ...(result.district?.risk_reasons || []).map((reason) => `อ.${result.district.district_name}: ${reason}`)],
-    advice: homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen })
+    advice: homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen: sheltersOpen && result.shelters.length > 0 })
   }) : "");
   const listen = async () => {
     const ok = await readAloud(speechFor(), { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) });
@@ -435,7 +437,7 @@ function MyRiskContent() {
                 </ul>
                 <h3 className="mt-4 font-black text-slate-900">สิ่งที่ควรทำ</h3>
                 <ul className="mt-1.5 space-y-1.5 text-slate-800">
-                  {homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen }).map((item) => (
+                  {homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen: sheltersOpen && result.shelters.length > 0 }).map((item) => (
                     <li key={item} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />{item}</li>
                   ))}
                 </ul>
@@ -524,6 +526,7 @@ function MyRiskContent() {
             {/* ที่พึ่งใกล้บ้าน */}
             <Card title="ที่พึ่งใกล้บ้าน" icon={Hospital}>
               <ul className="divide-y divide-slate-100">
+                {/* แสดงเฉพาะศูนย์ที่เปิดใช้ในเหตุการณ์ที่ยังเปิดอยู่ (เซิร์ฟเวอร์กรองแล้ว) — ปิด EOC แล้วรายการจะว่าง */}
                 {sheltersOpen && result.shelters.map(({ item, km }) => (
                   <li key={`s-${item.id}`} className="flex items-center gap-3 py-2.5">
                     <Tent className="h-5 w-5 shrink-0 text-violet-700" aria-hidden="true" />
@@ -559,7 +562,9 @@ function MyRiskContent() {
                   );
                 })}
               </ul>
-              {!sheltersOpen && <p className="mt-2 text-xs text-slate-500">ศูนย์พักพิงจะแสดงเมื่อเปิดศูนย์ปฏิบัติการ (EOC)</p>}
+              {!sheltersOpen
+                ? <p className="mt-2 text-xs text-slate-500">ศูนย์พักพิงจะแสดงเมื่อเปิดศูนย์ปฏิบัติการ (EOC)</p>
+                : !result.shelters.length ? <p className="mt-2 text-xs text-slate-500">ขณะนี้ยังไม่มีศูนย์พักพิงที่เปิดรับผู้อพยพ</p> : null}
             </Card>
 
             <section className="rounded-2xl border border-red-200 bg-red-50 p-4">

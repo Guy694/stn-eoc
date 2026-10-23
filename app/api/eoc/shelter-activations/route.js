@@ -155,6 +155,58 @@ export async function POST(request) {
         const body = await request.json();
         const { shelter_id, session_id, is_active, notes } = body;
 
+        // ปุ่มเดียว: เปิดทุกศูนย์ในทะเบียน (ที่ใช้งานได้) หรือปิดทุกศูนย์ ในเหตุการณ์นี้
+        if (body.bulk === 'open_all' || body.bulk === 'close_all') {
+            if (!session_id) return NextResponse.json({ success: false, message: 'ต้องระบุ session_id' }, { status: 400 });
+            const gate = await requireModuleEdit(auth.user, session_id, 'shelters');
+            if (gate.response) return gate.response;
+            const pool = await getConnection();
+            const [sessions] = await pool.query("SELECT id, eoc_type, status FROM eoc_sessions WHERE id = ?", [session_id]);
+            if (!sessions.length || sessions[0].status !== 'active') {
+                return NextResponse.json({ success: false, message: 'เหตุการณ์นี้ปิดแล้ว เปิดใช้ศูนย์ไม่ได้' }, { status: 409 });
+            }
+            const eocType = body.eoc_type || null;
+            let changed = 0;
+            if (body.bulk === 'open_all') {
+                const [shelters] = await pool.query(
+                    `SELECT sc.id, ssa.id AS activation_id FROM shelter_centers sc
+                     LEFT JOIN shelter_session_activations ssa ON ssa.shelter_id = sc.id AND ssa.session_id = ?
+                     WHERE sc.is_active = 1 AND (ssa.id IS NULL OR ssa.is_active = 0)${eocType ? ' AND sc.eoc_type = ?' : ''}`,
+                    eocType ? [session_id, eocType] : [session_id]
+                );
+                for (const { id, activation_id: activationId } of shelters) {
+                    if (activationId) {
+                        await pool.query('UPDATE shelter_session_activations SET is_active = 1, deactivated_at = NULL WHERE id = ?', [activationId]);
+                    } else {
+                        await pool.query('INSERT INTO shelter_session_activations (shelter_id, session_id, is_active, notes) VALUES (?, ?, 1, NULL)', [id, session_id]);
+                    }
+                }
+                changed = shelters.length;
+            } else {
+                const [result] = await pool.query(
+                    `UPDATE shelter_session_activations ssa
+                     ${eocType ? 'JOIN shelter_centers sc ON sc.id = ssa.shelter_id AND sc.eoc_type = ?' : ''}
+                     SET ssa.is_active = 0, ssa.deactivated_at = NOW()
+                     WHERE ssa.session_id = ? AND ssa.is_active = 1`,
+                    eocType ? [eocType, session_id] : [session_id]
+                );
+                changed = result.affectedRows || 0;
+            }
+            const opening = body.bulk === 'open_all';
+            await recordChange({
+                request, user: auth.user, action: 'data_update', table: 'shelter_session_activations', id: `session:${session_id}`,
+                sessionId: session_id, description: `${opening ? 'เปิด' : 'ปิด'}ใช้ศูนย์พักพิงทั้งหมดในเหตุการณ์ (${changed} ศูนย์)`
+            });
+            if (!opening) triggerEventAlerts(session_id);
+            return NextResponse.json({
+                success: true,
+                changed,
+                message: changed
+                    ? `${opening ? 'เปิด' : 'ปิด'}ใช้ศูนย์พักพิงแล้ว ${changed} ศูนย์`
+                    : (opening ? 'ทุกศูนย์เปิดใช้อยู่แล้ว' : 'ไม่มีศูนย์ที่เปิดใช้อยู่')
+            });
+        }
+
         if (!shelter_id || !session_id) {
             return NextResponse.json(
                 { success: false, message: 'ต้องระบุ shelter_id และ session_id' },

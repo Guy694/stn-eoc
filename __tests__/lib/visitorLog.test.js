@@ -40,3 +40,34 @@ test("อุปกรณ์/เบราว์เซอร์ และระย
   expect(visitorLogRetentionDays({ VISITOR_LOG_RETENTION_DAYS: "3" })).toBe(90);
   expect(visitorLogRetentionDays({ VISITOR_LOG_RETENTION_DAYS: "180" })).toBe(180);
 });
+
+import { gpsMismatch, gpsPlaceLabel, normalizeGps } from "@/lib/visitorLog";
+
+test("GPS ปัดเหลือ ≈ 1 กม. และตรวจค่า", () => {
+  expect(normalizeGps({ lat: 6.623456, lon: 100.067891, accuracy: 25.4, context: "my-risk" })).toEqual({ latitude: 6.62, longitude: 100.07, accuracy: 25, context: "my-risk" });
+  expect(normalizeGps({ lat: 6.6, lng: 100.1, context: "แปลก" }).context).toBe("staff-consent");
+  expect(normalizeGps({ lat: 200, lon: 1 })).toBeNull();
+  expect(normalizeGps({ lat: 0, lon: 0 })).toBeNull();
+  expect(normalizeGps(null)).toBeNull();
+});
+
+test("ป้ายตำแหน่งจาก GPS และเตือนเมื่อไม่สอดคล้องกับ IP", () => {
+  expect(gpsPlaceLabel({ gps_latitude: 6.85, gps_longitude: 99.78 })).toBe("ใกล้ อ.ละงู จ.สตูล");
+  expect(gpsPlaceLabel({ gps_latitude: 13.75, gps_longitude: 100.5 })).toBe("นอกจังหวัดสตูล");
+  expect(gpsPlaceLabel({ gps_latitude: null })).toBeNull();
+  expect(gpsMismatch({ gps_latitude: 6.62, gps_longitude: 100.07, country: "TH", latitude: 13.75, longitude: 100.5 })).toBeNull(); // เน็ตมือถือขึ้นกรุงเทพฯ ไม่ถือว่าผิดปกติ
+  expect(gpsMismatch({ gps_latitude: 6.62, gps_longitude: 100.07, country: "US", latitude: 37.4, longitude: -122.1 }).reason).toBe("country");
+  expect(gpsMismatch({ gps_latitude: 6.62, gps_longitude: 100.07, country: "TH", latitude: 18.79, longitude: 98.98 })).toBeNull();
+  expect(gpsMismatch({ gps_latitude: 35.68, gps_longitude: 139.69, country: "TH" }).reason).toBe("country");
+  expect(gpsMismatch({ gps_latitude: 6.62, gps_longitude: 100.07, latitude: 51.5, longitude: -0.12 }).reason).toBe("distance");
+});
+
+import { describeIpChain } from "@/lib/clientIp";
+
+test("ตรวจการรับ IP: บอกว่าตั้ง TRUST_PROXY เท่าไรจะได้ IP ไหน", () => {
+  const request = { headers: new Headers({ "x-forwarded-for": "49.228.1.1, 203.0.113.58", "x-real-ip": "203.0.113.58" }) };
+  const result = describeIpChain(request, { TRUST_PROXY: "1" });
+  expect(result.chosen).toBe("203.0.113.58");
+  expect(result.options).toEqual([{ trustProxy: 1, ip: "203.0.113.58" }, { trustProxy: 2, ip: "49.228.1.1" }]);
+  expect(describeIpChain(request, { TRUST_PROXY: "2" }).chosen).toBe("49.228.1.1");
+});

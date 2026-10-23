@@ -1,17 +1,14 @@
 "use client";
 
 // ประวัติผู้เข้าชม: ใครเข้าหน้าไหน เมื่อไร จาก IP และตำแหน่งโดยประมาณใด (ผู้ดูแลระบบ)
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Globe2, MapPin, RefreshCw, ShieldCheck, Users } from "lucide-react";
+import { AlertTriangle, Globe2, MapPin, Navigation, RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { Button, DataTable, FilterSelect, StatStrip, StatusPill, Toolbar } from "@/components/admin/crud";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
-import { locationLabel } from "@/lib/visitorLog";
+import VisitorMap from "@/components/admin/visitors/VisitorMap";
+import IpCheckPanel from "@/components/admin/visitors/IpCheckPanel";
+import { GPS_CONTEXTS, gpsMismatch, gpsPlaceLabel, locationLabel } from "@/lib/visitorLog";
 
-const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
-const CircleMarker = dynamic(() => import("react-leaflet").then((mod) => mod.CircleMarker), { ssr: false });
-const Tooltip = dynamic(() => import("react-leaflet").then((mod) => mod.Tooltip), { ssr: false });
 
 const API = "/stn-eoc/api/admin/visitor-log";
 const DEVICE = { mobile: "มือถือ", tablet: "แท็บเล็ต", desktop: "คอมพิวเตอร์", other: "อื่น ๆ" };
@@ -29,11 +26,9 @@ function NetworkPill({ network }) {
 }
 
 export default function VisitorAccessLog() {
-  const [filters, setFilters] = useState({ days: "7", area: "", q: "", user: "" });
+  const [filters, setFilters] = useState({ days: "7", area: "", q: "", user: "", gps: "" });
   const [search, setSearch] = useState("");
   const [state, setState] = useState({ loading: true, error: "", data: null });
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
   // พิมพ์ค้นหาแล้วรอเล็กน้อยก่อนโหลด
   useEffect(() => {
@@ -41,33 +36,30 @@ export default function VisitorAccessLog() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // ตัวกรองเดียวกันใช้ทั้งรายการและแผนที่
+  const filterParams = useMemo(() => {
+    const params = new URLSearchParams({ days: filters.days });
+    if (filters.area) params.set("area", filters.area);
+    if (filters.q) params.set("q", filters.q);
+    if (filters.user) params.set("user", "1");
+    if (filters.gps) params.set("gps", "1");
+    return params;
+  }, [filters]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const load = useCallback(async () => {
     setState((current) => ({ ...current, loading: true, error: "" }));
+    setRefreshKey((key) => key + 1);
     try {
-      const params = new URLSearchParams({ days: filters.days, size: "100" });
-      if (filters.area) params.set("area", filters.area);
-      if (filters.q) params.set("q", filters.q);
-      if (filters.user) params.set("user", "1");
-      const json = await apiRequest(`${API}?${params}`);
+      const json = await apiRequest(`${API}?${filterParams}&size=100`);
       setState({ loading: false, error: "", data: json });
     } catch (error) {
       setState({ loading: false, error: error.message || "โหลดประวัติผู้เข้าชมไม่สำเร็จ", data: null });
     }
-  }, [filters]);
+  }, [filterParams]);
   useEffect(() => { load(); }, [load]);
 
   const data = state.data;
-  const points = useMemo(() => {
-    const seen = new Map();
-    for (const row of data?.rows || []) {
-      if (row.latitude === null || row.longitude === null || row.latitude === undefined) continue;
-      const key = row.ip_address;
-      const current = seen.get(key) || { ...row, count: 0 };
-      current.count += 1;
-      seen.set(key, current);
-    }
-    return [...seen.values()];
-  }, [data]);
 
   const pickIp = (ip) => setSearch(ip);
 
@@ -86,12 +78,23 @@ export default function VisitorAccessLog() {
     {
       key: "location",
       label: "ตำแหน่งโดยประมาณ",
-      render: (row) => (
-        <span className="text-slate-700">
-          {locationLabel(row)}
-          {row.latitude !== null && row.latitude !== undefined ? <span className="block text-[11px] tabular-nums text-slate-500">{Number(row.latitude).toFixed(3)}, {Number(row.longitude).toFixed(3)}</span> : null}
-        </span>
-      )
+      render: (row) => {
+        const gpsLabel = gpsPlaceLabel(row);
+        const mismatch = gpsMismatch(row);
+        return (
+          <span className="block text-slate-700">
+            {gpsLabel ? (
+              <span className="block">
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-800"><Navigation className="h-3.5 w-3.5" aria-hidden="true" />{gpsLabel}</span>
+                <span className="block text-[11px] tabular-nums text-slate-500">GPS {Number(row.gps_latitude).toFixed(2)}, {Number(row.gps_longitude).toFixed(2)}{row.gps_accuracy_m ? ` ±${row.gps_accuracy_m >= 1000 ? `${Math.round(row.gps_accuracy_m / 1000)} กม.` : `${row.gps_accuracy_m} ม.`}` : ""} · {GPS_CONTEXTS[row.gps_context] || "ผู้ใช้อนุญาต"}</span>
+              </span>
+            ) : null}
+            <span className={gpsLabel ? "block text-[11px] text-slate-500" : "block"}>{gpsLabel ? "จาก IP: " : ""}{locationLabel(row)}</span>
+            {!gpsLabel && row.latitude !== null && row.latitude !== undefined ? <span className="block text-[11px] tabular-nums text-slate-500">{Number(row.latitude).toFixed(3)}, {Number(row.longitude).toFixed(3)}</span> : null}
+            {mismatch ? <span className="mt-0.5 inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800"><AlertTriangle className="h-3 w-3" aria-hidden="true" />{mismatch.message}</span> : null}
+          </span>
+        );
+      }
     },
     {
       key: "user",
@@ -121,11 +124,13 @@ export default function VisitorAccessLog() {
         <div>
           <p>บันทึกทุกการเปิดหน้าเว็บ (ทั้งประชาชนและเจ้าหน้าที่) เพื่อตรวจสอบย้อนหลังด้านความปลอดภัย: IP ตำแหน่งโดยประมาณจาก IP หน้าที่เปิด และบัญชีที่เข้าสู่ระบบ</p>
           <p className="mt-1 text-xs">
-            ตำแหน่งได้จาก IP ไม่ใช่ GPS (ระดับจังหวัด/เมือง) · เก็บ {data?.retentionDays || 90} วันแล้วลบอัตโนมัติ
+            ตำแหน่งมี 2 แบบ: จาก IP (ทุกคน ระดับประเทศ/เมือง) และ GPS เฉพาะผู้ที่กดอนุญาต (ปัดเหลือ ≈ 1 กม.) · เตือนเมื่อ GPS กับ IP ไม่สอดคล้องกัน · เก็บ {data?.retentionDays || 90} วันแล้วลบอัตโนมัติ
             {data && !data.geoLookup ? " · ยังไม่ได้ตั้งบริการหาตำแหน่งจาก IP (VISITOR_GEO_LOOKUP_URL) จึงแสดงตำแหน่งได้เฉพาะเมื่อ proxy/CDN ส่งมาให้" : ""}
           </p>
         </div>
       </div>
+
+      <IpCheckPanel />
 
       <Toolbar
         search={search}
@@ -135,6 +140,7 @@ export default function VisitorAccessLog() {
       >
         <FilterSelect label="ช่วงเวลา" value={filters.days} onChange={(days) => setFilters((current) => ({ ...current, days }))} options={[{ value: "1", label: "24 ชั่วโมง" }, { value: "7", label: "7 วัน" }, { value: "30", label: "30 วัน" }, { value: "90", label: "90 วัน" }]} />
         <FilterSelect label="ส่วนของเว็บ" value={filters.area} onChange={(area) => setFilters((current) => ({ ...current, area }))} options={[{ value: "", label: "ทุกส่วน" }, { value: "public", label: "หน้าประชาชน" }, { value: "staff", label: "หน้าเจ้าหน้าที่" }]} />
+        <FilterSelect label="ตำแหน่ง GPS" value={filters.gps} onChange={(gps) => setFilters((current) => ({ ...current, gps }))} options={[{ value: "", label: "ทุกรายการ" }, { value: "1", label: "เฉพาะที่มี GPS" }]} />
         <FilterSelect label="ผู้ใช้" value={filters.user} onChange={(user) => setFilters((current) => ({ ...current, user }))} options={[{ value: "", label: "ทุกคน" }, { value: "1", label: "เฉพาะที่เข้าสู่ระบบ" }]} />
       </Toolbar>
 
@@ -148,9 +154,11 @@ export default function VisitorAccessLog() {
               { label: "การเข้าชม", value: formatNumber(data.summary.visits), unit: "ครั้ง", icon: Globe2 },
               { label: "IP ไม่ซ้ำ", value: formatNumber(data.summary.uniqueIps), unit: "IP", tone: "blue" },
               { label: "เจ้าหน้าที่ที่เข้าระบบ", value: formatNumber(data.summary.staffUsers), unit: "คน", icon: Users },
-              { label: "เปิดหน้าเจ้าหน้าที่", value: formatNumber(data.summary.staffVisits), unit: "ครั้ง" }
+              { label: "มีตำแหน่ง GPS (ผู้ใช้อนุญาต)", value: formatNumber(data.summary.gpsVisits || 0), unit: "ครั้ง", icon: Navigation, tone: "green", onClick: () => setFilters((current) => ({ ...current, gps: current.gps ? "" : "1" })), active: Boolean(filters.gps) }
             ]}
           />
+
+          <VisitorMap params={filterParams} onPickIp={pickIp} refreshKey={refreshKey} />
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white">
@@ -171,18 +179,6 @@ export default function VisitorAccessLog() {
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white">
               <h4 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-black text-slate-900"><MapPin className="h-4 w-4 text-[#0b4c86]" aria-hidden="true" /> ตำแหน่งที่เข้าชม</h4>
-              {points.length && mounted ? (
-                <div className="h-52 border-b border-slate-100">
-                  <MapContainer center={[13.5, 100.5]} zoom={5} className="h-full w-full" scrollWheelZoom={false}>
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
-                    {points.map((point) => (
-                      <CircleMarker key={point.ip_address} center={[Number(point.latitude), Number(point.longitude)]} radius={Math.min(14, 5 + point.count)} pathOptions={{ color: "#fff", weight: 1.5, fillColor: point.area === "staff" ? "#0b4c86" : "#0e7490", fillOpacity: 0.85 }}>
-                        <Tooltip>{point.ip_address} · {locationLabel(point)} · {point.count} ครั้ง</Tooltip>
-                      </CircleMarker>
-                    ))}
-                  </MapContainer>
-                </div>
-              ) : null}
               {data.places.length ? (
                 <ul className="divide-y divide-slate-100">
                   {data.places.map((row) => (

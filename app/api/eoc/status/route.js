@@ -501,11 +501,12 @@ export async function POST(request) {
         } else {
             // ปิด EOC - อัพเดท session ที่เปิดอยู่
 
-            // หา active session
+            // หา active session ทั้งหมดของประเภทนี้ (ปิดให้ครบ — เคยปิดแค่ครั้งล่าสุด ทำให้ครั้งเก่าที่ค้างสถานะเปิด
+            // ยังทำให้ศูนย์พักพิง/ปุ่มขอความช่วยเหลือแสดงบนหน้าประชาชนหลังปิด EOC)
             const [activeSessions] = await connection.execute(
                 `SELECT id, opened_at FROM eoc_sessions 
                  WHERE eoc_type = ? AND status = 'active'
-                 LIMIT 1`,
+                 ORDER BY opened_at DESC`,
                 [eocType]
             );
 
@@ -586,6 +587,26 @@ export async function POST(request) {
                         `ปิด EOC ${eocType}: ${description || ''}${closedShelterCount > 0 ? ` | ปิดศูนย์พักพิง ${closedShelterCount} แห่ง` : ''}`
                     ]
                 );
+
+                // ครั้งเก่าที่ค้างสถานะเปิด (ข้อมูลเดิม) → ปิดพร้อมกัน และปิดศูนย์พักพิงของครั้งนั้นด้วย
+                for (const stale of activeSessions.slice(1)) {
+                    const staleClosedAt = formatDateForMysql(new Date(Math.max(new Date(stale.opened_at).getTime() || 0, Date.now())));
+                    await connection.execute(
+                        `UPDATE eoc_sessions
+                         SET closed_at = ?, closed_by = ?, status = 'closed',
+                             close_reason = CONCAT(COALESCE(close_reason, ''), 'ปิดพร้อมการปิด EOC ครั้งล่าสุด (สถานะค้างเปิด)'),
+                             duration_hours = TIMESTAMPDIFF(MINUTE, opened_at, ?) / 60
+                         WHERE id = ? AND status = 'active'`,
+                        [staleClosedAt, userId, staleClosedAt, stale.id]
+                    );
+                    if (await tableExists(connection, 'shelter_session_activations')) {
+                        await connection.execute(
+                            `UPDATE shelter_session_activations SET is_active = 0, deactivated_at = COALESCE(deactivated_at, ?)
+                             WHERE session_id = ? AND is_active = 1`,
+                            [staleClosedAt, stale.id]
+                        );
+                    }
+                }
             }
 
             // อัพเดทสถานะ EOC

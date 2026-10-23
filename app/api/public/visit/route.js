@@ -10,7 +10,7 @@ export async function POST(request) {
     const limit = await consumeRateLimit("visitLog", getClientIp(request), { store: "memory" });
     if (!limit.allowed) return new NextResponse(null, { status: 204 });
     const body = await request.json().catch(() => ({}));
-    await recordVisitorAccess(request, { path: body?.path, referrer: body?.referrer });
+    await recordVisitorAccess(request, { path: body?.path, referrer: body?.referrer, gps: body?.gps });
   } catch (error) {
     if (error?.code !== "ER_NO_SUCH_TABLE") console.error("Visitor log error:", error?.message || error);
   }

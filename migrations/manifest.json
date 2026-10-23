@@ -72,6 +72,8 @@
     "20261022_rename_sehrt.sql",
     "20261022_eoc_menu_layout.sql",
     "20261022_visitor_access_log.sql",
-    "20261022_officer_readiness.sql"
+    "20261022_officer_readiness.sql",
+    "20261023_visitor_gps.sql",
+    "20261023_close_stale_shelters.sql"
   ]
 }

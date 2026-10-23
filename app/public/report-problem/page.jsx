@@ -12,6 +12,7 @@ import { PROBLEM_CATEGORIES } from "@/lib/incidentPublishing";
 import { problemStyle } from "@/components/public/problemCategoryIcons";
 import { trackPublicUsage } from "@/lib/publicUsage";
 import TrackingCodeCard from "@/components/public/TrackingCodeCard";
+import { shareVisitGps } from "@/lib/visitorGps";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -91,6 +92,7 @@ export default function ReportProblemPage() {
     navigator.geolocation.getCurrentPosition(
       (result) => {
         setPosition({ lat: result.coords.latitude, lng: result.coords.longitude });
+        shareVisitGps(result.coords, "report-problem");
         setGps({ state: "success", message: "" });
       },
       () => setGps({ state: "error", message: "ระบุตำแหน่งอัตโนมัติไม่ได้ กรุณาแตะจุดที่เกิดปัญหาบนแผนที่" }),
