@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SiteViewCounter from "@/components/SiteViewCounter";
+import { APP_VERSION_LABEL } from "@/lib/appVersion";
 
 const EMERGENCY_NUMBERS = [
     ["1669", "เจ็บป่วยฉุกเฉิน"],
@@ -83,7 +84,7 @@ export default function Footer() {
                 </div>
 
                 <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-white/15 pt-4 text-xs sm:flex-row sm:text-sm">
-                    <p>&copy; 2025–2026 สำนักงานสาธารณสุขจังหวัดสตูล - All Rights Reserved</p>
+                    <p>&copy; 2025–2026 สำนักงานสาธารณสุขจังหวัดสตูล - All Rights Reserved <span className="ml-1 text-[#9fc0d8]" title="เวอร์ชันของระบบ">{APP_VERSION_LABEL}</span></p>
                     <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-end">
                         <SiteViewCounter className="text-[#c9dcee]" />
                         <Link href="/login" className="text-[#9fc0d8] hover:text-white">เข้าสู่ระบบเจ้าหน้าที่</Link>
