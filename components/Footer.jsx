@@ -60,9 +60,7 @@ export default function Footer() {
                     <div>
                         <h4 className="mb-2 text-sm font-bold text-white sm:text-base">ข้อมูลและความช่วยเหลือ</h4>
                         <ul className="space-y-1.5 text-xs sm:text-sm">
-                            <li><Link href="/public/agencies" className="hover:text-white">ติดต่อหน่วยงาน</Link></li>
                             <li><Link href="/public/help/faq" className="hover:text-white">คำถามที่พบบ่อย</Link></li>
-                            <li><Link href="/public/insights" className="hover:text-white">ข้อมูลเชิงลึกและสถิติ (สำหรับสื่อ/นักวิจัย)</Link></li>
                             <li><Link href="/privacy-policy" className="hover:text-white">นโยบายความเป็นส่วนตัว</Link></li>
                         </ul>
                     </div>
@@ -74,13 +72,10 @@ export default function Footer() {
                             <li><a href="https://www.moph.go.th/" target="_blank" rel="noopener noreferrer" className="hover:text-white">กระทรวงสาธารณสุข</a></li>
                         </ul>
                         <h5 className="mb-1.5 mt-4 text-xs font-bold text-white sm:text-sm">ขอขอบคุณหน่วยงานที่ให้ข้อมูลจาก</h5>
-                        <ul className="space-y-1.5 text-xs sm:text-sm">
-                            {DATA_PROVIDERS.map(([name, detail, url]) => (
+                        <ul className="space-y-1 text-xs sm:text-sm">
+                            {DATA_PROVIDERS.map(([name, , url]) => (
                                 <li key={name}>
-                                    <a href={url} target="_blank" rel="noopener noreferrer" className="block hover:text-white">
-                                        <span className="font-semibold">{name}</span>
-                                        <span className="block text-[11px] text-[#9fc0d8]">{detail}</span>
-                                    </a>
+                                    <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-white">{name}</a>
                                 </li>
                             ))}
                         </ul>

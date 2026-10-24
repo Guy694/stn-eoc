@@ -36,8 +36,8 @@ test("ตำแหน่งจาก header ของ CDN และจากบ�
 test("อุปกรณ์/เบราว์เซอร์ และระยะเก็บ", () => {
   expect(describeUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Mobile Safari")).toEqual({ device: "mobile", browser: "Safari" });
   expect(describeUserAgent("Mozilla/5.0 (Windows NT 10.0) Chrome/120 Safari")).toEqual({ device: "desktop", browser: "Chrome" });
-  expect(visitorLogRetentionDays({})).toBe(90);
-  expect(visitorLogRetentionDays({ VISITOR_LOG_RETENTION_DAYS: "3" })).toBe(90);
+  expect(visitorLogRetentionDays({})).toBe(365);
+  expect(visitorLogRetentionDays({ VISITOR_LOG_RETENTION_DAYS: "3" })).toBe(365);
   expect(visitorLogRetentionDays({ VISITOR_LOG_RETENTION_DAYS: "180" })).toBe(180);
 });
 

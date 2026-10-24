@@ -38,6 +38,8 @@ import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
 import { mergeAnnouncementSources } from "@/lib/riskcomMedia";
 import { shareVisitGps } from "@/lib/visitorGps";
+import { freshness, latestTime } from "@/lib/dataFreshness";
+import FreshnessTag, { useNow } from "@/components/common/FreshnessTag";
 
 // หน้าแรกสำหรับประชาชน
 // จุดเด่นเดียวของหน้า: แผนที่ 7 อำเภอที่ระบายสีตามความเสี่ยงวันนี้ แตะแล้วเห็น "พื้นที่ของฉัน" ทันที
@@ -250,28 +252,39 @@ function buildHeadline(current, events) {
   return `สตูลวันนี้${weather ? ` ${weather}` : ""} ไม่มีภาวะฉุกเฉิน`;
 }
 
-function clock(value) {
-  const date = new Date(value || 0);
-  return Number.isNaN(date.getTime()) || date.getTime() <= 0 ? null : `${date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`;
-}
+// พื้นหลังช่วงสถานการณ์: เส้นระดับน้ำ (คลื่นจาง) ด้านบน + ไล่จากฟ้าน้ำไปเกือบขาว
+const WATER_LINES = encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='720' height='280' viewBox='0 0 720 280'><g fill='none' stroke='#0b4c86' stroke-opacity='.075' stroke-width='1.3'>${
+    [0, 1, 2, 3, 4, 5, 6].map((i) => `<path d='M0 ${24 + i * 36} C 140 ${4 + i * 36}, 260 ${54 + i * 36}, 400 ${28 + i * 36} S 620 ${6 + i * 36}, 720 ${24 + i * 36}'/>`).join("")
+  }</g></svg>`
+);
+const SITUATION_BG = {
+  backgroundImage: `url("data:image/svg+xml,${WATER_LINES}"), linear-gradient(180deg, #d5e8f1 0, #e6f1f6 260px, #eff6f9 640px, #f5f9fb 100%)`,
+  backgroundRepeat: "repeat-x, no-repeat",
+  backgroundPosition: "center top, 0 0",
+  backgroundSize: "720px 280px, 100% 100%"
+};
 
-/** ที่มาของข้อมูลและเวลาอัปเดตของแต่ละแหล่ง */
-function SourceTimes({ weather, water }) {
-  const rainAt = (weather?.district_weather || []).map((item) => item.rain_gauge?.observed_at).filter(Boolean).sort().pop();
-  const waterAt = water.stations.map((item) => item.observedAt).filter(Boolean).sort().pop();
+/** ที่มาของข้อมูลและเวลาอัปเดตของแต่ละแหล่ง (เกินเวลาที่กำหนดขึ้นป้าย "ล่าช้า") */
+function SourceTimes({ weather, water, now }) {
+  const rainAt = latestTime((weather?.district_weather || []).map((item) => item.rain_gauge?.observed_at));
+  const waterAt = latestTime(water.stations.map((item) => item.observedAt));
   const sources = [
-    ["ระดับน้ำในคลอง", "ThaiWater (สสน.)", clock(waterAt)],
-    ["ฝนที่วัดได้", "ThaiWater (สสน.)", clock(rainAt)],
-    ["พยากรณ์และโอกาสฝนหนัก", "ECMWF", clock(weather?.weather_current?.observed_at)],
-    ["เหตุการณ์และศูนย์พักพิง", "ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล", "อัปเดตตามที่เจ้าหน้าที่บันทึก"]
+    ["ระดับน้ำในคลอง", "ThaiWater (สสน.)", freshness(waterAt, "water", now)],
+    ["ฝนที่วัดได้", "ThaiWater (สสน.)", freshness(rainAt, "rain", now)],
+    ["พยากรณ์และโอกาสฝนหนัก", "ECMWF", freshness(weather?.weather_current?.observed_at, "forecast", now)],
+    ["เหตุการณ์และศูนย์พักพิง", "ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล", null]
   ];
   return (
     <footer className="mx-auto max-w-6xl px-4 py-8 sm:px-6" aria-label="ที่มาของข้อมูล">
       <dl className="grid gap-x-6 gap-y-3 border-t border-slate-300/70 pt-6 text-sm sm:grid-cols-2 lg:grid-cols-4">
-        {sources.map(([label, source, time]) => (
+        {sources.map(([label, source, info]) => (
           <div key={label}>
             <dt className="font-semibold text-slate-700">{label}</dt>
-            <dd className="text-slate-500">{source}{time ? ` • ${time}` : ""}</dd>
+            <dd className="text-slate-500">
+              {source}
+              {info ? (info.known ? <span className="block"><FreshnessTag info={info} /></span> : null) : <span className="block">อัปเดตตามที่เจ้าหน้าที่บันทึก</span>}
+            </dd>
           </div>
         ))}
       </dl>
@@ -298,6 +311,7 @@ export default function PublicHome() {
     setFxPreset(new URLSearchParams(window.location.search).get("fx"));
   }, []);
   const [loading, setLoading] = useState(true);
+  const now = useNow();
   const [districtName, setDistrictName] = useState("");
   const [userPoint, setUserPoint] = useState(null);
   const [locationMessage, setLocationMessage] = useState("");
@@ -428,6 +442,10 @@ export default function PublicHome() {
   };
 
   const myRisk = riskMeta(myDistrict?.risk_level);
+  // ฝนจากสถานีวัด → ตรวจความสดแบบค่าวัด / ไม่มีสถานี → ใช้เวลาของพยากรณ์
+  const myRain = myDistrict?.rain_source === "gauge" && myDistrict?.rain_gauge?.observed_at
+    ? freshness(myDistrict.rain_gauge.observed_at, "rain", now)
+    : freshness(current?.observed_at, "forecast", now);
 
   return (
     <>
@@ -445,7 +463,7 @@ export default function PublicHome() {
       showBottomBar
       mainClassName="p-0!"
     >
-      <div className="bg-[#eef2f1] text-[#15232e]">
+      <div className="bg-white text-[#15232e]">
         <WarningRibbon warnings={weather?.weather_warnings || []} />
         {/* ── Hero: พาดหัว + แผนที่ความเสี่ยงรายอำเภอ ── */}
         <section className="relative overflow-hidden bg-[#0c2f4a] text-white" aria-labelledby="home-headline">
@@ -485,9 +503,10 @@ export default function PublicHome() {
                       {myRisk.label}
                     </span>
                   </div>
-                  <p className="mt-2 text-[15px] leading-7">
+                  <p className={`mt-2 text-[15px] leading-7 ${myRain.stale ? "text-slate-500" : ""}`}>
                     {myDistrict.weather_condition} {myDistrict.temperature}°C • {myDistrict.rain_source === "gauge" ? `ฝนวัดได้ 24 ชม. ${myDistrict.rainfall_24h} มม.` : `ฝน 24 ชม. ~${myDistrict.rainfall_24h} มม.`}{myDistrict.heavy_rain_today ? ` • โอกาสฝนหนักวันนี้ ${myDistrict.heavy_rain_today.prob_heavy}%` : ""}
                   </p>
+                  {myRain.known ? <p className="text-sm"><FreshnessTag info={myRain} /></p> : null}
                   <ul className="mt-1 space-y-0.5 text-[15px] leading-7 text-slate-700">
                     {(myDistrict.risk_reasons || []).slice(0, 2).map((reason) => <li key={reason}>• {reason}</li>)}
                     {events.map((event) => {
@@ -525,6 +544,8 @@ export default function PublicHome() {
           </div>
         </section>
 
+        {/* ── ช่วงข้อมูลสถานการณ์: พื้นฟ้าน้ำจาง ต่อจาก hero + เส้นระดับน้ำจาง ๆ (ช่วงข่าวด้านล่างเป็นพื้นขาว) ── */}
+        <div className="flow-root" style={SITUATION_BG}>
         {/* ── แถบทางลัด: ซ้อนขอบล่างของ hero ── */}
         <nav aria-label="ทางลัดที่สำคัญ" className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 sm:px-6">
           <div className="grid gap-px overflow-hidden rounded-3xl bg-slate-100 shadow-[0_20px_45px_-25px_rgba(12,47,74,.55)] sm:grid-cols-6 xl:grid-cols-[1.25fr_1.25fr_1fr_1fr_1fr]">
@@ -684,6 +705,8 @@ export default function PublicHome() {
           </section>
         </div>
 
+        </div>
+
         {/* ── ข่าวสารและความรู้สุขภาพ (มีภาพ ดึงดูดให้อ่าน) ── */}
         {announcements.length > 0 && (
           <section aria-labelledby="news-title" className="bg-white">
@@ -714,7 +737,7 @@ export default function PublicHome() {
           </section>
         )}
 
-        <SourceTimes weather={weather} water={water} />
+        <SourceTimes weather={weather} water={water} now={now} />
       </div>
     </PublicOpsScaffold>
     </>

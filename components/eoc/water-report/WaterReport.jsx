@@ -480,7 +480,7 @@ export default function WaterReport() {
       {data && !data.report.comparedWithBaseline && compare !== "prev" ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 print:hidden">
           {data.history_ready
-            ? "ยังไม่มีค่าที่เก็บไว้ ณ เวลาที่เลือก รายงานนี้จึงเทียบกับชั่วโมงก่อนหน้าตามต้นทางแทน ระบบเริ่มเก็บค่าทุกชั่วโมงแล้ว รอบถัดไปจะเลือกเวลาเทียบได้"
+            ? "ไม่มีค่าบันทึก ณ เวลาที่เลือก รายงานนี้เทียบกับชั่วโมงก่อนหน้าแทน"
             : "ยังไม่ได้สร้างตารางเก็บค่ารายชั่วโมง (รัน npm run db:migrate) รายงานนี้เทียบกับชั่วโมงก่อนหน้าตามต้นทางแทน"}
         </p>
       ) : null}

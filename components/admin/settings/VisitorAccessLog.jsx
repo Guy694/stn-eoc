@@ -124,7 +124,7 @@ export default function VisitorAccessLog() {
         <div>
           <p>บันทึกทุกการเปิดหน้าเว็บ (ทั้งประชาชนและเจ้าหน้าที่) เพื่อตรวจสอบย้อนหลังด้านความปลอดภัย: IP ตำแหน่งโดยประมาณจาก IP หน้าที่เปิด และบัญชีที่เข้าสู่ระบบ</p>
           <p className="mt-1 text-xs">
-            ตำแหน่งมี 2 แบบ: จาก IP (ทุกคน ระดับประเทศ/เมือง) และ GPS เฉพาะผู้ที่กดอนุญาต (ปัดเหลือ ≈ 1 กม.) · เตือนเมื่อ GPS กับ IP ไม่สอดคล้องกัน · เก็บ {data?.retentionDays || 90} วันแล้วลบอัตโนมัติ
+            ตำแหน่งมี 2 แบบ: จาก IP (ทุกคน ระดับประเทศ/เมือง) และ GPS เฉพาะผู้ที่กดอนุญาต (ปัดเหลือ ≈ 1 กม.) · เตือนเมื่อ GPS กับ IP ไม่สอดคล้องกัน · เก็บ {data?.retentionDays || 365} วันแล้วลบอัตโนมัติ
             {data && !data.geoLookup ? " · ยังไม่ได้ตั้งบริการหาตำแหน่งจาก IP (VISITOR_GEO_LOOKUP_URL) จึงแสดงตำแหน่งได้เฉพาะเมื่อ proxy/CDN ส่งมาให้" : ""}
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function VisitorAccessLog() {
         searchPlaceholder="ค้นหา IP ชื่อผู้ใช้ หน้า หรือเมือง"
         right={<Button variant="secondary" onClick={load} disabled={state.loading}><RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" /> รีเฟรช</Button>}
       >
-        <FilterSelect label="ช่วงเวลา" value={filters.days} onChange={(days) => setFilters((current) => ({ ...current, days }))} options={[{ value: "1", label: "24 ชั่วโมง" }, { value: "7", label: "7 วัน" }, { value: "30", label: "30 วัน" }, { value: "90", label: "90 วัน" }]} />
+        <FilterSelect label="ช่วงเวลา" value={filters.days} onChange={(days) => setFilters((current) => ({ ...current, days }))} options={[{ value: "1", label: "24 ชั่วโมง" }, { value: "7", label: "7 วัน" }, { value: "30", label: "30 วัน" }, { value: "90", label: "90 วัน" }, { value: "180", label: "6 เดือน" }, { value: "365", label: "1 ปี" }]} />
         <FilterSelect label="ส่วนของเว็บ" value={filters.area} onChange={(area) => setFilters((current) => ({ ...current, area }))} options={[{ value: "", label: "ทุกส่วน" }, { value: "public", label: "หน้าประชาชน" }, { value: "staff", label: "หน้าเจ้าหน้าที่" }]} />
         <FilterSelect label="ตำแหน่ง GPS" value={filters.gps} onChange={(gps) => setFilters((current) => ({ ...current, gps }))} options={[{ value: "", label: "ทุกรายการ" }, { value: "1", label: "เฉพาะที่มี GPS" }]} />
         <FilterSelect label="ผู้ใช้" value={filters.user} onChange={(user) => setFilters((current) => ({ ...current, user }))} options={[{ value: "", label: "ทุกคน" }, { value: "1", label: "เฉพาะที่เข้าสู่ระบบ" }]} />

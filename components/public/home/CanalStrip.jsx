@@ -4,13 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { canalState, canalSummary, sortCanals } from "@/lib/homeSignals";
+import { freshness, latestTime } from "@/lib/dataFreshness";
+import FreshnessTag, { useNow } from "@/components/common/FreshnessTag";
 
-function timeText(value) {
-  const date = new Date(value || 0);
-  return Number.isNaN(date.getTime()) || date.getTime() <= 0 ? "" : date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
-}
-
-// เกจระดับน้ำ: เส้นประ = ระดับตลิ่ง สีของน้ำตามเกณฑ์ ThaiWater
+// เกจระดับน้ำ: เส้นประ = ระดับตลิ่ง สีของน้ำ: แดง ใกล้/ล้นตลิ่ง · ส้ม ค่อนข้างสูง · เขียว ปกติ · น้ำเงิน เกือบแห้ง
 function Gauge({ state, delay = 0 }) {
   const fill = state.fill ?? 0;
   const bankLine = 100 / 120;
@@ -89,7 +86,9 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
   const visible = expanded ? sorted : sorted.slice(0, INITIAL_COUNT);
   const hiddenCount = sorted.length - visible.length;
   const worst = sorted[0] ? canalState(sorted[0]) : null;
-  const latest = stations.map((item) => item.observedAt).filter(Boolean).sort().pop() || observedAt;
+  const now = useNow();
+  const latest = latestTime(stations.map((item) => item.observedAt)) ?? latestTime([observedAt]);
+  const fresh = freshness(latest, "water", now);
 
   return (
     <section aria-labelledby="canal-title" className="mx-auto max-w-6xl px-4 pt-12 sm:px-6">
@@ -99,8 +98,9 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
           <p className="mt-1 text-[1.05rem] text-slate-700">
             {loading ? "กำลังอ่านค่าจากสถานีวัดระดับน้ำ…" : (
               <>
-                <span className="font-semibold" style={{ color: worst && worst.rank >= 2 ? worst.tone : undefined }}>{canalSummary(stations)}</span>
-                {latest ? <span className="text-slate-500"> • ThaiWater (สสน.) {timeText(latest)} น.</span> : null}
+                <span className="font-semibold" style={{ color: worst && worst.rank >= 2 && !fresh.stale ? worst.tone : undefined }}>{canalSummary(stations)}</span>
+                {fresh.known ? <span className="text-slate-500"> • ThaiWater (สสน.) </span> : null}
+                <FreshnessTag info={fresh} className="text-[0.95rem]" />
               </>
             )}
           </p>
@@ -114,7 +114,7 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
         <div className="mt-4 h-32 animate-pulse rounded-3xl bg-white" />
       ) : sorted.length > 0 ? (
         <>
-        <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className={`mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${fresh.stale ? "opacity-75 grayscale" : ""}`} data-stale={fresh.stale ? "1" : undefined}>
           {visible.map((station, index) => {
             const state = canalState(station);
             return (
@@ -160,7 +160,7 @@ export default function CanalStrip({ stations = [], observedAt = null, loading =
       ) : (
         <p className="mt-4 rounded-3xl bg-white p-5 text-slate-600">ยังไม่มีข้อมูลจากสถานีวัดระดับน้ำ ลองใหม่อีกครั้งภายหลัง</p>
       )}
-      <p className="mt-2 text-xs text-slate-500">ตัวเลข = ระยะจากระดับน้ำถึงตลิ่ง (ติดลบ = ยังต่ำกว่าตลิ่ง) • เส้นประในเกจคือระดับตลิ่ง • กราฟเล็กด้านขวา = ระดับน้ำ 24 ชม.ล่าสุด (ส้ม = ขึ้น, เขียว = ลง)</p>
+      <p className="mt-2 text-xs text-slate-500">ตัวเลข = ระยะจากระดับน้ำถึงตลิ่ง (ติดลบ = ยังต่ำกว่าตลิ่ง) • เส้นประในเกจคือระดับตลิ่ง • สีน้ำ: แดง = ใกล้/ล้นตลิ่ง, ส้ม = ค่อนข้างสูง, เขียว = ปกติ, น้ำเงิน = น้ำน้อยมาก • กราฟเล็กด้านขวา = ระดับน้ำ 24 ชม.ล่าสุด (ส้ม = ขึ้น, เขียว = ลง)</p>
 
       <style>{`
         .canal-gauge__water { transform-origin: bottom; animation: canal-fill 1.1s cubic-bezier(.2,.8,.2,1) both; }

@@ -53,7 +53,7 @@ export default function StaffGeoConsent() {
         <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#edf5fc] text-[#0b4c86]"><MapPin className="h-5 w-5" aria-hidden="true" /></span>
         <div className="min-w-0 flex-1 text-sm text-slate-700">
           <p className="font-bold text-slate-900">ขออนุญาตใช้ตำแหน่งของคุณเพื่อความปลอดภัยของระบบ</p>
-          <p className="mt-1">ใช้ตรวจสอบว่าการเข้าสู่ระบบมาจากพื้นที่ที่ควรเป็น ระบบปัดตำแหน่งเหลือระดับประมาณ 1 กม. (ไม่ถึงตัวบ้าน) ผู้ดูแลระบบเท่านั้นที่เห็น และลบอัตโนมัติใน 90 วัน · ไม่อนุญาตก็ใช้งานได้ตามปกติ</p>
+          <p className="mt-1">ใช้ตรวจสอบว่าการเข้าสู่ระบบมาจากพื้นที่ที่ควรเป็น ระบบปัดตำแหน่งเหลือระดับประมาณ 1 กม. (ไม่ถึงตัวบ้าน) ผู้ดูแลระบบเท่านั้นที่เห็น และลบอัตโนมัติใน 1 ปี · ไม่อนุญาตก็ใช้งานได้ตามปกติ</p>
           {message ? <p className="mt-1 font-semibold text-[#0b4c86]" role="status">{message}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={allow} className="inline-flex min-h-10 items-center rounded-lg bg-[#0b4c86] px-4 text-sm font-bold text-white hover:bg-[#083865]">อนุญาต</button>

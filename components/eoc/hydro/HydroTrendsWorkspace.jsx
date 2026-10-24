@@ -90,17 +90,6 @@ function MiniTrend({ station }) {
   );
 }
 
-function CoverageNote({ coverage, from }) {
-  const later = [["ฝน", coverage.rain], ["ระดับน้ำในคลอง", coverage.water], ["น้ำทะเล", coverage.sea]]
-    .filter(([, start]) => !start || start.slice(0, 10) > from);
-  if (!later.length) return null;
-  return (
-    <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-      ระบบเริ่มเก็บข้อมูลไม่นาน ช่วงก่อนหน้านี้จึงยังไม่มีข้อมูล: {later.map(([name, start]) => `${name} ${start ? `เริ่ม ${dayLabel(start)} ${start.slice(11, 16)} น.` : "ยังไม่มีข้อมูล"}`).join(" · ")}
-    </p>
-  );
-}
-
 /** publicMode = หน้าประชาชน (/public/water-trends): ใช้ API สาธารณะ และคำอธิบายแบบประชาชน */
 export default function HydroTrendsWorkspace({ publicMode = false }) {
   const api = publicMode ? "/stn-eoc/api/public/hydro-trends" : API;
@@ -178,7 +167,6 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
 
       {data ? (
         <>
-          <CoverageNote coverage={data.coverage} from={data.range.from} />
 
           <MetricGrid cols="grid-cols-2 lg:grid-cols-4">
             <MetricCard icon={CloudRain} tone={heavyDays ? "amber" : "blue"} label="วันที่มีฝนหนัก" value={heavyDays} unit="วัน" note={`สถานีใดสถานีหนึ่ง ≥ ${HEAVY_RAIN_MM} มม.`} />

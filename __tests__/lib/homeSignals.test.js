@@ -5,6 +5,15 @@ describe("homeSignals", () => {
     expect(canalState({ bankDiff: 0.2, storagePercent: 140, situationLevel: 5 })).toMatchObject({ key: "overflow", fill: 1 });
     expect(canalState({ bankDiff: -0.3, storagePercent: 60 })).toMatchObject({ key: "near", fill: 0.5 });
     expect(canalState({ bankDiff: -3 }).key).toBe("normal");
+    // สีตามระดับ: แดง ใกล้/ล้น · ส้ม ค่อนข้างสูง · เขียว ปกติ · น้ำเงิน เกือบแห้ง
+    expect(canalState({ bankDiff: 0.1 }).color).toBe("#dc2626");
+    expect(canalState({ bankDiff: -0.3 }).color).toBe("#dc2626");
+    expect(canalState({ bankDiff: -0.8, storagePercent: 50 })).toMatchObject({ key: "high", color: "#ea580c" });
+    expect(canalState({ bankDiff: -2, storagePercent: 85 })).toMatchObject({ key: "high", color: "#ea580c" });
+    expect(canalState({ bankDiff: -2, storagePercent: 40, situationLevel: 1 })).toMatchObject({ key: "normal", color: "#16a34a" });
+    expect(canalState({ bankDiff: -3, storagePercent: 6 })).toMatchObject({ key: "low", color: "#2563eb" });
+    expect(canalState({ storagePercent: 120 }).key).toBe("overflow");
+    expect(canalState({}).key).toBe("unknown");
     expect(canalState({}).key).toBe("unknown");
   });
 
