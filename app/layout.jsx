@@ -19,7 +19,7 @@ const kanit = Kanit({
 export const metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: "ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล | Satun Geo-EOC",
-  description: "Satun Provincial Emergency Operations Center (Satun Geo-EOC) - ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
+  description: "Satun Provincial Emergency Operations Center (Satun Geo-EOC) - ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
   openGraph: {
     type: "website",
     locale: "th_TH",

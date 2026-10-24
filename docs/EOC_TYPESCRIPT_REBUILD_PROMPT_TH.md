@@ -4,7 +4,7 @@
 
 ## ผลการศึกษาและขอบเขตหลักฐาน
 
-- ระบบศูนย์ปฏิบัติการภาวะฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล เป็น Next.js App Router แบบ full-stack ใช้ JavaScript/JSX, MySQL และ `mysql2/promise` เป็นหลัก
+- ศูนย์ปฏิบัติการภาวะฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล เป็น Next.js App Router แบบ full-stack ใช้ JavaScript/JSX, MySQL และ `mysql2/promise` เป็นหลัก
 - `package.json` ระบุ Next.js `^16.1.1`, React `19.2.0`, Tailwind CSS 4, Zod 4, Leaflet, Recharts/Chart.js และ Jest ตัวเลขนี้เป็น dependency ที่ประกาศใน repository ไม่ใช่การยืนยันเวอร์ชันที่ติดตั้งหรือคำแนะนำเวอร์ชันล่าสุด
 - `app/` มีหน้าสาธารณะ หน้าประชาชน หน้าผู้บัญชาการ หน้าปฏิบัติงาน และหน้าผู้ดูแล; `app/api/` เป็น backend; `components/` เป็น UI; `context/` ดูแล auth และ EOC ที่เลือก; `lib/` รวมฐานข้อมูล สิทธิ์ กฎงาน และ integration
 - `src/features/eoc/` เริ่มแยก feature เป็น registry → resolver → entry → dashboard/service/schema มีหน้าทีมร่วม และ override เฉพาะทีม/ภัย เช่น flood:sat และ dengue:sat

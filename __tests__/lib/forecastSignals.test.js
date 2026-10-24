@@ -14,15 +14,15 @@ import {
 describe("ensembleRainDays", () => {
   test("นับโอกาสฝนเกินเกณฑ์จากทุกชุด (รวม control)", () => {
     const daily = { time: ["2026-10-07"], precipitation_sum: [10] };
-    // 10 ชุด: 4 ชุดเกิน 35, 2 ชุดเกิน 60, 1 ชุดเกิน 90
+    // 10 ชุด + control (10): ≥ 35.1 มี 5 ชุด, ≥ 60 มี 3 ชุด, ≥ 90.1 มี 1 ชุด
     [5, 8, 12, 20, 30, 40, 50, 65, 70, 95].forEach((value, index) => {
       daily[`precipitation_sum_member${String(index + 1).padStart(2, "0")}`] = [value];
     });
     const [day] = ensembleRainDays(daily);
     expect(day.members).toBe(11);
     expect(day.prob_heavy).toBe(Math.round((5 / 11) * 100));
-    expect(day.prob_very_heavy).toBe(Math.round((3 / 11) * 100));
-    expect(day.prob_extreme).toBe(Math.round((1 / 11) * 100));
+    expect(day.prob_heavy_upper).toBe(Math.round((3 / 11) * 100));
+    expect(day.prob_very_heavy).toBe(Math.round((1 / 11) * 100));
     expect(day.median_mm).toBe(30);
   });
 
@@ -83,7 +83,7 @@ describe("ความเสี่ยงรายอำเภอ", () => {
   test("ฝนเล็กน้อยแม้แบบจำลองบอกโอกาสฝนสูง → ปกติ", () => {
     const result = assessDistrictRisk({
       observedRain24h: 2.4,
-      ensembleToday: { members: 51, prob_heavy: 4, prob_very_heavy: 0, prob_extreme: 0 },
+      ensembleToday: { members: 51, prob_heavy: 4, prob_heavy_upper: 0, prob_very_heavy: 0 },
       water: { state: "normal" },
       windSpeed: 8,
       susceptibility: 1
@@ -96,7 +96,7 @@ describe("ความเสี่ยงรายอำเภอ", () => {
     const result = assessDistrictRisk({
       observedRain24h: 120,
       maxStation: "บ้านปันจอร์",
-      ensembleToday: { members: 51, prob_heavy: 80, prob_very_heavy: 55, prob_extreme: 10 },
+      ensembleToday: { members: 51, prob_heavy: 80, prob_heavy_upper: 55, prob_very_heavy: 10 },
       water: { state: "overflow", station: "บ้านปันจอร์", bank_diff: 0.4 },
       discharge: { level: "high", level_label: "สูงกว่าปกติ" }
     });
@@ -108,13 +108,13 @@ describe("ความเสี่ยงรายอำเภอ", () => {
   test("พยากรณ์ฝนหนักพรุ่งนี้อย่างเดียว → เฝ้าระวัง", () => {
     const result = assessDistrictRisk({
       observedRain24h: 0,
-      ensembleTomorrow: { members: 51, prob_heavy: 60, prob_very_heavy: 10, prob_extreme: 0 }
+      ensembleTomorrow: { members: 51, prob_heavy: 60, prob_heavy_upper: 10, prob_very_heavy: 0 }
     });
     expect(result.score).toBe(1);
     expect(result.risk_level).toBe("normal");
     const withTerrain = assessDistrictRisk({
       observedRain24h: 0,
-      ensembleTomorrow: { members: 51, prob_heavy: 60, prob_very_heavy: 10, prob_extreme: 0 },
+      ensembleTomorrow: { members: 51, prob_heavy: 60, prob_heavy_upper: 10, prob_very_heavy: 0 },
       susceptibility: 1
     });
     expect(withTerrain.risk_level).toBe("watch");
@@ -122,8 +122,8 @@ describe("ความเสี่ยงรายอำเภอ", () => {
   });
 
   test("ความเสี่ยงวันในอนาคต", () => {
-    expect(assessForecastDay({ ensembleDay: { members: 51, prob_heavy: 90, prob_very_heavy: 60, prob_extreme: 35 } }).risk_level).toBe("watch");
-    expect(assessForecastDay({ ensembleDay: { members: 51, prob_heavy: 90, prob_very_heavy: 60, prob_extreme: 35 }, dischargeLevelOfDay: "very_high", windSpeed: 45 }).risk_level).toBe("critical");
+    expect(assessForecastDay({ ensembleDay: { members: 51, prob_heavy: 90, prob_heavy_upper: 60, prob_very_heavy: 35 } }).risk_level).toBe("watch");
+    expect(assessForecastDay({ ensembleDay: { members: 51, prob_heavy: 90, prob_heavy_upper: 60, prob_very_heavy: 35 }, dischargeLevelOfDay: "very_high", windSpeed: 45 }).risk_level).toBe("critical");
     expect(assessForecastDay({}).risk_level).toBe("normal");
   });
 });

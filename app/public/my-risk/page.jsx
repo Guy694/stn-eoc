@@ -15,6 +15,7 @@ import {
   Phone,
   RefreshCw,
   Search,
+  Info,
   Siren,
   Square,
   Tent,
@@ -26,7 +27,7 @@ import PublicLayout from "@/components/layouts/PublicLayout";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { RISK_META } from "@/lib/weatherRiskConfig";
-import { assessHomeRisk, homeAdvice, nearest, NEAR_REPORT_KM, riskSpeechText } from "@/lib/myRisk";
+import { assessHomeRisk, homeAdvice, nearest, NEAR_REPORT_KM, officialNotice, riskSpeechText } from "@/lib/myRisk";
 import { distanceText, facilityTypeInfo, floodAreaAt, serviceStatusMeta, phoneLinks } from "@/lib/healthFacilityStatus";
 import { floodAreaMapMeta } from "@/lib/floodMapLevels";
 import { bandFor, elevationText } from "@/lib/elevation";
@@ -267,7 +268,8 @@ function MyRiskContent() {
     label: meta.label,
     place: placeName,
     reasons: [...result.home.reasons, ...(result.district?.risk_reasons || []).map((reason) => `อ.${result.district.district_name}: ${reason}`)],
-    advice: homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen: sheltersOpen && result.shelters.length > 0 })
+    advice: homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen: sheltersOpen && result.shelters.length > 0 }),
+    notice: officialNotice(result.home.level)
   }) : "");
   const listen = async () => {
     const ok = await readAloud(speechFor(), { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) });
@@ -429,6 +431,13 @@ function MyRiskContent() {
                       <input type="checkbox" checked={autoRead} onChange={toggleAutoRead} className="h-4 w-4 accent-[#0b4c86]" />
                       อ่านให้ฟังเองทุกครั้งที่ประเมิน
                     </label>
+                  </div>
+                ) : null}
+                {officialNotice(result.home.level) ? (
+                  <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 p-3.5 text-[15px] leading-6 text-sky-950" role="note">
+                    <p className="flex items-center gap-2 font-black"><Info className="h-5 w-5 shrink-0 text-sky-700" aria-hidden="true" />{officialNotice(result.home.level).title}</p>
+                    <p className="mt-1">{officialNotice(result.home.level).body}</p>
+                    <p className="mt-2 font-semibold text-red-800">{officialNotice(result.home.level).urgent}</p>
                   </div>
                 ) : null}
                 <ul className="space-y-1.5 text-slate-800">

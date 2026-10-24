@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import SatunRiskMap from "@/components/public/home/SatunRiskMap";
+import { HOURLY_RAIN_CATEGORIES } from "@/lib/thaiWaterRain";
 import HomeSplashScreen from "@/components/public/home/HomeSplashScreen";
 import CanalStrip from "@/components/public/home/CanalStrip";
 import WarningRibbon from "@/components/public/home/WarningRibbon";
@@ -35,7 +36,7 @@ import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
 import { heavyRainTodayText } from "@/lib/rainNowcast";
 import SeaTodayCard from "@/components/public/home/SeaTodayCard";
-import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
+import { RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
 import { mergeAnnouncementSources } from "@/lib/riskcomMedia";
 import { shareVisitGps } from "@/lib/visitorGps";
@@ -533,13 +534,13 @@ export default function PublicHome() {
               <div className="relative rounded-[2rem] bg-[#11466e]/60 p-3 sm:p-5">
                 <SatunRiskMap districts={districts} selectedName={districtName} onSelect={(name) => selectDistrict(name)} userPoint={userPoint} />
                 <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 px-1 text-sm text-[#d5e7ec]" aria-label="ความหมายของสี">
-                  {RISK_LEVELS.map((level) => (
-                    <li key={level} className="inline-flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: riskMeta(level).color }} aria-hidden="true" />
-                      {riskMeta(level).label}
+                  {HOURLY_RAIN_CATEGORIES.map((item) => (
+                    <li key={item.key} className="inline-flex items-center gap-1.5">
+                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                      {item.label}{item.range ? <span className="text-[#9fc9d6]"> {item.range}</span> : null}
                     </li>
                   ))}
-                  <li className="text-[#9fc9d6]">สีตามความเสี่ยงน้ำท่วมวันนี้ (ฝนที่วัดได้ ระดับน้ำในคลอง และโอกาสฝนหนัก) • ตัวเลขคือฝนที่วัดได้ 24 ชม.</li>
+                  <li className="text-[#9fc9d6]">สีและตัวเลขคือฝนใน 1 ชั่วโมงล่าสุดจากสถานีวัดฝน (~ = ค่าประมาณ ไม่มีสถานีวัด) • ระดับความเสี่ยงน้ำท่วมดูได้ที่การ์ดอำเภอ</li>
                 </ul>
               </div>
             </div>

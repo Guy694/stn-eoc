@@ -149,7 +149,7 @@ export default function CitizenDashboard() {
                 <h2 className="text-2xl font-bold mb-2">
                     สวัสดี, {user?.title} {user?.givenName} {user?.familyName}
                 </h2>
-                <p className="text-green-100">ยินดีต้อนรับสู่ระบบ ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
+                <p className="text-green-100">ยินดีต้อนรับสู่ระบบ ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
             </div>
 
             {/* EOC Status Section */}

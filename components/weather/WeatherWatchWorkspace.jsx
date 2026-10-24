@@ -572,7 +572,7 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
                   {(selectedDistrict.heavy_rain_today || selectedDistrict.heavy_rain_tomorrow) && (
                     <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
                       <p className="flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">
-                        โอกาสฝนหนัก (เกิน 35 มม./วัน) <SourceTag>{selectedDistrict.heavy_rain_today?.source === "gauge+forecast" ? "สถานีวัดฝน + ECMWF 51 ชุด" : "ECMWF 51 ชุด"}</SourceTag>
+                        โอกาสฝนหนัก (35.1 มม./วัน ขึ้นไป) <SourceTag>{selectedDistrict.heavy_rain_today?.source === "gauge+forecast" ? "สถานีวัดฝน + ECMWF 51 ชุด" : "ECMWF 51 ชุด"}</SourceTag>
                       </p>
                       <div className="mt-1.5 grid grid-cols-2 gap-2">
                         {[["วันนี้", selectedDistrict.heavy_rain_today], ["พรุ่งนี้", selectedDistrict.heavy_rain_tomorrow]].map(([label, item]) => item && (

@@ -154,7 +154,7 @@ function LoginForm() {
                         <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-100">ช่องทางเข้าระบบสำหรับเจ้าหน้าที่</p>
                         <p className="text-4xl font-black leading-tight sm:text-5xl">เข้าสู่ระบบเจ้าหน้าที่</p>
                         <p className="mt-4 text-base leading-7 text-blue-50">
-                            ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
+                            ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
                         </p>
                     </div>
 
@@ -181,7 +181,7 @@ function LoginForm() {
                     <div className="w-full max-w-md">
                         <div className="mb-5 lg:mb-7">
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto hidden h-20 w-20 rounded-full bg-white p-2 lg:block" />
-                            <p className="hidden text-center text-lg font-black text-[#0b4c86] lg:block">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
+                            <p className="hidden text-center text-lg font-black text-[#0b4c86] lg:block">ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
                             <h1 className="text-2xl font-black text-slate-950 lg:mt-1 lg:text-3xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
                             <p className="mt-1 text-sm leading-6 text-slate-500 lg:mt-2">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiD / Provider ID</p>
                         </div>
@@ -313,7 +313,7 @@ function LoginForm() {
                             <Link href="/" className="hidden font-bold text-blue-700 hover:text-blue-900 lg:inline">กลับหน้าสาธารณะ</Link>
                         </div>
 
-                        <p className="mt-6 text-center text-xs text-slate-400 lg:mt-8">© 2025 ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
+                        <p className="mt-6 text-center text-xs text-slate-400 lg:mt-8">© 2025 ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
 
                         <Suspense fallback={null}>
                             <ThaiDErrorHandler setError={setError} />

@@ -182,7 +182,7 @@ export default function WaterAlertSettings() {
           <span>(ทดสอบเฉพาะเครื่องนี้ ไม่ส่งหาใคร)</span>
         </div>
         <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
-          <b className="text-slate-800">วิธีเปลี่ยน:</b> ตั้งใน <Code>.env</Code> — เกณฑ์ใกล้ล้นตลิ่ง <Code>WATER_ALERT_NEAR_M=0.5</Code> · เกณฑ์ฝน <Code>RAIN_ALERT_WATCH_MM=60</Code> <Code>RAIN_ALERT_SEVERE_MM=90.1</Code> · รอบตรวจ <Code>WATER_ALERTS_INTERVAL_MIN=10</Code> (5–60 นาที, <Code>off</Code> = ปิด)
+          <b className="text-slate-800">วิธีเปลี่ยน:</b> ตั้งใน <Code>.env</Code> — เกณฑ์ใกล้ล้นตลิ่ง <Code>WATER_ALERT_NEAR_M=0.5</Code> · เกณฑ์ฝน <Code>RAIN_ALERT_WATCH_MM=35.1</Code> <Code>RAIN_ALERT_SEVERE_MM=90.1</Code> · รอบตรวจ <Code>WATER_ALERTS_INTERVAL_MIN=10</Code> (5–60 นาที, <Code>off</Code> = ปิด)
           · ปิดส่ง Telegram ชั่วคราวใช้ <Code>EOC_ALERTS_TELEGRAM=off</Code> เดียวกับแจ้งเตือนอื่น · เสียงในเบราว์เซอร์จะดังได้หลังผู้ใช้แตะหน้าเว็บอย่างน้อยหนึ่งครั้ง
         </p>
       </div>

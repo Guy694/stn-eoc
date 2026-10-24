@@ -31,7 +31,7 @@ export default function Header() {
                         <div>
                             <h1 className="text-base font-bold leading-tight sm:text-xl">
                                 <span className="sm:hidden">EOC สาธารณสุข จ.สตูล</span>
-                                <span className="hidden sm:inline">ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</span>
+                                <span className="hidden sm:inline">ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</span>
                             </h1>
                             <p className="text-xs text-blue-100 hidden sm:block">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
                         </div>

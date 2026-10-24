@@ -72,7 +72,8 @@ describe("แจ้งเตือนฝนหนัก", () => {
 
   test("ฝนลดลงไม่แจ้ง และกันแกว่งที่ 80% ของเกณฑ์", () => {
     expect(nextRainState("watch", 55)).toBe("watch");
-    expect(nextRainState("watch", 40)).toBe("normal");
+    expect(nextRainState("watch", 30)).toBe("watch"); // 80% ของ 35.1 = 28.1
+    expect(nextRainState("watch", 25)).toBe("normal");
     expect(nextRainState("severe", 80)).toBe("severe");
     expect(nextRainState("severe", 65)).toBe("watch");
     const [station] = stations([20]);
@@ -92,8 +93,8 @@ describe("แจ้งเตือนฝนหนัก", () => {
 
   test("เกณฑ์จาก env", () => {
     expect(rainThresholdsFromEnv({ RAIN_ALERT_WATCH_MM: "50", RAIN_ALERT_SEVERE_MM: "100" })).toEqual({ watchMm: 50, severeMm: 100 });
-    expect(rainThresholdsFromEnv({ RAIN_ALERT_WATCH_MM: "120", RAIN_ALERT_SEVERE_MM: "100" })).toEqual({ watchMm: 60, severeMm: 90.1 });
-    expect(rainThresholdsFromEnv({ RAIN_ALERT_WATCH_MM: "100" })).toEqual({ watchMm: 60, severeMm: 90.1 });
-    expect(rainThresholdsFromEnv({})).toEqual({ watchMm: 60, severeMm: 90.1 });
+    expect(rainThresholdsFromEnv({ RAIN_ALERT_WATCH_MM: "120", RAIN_ALERT_SEVERE_MM: "100" })).toEqual({ watchMm: 35.1, severeMm: 90.1 });
+    expect(rainThresholdsFromEnv({ RAIN_ALERT_WATCH_MM: "100" })).toEqual({ watchMm: 35.1, severeMm: 90.1 });
+    expect(rainThresholdsFromEnv({})).toEqual({ watchMm: 35.1, severeMm: 90.1 });
   });
 });

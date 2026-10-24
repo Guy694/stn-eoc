@@ -141,7 +141,7 @@ export default function RegisterPage() {
                     <div className="relative my-10 max-w-md">
                         <p className="text-4xl font-black leading-tight">ลงทะเบียนเข้าใช้งานระบบ</p>
                         <p className="mt-4 text-base leading-7 text-blue-50">
-                            ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล ทุกบัญชีต้องยืนยันตัวตนด้วย ThaiD เพื่อป้องกันการใช้ข้อมูลของผู้อื่น
+                            ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล ทุกบัญชีต้องยืนยันตัวตนด้วย ThaiD เพื่อป้องกันการใช้ข้อมูลของผู้อื่น
                         </p>
                     </div>
 

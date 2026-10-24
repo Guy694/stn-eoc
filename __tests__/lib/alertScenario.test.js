@@ -61,10 +61,10 @@ test("น้ำขึ้น: ปกติ → ใกล้ตลิ่ง → �
   expect(sendTelegramMessage).toHaveBeenCalledTimes(2);
 });
 
-test("ฝนหนัก ≥ 60 มม. = เฝ้าระวัง, ≥ 90.1 มม. = วิกฤต", async () => {
-  await round([], [rain(40)]);
+test("ฝนหนัก ≥ 35.1 มม. = เฝ้าระวัง, ≥ 90.1 มม. = วิกฤต (เกณฑ์ ปภ.)", async () => {
+  await round([], [rain(35)]);
   expect(logs).toHaveLength(0);
-  await round([], [rain(65)]);
+  await round([], [rain(40)]);
   expect(logs.at(-1)).toMatchObject({ kind: "rain", level: "serious" });
   await round([], [rain(95)]);
   expect(logs.at(-1)).toMatchObject({ kind: "rain", level: "critical" });

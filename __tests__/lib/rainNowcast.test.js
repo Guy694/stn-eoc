@@ -63,7 +63,7 @@ describe("รวมกับพยากรณ์ชั่วโมงที่�
 
   test("ตกแล้ว 20 มม. ต้องการอีก 15 มม. → นับชุดที่ถึง", () => {
     const result = blendTodayHeavyRain({ observedMm: 20, hourly, today, now });
-    expect(result).toMatchObject({ members: 4, hours_left: 2, observed_mm: 20, prob_heavy: 50, prob_very_heavy: 25, source: "gauge+forecast" });
+    expect(result).toMatchObject({ members: 4, hours_left: 2, observed_mm: 20, prob_heavy: 50, prob_heavy_upper: 25, prob_very_heavy: 0, source: "gauge+forecast" });
   });
 
   test("ตกแล้วเกิน 35 มม. → 100%", () => {

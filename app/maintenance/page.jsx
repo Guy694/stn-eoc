@@ -40,7 +40,7 @@ export default async function MaintenancePage({ searchParams }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/stn-eoc/img/eoc-icon.png" alt="" width={56} height={56} className="h-14 w-14 rounded-full bg-white/90 p-1" />
           <p className="text-sm leading-snug text-[#c9dcee]">
-            ระบบศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล
+            ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล
             <span className="block text-xs text-[#9fc0d8]">Satun Geo-EOC</span>
           </p>
         </div>

@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { RISK_META } from "@/lib/weatherRiskConfig";
+import { hourlyRainCategory } from "@/lib/thaiWaterRain";
 
 // แผนที่ 7 อำเภอของสตูลแบบ SVG (ไฟล์ย่อจากขอบเขตอำเภอทางการ ~10 KB)
-// สีแต่ละอำเภอ = ระดับความเสี่ยงจากสภาพอากาศวันนี้ / แตะเพื่อเลือกเป็นพื้นที่ของฉัน
+// สีแต่ละอำเภอ = ฝนใน 1 ชม. ล่าสุด (สถานีวัดฝน ไม่มีสถานีใช้ค่าประมาณ) — ไม่ใช้ฝน 24 ชม./ระดับความเสี่ยง เพื่อไม่ให้ตื่นตระหนก
+// ระดับความเสี่ยงน้ำท่วมยังแสดงในการ์ดอำเภอเหมือนเดิม / แตะเพื่อเลือกเป็นพื้นที่ของฉัน
+
+/** ฝน 1 ชม. ของอำเภอ: { mm, estimated } */
+export function districtRain1h(district) {
+  const mm = Number(district?.rainfall_1h);
+  return { mm: Number.isFinite(mm) && mm > 0 ? mm : 0, estimated: !(district?.rain_now?.stations > 0) };
+}
+
+const mmText = (mm) => Number(mm || 0).toLocaleString("th-TH", { maximumFractionDigits: 1 });
 
 const OUTLINE_URL = "/stn-eoc/geo/satun-districts.json";
 
@@ -38,12 +48,14 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
     : null;
 
   return (
-    <svg viewBox={outline.viewBox} className="satun-map mx-auto block h-auto max-h-[22rem] w-full sm:max-h-[30rem] lg:max-h-[34rem]" role="group" aria-label="แผนที่ความเสี่ยงน้ำท่วมรายอำเภอ จังหวัดสตูล พร้อมฝนที่วัดได้ 24 ชั่วโมง">
+    <svg viewBox={outline.viewBox} className="satun-map mx-auto block h-auto max-h-[22rem] w-full sm:max-h-[30rem] lg:max-h-[34rem]" role="group" aria-label="แผนที่ฝนใน 1 ชั่วโมงล่าสุดรายอำเภอ จังหวัดสตูล">
       {outline.districts.map((shape, index) => {
         const district = byName.get(normalize(shape.name));
-        const meta = RISK_META[district?.risk_level] || null;
+        const rain = district ? districtRain1h(district) : null;
+        const category = rain ? hourlyRainCategory(rain.mm) : null;
+        const risk = RISK_META[district?.risk_level] || null;
         const selected = normalize(shape.name) === normalize(selectedName);
-        const label = `อำเภอ${shape.name}${meta ? ` ความเสี่ยง${meta.label}` : ""}`;
+        const label = `อำเภอ${shape.name}${rain ? ` ฝน 1 ชม. ${rain.estimated ? "ประมาณ " : ""}${mmText(rain.mm)} มม. (${category.label})` : ""}${risk ? ` ความเสี่ยงน้ำท่วม${risk.label}` : ""}`;
         return (
           <path
             key={shape.code}
@@ -62,7 +74,7 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
             }}
             className="satun-map__district"
             style={{
-              "--fill": meta?.color || "#5b7a8c",
+              "--fill": category?.color || "#5b7a8c",
               animationDelay: `${index * 90}ms`,
               stroke: selected ? "#ffffff" : "#0c2f4a",
               strokeWidth: selected ? 5 : 2
@@ -70,22 +82,6 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
           >
             <title>{label}</title>
           </path>
-        );
-      })}
-
-      {/* อำเภอเสี่ยงสูง/วิกฤต: เส้นขอบเต้นช้า ๆ ดึงสายตาไปก่อน */}
-      {outline.districts.map((shape) => {
-        const district = byName.get(normalize(shape.name));
-        if (!district || !["high", "critical"].includes(district.risk_level)) return null;
-        return (
-          <path
-            key={`alert-${shape.code}`}
-            d={shape.d}
-            fill="none"
-            pointerEvents="none"
-            className={`satun-map__alert ${district.risk_level === "critical" ? "is-critical" : ""}`}
-            style={{ stroke: RISK_META[district.risk_level].color }}
-          />
         );
       })}
 
@@ -97,7 +93,7 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
           <g key={`label-${shape.code}`} transform={`translate(${shape.label[0]} ${shape.label[1]})`} pointerEvents="none">
             <text textAnchor="middle" className={`satun-map__label ${selected ? "is-selected" : ""}`} y="-4">{shape.name}</text>
             {district && (
-              <text textAnchor="middle" className="satun-map__temp" y="40">{`ฝน ${Number(district.rainfall_24h || 0).toLocaleString("th-TH", { maximumFractionDigits: 1 })} มม.`}</text>
+              <text textAnchor="middle" className="satun-map__temp" y="40">{`1 ชม. ${districtRain1h(district).estimated ? "~" : ""}${mmText(districtRain1h(district).mm)} มม.`}</text>
             )}
           </g>
         );
@@ -136,14 +132,10 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
           stroke-width: 5px;
         }
         .satun-map__pulse { animation: satun-pulse 2s ease-out infinite; transform-origin: center; }
-        .satun-map__alert { stroke-width: 10px; stroke-linejoin: round; animation: satun-alert 2.4s ease-in-out infinite; }
-        .satun-map__alert.is-critical { animation-duration: 1.6s; }
-        @keyframes satun-alert { 0%, 100% { stroke-opacity: .15; stroke-width: 6px; } 50% { stroke-opacity: .9; stroke-width: 14px; } }
         @keyframes satun-district-in { from { fill: #5b7a8c; fill-opacity: .35; } }
         @keyframes satun-pulse { from { transform: scale(.6); opacity: .6; } to { transform: scale(2.2); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
           .satun-map__district, .satun-map__pulse { animation: none; }
-          .satun-map__alert { animation: none; stroke-opacity: .8; }
         }
       `}</style>
     </svg>
