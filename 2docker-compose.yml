@@ -46,6 +46,27 @@ services:
       - flood_maps:/app/public/flood-maps
       - backups:/app/backups
 
+  # เฝ้าระบบ: เรียก /api/health ทุก 1 นาที ล่ม/กลับมาแจ้ง Telegram กลุ่มผู้ดูแลระบบ (แยกจากแอป แอปล่มก็ยังแจ้งได้)
+  watchdog:
+    image: node:22-bookworm-slim
+    restart: unless-stopped
+    depends_on:
+      - app
+    # ส่งเฉพาะค่าที่ใช้ (ไม่ส่งรหัสฐานข้อมูลและค่าลับอื่นเข้า container นี้)
+    environment:
+      WATCHDOG_URL: ${WATCHDOG_URL:-http://app:3000/stn-eoc/api/health/}
+      WATCHDOG_PUBLIC_URL: ${WATCHDOG_PUBLIC_URL:-}
+      WATCHDOG_INTERVAL_SECONDS: ${WATCHDOG_INTERVAL_SECONDS:-60}
+      WATCHDOG_FAILURES_BEFORE_ALERT: ${WATCHDOG_FAILURES_BEFORE_ALERT:-3}
+      WATCHDOG_REMIND_MINUTES: ${WATCHDOG_REMIND_MINUTES:-30}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_SECURITY_CHAT_IDS: ${TELEGRAM_SECURITY_CHAT_IDS:-}
+      TELEGRAM_ADMIN_CHAT_IDS: ${TELEGRAM_ADMIN_CHAT_IDS:-}
+      TZ: Asia/Bangkok
+    volumes:
+      - ./scripts/uptime-watchdog.mjs:/watchdog/uptime-watchdog.mjs:ro
+    command: ["node", "/watchdog/uptime-watchdog.mjs"]
+
 volumes:
   db_data:
   private_uploads:

@@ -23,4 +23,6 @@ export async function register() {
   startDpmWaterScheduler();
   const { startHousekeeping } = await import("./lib/housekeeping");
   startHousekeeping();
+  const { startSecurityMonitor } = await import("./lib/securityMonitorServer");
+  startSecurityMonitor();
 }

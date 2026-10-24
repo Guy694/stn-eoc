@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { emailOutcomeText, notifyAccountDecision } from '@/lib/accountEmails';
 import { query, transaction } from '@/lib/db';
 import { recordChange } from '@/lib/recordArchive';
+import { officerChangeActions, recordSecurityAudit } from '@/lib/securityAudit';
 import { requireAuth, revokeUserSessions } from '@/lib/auth';
 import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
@@ -53,7 +54,7 @@ export async function PUT(request, { params }) {
         const { username, password, title, given_name, family_name, email, phone, role, department, requested_role, is_approved } = body;
 
         // ตรวจสอบว่ามีเจ้าหน้าที่นี้อยู่หรือไม่
-        const existing = await query('SELECT id, role, is_approved FROM officer WHERE id = ?', [id]);
+        const existing = await query('SELECT id, username, role, is_approved FROM officer WHERE id = ?', [id]);
         if (existing.length === 0) {
             return NextResponse.json(
                 { success: false, error: 'ไม่พบเจ้าหน้าที่' },
@@ -177,6 +178,10 @@ export async function PUT(request, { params }) {
             [id]
         );
 
+        for (const change of officerChangeActions(existing[0], { role, is_approved, password })) {
+            await recordSecurityAudit({ request, actor: auth.user, action: change.action, targetId: Number(id), targetUsername: updated[0]?.username || existing[0].username, detail: change.detail });
+        }
+
         // อนุมัติครั้งแรก (จากรออนุมัติ → อนุมัติ) แจ้งผลทางอีเมลที่ลงทะเบียนไว้
         const approvalGranted = Number(is_approved) === 1 && Number(existing[0].is_approved) !== 1;
         const emailResult = approvalGranted ? await notifyAccountDecision(updated[0], 'approved') : null;
@@ -261,6 +266,7 @@ export async function DELETE(request, { params }) {
         }
 
         await recordChange({ request, user: auth.user, action: 'data_delete', table: 'officer', id, description: `ลบบัญชีเจ้าหน้าที่ ${existing[0].username}` });
+        await recordSecurityAudit({ request, actor: auth.user, action: 'account_deleted', targetId: Number(id), targetUsername: existing[0].username });
         return NextResponse.json({
             success: true,
             message: 'ลบบัญชีแล้ว',
@@ -298,6 +304,7 @@ export async function PATCH(request, { params }) {
         } else {
             await query('UPDATE officer SET account_locked_until = NULL, failed_login_attempts = 0 WHERE id = ?', [id]);
         }
+        await recordSecurityAudit({ request, actor: auth.user, action: body.action === 'suspend' ? 'account_suspended' : 'account_reactivated', targetId: Number(id), targetUsername: existing[0].username });
         await recordChange({
             request, user: auth.user, action: 'data_update', table: 'officer', id,
             description: `${body.action === 'suspend' ? 'ระงับการใช้งาน' : 'เปิดใช้งานอีกครั้ง'} บัญชี ${existing[0].username}`

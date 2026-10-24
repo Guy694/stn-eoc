@@ -5,6 +5,7 @@ import { publicInternalError } from '@/lib/apiResponse';
 import bcrypt from 'bcryptjs';
 import { SYSTEM_ROLE_CODES } from '@/lib/eocRoles';
 import { validatePassword } from "@/lib/passwordPolicy";
+import { recordSecurityAudit } from '@/lib/securityAudit';
 
 const SYSTEM_ROLES = new Set(SYSTEM_ROLE_CODES);
 
@@ -138,6 +139,8 @@ export async function POST(request) {
             'SELECT id, username, title, given_name, family_name, email, phone, role, requested_role, is_approved, created_at FROM officer WHERE id = ?',
             [result.insertId]
         );
+
+        await recordSecurityAudit({ request, actor: auth.user, action: 'account_created', targetId: result.insertId, targetUsername: username, detail: role });
 
         return NextResponse.json({
             success: true,

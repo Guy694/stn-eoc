@@ -1,0 +1,35 @@
+name: Security audit
+
+# ตรวจช่องโหว่ไลบรารีทุกสัปดาห์ (และเมื่อแก้ package-lock.json) — พบระดับสูง/วิกฤต แจ้ง Telegram กลุ่มผู้ดูแลระบบ
+# ตั้ง GitHub › Settings › Secrets and variables › Actions:
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_SECURITY_CHAT_IDS
+on:
+  schedule:
+    - cron: "0 1 * * 1" # จันทร์ 08:00 น. เวลาไทย
+  push:
+    branches: [main, master]
+    paths: [package-lock.json]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm audit (เฉพาะไลบรารีที่ใช้ตอนรันจริง)
+        run: npm audit --omit=dev --json > audit.json || true
+
+      - name: สรุปผลและแจ้ง Telegram
+        run: node scripts/audit-report.mjs audit.json
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_SECURITY_CHAT_IDS: ${{ secrets.TELEGRAM_SECURITY_CHAT_IDS }}

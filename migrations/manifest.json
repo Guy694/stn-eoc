@@ -74,6 +74,7 @@
     "20261022_visitor_access_log.sql",
     "20261022_officer_readiness.sql",
     "20261023_visitor_gps.sql",
-    "20261023_close_stale_shelters.sql"
+    "20261023_close_stale_shelters.sql",
+    "20261024_security_monitoring.sql"
   ]
 }
