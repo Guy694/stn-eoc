@@ -38,6 +38,7 @@ import { trackPublicUsage } from "@/lib/publicUsage";
 import FloodOutlookCard from "@/components/public/FloodOutlookCard";
 import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 import { hasThaiVoice, primeSpeech, readAloud, stopSpeaking } from "@/lib/readAloud";
+import { heavyRainNote } from "@/lib/rainNowcast";
 import { shareVisitGps } from "@/lib/visitorGps";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
@@ -505,7 +506,7 @@ function MyRiskContent() {
                       label={`โอกาสฝนหนัก ${label}`}
                       value={`${item.prob_heavy}%`}
                       tone={item.prob_heavy >= 50 ? "text-red-700" : item.prob_heavy >= 20 ? "text-amber-700" : "text-slate-900"}
-                      note={`ฝนน่าจะได้ราว ${item.median_mm} มม. (มากสุด ~${item.p90_mm})`}
+                      note={heavyRainNote(item)}
                     />
                   ))}
                 </div>

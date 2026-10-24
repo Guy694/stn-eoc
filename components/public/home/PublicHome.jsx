@@ -33,6 +33,7 @@ import { citizenWaterReports, roadAlerts, shelterSummary } from "@/lib/homeSigna
 import CitizenWaterReports from "@/components/public/home/CitizenWaterReports";
 import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
+import { heavyRainTodayText } from "@/lib/rainNowcast";
 import SeaTodayCard from "@/components/public/home/SeaTodayCard";
 import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
@@ -272,7 +273,7 @@ function SourceTimes({ weather, water, now }) {
   const sources = [
     ["ระดับน้ำในคลอง", "ThaiWater (สสน.)", freshness(waterAt, "water", now)],
     ["ฝนที่วัดได้", "ThaiWater (สสน.)", freshness(rainAt, "rain", now)],
-    ["พยากรณ์และโอกาสฝนหนัก", "ECMWF", freshness(weather?.weather_current?.observed_at, "forecast", now)],
+    ["พยากรณ์และโอกาสฝนหนัก", "ECMWF + สถานีวัดฝน", freshness(weather?.weather_current?.observed_at, "forecast", now)],
     ["เหตุการณ์และศูนย์พักพิง", "ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล", null]
   ];
   return (
@@ -462,6 +463,7 @@ export default function PublicHome() {
       showPageHeader={false}
       showBottomBar
       mainClassName="p-0!"
+      alertPrompt={false}
     >
       <div className="bg-white text-[#15232e]">
         <WarningRibbon warnings={weather?.weather_warnings || []} />
@@ -504,7 +506,7 @@ export default function PublicHome() {
                     </span>
                   </div>
                   <p className={`mt-2 text-[15px] leading-7 ${myRain.stale ? "text-slate-500" : ""}`}>
-                    {myDistrict.weather_condition} {myDistrict.temperature}°C • {myDistrict.rain_source === "gauge" ? `ฝนวัดได้ 24 ชม. ${myDistrict.rainfall_24h} มม.` : `ฝน 24 ชม. ~${myDistrict.rainfall_24h} มม.`}{myDistrict.heavy_rain_today ? ` • โอกาสฝนหนักวันนี้ ${myDistrict.heavy_rain_today.prob_heavy}%` : ""}
+                    {myDistrict.weather_condition} {myDistrict.temperature}°C • {myDistrict.rain_source === "gauge" ? `ฝนวัดได้ 24 ชม. ${myDistrict.rainfall_24h} มม.` : `ฝน 24 ชม. ~${myDistrict.rainfall_24h} มม.`}{heavyRainTodayText(myDistrict.heavy_rain_today) ? ` • ${heavyRainTodayText(myDistrict.heavy_rain_today)}` : ""}
                   </p>
                   {myRain.known ? <p className="text-sm"><FreshnessTag info={myRain} /></p> : null}
                   <ul className="mt-1 space-y-0.5 text-[15px] leading-7 text-slate-700">

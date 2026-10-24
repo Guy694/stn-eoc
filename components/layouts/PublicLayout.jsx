@@ -2,6 +2,7 @@ import PublicHeader from "@/components/public/PublicHeader";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import Footer from "@/components/Footer";
 import AIChatbot from "@/components/AIChatbot";
+import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
 
 export default function PublicLayout({ children }) {
     return (
@@ -13,6 +14,7 @@ export default function PublicLayout({ children }) {
             </main>
             <Footer />
             <AIChatbot />
+            <AlertSubscribePrompt />
         </div>
     );
 }

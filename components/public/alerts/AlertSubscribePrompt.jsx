@@ -1,9 +1,10 @@
 "use client";
 
-// ชวนรับแจ้งเตือนภัยตอนเข้าหน้าแรก (แผ่นล่างบนมือถือ / กล่องกลางจอบนคอม)
-// เด้งเฉพาะเครื่องที่ยังไม่ได้รับ หลังหน้าโลโก้และ popup ประกาศปิดแล้ว · "ไว้ทีหลัง" = ถามใหม่ใน 3 วัน · "ไม่ต้องถามอีก" = 60 วัน
+// ชวนรับแจ้งเตือนภัยทุกหน้าของประชาชน (แผ่นล่างบนมือถือ / กล่องกลางจอบนคอม)
+// เด้งเฉพาะเครื่องที่ยังไม่ได้รับ (หน้าแรก: หลังหน้าโลโก้และ popup ประกาศปิดแล้ว) · ไม่เด้งในหน้า "แจ้งเตือน" ซึ่งมีปุ่มรับอยู่แล้ว · "ไว้ทีหลัง" = ถามใหม่ใน 3 วัน · "ไม่ต้องถามอีก" = 60 วัน
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BellRing, CheckCircle2, ChevronDown, ExternalLink, X } from "lucide-react";
 import { SATUN_DISTRICT_NAMES } from "@/lib/satunDistricts";
 import { isAndroid, isInAppBrowser, isIos, isStandalone, pushStatus, subscribePush } from "@/lib/pwaClient";
@@ -23,6 +24,8 @@ export default function AlertSubscribePrompt({ blocked = false, district = "" })
   const [showGuide, setShowGuide] = useState(false);
   const [android, setAndroid] = useState(false);
   const dialogRef = useRef(null);
+  const pathname = usePathname() || "";
+  const onAlertsPage = /\/public\/alerts\/?$/.test(pathname);
   const myDistrict = SATUN_DISTRICT_NAMES.includes(district) ? district : "";
 
   // ตรวจสถานะเครื่องครั้งเดียวต่อการเปิดหน้า
@@ -37,10 +40,10 @@ export default function AlertSubscribePrompt({ blocked = false, district = "" })
   }, []);
 
   useEffect(() => {
-    if (!mode || blocked || open || done) return undefined;
+    if (!mode || blocked || onAlertsPage || open || done) return undefined;
     const timer = window.setTimeout(() => setOpen(true), DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [mode, blocked, open, done]);
+  }, [mode, blocked, onAlertsPage, open, done]);
 
   useEffect(() => {
     if (open) dialogRef.current?.focus();

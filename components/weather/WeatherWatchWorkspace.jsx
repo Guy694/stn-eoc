@@ -59,6 +59,7 @@ import { DISCHARGE_LEVELS } from "@/lib/forecastSignals";
 import { PM25_UNIT } from "@/lib/pm25";
 import Pm25Card, { Pm25Dot, Pm25Legend } from "@/components/weather/Pm25Card";
 import SeaLevelCard, { SeaLevelPill } from "@/components/weather/SeaLevelCard";
+import { heavyRainNote } from "@/lib/rainNowcast";
 
 const WeatherRiskMap = dynamic(() => import("@/components/weather/WeatherRiskMap"), {
   ssr: false,
@@ -571,14 +572,14 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
                   {(selectedDistrict.heavy_rain_today || selectedDistrict.heavy_rain_tomorrow) && (
                     <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
                       <p className="flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">
-                        โอกาสฝนหนัก (เกิน 35 มม./วัน) <SourceTag>ECMWF 51 ชุด</SourceTag>
+                        โอกาสฝนหนัก (เกิน 35 มม./วัน) <SourceTag>{selectedDistrict.heavy_rain_today?.source === "gauge+forecast" ? "สถานีวัดฝน + ECMWF 51 ชุด" : "ECMWF 51 ชุด"}</SourceTag>
                       </p>
                       <div className="mt-1.5 grid grid-cols-2 gap-2">
                         {[["วันนี้", selectedDistrict.heavy_rain_today], ["พรุ่งนี้", selectedDistrict.heavy_rain_tomorrow]].map(([label, item]) => item && (
                           <div key={label}>
                             <div className="text-[11px] font-bold text-white/60">{label}</div>
                             <div className={`text-lg font-black leading-tight ${item.prob_heavy >= 50 ? "text-red-300" : item.prob_heavy >= 20 ? "text-amber-300" : "text-white"}`}>{item.prob_heavy}%</div>
-                            <div className="text-[11px] text-white/65">ฝนน่าจะได้ ~{item.median_mm} มม. (มากสุด ~{item.p90_mm})</div>
+                            <div className="text-[11px] text-white/65">{heavyRainNote(item)}</div>
                           </div>
                         ))}
                       </div>

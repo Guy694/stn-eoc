@@ -4,6 +4,7 @@ import PublicHeader from "@/components/public/PublicHeader";
 import AIChatbot from "@/components/AIChatbot";
 import Footer from "@/components/Footer";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
+import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
 
 export default function PublicOpsScaffold({
   title,
@@ -16,7 +17,8 @@ export default function PublicOpsScaffold({
   showWeatherMenu = false,
   showPageHeader = true,
   showBottomBar = false,
-  mainClassName = ""
+  mainClassName = "",
+  alertPrompt = true // ชวนรับแจ้งเตือนภัย (หน้าแรกจัดการเอง จึงส่ง false)
 }) {
   return (
     <div className="min-h-screen bg-[#edf5fc] text-slate-900">
@@ -45,6 +47,7 @@ export default function PublicOpsScaffold({
 
       {/* น้องสจ๊วตยืนมุมขวาล่าง (มือถือที่มีแถบล่าง ยกขึ้นเหนือแถบ) · เปิดจากเมนู "ถามน้องสจ๊วต" ได้เหมือนเดิม */}
       <AIChatbot launcherRaised={showBottomBar} />
+      {alertPrompt ? <AlertSubscribePrompt /> : null}
     </div>
   );
 }

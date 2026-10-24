@@ -245,7 +245,7 @@ export default function PublicPushSettings() {
               <li key={row.id} className="flex flex-wrap items-start gap-x-3 gap-y-1 px-3 py-2.5 sm:px-5 text-sm">
                 <StatusPill tone={kindOf(row)[1]}>{kindOf(row)[0]}</StatusPill>
                 <span className="order-last min-w-0 basis-full break-words sm:order-none sm:basis-0 sm:flex-1"><b>{row.title}</b> <span className="text-slate-600">— {row.body}</span></span>
-                <span className="min-w-0 flex-1 self-center text-xs text-slate-500 sm:flex-none sm:shrink-0">{formatDateTime(row.created_at)} • ถึง {formatNumber(row.delivered)}/{formatNumber(row.recipients)} เครื่อง{row.removed ? ` • ลบเครื่องที่เลิกใช้ ${row.removed}` : ""}</span>
+                <span className="min-w-0 flex-1 self-center text-xs text-slate-500 sm:flex-none sm:shrink-0">{formatDateTime(row.created_at)} • ถึง {formatNumber(row.delivered)}/{formatNumber(row.recipients)} เครื่อง{row.tracked ? ` • เปิดอ่าน ${formatNumber(row.opened)}` : ""}{row.removed ? ` • ลบเครื่องที่เลิกใช้ ${row.removed}` : ""}</span>
                 <button type="button" disabled={busy} onClick={() => setRemoving({ ids: [row.id], label: `"${row.title}"` })} aria-label={`ลบ "${row.title}" ออกจากประวัติ`} title="ลบออกจากประวัติ"
                   className="-my-1 shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-700 disabled:opacity-50">
                   <Trash2 className="h-4 w-4" aria-hidden="true" />

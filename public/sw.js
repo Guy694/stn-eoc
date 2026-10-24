@@ -95,6 +95,24 @@ self.addEventListener("fetch", (event) => {
 });
 
 // ---------- แจ้งเตือนภัย (Web Push) ----------
+// นับผู้รับ: แจ้งเตือนขึ้นบนเครื่องแล้ว (shown) / กดเปิด (opened) — ส่งเฉพาะรหัสรายการส่งกับปลายทางของเครื่องนี้ ไม่มีข้อมูลส่วนตัว
+const RECEIPT_URL = `${BASE}api/public/push/receipt/`;
+const receiptIds = (value) => (Array.isArray(value) ? value : []).map(Number).filter((n) => Number.isInteger(n) && n > 0).slice(0, 10);
+
+async function sendReceipt(ids, event) {
+  const list = receiptIds(ids);
+  if (!list.length) return;
+  const sub = await self.registration.pushManager.getSubscription();
+  if (!sub) return;
+  await fetch(RECEIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "omit",
+    keepalive: true,
+    body: JSON.stringify({ ids: list, event, endpoint: sub.endpoint })
+  });
+}
+
 function safeUrl(value) {
   try {
     const url = new URL(value || BASE, self.location.origin);
@@ -130,6 +148,7 @@ self.addEventListener("push", (event) => {
   const title = data.title || "แจ้งเตือนภัย จ.สตูล";
   const body = data.body || "มีประกาศใหม่จากศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล";
   const at = data.at || new Date().toISOString();
+  const rid = receiptIds(data.rid);
   event.waitUntil(Promise.all([
     self.registration.showNotification(title, {
       body,
@@ -142,8 +161,8 @@ self.addEventListener("push", (event) => {
       vibrate: high ? [300, 150, 300, 150, 600] : [200],
       lang: "th",
       timestamp: Date.parse(at) || Date.now(),
-      data: { url: safeUrl(data.url), title, body, at, level: data.level || "info" }
-    }),
+      data: { url: safeUrl(data.url), title, body, at, level: data.level || "info", rid }
+    }).then(() => sendReceipt(rid, "shown").catch(() => {})),
     // หน้าเว็บของระบบที่เปิดอยู่: ส่งให้หน้าเว็บเด้งหน้าต่างพร้อมเสียงเตือน (service worker เล่นเสียงเองไม่ได้)
     self.clients.matchAll({ type: "window", includeUncontrolled: true })
       .then((windows) => windows.forEach((client) => client.postMessage({ type: "stn-push", payload: { title, body, at, level: data.level || "info", url: safeUrl(data.url), tag: data.tag || null } })))
@@ -156,6 +175,7 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const info = event.notification.data || {};
   const target = readerUrl(info.title ? info : { url: info.url, title: event.notification.title, body: event.notification.body });
+  event.waitUntil(sendReceipt(info.rid, "opened").catch(() => {}));
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const client of windows) {
