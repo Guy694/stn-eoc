@@ -17,8 +17,9 @@ const DATA_PROVIDERS = [
     ["Open-Meteo", "พยากรณ์ฝน/ลม/คลื่น • ปริมาณน้ำท่า • ระดับน้ำทะเล", "https://open-meteo.com/"],
     ["RainViewer", "ภาพเรดาร์ฝน", "https://www.rainviewer.com/"],
     ["Windy.com", "แผนที่ลม/คลื่น", "https://www.windy.com/"],
-    ["IOC Sea Level Monitoring (UNESCO)", "ระดับน้ำทะเล • น้ำทะเลหนุน", "https://www.ioc-sealevelmonitoring.org/"]
-   
+    ["IOC Sea Level Monitoring (UNESCO)", "ระดับน้ำทะเล • น้ำทะเลหนุน", "https://www.ioc-sealevelmonitoring.org/"],
+    // ขอบเขตอำเภอ/ตำบล (public/geo/satun-districts.json, ตาราง districts_polygon, tambons_polygon) — CC BY-IGO ต้องแสดงที่มา
+    ["กรมแผนที่ทหาร (ผ่าน UN OCHA)", "ขอบเขตอำเภอ • ขอบเขตตำบล", "https://data.humdata.org/dataset/cod-ab-tha"]
 ];
 
 export default function Footer() {

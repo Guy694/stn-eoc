@@ -13,7 +13,10 @@ import path from "node:path";
 const input = process.argv[2] || "database/ampure.geojson";
 const output = process.argv[3] || "public/geo/satun-districts.json";
 const TOLERANCE_DEG = 0.0018; // ~200 ม.
-const MIN_RING_AREA = 0.0003; // ตัดเกาะ/แอ่งที่เล็กกว่า ~3.5 ตร.กม. (ไฟล์ทางการไม่มีเกาะใหญ่ จึงตัดจุดเล็ก ๆ ที่ทำให้แผนที่กว้างเกินจริง)
+const MIN_RING_AREA = 0.0003; // ตัดเกาะ/แอ่งที่เล็กกว่า ~3.5 ตร.กม.
+// แผนที่หน้าแรกแสดงเฉพาะแผ่นดินใหญ่: ตัดหมู่เกาะไกลฝั่ง (ตะรุเตา อาดัง หลีเป๊ะ) ทางตะวันตกเฉียงใต้
+// ไม่ให้แผนที่กว้างจนอำเภอเล็กลง (ข้อมูลเต็มยังอยู่ในตาราง districts_polygon)
+const isOffshoreIsland = ([lon, lat]) => lon < 99.6 || (lon < 99.75 && lat < 6.75);
 const WIDTH = 1000;
 
 function sqSegDist(p, a, b) {
@@ -79,7 +82,7 @@ const features = geo.features.map((feature) => {
     code: feature.properties.dis_code,
     polygons: polygons
       .map((polygon) => polygon.map((ring) => simplify(ring, TOLERANCE_DEG)).filter((ring) => ring.length >= 4 && ringArea(ring) >= MIN_RING_AREA))
-      .filter((polygon) => polygon.length > 0)
+      .filter((polygon) => polygon.length > 0 && !isOffshoreIsland(ringCentroid(polygon[0])))
   };
 });
 
