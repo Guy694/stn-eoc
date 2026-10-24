@@ -1,0 +1,24 @@
+Copyright (c) 2025-2026 Satun Provincial Health Office (สำนักงานสาธารณสุขจังหวัดสตูล)
+All rights reserved. สงวนลิขสิทธิ์
+
+ระบบ Satun Geo-EOC (ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล)
+รวมถึงซอร์สโค้ด การออกแบบหน้าจอ เอกสาร และไฟล์ทั้งหมดในที่เก็บนี้ เป็นลิขสิทธิ์ของ
+สำนักงานสาธารณสุขจังหวัดสตูล ห้ามทำซ้ำ ดัดแปลง เผยแพร่ จำหน่าย หรือนำไปใช้ทั้งหมดหรือบางส่วน
+โดยไม่ได้รับอนุญาตเป็นลายลักษณ์อักษรจากสำนักงานสาธารณสุขจังหวัดสตูล
+
+The Satun Geo-EOC system, including all source code, interface designs, documentation
+and other files in this repository, is the proprietary property of the Satun Provincial
+Health Office. No part of it may be copied, modified, distributed, sold, sublicensed or
+otherwise used, in whole or in part, without prior written permission from the
+Satun Provincial Health Office.
+
+ข้อมูลและซอฟต์แวร์จากบุคคลภายนอกที่ระบบนี้ใช้ (เช่น ไลบรารีโอเพนซอร์สใน package.json
+ข้อมูลจาก ThaiWater/สสน. กรมอุตุนิยมวิทยา Open-Meteo/ECMWF OpenStreetMap และขอบเขตการปกครอง
+จากกรมแผนที่ทหารผ่าน UN OCHA) อยู่ภายใต้เงื่อนไขอนุญาตของเจ้าของแต่ละราย ไม่อยู่ภายใต้ข้อความข้างต้น
+
+Third-party software and data used by this system (including the open-source packages
+listed in package.json and data from ThaiWater/HII, TMD, Open-Meteo/ECMWF, OpenStreetMap
+and RTSD boundaries via UN OCHA) remain subject to their own licenses and terms.
+
+ติดต่อขออนุญาต / Permission requests:
+สำนักงานสาธารณสุขจังหวัดสตูล (Satun Provincial Health Office), Satun, Thailand
