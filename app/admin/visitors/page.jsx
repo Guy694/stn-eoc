@@ -8,6 +8,7 @@ import VisitorAccessLog from "@/components/admin/settings/VisitorAccessLog";
 import SiteVisitorStatistics from "@/components/admin/settings/SiteVisitorStatistics";
 import SecurityMonitorPanel from "@/components/admin/settings/SecurityMonitorPanel";
 import PushAudiencePanel from "@/components/admin/settings/PushAudiencePanel";
+import ContentViewsPanel from "@/components/admin/settings/ContentViewsPanel";
 import { useAuth } from "@/context/AuthContext";
 
 export default function VisitorsPage() {
@@ -20,8 +21,8 @@ export default function VisitorsPage() {
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">หน้านี้สำหรับผู้ดูแลระบบเท่านั้น</p>
         ) : (
           <>
-            <Tabs value={tab} onChange={setTab} items={[{ value: "log", label: "ประวัติการเข้าชม (IP/ตำแหน่ง)" }, { value: "monitor", label: "เฝ้าระวังและสรุปรายสัปดาห์" }, { value: "stats", label: "สถิติหน้าประชาชน" }, { value: "push", label: "ผู้รับแจ้งเตือน" }]} />
-            {tab === "log" ? <VisitorAccessLog /> : tab === "monitor" ? <SecurityMonitorPanel /> : tab === "push" ? <PushAudiencePanel /> : <SiteVisitorStatistics />}
+            <Tabs value={tab} onChange={setTab} items={[{ value: "log", label: "ประวัติการเข้าชม (IP/ตำแหน่ง)" }, { value: "monitor", label: "เฝ้าระวังและสรุปรายสัปดาห์" }, { value: "stats", label: "สถิติหน้าประชาชน" }, { value: "content", label: "ประกาศและความรู้" }, { value: "push", label: "ผู้รับแจ้งเตือน" }]} />
+            {tab === "log" ? <VisitorAccessLog /> : tab === "monitor" ? <SecurityMonitorPanel /> : tab === "push" ? <PushAudiencePanel /> : tab === "content" ? <ContentViewsPanel /> : <SiteVisitorStatistics />}
           </>
         )}
       </AdminPage>

@@ -12,14 +12,14 @@ const EMERGENCY_NUMBERS = [
 // หน่วยงาน/แหล่งที่ให้ข้อมูลผ่าน API แก่ระบบนี้ (แสดงเป็นเครดิต)
 const DATA_PROVIDERS = [
     ["GISTDA (สทอภ.)", "ฝุ่น PM2.5 • พื้นที่น้ำท่วมซ้ำซาก", "https://www.gistda.or.th/"],
-    ["ThaiWater (สสน.)", "ระดับน้ำ • ปริมาณฝน • คำเตือน", "https://www.thaiwater.net/"],
+    ["คลังข้อมูลน้ำและภูมิอากาศแห่งชาติ ThaiWater (สสน.)", "ระดับน้ำ • ปริมาณฝน • คำเตือน", "https://www.thaiwater.net/"],
     ["กรมอุตุนิยมวิทยา", "พยากรณ์อากาศ • เรดาร์ฝน", "https://www.tmd.go.th/"],
     ["Open-Meteo", "พยากรณ์ฝน/ลม/คลื่น • ปริมาณน้ำท่า • ระดับน้ำทะเล", "https://open-meteo.com/"],
     ["RainViewer", "ภาพเรดาร์ฝน", "https://www.rainviewer.com/"],
     ["Windy.com", "แผนที่ลม/คลื่น", "https://www.windy.com/"],
     ["IOC Sea Level Monitoring (UNESCO)", "ระดับน้ำทะเล • น้ำทะเลหนุน", "https://www.ioc-sealevelmonitoring.org/"],
     // ขอบเขตอำเภอ/ตำบล (public/geo/satun-districts.json, ตาราง districts_polygon, tambons_polygon) — CC BY-IGO ต้องแสดงที่มา
-    ["กรมแผนที่ทหาร (ผ่าน UN OCHA)", "ขอบเขตอำเภอ • ขอบเขตตำบล", "https://data.humdata.org/dataset/cod-ab-tha"]
+    ["กรมแผนที่ทหาร", "ขอบเขตอำเภอ • ขอบเขตตำบล", "https://data.humdata.org/dataset/cod-ab-tha"]
 ];
 
 export default function Footer() {

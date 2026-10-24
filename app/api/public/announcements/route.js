@@ -3,6 +3,7 @@ import { publicInternalError } from '@/lib/apiResponse';
 import { getPool } from "@/lib/db";
 import { consumeRateLimit } from '@/lib/rateLimit';
 import { getClientIp } from '@/lib/clientIp';
+import { recordContentView } from '@/lib/contentViewsServer';
 
 const pool = getPool();
 
@@ -190,6 +191,9 @@ export async function POST(request) {
                 { status: 404 }
             );
         }
+
+        // ยอดรายวัน (เมนูผู้เข้าชม › ประกาศและความรู้) — ยังไม่ได้รัน migration ก็นับยอดสะสมได้ตามเดิม
+        await recordContentView({ kind: 'announcement', id: String(announcementId) }).catch(() => {});
 
         const [rows] = await connection.execute(
             `SELECT view_count FROM announcements WHERE id = ? LIMIT 1`,

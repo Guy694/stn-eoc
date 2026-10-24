@@ -7,6 +7,7 @@ import { Button, DataTable, FilterSelect, StatStrip, StatusPill, Toolbar } from 
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import VisitorMap from "@/components/admin/visitors/VisitorMap";
 import IpCheckPanel from "@/components/admin/visitors/IpCheckPanel";
+import PublicPagesCard from "@/components/admin/visitors/PublicPagesCard";
 import { GPS_CONTEXTS, gpsMismatch, gpsPlaceLabel, locationLabel } from "@/lib/visitorLog";
 
 
@@ -191,6 +192,8 @@ export default function VisitorAccessLog() {
               ) : <p className="p-4 text-sm text-slate-500">ยังไม่มีข้อมูลตำแหน่ง</p>}
             </div>
           </div>
+
+          <PublicPagesCard data={data.publicPages} onPickPath={setSearch} filtered={Boolean(filters.q || filters.user || filters.gps || filters.area === "staff")} />
 
           <div>
             <h4 className="mb-2 font-black text-slate-900">

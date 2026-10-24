@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
 import PublicOpsScaffold from '@/components/public/PublicOpsScaffold';
 import RiskcomMediaDetail from '@/components/public/announcements/RiskcomMediaDetail';
+import { reportContentView } from '@/lib/contentViewClient';
 
 export default function RiskcomMediaPage({ params }) {
   const { id } = use(params);
@@ -15,7 +16,11 @@ export default function RiskcomMediaPage({ params }) {
     const controller = new AbortController();
     fetch(`/stn-eoc/api/public/riskcom-media?id=${encodeURIComponent(id)}`, { signal: controller.signal })
       .then((response) => response.json())
-      .then((result) => setItem(result.success ? result.data : null))
+      .then((result) => {
+        const data = result.success ? result.data : null;
+        setItem(data);
+        if (data) reportContentView('riskcom', data.riskcom_id, data.title); // นับยอดเข้าชมสื่อนี้
+      })
       .catch((error) => { if (error.name !== 'AbortError') console.error('Load riskcom media error:', error); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();

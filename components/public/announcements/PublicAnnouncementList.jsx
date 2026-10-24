@@ -8,6 +8,8 @@ import { formatAnnouncementDate, getAnnouncementAsset } from "@/components/annou
 import { TOPIC_STYLE, cleanTitle, relativeThai, topicKey, topicOf } from "./announcementTopics";
 import { optimizedImage, responsiveImage } from "@/lib/imageUrl";
 import { mergeAnnouncementSources, RISKCOM_CREDIT, RISKCOM_SITE } from "@/lib/riskcomMedia";
+import { reportContentView } from "@/lib/contentViewClient";
+import CurrentWarnings from "./CurrentWarnings";
 
 const hrefOf = (item) => item.href || `/public/announcements/${item.id}`;
 const imageOf = (item) => item.image_url || getAnnouncementAsset(item.image_path);
@@ -261,7 +263,7 @@ function InfographicGallery({ items }) {
           const topic = topicOf(item);
           return (
             <li key={item.id}>
-              <button type="button" onClick={() => setOpen(item)} className="group block w-full overflow-hidden rounded-2xl bg-white text-left ring-1 ring-[#d6e3ea] transition hover:ring-[#2a9db0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2a9db0]">
+              <button type="button" onClick={() => { setOpen(item); reportContentView("infographic", item.id, item.title); }} className="group block w-full overflow-hidden rounded-2xl bg-white text-left ring-1 ring-[#d6e3ea] transition hover:ring-[#2a9db0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2a9db0]">
                 <span className="block aspect-[3/4] overflow-hidden bg-[#e3eef2]">
                   {/* eslint-disable-next-line @next/next/no-img-element -- ภาพจากคลังของระบบ ขนาดหลากหลาย */}
                   <img src={item.image} alt="" loading="lazy" className="poster-img h-full w-full object-cover" />
@@ -307,6 +309,7 @@ export default function PublicAnnouncementList() {
   const [shown, setShown] = useState(PAGE);
   const [alerts, setAlerts] = useState([]);
   const [infographics, setInfographics] = useState([]);
+  const [warnings, setWarnings] = useState([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -325,6 +328,11 @@ export default function PublicAnnouncementList() {
     fetch("/stn-eoc/api/public/infographic-gallery", { signal: controller.signal })
       .then((response) => response.json())
       .then((json) => { if (json.success) setInfographics(json.data || []); })
+      .catch(() => {});
+    // ประกาศเตือนขณะนี้ (ชุดเดียวกับแถบแดงหน้าแรก) — โหลดไม่ได้ก็ไม่แสดง
+    fetch("/stn-eoc/api/public/weather-watch/?view=warnings", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((json) => { if (json.success) setWarnings(json.weather_warnings || []); })
       .catch(() => {});
     // แจ้งเตือนที่ส่งถึงประชาชน (ไม่บังคับ — โหลดไม่ได้ก็ไม่แสดงคอลัมน์นี้)
     fetch("/stn-eoc/api/public/push/?history=1", { signal: controller.signal })
@@ -398,6 +406,7 @@ export default function PublicAnnouncementList() {
       {/* จอกว้างมาก (≥1536px): แจ้งเตือนที่ส่งถึงประชาชนย้ายไปคอลัมน์ขวาสุด ข้างเรื่องเด่น · จอเล็กกว่าอยู่ข้างรายการประกาศ */}
       <div className={`mx-auto -mt-12 max-w-6xl px-4 pb-14 sm:px-6 2xl:max-w-[94rem] ${alerts.length ? "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_23rem] 2xl:items-start 2xl:gap-8" : ""}`}>
         <div className="min-w-0">
+        <CurrentWarnings warnings={warnings} />
         {/* หมวด */}
         <div className="flex flex-wrap gap-2" role="group" aria-label="เลือกหมวด">
           {[["all", "ทั้งหมด", items.length], ...topics.map(([key, count]) => [key, TOPIC_STYLE[key].label, count])].map(([key, label, count]) => {

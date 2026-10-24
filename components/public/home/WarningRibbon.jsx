@@ -9,7 +9,7 @@ function timeText(value) {
   return Number.isNaN(date.getTime()) ? "" : `${date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`;
 }
 
-/** แถบประกาศเตือนบนสุดของหน้าแรก — แสดงเฉพาะเมื่อมีเหตุ (น้ำล้น/ใกล้ตลิ่ง ฝนตกหนัก ประกาศ สสน.) */
+/** แถบประกาศเตือนบนสุดของหน้าแรก — แสดงเฉพาะเมื่อมีเหตุ (น้ำล้น/ใกล้ตลิ่ง ฝนตกหนัก ประกาศ สสน.) · "ดูทั้งหมด" ไปที่รายการในหน้าประกาศและความรู้ */
 export default function WarningRibbon({ warnings = [] }) {
   if (warnings.length === 0) return null;
   const sorted = [...warnings].sort((a, b) => (b.level === "high") - (a.level === "high"));
@@ -42,7 +42,7 @@ export default function WarningRibbon({ warnings = [] }) {
           </p>
         </div>
         <Link
-          href="/public/weather-watch"
+          href="/public/announcements#current-warnings"
           className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold sm:px-3 sm:py-1.5 sm:text-sm ${severe ? "bg-white/15 hover:bg-white/25" : "bg-[#2b1d00]/10 hover:bg-[#2b1d00]/20"}`}
         >
           <span className="sm:hidden">{sorted.length > 1 ? `ทั้งหมด ${sorted.length}` : "ดู"}</span>
