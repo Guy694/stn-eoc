@@ -14,6 +14,7 @@ const DATA_PROVIDERS = [
     ["GISTDA (สทอภ.)", "ฝุ่น PM2.5 • พื้นที่น้ำท่วมซ้ำซาก", "https://www.gistda.or.th/"],
     ["คลังข้อมูลน้ำและภูมิอากาศแห่งชาติ ThaiWater (สสน.)", "ระดับน้ำ • ปริมาณฝน • คำเตือน", "https://www.thaiwater.net/"],
     ["กรมอุตุนิยมวิทยา", "พยากรณ์อากาศ • เรดาร์ฝน", "https://www.tmd.go.th/"],
+    ["กรมป้องกันและบรรเทาสาธารณภัย", "ภาพกล้อง CCTV ริมคลอง", "https://cctv.disaster.go.th/"],
     ["Open-Meteo", "พยากรณ์ฝน/ลม/คลื่น • ปริมาณน้ำท่า • ระดับน้ำทะเล", "https://open-meteo.com/"],
     ["RainViewer", "ภาพเรดาร์ฝน", "https://www.rainviewer.com/"],
     ["Windy.com", "แผนที่ลม/คลื่น", "https://www.windy.com/"],

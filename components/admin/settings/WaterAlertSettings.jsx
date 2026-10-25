@@ -93,8 +93,8 @@ export default function WaterAlertSettings() {
         {data?.ready ? (
           <>
             <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-              <div><dt className="text-slate-500">เกณฑ์ “ใกล้ล้นตลิ่ง”</dt><dd className="font-bold text-slate-900">น้ำห่างตลิ่งไม่เกิน {data.thresholds.nearMeters} ม.</dd></div>
-              <div><dt className="text-slate-500">เกณฑ์ “ล้นตลิ่ง”</dt><dd className="font-bold text-slate-900">น้ำสูงกว่าตลิ่ง (ThaiWater สถานะสีแดง)</dd></div>
+              <div><dt className="text-slate-500">เกณฑ์แจ้งเตือนระดับน้ำ</dt><dd className="font-bold text-slate-900">ใช้สถานะเฝ้าระวังขึ้นไปตามเกณฑ์ของสถานี ปภ.</dd></div>
+              <div><dt className="text-slate-500">ระดับอันตราย</dt><dd className="font-bold text-slate-900">แจ้งเมื่อสถานี ปภ. อยู่ในสถานะอันตรายหรือวิกฤต</dd></div>
               <div><dt className="text-slate-500">เกณฑ์ “ฝนหนัก” / “ฝนหนักมาก”</dt><dd className="font-bold text-slate-900">ฝน 24 ชม. ≥ {data.rain_thresholds.watchMm} / ≥ {data.rain_thresholds.severeMm} มม. ต่อสถานี</dd></div>
               <div><dt className="text-slate-500">ตรวจอัตโนมัติ</dt><dd className="font-bold text-slate-900">{data.scheduler === "off" ? <span className="text-amber-700">ปิดอยู่ (โหมดพัฒนา)</span> : `ทุก ${data.scheduler} นาที`}</dd></div>
               <div><dt className="text-slate-500">Telegram</dt><dd className="font-bold text-slate-900">{!data.telegram_ready ? <span className="text-amber-700">ยังไม่ได้ตั้งค่า</span> : data.sending_enabled ? "ส่งเข้ากลุ่มแจ้งเตือนของศูนย์" : <span className="text-amber-700">ปิดส่งชั่วคราว</span>}</dd></div>
@@ -113,7 +113,7 @@ export default function WaterAlertSettings() {
                 <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
                   {waterStates.map((row) => (
                     <li key={row.station_id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
-                      <StatusPill tone={STATE_META[row.state]?.tone}>{STATE_META[row.state]?.label || row.state}</StatusPill>
+                      <StatusPill tone={STATE_META[row.state]?.tone}>{row.kind === "water" ? ({ normal: "ปกติ", near: "เฝ้าระวัง/เตือนภัย", overflow: "อันตราย/วิกฤต" }[row.state] || row.state) : (STATE_META[row.state]?.label || row.state)}</StatusPill>
                       <span className="font-bold text-slate-900">{row.station_name}</span>
                       <span className="text-slate-600">{bankText(row.bank_diff)}</span>
                       <span className="ml-auto text-xs text-slate-500">วัดเมื่อ {formatDateTime(row.observed_at)}</span>

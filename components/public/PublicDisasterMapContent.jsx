@@ -34,8 +34,7 @@ export const DEFAULT_LAYERS = {
   shelters: true,
   hospitals: true,
   waterways: true,
-  // สถานการณ์น้ำ/ฝนตอนนี้จาก ThaiWater
-  waterStations: true,
+  // หมุดกล้อง CCTV ใช้บอกตำแหน่งสถานีระดับน้ำ ปภ.
   rainStations: true,
   elevation: false,
   // พื้นที่น้ำท่วมซ้ำซาก (GISTDA) — เปิดเองจากเมนู เพราะข้อมูล ~0.8 MB

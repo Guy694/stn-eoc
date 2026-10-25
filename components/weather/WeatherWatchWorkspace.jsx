@@ -13,7 +13,6 @@ import {
   CloudRain,
   Droplets,
   ExternalLink,
-  Gauge,
   Haze,
   HousePlus,
   Layers,
@@ -66,7 +65,7 @@ const WeatherRiskMap = dynamic(() => import("@/components/weather/WeatherRiskMap
   loading: () => <div className="flex h-full items-center justify-center bg-slate-800 text-sm font-bold text-white/70">กำลังโหลดแผนที่…</div>
 });
 
-const WEATHER_ICONS = { Wind, Tornado, CloudRain, Umbrella, CloudLightning, Thermometer, Cloud, Droplets, Gauge, Waves };
+const WEATHER_ICONS = { Wind, Tornado, CloudRain, Umbrella, CloudLightning, Thermometer, Cloud, Droplets, Waves };
 
 const BASE_MAPS = [
   { key: "street", label: "แผนที่ถนน", icon: MapIcon, tone: "from-sky-400 to-blue-600" },
@@ -77,8 +76,8 @@ const BASE_MAPS = [
 // ชั้นข้อมูลสถานการณ์ตอนนี้ (เดิมอยู่ที่หน้าแผนที่สถานการณ์)
 const SITUATION_ITEMS = [
   { key: "tide", label: "น้ำขึ้น–น้ำลง (ทะเลอันดามัน)", icon: Waves, tone: "from-cyan-400 to-blue-700", title: "ระดับน้ำทะเลหน้าสตูลตอนนี้ ลูกศรบอกน้ำกำลังขึ้นหรือลง ชี้ที่สัญลักษณ์เพื่อดูเวลาน้ำขึ้นสูงสุด/ลงต่ำสุดรอบถัดไป" },
-  { key: "waterStations", label: "ระดับน้ำ–ตลิ่ง (ThaiWater)", icon: Gauge, tone: "from-sky-400 to-blue-700" },
   { key: "rainStations", label: "ฝนวัดจริง (ThaiWater)", icon: Umbrella, tone: "from-sky-300 to-indigo-600" },
+  { key: "cctv", label: "กล้อง CCTV ริมคลอง (ปภ.)", icon: Cctv, tone: "from-slate-500 to-sky-800", title: "แตะไอคอนกล้องบนแผนที่เพื่อดูภาพล่าสุดของคลอง 2 มุม จากกรมป้องกันและบรรเทาสาธารณภัย (อัปเดตทุก 1 นาที)" },
   { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-blue-500 to-blue-800", title: "หมุดน้ำเงินตัว H · จุดสีที่มุม = สถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
   { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600", title: "รายงานการสัญจรที่เจ้าหน้าที่ตรวจแล้ว: เขียว ผ่านได้ · เหลือง ผ่านลำบาก · แดง ผ่านไม่ได้" },
   { key: "floodFreq", label: "น้ำท่วมซ้ำซาก (GISTDA)", icon: History, tone: "from-sky-400 to-violet-800", title: "พื้นที่ที่เคยถูกน้ำท่วมจากภาพดาวเทียม GISTDA พ.ศ. 2554–2567 สีเข้มขึ้นเมื่อท่วมหลายปี ใช้ประกอบการเตรียมรับมือ ไม่ใช่สถานการณ์น้ำตอนนี้" },
@@ -235,7 +234,7 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
   const [selectedDay, setSelectedDay] = useState(0);
 
   // หน้านี้ = แผนที่สถานการณ์และความเสี่ยง: ความเสี่ยง/พยากรณ์รายอำเภอ + ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์)
-  const [situationLayers, setSituationLayers] = useState({ tide: true, waterStations: true, rainStations: true });
+  const [situationLayers, setSituationLayers] = useState({ tide: true, rainStations: true, cctv: true });
   const [floodFreqStatus, setFloodFreqStatus] = useState(null);
   const onFloodFreqStatus = useCallback((status) => setFloodFreqStatus(status), []);
   const toggleSituation = (key) => {
@@ -555,7 +554,9 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
                       {selectedDistrict.rain_source === "gauge" && selectedDistrict.rain_gauge
                         ? `ฝนวัดจริงจาก ${selectedDistrict.rain_gauge.count} สถานีของ ThaiWater (สูงสุดที่${selectedDistrict.rain_gauge.max_station} • เฉลี่ย ${selectedDistrict.rain_gauge.mean} มม.)${selectedDistrict.rain_now_text ? ` • ตอนนี้: ${selectedDistrict.rain_now_text}` : ""}`
                         : "อำเภอนี้ไม่มีสถานีวัดฝนที่ส่งข้อมูล ตัวเลขฝนเป็นค่าประมาณจากแบบจำลอง ECMWF"}
-                      {selectedDistrict.water_status ? ` • ระดับน้ำ: สถานี${selectedDistrict.water_status.station} ${selectedDistrict.water_status.bank_diff >= 0 ? "สูงกว่า" : "ต่ำกว่า"}ตลิ่ง ${Math.abs(selectedDistrict.water_status.bank_diff)} ม.` : ""}
+                      {selectedDistrict.water_status ? selectedDistrict.water_status.source === "ddpm"
+                        ? ` • ระดับน้ำ: สถานี${selectedDistrict.water_status.station} สถานะ ปภ. ${selectedDistrict.water_status.status_label}`
+                        : ` • ระดับน้ำ: สถานี${selectedDistrict.water_status.station} ${selectedDistrict.water_status.bank_diff >= 0 ? "สูงกว่า" : "ต่ำกว่า"}ตลิ่ง ${Math.abs(selectedDistrict.water_status.bank_diff)} ม.` : ""}
                       {" "}• อุณหภูมิ ความชื้น ลม จากแบบจำลอง ECMWF
                     </p>
                   </div>
@@ -768,7 +769,7 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
               </div>
 
               <p className="text-[11px] leading-4 text-white/50">
-                ระดับความเสี่ยงคิดจากฝนและระดับน้ำที่วัดได้จริง (ThaiWater สสน.) เป็นหลัก
+                ระดับความเสี่ยงคิดจากฝนที่วัดได้จริง (ThaiWater) และระดับน้ำจากสถานี ปภ. เป็นหลัก
                 ร่วมกับโอกาสฝนหนักจาก ECMWF 51 ชุด และแนวโน้มน้ำในคลองจาก GloFAS
                 ประเมินอัตโนมัติ ไม่ใช่ประกาศทางราชการ โปรดยึดประกาศของกรมอุตุนิยมวิทยาและจังหวัดสตูลเป็นหลัก
               </p>

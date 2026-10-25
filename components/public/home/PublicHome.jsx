@@ -21,9 +21,9 @@ import {
 } from "lucide-react";
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import SatunRiskMap from "@/components/public/home/SatunRiskMap";
-import { HOURLY_RAIN_CATEGORIES } from "@/lib/thaiWaterRain";
+import { RAIN_24H_MAP_CATEGORIES, rain24hMapCategory } from "@/lib/thaiWaterRain";
 import HomeSplashScreen from "@/components/public/home/HomeSplashScreen";
-import CanalStrip from "@/components/public/home/CanalStrip";
+import DpmCanalStrip from "@/components/public/home/DpmCanalStrip";
 import WarningRibbon from "@/components/public/home/WarningRibbon";
 import HomePopup from "@/components/public/home/HomePopup";
 import HeroWeatherFx from "@/components/public/home/HeroWeatherFx";
@@ -36,7 +36,6 @@ import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
 import { heavyRainTodayText } from "@/lib/rainNowcast";
 import SeaTodayCard from "@/components/public/home/SeaTodayCard";
-import { RISK_META } from "@/lib/weatherRiskConfig";
 import { responsiveImage } from "@/lib/imageUrl";
 import { mergeAnnouncementSources } from "@/lib/riskcomMedia";
 import { shareVisitGps } from "@/lib/visitorGps";
@@ -90,10 +89,6 @@ function formatThaiDate(value, long = false) {
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("th-TH");
-}
-
-function riskMeta(level) {
-  return RISK_META[level] || RISK_META.normal;
 }
 
 function normalizeDistrict(value) {
@@ -272,7 +267,7 @@ function SourceTimes({ weather, water, now }) {
   const rainAt = latestTime((weather?.district_weather || []).map((item) => item.rain_gauge?.observed_at));
   const waterAt = latestTime(water.stations.map((item) => item.observedAt));
   const sources = [
-    ["ระดับน้ำในคลอง", "ThaiWater (สสน.)", freshness(waterAt, "water", now)],
+    ["ระดับน้ำในคลอง", "สถานีวัดระดับน้ำ ปภ.", freshness(waterAt, "water", now)],
     ["ฝนที่วัดได้", "ThaiWater (สสน.)", freshness(rainAt, "rain", now)],
     ["พยากรณ์และโอกาสฝนหนัก", "ECMWF + สถานีวัดฝน", freshness(weather?.weather_current?.observed_at, "forecast", now)],
     ["เหตุการณ์และศูนย์พักพิง", "ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล", null]
@@ -346,7 +341,8 @@ export default function PublicHome() {
       setLoading(false);
     });
     // ข้อมูลประกอบ: โหลดแยก ไม่ให้หน้าแรกรอ
-    load("/stn-eoc/api/public/water-levels?history=1").then((json) => {
+    // น้ำในคลองและการคำนวณความเสี่ยงใช้สถานีวัดระดับน้ำของ ปภ.
+    load("/stn-eoc/api/public/dpm-water?history=1").then((json) => {
       if (!controller.signal.aborted) setWater({ loading: false, stations: json?.stations || [], fetchedAt: json?.fetchedAt || null, history: json?.history || {} });
     });
     load("/stn-eoc/api/public/ops-today").then((json) => {
@@ -443,7 +439,7 @@ export default function PublicHome() {
     );
   };
 
-  const myRisk = riskMeta(myDistrict?.risk_level);
+  const myRainLevel = rain24hMapCategory(myDistrict?.rainfall_24h);
   // ฝนจากสถานีวัด → ตรวจความสดแบบค่าวัด / ไม่มีสถานี → ใช้เวลาของพยากรณ์
   const myRain = myDistrict?.rain_source === "gauge" && myDistrict?.rain_gauge?.observed_at
     ? freshness(myDistrict.rain_gauge.observed_at, "rain", now)
@@ -502,8 +498,8 @@ export default function PublicHome() {
                       <p className="text-sm text-slate-500">พื้นที่ของฉัน</p>
                       <p className="font-[family-name:var(--font-kanit)] text-2xl font-bold">อ.{myDistrict.district_name}</p>
                     </div>
-                    <span className="rounded-full px-3 py-1 font-[family-name:var(--font-kanit)] text-base font-semibold text-white" style={{ backgroundColor: myRisk.color }}>
-                      {myRisk.label}
+                    <span className="rounded-full px-3 py-1 font-[family-name:var(--font-kanit)] text-sm font-bold text-slate-900" style={{ backgroundColor: myRainLevel.color }}>
+                      {myRainLevel.label === "ไม่มีฝน" ? "ไม่มีฝน" : `ระดับฝน: ${myRainLevel.label}`}
                     </span>
                   </div>
                   <p className={`mt-2 text-[15px] leading-7 ${myRain.stale ? "text-slate-500" : ""}`}>
@@ -534,13 +530,13 @@ export default function PublicHome() {
               <div className="relative rounded-[2rem] bg-[#11466e]/60 p-3 sm:p-5">
                 <SatunRiskMap districts={districts} selectedName={districtName} onSelect={(name) => selectDistrict(name)} userPoint={userPoint} />
                 <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 px-1 text-sm text-[#d5e7ec]" aria-label="ความหมายของสี">
-                  {HOURLY_RAIN_CATEGORIES.map((item) => (
+                  {RAIN_24H_MAP_CATEGORIES.map((item) => (
                     <li key={item.key} className="inline-flex items-center gap-1.5">
                       <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} aria-hidden="true" />
                       {item.label}{item.range ? <span className="text-[#9fc9d6]"> {item.range}</span> : null}
                     </li>
                   ))}
-                  <li className="text-[#9fc9d6]">สีและตัวเลขคือฝนใน 1 ชั่วโมงล่าสุดจากสถานีวัดฝน (~ = ค่าประมาณ ไม่มีสถานีวัด) • ระดับความเสี่ยงน้ำท่วมดูได้ที่การ์ดอำเภอ</li>
+                  <li className="text-[#9fc9d6]">สีและตัวเลขคือฝนสะสมใน 24 ชั่วโมง (~ = ค่าประมาณ ไม่มีสถานีวัด) • ระดับความเสี่ยงน้ำท่วมดูได้ที่การ์ดอำเภอ</li>
                 </ul>
               </div>
             </div>
@@ -623,7 +619,7 @@ export default function PublicHome() {
         </nav>
 
         {/* ── น้ำในคลองตอนนี้ ── */}
-        <CanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} history={water.history} />
+        <DpmCanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} history={water.history} />
         {/* ── น้ำทะเลหนุน: ต่อจากน้ำในคลอง (น้ำทะเลขึ้นสูงทำให้คลองระบายช้า) ── */}
         <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-6"><SeaTodayCard layout="wide" /></div>
 

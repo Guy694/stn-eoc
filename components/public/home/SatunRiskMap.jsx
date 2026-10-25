@@ -2,16 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { RISK_META } from "@/lib/weatherRiskConfig";
-import { hourlyRainCategory } from "@/lib/thaiWaterRain";
+import { rain24hMapCategory } from "@/lib/thaiWaterRain";
 
 // แผนที่ 7 อำเภอของสตูลแบบ SVG (ไฟล์ย่อจากขอบเขตอำเภอทางการ ~10 KB)
-// สีแต่ละอำเภอ = ฝนใน 1 ชม. ล่าสุด (สถานีวัดฝน ไม่มีสถานีใช้ค่าประมาณ) — ไม่ใช้ฝน 24 ชม./ระดับความเสี่ยง เพื่อไม่ให้ตื่นตระหนก
+// สีและตัวเลขแต่ละอำเภอ = ฝนสะสมใน 24 ชม. จากสถานีวัดฝนหรือค่าประมาณ
 // ระดับความเสี่ยงน้ำท่วมยังแสดงในการ์ดอำเภอเหมือนเดิม / แตะเพื่อเลือกเป็นพื้นที่ของฉัน
 
-/** ฝน 1 ชม. ของอำเภอ: { mm, estimated } */
-export function districtRain1h(district) {
-  const mm = Number(district?.rainfall_1h);
-  return { mm: Number.isFinite(mm) && mm > 0 ? mm : 0, estimated: !(district?.rain_now?.stations > 0) };
+/** ฝนสะสม 24 ชม. ของอำเภอ: { mm, estimated } */
+export function districtRain24h(district) {
+  const mm = Number(district?.rainfall_24h);
+  return { mm: Number.isFinite(mm) && mm > 0 ? mm : 0, estimated: district?.rain_source !== "gauge" };
 }
 
 const mmText = (mm) => Number(mm || 0).toLocaleString("th-TH", { maximumFractionDigits: 1 });
@@ -48,14 +48,14 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
     : null;
 
   return (
-    <svg viewBox={outline.viewBox} className="satun-map mx-auto block h-auto max-h-[22rem] w-full sm:max-h-[30rem] lg:max-h-[34rem]" role="group" aria-label="แผนที่ฝนใน 1 ชั่วโมงล่าสุดรายอำเภอ จังหวัดสตูล">
+    <svg viewBox={outline.viewBox} className="satun-map mx-auto block h-auto max-h-[22rem] w-full sm:max-h-[30rem] lg:max-h-[34rem]" role="group" aria-label="แผนที่ฝนสะสม 24 ชั่วโมงรายอำเภอ จังหวัดสตูล">
       {outline.districts.map((shape, index) => {
         const district = byName.get(normalize(shape.name));
-        const rain = district ? districtRain1h(district) : null;
-        const category = rain ? hourlyRainCategory(rain.mm) : null;
+        const rain = district ? districtRain24h(district) : null;
+        const category = rain ? rain24hMapCategory(rain.mm) : null;
         const risk = RISK_META[district?.risk_level] || null;
         const selected = normalize(shape.name) === normalize(selectedName);
-        const label = `อำเภอ${shape.name}${rain ? ` ฝน 1 ชม. ${rain.estimated ? "ประมาณ " : ""}${mmText(rain.mm)} มม. (${category.label})` : ""}${risk ? ` ความเสี่ยงน้ำท่วม${risk.label}` : ""}`;
+        const label = `อำเภอ${shape.name}${rain ? ` ฝนสะสม 24 ชม. ${rain.estimated ? "ประมาณ " : ""}${mmText(rain.mm)} มม. (${category.label})` : ""}${risk ? ` ความเสี่ยงน้ำท่วม${risk.label}` : ""}`;
         return (
           <path
             key={shape.code}
@@ -93,7 +93,7 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
           <g key={`label-${shape.code}`} transform={`translate(${shape.label[0]} ${shape.label[1]})`} pointerEvents="none">
             <text textAnchor="middle" className={`satun-map__label ${selected ? "is-selected" : ""}`} y="-4">{shape.name}</text>
             {district && (
-              <text textAnchor="middle" className="satun-map__temp" y="40">{`1 ชม. ${districtRain1h(district).estimated ? "~" : ""}${mmText(districtRain1h(district).mm)} มม.`}</text>
+              <text textAnchor="middle" className="satun-map__temp" y="40">{`24 ชม. ${districtRain24h(district).estimated ? "~" : ""}${mmText(districtRain24h(district).mm)} มม.`}</text>
             )}
           </g>
         );

@@ -38,7 +38,7 @@ export function sparkPoints(history = [], station = null) {
   return points.sort((a, b) => a.t - b.t);
 }
 
-function Sparkline({ station, history }) {
+export function Sparkline({ station, history }) {
   const points = sparkPoints(history, station);
   if (points.length < 3) {
     return <p className="w-28 shrink-0 self-center text-right text-[11px] leading-4 text-slate-400">กำลังสะสมข้อมูล<br />แนวโน้ม 24 ชม.</p>;

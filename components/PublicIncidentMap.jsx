@@ -26,7 +26,6 @@ const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), 
 const WaterReportMarker = dynamic(() => import('./public/map/WaterReportMarker'), { ssr: false });
 const ElevationLayer = dynamic(() => import('./public/map/ElevationLayer'), { ssr: false });
 const FloodFreqLayer = dynamic(() => import('./public/map/FloodFreqLayer'), { ssr: false });
-const WaterStationLayer = dynamic(() => import('./weather/WaterStationLayer'), { ssr: false });
 const RainStationLayer = dynamic(() => import('./weather/RainStationLayer'), { ssr: false });
 
 const renderMapIcon = (icon, className = "h-5 w-5 text-white") => renderToStaticMarkup(<AppIcon icon={icon} className={className} strokeWidth={2.5} />);
@@ -62,7 +61,7 @@ export default function PublicIncidentMap({
     const [diseaseReports, setDiseaseReports] = useState([]);
     const [waterways, setWaterways] = useState(null);
     const [shelters, setShelters] = useState([]);
-    // สถานีวัดระดับน้ำ/ฝน ThaiWater (สถานการณ์ปัจจุบัน — ดึงผ่าน API ของระบบ แคชฝั่งเซิร์ฟเวอร์ 10 นาที)
+    // สถานีระดับน้ำ ปภ. และสถานีฝน ThaiWater (สถานการณ์ปัจจุบัน)
     const [waterStations, setWaterStations] = useState([]);
     const [rainStations, setRainStations] = useState([]);
     const [healthFacilities, setHealthFacilities] = useState([]);
@@ -378,10 +377,10 @@ export default function PublicIncidentMap({
         if (showShelterLayer && shelters.length === 0) fetchShelters();
     }, [fetchShelters, shelters.length, showShelterLayer]);
 
-    const showWaterStations = Boolean(activeLayers.waterStations);
+    const showWaterContext = Boolean(activeLayers.hospitals);
     const showRainStations = Boolean(activeLayers.rainStations);
     useEffect(() => {
-        if (!showWaterStations) return undefined;
+        if (!showWaterContext) return undefined;
         let alive = true;
         const load = () => fetch('/stn-eoc/api/public/water-levels')
             .then((response) => (response.ok ? response.json() : null))
@@ -390,7 +389,7 @@ export default function PublicIncidentMap({
         load();
         const timer = window.setInterval(load, 10 * 60 * 1000);
         return () => { alive = false; window.clearInterval(timer); };
-    }, [showWaterStations]);
+    }, [showWaterContext]);
     useEffect(() => {
         if (!showRainStations) return undefined;
         let alive = true;
@@ -946,11 +945,10 @@ export default function PublicIncidentMap({
                         {/* พื้นที่น้ำท่วมซ้ำซาก GISTDA (สถิติ พ.ศ. 2554–2567) */}
                         {activeLayers.floodFreq ? <FloodFreqLayer onStatus={onFloodFreqStatus} /> : null}
 
-                        {/* ฝนวัดจริง (หยดน้ำ) และระดับน้ำ–ตลิ่ง (สี่เหลี่ยม) จาก ThaiWater */}
+                        {/* ฝนวัดจริงจาก ThaiWater; CCTV แสดงตำแหน่งสถานี ปภ. */}
                         <Pane name="rain-stations" style={{ zIndex: 450 }}>
                             {showRainStations && rainStations.length > 0 ? <RainStationLayer stations={rainStations} /> : null}
                         </Pane>
-                        {showWaterStations && waterStations.length > 0 ? <WaterStationLayer stations={waterStations} /> : null}
 
                         {/* รายงานระดับน้ำจากประชาชน: วงกลมสีตามระดับน้ำ จางลงตามเวลา (pane แยกเหนือพื้นที่น้ำท่วม/ขอบเขต) */}
                         <Pane name="water-reports" style={{ zIndex: 460 }}>
@@ -1005,7 +1003,7 @@ export default function PublicIncidentMap({
                                             facility={facility}
                                             floodAreas={showFloodAreaLayer ? floodAreas : []}
                                             waterReports={filteredIncidents.filter(isWaterReport)}
-                                            waterStations={showWaterStations ? waterStations : []}
+                                            waterStations={waterStations}
                                         />
                                     </Popup>
                                 </Marker>

@@ -7,7 +7,6 @@ import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, TileLayer, Tooltip, 
 import { getMapBaseLayer } from "@/lib/mapBaseLayers";
 import { RISK_META } from "@/lib/weatherRiskConfig";
 import { pm25ForDistrict, pm25Level } from "@/lib/pm25";
-import WaterStationLayer from "@/components/weather/WaterStationLayer";
 import RainStationLayer from "@/components/weather/RainStationLayer";
 import WaterReportMarker from "@/components/public/map/WaterReportMarker";
 import ElevationLayer from "@/components/public/map/ElevationLayer";
@@ -72,7 +71,6 @@ export default function WeatherRiskMap({
   extraTileLayers = [],
   userLocation,
   flyTarget,
-  waterStations = [],
   rainStations = [],
   waterReports = [],
   elevationEnabled = false,
@@ -165,7 +163,6 @@ export default function WeatherRiskMap({
           <WaterReportMarker key={`wr-${incident.id}`} incident={incident} panPadding={typeof window !== "undefined" && window.innerWidth >= 768 ? [392, 80] : [16, 70]} />
         ))}
       </Pane>
-      {waterStations.length > 0 && <WaterStationLayer stations={waterStations} />}
 
       {/* ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์) */}
       {situationLayers ? <SituationLayers layers={situationLayers} /> : null}

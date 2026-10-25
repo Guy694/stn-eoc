@@ -324,7 +324,7 @@ export default function AreaRiskWorkspace({ initialData = null, initialBacktest 
   return (
     <AdminPage
       title="วิเคราะห์และพยากรณ์พื้นที่เสี่ยงน้ำท่วม"
-      description="รวมฝน (วัดจริง + พยากรณ์ ECMWF รายตำบล) ระดับน้ำในคลอง (ThaiWater + GloFAS) น้ำทะเลหนุน (พยากรณ์น้ำขึ้น + ค่าวัดจริง) ประวัติน้ำท่วมจากดาวเทียมและของ EOC ความสูงพื้นที่ จำนวนครัวเรือน และกลุ่มเปราะบาง"
+      description="รวมฝน (วัดจริง + พยากรณ์ ECMWF รายตำบล) ระดับน้ำในคลอง (ปภ. + GloFAS) น้ำทะเลหนุน (พยากรณ์น้ำขึ้น + ค่าวัดจริง) ประวัติน้ำท่วมจากดาวเทียมและของ EOC ความสูงพื้นที่ จำนวนครัวเรือน และกลุ่มเปราะบาง"
       actions={<Button variant="secondary" disabled={state.loading} onClick={load}><RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin motion-reduce:animate-none" : ""}`} aria-hidden="true" />วิเคราะห์ใหม่</Button>}
     >
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}

@@ -1,9 +1,19 @@
 "use client";
 
-// หมุดสถานีวัดระดับน้ำ (ThaiWater) บนแผนที่สภาพอากาศ — สีตามสถานการณ์น้ำ ป้ายบอกระยะห่างจากตลิ่ง กดดูรายละเอียดแบบ popup เล็ก
+// หมุดสถานีวัดระดับน้ำบนแผนที่ — ใช้ได้กับข้อมูล ปภ. และ ThaiWater ตามต้นทางของข้อมูล
 import L from "leaflet";
 import { Marker, Popup } from "react-leaflet";
-import { THAIWATER_SOURCE, bankLabel, bankText, groupByLocation, isStale, situationMeta } from "@/lib/thaiWater";
+import { DDPM_CCTV_CREDIT } from "@/lib/ddpmCctv";
+import { DPM_STATUS } from "@/lib/dpmCanals";
+import { bankLabel, bankText, groupByLocation, isStale, situationMeta } from "@/lib/thaiWater";
+
+function stationMeta(station) {
+  if (station.source === "ddpm") {
+    const status = DPM_STATUS[station.statusCode] || DPM_STATUS[0];
+    return { color: status.tone, text: "#fff", label: status.label };
+  }
+  return situationMeta(station.situationLevel) || { color: "#64748b", text: "#fff", label: "ไม่มีข้อมูล" };
+}
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -13,9 +23,9 @@ const GAUGE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" s
 
 function stationIcon(group) {
   const station = group.primary;
-  const meta = situationMeta(station.situationLevel) || { color: "#64748b", text: "#fff" };
+  const meta = stationMeta(station);
   const label = bankLabel(station.bankDiff);
-  const alert = station.situationLevel >= 5;
+  const alert = station.source === "ddpm" ? station.statusCode >= 4 : station.situationLevel >= 5;
   return L.divIcon({
     className: "",
     iconSize: [0, 0],
@@ -37,7 +47,7 @@ function fmt(value, digits = 2) {
 }
 
 function StationDetail({ station, compact }) {
-  const meta = situationMeta(station.situationLevel);
+  const meta = stationMeta(station);
   const place = [station.river, station.tambon && `ต.${station.tambon}`, station.amphoe && `อ.${station.amphoe}`].filter(Boolean).join(" · ");
   const stale = isStale(station.observedAt);
   return (
@@ -49,8 +59,9 @@ function StationDetail({ station, compact }) {
       ) : null}
       <div className="mt-1.5 space-y-0.5 text-[13px] text-slate-700">
         {station.bankDiff !== null ? <div className="font-bold text-slate-900">{bankText(station.bankDiff)}</div> : null}
-        <div>ระดับน้ำ {fmt(station.waterLevelMsl)} ม.รทก.{station.bankLevelMsl !== null ? ` (ตลิ่ง ${fmt(station.bankLevelMsl)})` : ""}</div>
-        {station.storagePercent !== null ? <div>ความจุลำน้ำ {fmt(station.storagePercent, 0)}%</div> : null}
+        <div>ระดับน้ำ {fmt(station.waterLevelMsl)} ม.{station.source === "ddpm" ? ` (ระดับตลิ่ง ${fmt(station.bankLevelMsl)} ม.)` : ` รทก.${station.bankLevelMsl !== null ? ` (ตลิ่ง ${fmt(station.bankLevelMsl)})` : ""}`}</div>
+      {station.storagePercent !== null && station.storagePercent !== undefined ? <div>ความจุลำน้ำ {fmt(station.storagePercent, 0)}%</div> : null}
+      {station.source === "ddpm" && station.statusCode > 0 ? <div>สถานะตามเกณฑ์ ปภ. ระดับ {station.statusCode}</div> : null}
         {station.trend ? <div>{station.trend.arrow} {station.trend.label}{station.trend.change ? ` (${station.trend.change > 0 ? "+" : ""}${station.trend.change.toFixed(2)} ม.)` : ""}</div> : null}
         <div className={stale ? "font-semibold text-amber-700" : "text-slate-500"}>
           วัดเมื่อ {formatObserved(station.observedAt)}{stale ? " · ข้อมูลอาจไม่เป็นปัจจุบัน" : ""}
@@ -77,7 +88,7 @@ export default function WaterStationLayer({ stations = [] }) {
       <Popup maxWidth={260} minWidth={220} autoPanPaddingTopLeft={panPadding} autoPanPaddingBottomRight={[72, 110]}>
         <div className="space-y-1.5 text-slate-700" style={{ fontFamily: "var(--font-kanit)" }}>
           {group.stations.map((station, index) => <StationDetail key={station.id} station={station} compact={index > 0} />)}
-          <div className="text-[11px] text-sky-700">ข้อมูลระดับน้ำ: {THAIWATER_SOURCE}</div>
+          <div className="text-[11px] text-sky-700">ข้อมูลระดับน้ำ: {group.primary.source === "ddpm" ? DDPM_CCTV_CREDIT : "คลังข้อมูลน้ำแห่งชาติ (ThaiWater) สสน."}</div>
         </div>
       </Popup>
     </Marker>

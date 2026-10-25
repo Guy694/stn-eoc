@@ -1,7 +1,7 @@
 "use client";
 
 // ชั้นข้อมูล "สถานการณ์ตอนนี้" ที่ย้ายมาจากหน้าแผนที่สถานการณ์ — วางไว้ใน MapContainer ใดก็ได้
-// สถานพยาบาล · เส้นทาง/ถนน (รายงานการสัญจรที่ตรวจแล้ว) · ระดับน้ำ–ตลิ่ง · ฝนวัดจริง · เส้นทางน้ำ/คลอง · ขอบเขตตำบล · ขอบเขตอำเภอ
+// สถานพยาบาล · เส้นทาง/ถนน (รายงานการสัญจรที่ตรวจแล้ว) · ระดับน้ำ–ตลิ่ง · ฝนวัดจริง · กล้อง CCTV ปภ. · เส้นทางน้ำ/คลอง · ขอบเขตตำบล · ขอบเขตอำเภอ
 // โหลดข้อมูลเฉพาะชั้นที่เปิด และโหลดครั้งเดียว (สถานีฝน/ระดับน้ำ ดึงใหม่ทุก 10 นาที)
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
@@ -10,13 +10,13 @@ import { GeoJSON, Marker, Pane, Popup, Tooltip } from "react-leaflet";
 import AppIcon from "@/components/icons/AppIcon";
 import HealthFacilityPopup from "@/components/public/map/HealthFacilityPopup";
 import CitizenPointPopup from "@/components/public/map/CitizenPointPopup";
-import WaterStationLayer from "@/components/weather/WaterStationLayer";
 import RainStationLayer from "@/components/weather/RainStationLayer";
+import CctvLayer from "@/components/weather/CctvLayer";
 import { facilityTypeInfo, markerTone } from "@/lib/healthFacilityStatus";
 import { healthDivIconOptions } from "@/lib/shelterMarker";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
 
-export const SITUATION_LAYER_KEYS = ["hospitals", "traffic", "waterStations", "rainStations", "waterways", "tambon", "district"];
+export const SITUATION_LAYER_KEYS = ["hospitals", "traffic", "rainStations", "cctv", "waterways", "tambon", "district"];
 
 const icon = (name, className) => renderToStaticMarkup(<AppIcon icon={name} className={className} strokeWidth={2.5} />);
 const POPUP_PAN = typeof window !== "undefined" && window.innerWidth >= 768 ? [392, 80] : [16, 70];
@@ -110,7 +110,7 @@ function label(text, type) {
 
 export default function SituationLayers({ layers = {}, showLabels = true }) {
   const loaded = useStaticLayers(layers);
-  const waterStations = useStationFeed(Boolean(layers.waterStations), "/stn-eoc/api/public/water-levels");
+  const waterStations = useStationFeed(Boolean(layers.hospitals), "/stn-eoc/api/public/dpm-water");
   const rainStations = useStationFeed(Boolean(layers.rainStations), "/stn-eoc/api/public/rain-stations");
   const data = { ...loaded, rainStations };
 
@@ -143,7 +143,7 @@ export default function SituationLayers({ layers = {}, showLabels = true }) {
       <Pane name="situation-rain" style={{ zIndex: 450 }}>
         {layers.rainStations && data.rainStations?.length ? <RainStationLayer stations={data.rainStations} /> : null}
       </Pane>
-      {waterStations.length ? <WaterStationLayer stations={waterStations} /> : null}
+      {layers.cctv ? <CctvLayer /> : null}
 
       {layers.traffic && (data.traffic || []).map((incident) => {
         const lat = Number.parseFloat(incident.latitude);
