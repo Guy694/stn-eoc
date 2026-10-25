@@ -5,6 +5,7 @@ import AIChatbot from "@/components/AIChatbot";
 import Footer from "@/components/Footer";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
+import PublicDataNotice from "@/components/public/PublicDataNotice";
 
 export default function PublicOpsScaffold({
   title,
@@ -25,6 +26,7 @@ export default function PublicOpsScaffold({
       <PublicHeader eocStatus={eocStatus} eocLabel={eocLabel} eocIsOpen={eocIsOpen} />
 
       <PublicTopNavigation activeMenu={activeMenu} showWeatherMenu={showWeatherMenu} showBottomBar={showBottomBar} />
+      <PublicDataNotice />
 
       <div className="min-h-[calc(100vh-143px)]">
         <main className={`min-w-0 p-3 ${mainClassName}`}>
