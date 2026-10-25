@@ -13,6 +13,8 @@ import { sendCategorized } from '@/lib/telegramChannels';
 import { notifyOfficersOfNewHelp } from '@/lib/helpAlertsServer';
 import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { HELP_CLOSED_MESSAGE, PROBLEM_CLOSED_MESSAGE, WATER_CLOSED_MESSAGE, getOpenEocSessions, hasOpenEoc } from '@/lib/eocOpen';
+import { WATER_ADMIN_CLOSED_MESSAGE, waterReportStatus } from '@/lib/waterReportSetting';
+import { getWaterReportSetting } from '@/lib/waterReportSettingServer';
 import { hasWaterTrendColumn } from '@/lib/incidentPublishingDb';
 import { WATER_PASSABILITY, isWaterLevel, travelForPassability, waterLevelMeta, waterTrendMeta } from '@/lib/waterReport';
 
@@ -96,8 +98,11 @@ function clean(value, max) {
 // รายงานระดับน้ำจากประชาชน → เก็บเป็น "จุดปัญหา" ประเภทน้ำท่วม เพื่อเข้าคิวตรวจสอบ/เผยแพร่เดิมของเจ้าหน้าที่
 async function handleWaterReport({ firstName, lastName, phone, village, subDistrict, district, notes, waterLevel, waterTrend, passability, latitude, longitude, photo, occurredAt }) {
     const openSessions = await getOpenEocSessions();
-    if (!openSessions.some((session) => session.eoc_type === 'flood')) {
-        return NextResponse.json({ success: false, code: 'EOC_NOT_OPEN', message: WATER_CLOSED_MESSAGE }, { status: 403 });
+    // เปิดรับตาม EOC อุทกภัย หรือตามที่ผู้ดูแลระบบตั้งเปิด/ปิดไว้ (เมนูตั้งค่าระบบ › เมนูประชาชน)
+    const setting = await getWaterReportSetting().catch(() => ({ mode: 'auto' }));
+    const water = waterReportStatus(setting.mode, openSessions);
+    if (!water.open) {
+        return NextResponse.json({ success: false, code: 'EOC_NOT_OPEN', message: water.reason === 'admin' ? WATER_ADMIN_CLOSED_MESSAGE : WATER_CLOSED_MESSAGE }, { status: 403 });
     }
     const lat = Number(latitude);
     const lng = Number(longitude);

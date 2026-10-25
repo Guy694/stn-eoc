@@ -74,7 +74,7 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
                   style={status.rank >= 2 ? { boxShadow: `inset 0 0 0 2px ${status.tone}` } : undefined}>
                   <Gauge station={station} status={status} delay={index * 90} />
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 break-words font-[family-name:var(--font-kanit)] text-[1.05rem] font-semibold leading-snug text-[#0c2f4a]" title={station.name}>{station.name}</p>
+                    <p className="line-clamp-2 break-words font-[family-name:var(--font-kanit)] text-[1.05rem] font-semibold leading-snug text-[#0c2f4a]" title={`${station.code} ${station.name}`}><span className="mr-1 text-sm font-bold text-slate-500">{station.code}</span>{station.name}</p>
                     <p className="truncate text-xs text-slate-500">{[station.river, station.amphoe && `อ.${station.amphoe}`].filter(Boolean).join(" • ") || station.code}</p>
                     <p className="mt-2 font-[family-name:var(--font-kanit)] text-2xl font-bold leading-none" style={{ color: status.tone }}>
                       {station.level === null ? "–" : fmt(station.level)}

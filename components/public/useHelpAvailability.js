@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 //   และเซิร์ฟเวอร์ยังตรวจซ้ำตอนรับคำขออยู่แล้ว
 export const HELP_CLOSED_HINT = "เปิดให้ใช้เมื่อมีเหตุการณ์ฉุกเฉิน (EOC เปิด) • เหตุด่วนโทร 1669";
 export const WATER_CLOSED_HINT = "เปิดรับรายงานเมื่อเปิดศูนย์ปฏิบัติการด้านอุทกภัย • เหตุด่วนโทร 1669";
+export const WATER_ADMIN_CLOSED_HINT = "ปิดรับรายงานระดับน้ำชั่วคราว • เหตุด่วนโทร 1669";
 
 let cached = null;
 let inflight = null;
@@ -18,7 +19,7 @@ function loadAvailability() {
     inflight = fetch("/stn-eoc/api/public/help-availability", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((json) => {
-        const open = json?.success ? { help: Boolean(json.open), flood: Boolean(json.floodOpen) } : null;
+        const open = json?.success ? { help: Boolean(json.open), flood: Boolean(json.floodOpen), waterClosedBy: json.waterClosedBy || null } : null;
         if (open !== null) cached = { open, at: Date.now() };
         return open;
       })
@@ -47,6 +48,8 @@ export default function useHelpAvailability() {
     // null (ยังไม่รู้/เช็กไม่ได้) ถือว่าเปิด
     helpOpen: open === null || open.help,
     floodOpen: open === null || open.flood,
+    // ปิดรับรายงานระดับน้ำเพราะอะไร: "eoc" (ยังไม่เปิด EOC อุทกภัย) | "admin" (ผู้ดูแลระบบปิดไว้)
+    waterClosedBy: open?.flood === false ? open.waterClosedBy || "eoc" : null,
     // ศูนย์พักพิงแสดงเฉพาะเมื่อรู้แน่ว่ามี EOC เปิด (ไม่ใช่เรื่องที่ต้องกดทันที จึงซ่อนไว้ก่อนระหว่างโหลด)
     sheltersOpen: open !== null && open.help
   };

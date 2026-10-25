@@ -35,6 +35,7 @@ export const DEFAULT_LAYERS = {
   hospitals: true,
   waterways: true,
   // หมุดกล้อง CCTV ใช้บอกตำแหน่งสถานีระดับน้ำ ปภ.
+  waterStations: true,
   rainStations: true,
   elevation: false,
   // พื้นที่น้ำท่วมซ้ำซาก (GISTDA) — เปิดเองจากเมนู เพราะข้อมูล ~0.8 MB
@@ -48,6 +49,7 @@ const DISEASE_DEFAULT_LAYERS = {
   waterways: false,
   shelters: false,
   hospitals: true,
+  waterStations: false,
   waterStations: false,
   rainStations: false
 };

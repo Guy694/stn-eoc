@@ -45,7 +45,7 @@ export default function PublicTopNavigation({ activeMenu, showBottomBar = false,
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const navRef = useRef(null);
-  const { sheltersOpen } = useHelpAvailability();
+  const { sheltersOpen, floodOpen } = useHelpAvailability();
   const barKey = bottomBarKey(pathname);
   const barEnabled = bottomBar !== "off";
 
@@ -68,7 +68,8 @@ export default function PublicTopNavigation({ activeMenu, showBottomBar = false,
     { href: "/public/announcements", label: "ประกาศ", icon: Bell, key: "announce" },
     { label: "ถามน้องสจ๊วต", shortLabel: "ผู้ช่วย", icon: Bot, key: "assistant", action: openAssistant },
     { href: "/public/track", label: "ติดตามคำขอความช่วยเหลือ", shortLabel: "ติดตาม", icon: SearchCheck, key: "track" },
-    { href: "/public/report-water", label: "รายงานระดับน้ำ", shortLabel: "ระดับน้ำ", icon: Waves, key: "water", emphasis: "water" },
+    // รายงานระดับน้ำ: แสดงเมื่อเปิดรับ (ตาม EOC อุทกภัย หรือผู้ดูแลระบบตั้งเปิด/ปิดในตั้งค่าระบบ › เมนูประชาชน)
+    ...(floodOpen ? [{ href: "/public/report-water", label: "รายงานระดับน้ำ", shortLabel: "ระดับน้ำ", icon: Waves, key: "water", emphasis: "water" }] : []),
     { href: "/public/report-incident", label: "ขอความช่วยเหลือ", icon: Siren, key: "help", emphasis: "help" }
   ];
 

@@ -9,6 +9,7 @@ import {
   ChevronUp,
   CloudSun,
   Download,
+  Gauge,
   History,
   Layers3,
   Hospital,
@@ -61,6 +62,7 @@ import { GLASS, MenuToggle, SectionTitle, SidebarItem } from "@/components/publi
 import ElevationLegend from "@/components/public/map/ElevationLegend";
 import { FLOOD_FREQ_CLASSES, REPEATED_MIN_FREQ } from "@/lib/floodFreq";
 import { RAIN_CATEGORIES } from "@/lib/thaiWaterRain";
+import { DPM_STATUS } from "@/lib/dpmCanals";
 
 // แถบบอกสถานะข้อมูลที่กำลังดู: เหตุการณ์ปัจจุบัน / ข้อมูลย้อนหลังของเหตุการณ์ปัจจุบัน / เหตุการณ์ย้อนหลัง
 function ViewModeBanner({ viewMode, context, selectedDate, disasterLabel, onBackToToday, onShowActive }) {
@@ -167,7 +169,7 @@ const HEALTH_LEGEND = [
   ["#475569", "ยังไม่มีรายงาน"]
 ];
 
-function Legend({ disasterType, onClose, showElevation = false, showRainStations = false, showHealth = false, showFloodFreq = false }) {
+function Legend({ disasterType, onClose, showElevation = false, showWaterStations = false, showRainStations = false, showHealth = false, showFloodFreq = false }) {
   const items = disasterType === "disease"
     ? [["bg-red-600", "ระบาดหนัก"], ["bg-amber-400", "ระบาดปานกลาง"], ["bg-teal-500", "เฝ้าระวัง"], ["bg-blue-700", "สถานพยาบาล (H)"], ["bg-orange-500", "เหตุการณ์"], ["bg-green-700", "ศูนย์พักพิง (+ = ทางการแพทย์)"]]
     : [...FLOOD_LEVEL_LEGEND.map((level) => [level.color, level.description, true]), ["bg-orange-500", "เหตุการณ์"], ["bg-green-700", "ศูนย์พักพิง (+ = ทางการแพทย์)"], ["bg-blue-700", "สถานพยาบาล (H)"], ["bg-sky-700", "เส้นทางน้ำ"]];
@@ -213,6 +215,15 @@ function Legend({ disasterType, onClose, showElevation = false, showRainStations
             ))}
           </div>
           <p className="mt-1 text-[11px] text-white/70">หมุดใหญ่มีชื่อ = โรงพยาบาล, หมุดเล็ก = รพ.สต./หน่วยบริการ</p>
+        </div>
+      ) : null}
+      {showWaterStations ? (
+        <div className="mt-3 border-t border-white/15 pt-2">
+          <div className="mb-1 font-black">ระดับน้ำในคลอง (สถานี ปภ.)</div>
+          <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+            {[1, 2, 3, 4, 5].map((code) => <span key={code} className="flex items-center gap-1.5 font-semibold text-white/90"><span className="h-3 w-3 shrink-0 rounded-[3px] ring-1 ring-white/70" style={{ backgroundColor: DPM_STATUS[code].tone }} aria-hidden="true" />{DPM_STATUS[code].label}</span>)}
+          </div>
+          <p className="mt-1 text-[11px] text-white/70">ตัวเลขข้างหมุด = ระยะจากตลิ่ง (ติดลบ = ต่ำกว่าตลิ่ง)</p>
         </div>
       ) : null}
       {showRainStations ? (
@@ -334,7 +345,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
   // ThaiWater ให้เฉพาะค่าล่าสุด จึงแสดงได้เมื่อดูวันนี้เท่านั้น (ไม่ปะปนกับข้อมูลย้อนหลัง)
   const stationsAvailable = viewMode.kind === "live" || viewMode.kind === "none";
   const visibleLayers = useMemo(
-    () => (stationsAvailable ? mapLayers : { ...mapLayers, rainStations: false }),
+    () => (stationsAvailable ? mapLayers : { ...mapLayers, rainStations: false, waterStations: false }),
     [mapLayers, stationsAvailable]
   );
   const activeContextOptions = contextOptions.filter((item) => item.mode === "active");
@@ -730,10 +741,17 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
                       active={Boolean(mapLayers.rainStations)}
                       onClick={() => toggleEocLayer("rainStations")}
                     />
+                    <SidebarItem
+                      label="ระดับน้ำ–ตลิ่ง (ปภ.)"
+                      icon={Gauge}
+                      tone="from-sky-400 to-blue-700"
+                      active={Boolean(mapLayers.waterStations)}
+                      onClick={() => toggleEocLayer("waterStations")}
+                    />
                   </>
                 ) : (
                   <div className="rounded-xl bg-amber-400/95 px-3 py-2 text-slate-950 shadow" role="status">
-                    <p className="text-xs font-black leading-tight">สถานีฝน ThaiWater แสดงเฉพาะค่าปัจจุบัน</p>
+                    <p className="text-xs font-black leading-tight">สถานีฝน ThaiWater และระดับน้ำ ปภ. แสดงเฉพาะค่าปัจจุบัน</p>
                     <p className="mt-0.5 text-[11px] font-semibold">ซ่อนไว้เพราะกำลังดูข้อมูลย้อนหลัง</p>
                     {(viewMode.kind === "activePast" || viewMode.hasActive) && (
                     <button type="button" onClick={() => { setSelectedDate(getTodayDateKey()); if (viewMode.kind === "history" && activeContextOptions[0]) setSelectedContextKey(activeContextOptions[0].key); }} className="mt-1.5 rounded-lg bg-slate-950 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-slate-800">
@@ -807,7 +825,7 @@ export default function DisasterMapWorkspace({ initialDisasterType = "flood" }) 
         {/* ซ้ายล่าง: คำอธิบายสัญลักษณ์ */}
         {legendOpen && (
           <div className="absolute bottom-24 left-3 z-[650] max-h-[calc(100%-31rem)] min-h-[9rem] w-[270px] overflow-y-auto rounded-xl [scrollbar-width:thin] max-md:hidden">
-            <Legend disasterType={disasterType} onClose={() => setLegendOpen(false)} showElevation={Boolean(mapLayers.elevation)} showRainStations={Boolean(visibleLayers.rainStations)} showHealth={Boolean(visibleLayers.hospitals)} showFloodFreq={Boolean(visibleLayers.floodFreq)} />
+            <Legend disasterType={disasterType} onClose={() => setLegendOpen(false)} showElevation={Boolean(mapLayers.elevation)} showWaterStations={Boolean(visibleLayers.waterStations)} showRainStations={Boolean(visibleLayers.rainStations)} showHealth={Boolean(visibleLayers.hospitals)} showFloodFreq={Boolean(visibleLayers.floodFreq)} />
           </div>
         )}
 

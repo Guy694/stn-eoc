@@ -27,6 +27,7 @@ const WaterReportMarker = dynamic(() => import('./public/map/WaterReportMarker')
 const ElevationLayer = dynamic(() => import('./public/map/ElevationLayer'), { ssr: false });
 const FloodFreqLayer = dynamic(() => import('./public/map/FloodFreqLayer'), { ssr: false });
 const RainStationLayer = dynamic(() => import('./weather/RainStationLayer'), { ssr: false });
+const WaterStationLayer = dynamic(() => import('./weather/WaterStationLayer'), { ssr: false });
 
 const renderMapIcon = (icon, className = "h-5 w-5 text-white") => renderToStaticMarkup(<AppIcon icon={icon} className={className} strokeWidth={2.5} />);
 
@@ -377,7 +378,8 @@ export default function PublicIncidentMap({
         if (showShelterLayer && shelters.length === 0) fetchShelters();
     }, [fetchShelters, shelters.length, showShelterLayer]);
 
-    const showWaterContext = Boolean(activeLayers.hospitals);
+    const showWaterStations = Boolean(activeLayers.waterStations);
+    const showWaterContext = Boolean(activeLayers.hospitals || showWaterStations);
     const showRainStations = Boolean(activeLayers.rainStations);
     useEffect(() => {
         if (!showWaterContext) return undefined;
@@ -948,6 +950,9 @@ export default function PublicIncidentMap({
                         {/* ฝนวัดจริงจาก ThaiWater; CCTV แสดงตำแหน่งสถานี ปภ. */}
                         <Pane name="rain-stations" style={{ zIndex: 450 }}>
                             {showRainStations && rainStations.length > 0 ? <RainStationLayer stations={rainStations} /> : null}
+                        </Pane>
+                        <Pane name="water-stations" style={{ zIndex: 470 }}>
+                            {showWaterStations && waterStations.length > 0 ? <WaterStationLayer stations={waterStations} /> : null}
                         </Pane>
 
                         {/* รายงานระดับน้ำจากประชาชน: วงกลมสีตามระดับน้ำ จางลงตามเวลา (pane แยกเหนือพื้นที่น้ำท่วม/ขอบเขต) */}

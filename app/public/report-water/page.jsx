@@ -59,7 +59,7 @@ function StepTitle({ number, children, hint }) {
 }
 
 export default function ReportWaterPage() {
-  const { floodOpen } = useHelpAvailability();
+  const { floodOpen, waterClosedBy } = useHelpAvailability();
   const [mounted, setMounted] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [position, setPosition] = useState(null);
@@ -252,7 +252,7 @@ export default function ReportWaterPage() {
     return shell(
       <section className="rounded-2xl border border-[#c9dcee] bg-white p-6 text-center" role="status">
         <h1 className="text-2xl font-black text-slate-900">ยังไม่เปิดรับรายงานระดับน้ำ</h1>
-        <p className="mt-3 text-slate-700">เปิดรับเฉพาะช่วงที่ศูนย์ปฏิบัติการด้านอุทกภัยเปิดรับมือเหตุการณ์ หากเป็นเหตุฉุกเฉินโทร 1669 หรือ ปภ. 1784</p>
+        <p className="mt-3 text-slate-700">{waterClosedBy === "admin" ? "ขณะนี้ปิดรับรายงานระดับน้ำผ่านเว็บไซต์ชั่วคราว" : "เปิดรับเฉพาะช่วงที่ศูนย์ปฏิบัติการด้านอุทกภัยเปิดรับมือเหตุการณ์"} หากเป็นเหตุฉุกเฉินโทร 1669 หรือ ปภ. 1784</p>
         <div className="mt-5 flex flex-wrap justify-center gap-2 text-sm font-bold">
           <a href="tel:1669" className="rounded-lg bg-red-600 px-4 py-3 text-white hover:bg-red-700">โทร 1669</a>
           <a href="tel:1784" className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">โทร 1784</a>

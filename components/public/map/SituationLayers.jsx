@@ -10,13 +10,14 @@ import { GeoJSON, Marker, Pane, Popup, Tooltip } from "react-leaflet";
 import AppIcon from "@/components/icons/AppIcon";
 import HealthFacilityPopup from "@/components/public/map/HealthFacilityPopup";
 import CitizenPointPopup from "@/components/public/map/CitizenPointPopup";
+import WaterStationLayer from "@/components/weather/WaterStationLayer";
 import RainStationLayer from "@/components/weather/RainStationLayer";
 import CctvLayer from "@/components/weather/CctvLayer";
 import { facilityTypeInfo, markerTone } from "@/lib/healthFacilityStatus";
 import { healthDivIconOptions } from "@/lib/shelterMarker";
 import { escapeHtml as esc } from "@/lib/escapeHtml";
 
-export const SITUATION_LAYER_KEYS = ["hospitals", "traffic", "rainStations", "cctv", "waterways", "tambon", "district"];
+export const SITUATION_LAYER_KEYS = ["hospitals", "traffic", "waterStations", "rainStations", "cctv", "waterways", "tambon", "district"];
 
 const icon = (name, className) => renderToStaticMarkup(<AppIcon icon={name} className={className} strokeWidth={2.5} />);
 const POPUP_PAN = typeof window !== "undefined" && window.innerWidth >= 768 ? [392, 80] : [16, 70];
@@ -110,7 +111,7 @@ function label(text, type) {
 
 export default function SituationLayers({ layers = {}, showLabels = true }) {
   const loaded = useStaticLayers(layers);
-  const waterStations = useStationFeed(Boolean(layers.hospitals), "/stn-eoc/api/public/dpm-water");
+  const waterStations = useStationFeed(Boolean(layers.hospitals || layers.waterStations), "/stn-eoc/api/public/dpm-water");
   const rainStations = useStationFeed(Boolean(layers.rainStations), "/stn-eoc/api/public/rain-stations");
   const data = { ...loaded, rainStations };
 
@@ -142,6 +143,9 @@ export default function SituationLayers({ layers = {}, showLabels = true }) {
 
       <Pane name="situation-rain" style={{ zIndex: 450 }}>
         {layers.rainStations && data.rainStations?.length ? <RainStationLayer stations={data.rainStations} /> : null}
+      </Pane>
+      <Pane name="situation-water-stations" style={{ zIndex: 470 }}>
+        {layers.waterStations && waterStations.length ? <WaterStationLayer stations={waterStations} /> : null}
       </Pane>
       {layers.cctv ? <CctvLayer /> : null}
 

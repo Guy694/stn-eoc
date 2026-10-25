@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 
-const SHOW = 5;
 export const WARNINGS_ANCHOR = "current-warnings";
 
 function timeText(value) {
@@ -21,16 +20,13 @@ export function sortWarnings(list = []) {
 }
 
 export default function CurrentWarnings({ warnings = [] }) {
-  const [all, setAll] = useState(false);
   const ref = useRef(null);
   const sorted = sortWarnings(warnings);
-  const shown = all ? sorted : sorted.slice(0, SHOW);
   const high = sorted.filter((item) => item.level === "high").length;
 
   // มาจากแถบแดงหน้าแรก (#current-warnings): เลื่อนมาที่รายการเมื่อโหลดเสร็จ
   useEffect(() => {
     if (!sorted.length || window.location.hash !== `#${WARNINGS_ANCHOR}`) return;
-    setAll(true);
     ref.current?.scrollIntoView({ block: "start" });
   }, [sorted.length]);
 
@@ -42,8 +38,8 @@ export default function CurrentWarnings({ warnings = [] }) {
         <h2 id="current-warnings-title" className="font-[family-name:var(--font-kanit)] text-xl font-semibold">ประกาศเตือนขณะนี้</h2>
         <span className="text-sm text-white/85">{sorted.length} ประกาศ{high ? ` • รุนแรง ${high}` : ""}</span>
       </div>
-      <ul className="divide-y divide-[#f1e1e1]">
-        {shown.map((item, index) => (
+      <ul aria-label="รายการประกาศเตือน เลื่อนเพื่อดูทั้งหมด" tabIndex={0} className="max-h-[min(45vh,24rem)] overflow-y-auto overscroll-contain divide-y divide-[#f1e1e1] pr-1 [scrollbar-width:thin] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#b91c1c]">
+        {sorted.map((item, index) => (
           <li key={`${item.issued_at}-${index}`} className="flex gap-3 px-5 py-3.5">
             <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${item.level === "high" ? "bg-[#dc2626]" : "bg-[#f59e0b]"}`} aria-hidden="true" />
             <div className="min-w-0 flex-1">
@@ -57,11 +53,7 @@ export default function CurrentWarnings({ warnings = [] }) {
         ))}
       </ul>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#f1e1e1] px-5 py-3 text-[15px]">
-        {sorted.length > SHOW ? (
-          <button type="button" onClick={() => setAll((value) => !value)} aria-expanded={all} className="font-semibold text-[#b91c1c] hover:underline">
-            {all ? "แสดงน้อยลง" : `ดูทั้งหมด ${sorted.length} ประกาศ`}
-          </button>
-        ) : <span />}
+        <span className="text-xs text-slate-500">{sorted.length} ประกาศ · เลื่อนรายการเพื่อดูเพิ่มเติม</span>
         <Link href="/public/weather-watch" className="inline-flex items-center gap-1 font-semibold text-[#0b4c86] hover:underline">ดูบนแผนที่สถานการณ์ <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
       </div>
     </section>

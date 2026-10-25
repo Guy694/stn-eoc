@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity, AlertTriangle, BarChart3, BellRing, CheckCircle2, Construction, DatabaseBackup, ExternalLink, Map as MapIcon,
-  KeyRound, ListTree, Megaphone, PlugZap, RefreshCw, ShieldCheck, Users, Volume2, XCircle, FlaskConical
+  KeyRound, ListTree, Megaphone, PlugZap, RefreshCw, ShieldCheck, Users, Volume2, Waves, XCircle, FlaskConical
 } from "lucide-react";
 import { AdminPage, StatusPill, useNotice } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
@@ -19,6 +19,7 @@ import ModulePermissions from "@/components/admin/settings/ModulePermissions";
 import MenuLayoutSettings from "@/components/admin/settings/MenuLayoutSettings";
 import WaterAlertSettings from "@/components/admin/settings/WaterAlertSettings";
 import MaintenanceSettings from "@/components/admin/settings/MaintenanceSettings";
+import PublicMenuSettings from "@/components/admin/settings/PublicMenuSettings";
 import AlertTestSettings from "@/components/admin/settings/AlertTestSettings";
 import AlertSoundSettings from "@/components/admin/settings/AlertSoundSettings";
 import TestDataSettings from "@/components/admin/settings/TestDataSettings";
@@ -36,6 +37,7 @@ const SECTIONS = [
   { value: "alert-sounds", label: "เสียงแจ้งเตือน", hint: "แบบเสียงบนหน้าเว็บ ใช้ทุกเครื่อง", icon: Volume2 },
   { value: "alert-test", label: "ทดสอบการแจ้งเตือน", hint: "ตรวจความพร้อม ทดสอบเสียง popup และมือถือ", icon: Megaphone },
   { value: "maintenance", label: "ปิดปรับปรุงระบบ", hint: "ปิดหน้าเว็บชั่วคราวระหว่างปรับปรุง", icon: Construction },
+  { value: "public-menus", label: "เมนูประชาชน", hint: "เปิด/ปิดเมนูรายงานระดับน้ำ", icon: Waves },
   { value: "backup", label: "สำรองข้อมูล", hint: "ไฟล์สำรองและวิธีสำรอง/กู้คืน", icon: DatabaseBackup },
   { value: "test-data", label: "ข้อมูลทดสอบ", hint: "ลบข้อมูลที่ติดป้าย [ทดสอบ] ก่อนใช้งานจริง", icon: FlaskConical },
   { value: "visitors", label: "ผู้เข้าชม", hint: "IP ตำแหน่ง และสถิติการเข้าชม", icon: BarChart3 },
@@ -48,7 +50,7 @@ const GROUPS = [
   { label: "การแจ้งเตือน", items: ["alerts", "alert-sounds", "alert-test"] },
   { label: "ผู้ใช้และสิทธิ์", items: ["security", "roles", "modules"] },
   { label: "ข้อมูล", items: ["data", "visitors", "test-data", "backup"] },
-  { label: "ระบบ", items: ["integrations", "maintenance"] }
+  { label: "ระบบ", items: ["integrations", "public-menus", "maintenance"] }
 ].map((group) => ({ ...group, items: group.items.map((value) => SECTIONS.find((item) => item.value === value)).filter(Boolean) }));
 
 const TONE = {
@@ -357,7 +359,7 @@ export default function SystemSettingsWorkspace() {
   };
 
   const current = SECTIONS.find((item) => item.value === section) || SECTIONS[0];
-  const needsData = !["visitors", "data", "modules", "maintenance", "alert-sounds", "alert-test"].includes(section);
+  const needsData = !["visitors", "data", "modules", "maintenance", "public-menus", "alert-sounds", "alert-test"].includes(section);
   const problems = state.data?.checks?.filter((check) => check.tone !== "ok").length || 0;
 
   return (
@@ -415,6 +417,7 @@ export default function SystemSettingsWorkspace() {
           {section === "modules" ? <ModulePermissions /> : null}
           {section === "menus" ? <MenuLayoutSettings /> : null}
           {section === "maintenance" ? <MaintenanceSettings /> : null}
+          {section === "public-menus" ? <PublicMenuSettings /> : null}
           {section === "alert-test" ? <AlertTestSettings /> : null}
           {section === "alert-sounds" ? <AlertSoundSettings /> : null}
           {section === "test-data" ? <TestDataSettings /> : null}

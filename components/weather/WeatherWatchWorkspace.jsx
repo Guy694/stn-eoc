@@ -76,6 +76,7 @@ const BASE_MAPS = [
 // ชั้นข้อมูลสถานการณ์ตอนนี้ (เดิมอยู่ที่หน้าแผนที่สถานการณ์)
 const SITUATION_ITEMS = [
   { key: "tide", label: "น้ำขึ้น–น้ำลง (ทะเลอันดามัน)", icon: Waves, tone: "from-cyan-400 to-blue-700", title: "ระดับน้ำทะเลหน้าสตูลตอนนี้ ลูกศรบอกน้ำกำลังขึ้นหรือลง ชี้ที่สัญลักษณ์เพื่อดูเวลาน้ำขึ้นสูงสุด/ลงต่ำสุดรอบถัดไป" },
+  { key: "waterStations", label: "ระดับน้ำ–ตลิ่ง (ปภ.)", icon: Waves, tone: "from-sky-400 to-blue-700" },
   { key: "rainStations", label: "ฝนวัดจริง (ThaiWater)", icon: Umbrella, tone: "from-sky-300 to-indigo-600" },
   { key: "cctv", label: "กล้อง CCTV ริมคลอง (ปภ.)", icon: Cctv, tone: "from-slate-500 to-sky-800", title: "แตะไอคอนกล้องบนแผนที่เพื่อดูภาพล่าสุดของคลอง 2 มุม จากกรมป้องกันและบรรเทาสาธารณภัย (อัปเดตทุก 1 นาที)" },
   { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-blue-500 to-blue-800", title: "หมุดน้ำเงินตัว H · จุดสีที่มุม = สถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
@@ -234,7 +235,7 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
   const [selectedDay, setSelectedDay] = useState(0);
 
   // หน้านี้ = แผนที่สถานการณ์และความเสี่ยง: ความเสี่ยง/พยากรณ์รายอำเภอ + ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์)
-  const [situationLayers, setSituationLayers] = useState({ tide: true, rainStations: true, cctv: true });
+  const [situationLayers, setSituationLayers] = useState({ tide: true, waterStations: true, rainStations: true, cctv: true });
   const [floodFreqStatus, setFloodFreqStatus] = useState(null);
   const onFloodFreqStatus = useCallback((status) => setFloodFreqStatus(status), []);
   const toggleSituation = (key) => {
