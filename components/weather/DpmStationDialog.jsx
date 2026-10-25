@@ -224,20 +224,18 @@ export default function DpmStationDialog({ station, history = [], open, onClose 
 
       <WaterTrendChart station={station} history={history} />
 
-      <section className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4" aria-labelledby="nearby-thaiwater-title">
+      {nearbyThaiWater ? <section className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4" aria-labelledby="nearby-thaiwater-title">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div><h3 id="nearby-thaiwater-title" className="font-[family-name:var(--font-kanit)] text-sm font-bold text-[#0c2f4a]">ข้อมูลความจุน้ำจากสถานีใกล้เคียง</h3><p className="mt-0.5 text-xs text-slate-500">ThaiWater (สสน.) • สถานีในอำเภอเดียวกันและห่างไม่เกิน 3 กม.</p></div>
           {nearbyThaiWater ? <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-cyan-800 ring-1 ring-cyan-200">ห่าง {nearbyThaiWater.distanceKm} กม.</span> : null}
         </div>
-        {nearbyThaiWater ? (
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <div><p className="text-xs text-slate-500">สถานีที่จับคู่</p><p className="mt-0.5 text-sm font-semibold text-slate-800">{nearbyThaiWater.name}</p></div>
             <div><p className="text-xs text-slate-500">ความจุลำน้ำ</p><p className="mt-0.5 font-[family-name:var(--font-kanit)] text-xl font-bold text-cyan-800">{nearbyThaiWater.storagePercent === null ? "–" : `${Number(nearbyThaiWater.storagePercent).toFixed(0)}%`}{thaiWaterStatus ? <span className="ml-2 rounded-full px-2 py-0.5 align-middle font-sans text-xs" style={{ backgroundColor: thaiWaterStatus.color, color: thaiWaterStatus.text }}>{thaiWaterStatus.label}</span> : null}</p></div>
             <div><p className="text-xs text-slate-500">ระดับน้ำเทียบตลิ่ง</p><p className="mt-0.5 text-sm font-semibold text-slate-800">{nearbyThaiWater.bankDiff === null ? "–" : bankText(nearbyThaiWater.bankDiff)}</p></div>
             <div className="sm:col-span-3 text-xs text-slate-500">สถานี {nearbyThaiWater.agency || "ThaiWater (สสน.)"} · วัดเมื่อ {nearbyThaiWater.observedAt ? when(nearbyThaiWater.observedAt) : "–"}</div>
-          </div>
-        ) : <p className="mt-3 text-sm text-slate-600">ไม่พบสถานี ThaiWater ในบริเวณเดียวกันที่เข้าเงื่อนไขระยะทาง</p>}
-      </section>
+        </div>
+      </section> : null}
 
       <div className="mt-4 grid gap-1 sm:grid-cols-2">
         <InfoRow icon={MapPin} label="ที่ตั้ง">{station.location || station.name}</InfoRow>
