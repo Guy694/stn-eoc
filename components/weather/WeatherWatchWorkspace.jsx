@@ -235,7 +235,7 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
   const [selectedDay, setSelectedDay] = useState(0);
 
   // หน้านี้ = แผนที่สถานการณ์และความเสี่ยง: ความเสี่ยง/พยากรณ์รายอำเภอ + ชั้นข้อมูลสถานการณ์ตอนนี้ (ย้ายมาจากหน้าแผนที่สถานการณ์)
-  const [situationLayers, setSituationLayers] = useState({ tide: true, waterStations: true, rainStations: true, cctv: true });
+  const [situationLayers, setSituationLayers] = useState({ tide: true, waterStations: true, rainStations: true, cctv: true, floodFreq: true });
   const [floodFreqStatus, setFloodFreqStatus] = useState(null);
   const onFloodFreqStatus = useCallback((status) => setFloodFreqStatus(status), []);
   const toggleSituation = (key) => {

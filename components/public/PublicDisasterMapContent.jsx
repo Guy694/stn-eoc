@@ -40,13 +40,14 @@ export const DEFAULT_LAYERS = {
   waterStations: true,
   rainStations: true,
   elevation: false,
-  // พื้นที่น้ำท่วมซ้ำซาก (GISTDA) — เปิดเองจากเมนู เพราะข้อมูล ~0.8 MB
-  floodFreq: false
+  // พื้นที่น้ำท่วมซ้ำซากจาก GISTDA เปิดไว้เป็นค่าเริ่มต้น
+  floodFreq: true
 };
 
 const DISEASE_DEFAULT_LAYERS = {
   ...DEFAULT_LAYERS,
   floodAreas: false,
+  floodFreq: false,
   diseaseReports: true,
   citizenWaterReports: false,
   waterways: false,
