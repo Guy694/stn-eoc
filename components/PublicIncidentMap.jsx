@@ -80,6 +80,7 @@ export default function PublicIncidentMap({
         diseaseReports: false,
         labels: true,
         incidents: true,
+        citizenWaterReports: true,
         traffic: true,
         shelters: false,
         hospitals: false,
@@ -98,6 +99,7 @@ export default function PublicIncidentMap({
     const showDiseaseReportLayer = disasterType === 'disease' && Boolean(activeLayers.diseaseReports);
     const showLabels = activeLayers.labels;
     const showIncidentLayer = activeLayers.incidents !== false;
+    const showCitizenWaterReports = activeLayers.citizenWaterReports !== false;
     const showTrafficLayer = activeLayers.traffic !== false;
     const showShelterLayer = Boolean(activeLayers.shelters);
     // กันไม่ให้ popup ไปอยู่ใต้แผงเหตุการณ์ด้านซ้ายและช่องค้นหาด้านบน
@@ -705,6 +707,10 @@ export default function PublicIncidentMap({
                                     <input type="checkbox" checked={showIncidentLayer} onChange={(e) => setLayer('incidents', e.target.checked)} className="w-4 h-4 accent-orange-600" />
                                     <span className="inline-flex items-center gap-1.5"><AppIcon icon="alert" className="h-4 w-4" /> เหตุการณ์</span>
                                 </label>
+                                {disasterType === 'flood' ? <label className="inline-flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-900 cursor-pointer">
+                                    <input type="checkbox" checked={showCitizenWaterReports} onChange={(e) => setLayer('citizenWaterReports', e.target.checked)} className="w-4 h-4 accent-cyan-600" />
+                                    <span>รายงานระดับน้ำจากประชาชน</span>
+                                </label> : null}
                                 <label className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 cursor-pointer">
                                     <input type="checkbox" checked={showTrafficLayer} onChange={(e) => setLayer('traffic', e.target.checked)} className="w-4 h-4 accent-red-600" />
                                     <span className="inline-flex items-center gap-1.5"><AppIcon icon="route" className="h-4 w-4" /> เส้นทาง</span>
@@ -957,7 +963,7 @@ export default function PublicIncidentMap({
 
                         {/* รายงานระดับน้ำจากประชาชน: วงกลมสีตามระดับน้ำ จางลงตามเวลา (pane แยกเหนือพื้นที่น้ำท่วม/ขอบเขต) */}
                         <Pane name="water-reports" style={{ zIndex: 460 }}>
-                            {filteredIncidents.filter(isWaterReport).map((incident) => (
+                            {showCitizenWaterReports && filteredIncidents.filter(isWaterReport).map((incident) => (
                                 <WaterReportMarker key={`wr-${incident.id}`} incident={incident} panPadding={popupPanPadding} />
                             ))}
                         </Pane>

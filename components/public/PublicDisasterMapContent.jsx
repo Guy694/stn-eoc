@@ -8,6 +8,7 @@ import { MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import AppIcon from "@/components/icons/AppIcon";
 import { FLOOD_LEVEL_LEGEND, floodAreaMapMeta } from "@/lib/floodMapLevels";
+import { isWaterReport } from "@/lib/waterReportMap";
 
 const EOC_TYPE_LABELS = {
   flood: "อุทกภัยน้ำท่วม",
@@ -31,6 +32,7 @@ export const DEFAULT_LAYERS = {
   labels: true,
   incidents: true,
   traffic: true,
+  citizenWaterReports: true,
   shelters: true,
   hospitals: true,
   waterways: true,
@@ -46,6 +48,7 @@ const DISEASE_DEFAULT_LAYERS = {
   ...DEFAULT_LAYERS,
   floodAreas: false,
   diseaseReports: true,
+  citizenWaterReports: false,
   waterways: false,
   shelters: false,
   hospitals: true,
@@ -265,8 +268,10 @@ export function filterPublicIncidents(incidents, { urgencyFilter = "all", report
     if (urgencyFilter !== "all" && incident.urgency !== urgencyFilter) return false;
     if (reportTypeFilter !== "all" && incident.report_type !== reportTypeFilter) return false;
     if (districtFilter !== "all" && incident.district !== districtFilter) return false;
-    if (incident.report_type === "traffic_report" && !layers.traffic) return false;
-    if ((incident.report_type || "help_request") !== "traffic_report" && !layers.incidents) return false;
+    if (isWaterReport(incident)) {
+      if (layers.citizenWaterReports === false) return false;
+    } else if (incident.report_type === "traffic_report" && !layers.traffic) return false;
+    else if ((incident.report_type || "help_request") !== "traffic_report" && !layers.incidents) return false;
     if (query) {
       const haystack = [
         incident.district,

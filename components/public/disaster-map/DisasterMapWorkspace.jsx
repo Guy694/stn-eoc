@@ -125,6 +125,7 @@ function getEocLayerItems(disasterType, sheltersOpen = true) {
     ...(disasterType === "flood" ? [{ key: "floodAreas", label: "พื้นที่น้ำท่วม", icon: Waves, tone: "from-sky-500 to-blue-700" }] : []),
     ...(disasterType === "disease" ? [{ key: "diseaseReports", label: "รายงานโรคระบาด", icon: Activity, tone: "from-teal-400 to-emerald-600" }] : []),
     { key: "incidents", label: "เหตุการณ์/ขอความช่วยเหลือ", icon: TriangleAlert, tone: "from-orange-400 to-red-500" },
+    ...(disasterType === "flood" ? [{ key: "citizenWaterReports", label: "รายงานระดับน้ำจากประชาชน", icon: Waves, tone: "from-cyan-400 to-blue-600" }] : []),
     { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600" },
     // ศูนย์พักพิงมีข้อมูลเฉพาะช่วงเปิด EOC
     ...(sheltersOpen ? [{ key: "shelters", label: "ศูนย์พักพิง", icon: Tent, tone: "from-green-500 to-green-700" }] : []),
