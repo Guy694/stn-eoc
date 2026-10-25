@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CalendarDays, CloudRain, Waves } from "lucide-react";
 import { RISK_META } from "@/lib/weatherRiskConfig";
 
-const SHORT = { normal: "ปกติ", watch: "เฝ้าระวัง", high: "เสี่ยงสูง", critical: "วิกฤต" };
+const SHORT = { normal: "ปกติ", watch: "เฝ้าระวัง", high: "เสี่ยง", critical: "เสี่ยงสูง" };
 const ADVICE = {
   watch: "ติดตามข่าว เตรียมยกของขึ้นที่สูง ชาร์จโทรศัพท์ให้เต็ม",
   high: "ยกของขึ้นที่สูง เตรียมกระเป๋ายา/เอกสาร ดูทางไปศูนย์พักพิงไว้ล่วงหน้า",

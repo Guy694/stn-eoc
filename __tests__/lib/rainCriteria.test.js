@@ -39,3 +39,14 @@ describe("บ้านฉันเสี่ยงไหม: ย้ำให้�
     expect(riskSpeechText({ label: "วิกฤต", notice: officialNotice("critical") })).toMatch(/ยังไม่ใช่คำสั่งอพยพ/);
   });
 });
+
+describe("ชื่อระดับความเสี่ยงที่ไม่ทำให้ตื่นตระหนก", () => {
+  const { RISK_LEVELS, RISK_META } = require("@/lib/weatherRiskConfig");
+  test("ปกติ / เฝ้าระวัง / เสี่ยง / เสี่ยงสูง — ไม่ใช้คำว่าวิกฤต", () => {
+    expect(RISK_LEVELS.map((level) => RISK_META[level].label)).toEqual(["ปกติ", "เฝ้าระวัง", "เสี่ยง", "เสี่ยงสูง"]);
+  });
+  test("เสี่ยงสูงใช้คำแนะนำชุดเดียวกับเสี่ยง และขึ้นต้นด้วยให้รอคำสั่ง ปภ.", () => {
+    expect(homeAdvice("critical")).toEqual(homeAdvice("high"));
+    expect(homeAdvice("critical")[0]).toMatch(/^รอคำสั่งอพยพหรือเคลื่อนย้ายจาก ปภ\./);
+  });
+});
