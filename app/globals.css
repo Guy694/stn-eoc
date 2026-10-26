@@ -90,6 +90,19 @@ body {
   font-family: var(--font-kanit);
 }
 
+.site-watermark {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(7px, env(safe-area-inset-bottom));
+  z-index: 40;
+  color: #334155;
+  font-size: 10px;
+  line-height: 1.3;
+  opacity: 0.42;
+  pointer-events: none;
+  user-select: none;
+}
+
 @layer components {
   .app-surface {
     @apply rounded-xl border border-slate-200 bg-white shadow-sm;

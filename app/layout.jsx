@@ -48,6 +48,9 @@ export default function RootLayout({ children }) {
         className={`${kanit.variable} antialiased`}
         suppressHydrationWarning
       >
+        <div className="site-watermark" aria-hidden="true">
+          สำนักงานสาธารณสุขจังหวัดสตูล
+        </div>
         <AuthProvider>
           <EOCProvider>
             {children}
