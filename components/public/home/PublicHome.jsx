@@ -531,7 +531,7 @@ export default function PublicHome() {
                 <SatunRiskMap districts={districts} selectedName={districtName} onSelect={(name) => selectDistrict(name)} userPoint={userPoint} />
                 <div className="mt-3 px-1">
                   <Link
-                    href="/public/disaster-map"
+                    href="/public/weather-watch/"
                     className="inline-flex min-h-10 min-w-28 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-3 font-[family-name:var(--font-kanit)] font-bold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd166]"
                   >
                     <MapPinned className="h-5 w-5" aria-hidden="true" /> ดูแผนที่
