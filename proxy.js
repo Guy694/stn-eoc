@@ -10,6 +10,24 @@ import { maintenanceDecision } from "@/lib/maintenanceRules";
 //    การตรวจสิทธิ์จริง (session หมดอายุ, role, การอนุมัติ, บังคับเปลี่ยนรหัสผ่าน) อยู่ที่ API ซึ่งเป็นขอบเขตความปลอดภัยที่แท้จริง
 
 const PROTECTED_PREFIXES = ["/admin", "/commander", "/eoc", "/analytics", "/resources", "/settings"];
+const BLOCK_FOREIGN_COUNTRIES = process.env.BLOCK_FOREIGN_COUNTRIES === "1";
+
+function countryBlockResponse(request) {
+    if (!BLOCK_FOREIGN_COUNTRIES) return null;
+
+    // cf-ipcountry is supplied by Cloudflare. Enable this only when traffic is
+    // forced through Cloudflare and direct access to the origin is restricted.
+    const country = request.headers.get("cf-ipcountry")?.trim().toUpperCase();
+    if (country === "TH") return null;
+
+    return new Response("ขออภัย เว็บไซต์นี้เปิดให้บริการเฉพาะผู้ที่เชื่อมต่อจากประเทศไทย", {
+        status: 403,
+        headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-store",
+        },
+    });
+}
 
 function isProtectedPath(pathname) {
     return PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -40,6 +58,9 @@ async function maintenanceResponse(request) {
 }
 
 export async function proxy(request) {
+    const countryBlocked = countryBlockResponse(request);
+    if (countryBlocked) return countryBlocked;
+
     const blocked = await maintenanceResponse(request);
     if (blocked) return blocked;
 
@@ -60,10 +81,10 @@ export async function proxy(request) {
 }
 
 export const config = {
-    // ทุกหน้าและ API ยกเว้นไฟล์ static (รูป, สคริปต์, ฟอนต์) — ตอนระบบเปิดปกติ proxy อ่านค่าจากหน่วยความจำ (แคช 10 วินาที) เท่านั้น
+    // รวมไฟล์ static ด้วย เพื่อให้การจำกัดประเทศครอบคลุมทั้งเว็บและ API
     // หมายเหตุ: หน้าแรก "/" ต้องระบุแยก — ถ้าให้ regex ".*" จับ "/" ด้วย (ร่วมกับ basePath) Next ตอบหน้าว่าง
     matcher: [
         "/",
-        "/((?!_next/static|_next/image|favicon\\.ico|img/|uploads/|infographics/|flood-maps/|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|css|js|map|txt|xml|json|woff2?|ttf|pdf|geojson)$).+)",
+        "/((?!_next/static|_next/image).+)",
     ],
 };

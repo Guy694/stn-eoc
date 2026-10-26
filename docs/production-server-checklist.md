@@ -18,6 +18,7 @@
 - [ ] `VULNERABLE_DATA_KEY` และ `BACKUP_ENCRYPTION_KEY` สุ่มใหม่ — **เก็บสำเนาไว้นอกเครื่อง ห้ามเปลี่ยน/ห้ามหายหลังมีข้อมูล** ไม่งั้นถอดรหัสข้อมูลกลุ่มเปราะบางและไฟล์สำรองไม่ได้
 - [ ] `DB_USER=stneoc_app` (ไม่ใช่ root) + `DB_PASSWORD` ใหม่ · `MYSQL_ROOT_PASSWORD` (ถ้าใช้ docker compose)
 - [ ] `TRUST_PROXY=1` (อยู่หลัง nginx ชั้นเดียว)
+- [ ] หากต้องการบล็อกผู้เข้าชมต่างประเทศ: ตั้ง `BLOCK_FOREIGN_COUNTRIES=1` และให้ Cloudflare เป็นทางเข้าทุกคำขอ พร้อมจำกัด firewall ของ origin ให้รับเฉพาะ IP ของ Cloudflare (ถ้าไม่มี `CF-IPCountry` คำขอจะถูกปฏิเสธ)
 - [ ] VAPID (`npm run push:vapid`), ThaiD, Telegram, GISTDA, Gemini ตามที่ใช้
 - [ ] `ALERT_CRON_SECRET` ถ้าใช้ตัวตั้งเวลาภายนอกเรียกแจ้งเตือน
 - [ ] `PDPA_RETENTION_DAYS` ตามที่ตกลงกับผู้รับผิดชอบข้อมูล (ค่าเริ่มต้น 365)

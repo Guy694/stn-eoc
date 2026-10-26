@@ -104,6 +104,6 @@ test("เหตุการณ์จากการแก้ไขบัญช�
   expect(officerChangeActions({ role: "staff", is_approved: 1 }, { given_name: "x" })).toEqual([]);
 });
 
-test("งานลบอัตโนมัติเก็บประวัติผู้เข้าชม 365 วันเป็นค่าเริ่มต้น", () => {
-  expect(visitorLogDays({})).toBe(365);
+test("งานลบอัตโนมัติเก็บประวัติผู้เข้าชม 90 วันเป็นค่าเริ่มต้น", () => {
+  expect(visitorLogDays({})).toBe(90);
 });
