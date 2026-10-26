@@ -27,10 +27,10 @@ import PublicLayout from "@/components/layouts/PublicLayout";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { RISK_META } from "@/lib/weatherRiskConfig";
-import { assessHomeRisk, homeAdvice, nearest, NEAR_REPORT_KM, officialNotice, riskSpeechText } from "@/lib/myRisk";
+import { assessHomeRisk, nearest, NEAR_REPORT_KM, officialNotice, riskSpeechText } from "@/lib/myRisk";
 import { distanceText, facilityTypeInfo, floodAreaAt, serviceStatusMeta, phoneLinks } from "@/lib/healthFacilityStatus";
 import { floodAreaMapMeta } from "@/lib/floodMapLevels";
-import { bandFor, elevationText } from "@/lib/elevation";
+import { elevationText } from "@/lib/elevation";
 import { loadElevation } from "@/lib/elevationClient";
 import { isWaterReport, timeAgoText } from "@/lib/waterReportMap";
 import { waterLevelMeta } from "@/lib/waterReport";
@@ -69,6 +69,12 @@ const LOAD_STEPS = [
 const HOME_KEY = "stn-eoc:home-location";
 const toLocalDate = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
 const normalizeName = (value) => String(value || "").replace(/^อ(\.|ำเภอ)\s*/, "").replace(/\s+/g, "");
+
+function sourceTime(value) {
+  if (!value) return "";
+  const date = new Date(String(value).replace(" ", "T"));
+  return Number.isNaN(date.getTime()) ? "" : `วัดเมื่อ ${date.toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} น.`;
+}
 
 async function getJson(url, init = {}) {
   try {
@@ -121,10 +127,10 @@ function MyRiskContent() {
   // อ่านผลประเมินออกเสียง: อ่านเองเมื่อประเมินเสร็จ (ปิดได้) และกดฟังซ้ำ/หยุดได้
   const [speaking, setSpeaking] = useState(false);
   const [thaiVoice, setThaiVoice] = useState(null);
-  const [autoRead, setAutoRead] = useState(true);
+  const [autoRead, setAutoRead] = useState(false);
   const spokenAt = useRef(null);
   useEffect(() => {
-    try { setAutoRead(window.localStorage.getItem(AUTO_READ_KEY) !== "off"); } catch { /* ใช้ค่าเริ่มต้น */ }
+    try { setAutoRead(window.localStorage.getItem(AUTO_READ_KEY) === "on"); } catch { /* ค่าเริ่มต้นปิดเสียงอ่านอัตโนมัติ */ }
     hasThaiVoice().then(setThaiVoice);
     return () => stopSpeaking();
   }, []);
@@ -186,6 +192,7 @@ function MyRiskContent() {
   const load = useCallback(async (point) => {
     setReport({ state: "loading" });
     setStepsDone([]);
+    const pointKey = `${Number(point.lat).toFixed(5)},${Number(point.lng).toFixed(5)}`;
     const mark = (key) => (value) => {
       setStepsDone((current) => (current.includes(key) ? current : [...current, key]));
       return value;
@@ -213,6 +220,7 @@ function MyRiskContent() {
     ]);
     setReport({
       state: "done",
+      pointKey,
       at: new Date(),
       where: where?.data || null,
       weather,
@@ -223,8 +231,28 @@ function MyRiskContent() {
       floodAreas: floodAreas?.data || [],
       waterReports: (incidents?.data || []).filter(isWaterReport),
       outlook: outlook?.data || null,
-      elevation: Number.isFinite(elevation) ? elevation : null
+      elevation: Number.isFinite(elevation) ? elevation : null,
+      floodHistoryState: "loading",
+      floodHistory: null
     });
+    // โหลดประวัติ GISTDA แยกจากผลปัจจุบัน ไม่ให้การประเมินหลักต้องรอ API ภายนอก
+    if (whereData?.in_satun) {
+      getJson("/stn-eoc/api/public/flood-freq/point", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: point.lat, lng: point.lng }),
+        signal: AbortSignal.timeout(25000)
+      }).then((json) => {
+        setReport((current) => {
+          if (current.state !== "done" || current.pointKey !== pointKey) return current;
+          return {
+            ...current,
+            floodHistoryState: json?.success ? "ready" : "unavailable",
+          floodHistory: json?.success ? { ...json.data, nearby_areas: json.nearby_areas || [], nearby_radius_m: json.nearby_radius_m || 200 } : null
+          };
+        });
+      });
+    }
     trackPublicUsage("my_risk_checked", "/public/my-risk");
   }, []);
 
@@ -259,16 +287,21 @@ function MyRiskContent() {
   }, [position, report]);
 
   const meta = result ? RISK_META[result.home.level] || RISK_META.normal : null;
+  const assessmentIncomplete = Boolean(result && !result.district && result.home.level === "normal");
+  const contextOnlySignals = Boolean(result && result.home.level === "normal" && result.home.reasons.length > 0);
+  const assessmentLabel = result
+    ? assessmentIncomplete ? "ข้อมูลบางส่วนยังไม่พร้อม" : contextOnlySignals ? "ปกติ" : ({ normal: "ปกติ", watch: "เฝ้าระวัง", high: "มีสัญญาณควรติดตาม", critical: "ควรติดตามใกล้ชิด" }[result.home.level] || meta.label)
+    : "";
+  const assessmentColor = assessmentIncomplete ? "#64748b" : meta?.color || RISK_META.normal.color;
   const where = report.where;
   const placeName = where?.in_satun
     ? [where.village && `${where.moo ? `หมู่ ${where.moo} ` : ""}บ้าน${where.village}`, where.tambon && `ต.${where.tambon}`, where.district && `อ.${where.district}`].filter(Boolean).join(" ")
     : null;
 
   const speechFor = () => (result && meta ? riskSpeechText({
-    label: meta.label,
+    label: assessmentLabel,
     place: placeName,
     reasons: [...result.home.reasons, ...(result.district?.risk_reasons || []).map((reason) => `อ.${result.district.district_name}: ${reason}`)],
-    advice: homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen: sheltersOpen && result.shelters.length > 0 }),
     notice: officialNotice(result.home.level)
   }) : "");
   const listen = async () => {
@@ -412,14 +445,17 @@ function MyRiskContent() {
         {result && where?.in_satun && (
           <>
             {/* คำตอบ */}
-            <section className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: meta.color }} aria-live="polite">
-              <div className="py-4 pl-4 pr-[150px] text-white sm:pr-[232px] md:pl-5" style={{ backgroundColor: meta.color }}>
-                <p className="text-sm font-bold opacity-90">ความเสี่ยงน้ำท่วมที่บ้านคุณตอนนี้</p>
-                <p className="text-3xl font-black">{meta.label}</p>
+            <section className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: assessmentColor }} aria-live="polite">
+              <div className="py-4 pl-4 pr-[150px] text-white sm:pr-[232px] md:pl-5" style={{ backgroundColor: assessmentColor }}>
+                <p className="text-sm font-bold opacity-90">ภาพรวมสถานการณ์ใกล้ตำแหน่งที่เลือก</p>
+                <p className="text-3xl font-black">{assessmentLabel}</p>
                 <p className="mt-0.5 text-sm opacity-90">{placeName}</p>
               </div>
               <div className="p-4 md:p-5">
                 <RiskMascot level={result.home.level} speaking={speaking} />
+                <p className="mb-3 rounded-lg bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700">
+                  เป็นการคัดกรองจากภาพรวมระดับอำเภอและสัญญาณที่พบใกล้ตำแหน่ง ไม่ใช่การวัดน้ำหน้าบ้านหรือการยืนยันว่าจะเกิดน้ำท่วม ระดับอาจเปลี่ยนเมื่อข้อมูลอัปเดต
+                </p>
                 {thaiVoice !== false ? (
                   <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <button type="button" onClick={speaking ? stopListening : listen} aria-pressed={speaking}
@@ -440,13 +476,45 @@ function MyRiskContent() {
                     <p className="mt-2 font-semibold text-red-800">{officialNotice(result.home.level).urgent}</p>
                   </div>
                 ) : null}
-                <ul className="space-y-1.5 text-slate-800">
-                  {[...result.home.reasons, ...(result.district?.risk_reasons || []).map((reason) => `อ.${result.district.district_name}: ${reason}`)].map((reason) => (
-                    <li key={reason} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />{reason}</li>
-                  ))}
-                </ul>
+                <div className="space-y-3">
+                  <section>
+                    <h3 className="font-bold text-slate-900">สัญญาณใกล้ตำแหน่งที่เลือก</h3>
+                    {result.home.reasons.length ? (
+                      <ul className="mt-1 space-y-1.5 text-slate-800">
+                        {result.home.reasons.map((reason) => <li key={reason} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />{reason}</li>)}
+                      </ul>
+                    ) : <p className="mt-1 text-sm leading-6 text-slate-600">จากข้อมูลที่มี ยังไม่พบสัญญาณเฉพาะจุดที่เข้าเกณฑ์ในบริเวณนี้ ทั้งนี้ไม่ได้ยืนยันว่าจะไม่มีน้ำท่วม</p>}
+                  </section>
+                  <section className="rounded-xl border border-slate-200 p-3">
+                    <h3 className="font-bold text-slate-900">ภาพรวมอำเภอ{result.district?.district_name ? ` ${result.district.district_name}` : ""}</h3>
+                    {result.district?.risk_reasons?.length ? (
+                      <ul className="mt-1 space-y-1.5 text-sm leading-6 text-slate-700">
+                        {result.district.risk_reasons.map((reason) => <li key={reason} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />{reason}</li>)}
+                      </ul>
+                    ) : <p className="mt-1 text-sm text-slate-600">{result.district ? "ยังไม่มีสัญญาณเด่นจากข้อมูลระดับอำเภอ" : "ข้อมูลภาพรวมระดับอำเภอยังโหลดไม่ได้ การประเมินครั้งนี้จึงมีข้อมูลไม่ครบ"}</p>}
+                  </section>
+                  <section className="rounded-xl border border-violet-200 bg-violet-50/70 p-3">
+                    <h3 className="font-bold text-violet-950">พื้นที่ใกล้เคียงที่เคยท่วมจากภาพดาวเทียม GISTDA (ไม่เกิน 200 เมตร)</h3>
+                    {report.floodHistoryState === "loading" ? (
+                      <p className="mt-1 text-sm text-violet-900">กำลังตรวจสอบข้อมูล…</p>
+                    ) : report.floodHistoryState === "unavailable" ? (
+                      <p className="mt-1 text-sm text-violet-900">ตรวจสอบข้อมูล GISTDA ไม่สำเร็จ</p>
+                    ) : report.floodHistory?.nearby_areas?.length ? (
+                      <ul className="mt-1 space-y-2 text-sm leading-6 text-violet-950">
+                        {report.floodHistory.nearby_areas.map((area, index) => (
+                          <li key={`${area.district}-${area.tambon}-${area.distance_m}-${index}`} className="rounded-lg bg-white/75 px-2.5 py-2">
+                            <span className="font-bold">{area.distance_m === 0 ? "ตรงตำแหน่งหมุด" : `ห่างจากหมุด ${area.distance_m} เมตร`}</span>
+                            {area.frequency >= 2 ? " · ท่วมซ้ำ" : " · เคยท่วม"}
+                            {area.years?.length ? <span> · ปี พ.ศ. {area.years.map((year) => Number(year) + 543).join(", ")}</span> : null}
+                            {area.tambon || area.district ? <span className="block text-xs text-violet-800">{[area.tambon && `ต.${area.tambon}`, area.district && `อ.${area.district}`].filter(Boolean).join(" ")}</span> : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : <p className="mt-1 text-sm text-violet-900">ไม่มีประวัติน้ำท่วมในระยะ 200 เมตรจากจุดนี้</p>}
+                  </section>
+                </div>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <span>ประเมินอัตโนมัติเมื่อ {report.at.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น. ไม่ใช่ประกาศทางราชการ</span>
+                  <span>ประมวลผลเมื่อ {report.at.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น. เวลานี้ไม่ใช่เวลาตรวจวัดของทุกแหล่งข้อมูล</span>
                   <button type="button" onClick={() => load(position)} className="inline-flex items-center gap-1 font-bold text-[#0b4c86] hover:underline">
                     <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" /> เช็กใหม่
                   </button>
@@ -454,6 +522,8 @@ function MyRiskContent() {
               </div>
             </section>
 
+            <div className="space-y-3">
+            <h2 className="px-1 text-lg font-black text-slate-900">ข้อมูลประกอบการประเมินรอบบ้าน</h2>
             {/* รอบบ้านตอนนี้ */}
             <Card title="รอบบ้านตอนนี้" icon={Waves}>
               <div className="grid gap-2 sm:grid-cols-2">
@@ -465,7 +535,7 @@ function MyRiskContent() {
                       label={`คลองใกล้บ้าน • สถานี${result.station.item.name} (${distanceText(result.station.km)})`}
                       value={state ? `${state}${Number.isFinite(diff) ? ` ${Math.abs(diff).toFixed(2)} ม.` : ""}` : "ไม่มีข้อมูลตลิ่ง"}
                       tone={diff >= 0 ? "text-red-700" : diff > -0.5 ? "text-amber-700" : "text-emerald-700"}
-                      note={[result.station.item.river, result.station.item.trend?.label].filter(Boolean).join(" • ")}
+                      note={[result.station.item.river, result.station.item.trend?.label, sourceTime(result.station.item.observedAt)].filter(Boolean).join(" • ")}
                     />
                   );
                 })() : <Fact label="คลองใกล้บ้าน" value="ไม่มีสถานีวัด" />}
@@ -474,13 +544,13 @@ function MyRiskContent() {
                     label={`ฝนวัดได้ 24 ชม. • ${result.gauge.item.name} (${distanceText(result.gauge.km)})`}
                     value={`${result.gauge.item.rain24h} มม.`}
                     tone={result.gauge.item.rain24h >= 90 ? "text-red-700" : result.gauge.item.rain24h >= 35 ? "text-amber-700" : "text-slate-900"}
-                    note={Number(result.gauge.item.rain1h) > 0 ? `ชั่วโมงล่าสุด ${result.gauge.item.rain1h} มม. (ฝนกำลังตก)` : "ชั่วโมงล่าสุดไม่มีฝน"}
+                    note={[Number(result.gauge.item.rain1h) > 0 ? `ชั่วโมงล่าสุด ${result.gauge.item.rain1h} มม. (ฝนกำลังตก)` : "ชั่วโมงล่าสุดไม่มีฝน", sourceTime(result.gauge.item.observedAt)].filter(Boolean).join(" • ")}
                   />
                 ) : <Fact label="ฝนวัดได้" value="ไม่มีสถานีวัด" />}
                 <Fact
                   label="ความสูงพื้นที่"
                   value={report.elevation !== null ? elevationText(report.elevation) : "อ่านค่าไม่ได้"}
-                  note={report.elevation !== null ? bandFor(report.elevation)?.meaning : null}
+                  note={report.elevation !== null ? "ค่าประมาณจากแผนที่ภูมิประเทศ ความละเอียดราว 30 ม. ไม่ใช่ระดับพื้นบ้านหรือหลักฐานว่าน้ำจะท่วม" : null}
                   tone="text-slate-900"
                 />
                 <Fact
@@ -570,6 +640,7 @@ function MyRiskContent() {
                 ? <p className="mt-2 text-xs text-slate-500">ศูนย์พักพิงจะแสดงเมื่อเปิดศูนย์ปฏิบัติการ (EOC)</p>
                 : !result.shelters.length ? <p className="mt-2 text-xs text-slate-500">ขณะนี้ยังไม่มีศูนย์พักพิงที่เปิดรับผู้อพยพ</p> : null}
             </Card>
+            </div>
 
             <section className="rounded-2xl border border-red-200 bg-red-50 p-4">
               <p className="font-bold text-red-900">ต้องการความช่วยเหลือ</p>

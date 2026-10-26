@@ -22,23 +22,24 @@ export default function WarningRibbon({ warnings = [] }) {
         @keyframes warning-ribbon-in { from { transform: translateY(-100%); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .warning-ribbon { animation: none; } }
       `}</style>
-      {/* มือถือ: แถวเดียวกะทัดรัด (ป้ายเล็ก + ข้อความ 2 บรรทัด + ลิงก์สั้น) / จอใหญ่: แบบเต็ม */}
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-3 py-2 sm:gap-4 sm:px-6 sm:py-3">
+      {/* แสดงระดับและรายละเอียดแยกบรรทัด เพื่อให้อ่านสถานการณ์ได้ครบทั้งมือถือและจอใหญ่ */}
+      <div className="mx-auto flex max-w-6xl items-start gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4">
         <span className="relative hidden h-3 w-3 shrink-0 sm:flex" aria-hidden="true">
           <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-70 motion-reduce:animate-none ${severe ? "bg-white" : "bg-[#7c2d12]"}`} />
           <span className={`relative inline-flex h-3 w-3 rounded-full ${severe ? "bg-white" : "bg-[#7c2d12]"}`} />
         </span>
         <TriangleAlert className="h-5 w-5 shrink-0 sm:hidden" aria-hidden="true" />
-        <span className="hidden shrink-0 items-center gap-2 font-[family-name:var(--font-kanit)] text-base font-bold sm:inline-flex">
+        <span className="hidden shrink-0 items-center gap-2 pt-0.5 font-[family-name:var(--font-kanit)] text-base font-bold sm:inline-flex">
           <TriangleAlert className="h-5 w-5" aria-hidden="true" /> ประกาศเตือน
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold leading-4 opacity-90 sm:hidden">
-            ประกาศเตือน{first.issued_at ? ` · ${timeText(first.issued_at)}` : ""}
+          <p className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-bold leading-4 sm:text-xs">
+            <span className="rounded-full bg-black/10 px-2 py-0.5">{severe ? "ระดับรุนแรง" : "เฝ้าระวัง"}</span>
+            {first.issued_at ? <time dateTime={first.issued_at}>{`อัปเดต ${timeText(first.issued_at)}`}</time> : null}
+            {first.source ? <span className="font-medium opacity-85">แหล่งข้อมูล: {first.source}</span> : null}
           </p>
-          <p className="line-clamp-2 text-[13px] font-semibold leading-[1.35] sm:line-clamp-none sm:text-[15px] sm:leading-6" title={first.message}>
+          <p className="break-words text-sm font-semibold leading-6 sm:text-base sm:leading-7" title={first.message}>
             {first.message}
-            {first.issued_at ? <span className="ml-2 hidden font-normal opacity-80 sm:inline">{timeText(first.issued_at)}</span> : null}
           </p>
         </div>
         <Link

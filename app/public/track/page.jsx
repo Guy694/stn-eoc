@@ -181,12 +181,12 @@ function TrackContent() {
     <div className="min-h-full bg-[#f4f8fc]">
       <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-5 md:py-8">
         <header>
-          <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 md:p-5">
-            <p className="text-sm font-black text-red-700">บริการประชาชน · ขอความช่วยเหลือ</p>
-            <h1 className="mt-1 text-2xl font-black text-slate-900 md:text-3xl">ติดตามคำขอช่วยเหลือ</h1>
-            <p className="mt-1 text-slate-700">ตรวจสอบว่าเจ้าหน้าที่รับเรื่อง ติดต่อกลับ หรือประสานทีมช่วยเหลือถึงขั้นไหนแล้ว</p>
+          <div className="rounded-2xl border border-[#c9dcee] bg-gradient-to-br from-sky-50 to-white p-4 md:p-5">
+            <p className="text-sm font-black text-[#0b4c86]">ติดตามเรื่องที่แจ้งผ่านเว็บไซต์</p>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 md:text-3xl">ติดตามคำขอและรายงาน</h1>
+            <p className="mt-1 text-slate-700">ตรวจสอบความคืบหน้าคำขอช่วยเหลือ หรือผลตรวจสอบรายงานระดับน้ำและจุดปัญหา</p>
           </div>
-          <p className="mt-2 text-sm text-slate-500">ค้นหาได้ทั้งคำขอช่วยเหลือและรายงานสถานการณ์ที่ส่งผ่านเว็บไซต์ภายใน 90 วัน</p>
+          <p className="mt-2 text-sm text-slate-500">ค้นหาเรื่องที่แจ้งภายใน 90 วัน ด้วยชื่อ นามสกุล และเบอร์โทร 4 ตัวท้ายที่ใช้ตอนส่งเรื่อง</p>
         </header>
 
         <form onSubmit={(event) => { event.preventDefault(); check(form); }} className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
@@ -211,7 +211,7 @@ function TrackContent() {
               />
             </label>
           </div>
-          <p className="mt-2 text-xs text-slate-500">ใช้ชื่อ นามสกุล และเบอร์โทรเดียวกับที่กรอกตอนแจ้ง ข้อมูลนี้ใช้ค้นหาเรื่องของคุณเท่านั้น ศูนย์ไม่ได้บันทึกเก็บไว้ (<Link href="/privacy-policy" target="_blank" className="font-bold text-[#0b4c86] underline">นโยบายความเป็นส่วนตัว</Link>)</p>
+          <p className="mt-2 text-xs text-slate-500">ระบบจะแสดงทั้งคำขอช่วยเหลือและรายงานที่ตรงกับข้อมูลนี้ เช่น รายงานระดับน้ำหรือแจ้งจุดปัญหา ข้อมูลที่กรอกใช้ค้นหาเท่านั้น ศูนย์ไม่ได้บันทึกเก็บไว้ (<Link href="/privacy-policy" target="_blank" className="font-bold text-[#0b4c86] underline">นโยบายความเป็นส่วนตัว</Link>)</p>
           <button
             type="submit"
             disabled={state.status === "loading"}

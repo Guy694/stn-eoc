@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { Camera, CircleCheck, Hospital, Link2, LocateFixed, Map as MapIcon, MapPin, Phone, Search, ShieldCheck, Siren, Tent, X } from "lucide-react";
+import { Camera, CircleCheck, Hospital, Link2, LocateFixed, Map as MapIcon, MapPin, Phone, Search, ShieldCheck, Tent, X } from "lucide-react";
 import PublicLayout from "@/components/layouts/PublicLayout";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import WaterLevelFigure from "@/components/public/water/WaterLevelFigure";
@@ -293,12 +293,6 @@ export default function ReportWaterPage() {
           <Phone className="h-4 w-4" aria-hidden="true" /> โทรกู้ภัย
         </a>
       </header>
-
-      <aside className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
-        <Siren className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 flex-1 font-semibold">มีกลุ่มเปราะบาง ต้องการความช่วยเหลือ? ไม่ต้องรายงานระดับน้ำ</span>
-        <Link href="/public/report-incident" className="rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-700">ขอความช่วยเหลือ</Link>
-      </aside>
 
       <form onSubmit={submit} className="mt-5 space-y-4" noValidate>
         {/* 1. ตำแหน่ง */}
