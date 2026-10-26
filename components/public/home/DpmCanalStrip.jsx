@@ -3,7 +3,7 @@
 // "น้ำในคลองตอนนี้": สถานีวัดระดับน้ำของ ปภ. (กล้อง CCTV + เซนเซอร์) ในสตูล — สถานะตามเกณฑ์ของ ปภ. ให้ตรงกับเว็บ ปภ. และ อบจ.สตูล
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, Camera, ChevronDown } from "lucide-react";
 import { DPM_STATUS, dpmStatus, dpmSummary, dpmTrend, gaugeScale, nextThreshold, sortDpmStations } from "@/lib/dpmCanals";
 import { freshness, latestTime } from "@/lib/dataFreshness";
 import FreshnessTag, { useNow } from "@/components/common/FreshnessTag";
@@ -85,7 +85,7 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
                       {trend ? <span className={`font-semibold ${trend.value === "rising" ? "canal-rising text-[#c2410c]" : "text-slate-500"}`}>{trend.arrow} {trend.label}</span> : null}
                     </p>
                     <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#e3f1f4] px-2.5 py-1 text-xs font-bold text-[#11466e]" aria-hidden="true">
-                      ดูข้อมูล <ArrowRight className="h-3.5 w-3.5" />
+                      ดูภาพสด CCTA  <Camera className="h-3.5 w-3.5" />
                     </span>
                     {next ? <p className="mt-1 text-[11px] text-slate-500">อีก {fmt(next.gap)} ม. ถึงเกณฑ์{next.label}</p> : null}
                     {station.level === null ? <p className="mt-1 text-[11px] text-slate-500">สถานีไม่ได้ส่งค่าระดับน้ำขณะนี้</p> : null}
