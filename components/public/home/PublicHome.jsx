@@ -529,6 +529,14 @@ export default function PublicHome() {
             <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
               <div className="relative rounded-[2rem] bg-[#11466e]/60 p-3 sm:p-5">
                 <SatunRiskMap districts={districts} selectedName={districtName} onSelect={(name) => selectDistrict(name)} userPoint={userPoint} />
+                <div className="mt-3 px-1">
+                  <Link
+                    href="/public/disaster-map"
+                    className="inline-flex min-h-10 min-w-28 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-3 font-[family-name:var(--font-kanit)] font-bold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd166]"
+                  >
+                    <MapPinned className="h-5 w-5" aria-hidden="true" /> ดูแผนที่
+                  </Link>
+                </div>
                 <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 px-1 text-sm text-[#d5e7ec]" aria-label="ความหมายของสี">
                   {RAIN_24H_MAP_CATEGORIES.map((item) => (
                     <li key={item.key} className="inline-flex items-center gap-1.5">
