@@ -497,7 +497,7 @@ export default function ReportWaterPage() {
         </fieldset>
 
         <details className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5" open={Boolean(form.firstName || form.lastName || form.phone) || undefined}>
-          <summary className="cursor-pointer font-bold text-slate-800">ให้เจ้าหน้าที่ติดต่อกลับ และติดตามผลได้ (ไม่บังคับ)</summary>
+          <summary className="cursor-pointer font-bold text-slate-800">ชื่อ-สกุลผู้แจ้งสำหรับติดตามผล (ไม่บังคับ)</summary>
           <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#0b4c86]" aria-hidden="true" /> ใช้เมื่อเจ้าหน้าที่ต้องสอบถามเพิ่ม ไม่แสดงบนแผนที่หรือหน้าสาธารณะ</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="block">

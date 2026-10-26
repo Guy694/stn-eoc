@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { HousePlus, SearchCheck, Siren, Tent, Waves } from "lucide-react";
-import HelpRequestLink from "@/components/public/HelpRequestLink";
+import { useEffect, useState } from "react";
+import { HousePlus, SearchCheck, Siren, Tent, Waves, X } from "lucide-react";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 
 const SLOT = "bb-slot relative flex min-w-0 flex-1 flex-col items-center justify-end gap-1 px-0.5 pb-1.5 pt-2 text-center font-[family-name:var(--font-kanit)] text-[11.5px] font-medium leading-[1.15] tracking-[0.01em]";
@@ -15,11 +14,12 @@ const Label = ({ top, bottom, className = "" }) => <span className={`block w-ful
 const Current = ({ on }) => (on ? <span className="bb-current absolute left-1/2 top-0 h-[3px] w-8 -translate-x-1/2 rounded-b-full bg-current" aria-hidden="true" /> : null);
 
 /**
- * แถบล่างบนมือถือ — แสดงเมื่อเลื่อนพ้น navbar แล้ว (visible) ปุ่มขอความช่วยเหลืออยู่กลางและยกสูงกว่าปุ่มอื่น
- * ปุ่มขอความช่วยเหลือ/รายงานระดับน้ำ/ศูนย์พักพิง เป็นสีเทากดไม่ได้เมื่อยังไม่เปิดศูนย์ (ไม่ซ่อน เพื่อให้ตำแหน่งปุ่มคงที่)
+ * แถบล่างบนมือถือ — แสดงเมื่อเลื่อนพ้น navbar แล้ว (visible) ปุ่มแจ้ง/รายงานอยู่กลางและยกสูงกว่าปุ่มอื่น
+ * เมนูแจ้ง/รายงานคงรายการทั้งสองไว้ และแสดงสถานะปิดรับเมื่อบริการยังไม่เปิด
  */
 export default function PublicBottomBar({ visible, activeMenu, reserveSpace = false }) {
-  const { sheltersOpen } = useHelpAvailability();
+  const { sheltersOpen, helpOpen, floodOpen } = useHelpAvailability();
+  const [reportMenuOpen, setReportMenuOpen] = useState(false);
   const tone = (key) => (activeMenu === key ? "text-[#0b4c86] font-semibold" : "text-slate-600 hover:text-[#0b4c86]");
   const current = (key) => (activeMenu === key ? { "aria-current": "page" } : {});
 
@@ -30,6 +30,15 @@ export default function PublicBottomBar({ visible, activeMenu, reserveSpace = fa
     if (reserveSpace) root.dataset.bottomBarSpace = "on";
     return () => { delete root.dataset.bottomBar; delete root.dataset.bottomBarSpace; };
   }, [visible, reserveSpace]);
+  useEffect(() => {
+    if (!visible) setReportMenuOpen(false);
+  }, [visible]);
+  useEffect(() => {
+    if (!reportMenuOpen) return undefined;
+    const onKeyDown = (event) => { if (event.key === "Escape") setReportMenuOpen(false); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [reportMenuOpen]);
   return (
     <nav
       aria-label="ทางลัดด้านล่าง"
@@ -64,29 +73,41 @@ export default function PublicBottomBar({ visible, activeMenu, reserveSpace = fa
         }
       `}</style>
       <div className="mx-auto flex max-w-lg items-end">
-        <HelpRequestLink kind="water" className={`${SLOT} text-[#0b5fa5] ${activeMenu === "water" ? "font-semibold" : ""}`} disabledClassName={OFF} {...current("water")}>
-          <Current on={activeMenu === "water"} />
+        <Link href="/public/disaster-map" className={`${SLOT} ${tone("map")}`} {...current("map")}>
+          <Current on={activeMenu === "map"} />
           <Waves className={ICON} aria-hidden="true" />
-          <Label top="รายงาน" bottom="ระดับน้ำ" />
-        </HelpRequestLink>
+          <Label top="แผนที่" bottom="สถานการณ์" />
+        </Link>
         <Link href="/public/my-risk" className={`${SLOT} ${tone("myrisk")}`} {...current("myrisk")}>
           <Current on={activeMenu === "myrisk"} />
           <HousePlus className={ICON} aria-hidden="true" />
           <Label top="บ้านฉัน" bottom="เสี่ยงไหม" />
         </Link>
-        <HelpRequestLink className={`${SLOT} text-[#c81e1e]`} disabledClassName={OFF} {...current("help")}>
-          {({ helpOpen }) => (
+        <div className="relative flex min-w-0 flex-1 justify-center">
+          {reportMenuOpen ? (
             <>
-              <span className="relative -mt-7 flex h-14 w-14 items-center justify-center">
-                {helpOpen ? <span className="bb-help-ring absolute inset-0 rounded-full bg-[#c81e1e]" aria-hidden="true" /> : null}
-                <span className={`bb-help relative flex h-14 w-14 items-center justify-center rounded-full text-white ring-4 ring-white ${helpOpen ? "bg-[#c81e1e] shadow-[0_8px_18px_-6px_rgba(200,30,30,.7)]" : "bg-slate-300"}`}>
-                  <Siren className="h-7 w-7" aria-hidden="true" />
-                </span>
-              </span>
-              <Label top="ขอความ" bottom="ช่วยเหลือ" className={activeMenu === "help" ? "font-bold underline decoration-2 underline-offset-2" : "font-semibold"} />
+              <button type="button" aria-label="ปิดเมนูแจ้ง/รายงาน" onClick={() => setReportMenuOpen(false)} className="fixed inset-0 z-[951] cursor-default" />
+              <div role="menu" aria-label="เลือกแจ้งหรือรายงาน" className="absolute bottom-[calc(100%+0.7rem)] left-1/2 z-[952] w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-2 text-left shadow-[0_12px_40px_-12px_rgba(15,23,42,.45)]">
+                <p className="px-3 py-2 text-xs font-bold text-slate-500">เลือกบริการที่ต้องการ</p>
+                {floodOpen ? (
+                  <Link role="menuitem" href="/public/report-water" onClick={() => setReportMenuOpen(false)} className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 font-bold text-slate-800 hover:bg-sky-50"><Waves className="h-5 w-5 text-sky-700" aria-hidden="true" /><span>รายงานระดับน้ำ</span></Link>
+                ) : <span role="menuitem" aria-disabled="true" title="ขณะนี้ยังไม่เปิดรับรายงานระดับน้ำ" className="flex min-h-12 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 font-semibold text-slate-400"><Waves className="h-5 w-5" aria-hidden="true" /><span>รายงานระดับน้ำ<span className="mt-0.5 block text-[10px] font-medium text-slate-400">ยังไม่เปิดรับรายงาน</span></span></span>}
+                {helpOpen ? (
+                  <Link role="menuitem" href="/public/report-incident" onClick={() => setReportMenuOpen(false)} className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 font-bold text-red-800 hover:bg-red-50"><Siren className="h-5 w-5" aria-hidden="true" /><span>ขอความช่วยเหลือ</span></Link>
+                ) : <span role="menuitem" aria-disabled="true" title="ปุ่มขอความช่วยเหลือจะเปิดเมื่อศูนย์เริ่มดำเนินการ" className="flex min-h-12 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 font-semibold text-slate-400"><Siren className="h-5 w-5 text-slate-300" aria-hidden="true" /><span>ขอความช่วยเหลือ<span className="mt-0.5 block text-[10px] font-medium text-slate-400">ยังไม่เปิดให้บริการ</span></span></span>}
+              </div>
             </>
-          )}
-        </HelpRequestLink>
+          ) : null}
+          <button type="button" aria-haspopup="menu" aria-expanded={reportMenuOpen} onClick={() => setReportMenuOpen((open) => !open)} className={`${SLOT} text-[#c81e1e]`} aria-current={activeMenu === "help" || activeMenu === "water" ? "page" : undefined}>
+            <Current on={activeMenu === "help" || activeMenu === "water"} />
+            <span className="relative -mt-7 flex h-14 w-14 items-center justify-center">
+              <span className={`bb-help relative flex h-14 w-14 items-center justify-center rounded-full text-white ring-4 ring-white ${helpOpen || floodOpen ? "bg-[#c81e1e] shadow-[0_8px_18px_-6px_rgba(200,30,30,.7)]" : "bg-slate-300"}`}>
+                {reportMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Siren className="h-7 w-7" aria-hidden="true" />}
+              </span>
+            </span>
+            <Label top="แจ้ง/" bottom="รายงาน" className="font-semibold" />
+          </button>
+        </div>
         <Link href="/public/track" className={`${SLOT} ${tone("track")}`} {...current("track")}>
           <Current on={activeMenu === "track"} />
           <SearchCheck className={ICON} aria-hidden="true" />

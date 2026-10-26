@@ -50,21 +50,42 @@ function Stepper({ steps, step, rejected }) {
 }
 
 function ReportCard({ data }) {
+  const isHelpRequest = data.type === "คำขอความช่วยเหลือ";
+  const reportStatus = {
+    pending: ["รับรายงานแล้ว", "ระบบได้รับรายงานแล้ว รอเจ้าหน้าที่ตรวจสอบข้อมูล"],
+    reviewing: ["กำลังตรวจสอบ", "เจ้าหน้าที่กำลังตรวจสอบข้อมูลรายงาน"],
+    verified: ["ตรวจสอบแล้ว", "เจ้าหน้าที่ตรวจสอบข้อมูลแล้ว และนำไปประกอบการติดตามสถานการณ์"],
+    resolved: ["ตรวจสอบเสร็จแล้ว", "เจ้าหน้าที่ดำเนินการตรวจสอบรายงานนี้แล้ว"],
+    rejected: ["ปิดรายงาน", "เจ้าหน้าที่ปิดรายงานนี้ เช่น ข้อมูลซ้ำหรือไม่สามารถตรวจสอบได้"]
+  }[data.status] || [data.status_label, data.status_detail];
+  const statusLabel = isHelpRequest ? data.status_label : reportStatus[0];
+  const statusDetail = isHelpRequest ? data.status_detail : reportStatus[1];
+  const steps = isHelpRequest ? data.steps : ["รับรายงาน", "ตรวจสอบ", "ยืนยันข้อมูล", "เสร็จสิ้น"];
+  const accent = isHelpRequest
+    ? "border-l-4 border-l-red-500"
+    : "border-l-4 border-l-sky-500";
+  const cardTitle = isHelpRequest ? "ติดตามคำขอช่วยเหลือ" : "ติดตามผลรายงาน";
+  const cardDescription = isHelpRequest
+    ? "เจ้าหน้าที่กำลังตรวจสอบและประสานความช่วยเหลือตามข้อมูลที่แจ้ง"
+    : "รายงานนี้ใช้ประกอบการตรวจสอบสถานการณ์และปรับปรุงข้อมูลบนแผนที่";
+
   return (
-    <section className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
+    <section className={`rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5 ${accent}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
+          <p className={`mb-1 text-xs font-black uppercase tracking-wide ${isHelpRequest ? "text-red-700" : "text-sky-800"}`}>{cardTitle}</p>
           <h2 className="text-lg font-black text-slate-900">{data.type}{data.category ? `: ${data.category}` : ""}</h2>
           <p className="text-sm text-slate-600">
             แจ้งเมื่อ {formatDateTime(data.reported_at)}{data.area ? ` • ${data.area}` : ""}
           </p>
           {data.code && <p className="font-mono text-xs font-bold text-slate-400">อ้างอิง {data.code}</p>}
         </div>
-        <span className={`rounded-full px-3 py-1 text-sm font-black ring-1 ${TONES[data.status_tone] || TONES.amber}`}>{data.status_label}</span>
+        <span className={`rounded-full px-3 py-1 text-sm font-black ring-1 ${TONES[data.status_tone] || TONES.amber}`}>{statusLabel}</span>
       </div>
 
-      <Stepper steps={data.steps} step={data.step} rejected={data.status === "rejected"} />
-      <p className="mt-3 text-slate-700">{data.status_detail}</p>
+      <Stepper steps={steps} step={data.step} rejected={data.status === "rejected"} />
+      <p className="mt-3 text-slate-700">{statusDetail}</p>
+      <p className="mt-1 text-sm text-slate-500">{cardDescription}</p>
 
       {data.citizen_message && (
         <div className="mt-3 flex gap-2 rounded-xl bg-sky-50 p-3 text-slate-800">
@@ -90,7 +111,7 @@ function ReportCard({ data }) {
         </ol>
       </details>
       {data.status === "resolved" ? (
-        <p className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700"><CircleCheck className="h-4 w-4" aria-hidden="true" /> ปิดเรื่องแล้ว</p>
+        <p className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700"><CircleCheck className="h-4 w-4" aria-hidden="true" /> {isHelpRequest ? "ปิดเรื่องแล้ว" : "ตรวจสอบรายงานแล้ว"}</p>
       ) : null}
     </section>
   );
@@ -160,8 +181,12 @@ function TrackContent() {
     <div className="min-h-full bg-[#f4f8fc]">
       <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-5 md:py-8">
         <header>
-          <h1 className="text-2xl font-black text-slate-900 md:text-3xl">ติดตามคำขอความช่วยเหลือ</h1>
-          <p className="mt-1 text-slate-600">ดูว่าเรื่องที่แจ้งผ่านเว็บไซต์ (ภายใน 90 วัน) เจ้าหน้าที่ดำเนินการถึงขั้นไหนแล้ว</p>
+          <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 md:p-5">
+            <p className="text-sm font-black text-red-700">บริการประชาชน · ขอความช่วยเหลือ</p>
+            <h1 className="mt-1 text-2xl font-black text-slate-900 md:text-3xl">ติดตามคำขอช่วยเหลือ</h1>
+            <p className="mt-1 text-slate-700">ตรวจสอบว่าเจ้าหน้าที่รับเรื่อง ติดต่อกลับ หรือประสานทีมช่วยเหลือถึงขั้นไหนแล้ว</p>
+          </div>
+          <p className="mt-2 text-sm text-slate-500">ค้นหาได้ทั้งคำขอช่วยเหลือและรายงานสถานการณ์ที่ส่งผ่านเว็บไซต์ภายใน 90 วัน</p>
         </header>
 
         <form onSubmit={(event) => { event.preventDefault(); check(form); }} className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
@@ -208,7 +233,7 @@ function TrackContent() {
         {state.status === "done" && (
           <div className="space-y-3" aria-live="polite">
             <div className="flex items-center justify-between gap-2">
-              <p className="font-bold text-slate-700">พบ {state.data.length} เรื่อง</p>
+              <p className="font-bold text-slate-700">พบ {state.data.length} รายการ{state.data.some((item) => item.type === "คำขอความช่วยเหลือ") ? " · คำขอช่วยเหลือแสดงแยกให้เห็นชัดเจน" : ""}</p>
               <button
                 type="button"
                 onClick={() => check(form)}
