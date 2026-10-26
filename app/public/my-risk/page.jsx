@@ -445,12 +445,6 @@ function MyRiskContent() {
                     <li key={reason} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />{reason}</li>
                   ))}
                 </ul>
-                <h3 className="mt-4 font-black text-slate-900">สิ่งที่ควรทำ</h3>
-                <ul className="mt-1.5 space-y-1.5 text-slate-800">
-                  {homeAdvice(result.home.level, { lowLying: result.home.lowLying, nearCanal: Boolean(result.station && result.station.km <= 1), sheltersOpen: sheltersOpen && result.shelters.length > 0 }).map((item) => (
-                    <li key={item} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />{item}</li>
-                  ))}
-                </ul>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <span>ประเมินอัตโนมัติเมื่อ {report.at.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น. ไม่ใช่ประกาศทางราชการ</span>
                   <button type="button" onClick={() => load(position)} className="inline-flex items-center gap-1 font-bold text-[#0b4c86] hover:underline">
