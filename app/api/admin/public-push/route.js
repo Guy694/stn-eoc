@@ -17,8 +17,21 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const logOptions = { logPage: Number(searchParams.get("log_page")) || 1, logSize: Number(searchParams.get("log_size")) || 20 };
-    const [settings, stats] = await Promise.all([getPushSettings(), pushStats(logOptions).catch((error) => (error?.code === "ER_NO_SUCH_TABLE" ? null : Promise.reject(error)))]);
-    return NextResponse.json({ success: true, data: { vapid_ready: Boolean(vapidConfig()), table_ready: stats !== null, settings, stats } }, { headers: { "Cache-Control": "no-store" } });
+    // สถิติ/ประวัติการส่งพัง ต้องไม่ทำให้ทั้งหน้าใช้ไม่ได้ (การตั้งค่าส่งอัตโนมัติและปุ่มส่งยังต้องใช้ได้)
+    let statsError = null;
+    const [settings, stats] = await Promise.all([
+      getPushSettings(),
+      pushStats(logOptions).catch((error) => {
+        if (error?.code === "ER_NO_SUCH_TABLE") return null;
+        console.error("Admin public push stats error:", error?.code || "", error?.sqlMessage || error?.message || error);
+        statsError = "โหลดยอดผู้รับและประวัติการส่งไม่สำเร็จ";
+        return undefined;
+      })
+    ]);
+    return NextResponse.json({
+      success: true,
+      data: { vapid_ready: Boolean(vapidConfig()), table_ready: stats !== null, settings, stats: stats || null, stats_error: statsError }
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Admin public push GET error:", error?.message || error);
     return publicInternalError("โหลดข้อมูลการแจ้งเตือนไม่สำเร็จ");

@@ -111,6 +111,11 @@ export default function PublicPushSettings() {
   return (
     <div className="space-y-4">
       {notice}
+      {state.data.stats_error ? (
+        <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          {state.data.stats_error} — การตั้งค่าส่งอัตโนมัติและการส่งข้อความยังใช้ได้ตามปกติ (สาเหตุบันทึกไว้ใน log ของเซิร์ฟเวอร์)
+        </p>
+      ) : null}
       {!ready ? (
         <section className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           <p className="font-black">ยังส่งแจ้งเตือนไม่ได้</p>

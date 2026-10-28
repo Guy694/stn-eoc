@@ -72,3 +72,9 @@ describe("นับผู้รับแจ้งเตือน", () => {
     expect(read("components/public/home/PublicHome.jsx")).toMatch(/alertPrompt=\{false\}/);
   });
 });
+
+test("หน้าแจ้งเตือนประชาชน: สถิติพังไม่ทำให้การตั้งค่าหายทั้งหน้า", () => {
+  const route = read("app/api/admin/public-push/route.js");
+  expect(route).toMatch(/stats_error/);
+  expect(read("components/admin/settings/PublicPushSettings.jsx")).toMatch(/state\.data\.stats_error/);
+});
