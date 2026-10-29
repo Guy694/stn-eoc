@@ -1,26 +1,32 @@
 import { NextResponse } from "next/server";
-import { buildRiskcomUrl, normalizeRiskcomItem, RISKCOM_CREDIT, RISKCOM_SITE } from "@/lib/riskcomMedia";
+import { buildRiskcomUrl, normalizeRiskcomItem, parseRecommended, riskcomHeaders, RISKCOM_CREDIT, RISKCOM_SITE } from "@/lib/riskcomMedia";
 
 // ต้นทางแคช 5 นาทีอยู่แล้ว ฝั่งเราก็แคช 5 นาที ไม่ยิงซ้ำทุกครั้งที่มีคนเปิดหน้า
 const REVALIDATE_SECONDS = 300;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const params = Object.fromEntries(["id", "q", "phase", "category", "page", "limit", "sort"].map((key) => [key, searchParams.get(key) || ""]));
+  const params = Object.fromEntries(["id", "view", "q", "phase", "category", "page", "limit", "sort"].map((key) => [key, searchParams.get(key) || ""]));
   const source = { name: RISKCOM_CREDIT, url: RISKCOM_SITE };
 
   try {
     const response = await fetch(buildRiskcomUrl(params), {
-      headers: { Accept: "application/json" },
+      headers: riskcomHeaders(),
       next: { revalidate: REVALIDATE_SECONDS },
       signal: AbortSignal.timeout(8000)
     });
     if (response.status === 404 && params.id) {
       return NextResponse.json({ success: false, error: "ไม่พบสื่อนี้", source }, { status: 404 });
     }
+    if (response.status === 401 || response.status === 403) console.error("riskcom: API key ไม่ถูกต้องหรือหมดอายุ — ตรวจ RISKCOM_API_KEY");
     if (!response.ok) throw new Error(`riskcom ${response.status}`);
     const json = await response.json();
     const headers = { "Cache-Control": `public, s-maxage=${REVALIDATE_SECONDS}, stale-while-revalidate=600` };
+
+    if (params.view === "recommended") {
+      const { items, situation } = parseRecommended(json);
+      return NextResponse.json({ success: true, data: items.slice(0, 12), situation, source }, { headers });
+    }
 
     if (params.id) {
       const item = normalizeRiskcomItem(json?.data || json);

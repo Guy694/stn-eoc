@@ -10,6 +10,7 @@ import { optimizedImage, responsiveImage } from "@/lib/imageUrl";
 import { mergeAnnouncementSources, RISKCOM_CREDIT, RISKCOM_SITE } from "@/lib/riskcomMedia";
 import { reportContentView } from "@/lib/contentViewClient";
 import CurrentWarnings from "./CurrentWarnings";
+import RecommendedMedia from "./RecommendedMedia";
 
 const hrefOf = (item) => item.href || `/public/announcements/${item.id}`;
 const imageOf = (item) => item.image_url || getAnnouncementAsset(item.image_path);
@@ -407,6 +408,7 @@ export default function PublicAnnouncementList() {
       <div className={`mx-auto -mt-12 max-w-6xl px-4 pb-14 sm:px-6 2xl:max-w-[94rem] ${alerts.length ? "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_23rem] 2xl:items-start 2xl:gap-8" : ""}`}>
         <div className="min-w-0">
         <CurrentWarnings warnings={warnings} />
+        <RecommendedMedia />
         {/* หมวด */}
         <div className="flex flex-wrap gap-2" role="group" aria-label="เลือกหมวด">
           {[["all", "ทั้งหมด", items.length], ...topics.map(([key, count]) => [key, TOPIC_STYLE[key].label, count])].map(([key, label, count]) => {

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { buildRiskcomUrl, mergeAnnouncementSources, normalizeRiskcomItem, riskcomTopic } from "@/lib/riskcomMedia";
+import { buildRiskcomUrl, mergeAnnouncementSources, normalizeRiskcomItem, parseRecommended, riskcomHeaders, riskcomTopic } from "@/lib/riskcomMedia";
 import { GET } from "@/app/api/public/riskcom-media/route";
 
 const SAMPLE = {
@@ -75,5 +75,41 @@ describe("riskcom media", () => {
     res = await GET(new Request("http://x/api/public/riskcom-media"));
     expect(res.status).toBe(502);
     global.fetch = original;
+  });
+});
+
+describe("riskcom API v1.1", () => {
+  test("แปลง categories / tags / images รูปแบบใหม่", () => {
+    const item = normalizeRiskcomItem({
+      id: "a1", title: "[ทดสอบ] สื่อ", phase: "before", categories: ["น้ำท่วม", "ทั่วไป"],
+      tags: [{ name: "#น้ำท่วม", color: "#000", backgroundColor: "#fff" }, { name: "ปลอดภัย" }],
+      thumbnailUrl: "https://x.test/t.jpg", downloadUrl: "https://x.test/d.jpg", fileType: "image/jpeg",
+      images: [{ id: "i1", downloadUrl: "https://x.test/1.jpg" }, { id: "i2", downloadUrl: "http://x.test/bad.jpg" }],
+      imageCount: 2, viewCount: 7, isRecommended: true
+    });
+    expect(item.category).toBe("น้ำท่วม");
+    expect(item.categories).toEqual(["น้ำท่วม", "ทั่วไป"]);
+    expect(item.keywords).toEqual(["น้ำท่วม", "ปลอดภัย"]);
+    expect(item.eoc_type).toBe("flood");
+    expect(item.images).toEqual([{ id: "i1", url: "https://x.test/1.jpg" }]);
+    expect(item.view_count).toBe(7);
+    expect(item.is_recommended).toBe(true);
+  });
+
+  test("ส่ง X-API-Key เฉพาะเมื่อตั้ง RISKCOM_API_KEY", () => {
+    expect(riskcomHeaders({})).toEqual({ Accept: "application/json" });
+    expect(riskcomHeaders({ RISKCOM_API_KEY: "  k  " })["X-API-Key"]).toBe("k");
+  });
+
+  test("สื่อแนะนำ: รับได้ทั้ง data เป็นอาร์เรย์ และ data.media พร้อมสถานการณ์ เรียงตามอันดับ", () => {
+    const a = { id: "a", title: "A", recommendationRank: 2 };
+    const b = { id: "b", title: "B", recommendationRank: 1 };
+    expect(parseRecommended({ data: [a, b] }).items.map((i) => i.riskcom_id)).toEqual(["b", "a"]);
+    const r = parseRecommended({ data: { situation: { label: "น้ำท่วมขัง", phase: "during" }, media: [a] } });
+    expect(r.items).toHaveLength(1);
+    expect(r.situation).toEqual({ label: "น้ำท่วมขัง", phase: "during", phase_label: "ระหว่างเกิดเหตุ" });
+    expect(parseRecommended({}).items).toEqual([]);
+    expect(parseRecommended(null).situation).toBeNull();
+    expect(buildRiskcomUrl({ view: "recommended", id: "x" })).toMatch(/\/media\/recommended$/);
   });
 });
