@@ -31,7 +31,7 @@ export default function HelpCenterPage() {
                         <AppIcon icon="book" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /> ศูนย์ช่วยเหลือ
                     </h1>
                     <p className="text-xl text-gray-600">
-                        คู่มือการใช้งานระบบ ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข
+                        คู่มือการใช้งานระบบ ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล
                     </p>
                 </div>
 

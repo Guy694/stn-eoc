@@ -270,7 +270,7 @@ function SourceTimes({ weather, water, now }) {
     ["ระดับน้ำในคลอง", "สถานีวัดระดับน้ำ ปภ.", freshness(waterAt, "water", now)],
     ["ฝนที่วัดได้", "ThaiWater (สสน.)", freshness(rainAt, "rain", now)],
     ["พยากรณ์และโอกาสฝนหนัก", "ECMWF + สถานีวัดฝน", freshness(weather?.weather_current?.observed_at, "forecast", now)],
-    ["เหตุการณ์และศูนย์พักพิง", "ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล", null]
+    ["เหตุการณ์และศูนย์พักพิง", "ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล", null]
   ];
   return (
     <footer className="mx-auto max-w-6xl px-4 py-8 sm:px-6" aria-label="ที่มาของข้อมูล">
@@ -642,7 +642,7 @@ export default function PublicHome() {
             </h2>
             {loading && <div className="mt-4 h-40 animate-pulse rounded-2xl bg-white" />}
             {!loading && events.length === 0 && (
-              <p className="mt-3 text-[1.05rem] leading-8 text-slate-700">ศูนย์ปฏิบัติการภาวะฉุกเฉินยังไม่ได้เปิดดำเนินการ ติดตามพยากรณ์อากาศและประกาศจากหน่วยงานได้ในหน้านี้</p>
+              <p className="mt-3 text-[1.05rem] leading-8 text-slate-700">ศูนย์ปฏิบัติการ (EOC) ยังไม่ได้เปิดดำเนินการ ติดตามพยากรณ์อากาศและประกาศจากหน่วยงานได้ในหน้านี้</p>
             )}
             {events.map((event) => {
               const meta = EVENT_META[event.type] || EVENT_META.disease;

@@ -135,7 +135,7 @@ export default function PrivacyPolicyPage() {
             </Link>
             <h1 className="mt-2 text-[1.7rem] font-semibold leading-tight sm:mt-4 sm:text-4xl">นโยบายความเป็นส่วนตัว</h1>
             <p className="mt-2 max-w-2xl text-[0.95rem] leading-relaxed text-[#c9dde6] sm:mt-3 sm:text-base">
-              ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล ใช้ข้อมูลของท่านเท่าที่จำเป็นต่อการช่วยเหลือ
+              ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล ใช้ข้อมูลของท่านเท่าที่จำเป็นต่อการช่วยเหลือ
               ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562
             </p>
             <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#9fc9d6] sm:text-sm">
@@ -213,7 +213,7 @@ export default function PrivacyPolicyPage() {
 
             <PrivacySection id="contact" title="ติดต่อเพื่อใช้สิทธิหรือสอบถาม" icon={Phone}>
               <div className="rounded-2xl bg-[#0c2f4a] p-4 text-white sm:p-6">
-                <p className="font-semibold leading-snug">ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข (EOC) จังหวัดสตูล</p>
+                <p className="font-semibold leading-snug">ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <a href="tel:074711501" className="flex min-h-12 items-center gap-3 rounded-xl bg-white/10 px-4 font-semibold hover:bg-white/15">
                     <Phone className="h-5 w-5 shrink-0 text-[#5cc8db]" aria-hidden="true" /> 074-711-501

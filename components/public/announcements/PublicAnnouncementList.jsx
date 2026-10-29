@@ -382,7 +382,7 @@ export default function PublicAnnouncementList() {
       {/* หัวหน้า + ค้นหา */}
       <section className="bg-[#0c2f4a] text-white">
         <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 2xl:max-w-[94rem]">
-          <p className="flex items-center gap-2 text-sm text-[#9fc9d6]"><Megaphone className="h-4 w-4" aria-hidden="true" /> ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล</p>
+          <p className="flex items-center gap-2 text-sm text-[#9fc9d6]"><Megaphone className="h-4 w-4" aria-hidden="true" /> ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
           <h1 className="mt-2 font-[family-name:var(--font-kanit)] text-[2rem] font-bold leading-tight sm:text-[2.6rem]">ประกาศและความรู้</h1>
           <p className="mt-2 max-w-2xl text-[1.05rem] leading-8 text-[#d5e7ec]">ประกาศจากศูนย์ฯ และสื่อความรู้จาก{RISKCOM_CREDIT} สำหรับดูแลตัวเองช่วงน้ำท่วม โรคระบาด และเหตุฉุกเฉิน</p>
           <label className="relative mt-6 block max-w-xl">

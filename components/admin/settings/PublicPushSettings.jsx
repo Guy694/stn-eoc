@@ -77,7 +77,7 @@ export default function PublicPushSettings() {
     let endpoint = device?.endpoint;
     if (!device?.subscribed) endpoint = await subscribePush({ scope: "all" });
     setDevice(await pushStatus());
-    const body = form.title && form.body ? form : { ...EMPTY, title: "ทดสอบแจ้งเตือน", body: "ข้อความทดสอบจากระบบ Satun Geo-EOC ถึงเครื่องนี้เท่านั้น" };
+    const body = form.title && form.body ? form : { ...EMPTY, title: "ทดสอบแจ้งเตือน", body: "ข้อความทดสอบจากระบบ ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล ถึงเครื่องนี้เท่านั้น" };
     const json = await apiRequest(API, { method: "POST", body: { ...body, action: "test", endpoint } });
     success(json.message);
     await load();

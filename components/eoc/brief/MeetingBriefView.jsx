@@ -71,7 +71,7 @@ export default function MeetingBriefView({ eocType = "flood" }) {
       <style>{"@media print { @page { size: A4; margin: 12mm; } }"}</style>
       <header className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#0b4c86] pb-3">
         <div>
-          <p className="text-sm font-semibold text-[#0b4c86]">ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล</p>
+          <p className="text-sm font-semibold text-[#0b4c86]">ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
           <h1 className="font-[family-name:var(--font-kanit)] text-2xl font-semibold text-slate-900">สรุปสถานการณ์สำหรับห้องประชุม</h1>
           <p className="text-sm text-slate-600">{getEocTypeLabel(eocType)} ครั้งที่ {data.session.session_number}{data.session.status === "active" ? "" : " (ปิดแล้ว)"} · ข้อมูล ณ {formatDateTime(data.generated_at)}</p>
         </div>

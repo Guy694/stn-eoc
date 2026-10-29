@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SiteViewCounter from "@/components/SiteViewCounter";
+import SatisfactionButton from "@/components/common/SatisfactionButton";
 import { APP_VERSION_LABEL, COPYRIGHT_OWNER_EN, COPYRIGHT_OWNER_TH, copyrightYears } from "@/lib/appVersion";
 
 const EMERGENCY_NUMBERS = [
@@ -42,8 +43,8 @@ export default function Footer() {
             <div className="container mx-auto px-4 pb-6 pt-10 sm:pt-12">
                 <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
-                        <h4 className="mb-2 text-sm font-bold text-white sm:text-base">ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</h4>
-                        <p className="text-xs sm:text-sm">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</p>
+                        <h4 className="mb-2 text-sm font-bold text-white sm:text-base">ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</h4>
+                        <p className="text-xs sm:text-sm">Satun Medical and Public Health Emergency Situation Information Center</p>
                     </div>
 
                     <div>
@@ -89,6 +90,7 @@ export default function Footer() {
                     <p className="text-center sm:text-left">&copy; {copyrightYears()} {COPYRIGHT_OWNER_TH} ({COPYRIGHT_OWNER_EN}) สงวนลิขสิทธิ์ All Rights Reserved <span className="ml-1 text-[#9fc0d8]" title="เวอร์ชันของระบบ">{APP_VERSION_LABEL}</span></p>
                     <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-end">
                         <SiteViewCounter className="text-[#c9dcee]" />
+                        <SatisfactionButton className="font-semibold text-[#ffe08a] hover:text-white" />
                         <Link href="/login" className="text-[#9fc0d8] hover:text-white">เข้าสู่ระบบเจ้าหน้าที่</Link>
                     </div>
                 </div>

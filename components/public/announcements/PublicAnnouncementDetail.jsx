@@ -84,7 +84,7 @@ export default function PublicAnnouncementDetail({ item, related = [] }) {
           <h1 className="mt-4 font-[family-name:var(--font-kanit)] text-[1.9rem] font-bold leading-tight text-[#0c2f4a] sm:text-[2.5rem]">{cleanTitle(item.title)}</h1>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-6">
             <p className="text-slate-500">
-              <time dateTime={date}>{formatAnnouncementDate(date, true)}</time> • {relativeThai(date)} • ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล
+              <time dateTime={date}>{formatAnnouncementDate(date, true)}</time> • {relativeThai(date)} • ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล
             </p>
             <button type="button" onClick={share} className="inline-flex items-center gap-1.5 rounded-full bg-[#e3f1f4] px-4 py-2 font-semibold text-[#11466e] hover:bg-[#cfe7ed]">
               {shared ? <Check className="h-4 w-4" aria-hidden="true" /> : <Share2 className="h-4 w-4" aria-hidden="true" />}

@@ -133,8 +133,8 @@ function LoginForm() {
             <header className="flex items-center gap-3 bg-[#083865] px-4 py-3 text-white lg:hidden">
                 <Image src="/stn-eoc/img/logo.png" alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full bg-white p-0.5" />
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-black leading-tight">Satun Geo-EOC</p>
-                    <p className="truncate text-xs text-blue-100">ศูนย์ปฏิบัติการภาวะฉุกเฉิน สสจ.สตูล</p>
+                    <p className="truncate text-sm font-black leading-tight">ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล</p>
+                    <p className="truncate text-xs text-blue-100">สำนักงานสาธารณสุขจังหวัดสตูล</p>
                 </div>
                 <Link href="/" className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold text-blue-50 hover:bg-white/10">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />หน้าสาธารณะ
@@ -146,7 +146,7 @@ function LoginForm() {
                     <div className="relative">
                         <Link href="/" className="inline-flex items-center gap-3 rounded-full bg-white/10 px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/15">
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={40} height={40} className="h-10 w-10 rounded-full bg-white p-1" />
-                            Satun Provincial Emergency Operations Center (Satun Geo-EOC)
+                            Satun Medical and Public Health Emergency Situation Information Center
                         </Link>
                     </div>
 
@@ -154,7 +154,7 @@ function LoginForm() {
                         <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-100">ช่องทางเข้าระบบสำหรับเจ้าหน้าที่</p>
                         <p className="text-4xl font-black leading-tight sm:text-5xl">เข้าสู่ระบบเจ้าหน้าที่</p>
                         <p className="mt-4 text-base leading-7 text-blue-50">
-                            ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
+                            ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล สำหรับติดตามสถานการณ์ บันทึกข้อมูล และประสานงานหน่วยปฏิบัติการ
                         </p>
                     </div>
 
@@ -181,7 +181,7 @@ function LoginForm() {
                     <div className="w-full max-w-md">
                         <div className="mb-5 lg:mb-7">
                             <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={80} height={80} className="mx-auto hidden h-20 w-20 rounded-full bg-white p-2 lg:block" />
-                            <p className="hidden text-center text-lg font-black text-[#0b4c86] lg:block">ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
+                            <p className="hidden text-center text-lg font-black text-[#0b4c86] lg:block">ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
                             <h1 className="text-2xl font-black text-slate-950 lg:mt-1 lg:text-3xl">เข้าสู่ระบบเจ้าหน้าที่</h1>
                             <p className="mt-1 text-sm leading-6 text-slate-500 lg:mt-2">ใช้บัญชีเจ้าหน้าที่ หรือยืนยันตัวตนผ่าน ThaiD / Provider ID</p>
                         </div>
@@ -313,7 +313,7 @@ function LoginForm() {
                             <Link href="/" className="hidden font-bold text-blue-700 hover:text-blue-900 lg:inline">กลับหน้าสาธารณะ</Link>
                         </div>
 
-                        <p className="mt-6 text-center text-xs text-slate-400 lg:mt-8">© 2025 ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข</p>
+                        <p className="mt-6 text-center text-xs text-slate-400 lg:mt-8">© 2025 ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
 
                         <Suspense fallback={null}>
                             <ThaiDErrorHandler setError={setError} />

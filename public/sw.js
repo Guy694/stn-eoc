@@ -146,7 +146,7 @@ self.addEventListener("push", (event) => {
   }
   const high = data.level === "high" || data.level === "critical";
   const title = data.title || "แจ้งเตือนภัย จ.สตูล";
-  const body = data.body || "มีประกาศใหม่จากศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล";
+  const body = data.body || "มีประกาศใหม่จากศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล";
   const at = data.at || new Date().toISOString();
   const rid = receiptIds(data.rid);
   event.waitUntil(Promise.all([

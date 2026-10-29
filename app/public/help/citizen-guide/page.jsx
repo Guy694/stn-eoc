@@ -3,7 +3,7 @@ import GuideView from "@/components/guide/GuideView";
 import { citizenGuide } from "@/lib/guides";
 
 export const metadata = {
-  title: "คู่มือสำหรับประชาชน | Satun Geo-EOC",
+  title: "คู่มือสำหรับประชาชน | ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล",
   description: "วิธีดูสถานการณ์ เช็กความเสี่ยงบ้าน ขอความช่วยเหลือ ติดตามคำขอ รายงานระดับน้ำ และรับแจ้งเตือนภัย จังหวัดสตูล"
 };
 

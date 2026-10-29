@@ -116,8 +116,8 @@ export default function PublicHeader({ eocStatus, eocLabel, eocIsOpen }) {
         <Link href="/" className="flex min-w-0 flex-1 items-center gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:gap-4" aria-label="กลับหน้าแรก">
           <Image src="/stn-eoc/img/logo.png" alt="" width={62} height={62} className="h-10 w-10 shrink-0 rounded-full bg-white p-1 shadow-md sm:h-12 sm:w-12 lg:h-[62px] lg:w-[62px] lg:p-1.5" priority />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล</span>
-            <span className="block truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun Provincial Emergency Operations Center (Satun Geo-EOC)</span>
+            <span className="block truncate text-sm font-black leading-5 sm:text-base lg:text-2xl lg:leading-7">ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</span>
+            <span className="block truncate text-[11px] font-semibold text-blue-100 sm:text-xs lg:text-base">Satun Medical and Public Health Emergency Situation Information Center</span>
           </span>
         </Link>
         <HeaderClock />

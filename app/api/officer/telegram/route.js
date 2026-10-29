@@ -67,7 +67,7 @@ export async function POST(request) {
         if (body.action === 'test') {
             const status = await readStatus(officerId);
             if (!status.linked) return NextResponse.json({ success: false, message: 'ยังไม่ได้เชื่อม Telegram' }, { status: 400 });
-            const result = await sendTelegramMessage(status.telegramChatId, '🔔 ทดสอบแจ้งเตือนจาก Satun Geo-EOC — ถ้าเห็นข้อความนี้ แปลว่าพร้อมรับแจ้งเตือนแล้ว');
+            const result = await sendTelegramMessage(status.telegramChatId, '🔔 ทดสอบแจ้งเตือนจาก ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล — ถ้าเห็นข้อความนี้ แปลว่าพร้อมรับแจ้งเตือนแล้ว');
             if (!result.ok) return NextResponse.json({ success: false, message: 'ส่งไม่สำเร็จ อาจกดบล็อกบอทไว้ ลองเชื่อมใหม่อีกครั้ง' }, { status: 502 });
             return NextResponse.json({ success: true, message: 'ส่งข้อความทดสอบแล้ว ตรวจใน Telegram' });
         }

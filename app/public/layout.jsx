@@ -1,13 +1,13 @@
 export const metadata = {
   title: {
-    default: "ข้อมูลสาธารณะ | Satun Geo-EOC",
-    template: "%s | Satun Geo-EOC"
+    default: "ข้อมูลสาธารณะ | ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล",
+    template: "%s | ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล"
   },
   description: "ข้อมูลสถานการณ์ สภาพอากาศ ศูนย์พักพิง และบริการช่วยเหลือประชาชน จังหวัดสตูล",
   openGraph: {
     type: "website",
     locale: "th_TH",
-    siteName: "Satun Geo-EOC"
+    siteName: "ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล"
   }
 };
 

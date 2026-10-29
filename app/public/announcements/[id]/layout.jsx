@@ -3,10 +3,10 @@ import { cleanTitle } from "@/components/public/announcements/announcementTopics
 
 // ตัวอย่างลิงก์เวลาแชร์ประกาศเข้า LINE / Facebook: ใช้ชื่อเรื่อง คำอธิบาย และอินโฟกราฟิกของประกาศนั้น
 // (หน้า page.jsx เป็น client component จึงตั้ง metadata ที่ layout นี้แทน)
-const SITE = "Satun Geo-EOC";
+const SITE = "ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล";
 const FALLBACK = {
   title: `ประกาศและความรู้ | ${SITE}`,
-  description: "ประกาศและความรู้จากศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล"
+  description: "ประกาศและความรู้จากศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล"
 };
 
 function summary(text, max = 160) {

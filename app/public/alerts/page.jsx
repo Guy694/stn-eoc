@@ -84,7 +84,7 @@ export default function PublicAlertsPage() {
   }, [jumpId, history, currentPage, pageOfIndex, goToPage]);
 
   return (
-    <PublicOpsScaffold title="แจ้งเตือนที่ได้รับ" subtitle="แจ้งเตือนภัยและข่าวจากศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล" activeMenu="announce" showPageHeader={false} mainClassName="p-0!">
+    <PublicOpsScaffold title="แจ้งเตือนที่ได้รับ" subtitle="แจ้งเตือนภัยและข่าวจากศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล" activeMenu="announce" showPageHeader={false} mainClassName="p-0!">
       <div className="min-h-[70vh] bg-[#eef2f1] px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-3xl space-y-6">
           <Suspense fallback={null}><Received /></Suspense>

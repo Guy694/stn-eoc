@@ -18,17 +18,17 @@ const kanit = Kanit({
 
 export const metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: "ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล | Satun Geo-EOC",
-  description: "Satun Provincial Emergency Operations Center (Satun Geo-EOC) - ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
+  title: "ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
+  description: "Satun Medical and Public Health Emergency Situation Information Center - ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
   openGraph: {
     type: "website",
     locale: "th_TH",
-    siteName: "Satun Geo-EOC",
-    title: "Satun Geo-EOC | ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล",
+    siteName: "ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล",
+    title: "ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
     description: "ติดตามสถานการณ์ สภาพอากาศ ศูนย์พักพิง และประกาศฉุกเฉินของจังหวัดสตูล",
-    images: [{ url: "/img/eoc-icon.png" /* metadataBase มี /stn-eoc แล้ว */, width: 512, height: 512, alt: "Satun Geo-EOC" }]
+    images: [{ url: "/img/eoc-icon.png" /* metadataBase มี /stn-eoc แล้ว */, width: 512, height: 512, alt: "ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล" }]
   },
-  twitter: { card: "summary", title: "Satun Geo-EOC" },
+  twitter: { card: "summary", title: "ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล" },
   icons: {
     icon: '/stn-eoc/img/eoc-icon.png',
     shortcut: '/stn-eoc/img/eoc-icon.png',

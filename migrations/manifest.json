@@ -78,6 +78,7 @@
     "20261024_security_monitoring.sql",
     "20261024_admin_boundaries_rtsd.sql",
     "20261024_push_receipts.sql",
-    "20261024_content_views.sql"
+    "20261024_content_views.sql",
+    "20261028_satisfaction_feedback.sql"
   ]
 }

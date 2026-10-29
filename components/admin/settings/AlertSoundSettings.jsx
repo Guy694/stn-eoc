@@ -68,7 +68,7 @@ export default function AlertSoundSettings({ className = "" }) {
   const toggleVoice = () => {
     const next = { ...prefs, voice: !prefs.voice };
     save(next, next.voice ? "เปิดเสียงพูดอ่านแจ้งเตือน" : "ปิดเสียงพูดอ่านแจ้งเตือน");
-    if (next.voice) speak("ทดสอบเสียงพูดแจ้งเตือน ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล", { force: true });
+    if (next.voice) speak("ทดสอบเสียงพูดแจ้งเตือน ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล", { force: true });
   };
 
   return (

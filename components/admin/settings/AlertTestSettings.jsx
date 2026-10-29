@@ -107,7 +107,7 @@ export default function AlertTestSettings() {
   };
 
   const testVoice = async () => {
-    const ok = await speak("ทดสอบเสียงแจ้งเตือน ศูนย์ปฏิบัติการภาวะฉุกเฉิน จังหวัดสตูล", { force: true });
+    const ok = await speak("ทดสอบเสียงแจ้งเตือน ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล", { force: true });
     if (!ok) warn("เครื่องนี้ไม่มีเสียงพูดภาษาไทย (ยังมีเสียงสัญญาณตามปกติ)");
   };
 

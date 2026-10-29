@@ -2,8 +2,8 @@
 export default function manifest() {
   return {
     id: "/stn-eoc/",
-    name: "Satun Geo-EOC ศูนย์ปฏิบัติการภาวะฉุกเฉิน จ.สตูล",
-    short_name: "สตูล EOC",
+    name: "ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล",
+    short_name: "ข้อมูลฉุกเฉิน สตูล",
     description: "เตือนภัย สถานการณ์น้ำท่วม ศูนย์พักพิง และขอความช่วยเหลือ จังหวัดสตูล",
     lang: "th",
     dir: "ltr",

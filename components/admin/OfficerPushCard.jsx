@@ -36,7 +36,7 @@ export default function OfficerPushCard({ className = "" }) {
   const testAlert = async () => {
     await unlockAlertAudio();
     const sounded = await playAlert("critical");
-    const shown = await showSystemAlert("🔔 ทดสอบแจ้งเตือน Satun Geo-EOC", {
+    const shown = await showSystemAlert("🔔 ทดสอบแจ้งเตือน ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล", {
       body: "ถ้าได้ยินเสียงและเห็นข้อความนี้ แปลว่าเครื่องนี้พร้อมรับแจ้งเตือนคำขอความช่วยเหลือ",
       tag: "stn-test-alert", renotify: true, data: { url: "/stn-eoc/profile/" }
     });

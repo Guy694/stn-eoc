@@ -5,7 +5,7 @@ import { getMaintenanceState } from "@/lib/maintenance";
 // เป็น server component ไม่เรียก API (API ถูกปิดอยู่) และไม่โหลด context ของระบบ
 export const dynamic = "force-dynamic";
 export const metadata = {
-  title: "ปิดปรับปรุงระบบชั่วคราว | Satun Geo-EOC",
+  title: "ปิดปรับปรุงระบบชั่วคราว | ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล",
   robots: { index: false, follow: false }
 };
 
@@ -40,8 +40,8 @@ export default async function MaintenancePage({ searchParams }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/stn-eoc/img/eoc-icon.png" alt="" width={56} height={56} className="h-14 w-14 rounded-full bg-white/90 p-1" />
           <p className="text-sm leading-snug text-[#c9dcee]">
-            ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล
-            <span className="block text-xs text-[#9fc0d8]">Satun Geo-EOC</span>
+            ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล
+            <span className="block text-xs text-[#9fc0d8]">Satun Medical and Public Health Emergency Situation Information Center</span>
           </p>
         </div>
 

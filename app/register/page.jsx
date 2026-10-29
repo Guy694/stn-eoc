@@ -123,7 +123,7 @@ export default function RegisterPage() {
             <header className="flex items-center justify-between gap-3 bg-[#083865] px-4 py-3 text-white lg:hidden">
                 <Link href="/" className="flex min-w-0 items-center gap-2 text-sm font-bold">
                     <Image src="/stn-eoc/img/logo.png" alt="" width={32} height={32} className="h-8 w-8 rounded-full bg-white p-0.5" />
-                    <span className="truncate">Satun Geo-EOC</span>
+                    <span className="truncate">ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล</span>
                 </Link>
                 <Link href="/login" className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold text-blue-50 hover:bg-white/10">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />เข้าสู่ระบบ
@@ -135,13 +135,13 @@ export default function RegisterPage() {
                     <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, #ffffff 0, transparent 26%), radial-gradient(circle at 80% 10%, #7dd3fc 0, transparent 28%), radial-gradient(circle at 40% 90%, #bae6fd 0, transparent 24%)" }} />
                     <Link href="/" className="relative inline-flex w-fit items-center gap-3 rounded-full bg-white/10 px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/15">
                         <Image src="/stn-eoc/img/logo.png" alt="EOC Logo" width={40} height={40} className="h-10 w-10 rounded-full bg-white p-1" />
-                        Satun Geo-EOC
+                        ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล
                     </Link>
 
                     <div className="relative my-10 max-w-md">
                         <p className="text-4xl font-black leading-tight">ลงทะเบียนเข้าใช้งานระบบ</p>
                         <p className="mt-4 text-base leading-7 text-blue-50">
-                            ศูนย์ปฏิบัติการภาวะฉุกเฉิน ด้านการแพทย์และสาธารณสุข จังหวัดสตูล ทุกบัญชีต้องยืนยันตัวตนด้วย ThaiD เพื่อป้องกันการใช้ข้อมูลของผู้อื่น
+                            ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล ทุกบัญชีต้องยืนยันตัวตนด้วย ThaiD เพื่อป้องกันการใช้ข้อมูลของผู้อื่น
                         </p>
                     </div>
 

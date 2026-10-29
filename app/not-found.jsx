@@ -3,7 +3,7 @@ import { Home, LifeBuoy, Map, Megaphone, Phone } from "lucide-react";
 import PublicLayout from "@/components/layouts/PublicLayout";
 
 export const metadata = {
-  title: "ไม่พบหน้านี้ | Satun Geo-EOC"
+  title: "ไม่พบหน้านี้ | ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล"
 };
 
 // หน้าไม่พบ: คนที่หลงมาช่วงเกิดภัยต้องเจอทางไปต่อทันที ไม่ใช่หน้าเปล่า
