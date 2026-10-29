@@ -10,11 +10,11 @@ describe("ประกาศเตือนขณะนี้ (หน้าป�
     expect(sortWarnings(make(3).concat([{ issued_at: "2026-10-24 09:00:00", level: "high", message: "x" }])).map((w) => w.message)).toEqual(["x", "[ทดสอบ] ประกาศเตือน 3", "[ทดสอบ] ประกาศเตือน 2", "[ทดสอบ] ประกาศเตือน 1"]);
   });
 
-  test("แสดง 5 รายการแรก แล้วกดดูทั้งหมดได้", () => {
-    render(<CurrentWarnings warnings={make(8)} />);
-    expect(screen.getAllByRole("listitem")).toHaveLength(5);
-    fireEvent.click(screen.getByRole("button", { name: "ดูทั้งหมด 8 ประกาศ" }));
+  test("แสดงทุกรายการในกล่องเลื่อน และจัดชิดมุมหัวหน้าเมื่อใช้ inHero", () => {
+    const { container } = render(<CurrentWarnings warnings={make(8)} inHero />);
     expect(screen.getAllByRole("listitem")).toHaveLength(8);
+    expect(screen.getByRole("list", { name: /เลื่อนเพื่อดูทั้งหมด/ })).toBeInTheDocument();
+    expect(container.querySelector("section")).not.toHaveClass("mb-8");
   });
 
   test("ไม่มีประกาศเตือน ไม่แสดงกล่อง", () => {

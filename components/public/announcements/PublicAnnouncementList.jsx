@@ -382,7 +382,8 @@ export default function PublicAnnouncementList() {
     <div className="bg-[#eef2f1] text-[#15232e]">
       {/* หัวหน้า + ค้นหา */}
       <section className="bg-[#0c2f4a] text-white">
-        <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 2xl:max-w-[94rem]">
+        <div className={`mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 2xl:max-w-[94rem] ${warnings.length ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:items-start lg:gap-10" : ""}`}>
+          <div className="min-w-0">
           <p className="flex items-center gap-2 text-sm text-[#9fc9d6]"><Megaphone className="h-4 w-4" aria-hidden="true" /> ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
           <h1 className="mt-2 font-[family-name:var(--font-kanit)] text-[2rem] font-bold leading-tight sm:text-[2.6rem]">ประกาศและความรู้</h1>
           <p className="mt-2 max-w-2xl text-[1.05rem] leading-8 text-[#d5e7ec]">ประกาศจากศูนย์ฯ และสื่อความรู้จาก{RISKCOM_CREDIT} สำหรับดูแลตัวเองช่วงน้ำท่วม โรคระบาด และเหตุฉุกเฉิน</p>
@@ -401,13 +402,15 @@ export default function PublicAnnouncementList() {
               </button>
             ) : null}
           </label>
+          </div>
+          {/* จอคอมพิวเตอร์: ประกาศเตือนขณะนี้อยู่มุมขวาของหัวหน้า; จอเล็กเรียงต่อใต้ช่องค้นหา */}
+          <div className="mt-6 min-w-0 lg:mt-0"><CurrentWarnings warnings={warnings} inHero /></div>
         </div>
       </section>
 
       {/* จอกว้างมาก (≥1536px): แจ้งเตือนที่ส่งถึงประชาชนย้ายไปคอลัมน์ขวาสุด ข้างเรื่องเด่น · จอเล็กกว่าอยู่ข้างรายการประกาศ */}
       <div className={`mx-auto -mt-12 max-w-6xl px-4 pb-14 sm:px-6 2xl:max-w-[94rem] ${alerts.length ? "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_23rem] 2xl:items-start 2xl:gap-8" : ""}`}>
         <div className="min-w-0">
-        <CurrentWarnings warnings={warnings} />
         <RecommendedMedia />
         {/* หมวด */}
         <div className="flex flex-wrap gap-2" role="group" aria-label="เลือกหมวด">
