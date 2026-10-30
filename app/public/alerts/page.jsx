@@ -1,5 +1,6 @@
 'use client';
 
+import { responsiveImage } from '@/lib/imageUrl';
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -99,7 +100,16 @@ export default function PublicAlertsPage() {
             {history === null ? (
               <div className="mt-3 h-32 animate-pulse rounded-2xl bg-white" />
             ) : history.length === 0 ? (
-              <p className="mt-3 rounded-2xl bg-white px-5 py-8 text-center text-slate-500">ยังไม่มีแจ้งเตือนในช่วงนี้</p>
+              <div className="relative mt-3 isolate overflow-hidden rounded-2xl bg-[#0c2f4a] text-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img {...responsiveImage('/stn-eoc/img/clear.png', [640, 1080], '(min-width: 768px) 48rem, 100vw')} alt="" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#06304d]/90 via-[#06304d]/45 to-transparent" aria-hidden="true" />
+                <div className="px-5 pb-5 pt-28 sm:pt-36">
+                  <p className="inline-flex items-center gap-2 rounded-full bg-black/25 px-3 py-1 text-sm font-bold ring-1 ring-white/25"><span className="h-2.5 w-2.5 rounded-full bg-[#4ade80]" aria-hidden="true" />สถานการณ์ปกติ</p>
+                  <p className="mt-2 font-[family-name:var(--font-kanit)] text-xl font-bold">ยังไม่มีแจ้งเตือนในช่วงนี้</p>
+                  <p className="text-sm text-white/90">ระบบเฝ้าระวังอยู่ตลอด หากมีเหตุที่ต้องระวังจะแจ้งที่นี่และผ่านมือถือของคุณ</p>
+                </div>
+              </div>
             ) : (
               <>
               <ul ref={listAnchor} className="mt-3 scroll-mt-24 space-y-3">

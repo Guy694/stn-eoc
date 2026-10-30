@@ -1,4 +1,4 @@
-import { thresholdBar, DPM_STATUS, dpmSummary, dpmTrend, gaugeScale, nextThreshold, normalizeDpmStation, sortDpmStations, statusFromThresholds } from "@/lib/dpmCanals";
+import { dpmWarningText, thresholdBar, DPM_STATUS, dpmSummary, dpmTrend, gaugeScale, nextThreshold, normalizeDpmStation, sortDpmStations, statusFromThresholds } from "@/lib/dpmCanals";
 
 // ตัวอย่างจาก /api/v1/stations/STN02 (ตัดเหลือฟิลด์ที่ใช้)
 const raw = {
@@ -63,4 +63,13 @@ test("แถบเกณฑ์แบบเดียวกับหน้าส�
   expect(bar.marker).toBeCloseTo((3.06 / (3.5 * 1.15)) * 100, 3);
   expect(bar.ticks.map((t) => t.label)).toEqual(["0", "เฝ้าระวัง 0.8", "เตือนภัย 2.5", "อันตราย 3.0", "วิกฤต 3.5"]);
   expect(thresholdBar({ level: 1, thresholds: { watch: null } })).toBeNull();
+});
+
+test("ข้อความเตือนสถานี ปภ. ให้ค่าระดับน้ำ ระยะถึงตลิ่ง เกณฑ์ถัดไป และแนวโน้ม (เทียบเท่า Telegram)", () => {
+  const station = { ...normalizeDpmStation(raw, "STN02"), tambon: "ละงู", name: "[ทดสอบ] สะพานคลองละงู" };
+  const { message, details } = dpmWarningText(station, { arrow: "↑", label: "น้ำขึ้น" });
+  expect(message).toBe("ระดับน้ำอันตราย สถานี[ทดสอบ] สะพานคลองละงู ต.ละงู อ.ละงู ระดับน้ำ 3.02 ม. ต่ำกว่าตลิ่ง 0.73 ม.");
+  expect(details).toEqual(["ลำน้ำ คลองละงู", "ระดับตลิ่ง 3.75 ม.", "เกณฑ์ถัดไป วิกฤต ที่ 3.50 ม. (อีก 0.48 ม.)", "แนวโน้ม ↑ น้ำขึ้น"]);
+  expect(dpmWarningText({ ...station, belowBank: -0.2, level: 3.95, statusCode: 5, statusLabel: "วิกฤต", thresholds: station.thresholds }).message).toContain("สูงกว่าตลิ่ง 0.20 ม.");
+  expect(dpmWarningText({ name: "x", statusCode: 2 }).details).toEqual([]);
 });

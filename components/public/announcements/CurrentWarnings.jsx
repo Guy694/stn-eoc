@@ -47,6 +47,7 @@ export default function CurrentWarnings({ warnings = [], inHero = false }) {
                 <span className={`mr-1.5 inline-block rounded-full px-2 py-0.5 align-[1px] text-xs font-semibold ${item.level === "high" ? "bg-red-50 text-red-800" : "bg-amber-50 text-amber-900"}`}>{item.level === "high" ? "รุนแรง" : "เฝ้าระวัง"}</span>
                 {item.message}
               </p>
+              {item.details?.length ? <p className="mt-0.5 break-words text-[13px] leading-5 text-slate-600">{item.details.join(" · ")}</p> : null}
               <p className="mt-0.5 text-xs text-slate-500">{timeText(item.issued_at)}{item.source ? `${item.issued_at ? " • " : ""}${item.source}` : ""}</p>
             </div>
           </li>
