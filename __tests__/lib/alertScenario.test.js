@@ -1,7 +1,8 @@
 /** @jest-environment node */
 // สถานการณ์จำลอง [ทดสอบ]: ฝนตกหนัก / น้ำขึ้นใกล้ตลิ่ง → ระบบบันทึกแจ้งเตือน (popup เจ้าหน้าที่) + Telegram + เตือนประชาชน
 jest.mock("@/lib/db", () => ({ query: jest.fn(), getPool: jest.fn() }));
-jest.mock("@/lib/thaiWaterClient", () => ({ getSatunWaterLevels: jest.fn(), getSatunRainfall: jest.fn() }));
+jest.mock("@/lib/thaiWaterClient", () => ({ getSatunRainfall: jest.fn() }));
+jest.mock("@/lib/dpmCanalsServer", () => ({ getDpmCanalStations: jest.fn(), loadDpmSparklines: jest.fn(async () => ({})) }));
 jest.mock("@/lib/publicPushServer", () => ({ sendResolvedAlerts: jest.fn(async () => ({ sent: 1, delivered: 1, recipients: 1 })) }));
 jest.mock("@/lib/telegram", () => ({
   escapeTelegramHtml: (v) => String(v),
@@ -10,7 +11,9 @@ jest.mock("@/lib/telegram", () => ({
 }));
 
 import { query } from "@/lib/db";
-import { getSatunRainfall, getSatunWaterLevels } from "@/lib/thaiWaterClient";
+import { getSatunRainfall } from "@/lib/thaiWaterClient";
+import { getDpmCanalStations } from "@/lib/dpmCanalsServer";
+import { DPM_STATUS, dpmStationForMap } from "@/lib/dpmCanals";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sendResolvedAlerts } from "@/lib/publicPushServer";
 import { runWaterAlerts } from "@/lib/waterAlertRunner";
@@ -18,7 +21,11 @@ import { measuredWarnings } from "@/lib/weatherWatch";
 import { warningCandidates } from "@/lib/publicPush";
 
 const minutesAgo = (m) => new Date(Date.now() - m * 60000).toISOString();
-const water = (bankDiff, over = {}) => ({ id: "T1", name: "[ทดสอบ] บ้านปันจอร์", amphoe: "ควนโดน", tambon: "ย่านซื่อ", bankDiff, waterLevelMsl: 20 + bankDiff, bankLevelMsl: 20, observedAt: minutesAgo(20), ...over });
+// สถานี ปภ. [ทดสอบ]: bankDiff > 0 = น้ำสูงกว่าตลิ่ง → อันตราย(4), ห่างตลิ่ง ≤ 0.5 ม. → เฝ้าระวัง(2), นอกนั้น ปกติ(1)
+const water = (bankDiff, over = {}) => {
+  const statusCode = bankDiff > 0 ? 4 : bankDiff >= -0.5 ? 2 : 1;
+  return { id: "STN01", code: "STN01", source: "ddpm", name: "[ทดสอบ] บ้านปันจอร์", amphoe: "ควนโดน", tambon: "ย่านซื่อ", river: "คลองทดสอบ", level: 20 + bankDiff, bank: 20, belowBank: -bankDiff, thresholds: { watch: null, warning: null, danger: null, critical: null }, statusCode, statusLabel: DPM_STATUS[statusCode].label, observedAt: minutesAgo(20), ...over };
+};
 const rain = (rain24h, over = {}) => ({ id: "R1", name: "[ทดสอบ] ทุ่งหว้า", amphoe: "ทุ่งหว้า", tambon: "ทุ่งหว้า", rain24h, rain1h: 12, observedAt: minutesAgo(20), ...over });
 
 let states;
@@ -43,7 +50,7 @@ beforeEach(() => {
 afterAll(() => { process.env = ENV; });
 
 async function round(waterStations, rainStations) {
-  getSatunWaterLevels.mockResolvedValue({ stations: waterStations });
+  getDpmCanalStations.mockResolvedValue({ stations: waterStations, fetchedAt: Date.now(), stale: false });
   getSatunRainfall.mockResolvedValue({ stations: rainStations });
   return runWaterAlerts();
 }
@@ -52,12 +59,12 @@ test("น้ำขึ้น: ปกติ → ใกล้ตลิ่ง → �
   expect((await round([water(-2)], [])).saved).toBe(0);
   let result = await round([water(-0.4)], []);
   expect(logs.at(-1)).toMatchObject({ kind: "water", level: "serious" });
-  expect(logs.at(-1).title).toContain("ใกล้ล้นตลิ่ง");
+  expect(logs.at(-1).title).toContain("ระดับน้ำเฝ้าระวัง");
   expect(result.delivered).toBe(1);
   expect((await round([water(-0.35)], [])).saved).toBe(0); // ยังใกล้ตลิ่ง ไม่แจ้งซ้ำ
   result = await round([water(0.15)], []);
   expect(logs.at(-1)).toMatchObject({ level: "critical" });
-  expect(logs.at(-1).title).toContain("น้ำล้นตลิ่ง");
+  expect(logs.at(-1).title).toContain("ระดับน้ำอันตราย");
   expect(sendTelegramMessage).toHaveBeenCalledTimes(2);
 });
 
@@ -85,11 +92,11 @@ test("ไม่มี Telegram: ยังบันทึกให้ popup บ�
 
 test("เตือนประชาชน (Web Push): ส่งเฉพาะน้ำล้นตลิ่ง หรือฝน 24 ชม. ≥ 90 มม.", () => {
   const now = Date.now();
-  const warnings = measuredWarnings([water(-0.3), water(0.1, { id: "T2", name: "[ทดสอบ] ควนกาหลง", amphoe: "ควนกาหลง" })], [rain(70), rain(95, { id: "R2" })], now);
+  const warnings = measuredWarnings([water(-0.3), water(0.1, { id: "STN02", code: "STN02", name: "[ทดสอบ] ควนกาหลง", amphoe: "ควนกาหลง" })].map(dpmStationForMap), [rain(70), rain(95, { id: "R2" })], now);
   expect(warnings.filter((w) => w.level === "watch")).toHaveLength(2); // ขึ้นแถบเตือนบนเว็บ แต่ไม่ push
   const push = warningCandidates(warnings, now);
   expect(push).toHaveLength(2);
-  expect(push.map((p) => p.message).join(" ")).toMatch(/น้ำล้นตลิ่ง.*ฝนตกหนัก/);
+  expect(push.map((p) => p.message).join(" ")).toMatch(/ระดับน้ำอันตราย.*ฝนตกหนัก/);
 });
 
 test("น้ำลดจากล้นตลิ่ง → แจ้งประชาชนว่าน้ำลดแล้ว (ส่งต่อให้ระบบ push)", async () => {
@@ -98,5 +105,15 @@ test("น้ำลดจากล้นตลิ่ง → แจ้งประ
   expect(sendResolvedAlerts).not.toHaveBeenCalled();
   await round([water(-0.3)], []);
   expect(sendResolvedAlerts).toHaveBeenCalledTimes(1);
-  expect(sendResolvedAlerts.mock.calls[0][0][0]).toMatchObject({ previousState: "overflow", state: "near", amphoe: "ควนโดน" });
+  expect(sendResolvedAlerts.mock.calls[0][0][0]).toMatchObject({ previousState: "danger", state: "watch", amphoe: "ควนโดน" });
+});
+
+test("ระดับน้ำใช้เฉพาะสถานี ปภ.: สถานีจากแหล่งอื่นไม่ถูกนำมาแจ้ง และฝนใช้เฉพาะสถานีวัดฝน สสน.", async () => {
+  const result = await round([water(0.4, { source: "thaiwater", id: "TW1" }), water(0.4)], [rain(40)]);
+  expect(result.stations).toBe(1);
+  expect(logs.filter((log) => log.kind === "water")).toHaveLength(1);
+  expect(logs.filter((log) => log.kind === "rain")).toHaveLength(1);
+  const warnings = measuredWarnings([dpmStationForMap(water(0.4)), dpmStationForMap(water(0.4, { source: "thaiwater", id: "TW1", code: "TW1" }))], [], Date.now());
+  expect(warnings).toHaveLength(1);
+  expect(warnings[0].source).toBe("กรมป้องกันและบรรเทาสาธารณภัย (ปภ.)");
 });

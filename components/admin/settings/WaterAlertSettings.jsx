@@ -9,6 +9,9 @@ import { apiRequest, formatDateTime } from "@/lib/adminApi";
 
 const API = "/stn-eoc/api/eoc/water-alerts";
 const STATE_META = {
+  critical: { tone: "red", label: "วิกฤต" },
+  danger: { tone: "red", label: "อันตราย" },
+  warning: { tone: "amber", label: "เตือนภัย" },
   overflow: { tone: "red", label: "ล้นตลิ่ง" },
   near: { tone: "amber", label: "ใกล้ล้นตลิ่ง" },
   severe: { tone: "red", label: "ฝนหนักมาก" },
@@ -72,8 +75,8 @@ export default function WaterAlertSettings() {
     <section className="rounded-2xl border border-slate-200 bg-white">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div className="min-w-0">
-          <h3 className="font-black text-slate-900">แจ้งเตือนน้ำล้นตลิ่งและฝนหนัก (ThaiWater)</h3>
-          <p className="mt-0.5 text-sm text-slate-600">ระบบตรวจสถานีวัดระดับน้ำและสถานีวัดฝนในสตูลอัตโนมัติ เมื่อน้ำใกล้ล้น/ล้นตลิ่ง หรือฝนหนัก จะส่ง Telegram และเด้งหน้าจอพร้อมเสียงให้เจ้าหน้าที่ที่เปิดระบบอยู่ — ทำงานแม้ยังไม่เปิด EOC</p>
+          <h3 className="font-black text-slate-900">แจ้งเตือนระดับน้ำในคลองและฝนหนัก</h3>
+          <p className="mt-0.5 text-sm text-slate-600">ระบบตรวจสถานีวัดระดับน้ำของ ปภ. และสถานีวัดฝนของ สสน. (ThaiWater) ในสตูลอัตโนมัติ เมื่อน้ำใกล้ล้น/ล้นตลิ่ง หรือฝนหนัก จะส่ง Telegram และเด้งหน้าจอพร้อมเสียงให้เจ้าหน้าที่ที่เปิดระบบอยู่ — ทำงานแม้ยังไม่เปิด EOC</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={dryRun} disabled={busy || !data?.can_run} className="inline-flex items-center gap-1.5 rounded-lg border border-[#c9dcee] bg-white px-3 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc] disabled:opacity-50">
@@ -113,7 +116,7 @@ export default function WaterAlertSettings() {
                 <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
                   {waterStates.map((row) => (
                     <li key={row.station_id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
-                      <StatusPill tone={STATE_META[row.state]?.tone}>{row.kind === "water" ? ({ normal: "ปกติ", near: "เฝ้าระวัง/เตือนภัย", overflow: "อันตราย/วิกฤต" }[row.state] || row.state) : (STATE_META[row.state]?.label || row.state)}</StatusPill>
+                      <StatusPill tone={STATE_META[row.state]?.tone}>{row.kind === "water" ? ({ normal: "ปกติ", watch: "เฝ้าระวัง", near: "เฝ้าระวัง", warning: "เตือนภัย", danger: "อันตราย", overflow: "อันตราย", critical: "วิกฤต" }[row.state] || row.state) : (STATE_META[row.state]?.label || row.state)}</StatusPill>
                       <span className="font-bold text-slate-900">{row.station_name}</span>
                       <span className="text-slate-600">{bankText(row.bank_diff)}</span>
                       <span className="ml-auto text-xs text-slate-500">วัดเมื่อ {formatDateTime(row.observed_at)}</span>

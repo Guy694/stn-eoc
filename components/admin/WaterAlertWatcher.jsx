@@ -261,7 +261,7 @@ export default function WaterAlertWatcher() {
                 {lines.map((line, index) => <div key={index} className={index === 1 ? "font-bold text-slate-900" : ""}>{line}</div>)}
               </div>
               <div className="mt-1.5 text-xs text-slate-500">
-                {alert.observed_at ? `วัดเมื่อ ${formatTime(alert.observed_at)} · ` : ""}แจ้งเมื่อ {formatTime(alert.created_at)} · ThaiWater สสน.
+                {alert.observed_at ? `วัดเมื่อ ${formatTime(alert.observed_at)} · ` : ""}แจ้งเมื่อ {formatTime(alert.created_at)} · {alert.kind === "rain" ? "ThaiWater สสน." : "ปภ."}
               </div>
               {audioLocked && soundOn ? (
                 <button type="button" onClick={enableAudio} className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-100 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-200">

@@ -7,7 +7,7 @@ import { rainThresholdsFromEnv, thresholdsFromEnv } from "@/lib/waterAlerts";
 import { alertSendingEnabled, telegramReady } from "@/lib/eocAlertRunner";
 import { recordChange } from "@/lib/recordArchive";
 
-// แจ้งเตือนระดับน้ำจากสถานี ThaiWater
+// แจ้งเตือนระดับน้ำจากสถานี ปภ. และฝนจากสถานีวัดฝน ThaiWater (สสน.)
 // GET  ?after=<id>  = เรื่องใหม่หลัง id นั้น (หน้าจอเจ้าหน้าที่ดึงทุกนาทีเพื่อเด้ง popup พร้อมเสียง)
 // GET  ?overview=1  = สถานะสถานี + ประวัติ + การตั้งค่า (หน้าตั้งค่าระบบ)
 // POST ?dry=1       = ตรวจตอนนี้แบบไม่บันทึก/ไม่ส่ง · POST = ตรวจและส่งจริง (ผู้ดูแลระบบ/ผู้บัญชาการ หรือ cron ที่มี x-cron-secret)
@@ -24,7 +24,7 @@ export async function GET(request) {
   try {
     if (params.get("overview") === "1") {
       const [states, log] = await Promise.all([
-        query("SELECT station_id, kind, station_name, state, bank_diff, observed_at, changed_at FROM water_station_alert_state ORDER BY kind DESC, FIELD(state, 'overflow', 'severe', 'near', 'watch', 'normal'), station_name", []),
+        query("SELECT station_id, kind, station_name, state, bank_diff, observed_at, changed_at FROM water_station_alert_state ORDER BY kind DESC, FIELD(state, 'critical', 'danger', 'overflow', 'severe', 'warning', 'near', 'watch', 'normal'), station_name", []),
         query(`SELECT ${COLUMNS} FROM water_alert_log ORDER BY id DESC LIMIT 30`, [])
       ]);
       const thresholds = thresholdsFromEnv();
@@ -73,7 +73,7 @@ export async function POST(request) {
     const message = dryRun
       ? (count ? `ถ้าตรวจตอนนี้จะแจ้ง ${count} เรื่อง (ยังไม่ได้ส่ง)` : `ไม่มีสถานีที่เข้าเกณฑ์แจ้งใหม่ (ตรวจสถานีวัดน้ำ ${result.stations} · สถานีวัดฝน ${result.rainStations})`)
       : (count ? `แจ้งเตือน ${count} เรื่อง${result.delivered ? ` · ส่ง Telegram ${result.delivered} ครั้ง` : " · ยังไม่ได้ส่ง Telegram (ยังไม่ตั้งค่าหรือปิดไว้)"}` : `ไม่มีเรื่องใหม่ (ตรวจสถานีวัดน้ำ ${result.stations} · สถานีวัดฝน ${result.rainStations})`);
-    const warning = result.sourceErrors.length ? ` · ดึงข้อมูล${result.sourceErrors.join("และ")}จาก ThaiWater ไม่ได้` : "";
+    const warning = result.sourceErrors.length ? ` · ดึงข้อมูล${result.sourceErrors.map((name) => (name === "ฝน" ? "ฝนจาก ThaiWater (สสน.)" : "ระดับน้ำจาก ปภ.")).join("และ")}ไม่ได้` : "";
     return NextResponse.json({ success: true, message: message + warning, dry_run: dryRun, alerts: result.alerts, stations: result.stations, delivered: result.delivered });
   } catch (error) {
     console.error("Water alerts POST error:", error);
