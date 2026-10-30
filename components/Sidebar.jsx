@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
+import { applyMenuVisibility } from "@/lib/menuVisibility";
 import { buildAdminMenu, buildOfficerEventSections, groupMenuItems, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
 
 // ไอคอนตาม iconKey ของเมนู (โครงเมนูอยู่ที่ src/config/navigation/admin-navigation.js)
@@ -116,6 +117,7 @@ export default function Sidebar() {
     const [teamAssignments, setTeamAssignments] = useState([]);
     const [ownerOverrides, setOwnerOverrides] = useState({});
     const [menuLayout, setMenuLayout] = useState({});
+    const [hiddenMenus, setHiddenMenus] = useState([]);
     const [expandedSections, setExpandedSections] = useState({});
     const { user } = useAuth();
     const { eocStatus } = useEOC();
@@ -181,6 +183,7 @@ export default function Sidebar() {
                 if (!active || !result?.success) return;
                 setOwnerOverrides(result.overrides || {});
                 setMenuLayout(result.layout || {});
+                setHiddenMenus(result.hidden || []);
             })
             .catch(() => {});
         fetch("/stn-eoc/api/user/my-assignments/")
@@ -241,9 +244,12 @@ export default function Sidebar() {
 
     const menuSections = (user.role === "user" || user.isApproved === false)
         ? pendingUserMenu
-        : user.role === "admin"
-            ? buildAdminMenu({ eocStatus, pathname, overrides: ownerOverrides, layout: menuLayout })
-            : teamMenu;
+        : applyMenuVisibility(
+            user.role === "admin"
+                ? buildAdminMenu({ eocStatus, pathname, overrides: ownerOverrides, layout: menuLayout })
+                : teamMenu,
+            hiddenMenus
+        );
 
     const isExpanded = (section) => expandedSections[section.key || section.section] ?? section.defaultExpanded ?? false;
     const toggle = (section) => setExpandedSections((previous) => ({ ...previous, [section.key || section.section]: !isExpanded(section) }));

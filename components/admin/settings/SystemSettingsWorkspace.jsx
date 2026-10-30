@@ -17,6 +17,7 @@ import SiteVisitorStatistics from "@/components/admin/settings/SiteVisitorStatis
 import VisitorAccessLog from "@/components/admin/settings/VisitorAccessLog";
 import ModulePermissions from "@/components/admin/settings/ModulePermissions";
 import MenuLayoutSettings from "@/components/admin/settings/MenuLayoutSettings";
+import MenuVisibilitySettings from "@/components/admin/settings/MenuVisibilitySettings";
 import WaterAlertSettings from "@/components/admin/settings/WaterAlertSettings";
 import MaintenanceSettings from "@/components/admin/settings/MaintenanceSettings";
 import PublicMenuSettings from "@/components/admin/settings/PublicMenuSettings";
@@ -34,6 +35,7 @@ const SECTIONS = [
   { value: "roles", label: "สิทธิ์และบทบาท", hint: "แต่ละบทบาททำอะไรได้บ้าง", icon: Users },
   { value: "modules", label: "สิทธิ์กลุ่มภารกิจ", hint: "ทีมไหนบันทึกเมนูไหนของเหตุการณ์ได้", icon: KeyRound },
   { value: "menus", label: "จัดกลุ่มเมนู", hint: "กลุ่มและลำดับเมนูของเหตุการณ์ในเมนูข้าง", icon: ListTree },
+  { value: "menu-visibility", label: "เปิด/ปิดเมนู", hint: "ซ่อนเมนูหลังบ้านที่ไม่ใช้จากเมนูข้าง", icon: ListTree },
   { value: "alert-sounds", label: "เสียงแจ้งเตือน", hint: "แบบเสียงบนหน้าเว็บ ใช้ทุกเครื่อง", icon: Volume2 },
   { value: "alert-test", label: "ทดสอบการแจ้งเตือน", hint: "ตรวจความพร้อม ทดสอบเสียง popup และมือถือ", icon: Megaphone },
   { value: "maintenance", label: "ปิดปรับปรุงระบบ", hint: "ปิดหน้าเว็บชั่วคราวระหว่างปรับปรุง", icon: Construction },
@@ -48,7 +50,7 @@ const SECTIONS = [
 const GROUPS = [
   { label: null, items: ["overview"] },
   { label: "การแจ้งเตือน", items: ["alerts", "alert-sounds", "alert-test"] },
-  { label: "ผู้ใช้และสิทธิ์", items: ["security", "roles", "modules"] },
+  { label: "ผู้ใช้และสิทธิ์", items: ["security", "roles", "modules", "menus", "menu-visibility"] },
   { label: "ข้อมูล", items: ["data", "visitors", "test-data", "backup"] },
   { label: "ระบบ", items: ["integrations", "public-menus", "maintenance"] }
 ].map((group) => ({ ...group, items: group.items.map((value) => SECTIONS.find((item) => item.value === value)).filter(Boolean) }));
@@ -359,7 +361,7 @@ export default function SystemSettingsWorkspace() {
   };
 
   const current = SECTIONS.find((item) => item.value === section) || SECTIONS[0];
-  const needsData = !["visitors", "data", "modules", "maintenance", "public-menus", "alert-sounds", "alert-test"].includes(section);
+  const needsData = !["visitors", "data", "modules", "maintenance", "public-menus", "menu-visibility", "alert-sounds", "alert-test"].includes(section);
   const problems = state.data?.checks?.filter((check) => check.tone !== "ok").length || 0;
 
   return (
@@ -416,6 +418,7 @@ export default function SystemSettingsWorkspace() {
           {section === "data" ? <DataLinks /> : null}
           {section === "modules" ? <ModulePermissions /> : null}
           {section === "menus" ? <MenuLayoutSettings /> : null}
+          {section === "menu-visibility" ? <MenuVisibilitySettings /> : null}
           {section === "maintenance" ? <MaintenanceSettings /> : null}
           {section === "public-menus" ? <PublicMenuSettings /> : null}
           {section === "alert-test" ? <AlertTestSettings /> : null}

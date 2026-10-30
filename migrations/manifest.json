@@ -81,6 +81,7 @@
     "20261024_content_views.sql",
     "20261028_satisfaction_feedback.sql",
     "20261030_satisfaction_source.sql",
-    "20261030_water_alert_dpm_states.sql"
+    "20261030_water_alert_dpm_states.sql",
+    "20261030_eoc_menu_hidden.sql"
   ]
 }

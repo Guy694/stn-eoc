@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { PageHero, Panel, EmptyPanel, heroButtonClass } from "@/components/common/ThemePanels";
 import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
+import HydroStationsMap from "@/components/eoc/hydro/HydroStationsMap";
 import { downloadCsv } from "@/lib/exportCsv";
 import { HEAVY_RAIN_MM, RANGE_DAYS, VERY_HEAVY_RAIN_MM } from "@/lib/hydroHistory";
 
@@ -174,6 +175,11 @@ export default function HydroTrendsWorkspace({ publicMode = false }) {
             <MetricCard icon={Waves} tone={overBank.length ? "red" : "green"} label="สถานีที่เคยล้นตลิ่ง" value={overBank.length} unit={`/${waterStations.length}`} note={overBank.length ? overBank.slice(0, 2).map((s) => s.name).join(", ") : "ไม่มีสถานีล้นตลิ่งในช่วงนี้"} />
             <MetricCard icon={Waves} tone={sea.high_days ? "amber" : "blue"} label="น้ำทะเลสูงสุด" value={sea.peak ? fmt(sea.peak.level, 2) : "–"} unit="ม." note={sea.peak ? `${dayLabel(sea.peak.t)} ${sea.peak.t.slice(11, 16)} น. · หนุนสูง ${sea.high_days || 0} วัน` : "ยังไม่มีข้อมูล"} />
           </MetricGrid>
+
+          {/* แผนที่สถานี */}
+          <Panel icon="map" title="แผนที่สถานีวัดน้ำและฝน" subtitle="สีหมุดตามสถานการณ์ในช่วงที่เลือก · กดหมุดระดับน้ำเพื่อดูกราฟของสถานีนั้นด้านล่าง · สถานีวัดน้ำที่แสดงเป็นสถานี ปภ." bodyClassName="p-4">
+            <HydroStationsMap waterStations={waterStations} rainStations={rainStations} selectedCode={station?.code} onSelectWater={setStationCode} />
+          </Panel>
 
           {/* ฝน */}
           <Panel icon="cloud" title="ฝนรายวัน" subtitle="แท่ง = สถานีที่ฝนมากที่สุดของวัน · เส้น = ค่าเฉลี่ยทุกสถานี" bodyClassName="p-4"

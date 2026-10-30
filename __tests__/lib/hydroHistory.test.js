@@ -58,3 +58,14 @@ test("วันที่ยังไม่ครบ: รวมฝนรายช
   ], ["2026-10-20"]);
   expect(s.daily[0]).toEqual({ date: "2026-10-20", mm: 5, approx: true });
 });
+
+test("ส่งพิกัดสถานีสำหรับแผนที่: ฝนจากข้อมูลที่เก็บ, น้ำเฉพาะสถานี ปภ.", () => {
+  const rain = dailyRainByStation([{ station_id: "r1", station_name: "[ทดสอบ] สถานีฝน", lat: "6.9", lng: "99.8", hour_at: "2026-10-02 07:00:00", rain_24h: 10, rain_1h: 0 }], ["2026-10-01"]);
+  expect(rain[0]).toMatchObject({ lat: 6.9, lng: 99.8 });
+  const water = waterStationSeries([
+    { station_code: "STN05", station_name: "ท่าแพ", hour_at: "2026-10-01 10:00:00", water_level: 3, bank_level: 6, malfunction: 0 },
+    { station_code: "TW123", station_name: "สสน.", hour_at: "2026-10-01 10:00:00", water_level: 1, bank_level: 4, malfunction: 0 }
+  ], { days: 7 });
+  expect(water.find((s) => s.code === "STN05").lat).toBeGreaterThan(6);
+  expect(water.find((s) => s.code === "TW123").lat).toBeNull();
+});
