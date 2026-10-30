@@ -274,7 +274,7 @@ export default function ReportWaterPage() {
         <p className="mt-2 text-sm text-slate-600">ถ้าระดับน้ำเปลี่ยน รายงานซ้ำจากจุดเดิมได้เลย</p>
         {tracking ? <TrackingCodeCard code={tracking.code} firstName={tracking.firstName} lastName={tracking.lastName} phone={tracking.phone} /> : null}
         <div className="mt-5 flex flex-wrap gap-2 text-sm font-bold">
-          <Link href="/public/disaster-map" className="rounded-lg bg-[#0b4c86] px-4 py-3 text-white hover:bg-[#083865]">ดูแผนที่สถานการณ์</Link>
+          <Link href="/public/weather-watch" className="rounded-lg bg-[#0b4c86] px-4 py-3 text-white hover:bg-[#083865]">ดูแผนที่สถานการณ์</Link>
           <button type="button" onClick={reportAnother} className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">รายงานจุดเดิมอีกครั้ง</button>
           <button type="button" onClick={() => { reportAnother(); setPosition(null); setPlace(null); setShowMap(false); }} className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">รายงานจุดอื่น</button>
         </div>

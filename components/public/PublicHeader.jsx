@@ -36,7 +36,7 @@ function loadEocStatus() {
 
 const STATUS_META = {
   // ใช้ภาษาที่ประชาชนเข้าใจแทนคำว่า "เปิด/ปิด EOC"
-  open: { title: "มีเหตุการณ์ที่ต้องติดตาม", dot: "#f6b73c", ring: "ring-[#f6b73c]/45", wash: "from-[#f6b73c]/25", live: true, href: "/public/disaster-map" },
+  open: { title: "มีเหตุการณ์ที่ต้องติดตาม", dot: "#f6b73c", ring: "ring-[#f6b73c]/45", wash: "from-[#f6b73c]/25", live: true, href: "/public/weather-watch" },
   closed: { title: "สถานการณ์ปกติ", dot: "#4fd18b", ring: "ring-white/15", wash: "from-[#4fd18b]/15", live: false },
   watch: { title: "เฝ้าระวัง", dot: "#5cc8db", ring: "ring-[#5cc8db]/35", wash: "from-[#5cc8db]/20", live: false },
   loading: { title: "สถานะศูนย์", dot: "#9fb4c7", ring: "ring-white/10", wash: "from-white/5", live: false }

@@ -270,7 +270,7 @@ export default function WaterAlertWatcher() {
               ) : null}
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={() => acknowledge(alert.id)} className="flex-1 rounded-lg bg-[#0b4c86] px-3 py-2 text-sm font-bold text-white hover:bg-[#083865]">รับทราบ</button>
-                <Link href="/public/disaster-map" target="_blank" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-800 hover:bg-slate-50">
+                <Link href="/public/weather-watch" target="_blank" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-800 hover:bg-slate-50">
                   <Waves className="h-4 w-4" aria-hidden="true" /> ดูแผนที่
                 </Link>
               </div>

@@ -389,7 +389,8 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
 
   return (
     <div className={embedded ? "flex h-[calc(100dvh-12rem)] min-h-[560px] flex-col overflow-hidden rounded-2xl bg-slate-900" : "flex h-dvh flex-col overflow-hidden bg-slate-900"}>
-      {embedded ? null : <PublicTopNavigation activeMenu="weather" showWeatherMenu bottomBar="off" />}
+      {/* แถบล่างมือถือแสดงในหน้านี้ด้วย: showBottomBar = ไม่เว้นที่ท้าย body (หน้านี้สูงเท่าจอ) เว้นที่ด้วย spacer ด้านล่างแทน */}
+      {embedded ? null : <PublicTopNavigation activeMenu="weather" showWeatherMenu showBottomBar />}
 
       <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่สถานการณ์และความเสี่ยง">
         <div className={`absolute inset-0 ${isWindy ? "invisible" : ""}`} aria-hidden={isWindy}>
@@ -706,17 +707,6 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
                 </div>
               )}
 
-              <Link
-                href="/public/disaster-map"
-                className="group flex items-start gap-3 rounded-xl bg-white/5 p-3 ring-1 ring-white/10 hover:bg-white/10"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#0b5fa5] text-white"><Waves className="h-5 w-5" aria-hidden="true" /></span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-black text-white">ดูน้ำท่วมตอนนี้ → แผนที่สถานการณ์</span>
-                  <span className="mt-0.5 block text-[12px] leading-snug text-white/75">ระดับน้ำในคลองเทียบตลิ่ง ฝนที่วัดได้จริง พื้นที่น้ำท่วม รายงานจากประชาชน และศูนย์พักพิง</span>
-                </span>
-              </Link>
-
               {/* กล้อง CCTV และระดับน้ำของ ปภ. — เว็บต้นทางไม่อนุญาตให้ฝัง (frame-ancestors 'self') จึงเปิดในแท็บใหม่ */}
               <a
                 href={DDPM_CCTV_URL}
@@ -973,6 +963,9 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
           </div>
         )}
       </main>
+
+      {/* ที่ว่างใต้แผนที่สำหรับแถบล่างบนมือถือ (แถบเป็น fixed จึงไม่ดันเนื้อหาเอง) */}
+      {embedded ? null : <div aria-hidden="true" className="h-[calc(4.5rem+env(safe-area-inset-bottom))] shrink-0 lg:hidden" />}
 
       {embedded ? null : <AIChatbot showLauncher={false} />}
     </div>

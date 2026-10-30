@@ -45,7 +45,7 @@ export default function PublicInsightsPage() {
 
         {!loading && events.length === 0 && (
           <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
-            ขณะนี้ไม่มีเหตุการณ์ที่เปิดศูนย์ปฏิบัติการ ดูข้อมูลย้อนหลังได้ที่ <Link href="/public/disaster-map" className="font-bold text-blue-700 underline">แผนที่สถานการณ์</Link>
+            ขณะนี้ไม่มีเหตุการณ์ที่เปิดศูนย์ปฏิบัติการ ดูข้อมูลย้อนหลังได้ที่ <Link href="/public/weather-watch" className="font-bold text-blue-700 underline">แผนที่สถานการณ์</Link>
           </p>
         )}
 
@@ -63,7 +63,7 @@ export default function PublicInsightsPage() {
             <p className="mt-2 text-sm text-slate-700">
               ข้อมูลพื้นที่น้ำท่วมรายหมู่บ้าน รายวัน และดาวน์โหลดเป็น CSV ได้ที่แผนที่สถานการณ์ (เมนู &quot;ดูรายการเหตุการณ์&quot;)
             </p>
-            <Link href="/public/disaster-map?type=flood" className="mt-3 inline-flex rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
+            <Link href="/public/weather-watch" className="mt-3 inline-flex rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
               เปิดแผนที่น้ำท่วม
             </Link>
           </section>

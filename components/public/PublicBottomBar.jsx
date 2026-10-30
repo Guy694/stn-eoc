@@ -14,7 +14,8 @@ const Label = ({ top, bottom, className = "" }) => <span className={`block w-ful
 const Current = ({ on }) => (on ? <span className="bb-current absolute left-1/2 top-0 h-[3px] w-8 -translate-x-1/2 rounded-b-full bg-current" aria-hidden="true" /> : null);
 
 /**
- * แถบล่างบนมือถือ — แสดงเมื่อเลื่อนพ้น navbar แล้ว (visible) ปุ่มแจ้ง/รายงานอยู่กลางและยกสูงกว่าปุ่มอื่น
+ * แถบล่างบนมือถือ — แสดงตลอด (ซ่อนเฉพาะตอนเปิดเมนูด้านบน: visible=false) ปุ่มแจ้ง/รายงานอยู่กลางและยกสูงกว่าปุ่มอื่น
+ * รวมถึงหน้าแผนที่ /public/weather-watch (หน้านั้นเว้นที่ใต้แผนที่ให้แถบเอง)
  * เมนูแจ้ง/รายงานคงรายการทั้งสองไว้ และแสดงสถานะปิดรับเมื่อบริการยังไม่เปิด
  */
 export default function PublicBottomBar({ visible, activeMenu, reserveSpace = false }) {
@@ -73,8 +74,8 @@ export default function PublicBottomBar({ visible, activeMenu, reserveSpace = fa
         }
       `}</style>
       <div className="mx-auto flex max-w-lg items-end">
-        <Link href="/public/disaster-map" className={`${SLOT} ${tone("map")}`} {...current("map")}>
-          <Current on={activeMenu === "map"} />
+        <Link href="/public/weather-watch" className={`${SLOT} ${tone("weather")}`} {...current("weather")}>
+          <Current on={activeMenu === "weather"} />
           <Waves className={ICON} aria-hidden="true" />
           <Label top="แผนที่" bottom="สถานการณ์" />
         </Link>

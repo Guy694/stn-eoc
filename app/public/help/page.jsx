@@ -87,7 +87,7 @@ export default function HelpCenterPage() {
                         </HelpRequestLink>
 
                         <Link
-                            href="/public/disaster-map"
+                            href="/public/weather-watch"
                             className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow flex items-center gap-3"
                         >
                             <span className="text-3xl"><AppIcon icon="map" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>

@@ -65,7 +65,7 @@ export default function LiveUpdatesFeed() {
                     <span className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
                     รายงานล่าสุด
                 </h3>
-                <Link href="/public/disaster-map" className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                <Link href="/public/weather-watch" className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
                     <span className="inline-flex items-center gap-1">
                         ดูทั้งหมด
                         <AppIcon icon="arrowRight" className="h-4 w-4" />

@@ -197,7 +197,7 @@ export default function ReportProblemPage() {
         <div className="mt-5 flex flex-wrap justify-center gap-2 text-sm font-bold">
           <a href="tel:1669" className="rounded-lg bg-red-600 px-4 py-3 text-white hover:bg-red-700">โทร 1669</a>
           <a href="tel:1784" className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">โทร 1784</a>
-          <Link href="/public/disaster-map" className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">ดูแผนที่</Link>
+          <Link href="/public/weather-watch" className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">ดูแผนที่</Link>
         </div>
       </section>
     );
@@ -213,7 +213,7 @@ export default function ReportProblemPage() {
         </p>
         {tracking ? <TrackingCodeCard code={tracking.code} firstName={tracking.firstName} lastName={tracking.lastName} phone={tracking.phone} /> : null}
         <div className="mt-5 flex flex-wrap gap-2 text-sm font-bold">
-          <Link href="/public/disaster-map" className="rounded-lg bg-[#0b4c86] px-4 py-3 text-white hover:bg-[#083865]">ดูแผนที่สถานการณ์</Link>
+          <Link href="/public/weather-watch" className="rounded-lg bg-[#0b4c86] px-4 py-3 text-white hover:bg-[#083865]">ดูแผนที่สถานการณ์</Link>
           <button type="button" onClick={() => setDone(false)} className="rounded-lg border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50">แจ้งจุดอื่นเพิ่ม</button>
         </div>
       </section>

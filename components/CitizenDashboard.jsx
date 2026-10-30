@@ -258,7 +258,7 @@ export default function CitizenDashboard() {
                     </HelpRequestLink>
 
                     <Link
-                        href="/public/disaster-map"
+                        href="/public/weather-watch"
                         className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300 rounded-xl shadow-md p-6 text-center transition-all hover:shadow-xl hover:scale-105 group"
                     >
                         <AppIcon icon="map" className="mx-auto mb-4 h-12 w-12 text-blue-600 transition-transform group-hover:scale-110" />

@@ -1,14 +1,6 @@
-import DisasterMapWorkspace from "@/components/public/disaster-map/DisasterMapWorkspace";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "แผนที่สถานการณ์ | ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล",
-  description: "แผนที่สถานการณ์ตอนนี้ของจังหวัดสตูล: พื้นที่น้ำท่วม ระดับน้ำในคลอง ฝนที่วัดได้ รายงานจากประชาชน ศูนย์พักพิง โรคระบาด และเรดาร์ฝน"
-};
-
-const MAP_TYPES = new Set(["flood", "disease", "accident"]);
-
-export default async function PublicDisasterMapPage({ searchParams }) {
-  const params = await searchParams;
-  const type = MAP_TYPES.has(params?.type) ? params.type : "flood";
-  return <DisasterMapWorkspace key={type} initialDisasterType={type} />;
+// แผนที่หลักของประชาชนคือ /public/weather-watch (หน้าแผนที่ภัยพิบัติเดิมเลิกใช้แล้ว)
+export default function PublicDisasterMapPage() {
+  redirect("/public/weather-watch");
 }

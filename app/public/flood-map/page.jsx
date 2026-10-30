@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// รวมเป็นแผนที่เดียว: /public/disaster-map (เลือกประเภทภัยได้ในหน้า)
+// แผนที่หลักของประชาชนคือ /public/weather-watch (หน้าแผนที่ภัยพิบัติเดิมเลิกใช้แล้ว)
 export default function PublicFloodMapPage() {
-  redirect("/public/disaster-map?type=flood");
+  redirect("/public/weather-watch");
 }

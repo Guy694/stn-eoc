@@ -9,7 +9,7 @@ export const metadata = {
 // หน้าไม่พบ: คนที่หลงมาช่วงเกิดภัยต้องเจอทางไปต่อทันที ไม่ใช่หน้าเปล่า
 const LINKS = [
   { href: "/", label: "หน้าแรก", note: "สถานการณ์และสภาพอากาศวันนี้", Icon: Home },
-  { href: "/public/disaster-map", label: "แผนที่สถานการณ์", note: "จุดน้ำท่วม ถนน และสถานพยาบาล", Icon: Map },
+  { href: "/public/weather-watch", label: "แผนที่สถานการณ์", note: "จุดน้ำท่วม ถนน และสถานพยาบาล", Icon: Map },
   { href: "/public/announcements", label: "ประกาศและความรู้", note: "ประกาศล่าสุดจากศูนย์ฯ", Icon: Megaphone }
 ];
 

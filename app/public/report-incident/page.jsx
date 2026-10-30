@@ -4,13 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { Camera, CircleCheck, LocateFixed, MapPin, Phone, ShieldCheck, Siren, X } from "lucide-react";
+import { Accessibility, Camera, Car, CircleCheck, CircleHelp, DoorClosed, Footprints, House, LocateFixed, MapPin, Phone, Ship, ShieldCheck, Siren, Truck, X } from "lucide-react";
+import WaterLevelFigure from "@/components/public/water/WaterLevelFigure";
+import { WATER_LEVELS } from "@/lib/waterReport";
 import PublicLayout from "@/components/layouts/PublicLayout";
 import { showWarning } from "@/lib/sweetAlert";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { trackPublicUsage } from "@/lib/publicUsage";
 import TrackingCodeCard from "@/components/public/TrackingCodeCard";
 import { shareVisitGps } from "@/lib/visitorGps";
+import { ACCESS_ROUTES, MEDICINE_REMAINING, MOBILITY, ON_BEHALF_RELATIONS, VULNERABLE_GROUPS } from "@/lib/helpRequestDetails";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -47,6 +50,20 @@ function LocationMarker({ position, setPosition }) {
         </>
     );
 }
+
+const EMPTY_DETAILS = {
+    onBehalf: "self",
+    relation: "",
+    patientName: "",
+    patientPhone: "",
+    peopleCount: "",
+    vulnerableGroups: [],
+    medicineRemaining: "",
+    medicineNeeded: "",
+    homeWaterLevel: "",
+    mobility: "",
+    accessRoute: ""
+};
 
 function getLocalDateTimeValue() {
     const now = new Date();
@@ -92,6 +109,15 @@ export default function ReportIncidentPage() {
         district: "",
         occurredAt: getLocalDateTimeValue()
     });
+    const [details, setDetails] = useState(EMPTY_DETAILS);
+    const setDetail = (name, value) => setDetails((current) => ({ ...current, [name]: value }));
+    const toggleGroup = (value) => setDetails((current) => ({
+        ...current,
+        vulnerableGroups: current.vulnerableGroups.includes(value)
+            ? current.vulnerableGroups.filter((item) => item !== value)
+            : [...current.vulnerableGroups, value]
+    }));
+    const onBehalf = details.onBehalf === "other";
 
     useEffect(() => {
         setMounted(true);
@@ -249,6 +275,16 @@ export default function ReportIncidentPage() {
             return;
         }
 
+        if (formData.helpCategory === "medicine" && !details.medicineRemaining) {
+            showWarning("กรุณาระบุว่ายาเหลือพอใช้อีกกี่วัน");
+            return;
+        }
+
+        if (formData.helpCategory === "vulnerable" && !details.vulnerableGroups.length) {
+            showWarning("กรุณาเลือกกลุ่มที่ต้องดูแลพิเศษอย่างน้อย 1 กลุ่ม");
+            return;
+        }
+
         if (!formData.helpReason.trim()) {
             showWarning("กรุณาระบุเหตุผลการขอความช่วยเหลือ");
             return;
@@ -282,7 +318,11 @@ export default function ReportIncidentPage() {
             payload.append("longitude", markerPosition.lng);
             payload.append("reportType", "help_request");
             payload.append("disasterType", "assistance");
-            payload.append("urgency", "high");
+            // ความเร่งด่วนจัดโดยเซิร์ฟเวอร์จากข้อมูลด้านล่าง
+            Object.entries(details).forEach(([key, value]) => {
+                if (key === "vulnerableGroups") payload.append(key, value.join(","));
+                else if (value !== "") payload.append(key, value);
+            });
             if (photoFile) {
                 payload.append("photo", photoFile);
             }
@@ -312,6 +352,7 @@ export default function ReportIncidentPage() {
                 district: "",
                 occurredAt: getLocalDateTimeValue()
             });
+            setDetails(EMPTY_DETAILS);
             setMarkerPosition(null);
             clearPhoto();
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -368,6 +409,11 @@ export default function ReportIncidentPage() {
                     <span className="min-w-0 flex-1 font-semibold">หากมีผู้บาดเจ็บหรืออันตรายเร่งด่วน โทร 1669 ทันที</span>
                     <a href="tel:1669" className="rounded-lg bg-red-600 px-3 py-2 font-bold text-white hover:bg-red-700">โทร 1669</a>
                 </aside>
+                <aside className="mb-4 rounded-xl border border-[#c9dcee] bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+                    <span className="font-bold text-[#083865]">รับคำขอ 2 ด้าน: ด้านยา และด้านกลุ่มเปราะบาง</span>{" "}
+                    สำนักงานสาธารณสุขจังหวัดสตูล (สสจ.) รวบรวมคำขอ แล้วส่งต่อให้ ปภ. จังหวัดสตูล เข้าพื้นที่ช่วยเหลือ
+                    ยิ่งตอบข้อ 3 ได้ครบ เจ้าหน้าที่ยิ่งจัดลำดับและเตรียมการเข้าพื้นที่ได้ถูกต้อง
+                </aside>
                 <p className="mb-5 text-sm text-slate-600">ต้องการแจ้งน้ำท่วม ถนนขาด หรือไฟดับโดยไม่มีผู้ขอความช่วยเหลือ? <Link href="/public/report-problem" className="font-bold text-[#0b4c86] underline">แจ้งจุดปัญหา</Link></p>
                 {submitSuccess && (
                     <section className="mb-5 rounded-2xl border border-emerald-200 bg-white p-4 text-emerald-800" role="status">
@@ -387,7 +433,17 @@ export default function ReportIncidentPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <section className="space-y-4">
                         <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
-                            <StepTitle number={1} hint="สำหรับให้เจ้าหน้าที่ติดต่อกลับ">ข้อมูลผู้ขอความช่วยเหลือ</StepTitle>
+                            <StepTitle number={1} hint="สำหรับให้เจ้าหน้าที่ติดต่อกลับ">ข้อมูลผู้แจ้ง</StepTitle>
+                            <ChoiceGroup
+                                label="แจ้งให้ใคร"
+                                value={details.onBehalf}
+                                onChange={(value) => setDetail("onBehalf", value || "self")}
+                                options={[{ value: "self", label: "ตัวเอง/คนในบ้าน" }, { value: "other", label: "แจ้งแทนผู้อื่น" }]}
+                                columns="grid-cols-2"
+                            />
+                            {onBehalf ? (
+                                <p className="-mt-1 mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">กรอกชื่อและเบอร์ของ<strong>ท่าน (ผู้แจ้ง)</strong> ด้านล่าง ใช้ติดตามคำขอได้ และกรอกข้อมูลผู้ที่ต้องการความช่วยเหลือในช่องถัดไป</p>
+                            ) : null}
                             <div className="grid gap-4 md:grid-cols-2">
                                 <TextField label="ชื่อ" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
                                 <TextField label="นามสกุล" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
@@ -403,6 +459,23 @@ export default function ReportIncidentPage() {
                                     />
                                 </label>
                             </div>
+                            {onBehalf ? (
+                                <div className="mt-4 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-2">
+                                    <TextField label="ชื่อ-นามสกุล ผู้ต้องการความช่วยเหลือ" name="patientName" value={details.patientName} onChange={(event) => setDetail("patientName", event.target.value)} placeholder="เช่น นางสมใจ ใจดี" />
+                                    <TextField label="เบอร์ติดต่อที่บ้าน/ในพื้นที่" name="patientPhone" type="tel" value={details.patientPhone} onChange={(event) => setDetail("patientPhone", event.target.value)} placeholder="ถ้ามี" />
+                                    <label className="block md:col-span-2">
+                                        <span className="mb-2 block text-sm font-bold text-slate-700">ท่านเกี่ยวข้องเป็น</span>
+                                        <select
+                                            value={details.relation}
+                                            onChange={(event) => setDetail("relation", event.target.value)}
+                                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-700 outline-none focus:border-[#0b4c86] focus:ring-2 focus:ring-[#c9dcee]"
+                                        >
+                                            <option value="">เลือก</option>
+                                            {ON_BEHALF_RELATIONS.map((item) => <option key={item} value={item}>{item}</option>)}
+                                        </select>
+                                    </label>
+                                </div>
+                            ) : null}
                         </div>
 
                         <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
@@ -424,13 +497,42 @@ export default function ReportIncidentPage() {
                                     </button>
                                 ))}
                             </div>
+                            {formData.helpCategory === "medicine" ? (
+                                <div className="mt-4 space-y-4">
+                                    <ChoiceGroup
+                                        label="ยาที่ใช้ประจำเหลือพอใช้อีกกี่วัน"
+                                        required
+                                        value={details.medicineRemaining}
+                                        onChange={(value) => setDetail("medicineRemaining", value)}
+                                        options={MEDICINE_REMAINING}
+                                        columns="grid-cols-2 md:grid-cols-4"
+                                    />
+                                    <TextField label="ชื่อยา หรือโรคประจำตัว" name="medicineNeeded" value={details.medicineNeeded} onChange={(event) => setDetail("medicineNeeded", event.target.value)} placeholder="เช่น ยาเบาหวาน, ยาความดัน, อินซูลิน (ถ้ามีสมุดยาให้ถ่ายรูปแนบ)" />
+                                </div>
+                            ) : null}
+                            <fieldset className="mt-4">
+                                <legend className="mb-2 block text-sm font-bold text-slate-700">
+                                    ในบ้านมีผู้ที่ต้องดูแลพิเศษหรือไม่ {formData.helpCategory === "vulnerable" ? <span className="text-red-500">*</span> : <span className="font-normal text-slate-500">(เลือกได้หลายข้อ)</span>}
+                                </legend>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {VULNERABLE_GROUPS.map((group) => {
+                                        const checked = details.vulnerableGroups.includes(group.value);
+                                        return (
+                                            <label key={group.value} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 text-sm transition ${checked ? "border-[#0b4c86] bg-[#edf5fc] font-bold text-[#083865]" : "border-slate-200 bg-white text-slate-700 hover:border-[#c9dcee]"}`}>
+                                                <input type="checkbox" checked={checked} onChange={() => toggleGroup(group.value)} className="h-5 w-5 shrink-0 accent-[#0b4c86]" />
+                                                <span>{group.label}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </fieldset>
                             <label className="mt-4 block">
                                 <span className="mb-2 block text-sm font-bold text-slate-700">เหตุผลการขอความช่วยเหลือ <span className="text-red-500">*</span></span>
                                 <textarea
                                     name="helpReason"
                                     value={formData.helpReason}
                                     onChange={handleInputChange}
-                                    rows={5}
+                                    rows={4}
                                     required
                                     placeholder="เช่น ผู้ป่วยติดเตียงต้องการยา, มีผู้สูงอายุติดอยู่ในบ้าน, ต้องการเวชภัณฑ์เร่งด่วน"
                                     className="w-full resize-none rounded-xl border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-[#0b4c86] focus:ring-2 focus:ring-[#c9dcee]"
@@ -439,7 +541,29 @@ export default function ReportIncidentPage() {
                         </div>
 
                         <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
-                            <StepTitle number={3} hint="ช่วยระบุพื้นที่ให้เจ้าหน้าที่">พื้นที่โดยประมาณ</StepTitle>
+                            <StepTitle number={3} hint="ใช้จัดลำดับความเร่งด่วนและเตรียมการเข้าพื้นที่">สภาพที่บ้านตอนนี้</StepTitle>
+                            <div className="space-y-4">
+                                <label className="block max-w-[12rem]">
+                                    <span className="mb-2 block text-sm font-bold text-slate-700">จำนวนคนในบ้าน</span>
+                                    <input
+                                        type="number"
+                                        inputMode="numeric"
+                                        min={1}
+                                        max={999}
+                                        value={details.peopleCount}
+                                        onChange={(event) => setDetail("peopleCount", event.target.value.replace(/\D/g, "").slice(0, 3))}
+                                        placeholder="เช่น 4"
+                                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-slate-700 outline-none focus:border-[#0b4c86] focus:ring-2 focus:ring-[#c9dcee]"
+                                    />
+                                </label>
+                                <WaterLevelPicker value={details.homeWaterLevel} onChange={(value) => setDetail("homeWaterLevel", value)} />
+                                <IconChoiceGroup label="ออกจากบ้านได้หรือไม่" value={details.mobility} onChange={(value) => setDetail("mobility", value)} options={MOBILITY} icons={MOBILITY_ICONS} columns="grid-cols-3" />
+                                <IconChoiceGroup label="เจ้าหน้าที่เดินทางเข้าถึงบ้านได้อย่างไร" value={details.accessRoute} onChange={(value) => setDetail("accessRoute", value)} options={ACCESS_ROUTES} icons={ACCESS_ICONS} columns="grid-cols-2 sm:grid-cols-4" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
+                            <StepTitle number={4} hint="ช่วยระบุพื้นที่ให้เจ้าหน้าที่">พื้นที่โดยประมาณ</StepTitle>
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="relative md:col-span-1" ref={villageInputRef}>
                                     <TextField label="หมู่บ้าน/ชุมชน" name="village" value={formData.village} onChange={handleInputChange} placeholder="พิมพ์ชื่อหมู่บ้าน" />
@@ -466,10 +590,10 @@ export default function ReportIncidentPage() {
                         </div>
 
                         <div className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
-                            <StepTitle number={4} hint="ไม่บังคับ">รูปประกอบ</StepTitle>
+                            <StepTitle number={5} hint="ไม่บังคับ">รูปประกอบ</StepTitle>
                             <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-[#c9dcee] px-4 py-3 text-slate-700 hover:bg-[#edf5fc]">
                                 <Camera className="h-6 w-6 shrink-0 text-[#0b4c86]" aria-hidden="true" />
-                                <span className="text-sm"><span className="font-bold">แนบรูปภาพสถานการณ์</span><span className="block text-slate-500">รูปช่วยให้เจ้าหน้าที่ประเมินสถานการณ์ได้เร็วขึ้น</span></span>
+                                <span className="text-sm"><span className="font-bold">แนบรูปภาพสถานการณ์</span><span className="block text-slate-500">เช่น สภาพบ้าน/ระดับน้ำ หรือสมุดยา/ซองยา ช่วยให้เจ้าหน้าที่เตรียมยาได้ถูกต้อง</span></span>
                                 <input
                                     type="file"
                                     accept="image/jpeg,image/png,image/webp"
@@ -504,10 +628,10 @@ export default function ReportIncidentPage() {
 
                     <aside className="space-y-4">
                         <section className="rounded-2xl border border-[#c9dcee] bg-white p-4 md:p-5">
-                            <StepTitle number={5} hint="แตะแผนที่หรือใช้ GPS">ตำแหน่งที่ต้องการความช่วยเหลือ</StepTitle>
+                            <StepTitle number={6} hint="แตะแผนที่หรือใช้ GPS">ตำแหน่งที่ต้องการความช่วยเหลือ</StepTitle>
                             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <p className="text-sm text-slate-600">ปักหมุดให้ตรงจุดที่เจ้าหน้าที่ควรไปพบ</p>
+                                    <p className="text-sm text-slate-600">ปักหมุดที่บ้านของผู้ต้องการความช่วยเหลือ{onBehalf ? " (ไม่ใช่ตำแหน่งของท่าน ถ้าท่านอยู่ที่อื่น ให้แตะแผนที่เลือกเอง)" : ""}</p>
                                 </div>
                                 <button
                                     type="button"
@@ -560,7 +684,8 @@ export default function ReportIncidentPage() {
                             />
                             <span>
                                 <span className="mb-1 flex items-center gap-1.5 font-bold text-slate-900"><ShieldCheck className="h-4 w-4 text-[#0b4c86]" aria-hidden="true" /> การใช้ข้อมูลส่วนบุคคล</span>
-                                ยินยอมให้เจ้าหน้าที่ใช้ชื่อ เบอร์โทรศัพท์ ตำแหน่ง และรูปภาพที่แจ้ง เพื่อติดต่อกลับ ประสานความช่วยเหลือ และให้ท่านติดตามสถานะเรื่องได้เท่านั้น
+                                ยินยอมให้เจ้าหน้าที่ใช้ชื่อ เบอร์โทรศัพท์ ตำแหน่ง ข้อมูลสุขภาพ และรูปภาพที่แจ้ง เพื่อติดต่อกลับ ประสานความช่วยเหลือ (รวมถึงส่งต่อให้ ปภ. จังหวัดสตูล และหน่วยที่เข้าพื้นที่) และให้ท่านติดตามสถานะเรื่องได้เท่านั้น
+                                {onBehalf ? " ท่านยืนยันว่าได้รับความยินยอมจากผู้ต้องการความช่วยเหลือ หรือผู้นั้นไม่สามารถให้ความยินยอมได้ในขณะนี้" : ""}
                                 (<Link href="/privacy-policy" target="_blank" className="font-bold text-[#0b4c86] underline">อ่านนโยบายความเป็นส่วนตัว</Link>)
                             </span>
                         </label>
@@ -578,6 +703,122 @@ export default function ReportIncidentPage() {
 
         </div>
         </PublicLayout>
+    );
+}
+
+function ChoiceGroup({ label, value, onChange, options, columns = "grid-cols-2", required = false }) {
+    return (
+        <fieldset className="mb-4 last:mb-0">
+            <legend className="mb-2 block text-sm font-bold text-slate-700">{label} {required && <span className="text-red-500">*</span>}</legend>
+            <div className={`grid gap-2 ${columns}`}>
+                {options.map((option) => {
+                    const selected = value === option.value;
+                    return (
+                        <button
+                            key={option.value}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => onChange(selected && !required ? "" : option.value)}
+                            className={`min-h-12 rounded-xl border px-3 py-2 text-left text-sm transition ${selected ? "border-[#0b4c86] bg-[#edf5fc] font-bold text-[#083865] shadow-sm" : "border-slate-200 bg-white text-slate-700 hover:border-[#c9dcee] hover:bg-[#f7fbff]"}`}
+                        >
+                            {option.label}
+                            {option.range ? <span className="block text-xs font-normal text-slate-500">{option.range}</span> : null}
+                        </button>
+                    );
+                })}
+            </div>
+        </fieldset>
+    );
+}
+
+// ระดับน้ำที่บ้าน: ใช้ภาพคนยืนในน้ำแบบเดียวกับฟอร์มรายงานระดับน้ำ (เลือกซ้ำ = ยกเลิก เพราะไม่บังคับ)
+function WaterLevelPicker({ value, onChange }) {
+    const pick = (next) => onChange(value === next ? "" : next);
+    const none = value === "none";
+    return (
+        <fieldset>
+            <legend className="mb-2 block text-sm font-bold text-slate-700">ระดับน้ำที่บ้าน <span className="font-normal text-slate-500">เทียบกับผู้ใหญ่ที่ยืนในน้ำ</span></legend>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3" role="radiogroup" aria-label="ระดับน้ำที่บ้าน">
+                {WATER_LEVELS.map((item) => {
+                    const active = value === item.value;
+                    return (
+                        <button
+                            key={item.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => pick(item.value)}
+                            className={`relative flex flex-col items-center rounded-2xl border bg-white px-1.5 pb-2.5 pt-3 text-center transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b4c86] ${active ? "border-transparent" : "border-slate-200 hover:border-[#c9dcee] hover:bg-[#f7fbff]"}`}
+                            style={active ? { boxShadow: `0 0 0 2.5px ${item.color}`, backgroundColor: `${item.color}12` } : undefined}
+                        >
+                            {active ? (
+                                <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full text-white" style={{ backgroundColor: item.color }}>
+                                    <CircleCheck className="h-4 w-4" aria-hidden="true" />
+                                </span>
+                            ) : null}
+                            <WaterLevelFigure id={`home-${item.value}`} fill={item.fill} color={item.color} className="h-14 w-14 sm:h-16 sm:w-16" />
+                            <span className="mt-1.5 text-[13px] font-bold leading-tight text-slate-900 sm:text-sm">{item.label}</span>
+                            <span className="mt-0.5 text-xs text-slate-500">{item.range}</span>
+                        </button>
+                    );
+                })}
+            </div>
+            <button
+                type="button"
+                role="radio"
+                aria-checked={none}
+                onClick={() => pick("none")}
+                className={`mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-sm font-bold transition ${none ? "border-transparent bg-emerald-50 text-emerald-800 shadow-[0_0_0_2.5px_#16a34a]" : "border-slate-200 bg-white text-slate-700 hover:border-[#c9dcee] hover:bg-[#f7fbff]"}`}
+            >
+                <House className="h-5 w-5" aria-hidden="true" /> ไม่มีน้ำท่วมที่บ้าน
+                {none ? <CircleCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" /> : null}
+            </button>
+        </fieldset>
+    );
+}
+
+const MOBILITY_ICONS = { self: Footprints, assisted: Accessibility, trapped: DoorClosed };
+const ACCESS_ICONS = { car: Car, high_vehicle: Truck, boat: Ship, unknown: CircleHelp };
+// สีไอคอนบอกความยากง่าย (เขียว → ส้ม → แดง) ให้อ่านได้จากภาพ
+const ICON_TONES = {
+    self: "#16a34a", assisted: "#ea8a1a", trapped: "#dc2626",
+    car: "#16a34a", high_vehicle: "#ea8a1a", boat: "#dc2626", unknown: "#64748b"
+};
+
+function IconChoiceGroup({ label, value, onChange, options, icons, columns }) {
+    return (
+        <fieldset>
+            <legend className="mb-2 block text-sm font-bold text-slate-700">{label}</legend>
+            <div className={`grid gap-2 sm:gap-3 ${columns}`} role="radiogroup" aria-label={label}>
+                {options.map((option) => {
+                    const Icon = icons[option.value];
+                    const color = ICON_TONES[option.value] || "#0b4c86";
+                    const active = value === option.value;
+                    return (
+                        <button
+                            key={option.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => onChange(active ? "" : option.value)}
+                            className={`relative flex flex-col items-center rounded-2xl border bg-white px-1.5 pb-2.5 pt-3 text-center transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b4c86] ${active ? "border-transparent" : "border-slate-200 hover:border-[#c9dcee] hover:bg-[#f7fbff]"}`}
+                            style={active ? { boxShadow: `0 0 0 2.5px ${color}`, backgroundColor: `${color}12` } : undefined}
+                        >
+                            {active ? (
+                                <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full text-white" style={{ backgroundColor: color }}>
+                                    <CircleCheck className="h-4 w-4" aria-hidden="true" />
+                                </span>
+                            ) : null}
+                            <span className="grid h-12 w-12 place-items-center rounded-full" style={{ backgroundColor: `${color}1a`, color }}>
+                                {Icon ? <Icon className="h-6 w-6" strokeWidth={2.2} aria-hidden="true" /> : null}
+                            </span>
+                            <span className="mt-1.5 text-[13px] font-bold leading-tight text-slate-900 sm:text-sm">{option.short || option.label}</span>
+                            {option.hint ? <span className="mt-0.5 text-xs text-slate-500">{option.hint}</span> : null}
+                        </button>
+                    );
+                })}
+            </div>
+        </fieldset>
     );
 }
 

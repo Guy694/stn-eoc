@@ -581,7 +581,7 @@ export async function GET(request) {
                         links: [
                             { label: 'เปิดภาพรวม', href: '/eoc/flood/overview' },
                             { label: 'ผู้ได้รับผลกระทบ', href: '/eoc/flood/affected' },
-                            { label: 'แผนที่', href: '/public/disaster-map' }
+                            { label: 'แผนที่', href: '/public/weather-watch' }
                         ]
                     };
                 }

@@ -655,7 +655,7 @@ export default function PublicHome() {
                     <h3 className={`flex items-center gap-2 font-[family-name:var(--font-kanit)] text-xl font-semibold ${meta.accent}`}>
                       <Icon className="h-6 w-6" aria-hidden="true" /> {eventTitle(event)}
                     </h3>
-                    <Link href={`/public/disaster-map?type=${meta.mapType}`} className="inline-flex items-center gap-1 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
+                    <Link href="/public/weather-watch" className="inline-flex items-center gap-1 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
                       <MapPinned className="h-4 w-4" aria-hidden="true" /> ดูบนแผนที่
                     </Link>
                   </div>

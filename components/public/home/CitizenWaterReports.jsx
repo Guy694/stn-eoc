@@ -91,7 +91,7 @@ function ReportDialog({ report, onClose }) {
           <p className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">
             <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" /> เจ้าหน้าที่ตรวจสอบก่อนเผยแพร่ ตำแหน่งบนแผนที่เป็นพิกัดโดยประมาณ
           </p>
-          <Link href="/public/disaster-map?type=flood" className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
+          <Link href="/public/weather-watch" className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
             <MapPinned className="h-4 w-4" aria-hidden="true" /> ดูบนแผนที่สถานการณ์
           </Link>
         </div>
@@ -154,7 +154,7 @@ export default function CitizenWaterReports({ reports = [], layout = "list", cla
 
   const footer = (
     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[15px]">
-      <Link href="/public/disaster-map?type=flood" className="inline-flex items-center gap-1 font-semibold text-[#11466e] underline-offset-4 hover:underline">
+      <Link href="/public/weather-watch" className="inline-flex items-center gap-1 font-semibold text-[#11466e] underline-offset-4 hover:underline">
         <MapPinned className="h-4 w-4" aria-hidden="true" /> ดูทั้งหมดบนแผนที่
       </Link>
       <HelpRequestLink kind="water" className="inline-flex items-center gap-1 rounded-full bg-[#0b5fa5] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#084a82]" disabledClassName="hidden">

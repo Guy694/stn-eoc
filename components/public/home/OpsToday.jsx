@@ -57,7 +57,7 @@ export function RoadAlerts({ roads = [] }) {
         <h3 className="flex items-center gap-2 font-[family-name:var(--font-kanit)] text-lg font-semibold text-[#0c2f4a]">
           <Construction className="h-5 w-5 text-[#c2410c]" aria-hidden="true" /> ถนนที่ควรเลี่ยง
         </h3>
-        <Link href="/public/disaster-map" className="inline-flex items-center gap-1 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
+        <Link href="/public/weather-watch" className="inline-flex items-center gap-1 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">
           <MapPinned className="h-4 w-4" aria-hidden="true" /> ดูเส้นทางบนแผนที่
         </Link>
       </div>

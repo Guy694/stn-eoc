@@ -4,7 +4,6 @@ import { BASE, watchPageErrors } from './helpers';
 // หน้าสาธารณะต้องเปิดได้โดยไม่ต้องล็อกอิน และไม่มี error ฝั่งเบราว์เซอร์
 const PUBLIC_PAGES = [
   { path: '/', text: /สตูล/ },
-  { path: '/public/disaster-map', text: /เหตุการณ์/ },
   { path: '/public/weather-watch', text: /อากาศ|ฝน/ },
   { path: '/public/shelters', text: /ศูนย์พักพิง/ },
   { path: '/public/help', text: /ช่วยเหลือ/ },

@@ -17,6 +17,7 @@ import { WATER_ADMIN_CLOSED_MESSAGE, waterReportStatus } from '@/lib/waterReport
 import { getWaterReportSetting } from '@/lib/waterReportSettingServer';
 import { hasWaterTrendColumn } from '@/lib/incidentPublishingDb';
 import { WATER_PASSABILITY, isWaterLevel, travelForPassability, waterLevelMeta, waterTrendMeta } from '@/lib/waterReport';
+import { deriveHelpUrgency, helpDetailLines, normalizeHelpDetails, travelStatusForAccess, waterLevelColumn } from '@/lib/helpRequestDetails';
 
 const MAX_PHOTO_SIZE_BYTES = DEFAULT_MAX_IMAGE_SIZE_BYTES;
 const HELP_CATEGORY_LABELS = {
@@ -25,10 +26,14 @@ const HELP_CATEGORY_LABELS = {
     other: 'อื่นๆ'
 };
 
-function buildHelpDescription({ helpCategory, helpReason, description }) {
+const URGENCY_LABELS = { critical: 'วิกฤต', high: 'สูง', medium: 'ปานกลาง', low: 'ต่ำ' };
+
+// บรรทัดแรกต้องเป็น "ประเภทความช่วยเหลือ:" (หน้าติดตามคำขออ่านจากบรรทัดนี้ — app/api/public/track)
+function buildHelpDescription({ helpCategory, helpReason, description, details }) {
     const categoryLabel = HELP_CATEGORY_LABELS[helpCategory] || helpCategory || '-';
     const lines = [
         `ประเภทความช่วยเหลือ: ${categoryLabel}`,
+        ...helpDetailLines(details),
         `เหตุผลการขอความช่วยเหลือ: ${helpReason || description || '-'}`
     ];
     if (description && description !== helpReason) {
@@ -51,13 +56,15 @@ function buildTelegramHelpMessage(report, { compact = false } = {}) {
         '<b>มีคำขอใหม่ รอเจ้าหน้าที่ติดต่อกลับ</b>',
         `เลขที่: #${escapeTelegramHtml(report.id)}${report.trackingCode ? ` (ติดตาม ${escapeTelegramHtml(formatTrackingCode(report.trackingCode))})` : ''}`,
         `ประเภท: ${escapeTelegramHtml(report.helpCategoryLabel)}`,
+        report.urgency ? `ความเร่งด่วน: <b>${escapeTelegramHtml(URGENCY_LABELS[report.urgency] || report.urgency)}</b>` : null,
         `ผู้แจ้ง: ${escapeTelegramHtml(`${report.firstName} ${report.lastName}`)}`,
         `โทร: ${escapeTelegramHtml(report.phone)}`,
         `พื้นที่: ${escapeTelegramHtml([report.village, report.subDistrict, report.district].filter(Boolean).join(' ') || '-')}`,
+        ...(report.detailLines || []).map((line) => escapeTelegramHtml(line)),
         `เหตุผล: ${escapeTelegramHtml(reason)}`,
         `พิกัด: ${escapeTelegramHtml(`${report.latitude}, ${report.longitude}`)}`,
         `<a href="${mapsUrl}">เปิดแผนที่</a>`
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 }
 
 // ส่งเข้ากลุ่มเจ้าหน้าที่ + เจ้าหน้าที่ที่เชื่อม Telegram ส่วนตัว (ประเภท "คำขอความช่วยเหลือ" — lib/telegramChannels.js)
@@ -199,11 +206,32 @@ export async function POST(request) {
         const helpReason = text('helpReason', 5000) || description;
         const waterLevel = text('waterLevel', 50);
         const affectedRaw = text('affectedPeople', 10);
-        const affectedPeople = affectedRaw && /^\d{1,6}$/.test(affectedRaw) ? Number(affectedRaw) : null;
+        const affectedInput = affectedRaw && /^\d{1,6}$/.test(affectedRaw) ? Number(affectedRaw) : null;
         const urgencyRaw = text('urgency', 20) || 'medium';
-        const urgency = ['low', 'medium', 'high', 'critical'].includes(urgencyRaw) ? urgencyRaw : 'medium';
-        const travelStatus = text('travelStatus', 20); // สถานะการสัญจร
         const reportType = text('reportType', 30) || 'help_request'; // ประเภทรายงาน
+        // รายละเอียดคำขอความช่วยเหลือ (จำนวนคน กลุ่มเปราะบาง ยาคงเหลือ ระดับน้ำ การเข้าถึง) — ใช้จัดลำดับและส่งต่อ ปภ.
+        const helpDetails = reportType === 'help_request'
+            ? normalizeHelpDetails({
+                onBehalf: text('onBehalf', 10),
+                relation: text('relation', 50),
+                patientName: text('patientName', 150),
+                patientPhone: text('patientPhone', 20),
+                peopleCount: text('peopleCount', 5),
+                vulnerableGroups: text('vulnerableGroups', 300),
+                medicineRemaining: text('medicineRemaining', 20),
+                medicineNeeded: text('medicineNeeded', 300),
+                homeWaterLevel: text('homeWaterLevel', 20),
+                mobility: text('mobility', 20),
+                accessRoute: text('accessRoute', 20)
+            })
+            : null;
+        // คำขอความช่วยเหลือ: เซิร์ฟเวอร์จัดลำดับความเร่งด่วนเองจากข้อมูลที่แจ้ง
+        const urgency = helpDetails
+            ? deriveHelpUrgency(helpDetails)
+            : (['low', 'medium', 'high', 'critical'].includes(urgencyRaw) ? urgencyRaw : 'medium');
+        const travelStatus = text('travelStatus', 20) || (helpDetails ? travelStatusForAccess(helpDetails.accessRoute) : null); // สถานะการสัญจร
+        const affectedPeople = helpDetails?.peopleCount ?? affectedInput;
+        const helpWaterLevel = helpDetails ? waterLevelColumn(helpDetails.homeWaterLevel) : '';
         const disasterType = text('disasterType', 30) || 'assistance'; // ประเภทภัย
         // เวลาเกิดเหตุ (เวลาไทยจากฟอร์ม) → Date ให้ mysql2 แปลงตามโซนเวลาของฐานข้อมูล ดู lib/publicReportTime.js
         const occurredAt = parseOccurredAt(text('occurredAt', 40));
@@ -234,6 +262,9 @@ export async function POST(request) {
         }
         if (!/^[0-9+\-\s]{9,20}$/.test(phone) || phone.replace(/\D/g, '').length < 9) {
             return NextResponse.json({ success: false, message: 'เบอร์โทรไม่ถูกต้อง (9–10 หลัก)' }, { status: 400 });
+        }
+        if (helpDetails?.patientPhone && helpDetails.patientPhone.replace(/\D/g, '').length < 9) {
+            return NextResponse.json({ success: false, message: 'เบอร์โทรของผู้ต้องการความช่วยเหลือไม่ถูกต้อง (9–10 หลัก)' }, { status: 400 });
         }
         // พิกัดต้องเป็นตัวเลขและอยู่ในประเทศไทยโดยประมาณ (กันค่าผิด/สลับละติจูด-ลองจิจูด)
         const latValue = Number(latitude);
@@ -347,7 +378,7 @@ export async function POST(request) {
         // Connect to database
         const pool = await getConnection();
         const finalDescription = reportType === 'help_request'
-            ? buildHelpDescription({ helpCategory, helpReason, description })
+            ? buildHelpDescription({ helpCategory, helpReason, description, details: helpDetails })
             : description;
 
         // Insert incident report
@@ -365,7 +396,7 @@ export async function POST(request) {
                 subDistrict,
                 district,
                 finalDescription,
-                requiresWaterLevel ? waterLevel : (waterLevel || ''),
+                requiresWaterLevel ? waterLevel : (waterLevel || helpWaterLevel || ''),
                 affectedPeople,
                 urgency,
                 travelStatus,
@@ -398,6 +429,8 @@ export async function POST(request) {
                 longitude,
                 helpCategoryLabel: HELP_CATEGORY_LABELS[helpCategory] || helpCategory || '-',
                 helpReason: helpReason || description || '-',
+                urgency,
+                detailLines: helpDetailLines(helpDetails),
                 telegramPhoto
             });
             // เด้งเข้ามือถือเจ้าหน้าที่ที่เปิดรับแจ้งเตือน (ไม่ทำให้การส่งคำขอของประชาชนล้มถ้าส่งไม่สำเร็จ)
