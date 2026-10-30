@@ -3,12 +3,12 @@
 import { useEffect, useRef } from "react";
 import ShareLineButton from "@/components/public/ShareLineButton";
 import Link from "next/link";
-import { CloudRainWind, Car, Footprints, HousePlus, Map, MapPin, Megaphone, PackageCheck, Phone, Siren, Smartphone, TriangleAlert, Users, Waves, X, Zap } from "lucide-react";
+import { CloudRainWind, HousePlus, Map, MapPin, Megaphone, Phone, Siren, TriangleAlert, Waves, X } from "lucide-react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
 import { responsiveImage } from "@/lib/imageUrl";
 import { alertDetail, alertHeadline, popupHazard } from "@/lib/homePopups";
 
-// หัวภาพและคำแนะนำตามชนิดภัย: น้ำ = flood.png, ฝนตกหนัก = rainny.png (ภาพอยู่ใน public/img)
+// หัวภาพและสีตามชนิดภัย: น้ำ = flood.png, ฝนตกหนัก = rainny.png (ภาพอยู่ใน public/img)
 const HAZARD_VIEW = {
   flood: {
     image: "/stn-eoc/img/flood.png",
@@ -17,12 +17,6 @@ const HAZARD_VIEW = {
     head: "from-[#7f1d1d] via-[#991b1b]/90",
     accent: "text-[#b91c1c]",
     soft: "bg-red-50",
-    ring: "ring-red-100",
-    advice: [
-      { Icon: Footprints, title: "อยู่ห่างคลองและทางน้ำไหล", sub: "ไม่ขับรถหรือเดินลุยน้ำที่ไหลเชี่ยว" },
-      { Icon: PackageCheck, title: "ขนย้ายของสำคัญ ยา และเอกสารขึ้นที่สูง", sub: "ชาร์จโทรศัพท์ให้เต็ม" },
-      { Icon: Users, title: "ดูแลผู้สูงอายุ เด็ก และผู้ป่วยติดเตียง", sub: "ให้พร้อมออกจากบ้านเมื่อมีประกาศ" }
-    ]
   },
   // เตือนระดับน้ำที่ยังไม่ถึงตลิ่ง (เช่น ระดับน้ำอันตราย): ไม่ใช้คำว่าน้ำท่วมและภาพน้ำท่วม
   water: {
@@ -32,12 +26,6 @@ const HAZARD_VIEW = {
     head: "from-[#7c2d12] via-[#9a3412]/90",
     accent: "text-[#c2410c]",
     soft: "bg-orange-50",
-    ring: "ring-orange-100",
-    advice: [
-      { Icon: Footprints, title: "อยู่ห่างคลองและทางน้ำไหล", sub: "ไม่ขับรถหรือเดินลุยน้ำที่ไหลเชี่ยว" },
-      { Icon: PackageCheck, title: "เตรียมของสำคัญ ยา และเอกสารให้พร้อมย้าย", sub: "ชาร์จโทรศัพท์ให้เต็ม" },
-      { Icon: Smartphone, title: "ติดตามระดับน้ำและประกาศจากหน่วยงาน", sub: "หากน้ำล้นตลิ่งจะแจ้งเตือนอีกครั้ง" }
-    ]
   },
   rain: {
     image: "/stn-eoc/img/rainny.png",
@@ -46,12 +34,6 @@ const HAZARD_VIEW = {
     head: "from-[#78350f] via-[#92400e]/90",
     accent: "text-[#b45309]",
     soft: "bg-amber-50",
-    ring: "ring-amber-100",
-    advice: [
-      { Icon: Car, title: "ขับรถช้าลง ระวังถนนลื่น", sub: "เปิดไฟหน้า เว้นระยะรถคันหน้า" },
-      { Icon: Zap, title: "อยู่ห่างต้นไม้ใหญ่ ป้าย และเสาไฟ", sub: "ไม่หลบฝนใต้ต้นไม้ใหญ่" },
-      { Icon: Smartphone, title: "ติดตามประกาศจากหน่วยงาน", sub: "ชาร์จโทรศัพท์ให้เต็มไว้ก่อน" }
-    ]
   }
 };
 
@@ -150,16 +132,6 @@ export default function HomePopup({ popup, onClose }) {
                   {others.length > 2 ? <li className="text-sm text-slate-500">และอีก {others.length - 2} จุด</li> : null}
                 </ul>
               ) : null}
-
-              <h3 className="mt-3 font-[family-name:var(--font-kanit)] text-base font-bold text-[#0c2f4a] sm:mt-5 sm:text-lg">ควรทำตอนนี้</h3>
-              <ul className={`mt-1.5 grid gap-2 rounded-xl ${view.soft} p-3 sm:mt-2 sm:grid-cols-3 sm:gap-4 sm:rounded-2xl sm:p-4`}>
-                {view.advice.map(({ Icon, title, sub }) => (
-                  <li key={title} className="flex items-center gap-2.5 sm:items-start sm:gap-3">
-                    <span className={`grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full bg-white ${view.accent} ring-1 ${view.ring}`} aria-hidden="true"><Icon className="h-4 w-4 sm:h-5 sm:w-5" /></span>
-                    <span className="min-w-0 text-sm leading-5 sm:text-[15px] sm:leading-6"><span className="block font-semibold text-[#15232e]">{title}</span><span className="hidden text-sm text-slate-500 sm:block">{sub}</span></span>
-                  </li>
-                ))}
-              </ul>
 
               <Link href="/public/weather-watch" onClick={onClose} className="mt-2.5 flex min-h-10 items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 text-sm sm:mt-3 sm:min-h-12 sm:rounded-2xl sm:px-4 sm:text-[15px] font-semibold text-[#0b4c86] ring-1 ring-slate-200 hover:bg-white">
                 <span className="flex min-w-0 items-center gap-2"><MapPin className={`h-5 w-5 shrink-0 ${view.accent}`} aria-hidden="true" /><span className="truncate">ดูพื้นที่ที่ได้รับผลกระทบบนแผนที่</span></span>
