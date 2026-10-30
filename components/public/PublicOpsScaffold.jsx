@@ -5,6 +5,7 @@ import AIChatbot from "@/components/AIChatbot";
 import Footer from "@/components/Footer";
 import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
+import SatisfactionPrompt from "@/components/common/SatisfactionPrompt";
 import PublicDataNotice from "@/components/public/PublicDataNotice";
 
 export default function PublicOpsScaffold({
@@ -50,6 +51,7 @@ export default function PublicOpsScaffold({
       {/* น้องสจ๊วตยืนมุมขวาล่าง (มือถือที่มีแถบล่าง ยกขึ้นเหนือแถบ) · เปิดจากเมนู "ถามน้องสจ๊วต" ได้เหมือนเดิม */}
       <AIChatbot launcherRaised={showBottomBar} />
       {alertPrompt ? <AlertSubscribePrompt /> : null}
+      <SatisfactionPrompt />
     </div>
   );
 }

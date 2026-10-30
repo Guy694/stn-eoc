@@ -34,6 +34,7 @@ import { citizenWaterReports, roadAlerts, shelterSummary } from "@/lib/homeSigna
 import CitizenWaterReports from "@/components/public/home/CitizenWaterReports";
 import AlertSubscribeCard from "@/components/public/AlertSubscribeCard";
 import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
+import SatisfactionPrompt from "@/components/common/SatisfactionPrompt";
 import { heavyRainTodayText } from "@/lib/rainNowcast";
 import SeaTodayCard from "@/components/public/home/SeaTodayCard";
 import { responsiveImage } from "@/lib/imageUrl";
@@ -451,6 +452,7 @@ export default function PublicHome() {
     <HomePopup popup={popup} onClose={closePopup} />
     {/* ชวนรับแจ้งเตือนภัย: หลังหน้าโลโก้และ popup ประกาศ เฉพาะเครื่องที่ยังไม่ได้รับ */}
     <AlertSubscribePrompt blocked={loading || Boolean(popup)} district={districtName} />
+    <SatisfactionPrompt />
     <PublicOpsScaffold
       title="หน้าหลัก"
       activeMenu="home"

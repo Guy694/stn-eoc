@@ -3,7 +3,7 @@ import { enforceIpRateLimit } from "@/lib/rateLimit";
 import { validateSatisfaction } from "@/lib/satisfaction";
 import { saveSatisfaction } from "@/lib/satisfactionServer";
 
-// ประเมินความพึงพอใจระบบ — POST { rating: 1–5, comment?, path } · ไม่ต้องเข้าสู่ระบบ ไม่เก็บชื่อ/เบอร์/IP
+// ประเมินความพึงพอใจระบบ — POST { rating: 1–5, comment?, sources?: [facebook|line|…], sourceOther?, path } · ไม่ต้องเข้าสู่ระบบ ไม่เก็บชื่อ/เบอร์/IP
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {

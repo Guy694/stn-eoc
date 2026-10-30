@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MessageSquareText, RefreshCw, Smile, Star, Users } from "lucide-react";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { MetricCard } from "@/components/common/MetricCards";
-import { RATING_LABELS } from "@/lib/satisfaction";
+import { RATING_LABELS, SOURCE_CHANNELS } from "@/lib/satisfaction";
 
 const API = "/stn-eoc/api/admin/satisfaction";
 const RANGES = [[7, "7 วัน"], [30, "30 วัน"], [90, "90 วัน"], [365, "1 ปี"]];
@@ -100,6 +100,27 @@ export default function SatisfactionPanel() {
             </section>
           </div>
 
+          <section className="rounded-2xl border border-slate-200 bg-white p-4">
+            <h4 className="mb-1 font-black text-slate-900">รับทราบข่าวสารระบบจากช่องทางไหน</h4>
+            <p className="mb-3 text-xs text-slate-500">เลือกได้หลายข้อ • ตอบแล้ว {formatNumber(data.source_total)} จาก {formatNumber(s.total)} ผู้ประเมิน</p>
+            {data.sources.length ? (
+              <ul className="space-y-1.5">
+                {data.sources.map((item) => (
+                  <li key={item.key} className="flex items-center gap-2 text-sm">
+                    <span className="w-44 min-w-0 shrink-0 truncate text-slate-700 sm:w-56">{item.label}</span>
+                    <span className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+                      <span className="block h-full rounded-full bg-[#0b4c86]" style={{ width: `${data.source_total ? Math.round((item.n / data.source_total) * 100) : 0}%` }} />
+                    </span>
+                    <span className="w-24 shrink-0 text-right tabular-nums text-slate-600">{formatNumber(item.n)} ({data.source_total ? Math.round((item.n / data.source_total) * 100) : 0}%)</span>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="text-sm text-slate-500">ยังไม่มีผู้ตอบคำถามนี้</p>}
+            {data.source_other.length ? (
+              <p className="mt-3 break-words text-sm text-slate-600"><span className="font-semibold text-slate-800">อื่น ๆ ที่ระบุ:</span> {data.source_other.join(" • ")}</p>
+            ) : null}
+          </section>
+
           <section className="rounded-2xl border border-slate-200 bg-white">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
               <h4 className="font-black text-slate-900">ความเห็นล่าสุด</h4>
@@ -122,6 +143,7 @@ export default function SatisfactionPanel() {
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       <Stars value={item.rating} />
                       <span className="text-xs text-slate-500">{formatDateTime(item.created_at)} • {item.area === "staff" ? `เจ้าหน้าที่${item.role ? ` (${ROLE[item.role] || item.role})` : ""}` : "ประชาชน"} • {DEVICE[item.device] || "-"}{item.page_path ? ` • หน้า ${item.page_path}` : ""}</span>
+                      {item.sources ? <span className="text-xs text-slate-500">รู้จักจาก: {item.sources.split(",").map((key) => SOURCE_CHANNELS[key]).filter(Boolean).join(", ")}{item.source_other ? ` (${item.source_other})` : ""}</span> : null}
                     </div>
                     {item.comment ? <p className="mt-1.5 whitespace-pre-line break-words text-[15px] leading-6 text-slate-800">{item.comment}</p> : <p className="mt-1 text-xs text-slate-400">ไม่ได้เขียนข้อเสนอแนะ</p>}
                   </li>
@@ -129,7 +151,7 @@ export default function SatisfactionPanel() {
               </ul>
             ) : <p className="p-4 text-sm text-slate-500">ยังไม่มีความเห็นตามตัวกรองนี้</p>}
           </section>
-          <p className="text-xs text-slate-500">ประเมินได้จากปุ่ม &quot;ประเมินความพึงพอใจ&quot; ท้ายเว็บทุกหน้า • ไม่เก็บชื่อ เบอร์โทร หรือ IP ของผู้ประเมิน • ลบอัตโนมัติเมื่อเกิน 2 ปี</p>
+          <p className="text-xs text-slate-500">ประเมินได้จากปุ่ม &quot;ประเมินความพึงพอใจ&quot; ท้ายเว็บทุกหน้า และระบบจะเด้งขอให้ประเมินเมื่อผู้ใช้เข้าหลายครั้ง (เข้าครบ 3 ครั้ง หรือเปิดครบ 8 หน้า) • ไม่เก็บชื่อ เบอร์โทร หรือ IP ของผู้ประเมิน • ลบอัตโนมัติเมื่อเกิน 2 ปี</p>
         </>
       ) : null}
     </div>

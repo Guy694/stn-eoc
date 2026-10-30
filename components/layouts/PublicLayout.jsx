@@ -3,6 +3,7 @@ import PublicTopNavigation from "@/components/public/PublicTopNavigation";
 import Footer from "@/components/Footer";
 import AIChatbot from "@/components/AIChatbot";
 import AlertSubscribePrompt from "@/components/public/alerts/AlertSubscribePrompt";
+import SatisfactionPrompt from "@/components/common/SatisfactionPrompt";
 import PublicDataNotice from "@/components/public/PublicDataNotice";
 
 export default function PublicLayout({ children }) {
@@ -17,6 +18,7 @@ export default function PublicLayout({ children }) {
             <Footer />
             <AIChatbot />
             <AlertSubscribePrompt />
+            <SatisfactionPrompt />
         </div>
     );
 }
