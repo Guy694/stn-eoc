@@ -19,7 +19,8 @@ test("แนวโน้ม 24 ชม.: รวมค่าที่บันท�
   expect(screen.getByLabelText(/แนวโน้ม \d+ ชม\. เพิ่มขึ้น 0\.18 เมตร/)).toBeInTheDocument();
 });
 
-test("ข้อมูลยังไม่พอ: บอกว่ากำลังสะสม", () => {
+test("ข้อมูลยังไม่พอ: ไม่แสดงกราฟและไม่ขึ้นข้อความกำลังสะสม (ไม่ให้การ์ดดูเหมือนระบบเสีย)", () => {
   render(<CanalStrip stations={[station]} history={{}} />);
-  expect(screen.getByText(/กำลังสะสมข้อมูล/)).toBeInTheDocument();
+  expect(screen.queryByText(/กำลังสะสมข้อมูล/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/แนวโน้ม \d+ ชม\./)).not.toBeInTheDocument();
 });

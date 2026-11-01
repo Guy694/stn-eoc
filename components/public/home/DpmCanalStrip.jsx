@@ -31,7 +31,7 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
   const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState(null);
   const sorted = sortDpmStations(stations);
-  const visible = expanded ? sorted : sorted.slice(0, INITIAL_COUNT);
+  const hiddenCount = Math.max(0, sorted.length - INITIAL_COUNT);
   const worst = sorted[0] ? dpmStatus(sorted[0]) : null;
   const now = useNow();
   const latest = latestTime(stations.map((item) => item.observedAt)) ?? latestTime([observedAt]);
@@ -61,14 +61,15 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
         <div className="mt-4 h-32 animate-pulse rounded-3xl bg-white" />
       ) : sorted.length > 0 ? (
         <>
-          <ul className={`mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${fresh.stale ? "opacity-75 grayscale" : ""}`} data-stale={fresh.stale ? "1" : undefined}>
-            {visible.map((station, index) => {
+          {/* มือถือ: แถบเลื่อนแนวนอนแสดงทุกสถานี (สถานีที่หนัก/ใกล้เกณฑ์ขึ้นก่อน) · จอ sm ขึ้นไป: ตาราง + ปุ่มดูทั้งหมด */}
+          <ul className={`-mx-4 mt-3 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 pt-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:mt-4 sm:px-0 sm:pb-0 sm:pt-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden ${fresh.stale ? "opacity-75 grayscale" : ""}`} data-stale={fresh.stale ? "1" : undefined} aria-label="สถานีวัดระดับน้ำ">
+            {sorted.map((station, index) => {
               const status = dpmStatus(station);
               const next = nextThreshold(station);
               const points = history[station.code] || [];
               const trend = dpmTrend(points, station);
               return (
-                <li key={station.code}>
+                <li key={station.code} className={`w-[85%] shrink-0 snap-start sm:w-auto ${!expanded && index >= INITIAL_COUNT ? "sm:hidden" : ""}`}>
                 <button type="button" onClick={() => setSelected(station)} aria-label={`ดูข้อมูล กล้อง และระดับน้ำ ${station.name}`}
                   className="flex h-full w-full gap-3 rounded-3xl bg-white p-4 text-left ring-1 ring-[#d6e3ea] transition hover:ring-[#9fc9d6] hover:shadow-[0_12px_28px_-20px_rgba(12,47,74,.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#11466e]"
                   style={status.rank >= 2 ? { boxShadow: `inset 0 0 0 2px ${status.tone}` } : undefined}>
@@ -98,10 +99,13 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
               );
             })}
           </ul>
+          {sorted.length > 1 ? (
+            <p className="mt-1 text-xs font-semibold text-[#11466e] sm:hidden" aria-hidden="true">เลื่อนซ้าย–ขวา ดูครบ {sorted.length} สถานี →</p>
+          ) : null}
           {sorted.length > INITIAL_COUNT ? (
             <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-4 py-3 text-[15px] font-semibold text-[#11466e] ring-1 ring-[#d6e3ea] hover:bg-[#f2f7fa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#11466e]">
-              {expanded ? "แสดงน้อยลง" : `ดูทั้งหมด (อีก ${sorted.length - visible.length} สถานี)`}
+              className="mt-3 hidden w-full sm:flex items-center justify-center gap-1.5 rounded-2xl bg-white px-4 py-3 text-[15px] font-semibold text-[#11466e] ring-1 ring-[#d6e3ea] hover:bg-[#f2f7fa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#11466e]">
+              {expanded ? "แสดงน้อยลง" : `ดูทั้งหมด (อีก ${hiddenCount} สถานี)`}
               <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
             </button>
           ) : null}
@@ -109,7 +113,8 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
       ) : (
         <p className="mt-4 rounded-3xl bg-white p-5 text-slate-600">ยังไม่มีข้อมูลจากสถานีวัดระดับน้ำ ลองใหม่อีกครั้งภายหลัง</p>
       )}
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-500 sm:hidden">สถานะตามเกณฑ์ของ ปภ. • แตะการ์ดเพื่อดูภาพกล้อง CCTV และรายละเอียด • ข้อมูลจาก ปภ.</p>
+      <p className="mt-2 hidden text-xs text-slate-500 sm:block">
         ตัวเลข = ระดับน้ำที่สถานีวัดได้ (ม.) • สถานะตามเกณฑ์ของ ปภ. แต่ละสถานี: {[1, 2, 3, 4, 5].map((code) => DPM_STATUS[code].label).join(" → ")} • เส้นประในเกจ = เกณฑ์อันตราย • กราฟเล็ก = ระดับน้ำ 24 ชม.ล่าสุด
         • แตะการ์ดเพื่อดูภาพกล้อง CCTV และรายละเอียด • ข้อมูลจากกรมป้องกันและบรรเทาสาธารณภัย (cctv.disaster.go.th)
       </p>

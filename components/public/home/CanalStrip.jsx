@@ -40,9 +40,8 @@ export function sparkPoints(history = [], station = null) {
 
 export function Sparkline({ station, history }) {
   const points = sparkPoints(history, station);
-  if (points.length < 3) {
-    return <p className="w-28 shrink-0 self-center text-right text-[11px] leading-4 text-slate-400">กำลังสะสมข้อมูล<br />แนวโน้ม 24 ชม.</p>;
-  }
+  // ข้อมูลยังไม่พอวาดกราฟ → ไม่แสดงอะไร (ข้อความ "กำลังสะสมข้อมูล" บนทุกการ์ดทำให้ดูเหมือนระบบเสีย)
+  if (points.length < 3) return null;
   const levels = points.map((p) => p.level);
   let min = Math.min(...levels);
   let max = Math.max(...levels);

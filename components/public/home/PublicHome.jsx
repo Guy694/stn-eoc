@@ -22,6 +22,7 @@ import {
 import PublicOpsScaffold from "@/components/public/PublicOpsScaffold";
 import SatunRiskMap from "@/components/public/home/SatunRiskMap";
 import { RAIN_24H_MAP_CATEGORIES, rain24hMapCategory } from "@/lib/thaiWaterRain";
+import { RISK_LEVELS, RISK_META } from "@/lib/weatherRiskConfig";
 import HomeSplashScreen from "@/components/public/home/HomeSplashScreen";
 import DpmCanalStrip from "@/components/public/home/DpmCanalStrip";
 import WarningRibbon from "@/components/public/home/WarningRibbon";
@@ -46,6 +47,12 @@ import FreshnessTag, { useNow } from "@/components/common/FreshnessTag";
 // หน้าแรกสำหรับประชาชน
 // จุดเด่นเดียวของหน้า: แผนที่ 7 อำเภอที่ระบายสีตามความเสี่ยงวันนี้ แตะแล้วเห็น "พื้นที่ของฉัน" ทันที
 const MY_DISTRICT_KEY = "stn-eoc:my-district";
+const MAP_MODE_KEY = "stn-eoc:home-map-mode";
+// แผนที่หน้าแรก: เริ่มที่ความเสี่ยงน้ำท่วม (ตรงกับพาดหัว) สลับเป็นฝน 24 ชม. ได้ และจำค่าที่เลือกไว้ในเครื่อง
+const MAP_MODES = [
+  { key: "risk", label: "ความเสี่ยงน้ำท่วม" },
+  { key: "rain", label: "ฝน 24 ชม." }
+];
 
 const EVENT_META = {
   disease: { icon: Activity, tone: "border-rose-200 bg-rose-50", accent: "text-rose-700", mapType: "disease" },
@@ -112,7 +119,7 @@ function eventTitle(event) {
 }
 
 /** สรุปสถานการณ์เป็นประโยคภาษาคน */
-function eventSentences(event) {
+function eventSentences(event, context = {}) {
   const detail = event.detail;
   if (!detail) return ["กำลังรวบรวมข้อมูลจากหน่วยงาน"];
 
@@ -133,7 +140,16 @@ function eventSentences(event) {
 
   if (event.type === "flood") {
     if (!detail.latest_date || detail.flooded_villages === 0) {
-      return ["ยังไม่มีรายงานพื้นที่น้ำท่วมในรอบนี้"];
+      // ยังไม่มีหมู่บ้านท่วม แต่บอกสัญญาณเฝ้าระวังด้วย ไม่ให้ขัดกับพาดหัว/ระดับน้ำในคลองด้านบน
+      const { watchDistricts = 0, totalDistricts = 0, watchStations = 0 } = context;
+      const signals = [
+        watchDistricts > 0 ? `เฝ้าระวัง ${formatNumber(watchDistricts)}${totalDistricts ? ` จาก ${formatNumber(totalDistricts)}` : ""} อำเภอ` : null,
+        watchStations > 0 ? `น้ำในคลองถึงเกณฑ์เฝ้าระวังขึ้นไป ${formatNumber(watchStations)} สถานี` : null
+      ].filter(Boolean);
+      return [
+        signals.length ? `ยังไม่มีหมู่บ้านน้ำท่วม • ${signals.join(" • ")}` : "ยังไม่มีหมู่บ้านน้ำท่วมในรอบนี้",
+        detail.open_shelters > 0 ? `ศูนย์พักพิงเปิด ${formatNumber(detail.open_shelters)} แห่ง` : null
+      ].filter(Boolean);
     }
     const levels = ["สูงมาก", "สูง", "ปานกลาง", "ต่ำ"]
       .filter((level) => detail.villages_by_level?.[level])
@@ -163,6 +179,77 @@ function districtFigure(event, districtName) {
   if (event.type === "flood") return `หมู่บ้านน้ำท่วม ${formatNumber(value)} หมู่บ้าน`;
   if (event.type === "festival-accidents") return `อุบัติเหตุ ${formatNumber(value)} ครั้ง`;
   return null;
+}
+
+function AdviceList({ groups, id }) {
+  return (
+    <section aria-labelledby={id}>
+      <h2 id={id} className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">สิ่งที่ควรทำตอนนี้</h2>
+      {groups.length === 0 ? (
+        <p className="mt-3 text-[1.05rem] leading-8 text-slate-700">ใช้ชีวิตได้ตามปกติ และติดตามข่าวสารจากหน่วยงานราชการเป็นระยะ</p>
+      ) : groups.map((group) => (
+        <div key={group.title} className="mt-5">
+          <p className="font-semibold text-[#2e6b4e]">{group.title}</p>
+          <ul className="mt-2 space-y-3">
+            {group.items.map((item) => (
+              <li key={item} className="flex gap-3 text-[1.05rem] leading-8">
+                <CheckCircle2 className="mt-1.5 h-5 w-5 shrink-0 text-[#2e6b4e]" aria-hidden="true" />{item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+/** ทางลัดบนมือถือ (ต่ำกว่า sm): ปุ่มหลัก 2 ปุ่ม + ปุ่มรอง 3 ปุ่ม อยู่ใน hero ใต้พาดหัว */
+function MobileShortcuts({ sheltersOpen, shelters }) {
+  const summary = sheltersOpen && shelters.length > 0 ? shelterSummary(shelters) : null;
+  // ไอคอนอยู่บน ข้อความอยู่ล่าง: จอ 360–390px ปุ่มละ ~170px วางไอคอนข้างข้อความแล้วชื่อปุ่มตกบรรทัด
+  const primary = "flex min-h-[5.5rem] flex-col justify-center gap-1.5 rounded-2xl px-3.5 py-3 text-white shadow-[0_10px_24px_-14px_rgba(0,0,0,.8)]";
+  const off = "cursor-not-allowed bg-white/10! text-white/60! shadow-none!";
+  const secondary = "flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl bg-white/10 px-1.5 py-2 text-center text-[13px] font-semibold leading-tight text-white ring-1 ring-white/15 active:bg-white/20";
+  return (
+    <nav aria-label="ทางลัดที่สำคัญ" className="-mt-2 sm:hidden">
+      <div className="grid grid-cols-2 gap-2">
+        <HelpRequestLink className={`${primary} bg-[#c81e1e]`} disabledClassName={off}>
+          {({ helpOpen }) => (
+            <>
+              <Siren className="h-7 w-7 shrink-0" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block whitespace-nowrap font-[family-name:var(--font-kanit)] text-base font-bold leading-tight">ขอความช่วยเหลือ</span>
+                <span className="block text-xs leading-snug opacity-85">{helpOpen ? "ด้านยา · กลุ่มเปราะบาง" : "ยังไม่เปิดรับ • โทร 1669"}</span>
+              </span>
+            </>
+          )}
+        </HelpRequestLink>
+        <HelpRequestLink kind="water" className={`${primary} bg-[#0b5fa5]`} disabledClassName={off}>
+          {({ helpOpen }) => (
+            <>
+              <Waves className="h-7 w-7 shrink-0" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block whitespace-nowrap font-[family-name:var(--font-kanit)] text-base font-bold leading-tight">รายงานระดับน้ำ</span>
+                <span className="block text-xs leading-snug opacity-85">{helpOpen ? "ใช้เวลาไม่ถึงนาที" : "ยังไม่เปิดรับ"}</span>
+              </span>
+            </>
+          )}
+        </HelpRequestLink>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        <Link href="/public/my-risk" className={secondary}><HousePlus className="h-6 w-6 text-[#9fd8e6]" aria-hidden="true" />บ้านฉันเสี่ยงไหม</Link>
+        <Link href="/public/track" className={secondary}><SearchCheck className="h-6 w-6 text-[#9fd8e6]" aria-hidden="true" />ติดตามคำขอ</Link>
+        {summary ? (
+          <Link href="/public/shelters?near=1" className={secondary}>
+            <Tent className="h-6 w-6 text-[#cdb8f5]" aria-hidden="true" />ศูนย์พักพิง
+            <span className="text-[11px] font-normal text-white/70">เปิด {formatNumber(summary.open)} แห่ง</span>
+          </Link>
+        ) : (
+          <a href="tel:1669" className={secondary}><Phone className="h-6 w-6 text-[#ffb4b4]" aria-hidden="true" />โทร 1669<span className="text-[11px] font-normal text-white/70">เจ็บป่วยฉุกเฉิน</span></a>
+        )}
+      </div>
+    </nav>
+  );
 }
 
 function TrendBars({ trend }) {
@@ -311,6 +398,14 @@ export default function PublicHome() {
   const [loading, setLoading] = useState(true);
   const now = useNow();
   const [districtName, setDistrictName] = useState("");
+  const [mapMode, setMapMode] = useState("risk");
+  useEffect(() => {
+    try { if (window.localStorage.getItem(MAP_MODE_KEY) === "rain") setMapMode("rain"); } catch { /* ใช้ค่าเริ่มต้น */ }
+  }, []);
+  const chooseMapMode = (mode) => {
+    setMapMode(mode);
+    try { window.localStorage.setItem(MAP_MODE_KEY, mode); } catch { /* ไม่จำก็ใช้ได้ */ }
+  };
   const [userPoint, setUserPoint] = useState(null);
   const [locationMessage, setLocationMessage] = useState("");
 
@@ -407,6 +502,7 @@ export default function PublicHome() {
 
   const myDistrict = districts.find((item) => item.district_name === districtName) || null;
   const watchCount = districts.filter((item) => item.risk_level !== "normal").length;
+  const eventContext = { watchDistricts: watchCount, totalDistricts: districts.length, watchStations: water.stations.filter((station) => station.statusCode >= 2).length };
   const primaryEvent = events.find((event) => event.detail?.trend?.points?.length) || null;
   const weatherAdvice = current && current.risk_level !== "normal" ? (weather?.safety_advice || []).slice(0, 2) : [];
   const adviceGroups = [
@@ -441,6 +537,7 @@ export default function PublicHome() {
   };
 
   const myRainLevel = rain24hMapCategory(myDistrict?.rainfall_24h);
+  const myRisk = RISK_META[myDistrict?.risk_level] || RISK_META.normal;
   // ฝนจากสถานีวัด → ตรวจความสดแบบค่าวัด / ไม่มีสถานี → ใช้เวลาของพยากรณ์
   const myRain = myDistrict?.rain_source === "gauge" && myDistrict?.rain_gauge?.observed_at
     ? freshness(myDistrict.rain_gauge.observed_at, "rain", now)
@@ -470,7 +567,7 @@ export default function PublicHome() {
         <section className="relative overflow-hidden bg-[#0c2f4a] text-white" aria-labelledby="home-headline">
           <HeroWeatherFx scene={scene} />
           {/* มือถือ: พาดหัว → แผนที่ → พื้นที่ของฉัน / จอใหญ่: ซ้าย (พาดหัว + พื้นที่ของฉัน) ขวา (แผนที่) */}
-          <div className="relative mx-auto grid max-w-6xl gap-6 px-4 pb-24 pt-8 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:pb-28 lg:pt-12">
+          <div className="relative mx-auto grid max-w-6xl gap-6 px-4 pb-10 pt-8 sm:px-6 sm:pb-24 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:pb-28 lg:pt-12">
             <div className="lg:col-start-1 lg:row-start-1">
               <p className="text-sm text-[#9fc9d6]">{todayLine(current?.observed_at)}</p>
               {scene ? (
@@ -491,6 +588,9 @@ export default function PublicHome() {
 
             </div>
 
+            {/* มือถือ: ทางลัดอยู่ใต้พาดหัวทันที (ไม่ต้องเลื่อนผ่านแผนที่และการ์ดพื้นที่) */}
+            <MobileShortcuts sheltersOpen={sheltersOpen} shelters={shelters} />
+
             {/* พื้นที่ของฉัน */}
             <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-2">
               {myDistrict && (
@@ -500,9 +600,16 @@ export default function PublicHome() {
                       <p className="text-sm text-slate-500">พื้นที่ของฉัน</p>
                       <p className="font-[family-name:var(--font-kanit)] text-2xl font-bold">อ.{myDistrict.district_name}</p>
                     </div>
-                    <span className="rounded-full px-3 py-1 font-[family-name:var(--font-kanit)] text-sm font-bold text-slate-900" style={{ backgroundColor: myRainLevel.color }}>
-                      {myRainLevel.label === "ไม่มีฝน" ? "ไม่มีฝน" : `ระดับฝน: ${myRainLevel.label}`}
-                    </span>
+                    {/* ป้ายสีตรงกับโหมดแผนที่ ให้เทียบสีกับแผนที่ได้ทันที */}
+                    {mapMode === "risk" ? (
+                      <span className="rounded-full px-3 py-1 font-[family-name:var(--font-kanit)] text-sm font-bold text-slate-900" style={{ backgroundColor: myRisk.color }}>
+                        น้ำท่วม: {myRisk.label}
+                      </span>
+                    ) : (
+                      <span className="rounded-full px-3 py-1 font-[family-name:var(--font-kanit)] text-sm font-bold text-slate-900" style={{ backgroundColor: myRainLevel.color }}>
+                        {myRainLevel.label === "ไม่มีฝน" ? "ไม่มีฝน" : `ระดับฝน: ${myRainLevel.label}`}
+                      </span>
+                    )}
                   </div>
                   <p className={`mt-2 text-[15px] leading-7 ${myRain.stale ? "text-slate-500" : ""}`}>
                     {myDistrict.weather_condition} {myDistrict.temperature}°C • {myDistrict.rain_source === "gauge" ? `ฝนวัดได้ 24 ชม. ${myDistrict.rainfall_24h} มม.` : `ฝน 24 ชม. ~${myDistrict.rainfall_24h} มม.`}{heavyRainTodayText(myDistrict.heavy_rain_today) ? ` • ${heavyRainTodayText(myDistrict.heavy_rain_today)}` : ""}
@@ -530,7 +637,26 @@ export default function PublicHome() {
 
             <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
               <div className="relative rounded-[2rem] bg-[#11466e]/60 p-3 sm:p-5">
-                <SatunRiskMap districts={districts} selectedName={districtName} onSelect={(name) => selectDistrict(name)} userPoint={userPoint} />
+                <div className="mb-3 flex justify-center">
+                  <div className="inline-flex rounded-full bg-[#0c2f4a]/70 p-1 ring-1 ring-white/15" role="radiogroup" aria-label="แสดงบนแผนที่">
+                    {MAP_MODES.map((item) => {
+                      const active = mapMode === item.key;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          onClick={() => chooseMapMode(item.key)}
+                          className={`min-h-10 rounded-full px-4 font-[family-name:var(--font-kanit)] text-sm font-semibold transition ${active ? "bg-white text-[#0c2f4a] shadow" : "text-[#d5e7ec] hover:bg-white/10"}`}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <SatunRiskMap districts={districts} selectedName={districtName} onSelect={(name) => selectDistrict(name)} userPoint={userPoint} mode={mapMode} />
                 <div className="mt-3 px-1">
                   <Link
                     href="/public/weather-watch/"
@@ -540,13 +666,27 @@ export default function PublicHome() {
                   </Link>
                 </div>
                 <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 px-1 text-sm text-[#d5e7ec]" aria-label="ความหมายของสี">
-                  {RAIN_24H_MAP_CATEGORIES.map((item) => (
-                    <li key={item.key} className="inline-flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} aria-hidden="true" />
-                      {item.label}{item.range ? <span className="text-[#9fc9d6]"> {item.range}</span> : null}
-                    </li>
-                  ))}
-                  <li className="text-[#9fc9d6]">สีและตัวเลขคือฝนสะสมใน 24 ชั่วโมง (~ = ค่าประมาณ ไม่มีสถานีวัด) • ระดับความเสี่ยงน้ำท่วมดูได้ที่การ์ดอำเภอ</li>
+                  {mapMode === "risk" ? (
+                    <>
+                      {RISK_LEVELS.map((level) => (
+                        <li key={level} className="inline-flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: RISK_META[level].color }} aria-hidden="true" />
+                          {RISK_META[level].label}
+                        </li>
+                      ))}
+                      <li className="text-[#9fc9d6]">สีคือระดับความเสี่ยงน้ำท่วมวันนี้ ประเมินจากฝน (วัดได้และพยากรณ์) ระดับน้ำในคลอง น้ำทะเลหนุน และสภาพพื้นที่ • แตะอำเภอเพื่อดูเหตุผล</li>
+                    </>
+                  ) : (
+                    <>
+                      {RAIN_24H_MAP_CATEGORIES.map((item) => (
+                        <li key={item.key} className="inline-flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                          {item.label}{item.range ? <span className="text-[#9fc9d6]"> {item.range}</span> : null}
+                        </li>
+                      ))}
+                      <li className="text-[#9fc9d6]">สีและตัวเลขคือฝนสะสมใน 24 ชั่วโมง (~ = ค่าประมาณ ไม่มีสถานีวัด)</li>
+                    </>
+                  )}
                 </ul>
               </div>
             </div>
@@ -555,8 +695,8 @@ export default function PublicHome() {
 
         {/* ── ช่วงข้อมูลสถานการณ์: พื้นฟ้าน้ำจาง ต่อจาก hero + เส้นระดับน้ำจาง ๆ (ช่วงข่าวด้านล่างเป็นพื้นขาว) ── */}
         <div className="flow-root" style={SITUATION_BG}>
-        {/* ── แถบทางลัด: ซ้อนขอบล่างของ hero ── */}
-        <nav aria-label="ทางลัดที่สำคัญ" className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 sm:px-6">
+        {/* ── แถบทางลัด: ซ้อนขอบล่างของ hero (แท็บเล็ต/จอใหญ่ · มือถือใช้ MobileShortcuts ใต้พาดหัว) ── */}
+        <nav aria-label="ทางลัดที่สำคัญ" className="relative z-10 mx-auto -mt-14 hidden max-w-6xl px-4 sm:block sm:px-6">
           <div className="grid gap-px overflow-hidden rounded-3xl bg-slate-100 shadow-[0_20px_45px_-25px_rgba(12,47,74,.55)] sm:grid-cols-6 xl:grid-cols-[1.25fr_1.25fr_1fr_1fr_1fr]">
             <HelpRequestLink
               className="flex items-center gap-3 bg-[#c81e1e] p-5 text-white hover:bg-[#a51818] focus-visible:outline-offset-[-4px] sm:col-span-3 xl:col-span-1"
@@ -630,6 +770,8 @@ export default function PublicHome() {
 
         {/* ── น้ำในคลองตอนนี้ ── */}
         <DpmCanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} history={water.history} />
+        {/* ── สิ่งที่ควรทำตอนนี้ (มือถือ/แท็บเล็ต): ก่อนน้ำทะเลหนุน เพราะเป็นสิ่งที่ต้องลงมือทำ ── */}
+        <section className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:hidden"><AdviceList groups={adviceGroups} id="todo-title-mobile" /></section>
         {/* ── น้ำทะเลหนุน: ต่อจากน้ำในคลอง (น้ำทะเลขึ้นสูงทำให้คลองระบายช้า) ── */}
         <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-6"><SeaTodayCard layout="wide" /></div>
 
@@ -661,7 +803,7 @@ export default function PublicHome() {
                   </div>
                   <p className="mt-1 text-sm text-slate-500">เปิดศูนย์ปฏิบัติการตั้งแต่ {formatThaiDate(event.opened_at, true)}</p>
                   <ul className="mt-3 space-y-1 text-[1.05rem] leading-8">
-                    {eventSentences(event).map((line) => <li key={line}>{line}</li>)}
+                    {eventSentences(event, eventContext).map((line) => <li key={line}>{line}</li>)}
                   </ul>
                 </article>
               );
@@ -681,24 +823,11 @@ export default function PublicHome() {
             )}
           </section>
 
-          <section aria-labelledby="todo-title">
+          <section aria-label="สิ่งที่ควรทำและช่องทางติดต่อ">
             {/* จอใหญ่: แผงข้างเหนือ "สิ่งที่ควรทำ" */}
             <CitizenWaterReports reports={waterReports} layout="list" className="mb-8 hidden lg:block" />
-            <h2 id="todo-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">สิ่งที่ควรทำตอนนี้</h2>
-            {adviceGroups.length === 0 ? (
-              <p className="mt-3 text-[1.05rem] leading-8 text-slate-700">ใช้ชีวิตได้ตามปกติ และติดตามข่าวสารจากหน่วยงานราชการเป็นระยะ</p>
-            ) : adviceGroups.map((group) => (
-              <div key={group.title} className="mt-5">
-                <p className="font-semibold text-[#2e6b4e]">{group.title}</p>
-                <ul className="mt-2 space-y-3">
-                  {group.items.map((item) => (
-                    <li key={item} className="flex gap-3 text-[1.05rem] leading-8">
-                      <CheckCircle2 className="mt-1.5 h-5 w-5 shrink-0 text-[#2e6b4e]" aria-hidden="true" />{item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {/* จอใหญ่: สิ่งที่ควรทำอยู่คอลัมน์ขวา · จอเล็กกว่า lg ย้ายขึ้นไปไว้ต่อจากน้ำในคลอง */}
+            <div className="hidden lg:block"><AdviceList groups={adviceGroups} id="todo-title" /></div>
             <div className="mt-8 rounded-3xl bg-[#0c2f4a] p-5 text-white">
               <p className="font-[family-name:var(--font-kanit)] text-lg font-semibold">เบอร์ฉุกเฉิน โทรฟรี 24 ชม.</p>
               <div className="mt-3 grid grid-cols-2 gap-2">

@@ -52,13 +52,19 @@ function useNow(intervalMs = 30 * 1000) {
   return now;
 }
 
+// th-TH ให้ชื่อวันแบบ "วันอาทิตย์" อยู่แล้ว (บางเบราว์เซอร์ให้ "อาทิตย์") → เติม "วัน" เฉพาะเมื่อยังไม่มี
+function weekdayText(date) {
+  const name = date.toLocaleDateString("th-TH", { weekday: "long" });
+  return name.startsWith("วัน") ? name : `วัน${name}`;
+}
+
 function HeaderClock() {
   const now = useNow();
   const date = now ? now.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" }) : "";
   const time = now ? now.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) : "";
   return (
     <div className="hidden min-w-[9.5rem] text-sm text-blue-50 lg:block" aria-live="off">
-      <div className="font-bold text-white">{date ? `วัน${now.toLocaleDateString("th-TH", { weekday: "long" })}ที่ ${date}` : " "}</div>
+      <div className="font-bold text-white">{date ? `${weekdayText(now)}ที่ ${date}` : " "}</div>
       <div>{time ? `เวลา ${time} น.` : " "}</div>
     </div>
   );

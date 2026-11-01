@@ -35,6 +35,13 @@ describe("สถานีวัดระดับน้ำ ปภ.", () => {
       { code: "STN03", statusCode: 2 }, { code: "STN01", statusCode: 5 }, { code: "STN08", statusCode: 0 }, { code: "STN02", statusCode: 4 }
     ];
     expect(sortDpmStations(list).map((s) => s.code)).toEqual(["STN01", "STN02", "STN03", "STN08"]);
+    // สถานะเดียวกัน: สถานีที่ใกล้ถึงเกณฑ์ถัดไปขึ้นก่อน (หน้าแรกบนมือถือแสดงตามลำดับนี้)
+    const same = [
+      { code: "STN04", statusCode: 1, level: 0.1, thresholds: { watch: 2 } },
+      { code: "STN06", statusCode: 1, level: 46.67, thresholds: { watch: 47 } },
+      { code: "STN09", statusCode: 1, level: null, thresholds: { watch: 1 } }
+    ];
+    expect(sortDpmStations(same).map((s) => s.code)).toEqual(["STN06", "STN04", "STN09"]);
     expect(dpmSummary(list)).toBe("วิกฤต 1 สถานี • อันตราย 1 สถานี • เฝ้าระวัง 1 สถานี");
     expect(dpmSummary([{ code: "STN07", statusCode: 1 }])).toBe("ทุกสถานีอยู่ในเกณฑ์ปกติ (1 สถานี)");
     expect(dpmSummary([])).toBe("ยังไม่มีข้อมูลจากสถานีวัดระดับน้ำ");
