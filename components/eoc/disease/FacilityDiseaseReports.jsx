@@ -6,7 +6,7 @@ import { IconButton } from "@/components/admin/crud";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { showWarning, showSuccess, showError, showConfirm } from '@/lib/sweetAlert';
+import { showWarning, showSuccess, showError, showConfirm } from '@/lib/feedback';
 import DailyDiseaseChart from '@/components/DailyDiseaseChart';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import {

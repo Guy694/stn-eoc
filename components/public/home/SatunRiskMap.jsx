@@ -1,12 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RISK_META } from "@/lib/weatherRiskConfig";
-import { rain24hMapCategory } from "@/lib/thaiWaterRain";
+import { hourlyRainCategory, rain24hMapCategory } from "@/lib/thaiWaterRain";
 
 // แผนที่ 7 อำเภอของสตูลแบบ SVG (ไฟล์ย่อจากขอบเขตอำเภอทางการ ~10 KB)
-// mode="risk" (ค่าเริ่มต้น): สี = ระดับความเสี่ยงน้ำท่วมรายอำเภอ ป้าย = ชื่อระดับ
+// mode="now" (ค่าเริ่มต้น): สีและตัวเลข = ฝนสูงสุดใน 1 ชม. จากสถานีวัดฝน ThaiWater ที่รายงานภายใน 2 ชม. (ไม่มีสถานี = สีเทา ไม่ใช้ค่าประมาณ)
 // mode="rain": สีและตัวเลข = ฝนสะสมใน 24 ชม. จากสถานีวัดฝนหรือค่าประมาณ · แตะเพื่อเลือกเป็นพื้นที่ของฉัน
+
+/** ฝนตอนนี้ของอำเภอ (สถานีวัดฝนที่รายงานภายใน 2 ชม.): { mm, stations } หรือ null เมื่อไม่มีสถานี */
+export function districtRainNow(district) {
+  const now = district?.rain_now;
+  if (!now || !(Number(now.stations) > 0)) return null;
+  const mm = Number(now.max1h);
+  return { mm: Number.isFinite(mm) && mm > 0 ? mm : 0, stations: Number(now.stations), station: now.maxStation || null };
+}
+
+const NO_STATION_COLOR = "#5b7a8c";
 
 /** ฝนสะสม 24 ชม. ของอำเภอ: { mm, estimated } */
 export function districtRain24h(district) {
@@ -22,8 +31,8 @@ function normalize(value) {
   return String(value || "").replace(/^อ(\.|ำเภอ)\s*/, "").replace(/\s+/g, "");
 }
 
-export default function SatunRiskMap({ districts = [], selectedName, onSelect, userPoint, mode = "risk" }) {
-  const riskMode = mode !== "rain";
+export default function SatunRiskMap({ districts = [], selectedName, onSelect, userPoint, mode = "now" }) {
+  const nowMode = mode !== "rain";
   const [outline, setOutline] = useState(null);
 
   useEffect(() => {
@@ -49,15 +58,17 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
     : null;
 
   return (
-    <svg viewBox={outline.viewBox} className="satun-map mx-auto block h-auto max-h-[22rem] w-full sm:max-h-[30rem] lg:max-h-[34rem]" role="group" aria-label={riskMode ? "แผนที่ความเสี่ยงน้ำท่วมรายอำเภอ จังหวัดสตูล" : "แผนที่ฝนสะสม 24 ชั่วโมงรายอำเภอ จังหวัดสตูล"}>
+    <svg viewBox={outline.viewBox} className="satun-map mx-auto block h-auto max-h-[22rem] w-full sm:max-h-[30rem] lg:max-h-[34rem]" role="group" aria-label={nowMode ? "แผนที่ฝนตอนนี้ (ฝน 1 ชั่วโมงจากสถานีวัดฝน) รายอำเภอ จังหวัดสตูล" : "แผนที่ฝนสะสม 24 ชั่วโมงรายอำเภอ จังหวัดสตูล"}>
       {outline.districts.map((shape, index) => {
         const district = byName.get(normalize(shape.name));
         const rain = district ? districtRain24h(district) : null;
         const category = rain ? rain24hMapCategory(rain.mm) : null;
-        const risk = district ? RISK_META[district.risk_level] || RISK_META.normal : null;
-        const fill = riskMode ? risk?.color : category?.color;
+        const rainNow = district ? districtRainNow(district) : null;
+        const fill = nowMode ? (district ? (rainNow ? hourlyRainCategory(rainNow.mm).color : NO_STATION_COLOR) : null) : category?.color;
         const selected = normalize(shape.name) === normalize(selectedName);
-        const label = `อำเภอ${shape.name}${rain ? ` ฝนสะสม 24 ชม. ${rain.estimated ? "ประมาณ " : ""}${mmText(rain.mm)} มม. (${category.label})` : ""}${risk ? ` ความเสี่ยงน้ำท่วม${risk.label}` : ""}`;
+        const label = nowMode
+          ? `อำเภอ${shape.name}${district ? (rainNow ? ` ฝน 1 ชม. ${mmText(rainNow.mm)} มม. (${hourlyRainCategory(rainNow.mm).label})` : " ไม่มีสถานีวัดฝนที่รายงานใน 2 ชม.") : ""}`
+          : `อำเภอ${shape.name}${rain ? ` ฝนสะสม 24 ชม. ${rain.estimated ? "ประมาณ " : ""}${mmText(rain.mm)} มม. (${category.label})` : ""}`;
         return (
           <path
             key={shape.code}
@@ -96,8 +107,8 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
             <text textAnchor="middle" className={`satun-map__label ${selected ? "is-selected" : ""}`} y="-4">{shape.name}</text>
             {district && (
               <text textAnchor="middle" className="satun-map__temp" y="40">
-                {riskMode
-                  ? (RISK_META[district.risk_level] || RISK_META.normal).label
+                {nowMode
+                  ? (districtRainNow(district) ? (districtRainNow(district).mm > 0 ? `1 ชม. ${mmText(districtRainNow(district).mm)} มม.` : "ไม่มีฝน") : "ไม่มีสถานี")
                   : `24 ชม. ${districtRain24h(district).estimated ? "~" : ""}${mmText(districtRain24h(district).mm)} มม.`}
               </text>
             )}

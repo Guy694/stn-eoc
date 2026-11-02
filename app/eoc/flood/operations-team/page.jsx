@@ -20,7 +20,7 @@ import {
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
-import { showDeleteConfirm, showError, showSuccess } from "@/lib/sweetAlert";
+import { showDeleteConfirm, showError, showSuccess } from "@/lib/feedback";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import { OfficerMultiPicker, OfficerPicker } from "@/components/admin/OfficerPicker";
 

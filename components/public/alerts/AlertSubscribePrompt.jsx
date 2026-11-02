@@ -2,7 +2,7 @@
 
 // ชวนรับแจ้งเตือนภัยทุกหน้าของประชาชน (แผ่นล่างบนมือถือ / กล่องกลางจอบนคอม)
 // เด้งเฉพาะเครื่องที่ยังไม่ได้รับ (หน้าแรก: หลังหน้าโลโก้และ popup ประกาศปิดแล้ว) · ไม่เด้งในหน้า "แจ้งเตือน" ซึ่งมีปุ่มรับอยู่แล้ว · "ไว้ทีหลัง" = ถามใหม่ใน 3 วัน · "ไม่ต้องถามอีก" = 60 วัน
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BellRing, CheckCircle2, ChevronDown, ExternalLink, X } from "lucide-react";
@@ -10,6 +10,7 @@ import { SATUN_DISTRICT_NAMES } from "@/lib/satunDistricts";
 import { isAndroid, isInAppBrowser, isIos, isStandalone, pushStatus, subscribePush } from "@/lib/pwaClient";
 import { promptMode, readPromptState, snooze } from "@/lib/alertPrompt";
 import AlertGuide from "./AlertGuide";
+import { AppDialogShell } from "@/components/ui/app-dialog";
 
 const DELAY_MS = 3500;
 const storage = () => { try { return window.localStorage; } catch { return null; } };
@@ -23,7 +24,6 @@ export default function AlertSubscribePrompt({ blocked = false, district = "" })
   const [done, setDone] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [android, setAndroid] = useState(false);
-  const dialogRef = useRef(null);
   const pathname = usePathname() || "";
   const onAlertsPage = /\/public\/alerts\/?$/.test(pathname);
   const myDistrict = SATUN_DISTRICT_NAMES.includes(district) ? district : "";
@@ -45,22 +45,11 @@ export default function AlertSubscribePrompt({ blocked = false, district = "" })
     return () => window.clearTimeout(timer);
   }, [mode, blocked, onAlertsPage, open, done]);
 
-  useEffect(() => {
-    if (open) dialogRef.current?.focus();
-  }, [open]);
-
   const close = (reason = "later") => {
     if (!done) snooze(storage(), reason);
     setOpen(false);
     setMode(null);
   };
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const onKey = (event) => { if (event.key === "Escape") close("later"); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
 
   const subscribe = async () => {
     setBusy(true);
@@ -80,15 +69,15 @@ export default function AlertSubscribePrompt({ blocked = false, district = "" })
   const title = done ? "รับแจ้งเตือนภัยแล้ว" : mode === "open-browser" ? "เปิดในเบราว์เซอร์เพื่อรับแจ้งเตือน" : "รับแจ้งเตือนภัยบนมือถือ";
 
   return (
-    <div className="fixed inset-0 z-[2050] flex items-end justify-center bg-slate-900/50 sm:items-center sm:p-4" onClick={(event) => { if (event.target === event.currentTarget) close("later"); }}>
-      <div
-        ref={dialogRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="alert-prompt-title"
-        className="alert-prompt max-h-[88dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:max-w-lg sm:rounded-3xl sm:p-6"
-      >
+    // แตะฉากหลัง / Esc = "ไว้ทีหลัง"
+    <AppDialogShell
+      open
+      onOpenChange={(next) => { if (!next) close("later"); }}
+      layer="high"
+      backdropClassName="bg-slate-900/50"
+      aria-labelledby="alert-prompt-title"
+      className="alert-prompt max-h-[88dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:max-w-lg sm:rounded-3xl sm:p-6"
+    >
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden" aria-hidden="true" />
         <div className="flex items-start gap-3">
           <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${done ? "bg-emerald-500 text-white" : "bg-[#fde68a] text-[#7c2d12]"}`}>
@@ -158,12 +147,11 @@ export default function AlertSubscribePrompt({ blocked = false, district = "" })
         <p className="mt-3 text-center text-xs text-slate-400">
           <Link href="/public/alerts#how-to" className="inline-flex items-center gap-1 hover:underline">คู่มือรับแจ้งเตือนฉบับเต็ม <ExternalLink className="h-3 w-3" aria-hidden="true" /></Link>
         </p>
-      </div>
       <style>{`
         .alert-prompt { animation: alert-prompt-in .32s cubic-bezier(.2,.8,.2,1) both; }
         @keyframes alert-prompt-in { from { transform: translateY(24px); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .alert-prompt { animation: none; } }
       `}</style>
-    </div>
+    </AppDialogShell>
   );
 }

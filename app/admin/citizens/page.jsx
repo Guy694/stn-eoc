@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageHero } from "@/components/common/ThemePanels";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from '@/components/layouts/EOCLayout';
-import { showError, showSuccess, showWarning } from '@/lib/sweetAlert';
+import { showError, showSuccess, showWarning } from '@/lib/feedback';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
 import { MetricCard, MetricGrid } from "@/components/common/MetricCards";

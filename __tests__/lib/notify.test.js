@@ -6,7 +6,7 @@ jest.mock("sonner", () => {
 });
 const { toast } = require("sonner");
 const { notify } = require("@/lib/notify");
-const { showSuccess, showError } = require("@/lib/sweetAlert");
+const { showSuccess, showError } = require("@/lib/feedback");
 
 test("ข้อความว่างไม่แสดง", () => {
   notify.error("  ");

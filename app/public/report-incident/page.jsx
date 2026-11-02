@@ -8,7 +8,7 @@ import { Accessibility, Camera, Car, CircleCheck, CircleHelp, DoorClosed, Footpr
 import WaterLevelFigure from "@/components/public/water/WaterLevelFigure";
 import { WATER_LEVELS } from "@/lib/waterReport";
 import PublicLayout from "@/components/layouts/PublicLayout";
-import { showWarning } from "@/lib/sweetAlert";
+import { showWarning } from "@/lib/feedback";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { trackPublicUsage } from "@/lib/publicUsage";
 import TrackingCodeCard from "@/components/public/TrackingCodeCard";

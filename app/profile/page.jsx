@@ -7,7 +7,7 @@ import { Check, KeyRound, Minus, Pencil } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { AdminPage, StatusPill, inputClass } from "@/components/admin/crud";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showError, showSuccess } from "@/lib/feedback";
 import OfficerPushCard from "@/components/admin/OfficerPushCard";
 import TelegramLinkCard from "@/components/admin/TelegramLinkCard";
 import ProviderIdLinkCard from "@/components/admin/ProviderIdLinkCard";

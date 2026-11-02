@@ -1,31 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Download, FileText, Maximize2, Share2, X } from "lucide-react";
+import { ArrowLeft, Check, Download, FileText, Maximize2, Share2 } from "lucide-react";
 import { formatAnnouncementDate, getAnnouncementAsset } from "@/components/announcements/announcementUtils";
 import { cleanTitle, relativeThai, topicKey, topicOf } from "./announcementTopics";
 import { optimizedImage, responsiveImage } from "@/lib/imageUrl";
-
-function ImageLightbox({ src, alt, onClose }) {
-  useEffect(() => {
-    const onKey = (event) => { if (event.key === "Escape") onClose(); };
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-    return () => { document.body.style.overflow = overflow; window.removeEventListener("keydown", onKey); };
-  }, [onClose]);
-  return (
-    <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-[#06192a]/90 p-4" role="dialog" aria-modal="true" aria-label="ดูภาพเต็ม">
-      <button type="button" onClick={onClose} className="absolute inset-0" aria-label="ปิด" tabIndex={-1} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} className="relative max-h-full max-w-full rounded-xl object-contain" />
-      <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-full bg-white/15 p-2 text-white hover:bg-white/25" aria-label="ปิดภาพ" autoFocus>
-        <X className="h-6 w-6" />
-      </button>
-    </div>
-  );
-}
+import ImageLightbox from "@/components/ui/image-lightbox";
 
 export default function PublicAnnouncementDetail({ item, related = [] }) {
   const [zoom, setZoom] = useState(false);
@@ -131,7 +112,7 @@ export default function PublicAnnouncementDetail({ item, related = [] }) {
         ) : null}
       </div>
 
-      {zoom && image ? <ImageLightbox src={image} alt={item.title} onClose={() => setZoom(false)} /> : null}
+      <ImageLightbox open={zoom} onOpenChange={setZoom} src={image} alt={item.title} />
     </div>
   );
 }

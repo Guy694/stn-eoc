@@ -8,7 +8,7 @@ import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
 import { AdminPage, Button, useNotice } from "@/components/admin/crud";
 import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
-import { showDeleteConfirm } from "@/lib/sweetAlert";
+import { showDeleteConfirm } from "@/lib/feedback";
 import { formatDateTime } from "@/lib/adminApi";
 
 // คลังภาพอินโฟกราฟิกของฝ่ายสื่อสารความเสี่ยง แยกตามประเภทภัย

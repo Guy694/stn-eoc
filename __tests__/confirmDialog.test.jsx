@@ -2,14 +2,16 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import ConfirmHost from "@/components/providers/ConfirmHost";
 import { hasConfirmHost, requestConfirm } from "@/lib/confirmDialog";
-import { showDeleteConfirm } from "@/lib/sweetAlert";
+import { showDeleteConfirm } from "@/lib/feedback";
 
-jest.mock("sweetalert2", () => ({ fire: jest.fn(() => Promise.resolve({ isConfirmed: true })) }));
-
-test("ไม่มี ConfirmHost: ใช้ SweetAlert แทน", async () => {
+test("ยังไม่มี ConfirmHost: คำขอรอในคิว แล้วแสดงเมื่อ ConfirmHost พร้อม (ไม่มีหน้าต่างแบบอื่นสำรอง)", async () => {
   expect(hasConfirmHost()).toBe(false);
-  await expect(showDeleteConfirm("ลบไหม")).resolves.toBe(true);
-  expect(require("sweetalert2").fire).toHaveBeenCalled();
+  let answer;
+  showDeleteConfirm("ลบไหม").then((v) => { answer = v; });
+  render(<ConfirmHost />);
+  expect(await screen.findByText("ลบไหม")).toBeTruthy();
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "ลบ" })); });
+  expect(answer).toBe(true);
 });
 
 test("มี ConfirmHost: แสดงหน้าต่างของระบบ กดลบ → true, กดยกเลิก → false", async () => {

@@ -3,10 +3,11 @@
 // "รายงานน้ำจากประชาชน" บนหน้าแรก — แสดงเฉพาะรายงานที่เจ้าหน้าที่ตรวจและเผยแพร่แล้ว (จาก /api/public/verified-incidents)
 // ไม่มีชื่อ เบอร์ หรือข้อความต้นฉบับของผู้แจ้ง: หัวข้อ/รายละเอียดเป็นข้อความที่เจ้าหน้าที่เขียน รูปเป็นสำเนาที่เลือกเผยแพร่
 // layout="list" = แผงข้างบนจอใหญ่, layout="strip" = แถบเลื่อนแนวนอนบนมือถือ
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { MapPinned, ShieldCheck, Users, Waves, X } from "lucide-react";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
+import { AppDialogShell } from "@/components/ui/app-dialog";
 
 function ago(value) {
   const time = new Date(value || 0).getTime();
@@ -52,22 +53,17 @@ function Photo({ report, className, sizes }) {
 
 function ReportDialog({ report, onClose }) {
   const closeRef = useRef(null);
-  useEffect(() => {
-    if (!report) return undefined;
-    closeRef.current?.focus();
-    const onKey = (event) => { if (event.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
-    };
-  }, [report, onClose]);
   if (!report) return null;
   return (
-    <div className="fixed inset-0 z-[1200] flex items-end justify-center bg-slate-950/70 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="water-report-title" onClick={onClose}>
-      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl" onClick={(event) => event.stopPropagation()}>
+    <AppDialogShell
+      open
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      initialFocus={closeRef}
+      backdropClassName="bg-slate-950/70"
+      viewportClassName="items-end justify-center p-0 sm:items-center sm:p-6"
+      aria-labelledby="water-report-title"
+      className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+    >
         <div className="relative">
           <Photo report={report} className="block aspect-[4/3] w-full" sizes="(min-width: 640px) 512px, 100vw" />
           <button ref={closeRef} type="button" onClick={onClose} className="absolute right-3 top-3 rounded-full bg-black/55 p-2 text-white hover:bg-black/75" aria-label="ปิด">
@@ -95,8 +91,7 @@ function ReportDialog({ report, onClose }) {
             <MapPinned className="h-4 w-4" aria-hidden="true" /> ดูบนแผนที่สถานการณ์
           </Link>
         </div>
-      </div>
-    </div>
+    </AppDialogShell>
   );
 }
 

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
-import { showLogoutConfirm } from "@/lib/sweetAlert";
+import { showLogoutConfirm } from "@/lib/feedback";
 
 export default function PendingApprovalPage() {
     const router = useRouter();

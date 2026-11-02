@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { showLogoutConfirm } from "@/lib/sweetAlert";
+import { showLogoutConfirm } from "@/lib/feedback";
 import Image from "next/image";
 import AppIcon from "./icons/AppIcon";
 

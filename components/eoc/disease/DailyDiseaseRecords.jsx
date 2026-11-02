@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
-import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/feedback';
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";

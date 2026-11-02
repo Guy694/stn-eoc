@@ -5,7 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { IconButton } from "@/components/admin/crud";
 import EOCLayout from '@/components/layouts/EOCLayout';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
-import { showDeleteConfirm, showError, showSuccess } from '@/lib/sweetAlert';
+import { showDeleteConfirm, showError, showSuccess } from '@/lib/feedback';
 import { AppDialogFrame } from '@/components/ui/app-dialog';
 import {
     Chart as ChartJS,

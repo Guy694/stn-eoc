@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, CalendarClock, CheckCheck, ClipboardList, RefreshCw, Target, Users } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showError, showSuccess } from "@/lib/feedback";
 
 function formatDate(value) {
   if (!value) return "-";

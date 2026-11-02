@@ -1,6 +1,7 @@
 "use client";
 
 import { Dialog } from "@base-ui/react/dialog";
+import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -155,3 +156,56 @@ export function AppDialogFrame({
     </Dialog.Root>
   );
 }
+
+// ชั้นของหน้าต่าง: default = หน้าต่างทำงานทั่วไป · high = popup ชวน/ประกาศบนหน้าประชาชน · urgent = เตือนภัยด่วน (อยู่บนสุด)
+const LAYERS = {
+  default: { backdrop: "z-[1190]", viewport: "z-[1200]" },
+  high: { backdrop: "z-[2040]", viewport: "z-[2050]" },
+  urgent: { backdrop: "z-[2090]", viewport: "z-[2100]" },
+};
+
+/**
+ * หน้าต่างที่ออกแบบหน้าตาเอง (popup ประกาศ เตือนภัยด่วน ภาพเต็มจอ) แต่ใช้พฤติกรรมเดียวกับ AppDialog ทั้งระบบ:
+ * focus trap, ล็อกการเลื่อนหน้า, Esc ปิด, คืน focus เมื่อปิด, ฉากหลัง และลำดับชั้น
+ * - className = กล่องหน้าต่าง (Popup) ของผู้เรียก · backdropClassName ปรับสีฉากหลัง (เช่น ภาพเต็มจอใช้สีเข้ม)
+ * - alert = หน้าต่างเตือนที่ต้องกดรับทราบ (role="alertdialog" แตะฉากหลังไม่ปิด)
+ * - dismissOnBackdrop=false = แตะฉากหลังไม่ปิด (ยังปิดด้วยปุ่มหรือ Esc ได้)
+ * - placement: "sheet" = แผ่นล่างบนมือถือ/กลางจอบนจอใหญ่ (ค่าเริ่มต้น) · "center" = กลางจอทุกขนาด (เช่น ภาพเต็มจอ)
+ */
+export function AppDialogShell({
+  open,
+  onOpenChange,
+  children,
+  className,
+  backdropClassName = "bg-slate-950/55 backdrop-blur-sm",
+  viewportClassName = "items-end justify-center p-0 sm:items-center sm:p-4",
+  layer = "default",
+  alert = false,
+  dismissOnBackdrop = true,
+  initialFocus,
+  placement = "sheet",
+  ...popupProps
+}) {
+  const Parts = alert ? AlertDialog : Dialog;
+  const z = LAYERS[layer] || LAYERS.default;
+  return (
+    <Parts.Root open={Boolean(open)} onOpenChange={(nextOpen) => onOpenChange?.(nextOpen)} disablePointerDismissal={alert || !dismissOnBackdrop}>
+      <Parts.Portal>
+        <Parts.Backdrop className={cn("fixed inset-0 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0 print:hidden", z.backdrop, backdropClassName)} />
+        <Parts.Viewport className={cn("fixed inset-0 flex overflow-y-auto print:hidden", z.viewport, viewportClassName)}>
+          <Parts.Popup
+            initialFocus={initialFocus}
+            className={cn(placement === "sheet" ? "max-sm:mt-auto sm:my-auto" : "my-auto", "outline-none transition data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none", className)}
+            {...popupProps}
+          >
+            {children}
+          </Parts.Popup>
+        </Parts.Viewport>
+      </Parts.Portal>
+    </Parts.Root>
+  );
+}
+
+export const AppDialogTitle = Dialog.Title;
+export const AppDialogDescription = Dialog.Description;
+export const AppDialogClose = Dialog.Close;

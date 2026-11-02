@@ -10,7 +10,7 @@ import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { useAuth } from "@/context/AuthContext";
 import { deleteOfficersInBatch } from "@/lib/officerBatch";
 import { useUrlState } from "@/components/admin/useUrlState";
-import { showConfirm, showDeleteConfirm } from "@/lib/sweetAlert";
+import { showConfirm, showDeleteConfirm } from "@/lib/feedback";
 import { TEAM_ROLE_OPTIONS } from "@/lib/eocRoles";
 import { PASSWORD_POLICY_TEXT, validatePassword } from "@/lib/passwordPolicy";
 import { TEAM_LEADER_ROLE, TEAM_MEMBER_ROLE, normalizeTeamMemberRole } from "@/lib/teamMemberRoles";

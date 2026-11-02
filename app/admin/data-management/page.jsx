@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Archive, ChevronLeft, ChevronRight, Database, Pencil, Plus, RefreshCw, Save, Search, ShieldCheck, X } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
-import { showConfirm, showError, showSuccess } from "@/lib/sweetAlert";
+import { showConfirm, showError, showSuccess } from "@/lib/feedback";
 import { MetricCard } from "@/components/common/MetricCards";
 
 const EMPTY_FORM = {

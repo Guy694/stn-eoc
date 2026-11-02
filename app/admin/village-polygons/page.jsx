@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { PageHero } from "@/components/common/ThemePanels";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from '@/components/layouts/EOCLayout';
-import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/feedback';
 import AppIcon from "@/components/icons/AppIcon";
 import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 

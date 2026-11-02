@@ -8,7 +8,7 @@ import { AppDialogFrame } from "@/components/ui/app-dialog";
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import EOCLayout from '@/components/layouts/EOCLayout';
-import { showSuccess, showError, showWarning, showDeleteConfirm } from '@/lib/sweetAlert';
+import { showSuccess, showError, showWarning, showDeleteConfirm } from '@/lib/feedback';
 import Image from 'next/image';
 import AppIcon from "@/components/icons/AppIcon";
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { AppDialogShell } from "@/components/ui/app-dialog";
 import ShareLineButton from "@/components/public/ShareLineButton";
 import Link from "next/link";
 import { CloudRainWind, HousePlus, Map, MapPin, Megaphone, Phone, Siren, TriangleAlert, Waves, X } from "lucide-react";
@@ -43,24 +44,9 @@ function timeText(value) {
   return Number.isNaN(date.getTime()) ? "" : `${date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`;
 }
 
-/** popup กลางจอ: เตือนด่วน หรือประกาศจากหน่วยงาน (ปิดด้วยปุ่ม Esc หรือแตะพื้นหลัง) */
+/** popup กลางจอ: เตือนด่วน หรือประกาศจากหน่วยงาน (ปิดด้วยปุ่ม Esc หรือแตะพื้นหลัง) — ใช้ AppDialogShell (focus trap/ล็อกการเลื่อน/คืน focus) */
 export default function HomePopup({ popup, onClose }) {
   const closeRef = useRef(null);
-
-  useEffect(() => {
-    if (!popup) return undefined;
-    const previous = document.activeElement;
-    closeRef.current?.focus();
-    const onKey = (event) => { if (event.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
-      previous?.focus?.();
-    };
-  }, [popup, onClose]);
 
   if (!popup) return null;
   const urgent = popup.kind === "urgent";
@@ -70,14 +56,16 @@ export default function HomePopup({ popup, onClose }) {
   const titleId = "home-popup-title";
 
   return (
-    <div className="home-popup fixed inset-0 z-[1900] flex items-end justify-center p-0 sm:items-center sm:p-4">
-      <button type="button" aria-label="ปิด" tabIndex={-1} onClick={onClose} className="absolute inset-0 bg-[#06192a]/70 backdrop-blur-[2px]" />
-      <div
-        role={urgent ? "alertdialog" : "dialog"}
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="home-popup__panel relative max-h-[92dvh] w-full overflow-y-auto rounded-t-[1.75rem] bg-white text-[#15232e] shadow-2xl sm:max-w-2xl sm:rounded-[1.75rem]"
-      >
+    <AppDialogShell
+      open
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      layer="high"
+      initialFocus={closeRef}
+      backdropClassName="bg-[#06192a]/70 backdrop-blur-[2px]"
+      role={urgent ? "alertdialog" : "dialog"}
+      aria-labelledby={titleId}
+      className="home-popup__panel relative max-h-[92dvh] w-full overflow-y-auto rounded-t-[1.75rem] bg-white text-[#15232e] shadow-2xl sm:max-w-2xl sm:rounded-[1.75rem]"
+    >
         <button
           ref={closeRef}
           type="button"
@@ -183,13 +171,12 @@ export default function HomePopup({ popup, onClose }) {
             </div>
           </>
         )}
-      </div>
 
       <style>{`
         .home-popup__panel { animation: home-popup-in .28s cubic-bezier(.2,.8,.2,1) both; }
         @keyframes home-popup-in { from { transform: translateY(24px); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .home-popup__panel { animation: none; } }
       `}</style>
-    </div>
+    </AppDialogShell>
   );
 }

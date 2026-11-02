@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import html2canvas from "html2canvas";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showError, showSuccess } from "@/lib/feedback";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 import AppIcon from "@/components/icons/AppIcon";

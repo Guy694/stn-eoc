@@ -10,7 +10,7 @@ import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { getAlertAudioContext, showSystemAlert, unlockAlertAudio } from "@/lib/alertSound";
 import { speak, speechSupported, thaiVoice, waitForVoices } from "@/lib/alertSpeech";
 import { isIos, isStandalone, pushStatus, pushSupported, subscribePush } from "@/lib/pwaClient";
-import { showConfirm } from "@/lib/sweetAlert";
+import { showConfirm } from "@/lib/feedback";
 
 const API = "/stn-eoc/api/admin/alert-test";
 const PUSH_API = "/stn-eoc/api/admin/public-push";

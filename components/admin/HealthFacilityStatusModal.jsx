@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AppDialogFrame } from "@/components/ui/app-dialog";
-import { showError, showSuccess } from '@/lib/sweetAlert';
+import { showError, showSuccess } from '@/lib/feedback';
 import { FLOOD_STATUSES, SERVICE_STATUSES, facilityTypeInfo } from '@/lib/healthFacilityStatus';
 
 function ChoiceGroup({ legend, name, options, value, onChange }) {

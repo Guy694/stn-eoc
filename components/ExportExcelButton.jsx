@@ -1,7 +1,7 @@
 "use client";
 import { downloadCsv, objectsToCsvRows } from '@/lib/exportCsv';
 import AppIcon from "@/components/icons/AppIcon";
-import { showError, showWarning } from '@/lib/sweetAlert';
+import { showError, showWarning } from '@/lib/feedback';
 
 export default function ExportExcelButton({
     data,

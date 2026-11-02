@@ -1,0 +1,110 @@
+/*
+ * Modern Sky Light — Clean Atmospheric UI (ธีมทดลองของหน้าแรก)
+ * มีผลเฉพาะใต้ [data-home-theme="sky"] · ธีมเดิม (classic) ไม่ถูกแตะ
+ * โหมด auto (ค่าเริ่มต้น): ใช้ธีมนี้เฉพาะตอนไม่มีฝน มีฝนกลับเป็นแบบเดิม (lib/homeTheme.js → effectiveHomeTheme)
+ * ย้อนกลับ: lib/homeTheme.js → DEFAULT_HOME_THEME = "classic" · ลบธีมนี้ทิ้ง: ลบไฟล์นี้ + import ใน PublicHome.jsx
+ * สีหลัก: ฟ้าใส #e8f4ff · ฟ้า #0284c7 · กรมท่า (ตัวอักษร) #0b2540 · เทาฟ้า (ตัวรอง) #4a6a85
+ */
+[data-home-theme="sky"] {
+  --sky-ink: #0b2540;
+  --sky-muted: #4a6a85;
+  --sky-accent: #0284c7;
+  --sky-accent-strong: #0369a1;
+  --sky-glass: rgba(255, 255, 255, 0.62);
+  --sky-glass-strong: rgba(255, 255, 255, 0.82);
+  --sky-line: rgba(148, 197, 233, 0.55);
+  --sky-shadow: 0 24px 48px -28px rgba(2, 74, 125, 0.45);
+  color: var(--sky-ink);
+}
+
+/* ── Hero: ท้องฟ้ายามเช้า ไล่ฟ้าใส → ขาว + แสงแดดอ่อน + เมฆโปร่ง ── */
+[data-home-theme="sky"] .home-hero {
+  background:
+    radial-gradient(60rem 26rem at 88% -6%, rgba(255, 236, 179, 0.75), rgba(255, 236, 179, 0) 60%),
+    radial-gradient(40rem 18rem at 8% 18%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(48rem 20rem at 60% 78%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #a9d8ff 0%, #cfe9ff 34%, #e8f4ff 68%, #f5faff 100%);
+  color: var(--sky-ink);
+}
+[data-home-theme="sky"] .home-hero .home-muted { color: var(--sky-muted); }
+[data-home-theme="sky"] .home-hero .home-sub { color: #33536e; }
+[data-home-theme="sky"] .home-hero .home-title { color: var(--sky-ink); }
+[data-home-theme="sky"] .home-hero .home-pill {
+  background: var(--sky-glass);
+  color: var(--sky-ink);
+  box-shadow: inset 0 0 0 1px var(--sky-line);
+}
+
+/* ฉากอากาศ: เมฆ/เม็ดฝนเดิมออกแบบไว้บนพื้นเข้ม → ทำให้เข้มขึ้นบนพื้นฟ้าสว่าง */
+[data-home-theme="sky"] .hero-fx canvas { filter: brightness(0.42) saturate(1.8); opacity: 0.55; }
+[data-home-theme="sky"] .hero-fx [class*="bg-white/"] { background-color: rgba(255, 255, 255, 0.55); }
+
+/* ── การ์ด "พื้นที่ของฉัน": กระจกฝ้าขาว ── */
+[data-home-theme="sky"] .home-card {
+  background: var(--sky-glass-strong);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: var(--sky-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+
+/* ── แผงแผนที่ ── */
+[data-home-theme="sky"] .home-map-panel {
+  background: var(--sky-glass);
+  backdrop-filter: blur(16px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  box-shadow: var(--sky-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+[data-home-theme="sky"] .home-toggle {
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 0 0 1px var(--sky-line);
+}
+[data-home-theme="sky"] .home-toggle button { color: var(--sky-muted); }
+[data-home-theme="sky"] .home-toggle button:hover { background: rgba(2, 132, 199, 0.08); }
+[data-home-theme="sky"] .home-toggle button[aria-checked="true"] {
+  background: var(--sky-accent);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(2, 132, 199, 0.9);
+}
+[data-home-theme="sky"] .home-map-link {
+  background: #fff;
+  color: var(--sky-accent-strong);
+  border-color: var(--sky-line);
+  box-shadow: 0 6px 16px -12px rgba(2, 74, 125, 0.6);
+}
+[data-home-theme="sky"] .home-map-link:hover { background: #f0f8ff; }
+[data-home-theme="sky"] .home-legend { color: #284a66; }
+[data-home-theme="sky"] .home-legend [class*="text-[#9fc9d6]"] { color: var(--sky-muted); }
+/* แผนที่: เส้นเขตบาง ๆ สีขาว ให้ดูเบาบนพื้นสว่าง */
+[data-home-theme="sky"] .satun-map__district { filter: drop-shadow(0 6px 10px rgba(2, 74, 125, 0.18)); }
+
+/* ── ทางลัดจอใหญ่ (ซ้อนขอบล่าง hero) ── */
+[data-home-theme="sky"] .home-shortcuts > div {
+  background: rgba(186, 222, 250, 0.6);
+  box-shadow: 0 26px 50px -30px rgba(2, 74, 125, 0.55);
+}
+
+/* ── ช่วงข้อมูลสถานการณ์: ต่อจากท้องฟ้าลงมาเป็นขาวอมฟ้า ── */
+[data-home-theme="sky"] .home-situation {
+  background-image:
+    radial-gradient(50rem 22rem at 100% 0, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #f5faff 0, #f2f8fe 420px, #f8fbff 100%) !important;
+}
+[data-home-theme="sky"] .home-situation .bg-white { box-shadow: 0 14px 34px -26px rgba(2, 74, 125, 0.45); }
+
+/* ── การ์ดวันนี้ของพยากรณ์ 7 วัน + การ์ดเบอร์ฉุกเฉิน: ไล่ฟ้า แทนกรมท่าทึบ ── */
+[data-home-theme="sky"] .fc-today,
+[data-home-theme="sky"] .home-emergency {
+  background: linear-gradient(160deg, #0ea5e9 0%, #0284c7 55%, #0369a1 100%);
+  box-shadow: 0 18px 34px -20px rgba(2, 132, 199, 0.85);
+}
+[data-home-theme="sky"] .fc-today [class*="text-[#9fc9d6]"],
+[data-home-theme="sky"] .fc-today [class*="text-[#d5e7ec]"] { color: #e0f2fe; }
+[data-home-theme="sky"] .fc-today [class*="text-[#7fd3df]"] { color: #fff; }
+[data-home-theme="sky"] .home-emergency [class*="text-[#d5e7ec]"] { color: #e0f2fe; }
+[data-home-theme="sky"] .home-emergency a { background: rgba(255, 255, 255, 0.16); }
+[data-home-theme="sky"] .home-emergency a:hover { background: rgba(255, 255, 255, 0.26); }
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-home-theme="sky"] .home-card,
+  [data-home-theme="sky"] .home-map-panel { background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

@@ -149,7 +149,7 @@ export default function HeroWeatherFx({ scene }) {
   const sunny = !scene.night && scene.cloud === 0 && !scene.rain;
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div className="hero-fx pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       {/* แสงแดด / แสงจันทร์ */}
       {sunny ? <div className="hero-fx__sun absolute -right-24 -top-24 h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(255,214,120,.35),rgba(255,214,120,0)_65%)]" /> : null}
       {scene.night && !scene.rain ? <div className="absolute right-[12%] top-10 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(220,235,255,.18),rgba(220,235,255,0)_70%)]" /> : null}

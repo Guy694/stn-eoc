@@ -29,7 +29,7 @@ const API = "/stn-eoc/api/admin/system-status";
 
 const SECTIONS = [
   { value: "overview", label: "ภาพรวมระบบ", hint: "สุขภาพระบบและสิ่งที่ต้องแก้", icon: Activity },
-  { value: "alerts", label: "การแจ้งเตือน", hint: "Telegram ของศูนย์", icon: BellRing },
+  { value: "alerts", label: "การแจ้งเตือน", hint: "Telegram ของศูนย์ และทดสอบการแจ้งเตือน", icon: BellRing },
   { value: "integrations", label: "การเชื่อมต่อภายนอก", hint: "สถานะและทดสอบการเชื่อมต่อ", icon: PlugZap },
   { value: "security", label: "ความปลอดภัย", hint: "นโยบายรหัสผ่านและการเข้าสู่ระบบ", icon: ShieldCheck },
   { value: "roles", label: "สิทธิ์และบทบาท", hint: "แต่ละบทบาททำอะไรได้บ้าง", icon: Users },
@@ -37,7 +37,8 @@ const SECTIONS = [
   { value: "menus", label: "จัดกลุ่มเมนู", hint: "กลุ่มและลำดับเมนูของเหตุการณ์ในเมนูข้าง", icon: ListTree },
   { value: "menu-visibility", label: "เปิด/ปิดเมนู", hint: "ซ่อนเมนูหลังบ้านที่ไม่ใช้จากเมนูข้าง", icon: ListTree },
   { value: "alert-sounds", label: "เสียงแจ้งเตือน", hint: "แบบเสียงบนหน้าเว็บ ใช้ทุกเครื่อง", icon: Volume2 },
-  { value: "alert-test", label: "ทดสอบการแจ้งเตือน", hint: "ตรวจความพร้อม ทดสอบเสียง popup และมือถือ", icon: Megaphone },
+  // ลิงก์เดิม ?section=alert-test → แท็บ "ทดสอบ" ของหมวดการแจ้งเตือน (ไม่แสดงในเมนูแล้ว)
+  { value: "alert-test", label: "ทดสอบการแจ้งเตือน", hint: "ตรวจความพร้อม ทดสอบเสียง popup และมือถือ", icon: Megaphone, hidden: true },
   { value: "maintenance", label: "ปิดปรับปรุงระบบ", hint: "ปิดหน้าเว็บชั่วคราวระหว่างปรับปรุง", icon: Construction },
   { value: "public-menus", label: "เมนูประชาชน", hint: "เปิด/ปิดเมนูรายงานระดับน้ำ", icon: Waves },
   { value: "backup", label: "สำรองข้อมูล", hint: "ไฟล์สำรองและวิธีสำรอง/กู้คืน", icon: DatabaseBackup },
@@ -49,7 +50,7 @@ const SECTIONS = [
 // จัดหมวดเมนูตั้งค่า: เรื่องที่ใช้บ่อยอยู่บน เรื่องที่ตั้งครั้งเดียวอยู่ล่าง
 const GROUPS = [
   { label: null, items: ["overview"] },
-  { label: "การแจ้งเตือน", items: ["alerts", "alert-sounds", "alert-test"] },
+  { label: "การแจ้งเตือน", items: ["alerts", "alert-sounds"] },
   { label: "ผู้ใช้และสิทธิ์", items: ["security", "roles", "modules", "menus", "menu-visibility"] },
   { label: "ข้อมูล", items: ["data", "visitors", "test-data", "backup"] },
   { label: "ระบบ", items: ["integrations", "public-menus", "maintenance"] }
@@ -330,8 +331,33 @@ function DataLinks() {
   );
 }
 
+const ALERT_TABS = [
+  { value: "channels", label: "ช่องทางแจ้งเตือน" },
+  { value: "test", label: "ทดสอบการแจ้งเตือน" }
+];
+
 export default function SystemSettingsWorkspace() {
-  const [section, setSection] = useUrlState("section", "overview", SECTIONS.map((item) => item.value));
+  const [rawSection, setSection] = useUrlState("section", "overview", SECTIONS.map((item) => item.value));
+  const [rawAlertTab, setAlertTab] = useUrlState("tab", "channels", ALERT_TABS.map((item) => item.value));
+  // ทดสอบการแจ้งเตือน = แท็บหนึ่งของหมวดการแจ้งเตือน
+  const section = rawSection === "alert-test" ? "alerts" : rawSection;
+  const alertTab = rawSection === "alert-test" ? "test" : rawAlertTab;
+  const chooseSection = (value) => {
+    setSection(value);
+    if (value !== "alerts") setAlertTab("channels");
+  };
+  // ข้อมูลทดสอบ: แสดงในเมนูเฉพาะเมื่อยังมีข้อมูลที่ติดป้าย [ทดสอบ] (ลบหมดแล้ว = ซ่อน)
+  const [testDataTotal, setTestDataTotal] = useState(null);
+  useEffect(() => {
+    let active = true;
+    apiRequest("/stn-eoc/api/admin/test-data").then((result) => { if (active) setTestDataTotal(Number(result?.total) || 0); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const hiddenSection = (value) => SECTIONS.find((item) => item.value === value)?.hidden
+    || (value === "test-data" && !testDataTotal && section !== "test-data");
+  const groups = GROUPS
+    .map((group) => ({ ...group, items: group.items.filter((item) => !hiddenSection(item.value)) }))
+    .filter((group) => group.items.length);
   const [state, setState] = useState({ loading: true, data: null, error: "" });
   const [confirmTest, setConfirmTest] = useState(false);
   const [sending, setSending] = useState(false);
@@ -361,7 +387,8 @@ export default function SystemSettingsWorkspace() {
   };
 
   const current = SECTIONS.find((item) => item.value === section) || SECTIONS[0];
-  const needsData = !["visitors", "data", "modules", "maintenance", "public-menus", "menu-visibility", "alert-sounds", "alert-test"].includes(section);
+  const needsData = !["visitors", "data", "modules", "maintenance", "public-menus", "menu-visibility", "alert-sounds"].includes(section)
+    && !(section === "alerts" && alertTab === "test");
   const problems = state.data?.checks?.filter((check) => check.tone !== "ok").length || 0;
 
   return (
@@ -378,9 +405,9 @@ export default function SystemSettingsWorkspace() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[16rem_1fr]">
         <label className="block lg:hidden">
           <span className="sr-only">หมวดการตั้งค่า</span>
-          <select value={section} onChange={(event) => setSection(event.target.value)}
+          <select value={section} onChange={(event) => chooseSection(event.target.value)}
             className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-[15px] font-bold text-slate-900">
-            {GROUPS.map((group) => (group.label ? (
+            {groups.map((group) => (group.label ? (
               <optgroup key={group.label} label={group.label}>
                 {group.items.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
               </optgroup>
@@ -388,14 +415,14 @@ export default function SystemSettingsWorkspace() {
           </select>
         </label>
         <nav aria-label="หมวดการตั้งค่า" className="hidden rounded-2xl border border-slate-200 bg-white p-1.5 lg:block lg:self-start">
-          {GROUPS.map((group) => (
+          {groups.map((group) => (
             <div key={group.label || "top"} className={group.label ? "mt-2 border-t border-slate-100 pt-2" : ""}>
               {group.label ? <p className="px-3 pb-1 text-xs font-bold text-slate-500">{group.label}</p> : null}
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const active = item.value === section;
                 return (
-                  <button key={item.value} type="button" onClick={() => setSection(item.value)} aria-current={active ? "page" : undefined}
+                  <button key={item.value} type="button" onClick={() => chooseSection(item.value)} aria-current={active ? "page" : undefined}
                     className={`flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left ${active ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc]"}`}>
                     <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                     <span className="min-w-0">
@@ -421,7 +448,18 @@ export default function SystemSettingsWorkspace() {
           {section === "menu-visibility" ? <MenuVisibilitySettings /> : null}
           {section === "maintenance" ? <MaintenanceSettings /> : null}
           {section === "public-menus" ? <PublicMenuSettings /> : null}
-          {section === "alert-test" ? <AlertTestSettings /> : null}
+          {section === "alerts" ? (
+            <div role="tablist" aria-label="การแจ้งเตือน" className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
+              {ALERT_TABS.map((tab) => (
+                <button key={tab.value} type="button" role="tab" aria-selected={alertTab === tab.value}
+                  onClick={() => { setSection("alerts"); setAlertTab(tab.value); }}
+                  className={`min-h-10 rounded-lg px-4 text-sm font-bold ${alertTab === tab.value ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc]"}`}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {section === "alerts" && alertTab === "test" ? <AlertTestSettings /> : null}
           {section === "alert-sounds" ? <AlertSoundSettings /> : null}
           {section === "test-data" ? <TestDataSettings /> : null}
           {needsData ? (
@@ -429,8 +467,8 @@ export default function SystemSettingsWorkspace() {
               : !state.data ? <p className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังตรวจสถานะระบบ…</p>
                 : <>
                   {section === "overview" ? <Overview data={state.data} /> : null}
-                  {section === "alerts" ? <Alerts data={state.data} onTest={() => setConfirmTest(true)} /> : null}
-                  {section === "alerts" ? <WaterAlertSettings /> : null}
+                  {section === "alerts" && alertTab === "channels" ? <Alerts data={state.data} onTest={() => setConfirmTest(true)} /> : null}
+                  {section === "alerts" && alertTab === "channels" ? <WaterAlertSettings /> : null}
                   {section === "integrations" ? <Integrations data={state.data} /> : null}
                   {section === "security" ? <Security data={state.data} /> : null}
                   {section === "roles" ? <Roles data={state.data} /> : null}

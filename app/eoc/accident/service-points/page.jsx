@@ -4,7 +4,7 @@ import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanel
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
-import { showError, showSuccess, showDeleteConfirm } from '@/lib/sweetAlert';
+import { showError, showSuccess, showDeleteConfirm } from '@/lib/feedback';
 import dynamic from 'next/dynamic';
 import AppIcon from "@/components/icons/AppIcon";
 import { MetricCard } from "@/components/common/MetricCards";

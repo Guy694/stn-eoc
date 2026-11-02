@@ -9,6 +9,7 @@ import { BellRing, ChevronRight, House, Phone, Siren, Volume2, X } from "lucide-
 import { installAlertAudioUnlock, playAlert, unlockAlertAudio } from "@/lib/alertSound";
 import { speak, speechText } from "@/lib/alertSpeech";
 import HelpRequestLink from "@/components/public/HelpRequestLink";
+import { AppDialogShell } from "@/components/ui/app-dialog";
 
 const HIGH = new Set(["high", "critical"]);
 const INFO_MS = 12000;
@@ -34,13 +35,20 @@ function UrgentAlert({ item, count, onAck, soundBlocked, onSound }) {
   const ackRef = useRef(null);
   const related = relatedPath(item.url);
   const officer = related && OFFICER_PATH.test(related);
-  useEffect(() => { ackRef.current?.focus(); }, [item.key]);
 
+  // เตือนภัยด่วน: AlertDialog ชั้นบนสุด แตะฉากหลังไม่ปิด ต้องกด "รับทราบ" (Esc = รับทราบ)
   return (
-    <div className="push-urgent fixed inset-0 z-[2100] flex items-end justify-center sm:items-center sm:p-4 print:hidden">
-      <div className="absolute inset-0 bg-[#2a0707]/75 backdrop-blur-sm" aria-hidden="true" />
-      <div role="alertdialog" aria-modal="true" aria-labelledby={`push-title-${item.key}`} aria-describedby={`push-body-${item.key}`}
-        className="push-urgent__card relative max-h-[92dvh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-[0_30px_80px_-20px_rgba(80,0,0,.65)] sm:max-w-md sm:rounded-[2rem]">
+    <AppDialogShell
+      open
+      alert
+      layer="urgent"
+      onOpenChange={(open) => { if (!open) onAck(); }}
+      initialFocus={ackRef}
+      backdropClassName="bg-[#2a0707]/75 backdrop-blur-sm"
+      aria-labelledby={`push-title-${item.key}`}
+      aria-describedby={`push-body-${item.key}`}
+      className="push-urgent__card relative max-h-[92dvh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-[0_30px_80px_-20px_rgba(80,0,0,.65)] sm:max-w-md sm:rounded-[2rem]"
+    >
         {/* แถบเตือนภัย: ลายเทปกั้นเขตจาง ๆ + ไอคอนไซเรนมีคลื่นกระจาย (จังหวะเดียว ไม่วนตลอด) */}
         <div className="push-urgent__band relative overflow-hidden bg-[#b4231b] px-6 pb-6 pt-7 text-white">
           <div className="flex items-center gap-4">
@@ -87,8 +95,7 @@ function UrgentAlert({ item, count, onAck, soundBlocked, onSound }) {
             </a>
           ) : null}
         </div>
-      </div>
-    </div>
+    </AppDialogShell>
   );
 }
 
@@ -155,22 +162,10 @@ export default function PushMessageHost() {
   const closeInfo = useCallback(() => setInfo(null), []);
   const replaySound = () => unlockAlertAudio().then(() => playAlert("critical")).then((ok) => setSoundBlocked(!ok)).catch(() => {});
 
-  useEffect(() => {
-    if (!urgent.length) return undefined;
-    const onKey = (event) => { if (event.key === "Escape") acknowledge(); };
-    document.addEventListener("keydown", onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
-    };
-  }, [urgent.length, acknowledge]);
-
   if (!urgent.length && !info) return null;
   return (
     <>
-      {urgent.length ? <UrgentAlert item={urgent[0]} count={urgent.length} onAck={acknowledge} soundBlocked={soundBlocked} onSound={replaySound} /> : null}
+      {urgent.length ? <UrgentAlert key={urgent[0].key} item={urgent[0]} count={urgent.length} onAck={acknowledge} soundBlocked={soundBlocked} onSound={replaySound} /> : null}
       {info && !urgent.length ? <InfoBanner key={info.key} item={info} onClose={closeInfo} /> : null}
       <style>{`
         .push-urgent__card { animation: push-rise .38s cubic-bezier(.2,.9,.25,1) both; }

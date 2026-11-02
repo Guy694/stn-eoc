@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { getOperationSessionLockByType } from "@/lib/eocSessionLock";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showError, showSuccess } from "@/lib/feedback";
 import ReasonDialog from "@/components/ui/reason-dialog";
 import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 import DailyDirectivesBoard from "@/components/eoc/directives/DailyDirectivesBoard";

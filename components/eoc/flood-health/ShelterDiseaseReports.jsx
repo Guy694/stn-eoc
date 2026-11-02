@@ -6,7 +6,7 @@ import { Button, ReadOnlyNotice, inputClass } from "@/components/admin/crud";
 import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 import { EmptyPanel, PageHero, Panel, heroInputClass, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { formatNumber } from "@/lib/adminApi";
-import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/sweetAlert';
+import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/feedback';
 import { FLOOD_DISEASE_CHOICES, buildDiseaseChoices } from '@/lib/diseaseNames';
 import PaginationControls, { usePagination } from '@/components/common/PaginationControls';
 

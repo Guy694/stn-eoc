@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
-import { showWarning } from "@/lib/sweetAlert";
+import { showWarning } from "@/lib/feedback";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
 

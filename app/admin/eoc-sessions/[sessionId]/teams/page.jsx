@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import EOCTeamManager from "@/components/EOCTeamManager";
 import { teamRegistry } from "@/src/features/eoc/registries/team.registry";
-import { showConfirm, showError, showSuccess } from "@/lib/sweetAlert";
+import { showConfirm, showError, showSuccess } from "@/lib/feedback";
 import { PageHero, HeroProgress, heroButtonClass, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 
 export default function EOCSessionTeamsPage() {

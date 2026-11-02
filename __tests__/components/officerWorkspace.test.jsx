@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import OfficerWorkspace from "@/components/admin/officers/OfficerWorkspace";
 
-jest.mock("@/lib/sweetAlert", () => ({ showDeleteConfirm: jest.fn(async () => true), showConfirm: jest.fn(async () => true) }));
+jest.mock("@/lib/feedback", () => ({ showDeleteConfirm: jest.fn(async () => true), showConfirm: jest.fn(async () => true) }));
 jest.mock("@/context/AuthContext", () => ({ useAuth: () => ({ user: { id: 1, role: "admin" } }) }));
 // ผลการทำงานแสดงเป็น toast มุมขวาบน (lib/notify) — ตรวจจากการเรียก notify
 jest.mock("@/lib/notify", () => {

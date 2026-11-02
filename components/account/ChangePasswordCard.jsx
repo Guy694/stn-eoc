@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { KeyRound } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { inputClass } from "@/components/admin/crud";
-import { showError, showSuccess } from "@/lib/sweetAlert";
+import { showError, showSuccess } from "@/lib/feedback";
 import { PASSWORD_MIN_LENGTH, PASSWORD_POLICY_TEXT, validatePassword } from "@/lib/passwordPolicy";
 
 const EMPTY = { currentPassword: "", newPassword: "", confirmPassword: "" };

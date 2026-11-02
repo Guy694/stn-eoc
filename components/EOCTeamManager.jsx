@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import AppIcon from './icons/AppIcon';
-import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/sweetAlert';
+import { showDeleteConfirm, showError, showSuccess, showWarning } from '@/lib/feedback';
 import { AppDialogFrame } from '@/components/ui/app-dialog';
 
 export default function EOCTeamManager({ sessionId, eocType, onTeamUpdated }) {
