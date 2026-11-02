@@ -9,6 +9,25 @@ import { freshness, latestTime } from "@/lib/dataFreshness";
 import FreshnessTag, { useNow } from "@/components/common/FreshnessTag";
 import { Sparkline } from "@/components/public/home/CanalStrip";
 import DpmStationDialog from "@/components/weather/DpmStationDialog";
+import { cameraCodes, frameUrl, isKnownCamera } from "@/lib/ddpmCctv";
+
+/** ภาพนิ่งล่าสุดจากกล้อง CCTV ของ ปภ. (กล้องตัวแรกของสถานี) แบบเล็ก — โหลดเมื่อเลื่อนมาถึง · กล้องดับ = ซ่อนไป */
+function CctvThumb({ station, stamp }) {
+  const [state, setState] = useState("loading");
+  const cam = cameraCodes(station)[0];
+  if (!isKnownCamera(cam) || state === "error") return null;
+  return (
+    <span className="relative mt-2 block aspect-video w-28 overflow-hidden rounded-xl bg-slate-200 ring-1 ring-[#d6e3ea]" aria-hidden="true">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={frameUrl(cam, stamp)} alt="" loading="lazy" decoding="async" onLoad={() => setState("ok")} onError={() => setState("error")}
+        className={`h-full w-full object-cover transition-opacity duration-300 ${state === "ok" ? "opacity-100" : "opacity-0"}`} />
+      {state === "loading" ? <span className="absolute inset-0 animate-pulse bg-slate-200" /> : null}
+      <span className="absolute left-1 top-1 inline-flex items-center gap-0.5 rounded-full bg-black/55 px-1.5 py-px text-[9px] font-bold text-white">
+        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />CCTV
+      </span>
+    </span>
+  );
+}
 
 const INITIAL_COUNT = 6;
 const MOBILE_COUNT = 3; // มือถือเรียงแนวตั้ง: แสดง 3 สถานีแรกพอ ที่เหลือกดดูทั้งหมด
@@ -35,6 +54,8 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
   const hiddenCount = Math.max(0, sorted.length - INITIAL_COUNT);
   const worst = sorted[0] ? dpmStatus(sorted[0]) : null;
   const now = useNow();
+  // เวลาอ้างอิงของภาพกล้อง: เปลี่ยนทุก 2 นาที ภาพเล็กจึงรีเฟรชเอง (เซิร์ฟเวอร์แคชภาพละ 1 นาที)
+  const stamp = Math.floor(now / 120000) * 120000;
   const latest = latestTime(stations.map((item) => item.observedAt)) ?? latestTime([observedAt]);
   const fresh = freshness(latest, "water", now);
 
@@ -92,9 +113,13 @@ export default function DpmCanalStrip({ stations = [], observedAt = null, loadin
                     {next ? <p className="mt-1 text-[11px] text-slate-500">อีก {fmt(next.gap)} ม. ถึงเกณฑ์{next.label}</p> : null}
                     {station.level === null ? <p className="mt-1 text-[11px] text-slate-500">สถานีไม่ได้ส่งค่าระดับน้ำขณะนี้</p> : null}
                   </div>
-                  {station.level !== null ? (
-                    <Sparkline station={{ observedAt: station.observedAt, waterLevelMsl: station.level, bankLevelMsl: station.thresholds?.danger }} history={points} />
-                  ) : null}
+                  {/* ขวา: กราฟแนวโน้ม 24 ชม. + ภาพกล้องล่าสุด (เล็ก) */}
+                  <span className="flex shrink-0 flex-col items-end justify-center">
+                    {station.level !== null ? (
+                      <Sparkline station={{ observedAt: station.observedAt, waterLevelMsl: station.level, bankLevelMsl: station.thresholds?.danger }} history={points} />
+                    ) : null}
+                    <CctvThumb station={station} stamp={stamp} />
+                  </span>
                 </button>
                 </li>
               );
