@@ -47,7 +47,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import { applyMenuVisibility } from "@/lib/menuVisibility";
-import { buildAdminMenu, buildOfficerEventSections, groupMenuItems, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
+import { buildAdminMenu, buildOfficerMenu, groupMenuItems, isMenuItemActive } from "@/src/config/navigation/admin-navigation";
 
 // ไอคอนตาม iconKey ของเมนู (โครงเมนูอยู่ที่ src/config/navigation/admin-navigation.js)
 const ICONS = {
@@ -201,11 +201,6 @@ export default function Sidebar() {
         return 0;
     };
 
-    const accountItems = [
-        { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
-        { name: "คู่มือการใช้งาน", path: "/eoc/guide", iconKey: "guide" }
-    ];
-
     // ผู้ใช้ที่รออนุมัติ
     const pendingUserMenu = [
         { section: "dashboard", title: "เริ่มต้น", items: [{ name: "หน้าหลัก", path: "/dashboard", iconKey: "home" }] },
@@ -219,28 +214,8 @@ export default function Sidebar() {
         }
     ];
 
-    // เจ้าหน้าที่ทีม/ผู้บัญชาการ: เห็นเมนูเหตุการณ์ที่เปิดอยู่เหมือนแอดมิน (เมนูของกลุ่มภารกิจอื่นเปิดดูได้อย่างเดียว)
-    // และงานเฉพาะของกลุ่มภารกิจที่ได้รับมอบหมาย
-    const officerEventSections = buildOfficerEventSections({ eocStatus, assignments: teamAssignments, role: user.role, overrides: ownerOverrides, layout: menuLayout });
-    const teamMenu = [
-        {
-            section: "team-main",
-            title: "ภาพรวม",
-            audience: "ทุกบทบาท",
-            items: [
-                { name: "หน้าหลัก", path: "/dashboard", iconKey: "home", description: "เลือกเหตุการณ์ก่อนเข้าสู่หน้าปฏิบัติการ" },
-                { name: "สถานะของฉัน", path: "/eoc/readiness", iconKey: "myStatus", description: "รายงานว่าพร้อมปฏิบัติงานหรือไม่" },
-                // ผู้บัญชาการดูความพร้อมของเจ้าหน้าที่ทั้งหมดได้
-                ...(user.role === "commander" ? [{ name: "สถานะความพร้อมเจ้าหน้าที่", path: "/admin/officer-readiness", iconKey: "readiness" }] : []),
-                { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
-                { name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood" },
-                // ผู้บัญชาการเหตุการณ์ส่งเตือนภัยถึงประชาชนได้
-                ...(user.role === "commander" ? [{ name: "แจ้งเตือนประชาชน", path: "/admin/public-alerts", iconKey: "announcements" }] : [])
-            ]
-        },
-        ...(officerEventSections.length ? [{ section: "events-heading", title: "เหตุการณ์ที่เปิดอยู่", group: "events-heading", items: [] }, ...officerEventSections] : []),
-        { section: "team-account", title: "บัญชีของฉัน", items: accountItems }
-    ];
+    // เจ้าหน้าที่ทีม/ผู้บัญชาการ: ภาพรวม → งานของทีมฉัน → เหตุการณ์ที่เปิดอยู่ (เมนูทีมอื่นดูได้อย่างเดียว) → สื่อสาร (ผบ.) → บัญชี
+    const teamMenu = buildOfficerMenu({ role: user.role, eocStatus, assignments: teamAssignments, overrides: ownerOverrides, layout: menuLayout });
 
     const menuSections = (user.role === "user" || user.isApproved === false)
         ? pendingUserMenu
@@ -327,29 +302,29 @@ export default function Sidebar() {
                         </span>
                         <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
                     </button>
-                    {expanded && (() => {
-                        const shared = section.items.filter((item) => !item.teamWork);
-                        const mine = section.items.filter((item) => item.teamWork);
-                        return (
+                    {expanded && (
                             <div className="px-1.5 pb-2">
                                 <p className="mx-1.5 mb-1 rounded-md bg-white/70 px-2 py-1 text-[11px] leading-snug text-slate-500">
                                     ใต้ชื่อเมนูคือทีมที่บันทึกข้อมูลได้{user.role === "admin" ? "" : " · ไอคอนรูปตา = ดูได้อย่างเดียว"}
                                 </p>
-                                {groupMenuItems(shared).map((group) => (
+                                {groupMenuItems(section.items).map((group) => (
                                     <div key={group.title || "main"}>
                                         {group.title ? <h4 className="px-3 pb-0.5 pt-2 text-[11px] font-bold text-slate-500">{group.title}</h4> : null}
                                         <ul className="space-y-0.5">{group.items.map((item) => renderItem(item, true))}</ul>
                                     </div>
                                 ))}
-                                {mine.length ? (
-                                    <>
-                                        <h4 className="mt-2 border-t border-emerald-200/70 px-3 pb-1 pt-2 text-[11px] font-bold text-slate-500">งานของกลุ่มภารกิจ</h4>
-                                        <ul className="space-y-0.5">{mine.map((item) => renderItem(item, true))}</ul>
-                                    </>
-                                ) : null}
                             </div>
-                        );
-                    })()}
+                    )}
+                </div>
+            );
+        }
+
+        // งานของทีมฉัน: กรอบเด่น อยู่บนสุดของเมนูเจ้าหน้าที่ (งานที่ทำบ่อยที่สุด)
+        if (section.highlight) {
+            return (
+                <div key={section.section} className="mb-3 rounded-xl border border-sky-200 bg-sky-50/70 p-1.5">
+                    <h3 className="px-2 pb-1 pt-0.5 text-xs font-bold text-sky-800">{section.title}</h3>
+                    <ul className="space-y-0.5">{section.items.map((item) => renderItem(item))}</ul>
                 </div>
             );
         }

@@ -21,7 +21,7 @@ describe("moduleEditAccess", () => {
   });
 });
 
-import { buildOfficerEventSections } from "@/src/config/navigation/admin-navigation";
+import { buildAdminMenu, buildMyTeamWorkSection, buildOfficerEventSections, buildOfficerMenu } from "@/src/config/navigation/admin-navigation";
 
 describe("buildOfficerEventSections", () => {
   const eocStatus = { flood: { is_active: true, session_id: 9, session_number: 3 }, disease: { is_active: false } };
@@ -32,9 +32,9 @@ describe("buildOfficerEventSections", () => {
     expect(it.readOnly).toBe(true);
     expect(sat[0].items.find((item) => item.key === "overview").readOnly).toBe(false);
     expect(sat[0].items.find((item) => item.key === "records").readOnly).toBe(false);
-    // เมนูเหตุการณ์เหมือนของแอดมินทุกข้อ + รายงานประจำวันของทีมท้ายการ์ด
-    expect(sat[0].items.filter((item) => !item.teamWork).map((item) => item.key)).toContain("supplies");
-    expect(sat[0].items.filter((item) => item.teamWork).map((item) => item.path)).toEqual(["/eoc/flood/teams/sat/records"]);
+    // เมนูเหตุการณ์เหมือนของแอดมินทุกข้อ · งานของทีมแยกไปหมวด "งานของทีมฉัน"
+    expect(sat[0].items.map((item) => item.key)).toContain("supplies");
+    expect(sat[0].items.some((item) => item.teamWork)).toBe(false);
 
     const itTeam = buildOfficerEventSections({ eocStatus, role: "staff", assignments: [{ eoc_type: "flood", eoc_session_id: 9, team_code: "ITSUPPORT" }] });
     expect(itTeam[0].items.find((item) => item.key === "it-support").readOnly).toBe(false);
@@ -43,6 +43,47 @@ describe("buildOfficerEventSections", () => {
   it("ไม่แสดงเหตุการณ์ที่ไม่ได้รับมอบหมาย", () => {
     expect(buildOfficerEventSections({ eocStatus, role: "SAT", assignments: [] })).toEqual([]);
     expect(buildOfficerEventSections({ eocStatus, role: "SAT", assignments: [{ eoc_type: "flood", eoc_session_id: 2, team_code: "SAT" }] })).toEqual([]);
+  });
+});
+
+describe("เมนูเจ้าหน้าที่ (M1/M2)", () => {
+  const eocStatus = { flood: { is_active: true, session_id: 9, session_number: 3 }, disease: { is_active: true, session_id: 4 } };
+  const titles = (menu) => menu.map((section) => section.title);
+  const paths = (menu, key) => menu.find((section) => section.section === key)?.items.map((item) => item.path) || [];
+
+  it("งานของทีมฉันอยู่ถัดจากภาพรวม ก่อนเมนูเหตุการณ์", () => {
+    const menu = buildOfficerMenu({ role: "staff", eocStatus, assignments: [{ eoc_type: "flood", eoc_session_id: 9, team_code: "SAT" }] });
+    expect(titles(menu).slice(0, 3)).toEqual(["ภาพรวม", "งานของทีมฉัน", "เหตุการณ์ที่เปิดอยู่"]);
+    expect(paths(menu, "my-team-work")).toEqual(["/eoc/flood/teams/sat/records"]);
+    expect(menu.find((section) => section.section === "my-team-work").items[0].name).not.toMatch(/·/);
+  });
+
+  it("หลายเหตุการณ์: ต่อท้ายชื่องานด้วยเหตุการณ์ · ไม่มีทีม = ไม่มีหมวดงานของทีม", () => {
+    const work = buildMyTeamWorkSection({ eocStatus, assignments: [
+      { eoc_type: "flood", eoc_session_id: 9, team_code: "SAT" },
+      { eoc_type: "disease", eoc_session_id: 4, team_code: "RISKCOM" }
+    ] });
+    expect(work.items.map((item) => item.name)).toEqual(expect.arrayContaining([expect.stringMatching(/· อุทกภัย$/), expect.stringMatching(/· โรคระบาด$/)]));
+    expect(buildMyTeamWorkSection({ eocStatus, assignments: [] })).toBeNull();
+    expect(titles(buildOfficerMenu({ role: "commander", eocStatus, assignments: [] }))).not.toContain("งานของทีมฉัน");
+  });
+
+  it("สถานะของฉันอยู่ในภาพรวมทุกบทบาท · แจ้งเตือนประชาชนอยู่ในหมวดสื่อสาร · แนวโน้มน้ำและฝนไม่ซ้ำ", () => {
+    const admin = buildAdminMenu({ eocStatus });
+    const commander = buildOfficerMenu({ role: "commander", eocStatus });
+    const staff = buildOfficerMenu({ role: "staff", eocStatus, assignments: [{ eoc_type: "flood", eoc_session_id: 9, team_code: "SAT" }] });
+    for (const menu of [admin, commander, staff]) {
+      expect(paths(menu, "overview")).toContain("/eoc/readiness");
+      expect(paths(menu, "account")).not.toContain("/eoc/readiness");
+      expect(paths(menu, "overview")).not.toContain("/admin/public-alerts");
+      const all = menu.flatMap((section) => section.items || []).map((item) => item.path);
+      expect(all.filter((path) => path === "/eoc/hydro-trends")).toHaveLength(1);
+    }
+    expect(paths(admin, "communication")).toContain("/admin/public-alerts");
+    expect(paths(commander, "communication")).toEqual(["/announcements", "/admin/public-alerts"]);
+    expect(titles(staff)).not.toContain("สื่อสาร");
+    expect(paths(staff, "overview")).not.toContain("/admin/officer-readiness");
+    expect(paths(commander, "overview")).toContain("/admin/officer-readiness");
   });
 });
 

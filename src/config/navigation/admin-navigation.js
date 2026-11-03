@@ -15,7 +15,7 @@ export const EVENT_MODULES = {
       { key: "overview", group: "ประเมินสถานการณ์", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
       { key: "water-report", group: "ประเมินสถานการณ์", name: "รายงานระดับน้ำ", path: "/eoc/flood/water-report", iconKey: "flood", description: "ระดับน้ำสถานีเฝ้าระวัง ปภ. เทียบย้อนหลัง บันทึกเป็น PDF/รูป A4" },
       { key: "risk-map", group: "ประเมินสถานการณ์", name: "แผนที่สถานการณ์และความเสี่ยง", path: "/eoc/flood/risk-map", iconKey: "map", description: "ชุดเดียวกับหน้าประชาชน: ระดับน้ำ ฝน น้ำขึ้น–ลง น้ำท่วมซ้ำซาก ความเสี่ยงรายอำเภอ และ Windy" },
-      { key: "hydro-trends", group: "ประเมินสถานการณ์", name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "daily", description: "ฝนรายวัน ระดับน้ำในคลอง น้ำทะเลหนุน ย้อนหลัง 7/30/90 วัน" },
+      // "แนวโน้มน้ำและฝน" อยู่ในหมวดภาพรวม (เปิดได้ตลอด ไม่ต้องมีเหตุการณ์) — ไม่ซ้ำในเมนูเหตุการณ์
       { key: "area-risk", group: "ประเมินสถานการณ์", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
       { key: "triggers", group: "สั่งการ", name: "ธงเตือนภัยและ Trigger", path: "/eoc/flood/triggers", iconKey: "flag", description: "ประกาศธงเขียว/เหลือง/แดง และ Trigger เคลื่อนย้ายกลุ่มเปราะบาง รายพื้นที่" },
       { key: "command", group: "สั่งการ", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
@@ -102,6 +102,7 @@ export function buildEventSections({ eocStatus = {}, pathname = "", overrides = 
  * เมนูเหตุการณ์สำหรับเจ้าหน้าที่ (ไม่ใช่แอดมิน): เหมือนของแอดมิน แต่
  * - แสดงเฉพาะเหตุการณ์ที่เปิดอยู่ซึ่งผู้ใช้ได้รับมอบหมาย
  * - เมนูของกลุ่มภารกิจอื่นติดป้าย readOnly (เปิดดูได้ บันทึกไม่ได้)
+ * - งานของทีมตัวเอง (รายงานประจำวัน ฯลฯ) แยกไปอยู่หมวด "งานของทีมฉัน" ด้านบน (buildMyTeamWorkSection)
  */
 export function buildOfficerEventSections({ eocStatus = {}, assignments = [], role = "staff", overrides = {}, layout = {} } = {}) {
   return Object.entries(EVENT_MODULES)
@@ -113,14 +114,6 @@ export function buildOfficerEventSections({ eocStatus = {}, assignments = [], ro
       // เมนูเหมือนแอดมินทุกข้อ (ลำดับ/ชื่อเดียวกัน) — เมนูที่กำหนดทีมเจ้าของแล้วติดป้ายดูอย่างเดียวสำหรับทีมอื่น
       const items = eventMenuItems(type, { sessionId: status.session_id || null, overrides, layout })
         .map((item) => ({ ...item, readOnly: !moduleEditAccess({ role, memberships: mine, moduleKey: item.key, owners: resolveOwners(type, item.key, overrides) }).canEdit }));
-      // งานของกลุ่มภารกิจที่ผู้ใช้สังกัด (รายงานประจำวัน + งานเฉพาะที่ยังไม่อยู่ในเมนูเหตุการณ์)
-      const myTeams = new Set(mine.map((item) => normalizeTeamCode(item.team_code)).filter(Boolean));
-      const shownPaths = new Set(items.map((item) => item.path));
-      const teamItems = TEAM_CODES
-        .filter((code) => myTeams.has(code))
-        .flatMap((code) => createTeamWorkItems(type, code))
-        .filter((item) => !shownPaths.has(item.path));
-      items.push(...teamItems);
       if (!items.length) return null;
       return {
         section: `event-${type}`,
@@ -137,22 +130,96 @@ export function buildOfficerEventSections({ eocStatus = {}, assignments = [], ro
     .filter(Boolean);
 }
 
+/** สถานะของ EOC ที่เปิดอยู่ซึ่งผู้ใช้ได้รับมอบหมาย → [{ type, status, mine }] */
+function assignedOpenEvents(eocStatus = {}, assignments = []) {
+  return Object.keys(EVENT_MODULES)
+    .map((type) => {
+      const status = eocStatus[type];
+      if (!status?.is_active) return null;
+      const mine = assignments.filter((item) => item?.eoc_type === type && (!status.session_id || Number(item.session_id ?? item.eoc_session_id) === Number(status.session_id)));
+      return mine.length ? { type, status, mine } : null;
+    })
+    .filter(Boolean);
+}
+
+/**
+ * หมวด "งานของทีมฉัน": งานที่เจ้าหน้าที่ต้องทำบ่อยที่สุด (รายงานประจำวันของกลุ่มภารกิจ + งานเฉพาะทีม) อยู่บนสุด
+ * มีหลายเหตุการณ์เปิดพร้อมกัน → ต่อท้ายชื่อด้วยเหตุการณ์ เช่น "รายงานประจำวัน SAT · อุทกภัย"
+ * ไม่ใส่งานที่มีอยู่แล้วในเมนูเหตุการณ์ (กันซ้ำ)
+ */
+export function buildMyTeamWorkSection({ eocStatus = {}, assignments = [], overrides = {}, layout = {} } = {}) {
+  const events = assignedOpenEvents(eocStatus, assignments);
+  const many = events.length > 1;
+  const items = events.flatMap(({ type, status, mine }) => {
+    const shownPaths = new Set(eventMenuItems(type, { sessionId: status.session_id || null, overrides, layout }).map((item) => item.path));
+    const myTeams = new Set(mine.map((item) => normalizeTeamCode(item.team_code)).filter(Boolean));
+    return TEAM_CODES
+      .filter((code) => myTeams.has(code))
+      .flatMap((code) => createTeamWorkItems(type, code))
+      .filter((item) => !shownPaths.has(item.path))
+      .map((item) => ({ ...item, eocType: type, name: many ? `${item.name} · ${EVENT_MODULES[type].label}` : item.name }));
+  });
+  if (!items.length) return null;
+  return { section: "my-team-work", title: "งานของทีมฉัน", highlight: true, items };
+}
+
+/** หมวดภาพรวม: เหมือนกันทุกบทบาท (แอดมิน/ผู้บัญชาการเห็นความพร้อมของทุกคนเพิ่ม) */
+function overviewSection(role) {
+  const seesEveryone = role === "admin" || role === "commander";
+  return {
+    section: "overview",
+    title: "ภาพรวม",
+    audience: "ทุกบทบาท",
+    items: [
+      { name: "หน้าหลัก", path: "/dashboard", iconKey: "home", description: "เลือกเหตุการณ์ก่อนเข้าสู่หน้าปฏิบัติการ" },
+      { name: "สถานะของฉัน", path: "/eoc/readiness", iconKey: "myStatus", description: "รายงานว่าพร้อมปฏิบัติงานหรือไม่" },
+      ...(seesEveryone ? [{ name: "สถานะความพร้อมเจ้าหน้าที่", path: "/admin/officer-readiness", iconKey: "readiness", description: "ใครพร้อม/มาไม่ได้/ต้องการความช่วยเหลือ สรุปรายทีม ปรับสถานะแทนได้" }] : []),
+      { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
+      { name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood", description: "กราฟฝนรายวัน ระดับน้ำในคลอง และน้ำทะเลหนุน 7/30/90 วัน" }
+    ]
+  };
+}
+
+const ACCOUNT_SECTION = {
+  section: "account",
+  title: "บัญชีของฉัน",
+  items: [
+    { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
+    { name: "คู่มือการใช้งาน", path: "/eoc/guide", iconKey: "guide", description: "คู่มือเจ้าหน้าที่ และคู่มือผู้ดูแลระบบ (แท็บด้านบน)", alsoActive: ["/eoc/guide/admin"] }
+  ]
+};
+
+/**
+ * เมนูเจ้าหน้าที่ทีม / ผู้บัญชาการ (ไม่ใช่แอดมิน)
+ * ภาพรวม → งานของทีมฉัน → เหตุการณ์ที่เปิดอยู่ → สื่อสาร (ผู้บัญชาการ) → บัญชีของฉัน
+ */
+export function buildOfficerMenu({ role = "staff", eocStatus = {}, assignments = [], overrides = {}, layout = {} } = {}) {
+  const events = buildOfficerEventSections({ eocStatus, assignments, role, overrides, layout });
+  const teamWork = buildMyTeamWorkSection({ eocStatus, assignments, overrides, layout });
+  return [
+    overviewSection(role),
+    ...(teamWork ? [teamWork] : []),
+    ...(events.length ? [{ section: "events-heading", title: "เหตุการณ์ที่เปิดอยู่", group: "events-heading", items: [] }, ...events] : []),
+    // ผู้บัญชาการเหตุการณ์จัดการประกาศและส่งเตือนภัยถึงประชาชนได้ — ชื่อหมวด/ลำดับเดียวกับของแอดมิน
+    ...(role === "commander" ? [{
+      section: "communication",
+      title: "สื่อสาร",
+      audience: "ผบ.",
+      items: [
+        { name: "ประกาศ", path: "/announcements", iconKey: "megaphone" },
+        { name: "แจ้งเตือนประชาชน", path: "/admin/public-alerts", iconKey: "announcements", description: "ส่งเตือนภัยเข้ามือถือประชาชน ข้อความสำเร็จรูป การส่งอัตโนมัติ" }
+      ]
+    }] : []),
+    ACCOUNT_SECTION
+  ];
+}
+
 export function buildAdminMenu({ eocStatus = {}, pathname = "", overrides = {}, layout = {} } = {}) {
   const events = buildEventSections({ eocStatus, pathname, overrides, layout });
   const anyOpen = events.some((section) => section.eventState === "open");
 
   return [
-    {
-      section: "overview",
-      title: "ภาพรวม",
-      audience: "ทุกบทบาท",
-      items: [
-        { name: "หน้าหลัก", path: "/dashboard", iconKey: "home" },
-        { name: "สถานะความพร้อมเจ้าหน้าที่", path: "/admin/officer-readiness", iconKey: "readiness", description: "ใครพร้อม/มาไม่ได้/ต้องการความช่วยเหลือ สรุปรายทีม ปรับสถานะแทนได้" },
-        { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
-        { name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood", description: "กราฟฝนรายวัน ระดับน้ำในคลอง และน้ำทะเลหนุน 7/30/90 วัน" }
-      ]
-    },
+    overviewSection("admin"),
     {
       section: "events-heading",
       title: "เหตุการณ์ที่เปิดอยู่",
@@ -217,15 +284,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "", overrides = {}, 
         { name: "ถังขยะ", path: "/admin/trash", iconKey: "trash", description: "ข้อมูลที่ถูกลบ กู้คืนได้" }
       ]
     },
-    {
-      section: "account",
-      title: "บัญชีของฉัน",
-      items: [
-        { name: "สถานะของฉัน", path: "/eoc/readiness", iconKey: "myStatus", description: "รายงานว่าพร้อมปฏิบัติงานหรือไม่" },
-        { name: "โปรไฟล์", path: "/profile", iconKey: "profile" },
-        { name: "คู่มือการใช้งาน", path: "/eoc/guide", iconKey: "guide", description: "คู่มือเจ้าหน้าที่ และคู่มือผู้ดูแลระบบ (แท็บด้านบน)", alsoActive: ["/eoc/guide/admin"] }
-      ]
-    }
+    ACCOUNT_SECTION
   ];
 }
 

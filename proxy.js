@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { getMaintenanceState, sessionRole } from "@/lib/maintenance";
 import { maintenanceDecision } from "@/lib/maintenanceRules";
+import { isAiBot } from "@/lib/aiBots";
 
 // ด่านแรกของทุกคำขอหน้าเว็บ/API (Next.js 16 "proxy" เดิมชื่อ middleware — รันบน Node.js)
 //
 // 1) โหมดปิดปรับปรุงระบบ (แอดมินเปิด/ปิดจากหน้า ตั้งค่าระบบ): ทุกหน้าแสดงหน้าแจ้งปิดปรับปรุง ทุก API ตอบ 503
 //    ยกเว้นหน้าเข้าสู่ระบบ และผู้ดูแลระบบ (หรือเจ้าหน้าที่ทุกคน ถ้าแอดมินอนุญาต)
+// 0) บอท AI (ตาม User-Agent ใน lib/aiBots.js) → 403 ทุกหน้าและ API — robots.txt ยังเปิดให้อ่าน เพื่อให้บอทรู้กติกา
 // 2) หน้าเว็บภายใน: ตรวจเพียงว่ามี cookie session ของเจ้าหน้าที่หรือไม่ เพื่อไม่ให้ผู้ที่ยังไม่เข้าสู่ระบบเห็นโครงหน้า
 //    การตรวจสิทธิ์จริง (session หมดอายุ, role, การอนุมัติ, บังคับเปลี่ยนรหัสผ่าน) อยู่ที่ API ซึ่งเป็นขอบเขตความปลอดภัยที่แท้จริง
 
@@ -39,7 +41,22 @@ async function maintenanceResponse(request) {
     return response;
 }
 
+function aiBotResponse(request) {
+    if (!isAiBot(request.headers.get("user-agent"))) return null;
+    const headers = { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, noai, noimageai" };
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+        return NextResponse.json({ success: false, message: "ไม่อนุญาตให้บอท AI เข้าถึงระบบนี้" }, { status: 403, headers });
+    }
+    return new NextResponse("ไม่อนุญาตให้บอท AI เข้าถึงเว็บไซต์นี้ (AI agents are not permitted on this site.)", {
+        status: 403,
+        headers: { ...headers, "Content-Type": "text/plain; charset=utf-8" }
+    });
+}
+
 export async function proxy(request) {
+    const aiBlocked = aiBotResponse(request);
+    if (aiBlocked) return aiBlocked;
+
     const blocked = await maintenanceResponse(request);
     if (blocked) return blocked;
 
