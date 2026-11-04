@@ -34,8 +34,8 @@ function Drops({ count = 3, long = false }) {
   );
 }
 
-export default function WeatherIcon({ code, text, className = "h-12 w-12", title }) {
-  const kind = weatherKind(code, text);
+export default function WeatherIcon({ code, text, kind: forcedKind = null, className = "h-12 w-12", title }) {
+  const kind = weatherKind(code, text, forcedKind);
   const label = title || text || WEATHER_KINDS[kind];
   return (
     <svg viewBox="0 0 64 64" className={`wx wx--${kind} ${className}`} role="img" aria-label={label}>

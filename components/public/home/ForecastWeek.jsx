@@ -81,7 +81,7 @@ export default function ForecastWeek({ district, loading = false }) {
                 {trend ? <span className="absolute -top-2 rounded-full bg-[#e3edf2] px-1.5 py-px text-[9px] sm:px-2 sm:text-[10px] font-semibold text-slate-600">แนวโน้ม</span> : null}
                 <p className="font-[family-name:var(--font-kanit)] text-[13px] font-semibold leading-tight sm:text-[15px]">{dayLabel(day.forecast_datetime, index)}</p>
                 <p className={`text-[11px] sm:text-xs ${today ? "text-[#9fc9d6]" : "text-slate-500"}`}>{dateLabel(day.forecast_datetime)}</p>
-                <WeatherIcon code={day.weather_code} text={day.weather_condition} className={`my-1 h-10 w-10 sm:my-1.5 sm:h-14 sm:w-14 ${trend ? "opacity-70 saturate-[.8]" : ""}`} />
+                <WeatherIcon code={day.weather_code} text={day.weather_condition} kind={day.weather_kind} className={`my-1 h-10 w-10 sm:my-1.5 sm:h-14 sm:w-14 ${trend ? "opacity-70 saturate-[.8]" : ""}`} />
                 <p className={`hidden line-clamp-2 min-h-[2.25rem] text-xs leading-[1.15rem] sm:block ${today ? "text-[#d5e7ec]" : "text-slate-600"}`}>{day.weather_condition}</p>
                 <p className="font-[family-name:var(--font-kanit)] tabular-nums sm:mt-1" aria-label={`สูงสุด ${day.temperature_max} องศา ต่ำสุด ${day.temperature_min} องศา`}>
                   <span className="text-base font-bold sm:text-lg">{day.temperature_max}°</span>
@@ -109,6 +109,13 @@ export default function ForecastWeek({ district, loading = false }) {
       {uvAdvice ? (
         <p className="mt-2 flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold sm:text-sm" style={{ backgroundColor: `${uvAdvice.color}1f`, color: uvAdvice.text }}>
           <Sun className="h-4 w-4 shrink-0" aria-hidden="true" /> UV {uvAdvice.label}: {uvAdvice.advice}
+        </p>
+      ) : null}
+      {days.length ? (
+        <p className="mt-2 text-[11px] leading-snug text-slate-500 sm:text-xs">
+          {days.some((day) => day.forecast_source === "tmd")
+            ? "สภาพอากาศและอุณหภูมิ: กรมอุตุนิยมวิทยา • โอกาสฝน: ECMWF Ensemble • UV: NOAA GFS"
+            : "สภาพอากาศและอุณหภูมิ: ECMWF (ปรับเทียบสถานีอุตุฯ สตูล) • โอกาสฝน: ECMWF Ensemble • UV: NOAA GFS"}
         </p>
       ) : null}
     </section>
