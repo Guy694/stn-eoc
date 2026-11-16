@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useState, useEffect } from "react";
-import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { PageHero, Panel, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { useRouter } from "next/navigation";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import DailyVillageFloodTimeline from "@/components/DailyVillageFloodTimeline";
@@ -153,7 +153,7 @@ export default function FloodMapPage() {
         <EOCLayout>
             <div className="w-full">
                 {/* Page Header */}
-                <PageHero icon="droplet" title={<>{mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}</>} subtitle={<>{mode === "realtime" ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์" : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}</>} actions={<>{user && (
+                <PageHero icon="flood" eyebrow="อุทกภัย" title={<>{mode === "realtime" ? "สถานการณ์อุทกภัยน้ำท่วมปัจจุบัน" : "แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน"}</>} subtitle={<>{mode === "realtime" ? "ติดตามสถานการณ์อุทกภัยน้ำท่วมแบบเรียลไทม์" : "ดูข้อมูลสรุปและประวัติการเกิดอุทกภัยน้ำท่วมย้อนหลัง"}</>} actions={<>{user && (
                             <button
                                 onClick={() => router.push('/eoc/flood/records')}
                                 className={heroPrimaryButtonClass}
@@ -165,14 +165,7 @@ export default function FloodMapPage() {
 
                 {/* แสดงทีมงาน EOC ที่เปิดใช้งาน - Realtime Mode */}
                 {mode === "realtime" && hasActiveSession && activeSessionData && sessionTeams.length > 0 && (
-                    <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50/60 p-5">
-                        <h2 className="text-lg font-semibold text-[#083865] mb-4 flex items-center gap-2">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="users" className="h-4 w-4" /></span>
-                            ทีมงาน EOC ที่ปฏิบัติงาน
-                            <span className="text-sm font-normal text-[#0b4c86] ml-2">
-                                (ครั้งที่ {activeSessionData.session_number})
-                            </span>
-                        </h2>
+                    <Panel icon="users" title="ทีมงาน EOC ที่ปฏิบัติงาน" subtitle={`เหตุการณ์ครั้งที่ ${activeSessionData.session_number}`} className="mb-6" bodyClassName="bg-slate-50 p-4">
 
                         {loadingTeams ? (
                             <div className="flex items-center gap-2 text-[#0b4c86]">
@@ -260,9 +253,7 @@ export default function FloodMapPage() {
                                 })}
                             </div>
                         )}
-
-                    </div>
-
+                    </Panel>
                 )}
 
 
@@ -314,19 +305,12 @@ export default function FloodMapPage() {
 
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
-                            <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="mapPin" className="h-4 w-4" /></span>
-                                    รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
-                                </h2>
-                                <p className="text-slate-600 mb-4">
-                                    แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
-                                </p>
+                            <Panel icon="mapPin" title="รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)" subtitle="แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว" bodyClassName="p-4">
                                 <PublicIncidentMap
                                     disasterType="flood"
                                     sessionId={activeSessionData?.id || null}
                                 />
-                            </div>
+                            </Panel>
                         </div>
                     </>
                 )}
@@ -342,17 +326,10 @@ export default function FloodMapPage() {
 
                         {/* แสดงทีมงานของ session ที่เลือก */}
                         {selectedSession && sessionTeams.length > 0 && (
-                            <div className="mt-6 mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
-                                <h2 className="text-lg font-semibold text-amber-900 mb-4 flex items-center gap-2">
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="users" className="h-4 w-4" /></span>
-                                    ทีมงาน EOC ในช่วงเวลานี้
-                                    <span className="text-sm font-normal text-amber-700 ml-2">
-                                        (ครั้งที่ {selectedSession.session_number})
-                                    </span>
-                                </h2>
+                            <Panel icon="users" title="ทีมงาน EOC ในช่วงเวลานี้" subtitle={`เหตุการณ์ครั้งที่ ${selectedSession.session_number}`} className="mt-6 mb-6" bodyClassName="bg-slate-50 p-4">
 
                                 {loadingTeams ? (
-                                    <div className="flex items-center gap-2 text-amber-700">
+                                    <div className="flex items-center gap-2 text-[#0b4c86]">
                                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0b4c86]/20 border-t-[#0b4c86] motion-reduce:animate-none"></div>
                                         <span>กำลังโหลดข้อมูลทีม...</span>
                                     </div>
@@ -378,14 +355,14 @@ export default function FloodMapPage() {
                                                         )}
 
                                                         <div className="flex items-center justify-between mt-2">
-                                                            <p className="text-sm text-amber-600 font-medium">
+                                                            <p className="text-sm text-[#0b4c86] font-medium">
                                                                 สมาชิก: {team.member_count || 0} คน
                                                             </p>
 
                                                             {team.members && team.members.length > 0 && (
                                                                 <button
                                                                     onClick={() => toggleTeamExpand(teamKey)}
-                                                                    className="text-xs text-amber-600 hover:text-amber-800 flex items-center gap-1 transition-colors"
+                                                                    className="text-xs text-[#0b4c86] hover:text-[#083865] flex items-center gap-1 transition-colors"
                                                                 >
                                                                     {isExpanded ? (
                                                                         <>
@@ -420,7 +397,7 @@ export default function FloodMapPage() {
                                                             <ul className="space-y-1">
                                                                 {team.members.map((member, mIdx) => (
                                                                     <li key={mIdx} className="text-sm text-slate-700 flex items-center gap-2">
-                                                                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                                                                        <span className="w-1.5 h-1.5 bg-[#0b4c86] rounded-full"></span>
                                                                         {member.given_name && member.family_name
                                                                             ? `${member.given_name} ${member.family_name}`
                                                                             : member.full_name || member.name || `สมาชิก ${mIdx + 1}`}
@@ -437,9 +414,8 @@ export default function FloodMapPage() {
                                         })}
                                     </div>
                                 )}
-                            </div>
+                            </Panel>
                         )}
-
 
                         {/* Daily Village Flood Timeline */}
                         <div className="mt-6">
@@ -463,21 +439,14 @@ export default function FloodMapPage() {
 
                         {/* Public Incident Reports Map */}
                         <div className="mt-6">
-                            <div className="border border-slate-200 bg-white rounded-2xl p-6">
-                                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="mapPin" className="h-4 w-4" /></span>
-                                    รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)
-                                </h2>
-                                <p className="text-slate-600 mb-4">
-                                    แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว
-                                </p>
+                            <Panel icon="mapPin" title="รายงานเหตุการณ์จากประชาชน (ข้อมูลที่ยืนยันแล้ว)" subtitle="แสดงจุดที่มีการรายงานเหตุการณ์อุทกภัยน้ำท่วมจากประชาชนที่ได้รับการยืนยันแล้ว" bodyClassName="p-4">
                                 <PublicIncidentMap
                                     disasterType="flood"
                                     sessionId={selectedSession?.id || null}
                                     startDate={selectedSession?.latest_flood_record_date || null}
                                     endDate={selectedSession?.latest_flood_record_date || null}
                                 />
-                            </div>
+                            </Panel>
                         </div>
                     </>
                 )}

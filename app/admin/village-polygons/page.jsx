@@ -148,7 +148,7 @@ export default function VillagePolygonsPage() {
         <EOCLayout>
             <div className="w-full">
                 {/* Header */}
-                <PageHero title="จัดการข้อมูลหมู่บ้าน" subtitle="ระบบจัดการข้อมูลขอบเขตพื้นที่และพิกัดหมู่บ้าน" className="mb-6" />
+                <PageHero icon="mapPinned" eyebrow="ข้อมูลกลาง" title="จัดการข้อมูลหมู่บ้าน" subtitle="ระบบจัดการข้อมูลขอบเขตพื้นที่และพิกัดหมู่บ้าน" className="mb-6" />
 
 
                 {/* Stats Cards */}

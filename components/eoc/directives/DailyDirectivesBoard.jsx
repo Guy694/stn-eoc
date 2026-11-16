@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, CalendarDays, Eye, PencilLine, Printer, RefreshCw, Save } from "lucide-react";
 import { Button, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { showConfirm } from "@/lib/feedback";
 import DirectiveListEditor, { newItem } from "@/components/eoc/directives/DirectiveListEditor";
@@ -133,7 +134,7 @@ export default function DailyDirectivesBoard({ sessionId }) {
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
           <div>
             <p className="text-xs font-semibold text-[#0b4c86]">สถานการณ์/ข้อสั่งการ ประจำวัน</p>
-            <h2 className="text-xl font-black text-slate-900">{thaiDate(date)}</h2>
+            <h2 className="font-[family-name:var(--font-kanit)] text-xl font-semibold text-slate-900">{thaiDate(date)}</h2>
             <p className="mt-0.5 text-xs text-slate-500">
               {counts.total} ข้อ · ดำเนินการแล้ว {counts.done} ข้อ{lastUpdate ? ` · แก้ไขล่าสุด ${formatDateTime(lastUpdate)}` : ""}
             </p>
@@ -182,10 +183,9 @@ export default function DailyDirectivesBoard({ sessionId }) {
         ) : null}
       </section>
 
-      <aside className="rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
-        <h3 className="text-sm font-black text-slate-900">วันที่มีบันทึก</h3>
+      <Panel as="aside" icon="calendarDays" title="วันที่มีบันทึก" className="h-fit print:hidden" bodyClassName="p-3">
         {days.length ? (
-          <ul className="mt-2 space-y-1">
+          <ul className="space-y-1">
             {days.map((day) => (
               <li key={day.report_date}>
                 <button type="button" onClick={() => changeDate(day.report_date)} aria-current={day.report_date === date ? "date" : undefined}
@@ -196,8 +196,8 @@ export default function DailyDirectivesBoard({ sessionId }) {
               </li>
             ))}
           </ul>
-        ) : <p className="mt-2 text-sm text-slate-500">ยังไม่มีบันทึก เริ่มพิมพ์ข้อแรกได้เลย</p>}
-      </aside>
+        ) : <p className="px-1 text-sm text-slate-500">ยังไม่มีบันทึก เริ่มพิมพ์ข้อแรกได้เลย</p>}
+      </Panel>
     </div>
   );
 }

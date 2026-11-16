@@ -3,6 +3,10 @@ import { requireAuth } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
 import { buildQualitySummary, evaluatePopulationRow, findUntrackedUploadFiles, inspectFileAsset } from "@/lib/dataQuality";
+import { teamRecordsPath } from "@/src/features/eoc/shared/utils/eoc-path";
+
+// รายงานประจำวันของทีม → หน้ารายงานของทีมนั้นในเหตุการณ์
+const reportUrl = (row) => teamRecordsPath({ eocType: row.eoc_type, teamCode: row.team_code, sessionId: row.eoc_session_id });
 
 function issue({ type, table, id, label, detail, editUrl }) {
   return { issue_type: type, table_name: table, record_id: id, label, detail, edit_url: editUrl };
@@ -20,20 +24,33 @@ export async function GET(request) {
     const [populations, orphanReports, duplicateReports, unverifiedReports, invalidMissions, invalidFlood, duplicateFlood, unmatchedAreas, missingSources, files, outOfRange] = await Promise.all([
       query(`SELECT * FROM area_population WHERE is_active = 1 ORDER BY district_name, id`),
       query(`
-        SELECT r.id, r.title
+        SELECT r.id, r.title, r.eoc_session_id, s.eoc_type, t.team_code
         FROM eoc_team_reports r
         LEFT JOIN eoc_sessions s ON s.id = r.eoc_session_id
+        LEFT JOIN eoc_session_teams st ON st.id = r.session_team_id
+        LEFT JOIN eoc_teams t ON t.id = st.team_id
         WHERE s.id IS NULL OR r.report_date IS NULL
         LIMIT 200
       `),
       query(`
-        SELECT MIN(id) AS id, eoc_session_id, session_team_id, DATE(report_date) AS report_day, COUNT(*) AS duplicate_count
-        FROM eoc_team_reports
-        GROUP BY eoc_session_id, session_team_id, DATE(report_date), title
+        SELECT MIN(r.id) AS id, r.eoc_session_id, r.session_team_id, DATE(r.report_date) AS report_day, COUNT(*) AS duplicate_count,
+               MAX(s.eoc_type) AS eoc_type, MAX(t.team_code) AS team_code
+        FROM eoc_team_reports r
+        LEFT JOIN eoc_sessions s ON s.id = r.eoc_session_id
+        LEFT JOIN eoc_session_teams st ON st.id = r.session_team_id
+        LEFT JOIN eoc_teams t ON t.id = st.team_id
+        GROUP BY r.eoc_session_id, r.session_team_id, DATE(r.report_date), r.title
         HAVING COUNT(*) > 1
         LIMIT 200
       `),
-      query(`SELECT id, title, status FROM eoc_team_reports WHERE status <> 'approved' ORDER BY updated_at DESC LIMIT 200`),
+      query(`
+        SELECT r.id, r.title, r.status, r.eoc_session_id, s.eoc_type, t.team_code
+        FROM eoc_team_reports r
+        LEFT JOIN eoc_sessions s ON s.id = r.eoc_session_id
+        LEFT JOIN eoc_session_teams st ON st.id = r.session_team_id
+        LEFT JOIN eoc_teams t ON t.id = st.team_id
+        WHERE r.status <> 'approved' ORDER BY r.updated_at DESC LIMIT 200
+      `),
       query(`SELECT id, mission_code, progress_percent, status FROM missions WHERE progress_percent < 0 OR progress_percent > 100 OR status NOT IN ('intake','assigned','in_progress','blocked','completed','verified','closed') LIMIT 200`),
       query(`
         SELECT id, district, tambon, village
@@ -104,9 +121,9 @@ export async function GET(request) {
         }));
       }
     }
-    orphanReports.forEach((row) => issues.push(issue({ type: "report_context_missing", table: "eoc_team_reports", id: row.id, label: row.title, detail: "รายงานไม่มีเหตุการณ์หรือวันที่ที่ถูกต้อง", editUrl: "/eoc/staff" })));
-    duplicateReports.forEach((row) => issues.push(issue({ type: "duplicate_report", table: "eoc_team_reports", id: row.id, label: `เหตุการณ์ ${row.eoc_session_id}`, detail: `พบ ${row.duplicate_count} รายการซ้ำในทีมและวันเดียวกัน`, editUrl: "/eoc/staff" })));
-    unverifiedReports.forEach((row) => issues.push(issue({ type: "report_not_approved", table: "eoc_team_reports", id: row.id, label: row.title, detail: `สถานะ ${row.status}`, editUrl: "/eoc/staff" })));
+    orphanReports.forEach((row) => issues.push(issue({ type: "report_context_missing", table: "eoc_team_reports", id: row.id, label: row.title, detail: "รายงานไม่มีเหตุการณ์หรือวันที่ที่ถูกต้อง", editUrl: reportUrl(row) })));
+    duplicateReports.forEach((row) => issues.push(issue({ type: "duplicate_report", table: "eoc_team_reports", id: row.id, label: `เหตุการณ์ ${row.eoc_session_id}`, detail: `พบ ${row.duplicate_count} รายการซ้ำในทีมและวันเดียวกัน`, editUrl: reportUrl(row) })));
+    unverifiedReports.forEach((row) => issues.push(issue({ type: "report_not_approved", table: "eoc_team_reports", id: row.id, label: row.title, detail: `สถานะ ${row.status}`, editUrl: reportUrl(row) })));
     invalidMissions.forEach((row) => issues.push(issue({ type: "mission_value_invalid", table: "missions", id: row.id, label: row.mission_code, detail: "สถานะหรือความคืบหน้าไม่ถูกต้อง", editUrl: "/eoc/flood/management/missions" })));
     invalidFlood.forEach((row) => issues.push(issue({ type: "flood_value_invalid", table: "flood_records", id: row.id, label: [row.district, row.tambon, row.village].filter(Boolean).join(" / "), detail: "เหตุการณ์วันที่ หรือค่าตัวเลขไม่ถูกต้อง", editUrl: "/admin/flood-records" })));
     duplicateFlood.forEach((row) => issues.push(issue({ type: "duplicate_flood_record", table: "flood_records", id: row.id, label: [row.district, row.tambon, row.village].filter(Boolean).join(" / "), detail: `พบ ${row.duplicate_count} รายการในเหตุการณ์และวันเดียวกัน`, editUrl: "/admin/flood-records" })));

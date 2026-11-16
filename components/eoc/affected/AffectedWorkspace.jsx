@@ -4,13 +4,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
-import { Bandage, HeartCrack, Home, Pencil, Search, Trash2 } from "lucide-react";
+import { Bandage, HeartCrack, Home, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import {
-  AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, ReadOnlyNotice,
+  AddButton, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, FreshnessBadge, ReadOnlyNotice,
   StatStrip, inputClass, latestTime, useNotice
 } from "@/components/admin/crud";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
+import { EmptyPanel, PageHero, Panel, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -81,11 +83,7 @@ function DistrictTable({ rows, prefix, title }) {
   const columns = [...IMPACT_GROUPS.flatMap((group) => IMPACT_FIELDS.map(([field]) => `${group.key}_${field}`)), ...ASSIST_FIELDS.map(([key]) => key)];
   const critical = (key) => /_(deaths|missing)$/.test(key);
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 px-4 py-3">
-        <h2 className="font-black text-slate-900">สรุปรายอำเภอ</h2>
-        <span className="text-xs text-slate-500">{title}</span>
-      </header>
+    <Panel icon="barChart" title="สรุปรายอำเภอ" subtitle={title}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[960px] border-collapse text-sm">
           <thead>
@@ -120,7 +118,7 @@ function DistrictTable({ rows, prefix, title }) {
           </tfoot>
         </table>
       </div>
-    </section>
+    </Panel>
   );
 }
 
@@ -128,7 +126,7 @@ function CasualtyChart({ rows, prefix }) {
   const byDistrict = new Map(rows.map((row) => [row.district_name, row]));
   const any = rows.some((row) => CASUALTY_SERIES.some(([key]) => n(row[`${prefix}_${key}`])));
   if (!any) {
-    return <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">ยังไม่มีรายงานผู้เสียชีวิต สูญหาย หรือบาดเจ็บในช่วงที่เลือก</p>;
+    return <EmptyPanel icon="checkCircle" title="ยังไม่มีรายงานผู้เสียชีวิต สูญหาย หรือบาดเจ็บ" text="ในช่วงที่เลือก" />;
   }
   const data = {
     labels: DISTRICTS.map((district) => `อ.${district}`),
@@ -147,11 +145,9 @@ function CasualtyChart({ rows, prefix }) {
     }
   };
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4">
-      <h2 className="font-black text-slate-900">เสียชีวิต สูญหาย บาดเจ็บ รายอำเภอ</h2>
-      <p className="text-xs text-slate-500">รวมประชาชน อสม. และบุคลากร · ยอดทรัพย์สินเสียหายดูในตารางสรุป</p>
-      <div className="mt-3 h-64"><Bar data={data} options={options} /></div>
-    </section>
+    <Panel icon="activity" title="เสียชีวิต สูญหาย บาดเจ็บ รายอำเภอ" subtitle="รวมประชาชน อสม. และบุคลากร · ยอดทรัพย์สินเสียหายดูในตารางสรุป" bodyClassName="p-4">
+      <div className="h-64"><Bar data={data} options={options} /></div>
+    </Panel>
   );
 }
 
@@ -214,6 +210,7 @@ export default function AffectedWorkspace() {
   const province = state.summary.province || {};
   const periodLabel = mode === "daily" ? `ประจำวันที่ ${thaiDate(range.date)}` : `สะสม ${thaiDate(range.start)} – ${thaiDate(range.end)}`;
   const reports = useMemo(() => state.reports.filter((row) => district === "all" || row.district_name === district), [state.reports, district]);
+  const { anchor: reportsAnchor, ...reportsPage } = usePagination(reports, { pageSize: 20, resetKey: `${sessionId}|${mode}|${district}|${range.date}|${range.start}|${range.end}` });
 
   const openForm = (report = null) => {
     setFormError("");
@@ -291,13 +288,15 @@ export default function AffectedWorkspace() {
   ];
 
   return (
-    <AdminPage
-      context={session ? `${getEocTypeLabel("flood")} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : null}
-      title="ผู้ได้รับผลกระทบ"
-      description="ผู้เสียชีวิต สูญหาย บาดเจ็บ และทรัพย์สินเสียหาย ของประชาชน อสม. และบุคลากรสาธารณสุข พร้อมการช่วยเหลือ รายอำเภอ"
-      actions={canEdit ? <AddButton onClick={() => openForm()}>เพิ่มรายงาน</AddButton> : null}
-      freshness={session ? { value: latestTime(state.reports.map((row) => row.updated_at || row.created_at)), staleHours: 24, label: "รายงานล่าสุด" } : null}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="users"
+        eyebrow={session ? `${getEocTypeLabel("flood")} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : "อุทกภัย"}
+        title="ผู้ได้รับผลกระทบ"
+        subtitle="ผู้เสียชีวิต สูญหาย บาดเจ็บ และทรัพย์สินเสียหาย ของประชาชน อสม. และบุคลากรสาธารณสุข พร้อมการช่วยเหลือ รายอำเภอ"
+        meta={session ? <FreshnessBadge value={latestTime(state.reports.map((row) => row.updated_at || row.created_at))} staleHours={24} label="รายงานล่าสุด" /> : null}
+        actions={canEdit ? <button type="button" onClick={() => openForm()} className={heroPrimaryButtonClass}><Plus className="h-4 w-4" aria-hidden="true" />เพิ่มรายงาน</button> : null}
+      />
       {notice}
       <ReadOnlyNotice message={state.permissions.can_edit ? null : state.permissions.read_only_message} />
 
@@ -343,7 +342,7 @@ export default function AffectedWorkspace() {
       </div>
 
       {!state.loading && !session ? (
-        <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">ยังไม่มีเหตุการณ์อุทกภัย</p>
+        <EmptyPanel icon="flood" title="ยังไม่มีเหตุการณ์อุทกภัย" text="เมื่อเปิด EOC อุทกภัยแล้ว จึงจะบันทึกและดูรายงานผู้ได้รับผลกระทบได้" />
       ) : null}
 
       {session ? (
@@ -361,11 +360,12 @@ export default function AffectedWorkspace() {
             <DistrictTable rows={summaryRows} prefix={prefix} title={periodLabel} />
           </div>
 
-          <section className="space-y-2">
+          <section ref={reportsAnchor} className="scroll-mt-20 space-y-2">
             <h2 className="font-black text-slate-900">รายงานที่บันทึก <span className="text-sm font-semibold text-slate-500">({formatNumber(reports.length)} รายการ)</span></h2>
             <DataTable
               columns={columns}
-              rows={reports}
+              rows={reportsPage.visible}
+              pageSize={100}
               loading={state.loading}
               emptyText="ยังไม่มีรายงานในช่วงวันที่ที่เลือก"
               emptyAction={canEdit ? <AddButton onClick={() => openForm()}>เพิ่มรายงาน</AddButton> : null}
@@ -376,6 +376,7 @@ export default function AffectedWorkspace() {
                 </span>
               ) : undefined}
             />
+            <PaginationControls {...reportsPage.controls} pageSizeOptions={[20, 50, 100]} itemLabel="รายงาน" className="rounded-2xl border border-slate-200 bg-white" />
           </section>
         </>
       ) : null}
@@ -438,6 +439,6 @@ export default function AffectedWorkspace() {
       >
         <p className="text-sm text-slate-700">รายงานนี้จะถูกลบออกจากยอดสรุปทั้งหมด ถ้าตัวเลขผิดให้ใช้ปุ่มแก้ไขแทน</p>
       </FormDialog>
-    </AdminPage>
+    </div>
   );
 }

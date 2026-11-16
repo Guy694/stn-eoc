@@ -9,14 +9,19 @@ import VillageMapPanel from "@/components/eoc/vulnerable/VillageMapPanel";
 import Link from "next/link";
 import { AlertTriangle, Clock3, HeartHandshake, RefreshCw, Truck, Users } from "lucide-react";
 import { ReadOnlyNotice,
-  AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, RowActions,
+  AddButton, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, RowActions,
   Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { VULNERABLE_TYPES, affectedOf, areaLabel, validateEventRecord } from "@/lib/vulnerableEvent";
 import { sendOrQueue } from "@/lib/offlineQueue";
-import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
+import { MetricCard, MetricGrid, toneFromClass } from "@/components/common/MetricCards";
+import { EmptyPanel, PageHero, Panel } from "@/components/common/ThemePanels";
+
+// กลุ่มบนหัวหน้า (eyebrow) ตามประเภทเหตุการณ์
+const EYEBROWS = { flood: "อุทกภัย", disease: "โรคระบาด" };
+const DESCRIPTION = "จำนวนแต่ละประเภทดึงจากทะเบียนกลาง เจ้าหน้าที่บันทึกการดูแล การเคลื่อนย้าย และความต้องการของแต่ละหมู่บ้าน";
 
 const API = "/stn-eoc/api/eoc/vulnerable-event";
 const EMPTY_STATUS = { cared_count: 0, moved_count: 0, moved_to: "", needs: "", notes: "" };
@@ -35,26 +40,24 @@ function Meter({ value, max, tone = "bg-[#0b4c86]", label }) {
 }
 
 function Kpi({ icon, label, value, unit = "คน", hint, tone = "text-slate-900" }) {
-  return <MetricCard icon={icon} label={label} value={formatNumber(value)} unit={unit} note={hint} tone={toneFromClass(tone)} compact />;
+  return <MetricCard icon={icon} label={label} value={formatNumber(value)} unit={unit} note={hint} tone={toneFromClass(tone)} />;
 }
 
 function Dashboard({ summary }) {
   const maxType = Math.max(1, ...summary.byType.map((type) => type.affected));
   return (
     <section aria-label="สรุปกลุ่มเปราะบางในเหตุการณ์" className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <MetricGrid>
         <Kpi icon={Users} label="หมู่บ้านที่ประสบภัย" value={summary.villages} unit="แห่ง" hint={`${formatNumber(summary.districts.length)} อำเภอ`} />
         <Kpi icon={AlertTriangle} label="กลุ่มเปราะบางที่ได้รับผลกระทบ" value={summary.affected} hint="จำนวนตามทะเบียนกลาง" tone="text-[#0b4c86]" />
         <Kpi icon={HeartHandshake} label="ดูแลแล้ว" value={summary.cared} hint={`${summary.caredPercent}% ของผู้ได้รับผลกระทบ`} tone="text-emerald-700" />
         <Kpi icon={Truck} label="เคลื่อนย้ายแล้ว" value={summary.moved} hint={`${summary.movedPercent}% ของผู้ได้รับผลกระทบ`} tone="text-sky-800" />
         <Kpi icon={Clock3} label="ยังไม่ได้ดูแล" value={summary.pending} hint={summary.pending ? "ต้องติดตาม" : "ดูแลครบแล้ว"} tone={summary.pending ? "text-red-700" : "text-emerald-700"} />
-      </div>
+      </MetricGrid>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_.9fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="text-base font-black text-slate-900">แยกตามประเภท</h3>
-          <p className="text-xs text-slate-500">ผู้เปราะบางในหมู่บ้านที่ประสบภัย (จากทะเบียนกลาง)</p>
-          <ul className="mt-4 space-y-3">
+        <Panel icon="barChart" title="แยกตามประเภท" subtitle="ผู้เปราะบางในหมู่บ้านที่ประสบภัย (จากทะเบียนกลาง)" bodyClassName="p-4">
+          <ul className="space-y-3">
             {summary.byType.map((type) => (
               <li key={type.key}>
                 <div className="flex items-baseline justify-between gap-3 text-sm">
@@ -67,13 +70,11 @@ function Dashboard({ summary }) {
               </li>
             ))}
           </ul>
-        </div>
+        </Panel>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="text-base font-black text-slate-900">ต้องติดตามด่วน</h3>
-          <p className="text-xs text-slate-500">หมู่บ้านที่ยังดูแลไม่ครบ เรียงตามจำนวนผู้ติดเตียง/พิการ/ตั้งครรภ์ที่รอ</p>
+        <Panel icon="siren" title="ต้องติดตามด่วน" subtitle="หมู่บ้านที่ยังดูแลไม่ครบ เรียงตามจำนวนผู้ติดเตียง/พิการ/ตั้งครรภ์ที่รอ" bodyClassName="px-4 pb-4 pt-1">
           {summary.urgent.length ? (
-            <ol className="mt-3 divide-y divide-slate-100">
+            <ol className="divide-y divide-slate-100">
               {summary.urgent.map((row) => {
                 const name = areaName(row);
                 const critical = VULNERABLE_TYPES.filter((type) => type.priority > 1 && Number(row[type.key]) > 0)
@@ -89,14 +90,14 @@ function Dashboard({ summary }) {
                 );
               })}
             </ol>
-          ) : <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">ทุกพื้นที่ได้รับการดูแลครบแล้ว</p>}
-        </div>
+          ) : <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">ทุกพื้นที่ได้รับการดูแลครบแล้ว</p>}
+        </Panel>
       </div>
 
       {summary.districts.length ? (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <Panel icon="map" title="แยกตามอำเภอ" bodyClassName="overflow-x-auto">
           <table className="stack-mobile w-full min-w-[36rem] text-left text-sm">
-            <caption className="px-5 pt-4 text-left text-base font-black text-slate-900">แยกตามอำเภอ</caption>
+            <caption className="sr-only">แยกตามอำเภอ</caption>
             <thead className="text-xs text-slate-500">
               <tr><th className="px-5 py-2">อำเภอ</th><th className="px-3 py-2 text-right">ได้รับผลกระทบ</th><th className="px-3 py-2 text-right">ดูแลแล้ว</th><th className="px-3 py-2 text-right">เคลื่อนย้าย</th><th className="px-3 py-2 text-right">ยังไม่ได้ดูแล</th><th className="w-40 px-5 py-2">ความคืบหน้าการดูแล</th></tr>
             </thead>
@@ -113,7 +114,7 @@ function Dashboard({ summary }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </Panel>
       ) : null}
     </section>
   );
@@ -300,20 +301,25 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
   ];
 
   if (!state.loading && data && !session) {
-    return <AdminPage title="กลุ่มเปราะบางในเหตุการณ์"><p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">{data.message}</p></AdminPage>;
+    return (
+      <div className="w-full space-y-4">
+        <PageHero icon="users" eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)} title="กลุ่มเปราะบางในเหตุการณ์" subtitle={DESCRIPTION} />
+        <EmptyPanel icon="info" title={data.message} />
+      </div>
+    );
   }
 
   return (
-    <AdminPage
-      context={context}
-      title="กลุ่มเปราะบางในเหตุการณ์"
-      description="จำนวนแต่ละประเภทดึงจากทะเบียนกลาง เจ้าหน้าที่บันทึกการดูแล การเคลื่อนย้าย และความต้องการของแต่ละหมู่บ้าน"
-      actions={(
-        <div className="flex flex-wrap gap-2">
-          {perms.can_edit ? <AddButton onClick={() => { setFormError(""); setAdding(true); }}>เพิ่มหมู่บ้านที่ประสบภัย</AddButton> : null}
-        </div>
-      )}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="users"
+        eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)}
+        title="กลุ่มเปราะบางในเหตุการณ์"
+        subtitle={DESCRIPTION}
+        meta={context}
+        actions={perms.can_edit ? <AddButton onClick={() => { setFormError(""); setAdding(true); }}>เพิ่มหมู่บ้านที่ประสบภัย</AddButton> : null}
+        tray
+      />
       <VulnerableViewTabs eocType={eocType} current="villages" />
       {notice}
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}
@@ -331,17 +337,17 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
       {data?.summary && records.length ? <Dashboard summary={data.summary} /> : null}
 
       {!state.loading && data && !records.length ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-          <Users className="mx-auto h-10 w-10 text-slate-300" aria-hidden="true" />
-          <h2 className="mt-3 text-lg font-black text-slate-900">ยังไม่มีหมู่บ้านที่ประสบภัยในเหตุการณ์นี้</h2>
-          <p className="mx-auto mt-1 max-w-lg text-sm text-slate-600">
-            เลือกหมู่บ้านที่ประสบภัยจากทะเบียน ระบบจะดึงจำนวนผู้สูงอายุ ติดเตียง พิการ เด็กเล็ก ตั้งครรภ์ และผู้ป่วยเรื้อรังมาให้ จากนั้นบันทึกการดูแลและการเคลื่อนย้ายได้ทุกวัน
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {perms.can_edit ? <AddButton onClick={() => { setFormError(""); setAdding(true); }}>เลือกหมู่บ้านจากทะเบียน</AddButton> : null}
-            <Link href="/eoc/vulnerable-groups" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ดูทะเบียนกลาง</Link>
-          </div>
-        </div>
+        <EmptyPanel
+          icon="users"
+          title="ยังไม่มีหมู่บ้านที่ประสบภัยในเหตุการณ์นี้"
+          text="เลือกหมู่บ้านที่ประสบภัยจากทะเบียน ระบบจะดึงจำนวนผู้สูงอายุ ติดเตียง พิการ เด็กเล็ก ตั้งครรภ์ และผู้ป่วยเรื้อรังมาให้ จากนั้นบันทึกการดูแลและการเคลื่อนย้ายได้ทุกวัน"
+          action={(
+            <div className="flex flex-wrap justify-center gap-2">
+              {perms.can_edit ? <AddButton onClick={() => { setFormError(""); setAdding(true); }}>เลือกหมู่บ้านจากทะเบียน</AddButton> : null}
+              <Link href="/eoc/vulnerable-groups" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ดูทะเบียนกลาง</Link>
+            </div>
+          )}
+        />
       ) : (
         <>
           <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาหมู่บ้าน ตำบล ความต้องการ">
@@ -415,6 +421,6 @@ export default function EventVulnerableWorkspace({ eocType = "flood" }) {
         error={formError}
       />
       {eocType === "flood" ? <VillageMapPanel session={session} /> : null}
-    </AdminPage>
+    </div>
   );
 }

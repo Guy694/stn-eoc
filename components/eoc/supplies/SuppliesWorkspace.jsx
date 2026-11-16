@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, FileUp, PackageOpen, Scale, Trash2 } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ClipboardList, FileUp, Scale, Trash2 } from "lucide-react";
 import { ReadOnlyNotice,
-  AddButton, AdminPage, Button, DataTable, DeleteDialog, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatusPill, Tabs, Toolbar,
+  AddButton, Button, DataTable, DeleteDialog, FreshnessBadge, latestTime, Field, FilterSelect, FormDialog, FormGrid, StatusPill, Tabs, Toolbar,
   UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
@@ -18,6 +18,10 @@ import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { sendOrQueue } from "@/lib/offlineQueue";
 import FacilitySelect from "@/components/common/FacilitySelect";
 import { compareFacilities } from "@/lib/facilityOrder";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
+
+// กลุ่มบนหัวหน้า (eyebrow) ตามประเภทเหตุการณ์
+const EYEBROWS = { flood: "อุทกภัย", disease: "โรคระบาด" };
 
 const TABS = [
   { value: "overview", label: "ภาพรวม" },
@@ -228,39 +232,42 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
   // ยังไม่มีเหตุการณ์ / ยังไม่เปิดบัญชีคลัง
   if (!state.loading && data && (!session || !data.event)) {
     return (
-      <AdminPage title="เวชภัณฑ์และคลังยา" context={context} description="ติดตามยอดเวชภัณฑ์ของแต่ละหน่วยบริการตลอดเหตุการณ์ รับเข้า เบิกจ่าย และรู้ทันทีว่ารายการไหนใกล้หมด">
+      <div className="w-full space-y-4">
+        <PageHero icon="package" eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)} title="เวชภัณฑ์และคลังยา" meta={context} subtitle="ติดตามยอดเวชภัณฑ์ของแต่ละหน่วยบริการตลอดเหตุการณ์ รับเข้า เบิกจ่าย และรู้ทันทีว่ารายการไหนใกล้หมด" />
         {notice}
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-          <PackageOpen className="mx-auto h-10 w-10 text-slate-300" />
-          <h2 className="mt-3 text-lg font-black text-slate-900">{session ? "ยังไม่ได้เปิดบัญชีคลังของเหตุการณ์นี้" : data.message}</h2>
-          {session ? (
-            <>
-              <p className="mx-auto mt-1 max-w-lg text-sm text-slate-600">
-                {data.previous_event
-                  ? `ยกยอดคงเหลือจาก "${data.previous_event.event_name}" (${formatNumber(data.previous_event.item_rows)} รายการ) มาเป็นยอดตั้งต้นได้ทันที หรือเริ่มบัญชีว่างแล้วเพิ่มรายการเอง`
-                  : "เปิดบัญชีคลังแล้วเพิ่มรายการเวชภัณฑ์ของแต่ละหน่วยบริการ"}
-              </p>
-              {perms.can_open ? (
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  {data.previous_event ? <Button disabled={busy} onClick={() => post({ action: "open_event", carry_over: true }, "เปิดบัญชีคลังแล้ว")}>ยกยอดจากครั้งก่อน</Button> : null}
-                  <Button variant={data.previous_event ? "secondary" : "primary"} disabled={busy} onClick={() => post({ action: "open_event", carry_over: false }, "เปิดบัญชีคลังแล้ว")}>เริ่มบัญชีว่าง</Button>
-                </div>
-              ) : <p className="mt-3 text-sm text-slate-500">ผู้ดูแลระบบหรือผู้บัญชาการเป็นผู้เปิดบัญชีคลัง</p>}
-            </>
-          ) : null}
-        </div>
-      </AdminPage>
+        <EmptyPanel
+          icon="package"
+          title={session ? "ยังไม่ได้เปิดบัญชีคลังของเหตุการณ์นี้" : data.message}
+          text={session ? (data.previous_event
+            ? `ยกยอดคงเหลือจาก "${data.previous_event.event_name}" (${formatNumber(data.previous_event.item_rows)} รายการ) มาเป็นยอดตั้งต้นได้ทันที หรือเริ่มบัญชีว่างแล้วเพิ่มรายการเอง`
+            : "เปิดบัญชีคลังแล้วเพิ่มรายการเวชภัณฑ์ของแต่ละหน่วยบริการ") : null}
+          action={session ? (perms.can_open ? (
+            <div className="flex flex-wrap justify-center gap-2">
+              {data.previous_event ? <Button disabled={busy} onClick={() => post({ action: "open_event", carry_over: true }, "เปิดบัญชีคลังแล้ว")}>ยกยอดจากครั้งก่อน</Button> : null}
+              <Button variant={data.previous_event ? "secondary" : "primary"} disabled={busy} onClick={() => post({ action: "open_event", carry_over: false }, "เปิดบัญชีคลังแล้ว")}>เริ่มบัญชีว่าง</Button>
+            </div>
+          ) : <p className="text-sm text-slate-500">ผู้ดูแลระบบหรือผู้บัญชาการเป็นผู้เปิดบัญชีคลัง</p>) : null}
+        />
+      </div>
     );
   }
 
   const summary = data?.summary;
   return (
-    <AdminPage
-      freshness={stock.length ? { value: latestTime(stock.map((row) => row.updated_at)), staleHours: 24 } : null}
-      title="เวชภัณฑ์และคลังยา"
-      context={context}
-      description="นำเข้า 4 ไฟล์จากระบบคลังยา รพ. (DRUGLIST / INVENTORY / RECEIPT / DISTRIBUTION) วันแรกเป็นยอดตั้งต้น และทุกวันเป็นรายงานประจำวัน ระบบคำนวณใช้ไปและคงเหลือให้เอง"
-      actions={(
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="package"
+        eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)}
+        title="เวชภัณฑ์และคลังยา"
+        subtitle="นำเข้า 4 ไฟล์จากระบบคลังยา รพ. (DRUGLIST / INVENTORY / RECEIPT / DISTRIBUTION) วันแรกเป็นยอดตั้งต้น และทุกวันเป็นรายงานประจำวัน ระบบคำนวณใช้ไปและคงเหลือให้เอง"
+        meta={context || stock.length ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {context ? <span className="text-sm font-medium text-blue-100">{context}</span> : null}
+            {stock.length ? <FreshnessBadge value={latestTime(stock.map((row) => row.updated_at))} staleHours={24} /> : null}
+          </div>
+        ) : null}
+        tray
+        actions={(
         <>
           {eocType === "flood" ? <Link href="/eoc/flood/oxygen" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ออกซิเจนเหลว</Link> : null}
           {eocType === "flood" ? <Link href="/eoc/flood/team-reports?team=resources" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">แจกจ่ายรายอำเภอ</Link> : null}
@@ -268,7 +275,7 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
           {perms.can_add_item ? <AddButton onClick={() => { setFormError(""); setItemDialog(true); }}>เพิ่มรายการ</AddButton> : null}
         </>
       )}
-    >
+      />
       {notice}
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
       <ReadOnlyNotice message={perms.read_only_message} />
@@ -413,6 +420,6 @@ export default function SuppliesWorkspace({ eocType = "flood" }) {
           }
         }}
       />
-    </AdminPage>
+    </div>
   );
 }

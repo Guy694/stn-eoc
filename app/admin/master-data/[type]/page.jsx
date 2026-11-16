@@ -6,10 +6,11 @@ import { useParams, useRouter } from "next/navigation";
 import { Archive, ArrowUpRight, Pencil, Plus, RefreshCw, Search } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
-import { AdminPage, Button, Field, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
+import { Button, Field, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import ReasonDialog from "@/components/ui/reason-dialog";
 import PaginationControls from "@/components/common/PaginationControls";
+import { PageHero, Panel } from "@/components/common/ThemePanels";
 
 const TYPES = [
   ["agencies", "หน่วยงาน"],
@@ -159,14 +160,18 @@ export default function MasterDataCatalogPage() {
 
   return (
     <EOCLayout>
-      <AdminPage
-        title={state.label || "ข้อมูลหลัก"}
-        description="ข้อมูลอ้างอิงที่ทั้งระบบใช้ร่วมกัน ทุกรายการต้องระบุแหล่งที่มา และระบบบันทึกประวัติการแก้ไขไว้"
-        actions={<>
+      <div className="w-full space-y-4">
+        <PageHero
+          icon="database"
+          eyebrow="ข้อมูลอ้างอิง"
+          title={state.label || "ข้อมูลหลัก"}
+          subtitle="ข้อมูลอ้างอิงที่ทั้งระบบใช้ร่วมกัน ทุกรายการต้องระบุแหล่งที่มา และระบบบันทึกประวัติการแก้ไขไว้"
+          tray
+          actions={<>
           <Button variant="secondary" onClick={load} disabled={state.loading}><RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />รีเฟรช</Button>
           <Button onClick={openCreate}><Plus className="h-4 w-4" aria-hidden="true" />เพิ่มข้อมูล</Button>
         </>}
-      >
+        />
         <nav aria-label="ประเภทข้อมูลหลัก" className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2">
           {TYPES.map(([key, label]) => (
             <Link key={key} href={`/admin/master-data/${key}`} aria-current={key === type ? "page" : undefined}
@@ -191,7 +196,7 @@ export default function MasterDataCatalogPage() {
           <Button type="submit" variant="secondary">ค้นหา</Button>
         </form>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <Panel icon="layers" title={`รายการ${state.label || "ข้อมูลหลัก"}`} subtitle={`ทั้งหมด ${state.total.toLocaleString("th-TH")} รายการ`}>
           <div className="overflow-x-auto">
             <table className="stack-mobile min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs font-bold text-slate-600">
@@ -230,8 +235,8 @@ export default function MasterDataCatalogPage() {
             <PaginationControls page={paging.page} pageSize={paging.size} totalItems={state.total} pageSizeOptions={[20, 50, 100]} className="border-t border-slate-100 bg-slate-50"
               onPageChange={(page) => setPaging((value) => ({ ...value, page }))} onPageSizeChange={(size) => setPaging({ page: 1, size })} />
           ) : <p className="border-t border-slate-100 px-4 py-3 text-sm text-slate-600">ทั้งหมด {state.total.toLocaleString("th-TH")} รายการ</p>}
-        </section>
-      </AdminPage>
+        </Panel>
+      </div>
 
       <AppDialog open={showForm} onOpenChange={(open) => { if (!open) close(); }} busy={saving} size="lg"
         title={editingId ? `แก้ไข${state.label}` : `เพิ่ม${state.label}`}

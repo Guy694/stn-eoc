@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Play, RotateCcw, Speech, Volume1, Volume2 } from "lucide-react";
 import { useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import {
   DEFAULT_SOUND_PREFS, SOUND_LEVELS, SOUND_STYLES,
@@ -72,19 +73,21 @@ export default function AlertSoundSettings({ className = "" }) {
   };
 
   return (
-    <section className={`rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 ${className}`} aria-labelledby="alert-sound-title">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 id="alert-sound-title" className="flex items-center gap-2 font-black text-slate-900"><Volume2 className="h-5 w-5 text-[#0b4c86]" aria-hidden="true" />เสียงแจ้งเตือน (ใช้ทุกเครื่อง)</h3>
-          <p className="mt-0.5 text-sm text-slate-600">เสียงที่ดังบนหน้าเว็บเมื่อมีแจ้งเตือน ทั้งหน้าประชาชนและหน้าเจ้าหน้าที่ แตะเพื่อเลือกและลองฟัง บันทึกทันที</p>
-          <p className="mt-0.5 text-xs text-slate-500">
-            {saving ? "กำลังบันทึก…" : meta.updated_at ? `เปลี่ยนล่าสุด ${formatDateTime(meta.updated_at)}${meta.updated_by_name ? ` โดย ${meta.updated_by_name}` : ""}` : "ยังใช้ค่าเริ่มต้น"}
-          </p>
-        </div>
+    <Panel
+      icon={Volume2}
+      title="เสียงแจ้งเตือน (ใช้ทุกเครื่อง)"
+      subtitle="เสียงที่ดังบนหน้าเว็บเมื่อมีแจ้งเตือน ทั้งหน้าประชาชนและหน้าเจ้าหน้าที่ แตะเพื่อเลือกและลองฟัง บันทึกทันที"
+      className={className}
+      bodyClassName="p-5 sm:p-6"
+      action={(
         <button type="button" disabled={saving} onClick={() => save({ ...DEFAULT_SOUND_PREFS }, "คืนค่าเสียงเริ่มต้นแล้ว")} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50">
           <RotateCcw className="h-4 w-4" aria-hidden="true" />คืนค่าเริ่มต้น
         </button>
-      </div>
+      )}
+    >
+      <p className="text-xs text-slate-500" role="status">
+        {saving ? "กำลังบันทึก…" : meta.updated_at ? `เปลี่ยนล่าสุด ${formatDateTime(meta.updated_at)}${meta.updated_by_name ? ` โดย ${meta.updated_by_name}` : ""}` : "ยังใช้ค่าเริ่มต้น"}
+      </p>
 
       <div className="mt-5 space-y-5">
         {Object.entries(SOUND_LEVELS).map(([level, info]) => (
@@ -140,6 +143,6 @@ export default function AlertSoundSettings({ className = "" }) {
         เครื่องอื่นจะได้เสียงใหม่เมื่อเปิดหรือรีเฟรชหน้าเว็บ · เจ้าหน้าที่ยังกดปิดเสียงบนเครื่องตัวเองได้จากไอคอนลำโพงใน popup
         · ตอนปิดเว็บหรือล็อกจอ แจ้งเตือนใช้เสียงของมือถือ (ตั้งที่เครื่องเอง ระบบเลือกให้ไม่ได้)
       </p>
-    </section>
+    </Panel>
   );
 }

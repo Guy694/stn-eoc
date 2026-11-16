@@ -56,7 +56,7 @@ export default function Pm25Card({ data, error, districtName, onShowMap }) {
 
   return (
     <section className="overflow-hidden rounded-xl ring-1 ring-white/10" aria-label={`ฝุ่น PM2.5 ${scopeLabel}`}>
-      <div className="p-3" style={{ background: level ? `linear-gradient(135deg, ${level.color}40, ${level.color}10 70%)` : undefined }}>
+      <div className="p-3" style={{ background: level ? `${level.color}26` : undefined }}>
         <p className="flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">
           ฝุ่น PM2.5 • {scopeLabel}
           <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-white/75">GISTDA</span>

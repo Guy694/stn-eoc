@@ -15,7 +15,7 @@ export function SidebarItem({ label, icon: Icon, tone, active, onClick, title, h
         {label}
       </span>
       <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${tone} shadow-md transition ${
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tone} shadow-md transition ${
           active ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900/40" : "opacity-60 grayscale-[35%] group-hover:opacity-100"
         }`}
       >
@@ -46,7 +46,7 @@ export function SidebarItem({ label, icon: Icon, tone, active, onClick, title, h
 }
 
 export function SectionTitle({ children }) {
-  return <p className="mb-1.5 mt-3 pr-1 text-right text-[11px] font-black uppercase tracking-wide text-white/70 drop-shadow first:mt-0">{children}</p>;
+  return <p className="mb-1.5 mt-3 pr-1 text-right text-[11px] font-black text-white/70 drop-shadow first:mt-0">{children}</p>;
 }
 
 export function MenuToggle({ open, onToggle, label = "ชั้นข้อมูล", controls }) {

@@ -6,7 +6,8 @@
 // - พิมพ์/บันทึก PDF ได้ · ปุ่มกลับขึ้นด้านบน
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, ArrowUp, BookOpen, ChevronRight, Info, Printer, Search, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, ArrowUp, ChevronRight, Info, Printer, Search, X } from "lucide-react";
+import { EmptyPanel, PageHero, heroButtonClass } from "@/components/common/ThemePanels";
 import { filterSections } from "@/lib/guides";
 
 const AUDIENCES = [
@@ -155,13 +156,16 @@ export default function GuideView({ guide, current, showAdminLink = false, linkP
     <div ref={rootRef} className="mx-auto max-w-6xl space-y-4 font-[family-name:var(--font-kanit)] print:max-w-none print:space-y-3">
       <style>{"@media print { @page { size: A4; margin: 14mm; } details { break-inside: avoid; } details > p { display: block !important; } }"}</style>
 
-      {/* หัวหน้า: พื้นน้ำเงิน · ตอนพิมพ์เป็นพื้นขาว */}
-      <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 print:rounded-none print:border-b-2 print:border-slate-900 print:bg-white print:p-0 print:pb-3 print:text-slate-900 print:shadow-none">
-        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 print:hidden" aria-hidden="true" />
-        <div className="absolute -bottom-24 right-40 h-48 w-48 rounded-full bg-white/5 print:hidden" aria-hidden="true" />
-        <div className="relative space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <nav aria-label="เลือกคู่มือ" className="inline-flex flex-wrap gap-1 rounded-xl bg-white/10 p-1 ring-1 ring-white/15 print:hidden">
+      {/* หัวหน้า: PageHero กลาง · ตอนพิมพ์ใช้หัวพื้นขาวด้านล่างแทน */}
+      <PageHero
+        icon="book"
+        eyebrow="คู่มือการใช้งาน"
+        title={guide.title}
+        subtitle={guide.intro}
+        className="print:hidden"
+        actions={(
+          <>
+            <nav aria-label="เลือกคู่มือ" className="inline-flex flex-wrap gap-1 rounded-xl bg-white/10 p-1 ring-1 ring-white/15">
               {audiences.map((item) => (
                 <Link key={item.key} href={item.href} aria-current={item.key === current ? "page" : undefined}
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${item.key === current ? "bg-white text-[#0b4c86]" : "text-blue-50 hover:bg-white/15"}`}>
@@ -169,20 +173,13 @@ export default function GuideView({ guide, current, showAdminLink = false, linkP
                 </Link>
               ))}
             </nav>
-            <button type="button" onClick={() => window.print()} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white/10 px-3.5 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/20 print:hidden">
+            <button type="button" onClick={() => window.print()} className={heroButtonClass}>
               <Printer className="h-4 w-4" aria-hidden="true" />พิมพ์ / บันทึก PDF
             </button>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 print:hidden"><BookOpen className="h-5 w-5" aria-hidden="true" /></span>
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold leading-snug sm:text-2xl">{guide.title}</h1>
-              <p className="mt-1 max-w-3xl text-sm leading-relaxed text-blue-100 print:text-slate-700">{guide.intro}</p>
-            </div>
-          </div>
-
-          <div className="print:hidden">
+          </>
+        )}
+        meta={(
+          <div className="space-y-2">
             <label className="relative block max-w-xl">
               <span className="sr-only">ค้นหาในคู่มือ</span>
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
@@ -194,11 +191,15 @@ export default function GuideView({ guide, current, showAdminLink = false, linkP
                 </button>
               ) : null}
             </label>
-            <p className="mt-2 min-h-5 text-xs text-blue-100" aria-live="polite">
+            <p className="min-h-5 text-xs text-blue-100" aria-live="polite">
               {searching ? `พบ ${sections.length} จาก ${guide.sections.length} หัวข้อ` : `${guide.sections.length} หัวข้อ`}
             </p>
           </div>
-        </div>
+        )}
+      />
+      <header className="hidden border-b-2 border-slate-900 pb-3 text-slate-900 print:block">
+        <p className="text-xl font-semibold leading-snug">{guide.title}</p>
+        <p className="mt-1 text-sm leading-relaxed text-slate-700">{guide.intro}</p>
       </header>
 
       {/* สารบัญบนมือถือ: เลื่อนซ้าย–ขวา ติดด้านบนขณะอ่าน */}
@@ -256,12 +257,12 @@ export default function GuideView({ guide, current, showAdminLink = false, linkP
               </div>
             </section>
           )) : (
-            <div className="flex flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-400 ring-1 ring-slate-200"><Search className="h-6 w-6" aria-hidden="true" /></span>
-              <p className="mt-3 font-semibold text-slate-900">ไม่พบหัวข้อที่ตรงกับ “{query}”</p>
-              <p className="mt-1 text-sm text-slate-500">ลองคำที่สั้นลง หรือคำอื่นที่ใกล้เคียง</p>
-              <button type="button" onClick={() => setQuery("")} className="mt-4 inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">ล้างคำค้นหา</button>
-            </div>
+            <EmptyPanel
+              icon="search"
+              title={`ไม่พบหัวข้อที่ตรงกับ “${query}”`}
+              text="ลองคำที่สั้นลง หรือคำอื่นที่ใกล้เคียง"
+              action={<button type="button" onClick={() => setQuery("")} className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">ล้างคำค้นหา</button>}
+            />
           )}
         </div>
       </div>

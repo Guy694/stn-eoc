@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { AlertTriangle, BedDouble, Building2, Clock3, HeartPulse, Users } from "lucide-react";
 import { formatNumber } from "@/lib/adminApi";
-import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
+import { MetricCard, MetricGrid, toneFromClass } from "@/components/common/MetricCards";
+import { Panel } from "@/components/common/ThemePanels";
 
 const PILL = {
   red: "bg-red-50 text-red-800 ring-red-200",
@@ -19,7 +20,7 @@ function usageTone(percent) {
 }
 
 function Kpi({ icon, label, value, unit, hint, tone = "text-slate-900" }) {
-  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} compact />;
+  return <MetricCard icon={icon} label={label} value={value} unit={unit} note={hint} tone={toneFromClass(tone)} />;
 }
 
 function Meter({ percent, label }) {
@@ -37,29 +38,30 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
 
   return (
     <section aria-label="สรุปศูนย์พักพิงในเหตุการณ์" className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <MetricGrid>
         <Kpi icon={Building2} label="ศูนย์ที่เปิดใช้" value={formatNumber(summary.activeCount)} unit="แห่ง" hint={`จากทะเบียน ${formatNumber(summary.registered)} แห่ง`} tone="text-[#0b4c86]" />
         <Kpi icon={Users} label="ผู้พักพิงขณะนี้" value={formatNumber(summary.occupancy)} unit="คน" hint={`ใช้ไป ${summary.usePercent}% ของความจุ`} />
         <Kpi icon={BedDouble} label="ที่ว่างรวม" value={formatNumber(summary.free)} unit="ที่" hint={`ความจุรวม ${formatNumber(summary.capacity)} คน`} tone={summary.activeCount && !summary.free ? "text-red-700" : "text-emerald-700"} />
         <Kpi icon={AlertTriangle} label="เต็ม / ใกล้เต็ม" value={`${formatNumber(summary.full)} / ${formatNumber(summary.nearFull)}`} unit="แห่ง" hint="ใกล้เต็ม = ใช้ 80% ขึ้นไป" tone={summary.full ? "text-red-700" : summary.nearFull ? "text-amber-700" : "text-slate-900"} />
         <Kpi icon={Clock3} label="ยอดไม่อัปเดตเกิน 12 ชม." value={formatNumber(summary.stale)} unit="แห่ง" hint="ควรให้ศูนย์รายงานยอดใหม่" tone={summary.stale ? "text-amber-700" : "text-slate-900"} />
         <Kpi icon={HeartPulse} label="ผู้ป่วยในศูนย์ (สะสม)" value={formatNumber(health.totals.new_cases)} unit="ราย" hint={`วันนี้ ${formatNumber(health.totals.today_new_cases)} · ส่งต่อ ${formatNumber(health.totals.hospitalized)}`} tone={health.totals.today_new_cases ? "text-amber-700" : "text-slate-900"} />
-      </div>
+      </MetricGrid>
 
       {summary.activeCount ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-base font-black text-slate-900">การใช้ความจุรวม</h3>
-            <p className="text-sm tabular-nums text-slate-600"><b className="text-slate-900">{formatNumber(summary.occupancy)}</b> / {formatNumber(summary.capacity)} คน ({summary.usePercent}%)</p>
-          </div>
-          <div className="mt-2"><Meter percent={summary.usePercent} label="การใช้ความจุรวม" /></div>
-        </div>
+        <Panel
+          icon="bed"
+          title="การใช้ความจุรวม"
+          action={<p className="text-sm tabular-nums text-slate-600"><b className="text-slate-900">{formatNumber(summary.occupancy)}</b> / {formatNumber(summary.capacity)} คน ({summary.usePercent}%)</p>}
+          bodyClassName="p-4"
+        >
+          <Meter percent={summary.usePercent} label="การใช้ความจุรวม" />
+        </Panel>
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_.85fr]">
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <Panel icon="map" title="แยกตามอำเภอ" bodyClassName="overflow-x-auto">
           <table className="stack-mobile w-full min-w-[34rem] text-left text-sm">
-            <caption className="px-5 pt-4 text-left text-base font-black text-slate-900">แยกตามอำเภอ</caption>
+            <caption className="sr-only">แยกตามอำเภอ</caption>
             <thead className="text-xs text-slate-500">
               <tr><th className="px-5 py-2">อำเภอ</th><th className="px-3 py-2 text-right">ศูนย์</th><th className="px-3 py-2 text-right">ผู้พักพิง</th><th className="px-3 py-2 text-right">ที่ว่าง</th><th className="w-44 px-5 py-2">การใช้ความจุ</th></tr>
             </thead>
@@ -75,12 +77,11 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
               )) : <tr><td colSpan={5} className="px-5 py-6 text-center text-sm text-slate-500">ยังไม่ได้เปิดใช้ศูนย์ในเหตุการณ์นี้</td></tr>}
             </tbody>
           </table>
-        </div>
+        </Panel>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="text-base font-black text-slate-900">ศูนย์ที่ต้องติดตาม</h3>
+        <Panel icon="alert" title="ศูนย์ที่ต้องติดตาม" bodyClassName="px-4 pb-4 pt-1">
           {summary.attention.length ? (
-            <ul className="mt-2 divide-y divide-slate-100">
+            <ul className="divide-y divide-slate-100">
               {summary.attention.map((item) => (
                 <li key={item.id} className="py-2.5">
                   <button type="button" onClick={() => onShowShelter?.(item.name)} className="text-left text-sm font-bold text-slate-900 hover:text-[#0b4c86] hover:underline">{item.name}</button>
@@ -92,22 +93,23 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
               ))}
             </ul>
           ) : <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">ทุกศูนย์อยู่ในเกณฑ์ปกติ</p>}
-        </div>
+        </Panel>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-base font-black text-slate-900">โรคที่พบในศูนย์</h3>
-            <Link href="/eoc/flood/health?tab=shelter" className="text-sm font-bold text-[#0b4c86] hover:underline">บันทึกรายงานโรค</Link>
-          </div>
-          <p className="text-xs text-slate-500">
+        <Panel
+          icon="stethoscope"
+          title="โรคที่พบในศูนย์"
+          subtitle={<>
             {health.sheltersWithCases ? `พบผู้ป่วยใน ${formatNumber(health.sheltersWithCases)} ศูนย์` : "ยังไม่มีรายงานผู้ป่วยในศูนย์"}
             {health.totals.latest_report_date ? ` · รายงานล่าสุด ${health.totals.latest_report_date}` : ""}
             {health.totals.deaths ? ` · เสียชีวิต ${formatNumber(health.totals.deaths)} ราย` : ""}
-          </p>
+          </>}
+          action={<Link href="/eoc/flood/health?tab=shelter" className="text-sm font-bold text-[#0b4c86] hover:underline">บันทึกรายงานโรค</Link>}
+          bodyClassName={health.byDisease.length ? "p-4" : ""}
+        >
           {health.byDisease.length ? (
-            <ul className="mt-3 space-y-2.5">
+            <ul className="space-y-2.5">
               {health.byDisease.map((item) => (
                 <li key={item.disease_type}>
                   <div className="flex justify-between gap-3 text-sm"><span className="font-semibold text-slate-800">{item.disease_type}</span><span className="tabular-nums text-slate-600"><b className="text-slate-900">{formatNumber(item.new_cases)}</b> ราย · {formatNumber(item.shelters)} ศูนย์</span></div>
@@ -116,13 +118,11 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
               ))}
             </ul>
           ) : null}
-        </div>
+        </Panel>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="text-base font-black text-slate-900">กลุ่มที่ต้องดูแลพิเศษในศูนย์</h3>
-          <p className="text-xs text-slate-500">ตามข้อมูลผู้พักพิงรายกลุ่มในทะเบียนศูนย์ (รวมเฉพาะศูนย์ที่เปิดใช้)</p>
+        <Panel icon="accessibility" title="กลุ่มที่ต้องดูแลพิเศษในศูนย์" subtitle="ตามข้อมูลผู้พักพิงรายกลุ่มในทะเบียนศูนย์ (รวมเฉพาะศูนย์ที่เปิดใช้)" bodyClassName="p-4">
           {summary.hasGroupData ? (
-            <ul className="mt-3 space-y-2.5">
+            <ul className="space-y-2.5">
               {summary.groups.map((group) => (
                 <li key={group.key}>
                   <div className="flex justify-between text-sm"><span className="font-semibold text-slate-800">{group.label}</span><b className="tabular-nums text-slate-900">{formatNumber(group.value)}</b></div>
@@ -130,8 +130,8 @@ export default function ShelterSessionDashboard({ summary, onShowShelter }) {
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">ยังไม่มีข้อมูลผู้พักพิงแยกกลุ่ม ดูผู้เปราะบางที่เคลื่อนย้ายได้ที่ <Link href="/eoc/flood/vulnerable-groups" className="font-bold text-[#0b4c86] hover:underline">กลุ่มเปราะบาง</Link></p>}
-        </div>
+          ) : <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">ยังไม่มีข้อมูลผู้พักพิงแยกกลุ่ม ดูผู้เปราะบางที่เคลื่อนย้ายได้ที่ <Link href="/eoc/flood/vulnerable-groups" className="font-bold text-[#0b4c86] hover:underline">กลุ่มเปราะบาง</Link></p>}
+        </Panel>
       </div>
     </section>
   );

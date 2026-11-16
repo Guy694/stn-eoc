@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageHero } from "@/components/common/ThemePanels";
+import { EmptyPanel, PageHero, Panel, heroButtonClass, heroInputClass } from "@/components/common/ThemePanels";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
@@ -96,9 +97,8 @@ export default function DiseaseDailyRiskPage() {
         return (
             <EOCLayout>
                 <div className="w-full">
-                    <div className="text-center py-12">
-                        <p className="text-slate-600">ไม่พบข้อมูล</p>
-                    </div>
+                    <PageHero icon="biohazard" eyebrow="โรคระบาด" title="สรุปสถานการณ์โรครายวัน" className="mb-6" />
+                    <EmptyPanel icon="info" title="ไม่พบข้อมูล" />
                 </div>
             </EOCLayout>
         );
@@ -108,11 +108,8 @@ export default function DiseaseDailyRiskPage() {
         return (
             <EOCLayout>
                 <div className="w-full">
-                    <div className="border border-dashed border-slate-300 bg-white py-12 text-center shadow-sm">
-                        <AppIcon icon="calendar" className="mx-auto h-10 w-10 text-slate-400" />
-                        <h1 className="mt-3 text-xl font-black text-slate-800">ยังไม่มีรายงานโรคในเหตุการณ์นี้</h1>
-                        <p className="mt-2 text-sm text-slate-500">ระบบจะแสดงเฉพาะวันที่ที่มีข้อมูลจากฐานข้อมูล</p>
-                    </div>
+                    <PageHero icon="biohazard" eyebrow="โรคระบาด" title="สรุปสถานการณ์โรครายวัน" className="mb-6" />
+                    <EmptyPanel icon="calendar" title="ยังไม่มีรายงานโรคในเหตุการณ์นี้" text="ระบบจะแสดงเฉพาะวันที่ที่มีข้อมูลจากฐานข้อมูล" />
                 </div>
             </EOCLayout>
         );
@@ -129,142 +126,111 @@ export default function DiseaseDailyRiskPage() {
     return (
         <EOCLayout>
             <div className="w-full">
-                {/* Header */}
-                <PageHero icon="biohazard" title="สรุปสถานการณ์โรครายวัน" subtitle={<>แสดงข้อมูลวันที่: {formatDate}</>} className="mb-6" />
-
-                {/* Date Selector */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
-                    <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-                        <label className="block text-sm font-medium text-slate-700">
-                            เลือกวันที่ต้องการดู:
-                        </label>
-                        <button
-                            onClick={() => setShowAllDates(!showAllDates)}
-                            className="px-4 py-2 bg-[#0b4c86] text-white rounded-lg hover:bg-[#083865] transition-colors text-sm"
-                        >
-                            {showAllDates ? "ซ่อนลิสวันที่" : "แสดงลิสวันที่ทั้งหมด"}
-                        </button>
-                    </div>
-                    <input
-                        type="date"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        max={new Date().toISOString().split('T')[0]}
-                        className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b4c86]/40 text-slate-700 w-full md:w-auto"
-                    />
-
-                    {/* Available Dates List */}
-                    {showAllDates && availableDates.length > 0 && (
-                        <div className="mt-4 border-t pt-4">
-                            <h3 className="font-semibold text-slate-700 mb-3">วันที่มีข้อมูล ({availableDates.length} วัน):</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 max-h-96 overflow-y-auto">
-                                {availableDates.map((date, index) => {
-                                    const dateObj = new Date(date);
-                                    const isSelected = date === selectedDate;
-                                    const thaiDate = dateObj.toLocaleDateString('th-TH', {
-                                        weekday: 'short',
-                                        day: 'numeric',
-                                        month: 'short'
-                                    });
-
-                                    return (
-                                        <button
-                                            key={date}
-                                            onClick={() => {
-                                                setSelectedDate(date);
-                                                setShowAllDates(false);
-                                            }}
-                                            className={`p-3 rounded-lg text-sm transition-all ${isSelected
-                                                ? 'bg-[#0b4c86] text-white shadow-lg font-bold'
-                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                }`}
-                                        >
-                                            <div className="font-medium">วันที่ {availableDates.length - index}</div>
-                                            <div className="text-xs mt-1">{thaiDate}</div>
-                                        </button>
-                                    );
+                {/* Header: วันที่และข้อมูลเหตุการณ์อยู่บนหัวหน้า */}
+                <PageHero
+                    icon="biohazard"
+                    eyebrow="โรคระบาด"
+                    title="สรุปสถานการณ์โรครายวัน"
+                    subtitle={<>แสดงข้อมูลวันที่: {formatDate}</>}
+                    className="mb-6"
+                    meta={data.activeSession ? (
+                        <div className="space-y-0.5 text-sm">
+                            <p className="font-semibold text-white">{activeDiseaseEocName} ครั้งที่ {data.activeSession.session_number}/2026 - กำลังดำเนินการ</p>
+                            <p>
+                                เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
                                 })}
-                            </div>
+                            </p>
+                            <p>เหตุผล: {data.activeSession.open_reason}</p>
                         </div>
+                    ) : null}
+                    actions={(
+                        <>
+                            <label className="flex items-center gap-2 text-sm font-medium text-blue-100">
+                                เลือกวันที่ต้องการดู:
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                    max={new Date().toISOString().split('T')[0]}
+                                    className={heroInputClass}
+                                />
+                            </label>
+                            <button type="button" onClick={() => setShowAllDates(!showAllDates)} aria-expanded={showAllDates} className={heroButtonClass}>
+                                <AppIcon icon="calendarDays" className="h-4 w-4" />
+                                {showAllDates ? "ซ่อนลิสวันที่" : "แสดงลิสวันที่ทั้งหมด"}
+                            </button>
+                        </>
                     )}
-                </div>
-
-                {/* Active EOC Session Info */}
-                {data.activeSession && (
-                    <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-4 mb-6 md:p-6">
-                        <div className="flex items-center justify-between flex-wrap gap-4">
-                            <div className="min-w-0">
-                                <h3 className="text-lg font-bold mb-2 md:text-xl">
-                                    {activeDiseaseEocName} ครั้งที่ {data.activeSession.session_number}/2026 - กำลังดำเนินการ
-                                </h3>
-                                <p className="opacity-90 mb-1">
-                                    เปิดเมื่อ: {new Date(data.activeSession.opened_at).toLocaleDateString('th-TH', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
-                                </p>
-                                <p className="opacity-90">
-                                    เหตุผล: {data.activeSession.open_reason}
-                                </p>
+                    aside={data.activeSession ? (
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            <div className="rounded-xl bg-white/10 p-3 ring-1 ring-white/15">
+                                <p className="text-2xl font-bold tabular-nums">{data.activeSession.days_open}</p>
+                                <p className="text-xs text-blue-100">วัน</p>
                             </div>
-                            <div className="grid w-full grid-cols-3 gap-2 text-center sm:w-auto sm:gap-3">
-                                <div className="bg-white/20 rounded p-3 backdrop-blur-sm">
-                                    <p className="text-xl font-bold md:text-2xl">{data.activeSession.days_open}</p>
-                                    <p className="text-sm">วัน</p>
-                                </div>
-                                <div className="bg-white/20 rounded p-3 backdrop-blur-sm">
-                                    <p className="text-2xl font-bold">{data.activeSession.total_activities}</p>
-                                    <p className="text-sm">กิจกรรม</p>
-                                </div>
-                                <div className="bg-white/20 rounded p-3 backdrop-blur-sm">
-                                    <p className="text-2xl font-bold">{data.activeSession.total_data_entries}</p>
-                                    <p className="text-sm">บันทึก</p>
-                                </div>
+                            <div className="rounded-xl bg-white/10 p-3 ring-1 ring-white/15">
+                                <p className="text-2xl font-bold tabular-nums">{data.activeSession.total_activities}</p>
+                                <p className="text-xs text-blue-100">กิจกรรม</p>
+                            </div>
+                            <div className="rounded-xl bg-white/10 p-3 ring-1 ring-white/15">
+                                <p className="text-2xl font-bold tabular-nums">{data.activeSession.total_data_entries}</p>
+                                <p className="text-xs text-blue-100">บันทึก</p>
                             </div>
                         </div>
-                    </div>
+                    ) : null}
+                />
+
+                {/* Available Dates List */}
+                {showAllDates && availableDates.length > 0 && (
+                    <Panel icon="calendar" title={`วันที่มีข้อมูล (${availableDates.length} วัน)`} className="mb-6" bodyClassName="p-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 max-h-96 overflow-y-auto">
+                            {availableDates.map((date, index) => {
+                                const dateObj = new Date(date);
+                                const isSelected = date === selectedDate;
+                                const thaiDate = dateObj.toLocaleDateString('th-TH', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short'
+                                });
+
+                                return (
+                                    <button
+                                        key={date}
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedDate(date);
+                                            setShowAllDates(false);
+                                        }}
+                                        aria-pressed={isSelected}
+                                        className={`p-3 rounded-lg text-sm transition-all ${isSelected
+                                            ? 'bg-[#0b4c86] text-white font-bold'
+                                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                            }`}
+                                    >
+                                        <div className="font-medium">วันที่ {availableDates.length - index}</div>
+                                        <div className="text-xs mt-1">{thaiDate}</div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </Panel>
                 )}
 
                 {/* Total Statistics */}
-                <div className="grid grid-cols-2 gap-3 mb-6 md:grid-cols-5 md:gap-4">
-                    <StatCard
-                        icon="map"
-                        label="อำเภอ"
-                        value={stats.affected_districts || 0}
-                        color="purple"
-                    />
-                    <StatCard
-                        icon="hospital"
-                        label="หน่วยบริการ"
-                        value={stats.affected_facilities || 0}
-                        color="blue"
-                    />
-                    <StatCard
-                        icon="biohazard"
-                        label="ประเภทโรค"
-                        value={stats.diseases_count || 0}
-                        color="green"
-                    />
-                    <StatCard
-                        icon="clipboard"
-                        label="รายงาน"
-                        value={stats.total_reports || 0}
-                        color="orange"
-                    />
-                    <StatCard
-                        icon="users"
-                        label="ผู้ป่วย"
-                        value={(stats.total_patients || 0).toLocaleString()}
-                        color="red"
-                    />
-                </div>
+                <MetricGrid className="mb-6">
+                    <MetricCard icon="map" label="อำเภอ" value={stats.affected_districts || 0} tone="blue" />
+                    <MetricCard icon="hospital" label="หน่วยบริการ" value={stats.affected_facilities || 0} tone="blue" />
+                    <MetricCard icon="biohazard" label="ประเภทโรค" value={stats.diseases_count || 0} tone="green" />
+                    <MetricCard icon="clipboard" label="รายงาน" value={stats.total_reports || 0} tone="amber" />
+                    <MetricCard icon="users" label="ผู้ป่วย" value={(stats.total_patients || 0).toLocaleString()} tone="red" />
+                </MetricGrid>
 
                 {/* Disease Summary */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6 md:p-6">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">สรุปตามประเภทโรค</h2>
+                <Panel icon="biohazard" title="สรุปตามประเภทโรค" className="mb-6" bodyClassName="p-4 md:p-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {data.diseaseSummary?.map((item, index) => (
                             <div
@@ -284,11 +250,10 @@ export default function DiseaseDailyRiskPage() {
                             </div>
                         ))}
                     </div>
-                </div>
+                </Panel>
 
                 {/* District Summary */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6 md:p-6">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">สรุปตามอำเภอ</h2>
+                <Panel icon="map" title="สรุปตามอำเภอ" className="mb-6" bodyClassName="p-4 md:p-5">
                     <div className="grid gap-2 md:hidden">
                         {data.districtSummary?.map((district, index) => (
                             <div key={index} className="rounded-2xl border border-slate-200 bg-white p-3">
@@ -346,16 +311,15 @@ export default function DiseaseDailyRiskPage() {
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </Panel>
 
                 {/* Detailed List */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 md:p-6">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">รายละเอียดรายงาน</h2>
+                <Panel icon="file" title="รายละเอียดรายงาน" bodyClassName="p-4 md:p-5">
                     <div className="space-y-3">
                         {paginatedDetails.map((item, index) => (
                             <div
                                 key={index}
-                                className="bg-slate-50 border border-[#0b4c86] p-4 rounded-r-lg"
+                                className="rounded-xl border border-slate-200 border-l-4 border-l-[#0b4c86] bg-slate-50 p-4"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -384,10 +348,7 @@ export default function DiseaseDailyRiskPage() {
                         ))}
 
                         {(!data.details || data.details.length === 0) && (
-                            <div className="text-center py-8 text-slate-500">
-                                <p className="text-4xl mb-2"><AppIcon icon="file" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></p>
-                                <p>ไม่มีรายงานในวันนี้</p>
-                            </div>
+                            <EmptyPanel icon="file" title="ไม่มีรายงานในวันนี้" />
                         )}
                     </div>
                     <PaginationControls
@@ -396,27 +357,10 @@ export default function DiseaseDailyRiskPage() {
                         totalItems={detailRows.length}
                         onPageChange={setDetailsPage}
                         onPageSizeChange={setDetailsPageSize}
+                        className="mt-4 rounded-xl border bg-slate-50"
                     />
-                </div>
+                </Panel>
             </div>
         </EOCLayout>
-    );
-}
-
-function StatCard({ icon, label, value, color }) {
-    const colorClasses = {
-        purple: 'bg-[#edf5fc] border-[#c9dcee] text-[#0b4c86]',
-        blue: 'bg-[#edf5fc] border-[#c9dcee] text-[#0b4c86]',
-        green: 'bg-green-50 border-green-200 text-green-700',
-        orange: 'bg-orange-50 border-orange-200 text-orange-700',
-        red: 'bg-red-50 border-red-200 text-red-700'
-    };
-
-    return (
-        <div className={`${colorClasses[color]} border-2 rounded-lg p-4 text-center`}>
-            <AppIcon icon={icon} className="mx-auto mb-2 h-8 w-8" />
-            <p className="text-2xl font-bold mb-1">{value}</p>
-            <p className="text-sm opacity-80">{label}</p>
-        </div>
     );
 }

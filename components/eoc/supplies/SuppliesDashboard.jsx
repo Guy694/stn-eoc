@@ -10,6 +10,7 @@ import { COVER_LEVELS, DAILY_WINDOW_DAYS, shortThaiDate } from "@/lib/medicalDai
 import { STOCK_LEVEL_LABELS } from "@/lib/medicalInventory";
 import { periodLabel } from "@/lib/hospitalDrugFiles";
 import { compareFacilities } from "@/lib/facilityOrder";
+import { Panel } from "@/components/common/ThemePanels";
 
 const LEVEL_CELL = {
   out: "bg-red-100 text-red-900",
@@ -18,19 +19,9 @@ const LEVEL_CELL = {
   unknown: "bg-slate-50 text-slate-500"
 };
 
-function Section({ title, description, actions, children }) {
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
-      <header className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-4 py-3">
-        <div>
-          <h2 className="text-base font-black text-slate-900">{title}</h2>
-          {description ? <p className="mt-0.5 text-sm text-slate-600">{description}</p> : null}
-        </div>
-        {actions}
-      </header>
-      <div className="p-4">{children}</div>
-    </section>
-  );
+// กล่องหัวข้อใช้ Panel กลางของระบบ
+function Section({ icon, title, description, actions, children }) {
+  return <Panel icon={icon} title={title} subtitle={description} action={actions} bodyClassName="p-4">{children}</Panel>;
 }
 
 function CoverPill({ days, level }) {
@@ -264,7 +255,7 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
     <div className="space-y-4">
       <DashboardSummary summary={summary} reporting={reporting} today={dashboard.today} />
 
-      <Section title="ต้องเติมด่วน" description={`รายการที่หมด ใกล้หมด หรือคาดว่าพอใช้ไม่เกิน 7 วัน (คิดจากอัตราใช้เฉลี่ย ${DAILY_WINDOW_DAYS} วันล่าสุด)`}>
+      <Section icon="alert" title="ต้องเติมด่วน" description={`รายการที่หมด ใกล้หมด หรือคาดว่าพอใช้ไม่เกิน 7 วัน (คิดจากอัตราใช้เฉลี่ย ${DAILY_WINDOW_DAYS} วันล่าสุด)`}>
         <DataTable columns={urgentColumns} rows={dashboard.urgent} caption="ต้องเติมด่วน" emptyText="ไม่มีรายการที่ต้องเติมด่วน" pageSize={10}
           rowClassName={(row) => (row.level === "out" || row.cover_level === "critical" ? "bg-red-50/40" : "")} />
       </Section>
@@ -276,21 +267,22 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
       ) : null}
 
       {summary.lots ? (
-        <Section title="ยาใกล้หมดอายุ" description="จากล็อตที่นำเข้าจากระบบคลังยาของโรงพยาบาล ใช้ล็อตที่ใกล้หมดอายุก่อน หรือแลกเปลี่ยนกับหน่วยที่ใช้มากกว่า">
+        <Section icon="clock" title="ยาใกล้หมดอายุ" description="จากล็อตที่นำเข้าจากระบบคลังยาของโรงพยาบาล ใช้ล็อตที่ใกล้หมดอายุก่อน หรือแลกเปลี่ยนกับหน่วยที่ใช้มากกว่า">
           <DataTable columns={expiryColumns} rows={dashboard.expiring || []} rowKey={(row) => `${row.stock_id}-${row.lot_no}-${row.expire_date}`} caption="ยาใกล้หมดอายุ" emptyText="ไม่มียาที่หมดอายุภายใน 6 เดือน" pageSize={10}
             rowClassName={(row) => (row.status === "expired" ? "bg-red-50/40" : "")} />
         </Section>
       ) : null}
 
-      <Section title="การส่งรายงานประจำวัน" description="หน่วยบริการต้องรายงานทุกรายการทุกวัน กดชื่อหน่วยที่ยังไม่รายงานเพื่อกรอกแทนได้">
+      <Section icon="clipboard" title="การส่งรายงานประจำวัน" description="หน่วยบริการต้องรายงานทุกรายการทุกวัน กดชื่อหน่วยที่ยังไม่รายงานเพื่อกรอกแทนได้">
         <ReportingPanel reporting={reporting} onPickFacility={onPickFacility} />
       </Section>
 
-      <Section title="ภาพรวมรายเวชภัณฑ์ทั้งจังหวัด" description="ยอดรวมทุกหน่วยบริการ กดชื่อเวชภัณฑ์เพื่อดูแนวโน้มรายวัน">
+      <Section icon="package" title="ภาพรวมรายเวชภัณฑ์ทั้งจังหวัด" description="ยอดรวมทุกหน่วยบริการ กดชื่อเวชภัณฑ์เพื่อดูแนวโน้มรายวัน">
         <DataTable columns={itemColumns} rows={items} rowKey="item_code" caption="ภาพรวมรายเวชภัณฑ์" pageSize={20} />
       </Section>
 
       <Section
+        icon="trendingDown"
         title={`แนวโน้มรายวัน${selectedItem ? `: ${selectedItem.item_name}` : ""}`}
         description="แท่ง = ใช้ไปและรับเข้าในแต่ละวัน · เส้น = ยอดคงเหลือสิ้นวันรวมทุกหน่วยบริการ"
         actions={items.length ? (
@@ -302,6 +294,7 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
       </Section>
 
       <Section
+        icon="layers"
         title={matrixMode === "district" ? "คงเหลือรายอำเภอ × เวชภัณฑ์" : "คงเหลือรายหน่วยบริการ × เวชภัณฑ์"}
         description={matrixMode === "district" ? "ยอดรวมของหน่วยบริการในอำเภอ พร้อมอัตราใช้ต่อวัน" : "สีแดง = หมด · สีเหลือง = ใกล้หมด · ตัวเลขเล็ก = พอใช้อีกกี่วัน"}
         actions={(
@@ -314,7 +307,7 @@ export default function SuppliesDashboard({ eocType = "flood", sessionId, refres
         <Matrix stocks={dashboard.stocks} items={items} districts={dashboard.districts} mode={matrixMode} />
       </Section>
 
-      <Section title="ยอดนับจริงไม่ตรงกับที่ระบบคำนวณ" description="เกิดจากรายงานใช้ไป/รับเข้าไม่ครบ หรือของสูญหาย/หมดอายุ ตรวจแล้วปรับยอดที่หน้า คงคลัง (ปุ่มตาชั่ง)">
+      <Section icon="alertCircle" title="ยอดนับจริงไม่ตรงกับที่ระบบคำนวณ" description="เกิดจากรายงานใช้ไป/รับเข้าไม่ครบ หรือของสูญหาย/หมดอายุ ตรวจแล้วปรับยอดที่หน้า คงคลัง (ปุ่มตาชั่ง)">
         <DataTable columns={diffColumns} rows={dashboard.discrepancies} rowKey={(row) => `${row.stock_id}-${row.date}`} caption="ยอดนับไม่ตรง" emptyText="ยังไม่มียอดนับที่ไม่ตรง" pageSize={10} />
       </Section>
     </div>

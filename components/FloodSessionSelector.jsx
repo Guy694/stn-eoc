@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SessionTeamsList from './SessionTeamsList';
 import AppIcon from "@/components/icons/AppIcon";
+import { Panel } from "@/components/common/ThemePanels";
 import { MetricCard } from "@/components/common/MetricCards";
 
 export default function FloodSessionSelector({
@@ -113,28 +114,28 @@ export default function FloodSessionSelector({
         const activeSessions = sessions.filter(s => s.status === 'active');
 
         return (
-            <div className="bg-linear-to-r from-[#0b4c86] to-[#11466e] text-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 font-[family-name:var(--font-kanit)] text-slate-900">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold mb-1">สถานการณ์ปัจจุบัน (เรียลไทม์)</h3>
+                        <h3 className="mb-2 text-lg font-semibold text-slate-900">สถานการณ์ปัจจุบัน (เรียลไทม์)</h3>
                         {activeSessions.length > 0 ? (
                             <div className="space-y-2">
                                 {activeSessions.map(session => (
-                                    <div key={session.id} className="bg-white/10 rounded p-3 backdrop-blur-sm">
+                                    <div key={session.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-2xl animate-pulse"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                                            <span className="text-2xl text-red-600 animate-pulse motion-reduce:animate-none"><AppIcon icon="statusRed" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                             <div>
                                                 <p className="font-medium">
                                                     เหตุการณ์ EOC ที่ {session.session_number} - {new Date().getFullYear()}
                                                 </p>
-                                                <p className="text-sm opacity-90">
+                                                <p className="text-sm text-slate-600">
                                                     เปิดเมื่อ: {formatDate(session.opened_at)}
                                                 </p>
-                                                <p className="text-sm opacity-90">
+                                                <p className="text-sm text-slate-600">
                                                     ระยะเวลา: {formatDuration(session.duration_hours || calculateDuration(session.opened_at))}
                                                 </p>
                                                 {session.open_reason && (
-                                                    <p className="text-sm opacity-90 mt-1">
+                                                    <p className="text-sm text-slate-600 mt-1">
                                                         เหตุผล: {session.open_reason}
                                                     </p>
                                                 )}
@@ -144,12 +145,12 @@ export default function FloodSessionSelector({
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-white/10 rounded p-3 backdrop-blur-sm">
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
+                                    <span className="text-2xl text-emerald-600"><AppIcon icon="checkCircle" className="inline-block h-[1em] w-[1em] shrink-0 align-[-0.125em]" /></span>
                                     <div>
                                         <p className="font-medium">ไม่มี EOC ที่เปิดอยู่ในขณะนี้</p>
-                                        <p className="text-sm opacity-90">สถานการณ์ปกติ</p>
+                                        <p className="text-sm text-slate-600">สถานการณ์ปกติ</p>
                                     </div>
                                 </div>
                             </div>
@@ -157,17 +158,17 @@ export default function FloodSessionSelector({
                     </div>
                     {yearSummary && (
                         <div className="grid grid-cols-3 gap-4 text-center">
-                            <div className="bg-white/10 rounded p-3 backdrop-blur-sm">
-                                <p className="text-2xl font-bold">{yearSummary.total_sessions || 0}</p>
-                                <p className="text-sm opacity-90">ครั้งในปีนี้</p>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-2xl font-bold text-[#0b4c86]">{yearSummary.total_sessions || 0}</p>
+                                <p className="text-sm text-slate-600">ครั้งในปีนี้</p>
                             </div>
-                            <div className="bg-white/10 rounded p-3 backdrop-blur-sm">
-                                <p className="text-2xl font-bold">{yearSummary.total_data_entries || 0}</p>
-                                <p className="text-sm opacity-90">บันทึกข้อมูล</p>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-2xl font-bold text-[#0b4c86]">{yearSummary.total_data_entries || 0}</p>
+                                <p className="text-sm text-slate-600">บันทึกข้อมูล</p>
                             </div>
-                            <div className="bg-white/10 rounded p-3 backdrop-blur-sm">
-                                <p className="text-2xl font-bold">{yearSummary.total_villages || 0}</p>
-                                <p className="text-sm opacity-90">หมู่บ้านที่ได้รับผลกระทบ</p>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-2xl font-bold text-[#0b4c86]">{yearSummary.total_villages || 0}</p>
+                                <p className="text-sm text-slate-600">หมู่บ้านที่ได้รับผลกระทบ</p>
                             </div>
                         </div>
                     )}
@@ -178,10 +179,7 @@ export default function FloodSessionSelector({
 
     // โหมดข้อมูลย้อนหลัง
     return (
-        <div className="border border-slate-200 bg-white rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">
-                ข้อมูลย้อนหลัง
-            </h3>
+        <Panel icon="calendar" title="ข้อมูลย้อนหลัง" subtitle="เลือกปีและเหตุการณ์ EOC เพื่อดูแผนที่และข้อมูลย้อนหลัง" className="mb-6" bodyClassName="p-6">
 
             {/* เลือกปี */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -334,7 +332,7 @@ export default function FloodSessionSelector({
                     <SessionTeamsList sessionId={selectedSession.id} showTitle={true} />
                 </div>
             )}
-        </div>
+        </Panel>
     );
 }
 

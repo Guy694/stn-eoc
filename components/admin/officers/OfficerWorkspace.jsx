@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BadgeCheck, CheckCircle2, Lock, LockOpen, Pencil, RotateCcw, ShieldCheck, Trash2, UserCheck, UserPlus, Users, XCircle } from "lucide-react";
 import {
-  AddButton, AdminPage, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, StatStrip, StatusPill, Tabs, Toolbar,
+  AddButton, Button, DataTable, Field, FilterSelect, FormDialog, FormGrid, FormSection, StatStrip, StatusPill, Tabs, Toolbar,
   inputClass, useNotice
 } from "@/components/admin/crud";
+import { PageHero } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { useAuth } from "@/context/AuthContext";
 import { deleteOfficersInBatch } from "@/lib/officerBatch";
@@ -379,11 +380,15 @@ export default function OfficerWorkspace() {
   const regStats = registrations.stats || {};
 
   return (
-    <AdminPage
-      title="จัดการเจ้าหน้าที่"
-      description="บัญชีผู้ใช้ สิทธิ์การใช้ระบบ และกลุ่มภารกิจ EOC ที่แต่ละคนได้รับมอบหมายในเหตุการณ์ที่เปิดอยู่"
-      actions={<AddButton onClick={() => openForm()}>เพิ่มเจ้าหน้าที่</AddButton>}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="userCog"
+        eyebrow="ผู้ดูแลระบบ"
+        tray
+        title="จัดการเจ้าหน้าที่"
+        subtitle="บัญชีผู้ใช้ สิทธิ์การใช้ระบบ และกลุ่มภารกิจ EOC ที่แต่ละคนได้รับมอบหมายในเหตุการณ์ที่เปิดอยู่"
+        actions={<AddButton onClick={() => openForm()}>เพิ่มเจ้าหน้าที่</AddButton>}
+      />
       {notice}
       <StatStrip items={[
         { icon: Users, tone: "blue", label: "เจ้าหน้าที่ที่ใช้งานได้", value: approvedCount.toLocaleString("th-TH") },
@@ -572,6 +577,6 @@ export default function OfficerWorkspace() {
           </fieldset>
         </FormGrid>
       </FormDialog>
-    </AdminPage>
+    </div>
   );
 }

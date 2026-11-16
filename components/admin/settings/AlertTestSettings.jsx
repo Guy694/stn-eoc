@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BellRing, CheckCircle2, CloudRain, Globe, Monitor, RefreshCw, Siren, Smartphone, Speech, TriangleAlert, Volume2, XCircle } from "lucide-react";
 import { Button, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { getAlertAudioContext, showSystemAlert, unlockAlertAudio } from "@/lib/alertSound";
 import { speak, speechSupported, thaiVoice, waitForVoices } from "@/lib/alertSpeech";
@@ -31,16 +32,9 @@ function Check({ ok, label, detail, fix }) {
 
 function Section({ icon: Icon, title, description, children }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf5fc] text-[#0b4c86]"><Icon className="h-5 w-5" aria-hidden="true" /></span>
-        <div className="min-w-0">
-          <h2 className="font-[family-name:var(--font-kanit)] text-lg font-semibold text-slate-900">{title}</h2>
-          {description ? <p className="mt-0.5 text-sm text-slate-600">{description}</p> : null}
-        </div>
-      </div>
-      <div className="mt-4">{children}</div>
-    </section>
+    <Panel icon={Icon} title={title} subtitle={description} bodyClassName="p-5">
+      {children}
+    </Panel>
   );
 }
 

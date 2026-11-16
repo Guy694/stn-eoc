@@ -8,7 +8,7 @@ import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip } from "chart.js";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { areaLabel, flagMeta, stageMeta } from "@/lib/floodTriggers";
-import { Panel } from "@/components/common/ThemePanels";
+import { HeroProgress, PageHero, Panel, heroButtonClass } from "@/components/common/ThemePanels";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineController, LineElement, PointElement, Tooltip, Legend);
 
@@ -372,7 +372,7 @@ function SetupChecklist({ setup }) {
   );
 }
 
-export default function SituationBoard({ sessionId, eocType = "flood" }) {
+export default function SituationBoard({ sessionId, eocType = "flood", heroEyebrow = null, heroSubtitle = null }) {
   const [state, setState] = useState({ loading: true, data: null, error: "" });
 
   const load = useCallback(async () => {
@@ -400,61 +400,66 @@ export default function SituationBoard({ sessionId, eocType = "flood" }) {
   }
   if (state.error) {
     return (
-      <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
-        {state.error} <button type="button" onClick={load} className="ml-2 font-bold underline">ลองใหม่</button>
+      <div className="mb-6 space-y-4">
+        <PageHero icon={eocType === "flood" ? "flood" : "barChart"} eyebrow={heroEyebrow} title="ภาพรวมสถานการณ์" subtitle={heroSubtitle} />
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+          {state.error} <button type="button" onClick={load} className="ml-2 font-bold underline">ลองใหม่</button>
+        </div>
       </div>
     );
   }
-  if (!data?.session) return null;
+  if (!data?.session) return <PageHero className="mb-6" icon={eocType === "flood" ? "flood" : "barChart"} eyebrow={heroEyebrow} title="ภาพรวมสถานการณ์" subtitle={heroSubtitle} />;
   const headlineTone = data.headline?.tone || "gray";
   const HERO_DOT = { red: "bg-red-400", amber: "bg-amber-300", green: "bg-emerald-400", gray: "bg-slate-300" };
   const completeness = data.completeness;
-  const heroButton = "inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-60";
 
   return (
     <section id="sec-situation" aria-labelledby="situation-title" className="mb-8 scroll-mt-20 space-y-4">
-      <SetupChecklist setup={data.setup} />
-
       {/* การ์ดหลัก: สถานการณ์รวม + ความครบของรายงานวันนี้ */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
-        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" aria-hidden="true" />
-        <div className="absolute -bottom-24 right-40 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
-        <div className="relative grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
-          <div className="min-w-0">
-            <p className="flex items-center gap-2 text-sm font-medium text-blue-100">
+      <PageHero
+        icon={eocType === "flood" ? "flood" : "barChart"}
+        titleId="situation-title"
+        eyebrow={(
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            {heroEyebrow ? <span>{heroEyebrow} ·</span> : null}
+            <span className="inline-flex items-center gap-2">
               <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
                 {headlineTone === "red" ? <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70 motion-reduce:animate-none" /> : null}
                 <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${HERO_DOT[headlineTone] || HERO_DOT.gray}`} />
               </span>
               สถานการณ์ตอนนี้ · {(TONE[headlineTone] || TONE.gray).label}
-            </p>
-            <h2 id="situation-title" className="mt-2 text-xl font-semibold leading-snug sm:text-2xl">{data.headline?.text}</h2>
-            <p className="mt-2 text-xs text-blue-100">ข้อมูล ณ {formatDateTime(data.generated_at)} · อัปเดตอัตโนมัติทุก 5 นาที</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" onClick={load} disabled={state.loading} className={heroButton}>
-                <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ดึงข้อมูลล่าสุด
-              </button>
-              {eocType === "flood" ? (
-                <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download title="แบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล 14 แผ่นงาน" className={heroButton}>
-                  <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
-                </a>
-              ) : null}
-            </div>
-          </div>
-          {completeness ? (
-            <Link href="/eoc/flood/records" className="block rounded-xl bg-white/10 p-4 ring-1 ring-white/15 hover:bg-white/15">
-              <span className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-medium text-blue-100">ความครบของรายงานวันนี้</span>
-                <span className="text-3xl font-bold tabular-nums">{completeness.percent}<span className="ml-0.5 text-base font-medium text-blue-100">%</span></span>
-              </span>
-              <span className="mt-2 block h-2 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
-                <span className={`block h-full rounded-full ${completeness.percent >= 80 ? "bg-emerald-400" : completeness.percent > 0 ? "bg-amber-300" : "bg-red-400"}`} style={{ width: `${completeness.percent}%` }} />
-              </span>
-              <span className="mt-2 block text-xs text-blue-100">ส่งแล้ว {formatNumber(completeness.reported)} จาก {formatNumber(completeness.total)} ตำบล{completeness.percent < 100 ? " — ตัวเลขด้านล่างอาจยังไม่ครบ" : ""}</span>
-            </Link>
-          ) : null}
-        </div>
-      </div>
+            </span>
+          </span>
+        )}
+        title={data.headline?.text}
+        subtitle={heroSubtitle}
+        meta={`ข้อมูล ณ ${formatDateTime(data.generated_at)} · อัปเดตอัตโนมัติทุก 5 นาที`}
+        actions={(
+          <>
+            <button type="button" onClick={load} disabled={state.loading} className={heroButtonClass}>
+              <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ดึงข้อมูลล่าสุด
+            </button>
+            {eocType === "flood" ? (
+              <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download title="แบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล 14 แผ่นงาน" className={heroButtonClass}>
+                <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
+              </a>
+            ) : null}
+          </>
+        )}
+        aside={completeness ? (
+          <Link href="/eoc/flood/records" className="block rounded-xl hover:bg-white/5">
+            <HeroProgress
+              label="ความครบของรายงานวันนี้"
+              value={completeness.percent}
+              percent={completeness.percent}
+              note={`ส่งแล้ว ${formatNumber(completeness.reported)} จาก ${formatNumber(completeness.total)} ตำบล${completeness.percent < 100 ? " — ตัวเลขด้านล่างอาจยังไม่ครบ" : ""}`}
+            />
+          </Link>
+        ) : null}
+      />
+
+      {/* รายการตั้งค่าที่ยังขาด อยู่ใต้หัว (หัวหน้าเป็นสิ่งแรกของหน้าเสมอ) */}
+      <SetupChecklist setup={data.setup} />
 
       {eocType === "flood" ? <TriggerStrip sessionId={data?.session?.id} /> : null}
 

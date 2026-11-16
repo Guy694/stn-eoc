@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Eye, RefreshCw, Send, ShieldAlert } from "lucide-react";
 import { Button, StatusPill, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { SECURITY_AUDIT_LABELS } from "@/lib/securityAuditLabels";
 
 const API = "/stn-eoc/api/admin/security-monitor";
@@ -21,13 +22,9 @@ const plain = (html) => String(html || "").replace(/<[^>]+>/g, "").replace(/&lt;
 
 function Section({ title, children, right }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-        <h3 className="text-base font-black text-slate-900">{title}</h3>
-        {right}
-      </div>
-      <div className="p-4">{children}</div>
-    </section>
+    <Panel title={title} action={right} bodyClassName="p-4">
+      {children}
+    </Panel>
   );
 }
 

@@ -2,8 +2,9 @@
 
 // ประวัติผู้เข้าชม: ใครเข้าหน้าไหน เมื่อไร จาก IP และตำแหน่งโดยประมาณใด (ผู้ดูแลระบบ)
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Globe2, MapPin, Navigation, RefreshCw, ShieldCheck, Users } from "lucide-react";
+import { AlertTriangle, Fingerprint, Globe2, MapPin, Navigation, RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { Button, DataTable, FilterSelect, StatStrip, StatusPill, Toolbar } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import VisitorMap from "@/components/admin/visitors/VisitorMap";
 import IpCheckPanel from "@/components/admin/visitors/IpCheckPanel";
@@ -153,7 +154,7 @@ export default function VisitorAccessLog() {
             compact
             items={[
               { label: "การเข้าชม", value: formatNumber(data.summary.visits), unit: "ครั้ง", icon: Globe2 },
-              { label: "IP ไม่ซ้ำ", value: formatNumber(data.summary.uniqueIps), unit: "IP", tone: "blue" },
+              { label: "IP ไม่ซ้ำ", value: formatNumber(data.summary.uniqueIps), unit: "IP", icon: Fingerprint, tone: "blue" },
               { label: "เจ้าหน้าที่ที่เข้าระบบ", value: formatNumber(data.summary.staffUsers), unit: "คน", icon: Users },
               { label: "มีตำแหน่ง GPS (ผู้ใช้อนุญาต)", value: formatNumber(data.summary.gpsVisits || 0), unit: "ครั้ง", icon: Navigation, tone: "green", onClick: () => setFilters((current) => ({ ...current, gps: current.gps ? "" : "1" })), active: Boolean(filters.gps) }
             ]}
@@ -162,8 +163,7 @@ export default function VisitorAccessLog() {
           <VisitorMap params={filterParams} onPickIp={pickIp} refreshKey={refreshKey} />
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white">
-              <h4 className="border-b border-slate-100 px-4 py-3 font-black text-slate-900">IP ที่เข้าชมมากที่สุด</h4>
+            <Panel icon="wifi" title="IP ที่เข้าชมมากที่สุด">
               {data.topIps.length ? (
                 <ul className="divide-y divide-slate-100">
                   {data.topIps.map((row) => (
@@ -177,9 +177,8 @@ export default function VisitorAccessLog() {
                   ))}
                 </ul>
               ) : <p className="p-4 text-sm text-slate-500">ยังไม่มีข้อมูล</p>}
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white">
-              <h4 className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 font-black text-slate-900"><MapPin className="h-4 w-4 text-[#0b4c86]" aria-hidden="true" /> ตำแหน่งที่เข้าชม</h4>
+            </Panel>
+            <Panel icon={MapPin} title="ตำแหน่งที่เข้าชม">
               {data.places.length ? (
                 <ul className="divide-y divide-slate-100">
                   {data.places.map((row) => (
@@ -190,7 +189,7 @@ export default function VisitorAccessLog() {
                   ))}
                 </ul>
               ) : <p className="p-4 text-sm text-slate-500">ยังไม่มีข้อมูลตำแหน่ง</p>}
-            </div>
+            </Panel>
           </div>
 
           <PublicPagesCard data={data.publicPages} onPickPath={setSearch} filtered={Boolean(filters.q || filters.user || filters.gps || filters.area === "staff")} />

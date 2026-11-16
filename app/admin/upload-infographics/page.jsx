@@ -6,7 +6,8 @@ import Image from "next/image";
 import { Biohazard, Droplets, Earth, ImagePlus, RefreshCw, Sun, Trash2, Upload, Waves, X } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
-import { AdminPage, Button, useNotice } from "@/components/admin/crud";
+import { Button, useNotice } from "@/components/admin/crud";
+import { PageHero, Panel, heroButtonClass } from "@/components/common/ThemePanels";
 import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 import { showDeleteConfirm } from "@/lib/feedback";
 import { formatDateTime } from "@/lib/adminApi";
@@ -122,14 +123,16 @@ export default function UploadInfographics() {
 
   return (
     <EOCLayout>
-      <AdminPage
-        title="คลังอินโฟกราฟิก"
-        description="ภาพที่อัปโหลดจะแสดงในหน้า &quot;ประกาศและความรู้&quot; ของประชาชนทันที แยกหมวดตามประเภทภัย ตั้งชื่อไฟล์ให้อ่านรู้เรื่อง เพราะใช้เป็นชื่อภาพ"
-        actions={<Button variant="secondary" onClick={load}><RefreshCw className="h-4 w-4" aria-hidden="true" />รีเฟรช</Button>}
-      >
-        <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="upload-title">
-          <h2 id="upload-title" className="text-base font-black text-slate-900">อัปโหลดภาพใหม่</h2>
-          <fieldset className="mt-3">
+      <div className="w-full space-y-4">
+        <PageHero
+          icon="camera"
+          eyebrow="สื่อสารความเสี่ยง"
+          title="คลังอินโฟกราฟิก"
+          subtitle="ภาพที่อัปโหลดจะแสดงในหน้า &quot;ประกาศและความรู้&quot; ของประชาชนทันที แยกหมวดตามประเภทภัย ตั้งชื่อไฟล์ให้อ่านรู้เรื่อง เพราะใช้เป็นชื่อภาพ"
+          actions={<button type="button" onClick={load} className={heroButtonClass}><RefreshCw className="h-4 w-4" aria-hidden="true" />รีเฟรช</button>}
+        />
+        <Panel icon="plus" title="อัปโหลดภาพใหม่" bodyClassName="p-5">
+          <fieldset>
             <legend className="text-sm font-bold text-slate-800">ประเภทภัย</legend>
             <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="ประเภทภัย">
               {EOC_TYPES.map((type) => {
@@ -175,11 +178,13 @@ export default function UploadInfographics() {
               </div>
             </div>
           ) : null}
-        </section>
+        </Panel>
 
-        <section className="rounded-2xl border border-slate-200 bg-white" aria-labelledby="gallery-title">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
-            <h2 id="gallery-title" className="text-base font-black text-slate-900">ภาพในคลัง {assets ? <span className="text-sm font-semibold text-slate-500">({assets.length.toLocaleString("th-TH")} ภาพ)</span> : null}</h2>
+        <Panel
+          icon="layers"
+          title="ภาพในคลัง"
+          subtitle={assets ? `${assets.length.toLocaleString("th-TH")} ภาพ` : null}
+          action={(
             <div className="flex flex-wrap gap-1" role="tablist" aria-label="กรองตามประเภทภัย">
               {[{ value: "all", label: "ทั้งหมด" }, ...EOC_TYPES].map((type) => {
                 const on = filter === type.value;
@@ -192,8 +197,8 @@ export default function UploadInfographics() {
                 );
               })}
             </div>
-          </div>
-
+          )}
+        >
           {assets === null ? (
             <div className="grid grid-cols-2 gap-4 p-5 md:grid-cols-4" aria-busy="true">{[0, 1, 2, 3].map((i) => <div key={i} className="h-48 animate-pulse rounded-xl bg-slate-100" />)}</div>
           ) : !shown.length ? (
@@ -224,8 +229,8 @@ export default function UploadInfographics() {
               <PaginationControls {...paged.controls} pageSizeOptions={[12, 24, 48]} itemLabel="ภาพ" className="rounded-b-2xl border-t border-slate-100 bg-slate-50" />
             </>
           )}
-        </section>
-      </AdminPage>
+        </Panel>
+      </div>
     </EOCLayout>
   );
 }

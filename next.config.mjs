@@ -56,6 +56,19 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // หน้าเก่าที่รวมเข้าหน้าอื่นแล้ว — ลิงก์เก่า/บุ๊กมาร์กยังพาไปหน้าใหม่ (เดิมเป็นไฟล์ page.jsx ที่มีแค่ redirect)
+      { source: '/admin/eoc-modules', destination: '/admin/eoc-management', permanent: false },
+      { source: '/admin/recent-activities', destination: '/admin/activity-logs', permanent: false },
+      { source: '/eoc/flood/management/command-room', destination: '/eoc/flood/overview', permanent: false },
+      { source: '/eoc/flood/management/completeness', destination: '/eoc/flood/overview#sec-completeness', permanent: false },
+      { source: '/eoc/flood/management/daily', destination: '/eoc/flood/overview', permanent: false },
+      { source: '/eoc/flood/management/forms', destination: '/eoc/flood/records', permanent: false },
+      { source: '/eoc/flood/management/reports', destination: '/eoc/flood/management/team-workspace', permanent: false },
+      { source: '/eoc/flood/shelters/disease-reports', destination: '/eoc/flood/health?tab=shelter', permanent: false },
+      { source: '/eoc/flood/shelters/manage', destination: '/eoc/shelters?eoc=flood', permanent: false },
+      { source: '/eoc/flood/shelters', destination: '/eoc/shelters?eoc=flood&tab=map', permanent: false },
+      // ศูนย์งานเจ้าหน้าที่แบบเก่า (เลิกใช้) — ลิงก์ในการแจ้งเตือนเก่าพาไปหน้าหลัก
+      { source: '/eoc/staff/:path*', destination: '/dashboard', permanent: false },
       {
         source: '/',
         destination: '/stn-eoc/',

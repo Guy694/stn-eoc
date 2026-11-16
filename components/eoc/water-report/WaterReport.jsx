@@ -6,6 +6,7 @@ import { Button } from "@/components/admin/crud";
 import { apiRequest } from "@/lib/adminApi";
 import { BANK_LEVELS, flagRecommendations, formatLevel, formatSigned, thaiHourLabel } from "@/lib/dpmWater";
 import { FLOOD_FLAGS, flagMeta } from "@/lib/floodTriggers";
+import { PageHero } from "@/components/common/ThemePanels";
 import FullReportSheet from "@/components/eoc/water-report/FullReportSheet";
 import ReportConfigEditor from "@/components/eoc/water-report/ReportConfigEditor";
 import { normalizeReportConfig } from "@/lib/waterReportExtras";
@@ -417,12 +418,15 @@ export default function WaterReport() {
     <div className="mx-auto max-w-5xl space-y-4 print:m-0 print:max-w-none print:space-y-0">
       <style>{`.water-sheet[data-compact] h1 { font-size: 22px !important; } .water-sheet[data-compact] td { padding-top: 1.5px !important; padding-bottom: 1.5px !important; font-size: 11.5px; } .water-sheet[data-compact] th { padding-top: 2px !important; padding-bottom: 2px !important; } .water-sheet[data-compact] ul { font-size: 12.5px !important; padding-top: 5px !important; padding-bottom: 5px !important; } .water-sheet[data-compact] h2 { font-size: 16px !important; } .water-sheet[data-compact] footer { padding-top: 14px !important; } @media print { @page { size: A4 portrait; margin: 0; } html, body { background: #fff !important; } .water-sheet { box-shadow: none !important; } [data-sheet-scale] { transform: none !important; } [data-sheet-frame] { height: auto !important; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }`}</style>
 
-      <div className="flex flex-wrap items-end justify-between gap-3 print:hidden">
-        <div>
-          <h1 className="text-xl font-bold text-[#083865]">รายงานระดับน้ำสถานีเฝ้าระวัง</h1>
-          <p className="text-sm text-slate-600">สถานี STN ของ ปภ. จังหวัดสตูล สรุปเป็นแผ่น A4 พร้อมส่งต่อ ระบบเก็บค่าทุกชั่วโมงไว้เทียบย้อนหลัง</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <PageHero
+        className="print:hidden"
+        icon="waves"
+        eyebrow="อุทกภัย"
+        title="รายงานระดับน้ำสถานีเฝ้าระวัง"
+        subtitle="สถานี STN ของ ปภ. จังหวัดสตูล สรุปเป็นแผ่น A4 พร้อมส่งต่อ ระบบเก็บค่าทุกชั่วโมงไว้เทียบย้อนหลัง"
+        tray
+        actions={(
+          <>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             รูปแบบ
             <select value={layout} onChange={(event) => changeLayout(event.target.value)} className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm">
@@ -474,8 +478,9 @@ export default function WaterReport() {
             : <Button variant="secondary" onClick={startEdit} disabled={!data}><Pencil className="h-4 w-4" />แก้ข้อเสนอ</Button>}
           <Button variant="secondary" onClick={saveImage} disabled={!data || saving}><ImageDown className="h-4 w-4" />{saving ? "กำลังบันทึก…" : "บันทึกเป็นรูป"}</Button>
           <Button onClick={printPdf} disabled={!data}><FileDown className="h-4 w-4" />บันทึก PDF</Button>
-        </div>
-      </div>
+          </>
+        )}
+      />
 
       {data && !data.report.comparedWithBaseline && compare !== "prev" ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 print:hidden">

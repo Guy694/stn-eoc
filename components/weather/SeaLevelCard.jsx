@@ -61,7 +61,7 @@ export default function SeaLevelCard({ data, error }) {
 
   return (
     <section className="overflow-hidden rounded-xl ring-1 ring-white/10" aria-label="ระดับน้ำทะเลและน้ำทะเลหนุน">
-      <div className="p-3" style={{ background: `linear-gradient(135deg, ${status.color}38, ${status.color}0d 70%)` }}>
+      <div className="p-3" style={{ background: `${status.color}26` }}>
         <p className="flex flex-wrap items-center gap-1.5 text-xs font-black text-white/70">
           น้ำทะเลหนุน • {modelMode ? "หน้าเมืองสตูล" : `สถานี${data.station?.name}`}
           {data.stale ? <span className="rounded bg-amber-400/90 px-1.5 py-0.5 text-[10px] font-bold text-slate-900">ข้อมูลเก่า</span> : null}

@@ -9,7 +9,7 @@ import { Accessibility, Baby, BedDouble, Brain, Droplet, Droplets, HeartPulse, M
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import {
-  AddButton, AdminPage, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, FormSection, RowActions,
+  AddButton, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, FormSection, RowActions,
   Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import AreaFields from "@/components/admin/AreaFields";
@@ -18,6 +18,7 @@ import { readQuery } from "@/components/admin/useUrlState";
 import { VULNERABLE_TYPES, affectedOf } from "@/lib/vulnerableEvent";
 import { MetricCard } from "@/components/common/MetricCards";
 import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
+import { PageHero } from "@/components/common/ThemePanels";
 
 const BASELINE_API = "/stn-eoc/api/eoc/vulnerable-groups/baseline";
 const BASELINE_EDITORS = ["admin", "commander", "SAT", "SEhRT"];
@@ -221,12 +222,15 @@ export default function VulnerableWorkspace() {
   ];
 
   return (
-    <AdminPage
-      context="ข้อมูลกลาง"
-      title="ทะเบียนกลุ่มเปราะบาง"
-      description="จำนวนผู้เปราะบางแต่ละประเภทรายหมู่บ้าน รวมยอดที่กรอกเองกับรายชื่อรายบุคคลที่นำเข้า (ใช้ค่าที่มากกว่า) เมื่อเปิด EOC เมนูกลุ่มเปราะบางของเหตุการณ์จะดึงจำนวนจากทะเบียนนี้ไปใช้"
-      actions={canEdit ? <AddButton onClick={() => openForm()}>เพิ่มพื้นที่</AddButton> : null}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="users"
+        eyebrow="ข้อมูลกลาง"
+        title="ทะเบียนกลุ่มเปราะบาง"
+        subtitle="จำนวนผู้เปราะบางแต่ละประเภทรายหมู่บ้าน รวมยอดที่กรอกเองกับรายชื่อรายบุคคลที่นำเข้า (ใช้ค่าที่มากกว่า) เมื่อเปิด EOC เมนูกลุ่มเปราะบางของเหตุการณ์จะดึงจำนวนจากทะเบียนนี้ไปใช้"
+        actions={canEdit ? <AddButton onClick={() => openForm()}>เพิ่มพื้นที่</AddButton> : null}
+        tray
+      />
       <VulnerableViewTabs registry current="villages" />
       {openEvents.length ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
@@ -271,6 +275,6 @@ export default function VulnerableWorkspace() {
 
       <DeleteDialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)} itemType="ทะเบียนกลุ่มเปราะบาง" itemLabel={deleting ? `${area(deleting).main} ${area(deleting).sub}` : ""} onConfirm={confirmDelete} busy={busy} error={deleteError} />
       {notice}
-    </AdminPage>
+    </div>
   );
 }

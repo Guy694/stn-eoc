@@ -9,7 +9,8 @@ import {
   Activity, AlertTriangle, BarChart3, BellRing, CheckCircle2, Construction, DatabaseBackup, ExternalLink, Map as MapIcon,
   KeyRound, ListTree, Megaphone, PlugZap, RefreshCw, ShieldCheck, Users, Volume2, Waves, XCircle, FlaskConical
 } from "lucide-react";
-import { AdminPage, StatusPill, useNotice } from "@/components/admin/crud";
+import { StatusPill, useNotice } from "@/components/admin/crud";
+import { PageHero, Panel, heroButtonClass } from "@/components/common/ThemePanels";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { useUrlState } from "@/components/admin/useUrlState";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
@@ -62,18 +63,12 @@ const TONE = {
   bad: { icon: XCircle, cls: "text-red-600", border: "border-l-red-600", label: "ต้องแก้" }
 };
 
-function Panel({ title, description, children, actions }) {
+// กล่องของแต่ละหมวด: ใช้ Panel กลาง (หัวมีชื่อ คำอธิบาย และปุ่มด้านขวา)
+function SectionPanel({ icon, title, description, children, actions }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
-        <div className="min-w-0">
-          <h3 className="font-black text-slate-900">{title}</h3>
-          {description ? <p className="mt-0.5 text-sm text-slate-600">{description}</p> : null}
-        </div>
-        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
-      </div>
-      <div className="p-5">{children}</div>
-    </section>
+    <Panel icon={icon} title={title} subtitle={description} action={actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null} bodyClassName="p-5">
+      {children}
+    </Panel>
   );
 }
 
@@ -110,7 +105,7 @@ function Overview({ data }) {
           );
         })}
       </div>
-      <Panel title="ฐานข้อมูลและเซิร์ฟเวอร์">
+      <SectionPanel icon="database" title="ฐานข้อมูลและเซิร์ฟเวอร์">
         <dl>
           <Row label="ฐานข้อมูล">{data.db.ok ? `MySQL ${data.db.version}` : <span className="text-red-700">{data.db.error}</span>}</Row>
           {data.db.ok ? <>
@@ -124,7 +119,7 @@ function Overview({ data }) {
           <Row label="Node.js">{data.runtime.node} · โหมด {data.runtime.env === "production" ? "ใช้งานจริง" : data.runtime.env}</Row>
         </dl>
         {data.migrations.pending.length ? <HowToChange>รัน <Code>npm run db:migrate</Code> บนเซิร์ฟเวอร์ แล้วรีเฟรชหน้านี้</HowToChange> : null}
-      </Panel>
+      </SectionPanel>
     </div>
   );
 }
@@ -132,7 +127,7 @@ function Overview({ data }) {
 function Alerts({ data, onTest }) {
   const { alerts } = data;
   return (
-    <Panel
+    <SectionPanel icon="send"
       title="แจ้งเตือนอัตโนมัติทาง Telegram"
       description="ระบบส่งเรื่องเร่งด่วน (ผู้เสียชีวิต ศูนย์เต็ม เวชภัณฑ์หมด ปัญหา IT วิกฤต ฯลฯ) เข้ากลุ่มของศูนย์ และไม่ส่งเรื่องเดิมซ้ำ"
       actions={<button type="button" onClick={onTest} disabled={!alerts.ready} className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b4c86] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#083865] disabled:opacity-50">ส่งข้อความทดสอบ</button>}
@@ -153,7 +148,7 @@ function Alerts({ data, onTest }) {
         · ปิดส่งชั่วคราวช่วงซ้อมแผนด้วย <Code>EOC_ALERTS_TELEGRAM=off</Code> · ตรวจตามรอบเวลา: ตั้ง <Code>ALERT_CRON_SECRET</Code> แล้วให้ cron เรียก <Code>POST /stn-eoc/api/eoc/alerts?eoc=flood</Code> พร้อม header <Code>x-cron-secret</Code>
         — แก้แล้วต้องรีสตาร์ตระบบ เก็บค่าไว้ที่เซิร์ฟเวอร์เพื่อไม่ให้ token หลุดผ่านหน้าเว็บ
       </HowToChange>
-    </Panel>
+    </SectionPanel>
   );
 }
 
@@ -169,7 +164,7 @@ function Integrations({ data }) {
     }
   };
   return (
-    <Panel title="การเชื่อมต่อภายนอก" description="ตรวจว่าตั้งค่าครบหรือยัง และทดสอบการเชื่อมต่อจริงได้ (การทดสอบไม่ส่งข้อความหาใคร)">
+    <SectionPanel icon="link" title="การเชื่อมต่อภายนอก" description="ตรวจว่าตั้งค่าครบหรือยัง และทดสอบการเชื่อมต่อจริงได้ (การทดสอบไม่ส่งข้อความหาใคร)">
       <ul className="divide-y divide-slate-100">
         {data.integrations.map((item) => {
           const result = results[item.key];
@@ -193,7 +188,7 @@ function Integrations({ data }) {
         })}
       </ul>
       <HowToChange>ค่ากุญแจและรหัสทั้งหมดตั้งใน <Code>.env</Code> บนเซิร์ฟเวอร์ (ดูตัวอย่างใน <Code>.env.example</Code>) แล้วรีสตาร์ตระบบ</HowToChange>
-    </Panel>
+    </SectionPanel>
   );
 }
 
@@ -202,7 +197,7 @@ function Security({ data }) {
   const events = s.events7d;
   return (
     <div className="space-y-4">
-      <Panel title="นโยบายที่ใช้อยู่" description="ค่าจริงที่ระบบบังคับใช้ตอนนี้">
+      <SectionPanel icon="lock" title="นโยบายที่ใช้อยู่" description="ค่าจริงที่ระบบบังคับใช้ตอนนี้">
         <dl>
           <Row label="รหัสผ่าน">{s.passwordPolicy}</Row>
           <Row label="ล็อกบัญชี">ใส่รหัสผิด {s.lockAfterFailed} ครั้ง ล็อก {s.lockMinutes} นาที และแจ้งกลุ่มความปลอดภัย</Row>
@@ -216,8 +211,8 @@ function Security({ data }) {
           ระยะหมดเวลาเมื่อไม่ได้ใช้งานตั้งด้วย <Code>SESSION_IDLE_MINUTES</Code> ใน <Code>.env</Code> · ค่าอื่นกำหนดไว้ในโค้ด (<Code>lib/passwordPolicy.js</Code>, <Code>lib/rateLimit.js</Code>)
           ตั้งใจไม่ให้แก้จากหน้าเว็บ เพราะถ้าบัญชีผู้ดูแลถูกยึด ผู้บุกรุกจะลดการป้องกันลงไม่ได้
         </HowToChange>
-      </Panel>
-      <Panel title="เหตุการณ์ด้านความปลอดภัย 7 วันล่าสุด" actions={<Link href="/admin/activity-logs" className="inline-flex items-center gap-1 rounded-lg border border-[#c9dcee] px-3 py-1.5 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]">ประวัติการใช้งาน <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></Link>}>
+      </SectionPanel>
+      <SectionPanel icon="shield" title="เหตุการณ์ด้านความปลอดภัย 7 วันล่าสุด" actions={<Link href="/admin/activity-logs" className="inline-flex items-center gap-1 rounded-lg border border-[#c9dcee] px-3 py-1.5 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]">ประวัติการใช้งาน <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></Link>}>
         {events ? (
           Object.keys(events).length ? (
             <div className="flex flex-wrap gap-2">
@@ -229,7 +224,7 @@ function Security({ data }) {
             </div>
           ) : <p className="text-sm text-slate-600">ไม่มีเหตุการณ์ผิดปกติ</p>
         ) : <p className="text-sm text-slate-500">ยังไม่มีตารางบันทึกเหตุการณ์ความปลอดภัย</p>}
-      </Panel>
+      </SectionPanel>
     </div>
   );
 }
@@ -237,7 +232,7 @@ function Security({ data }) {
 function Roles({ data }) {
   const yes = (value) => (value ? <CheckCircle2 className="mx-auto h-4 w-4 text-emerald-600" aria-label="ได้" /> : <span className="text-slate-300" aria-label="ไม่ได้">–</span>);
   return (
-    <Panel
+    <SectionPanel icon="users"
       title="สิทธิ์ของแต่ละบทบาท"
       description="บทบาทเป็นค่าตายตัวในระบบ การให้สิทธิ์ทำโดยกำหนดบทบาทให้เจ้าหน้าที่ และจัดคนเข้าทีมของแต่ละเหตุการณ์"
       actions={<Link href="/admin/officers" className="inline-flex items-center gap-1 rounded-lg bg-[#0b4c86] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#083865]">กำหนดบทบาทเจ้าหน้าที่</Link>}
@@ -277,7 +272,7 @@ function Roles({ data }) {
         ผู้รับผิดชอบรายเหตุการณ์/รายทีม กำหนดที่เมนู &ldquo;ทีมปฏิบัติการ&rdquo; ของแต่ละ EOC · การสร้างบทบาทใหม่หรือปรับสิทธิ์รายเมนูต้องแก้โค้ด
         เพราะสิทธิ์ถูกตรวจในทุก API — ทำผ่านหน้าเว็บจะเสี่ยงเปิดสิทธิ์ผิดโดยไม่รู้ตัว
       </HowToChange>
-    </Panel>
+    </SectionPanel>
   );
 }
 
@@ -285,7 +280,7 @@ function Backup({ data }) {
   const { backups } = data;
   const keyReady = data.integrations.find((item) => item.key === "backup-key")?.configured;
   return (
-    <Panel title="ไฟล์สำรองฐานข้อมูล" description={`ไฟล์ในโฟลเดอร์ ${backups.directory} ของเซิร์ฟเวอร์ (แสดง 10 ไฟล์ล่าสุด จากทั้งหมด ${backups.total})`}>
+    <SectionPanel icon="save" title="ไฟล์สำรองฐานข้อมูล" description={`ไฟล์ในโฟลเดอร์ ${backups.directory} ของเซิร์ฟเวอร์ (แสดง 10 ไฟล์ล่าสุด จากทั้งหมด ${backups.total})`}>
       {backups.error ? <p className="text-sm text-amber-800">{backups.error}</p> : null}
       {backups.files.length ? (
         <ul className="divide-y divide-slate-100">
@@ -305,7 +300,7 @@ function Backup({ data }) {
         — การกู้คืนลงฐานข้อมูลจริงไม่มีปุ่มบนหน้าเว็บโดยตั้งใจ เพราะเขียนทับข้อมูลทั้งหมดและย้อนกลับไม่ได้ ต้องทำบนเซิร์ฟเวอร์โดยผู้ดูแลเท่านั้น
         และควรเก็บสำเนาไฟล์สำรองไว้นอกเครื่องเซิร์ฟเวอร์ด้วย
       </HowToChange>
-    </Panel>
+    </SectionPanel>
   );
 }
 
@@ -392,15 +387,19 @@ export default function SystemSettingsWorkspace() {
   const problems = state.data?.checks?.filter((check) => check.tone !== "ok").length || 0;
 
   return (
-    <AdminPage
-      title="ตั้งค่าระบบ"
-      description="สถานะและการตั้งค่าของทั้งระบบ สำหรับผู้ดูแลระบบ — การตั้งค่าส่วนตัว (รหัสผ่าน) อยู่ที่เมนูบัญชีของฉัน"
-      actions={needsData ? (
-        <button type="button" onClick={load} disabled={state.loading} className="inline-flex items-center gap-1.5 rounded-lg border border-[#c9dcee] bg-white px-3 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc] disabled:opacity-60">
-          <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ตรวจอีกครั้ง
-        </button>
-      ) : null}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="settings"
+        eyebrow="ผู้ดูแลระบบ"
+        title="ตั้งค่าระบบ"
+        subtitle="สถานะและการตั้งค่าของทั้งระบบ สำหรับผู้ดูแลระบบ — การตั้งค่าส่วนตัว (รหัสผ่าน) อยู่ที่เมนูบัญชีของฉัน"
+        meta={<>หมวดที่เปิดอยู่: <b className="text-white">{current.label}</b>{problems ? ` · ต้องแก้ ${problems} เรื่อง` : ""}</>}
+        actions={needsData ? (
+          <button type="button" onClick={load} disabled={state.loading} className={heroButtonClass}>
+            <RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ตรวจอีกครั้ง
+          </button>
+        ) : null}
+      />
       {notice}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[16rem_1fr]">
         <label className="block lg:hidden">
@@ -486,6 +485,6 @@ export default function SystemSettingsWorkspace() {
           <button type="button" onClick={sendTest} disabled={sending} className="rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865] disabled:opacity-60">{sending ? "กำลังส่ง…" : "ส่งข้อความทดสอบ"}</button>
         </AppDialogActions>
       </AppDialog>
-    </AdminPage>
+    </div>
   );
 }

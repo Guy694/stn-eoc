@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MessageSquareText, RefreshCw, Smile, Star, Users } from "lucide-react";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { MetricCard } from "@/components/common/MetricCards";
+import { Panel } from "@/components/common/ThemePanels";
 import { RATING_LABELS, SOURCE_CHANNELS } from "@/lib/satisfaction";
 
 const API = "/stn-eoc/api/admin/satisfaction";
@@ -86,23 +87,18 @@ export default function SatisfactionPanel() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <section className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h4 className="mb-3 font-black text-slate-900">ทั้งหมด</h4>
+            <Panel icon={Star} title="ทั้งหมด" bodyClassName="p-4">
               <Distribution summary={s} />
-            </section>
-            <section className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h4 className="mb-3 font-black text-slate-900">ประชาชน <span className="text-sm font-semibold text-slate-500">เฉลี่ย {data.public.average?.toFixed(2) ?? "–"}</span></h4>
+            </Panel>
+            <Panel icon="users" title="ประชาชน" subtitle={`เฉลี่ย ${data.public.average?.toFixed(2) ?? "–"}`} bodyClassName="p-4">
               <Distribution summary={data.public} />
-            </section>
-            <section className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h4 className="mb-3 font-black text-slate-900">เจ้าหน้าที่ <span className="text-sm font-semibold text-slate-500">เฉลี่ย {data.staff.average?.toFixed(2) ?? "–"}</span></h4>
+            </Panel>
+            <Panel icon="userCog" title="เจ้าหน้าที่" subtitle={`เฉลี่ย ${data.staff.average?.toFixed(2) ?? "–"}`} bodyClassName="p-4">
               <Distribution summary={data.staff} />
-            </section>
+            </Panel>
           </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4">
-            <h4 className="mb-1 font-black text-slate-900">รับทราบข่าวสารระบบจากช่องทางไหน</h4>
-            <p className="mb-3 text-xs text-slate-500">เลือกได้หลายข้อ • ตอบแล้ว {formatNumber(data.source_total)} จาก {formatNumber(s.total)} ผู้ประเมิน</p>
+          <Panel icon="megaphone" title="รับทราบข่าวสารระบบจากช่องทางไหน" subtitle={`เลือกได้หลายข้อ • ตอบแล้ว ${formatNumber(data.source_total)} จาก ${formatNumber(s.total)} ผู้ประเมิน`} bodyClassName="p-4">
             {data.sources.length ? (
               <ul className="space-y-1.5">
                 {data.sources.map((item) => (
@@ -119,11 +115,12 @@ export default function SatisfactionPanel() {
             {data.source_other.length ? (
               <p className="mt-3 break-words text-sm text-slate-600"><span className="font-semibold text-slate-800">อื่น ๆ ที่ระบุ:</span> {data.source_other.join(" • ")}</p>
             ) : null}
-          </section>
+          </Panel>
 
-          <section className="rounded-2xl border border-slate-200 bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-              <h4 className="font-black text-slate-900">ความเห็นล่าสุด</h4>
+          <Panel
+            icon="message"
+            title="ความเห็นล่าสุด"
+            action={(
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <select value={filter.rating} onChange={(event) => setFilter((current) => ({ ...current, rating: event.target.value }))} aria-label="กรองตามดาว"
                   className="min-h-9 rounded-lg border border-slate-300 bg-white px-2">
@@ -135,7 +132,8 @@ export default function SatisfactionPanel() {
                   เฉพาะที่มีข้อความ
                 </label>
               </div>
-            </div>
+            )}
+          >
             {data.items.length ? (
               <ul className="divide-y divide-slate-100">
                 {data.items.map((item) => (
@@ -150,7 +148,7 @@ export default function SatisfactionPanel() {
                 ))}
               </ul>
             ) : <p className="p-4 text-sm text-slate-500">ยังไม่มีความเห็นตามตัวกรองนี้</p>}
-          </section>
+          </Panel>
           <p className="text-xs text-slate-500">ประเมินได้จากปุ่ม &quot;ประเมินความพึงพอใจ&quot; ท้ายเว็บทุกหน้า และระบบจะเด้งขอให้ประเมินเมื่อผู้ใช้เข้าหลายครั้ง (เข้าครบ 3 ครั้ง หรือเปิดครบ 8 หน้า) • ไม่เก็บชื่อ เบอร์โทร หรือ IP ของผู้ประเมิน • ลบอัตโนมัติเมื่อเกิน 2 ปี</p>
         </>
       ) : null}

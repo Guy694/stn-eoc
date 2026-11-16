@@ -7,9 +7,10 @@ import Link from "next/link";
 import { History, Phone, RefreshCw } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import {
-  AdminPage, Button, DataTable, FilterSelect, IconButton, StatStrip, StatusPill, Toolbar, inputClass, useNotice
+  Button, DataTable, FilterSelect, IconButton, StatStrip, StatusPill, Toolbar, inputClass, useNotice
 } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
+import { PageHero, Panel } from "@/components/common/ThemePanels";
 import ReadinessSlider from "@/components/readiness/ReadinessSlider";
 import { useAuth } from "@/context/AuthContext";
 import { apiRequest } from "@/lib/adminApi";
@@ -157,16 +158,20 @@ export default function OfficerReadinessPage() {
 
   return (
     <EOCLayout>
-      <AdminPage
-        title="สถานะความพร้อมเจ้าหน้าที่"
-        description="ใครพร้อมมาปฏิบัติงาน ใครมาไม่ได้หรือต้องการความช่วยเหลือ — เจ้าหน้าที่รายงานเองจากเมนู “สถานะของฉัน”"
-        actions={(
+      <div className="w-full space-y-4">
+        <PageHero
+          icon="users"
+          eyebrow="ผู้ดูแลระบบ"
+          title="สถานะความพร้อมเจ้าหน้าที่"
+          subtitle="ใครพร้อมมาปฏิบัติงาน ใครมาไม่ได้หรือต้องการความช่วยเหลือ — เจ้าหน้าที่รายงานเองจากเมนู “สถานะของฉัน”"
+          tray
+          actions={(
           <>
             <Link href="/eoc/readiness" className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]">สถานะของฉัน</Link>
             <Button variant="secondary" onClick={load} disabled={state.loading}><RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" /> รีเฟรช</Button>
           </>
         )}
-      >
+        />
         {state.error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error}</p> : null}
 
         <StatStrip
@@ -182,15 +187,18 @@ export default function OfficerReadinessPage() {
           </button>
         ) : null}
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-black text-slate-900">สรุปราย{groupBy === "role" ? "บทบาท/ทีม" : "หน่วยงาน"}</h2>
+        <Panel
+          icon="barChart"
+          title={`สรุปราย${groupBy === "role" ? "บทบาท/ทีม" : "หน่วยงาน"}`}
+          bodyClassName="p-4"
+          action={(
             <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-sm font-bold" role="tablist" aria-label="สรุปตาม">
               {[["role", "บทบาท/ทีม"], ["department", "หน่วยงาน"]].map(([value, label]) => (
                 <button key={value} type="button" role="tab" aria-selected={groupBy === value} onClick={() => setGroupBy(value)} className={`rounded-md px-3 py-1 ${groupBy === value ? "bg-white text-[#0b4c86] shadow-sm" : "text-slate-600"}`}>{label}</button>
               ))}
             </div>
-          </div>
+          )}
+        >
           {groups.length ? (
             <ul className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2 xl:grid-cols-3">
               {groups.slice(0, 12).map((group) => (
@@ -204,7 +212,7 @@ export default function OfficerReadinessPage() {
               ))}
             </ul>
           ) : <p className="text-sm text-slate-500">ยังไม่มีข้อมูล</p>}
-        </section>
+        </Panel>
 
         <Toolbar search={filters.search} onSearchChange={(value) => setFilter("search", value)} searchPlaceholder="ค้นหาชื่อ ชื่อผู้ใช้ ตำแหน่ง หน่วยงาน">
           <FilterSelect label="สถานะ" value={filters.status} onChange={(value) => setFilter("status", value)} options={[{ value: "", label: "ทุกสถานะ" }, ...READINESS_STATUSES.map((item) => ({ value: item.value, label: item.label })), { value: UNREPORTED.value, label: UNREPORTED.label }]} />
@@ -246,7 +254,7 @@ export default function OfficerReadinessPage() {
           )}
         />
         {!canEdit ? <p className="text-xs text-slate-500">ผู้บัญชาการดูได้อย่างเดียว · ผู้ดูแลระบบปรับสถานะแทนเจ้าหน้าที่ได้ (เช่น หลังโทรสอบถาม)</p> : null}
-      </AdminPage>
+      </div>
 
       <AppDialog open={Boolean(bulk)} onOpenChange={(open) => { if (!open && !busy) setBulk(null); }} title={`ปรับสถานะ ${selected.size} คนเป็น “${readinessMeta(bulk?.status).label}”?`} description="บันทึกว่าแอดมินเป็นผู้ปรับ เจ้าหน้าที่เห็นในหน้าสถานะของตนเอง" busy={busy}>
         <label className="block">

@@ -75,10 +75,13 @@ export function spreadApproxPositions(people) {
   return positions;
 }
 
+/** ไอคอนสายฟ้า (ใช้อุปกรณ์ไฟฟ้า) เป็น SVG inline — ใช้แทนอีโมจิในป้ายหมุด */
+export const BOLT_SVG = '<svg width="9" height="9" viewBox="0 0 24 24" fill="#6d28d9" stroke="#6d28d9" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-1px"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 
 /**
- * หมุด: สี = กลุ่มสี, สัญลักษณ์ = สถานะ, ป้ายมุมขวาบน = ประเภท (เตียง, HD, ครรภ์ ...) ⚡ = ใช้อุปกรณ์ไฟฟ้า
+ * หมุด: สี = กลุ่มสี, สัญลักษณ์ = สถานะ, ป้ายมุมขวาบน = ประเภท (เตียง, HD, ครรภ์ ...) ไอคอนสายฟ้า = ใช้อุปกรณ์ไฟฟ้า
  * วงแดงรอบหมุด = กลุ่มสีแดงที่ยังรอช่วยเหลือ (กะพริบเฉพาะตอนมีไม่มาก — ดู VulnerablePersonsMap)
  */
 export function pinKey(person, { selected = false } = {}) {
@@ -91,8 +94,9 @@ export function pinHtml(person, { selected = false } = {}) {
   const care = careGroupMeta(effectiveCareGroup(person));
   const urgent = person.status === "waiting" && care?.key === "red";
   const size = selected ? 38 : 30;
-  const label = `${type?.tag || ""}${person.power_dependent ? " ⚡" : ""}`.trim();
-  const tag = label ? `<span class="vp-tag">${escapeHtml(label)}</span>` : "";
+  const label = String(type?.tag || "").trim();
+  const bolt = person.power_dependent ? BOLT_SVG : "";
+  const tag = label || bolt ? `<span class="vp-tag">${escapeHtml(label)}${label && bolt ? " " : ""}${bolt}</span>` : "";
   const approx = person.location?.approx ? " vp-pin--approx" : "";
   return `<div class="vp-pin${urgent ? " vp-pin--urgent" : ""}${selected ? " vp-pin--selected" : ""}${approx}" style="width:${size}px;height:${Math.round(size * 1.33)}px">${pinSvg(person.status, size, pinFill(person))}${tag}</div>`;
 }

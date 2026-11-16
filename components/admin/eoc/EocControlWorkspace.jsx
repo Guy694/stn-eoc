@@ -7,8 +7,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Power, PowerOff } from "lucide-react";
 import { useEOC } from "@/context/EOCContext";
 import {
-  AddButton, AdminPage, Button, DataTable, Field, FormDialog, FormGrid, RowActions, StatusPill, Tabs, inputClass, useNotice
+  AddButton, Button, DataTable, Field, FormDialog, FormGrid, RowActions, StatusPill, Tabs, inputClass, useNotice
 } from "@/components/admin/crud";
+import { PageHero } from "@/components/common/ThemePanels";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { apiRequest, formatDateTime, formatRelative } from "@/lib/adminApi";
 import { useUrlState } from "@/components/admin/useUrlState";
@@ -165,14 +166,17 @@ export default function EocControlWorkspace() {
   };
 
   return (
-    <AdminPage
-      context="บริหารระบบ"
-      title="เปิด/ปิด EOC"
-      description="เปิดศูนย์ปฏิบัติการเมื่อมีคำสั่ง ระบบจะเริ่มรอบเหตุการณ์ใหม่ เปิดเมนูกรอกข้อมูลให้ทีม และเปิดปุ่มขอความช่วยเหลือบนหน้าเว็บประชาชน"
-      actions={tab === "types" ? <AddButton onClick={() => startEditType()}>เพิ่มประเภทเหตุการณ์</AddButton> : (
-        <Link href="/admin/eoc-sessions" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ประวัติเหตุการณ์</Link>
-      )}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="activity"
+        tray
+        eyebrow="บริหารระบบ"
+        title="เปิด/ปิด EOC"
+        subtitle="เปิดศูนย์ปฏิบัติการเมื่อมีคำสั่ง ระบบจะเริ่มรอบเหตุการณ์ใหม่ เปิดเมนูกรอกข้อมูลให้ทีม และเปิดปุ่มขอความช่วยเหลือบนหน้าเว็บประชาชน"
+        actions={tab === "types" ? <AddButton onClick={() => startEditType()}>เพิ่มประเภทเหตุการณ์</AddButton> : (
+          <Link href="/admin/eoc-sessions" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ประวัติเหตุการณ์</Link>
+        )}
+      />
       <Tabs value={tab} onChange={setTab} items={[
         { value: "status", label: "สถานะเหตุการณ์", count: openCount },
         { value: "types", label: "ประเภทเหตุการณ์", count: types.length }
@@ -329,6 +333,6 @@ export default function EocControlWorkspace() {
         <p className="text-sm text-slate-700">ลบประเภท <strong>{deletingType?.name_th}</strong> ลบได้เฉพาะประเภทที่ยังไม่เคยเปิด EOC (ถ้าเคยเปิดแล้ว ระบบจะไม่ให้ลบเพื่อเก็บประวัติ)</p>
       </AppDialog>
       {notice}
-    </AdminPage>
+    </div>
   );
 }

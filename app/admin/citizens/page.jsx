@@ -135,7 +135,7 @@ export default function CitizensManagementPage() {
         <EOCLayout>
             <div className="w-full">
                 {/* Header */}
-                <PageHero title="จัดการผู้ใช้ประชาชน" subtitle="รายชื่อประชาชนที่ลงทะเบียนผ่าน ThaiD และสามารถเลื่อนตำแหน่งเป็นเจ้าหน้าที่" className="mb-6" />
+                <PageHero icon="users" eyebrow="ผู้ดูแลระบบ" title="จัดการผู้ใช้ประชาชน" subtitle="รายชื่อประชาชนที่ลงทะเบียนผ่าน ThaiD และสามารถเลื่อนตำแหน่งเป็นเจ้าหน้าที่" className="mb-6" />
 
                 {/* Stats Card */}
                 <MetricGrid className="mb-6" cols="grid-cols-1 sm:grid-cols-3">

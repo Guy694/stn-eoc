@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
     AlertCircle,
     Crown,
-    Network,
     Pencil,
     Plus,
     RefreshCw,
@@ -20,6 +19,8 @@ import {
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
 import AppIcon from "@/components/icons/AppIcon";
+import { EmptyPanel, PageHero, Panel, heroButtonClass, heroInputClass } from "@/components/common/ThemePanels";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 import { showDeleteConfirm, showError, showSuccess } from "@/lib/feedback";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import { OfficerMultiPicker, OfficerPicker } from "@/components/admin/OfficerPicker";
@@ -447,27 +448,21 @@ export default function FloodOperationsTeamPage() {
     return (
         <EOCLayout>
             <div className="w-full space-y-5">
-                <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
-                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
-                        <div>
-                            <div className="flex items-center gap-2 text-sm font-semibold text-blue-100">
-                                <Network className="h-4 w-4" />
-                                EOC อุทกภัยน้ำท่วม
-                            </div>
-                            <h1 className="mt-2 text-xl font-semibold text-white sm:text-2xl">ทีมปฏิบัติการ</h1>
-                            <p className="mt-1 max-w-3xl text-sm leading-6 text-blue-100">
-                                ผังบทบาทของทีมปฏิบัติการในแต่ละเหตุการณ์ EOC โดยให้ผู้บัญชาการเหตุการณ์และรองผู้บัญชาการเหตุการณ์เป็นหัวหน้าของโครงสร้าง ไม่อ้างอิงผู้ดูแลระบบ
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label className="block">
-                                <span className="mb-1 block text-xs font-bold text-blue-100">เลือกเหตุการณ์ EOC</span>
+                <PageHero
+                    icon="users"
+                    eyebrow="อุทกภัย"
+                    title="ทีมปฏิบัติการ"
+                    subtitle="ผังบทบาทของทีมปฏิบัติการในแต่ละเหตุการณ์ EOC โดยให้ผู้บัญชาการเหตุการณ์และรองผู้บัญชาการเหตุการณ์เป็นหัวหน้าของโครงสร้าง ไม่อ้างอิงผู้ดูแลระบบ"
+                    meta={selectedSession ? sessionLabel(selectedSession) : null}
+                    actions={(
+                        <>
+                            <label className="block min-w-0 max-w-full">
+                                <span className="sr-only">เลือกเหตุการณ์ EOC</span>
                                 <select
                                     value={selectedSessionId}
                                     onChange={(event) => setSelectedSessionId(event.target.value)}
                                     disabled={loadingSessions || sessions.length === 0}
-                                    className="h-11 w-full rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-bold text-blue-100 outline-none focus:border-white disabled:bg-white/10 text-white [color-scheme:dark]"
+                                    className={`${heroInputClass} w-full max-w-[22rem] font-semibold`}
                                 >
                                     {sessions.length === 0 && <option value="">ไม่มีเหตุการณ์</option>}
                                     {sessions.map((session) => (
@@ -477,17 +472,13 @@ export default function FloodOperationsTeamPage() {
                                     ))}
                                 </select>
                             </label>
-                            <button
-                                type="button"
-                                onClick={refreshAll}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#c9dcee] bg-white/15 px-4 text-sm font-bold text-blue-100 hover:bg-white/15"
-                            >
-                                <RefreshCw className="h-4 w-4" />
+                            <button type="button" onClick={refreshAll} className={heroButtonClass}>
+                                <RefreshCw className="h-4 w-4" aria-hidden="true" />
                                 รีเฟรชข้อมูล
                             </button>
-                        </div>
-                    </div>
-                </section>
+                        </>
+                    )}
+                />
 
                 {error && (
                     <section className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
@@ -506,53 +497,37 @@ export default function FloodOperationsTeamPage() {
                     </section>
                 )}
 
-                <section className="grid gap-3 md:grid-cols-3">
-                    <SummaryCard icon={Crown} label="ผู้บัญชาการเหตุการณ์" value={incidentCommander ? personName(incidentCommander) : "ยังไม่กำหนด"} />
-                    <SummaryCard icon={ShieldCheck} label="รองผู้บัญชาการเหตุการณ์" value={`${deputyCommanders.length.toLocaleString("th-TH")} คน`} />
-                    <SummaryCard icon={Users} label="ทีม / บุคลากร" value={`${teams.length.toLocaleString("th-TH")} ทีม / ${totalMembers.toLocaleString("th-TH")} คน`} />
-                </section>
+                <MetricGrid cols="grid-cols-1 sm:grid-cols-3">
+                    <MetricCard icon={Crown} tone={incidentCommander ? "blue" : "amber"} label="ผู้บัญชาการเหตุการณ์" value={<span className="block truncate text-lg">{incidentCommander ? personName(incidentCommander) : "ยังไม่กำหนด"}</span>} />
+                    <MetricCard icon={ShieldCheck} tone="blue" label="รองผู้บัญชาการเหตุการณ์" value={deputyCommanders.length.toLocaleString("th-TH")} unit="คน" />
+                    <MetricCard icon={Users} tone="blue" label="ทีม / บุคลากร" value={teams.length.toLocaleString("th-TH")} unit={`ทีม / ${totalMembers.toLocaleString("th-TH")} คน`} />
+                </MetricGrid>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <h2 className="text-lg font-black text-slate-900">หัวหน้าผังบัญชาการ</h2>
-                            <p className="mt-1 text-sm text-slate-500">เลือกจากเจ้าหน้าที่ที่ไม่ใช่ผู้ดูแลระบบ และผูกกับเหตุการณ์ EOC ที่เลือก</p>
-                        </div>
-                        {!canManageCommanders && teamPermissions.read_only_message ? (
-                            <p className="rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{teamPermissions.read_only_message}</p>
-                        ) : null}
-                        {canManageCommanders && selectedSessionId && (
-                            <div className="flex flex-wrap gap-2">
-                                {!incidentCommander && (
-                                    <button
-                                        type="button"
-                                        onClick={() => openCreateCommander("incident_commander")}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        เพิ่มผู้บัญชาการ
-                                    </button>
-                                )}
+                <Panel
+                    icon="users"
+                    title="ผังบัญชาการและทีมในเหตุการณ์ EOC"
+                    subtitle="หัวหน้าผังเลือกจากเจ้าหน้าที่ที่ไม่ใช่ผู้ดูแลระบบ · เพิ่ม แก้ไขหัวหน้าทีม/หมายเหตุ หรือถอดทีมออกจากเหตุการณ์ที่เลือก"
+                    bodyClassName="space-y-4 bg-slate-50 p-4"
+                    action={canManageCommanders && selectedSessionId ? (
+                        <div className="flex flex-wrap gap-2">
+                            {!incidentCommander && (
                                 <button
                                     type="button"
-                                    onClick={() => openCreateCommander("deputy_incident_commander")}
-                                    className="inline-flex items-center gap-2 rounded-lg border border-[#c9dcee] bg-[#edf5fc] px-4 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc]"
+                                    onClick={() => openCreateCommander("incident_commander")}
+                                    className="inline-flex items-center gap-2 rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    เพิ่มรองผู้บัญชาการ
+                                    เพิ่มผู้บัญชาการ
                                 </button>
-                            </div>
-                        )}
-                    </div>
-                </section>
-
-                <section className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <h2 className="text-lg font-black text-slate-900">ทีมในเหตุการณ์ EOC</h2>
-                            <p className="mt-1 text-sm text-slate-500">เพิ่ม แก้ไขหัวหน้าทีม/หมายเหตุ หรือถอดทีมออกจากเหตุการณ์ที่เลือก</p>
-                        </div>
-                        {canManageCommanders && selectedSessionId && (
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => openCreateCommander("deputy_incident_commander")}
+                                className="inline-flex items-center gap-2 rounded-lg border border-[#c9dcee] bg-[#edf5fc] px-4 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#dbeaf7]"
+                            >
+                                <Plus className="h-4 w-4" />
+                                เพิ่มรองผู้บัญชาการ
+                            </button>
                             <button
                                 type="button"
                                 onClick={openAddTeam}
@@ -561,11 +536,12 @@ export default function FloodOperationsTeamPage() {
                                 <Plus className="h-4 w-4" />
                                 เพิ่มทีม
                             </button>
-                        )}
-                    </div>
-                </section>
-
-                <section className="rounded-xl border border-[#c9dcee] bg-[#f8fbff] p-4 shadow-sm">
+                        </div>
+                    ) : null}
+                >
+                    {!canManageCommanders && teamPermissions.read_only_message ? (
+                        <p className="rounded-xl border border-[#c9dcee] bg-[#edf5fc] px-4 py-3 text-sm text-[#083865]" role="status">{teamPermissions.read_only_message}</p>
+                    ) : null}
                     {loadingSessions || loadingTeams || loadingCommanders ? (
                         <div className="flex min-h-[360px] items-center justify-center rounded-xl bg-white text-slate-500">
                             <div className="text-center">
@@ -590,7 +566,7 @@ export default function FloodOperationsTeamPage() {
                             teams={teams}
                         />
                     )}
-                </section>
+                </Panel>
             </div>
 
             {showCommanderModal && (
@@ -622,34 +598,18 @@ export default function FloodOperationsTeamPage() {
     );
 }
 
-function SummaryCard({ icon: Icon, label, value }) {
-    return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#edf5fc] text-[#0b4c86]">
-                    <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-500">{label}</p>
-                    <p className="mt-1 truncate text-lg font-black text-slate-900">{value}</p>
-                </div>
-            </div>
-        </div>
-    );
-}
-
 function EmptyState({ title, description }) {
     return (
-        <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-            <div>
-                <Users className="mx-auto h-12 w-12 text-blue-300" />
-                <h2 className="mt-3 text-xl font-black text-slate-800">{title}</h2>
-                <p className="mt-1 text-sm text-slate-500">{description}</p>
-                <Link href="/admin/eoc-management" className="mt-4 inline-flex rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]">
+        <EmptyPanel
+            icon="users"
+            title={title}
+            text={description}
+            action={(
+                <Link href="/admin/eoc-management" className="inline-flex rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]">
                     ไปหน้าจัดการ EOC
                 </Link>
-            </div>
-        </div>
+            )}
+        />
     );
 }
 
@@ -780,7 +740,7 @@ function MissingCommanderNode({ canManage, onAdd }) {
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#edf5fc] text-[#0b4c86]">
                 <Crown className="h-7 w-7" />
             </div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0b4c86]">ผู้บัญชาการเหตุการณ์</p>
+            <p className="text-xs font-black text-[#0b4c86]">ผู้บัญชาการเหตุการณ์</p>
             <h2 className="mt-2 text-xl font-black text-slate-900">ยังไม่กำหนดผู้บัญชาการเหตุการณ์</h2>
             <p className="mt-1 text-sm text-slate-500">หัวหน้าของผังต้องเลือกจากเจ้าหน้าที่ ไม่ใช่ผู้ดูแลระบบหรือผู้เปิดเหตุการณ์</p>
             {canManage && (

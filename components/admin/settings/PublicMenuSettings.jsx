@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Waves } from "lucide-react";
 import { Button, StatusPill, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { WATER_REPORT_MODES } from "@/lib/waterReportSetting";
 
@@ -46,19 +47,14 @@ export default function PublicMenuSettings() {
   return (
     <section className="space-y-4">
       {notice}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-50 text-[#0b4c86]"><Waves className="h-5 w-5" aria-hidden="true" /></span>
-            <div>
-              <h3 className="text-base font-black text-slate-900">รายงานระดับน้ำ (ประชาชน)</h3>
-              <p className="text-sm text-slate-600">เมนูให้ประชาชนส่งรูปและระดับน้ำที่บ้าน/ถนน แสดงในเมนูด้านบน แถบล่างบนมือถือ และหน้าบ้านฉันเสี่ยงไหม</p>
-            </div>
-          </div>
-          <StatusPill tone={data.status.open ? "green" : "gray"}>{data.status.open ? "ตอนนี้เปิดรับรายงาน" : "ตอนนี้ปิดรับรายงาน"}</StatusPill>
-        </div>
-
-        <fieldset className="mt-4 space-y-2">
+      <Panel
+        icon={Waves}
+        title="รายงานระดับน้ำ (ประชาชน)"
+        subtitle="เมนูให้ประชาชนส่งรูปและระดับน้ำที่บ้าน/ถนน แสดงในเมนูด้านบน แถบล่างบนมือถือ และหน้าบ้านฉันเสี่ยงไหม"
+        action={<StatusPill tone={data.status.open ? "green" : "gray"}>{data.status.open ? "ตอนนี้เปิดรับรายงาน" : "ตอนนี้ปิดรับรายงาน"}</StatusPill>}
+        bodyClassName="p-5"
+      >
+        <fieldset className="space-y-2">
           <legend className="sr-only">การเปิดเมนูรายงานระดับน้ำ</legend>
           {Object.entries(WATER_REPORT_MODES).map(([key, item]) => (
             <label key={key} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${mode === key ? "border-[#0b4c86] bg-sky-50/60" : "border-slate-200 hover:bg-slate-50"}`}>
@@ -78,7 +74,7 @@ export default function PublicMenuSettings() {
             {data.updated_at ? ` • ตั้งล่าสุด ${formatDateTime(data.updated_at)}${data.updated_by_name ? ` โดย ${data.updated_by_name}` : ""}` : ""}
           </span>
         </div>
-      </div>
+      </Panel>
       <p className="text-xs text-slate-500">ระบบตรวจซ้ำตอนรับรายงานทุกครั้ง ปิดแล้วประชาชนส่งรายงานไม่ได้แม้เปิดหน้าค้างไว้ หน้าประชาชนเปลี่ยนตามภายใน 1 นาที</p>
     </section>
   );

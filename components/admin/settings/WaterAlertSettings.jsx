@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Play, RefreshCw, Speech, Volume2 } from "lucide-react";
 import { setVoiceEnabled, speak, speechSupported, voiceEnabled, waitForVoices } from "@/lib/alertSpeech";
 import { StatusPill, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 
 const API = "/stn-eoc/api/eoc/water-alerts";
@@ -72,12 +73,11 @@ export default function WaterAlertSettings() {
   const rainStates = (data?.states || []).filter((row) => row.kind === "rain");
   const rainActive = rainStates.filter((row) => row.state !== "normal");
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
-        <div className="min-w-0">
-          <h3 className="font-black text-slate-900">แจ้งเตือนระดับน้ำในคลองและฝนหนัก</h3>
-          <p className="mt-0.5 text-sm text-slate-600">ระบบตรวจสถานีวัดระดับน้ำของ ปภ. และสถานีวัดฝนของ สสน. (ThaiWater) ในสตูลอัตโนมัติ เมื่อน้ำใกล้ล้น/ล้นตลิ่ง หรือฝนหนัก จะส่ง Telegram และเด้งหน้าจอพร้อมเสียงให้เจ้าหน้าที่ที่เปิดระบบอยู่ — ทำงานแม้ยังไม่เปิด EOC</p>
-        </div>
+    <Panel
+      icon="waves"
+      title="แจ้งเตือนระดับน้ำในคลองและฝนหนัก"
+      subtitle="ระบบตรวจสถานีวัดระดับน้ำของ ปภ. และสถานีวัดฝนของ สสน. (ThaiWater) ในสตูลอัตโนมัติ เมื่อน้ำใกล้ล้น/ล้นตลิ่ง หรือฝนหนัก จะส่ง Telegram และเด้งหน้าจอพร้อมเสียงให้เจ้าหน้าที่ที่เปิดระบบอยู่ — ทำงานแม้ยังไม่เปิด EOC"
+      action={(
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={dryRun} disabled={busy || !data?.can_run} className="inline-flex items-center gap-1.5 rounded-lg border border-[#c9dcee] bg-white px-3 py-2 text-sm font-bold text-[#0b4c86] hover:bg-[#edf5fc] disabled:opacity-50">
             <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} aria-hidden="true" /> ตรวจตอนนี้ (ไม่ส่ง)
@@ -86,8 +86,9 @@ export default function WaterAlertSettings() {
             <Volume2 className="h-4 w-4" aria-hidden="true" /> ทดสอบเสียงและ popup
           </button>
         </div>
-      </div>
-      <div className="space-y-4 p-5">
+      )}
+      bodyClassName="space-y-4 p-5"
+    >
         {notice}
         {state.loading ? <p className="text-sm text-slate-500">กำลังโหลด…</p> : null}
         {state.error ? <p role="alert" className="text-sm text-red-700">{state.error}</p> : null}
@@ -188,7 +189,6 @@ export default function WaterAlertSettings() {
           <b className="text-slate-800">วิธีเปลี่ยน:</b> ตั้งใน <Code>.env</Code> — เกณฑ์ใกล้ล้นตลิ่ง <Code>WATER_ALERT_NEAR_M=0.5</Code> · เกณฑ์ฝน <Code>RAIN_ALERT_WATCH_MM=35.1</Code> <Code>RAIN_ALERT_SEVERE_MM=90.1</Code> · รอบตรวจ <Code>WATER_ALERTS_INTERVAL_MIN=10</Code> (5–60 นาที, <Code>off</Code> = ปิด)
           · ปิดส่ง Telegram ชั่วคราวใช้ <Code>EOC_ALERTS_TELEGRAM=off</Code> เดียวกับแจ้งเตือนอื่น · เสียงในเบราว์เซอร์จะดังได้หลังผู้ใช้แตะหน้าเว็บอย่างน้อยหนึ่งครั้ง
         </p>
-      </div>
-    </section>
+    </Panel>
   );
 }

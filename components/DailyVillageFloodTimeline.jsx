@@ -6,6 +6,7 @@ import { showError, showSuccess } from "@/lib/feedback";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
 import HydroTerrainOverlays from "@/components/map/HydroTerrainOverlays";
 import AppIcon from "@/components/icons/AppIcon";
+import { EmptyPanel, Panel } from "@/components/common/ThemePanels";
 import { LEGACY_FLOOD_LEVELS } from "@/lib/floodMapLevels";
 import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
 
@@ -344,31 +345,21 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
     // ตรวจสอบว่ามี session หรือไม่
     if (!session) {
         return (
-            <div className="bg-[#edf5fc] border-2 border-[#c9dcee] rounded-lg p-6 text-center">
-                <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="barChart" className="h-6 w-6" /></span>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">กรุณาเลือกเหตุการณ์ EOC</h3>
-                <p className="text-slate-600">
-                    เลือกปีและ เหตุการณ์ EOC จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม
-                </p>
-                <p className="text-sm text-slate-500 mt-2">
-                    ระบบจะแสดงทั้ง Session ที่กำลังดำเนินการและที่ปิดไปแล้ว
-                </p>
-            </div>
+            <EmptyPanel
+                icon="barChart"
+                title="กรุณาเลือกเหตุการณ์ EOC"
+                text="เลือกปีและเหตุการณ์ EOC จากด้านบนเพื่อดูข้อมูลประวัติการเกิดอุทกภัยน้ำท่วม ระบบจะแสดงทั้งเหตุการณ์ที่กำลังดำเนินการและที่ปิดไปแล้ว"
+            />
         );
     }
 
     return (
-        <div className="border border-slate-200 bg-white rounded-2xl p-6">
-            <div className="mb-6">
-                <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                    แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)
-                </h2>
-                <p className="text-slate-600">
-                    ครั้งที่ {session.session_number} - ตั้งแต่ {new Date(session.opened_at).toLocaleDateString('th-TH')}
-                    {session.closed_at && ` ถึง ${new Date(session.closed_at).toLocaleDateString('th-TH')}`}
-                    {' '}({dates.length} วัน)
-                </p>
-            </div>
+        <Panel
+            icon="map"
+            title="แผนที่สถานการณ์อุทกภัยน้ำท่วมรายวัน (ระดับหมู่บ้าน)"
+            subtitle={`ครั้งที่ ${session.session_number} - ตั้งแต่ ${new Date(session.opened_at).toLocaleDateString('th-TH')}${session.closed_at ? ` ถึง ${new Date(session.closed_at).toLocaleDateString('th-TH')}` : ''} (${dates.length} วัน)`}
+            bodyClassName="p-6"
+        >
 
             {/* Timeline Selector */}
             <div className="mb-6">
@@ -844,7 +835,7 @@ export default function DailyVillageFloodTimeline({ session, polygons }) {
                     </div>
                 )
             }
-        </div >
+        </Panel>
     );
 }
 

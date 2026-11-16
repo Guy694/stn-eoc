@@ -68,23 +68,23 @@ const WeatherRiskMap = dynamic(() => import("@/components/weather/WeatherRiskMap
 const WEATHER_ICONS = { Wind, Tornado, CloudRain, Umbrella, CloudLightning, Thermometer, Cloud, Droplets, Waves };
 
 const BASE_MAPS = [
-  { key: "street", label: "แผนที่ถนน", icon: MapIcon, tone: "from-sky-400 to-blue-600" },
-  { key: "satellite", label: "ภาพดาวเทียม", icon: Satellite, tone: "from-emerald-500 to-slate-700" },
-  { key: "topo", label: "ภูมิประเทศ", icon: Layers, tone: "from-lime-400 to-green-700" }
+  { key: "street", label: "แผนที่ถนน", icon: MapIcon, tone: "bg-blue-600" },
+  { key: "satellite", label: "ภาพดาวเทียม", icon: Satellite, tone: "bg-slate-700" },
+  { key: "topo", label: "ภูมิประเทศ", icon: Layers, tone: "bg-green-700" }
 ];
 
 // ชั้นข้อมูลสถานการณ์ตอนนี้ (เดิมอยู่ที่หน้าแผนที่สถานการณ์)
 const SITUATION_ITEMS = [
-  { key: "tide", label: "น้ำขึ้น–น้ำลง (ทะเลอันดามัน)", icon: Waves, tone: "from-cyan-400 to-blue-700", title: "ระดับน้ำทะเลหน้าสตูลตอนนี้ ลูกศรบอกน้ำกำลังขึ้นหรือลง ชี้ที่สัญลักษณ์เพื่อดูเวลาน้ำขึ้นสูงสุด/ลงต่ำสุดรอบถัดไป" },
-  { key: "waterStations", label: "ระดับน้ำ–ตลิ่ง (ปภ.)", icon: Waves, tone: "from-sky-400 to-blue-700" },
-  { key: "rainStations", label: "ฝนวัดจริง (ThaiWater)", icon: Umbrella, tone: "from-sky-300 to-indigo-600" },
-  { key: "cctv", label: "กล้อง CCTV ริมคลอง (ปภ.)", icon: Cctv, tone: "from-slate-500 to-sky-800", title: "แตะไอคอนกล้องบนแผนที่เพื่อดูภาพล่าสุดของคลอง 2 มุม จากกรมป้องกันและบรรเทาสาธารณภัย (อัปเดตทุก 1 นาที)" },
-  { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "from-blue-500 to-blue-800", title: "หมุดน้ำเงินตัว H · จุดสีที่มุม = สถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
-  { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "from-rose-400 to-red-600", title: "รายงานการสัญจรที่เจ้าหน้าที่ตรวจแล้ว: เขียว ผ่านได้ · เหลือง ผ่านลำบาก · แดง ผ่านไม่ได้" },
-  { key: "floodFreq", label: "น้ำท่วมซ้ำซาก (GISTDA)", icon: History, tone: "from-sky-400 to-violet-800", title: "พื้นที่ที่เคยถูกน้ำท่วมจากภาพดาวเทียม GISTDA พ.ศ. 2554–2567 สีเข้มขึ้นเมื่อท่วมหลายปี ใช้ประกอบการเตรียมรับมือ ไม่ใช่สถานการณ์น้ำตอนนี้" },
-  { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "from-cyan-400 to-sky-600" },
-  { key: "tambon", label: "ขอบเขตตำบล", icon: MapPinned, tone: "from-emerald-300 to-teal-600" },
-  { key: "district", label: "ขอบเขตอำเภอ", icon: Landmark, tone: "from-slate-400 to-slate-700" }
+  { key: "tide", label: "น้ำขึ้น–น้ำลง (ทะเลอันดามัน)", icon: Waves, tone: "bg-blue-700", title: "ระดับน้ำทะเลหน้าสตูลตอนนี้ ลูกศรบอกน้ำกำลังขึ้นหรือลง ชี้ที่สัญลักษณ์เพื่อดูเวลาน้ำขึ้นสูงสุด/ลงต่ำสุดรอบถัดไป" },
+  { key: "waterStations", label: "ระดับน้ำ–ตลิ่ง (ปภ.)", icon: Waves, tone: "bg-blue-700" },
+  { key: "rainStations", label: "ฝนวัดจริง (ThaiWater)", icon: Umbrella, tone: "bg-indigo-600" },
+  { key: "cctv", label: "กล้อง CCTV ริมคลอง (ปภ.)", icon: Cctv, tone: "bg-sky-800", title: "แตะไอคอนกล้องบนแผนที่เพื่อดูภาพล่าสุดของคลอง 2 มุม จากกรมป้องกันและบรรเทาสาธารณภัย (อัปเดตทุก 1 นาที)" },
+  { key: "hospitals", label: "สถานพยาบาล", icon: Hospital, tone: "bg-blue-800", title: "หมุดน้ำเงินตัว H · จุดสีที่มุม = สถานะ: เขียว เปิดปกติ · เหลือง จำกัดบริการ/ถนนน้ำท่วม · แดง ปิดหรือน้ำท่วม · เทา ยังไม่มีรายงาน" },
+  { key: "traffic", label: "เส้นทาง/ถนน", icon: Route, tone: "bg-red-600", title: "รายงานการสัญจรที่เจ้าหน้าที่ตรวจแล้ว: เขียว ผ่านได้ · เหลือง ผ่านลำบาก · แดง ผ่านไม่ได้" },
+  { key: "floodFreq", label: "น้ำท่วมซ้ำซาก (GISTDA)", icon: History, tone: "bg-violet-800", title: "พื้นที่ที่เคยถูกน้ำท่วมจากภาพดาวเทียม GISTDA พ.ศ. 2554–2567 สีเข้มขึ้นเมื่อท่วมหลายปี ใช้ประกอบการเตรียมรับมือ ไม่ใช่สถานการณ์น้ำตอนนี้" },
+  { key: "waterways", label: "เส้นทางน้ำ/คลอง", icon: Signpost, tone: "bg-sky-600" },
+  { key: "tambon", label: "ขอบเขตตำบล", icon: MapPinned, tone: "bg-teal-600" },
+  { key: "district", label: "ขอบเขตอำเภอ", icon: Landmark, tone: "bg-slate-700" }
 ];
 
 const EMERGENCY_CONTACTS = [
@@ -712,7 +712,7 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
                 href={DDPM_CCTV_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block rounded-xl bg-gradient-to-br from-sky-500/25 to-cyan-400/10 p-3 ring-1 ring-sky-300/40 transition hover:from-sky-500/35 hover:ring-sky-300/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                className="group block rounded-xl bg-sky-500/15 p-3 ring-1 ring-sky-300/40 transition hover:bg-sky-500/25 hover:ring-sky-300/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
               >
                 <span className="flex items-start gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-sky-500 text-white"><Cctv className="h-5 w-5" aria-hidden="true" /></span>
@@ -793,21 +793,21 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
                 <SidebarItem
                   label="แผนที่ความเสี่ยง"
                   icon={ShieldCheck}
-                  tone="from-emerald-400 to-red-500"
+                  tone="bg-red-500"
                   active={!isWindy && colorBy === "risk"}
                   onClick={() => { setViewMode("risk"); setColorBy("risk"); }}
                 />
                 <SidebarItem
                   label="ฝุ่น PM2.5"
                   icon={Haze}
-                  tone="from-sky-400 via-yellow-400 to-orange-500"
+                  tone="bg-orange-500"
                   active={!isWindy && colorBy === "pm25"}
                   onClick={() => { setViewMode("risk"); setColorBy("pm25"); }}
                 />
                 <SidebarItem
                   label="ความสูงพื้นที่"
                   icon={MountainSnow}
-                  tone="from-blue-800 to-amber-700"
+                  tone="bg-amber-700"
                   active={!isWindy && elevationEnabled}
                   onClick={() => {
                     setViewMode("risk");

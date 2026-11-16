@@ -5,11 +5,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Flag, ListChecks, Users } from "lucide-react";
-import { AdminPage, Button, Field, FormDialog, ReadOnlyNotice, inputClass, latestTime, useNotice } from "@/components/admin/crud";
+import { Button, Field, FormDialog, FreshnessBadge, ReadOnlyNotice, inputClass, latestTime, useNotice } from "@/components/admin/crud";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { CARE_GROUPS, effectiveCareGroup } from "@/lib/careGroups";
 import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
+import { EmptyPanel, PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import {
   ASSESSMENT_FACTORS, COORDINATION_CHAIN, FLOOD_FLAGS, TRIGGER_STAGES, areaLabel, declarationFor, flagMeta, matchesStageTarget, stageMeta, stageTitle
 } from "@/lib/floodTriggers";
@@ -339,13 +340,15 @@ export default function AreaTriggersWorkspace() {
   const context = session ? `${getEocTypeLabel("flood")} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : null;
 
   return (
-    <AdminPage
-      context={context}
-      title="ธงเตือนภัยและ Trigger เคลื่อนย้าย"
-      freshness={session ? { value: latestTime((data?.history || []).map((row) => row.declared_at)), staleHours: 12, label: "ประกาศ/ทบทวนล่าสุด", emptyText: "ยังไม่มีการประกาศ" } : null}
-      description="ประกาศระดับรายพื้นที่ตามเกณฑ์ทีม SAT ระบบบอกสิ่งที่ต้องทำ ผู้รับผิดชอบ และรายชื่อกลุ่มเปราะบางที่เป็นเป้าหมาย"
-      actions={data?.can_declare ? <Button onClick={() => setDialog({ open: true, initial: null })}><Flag className="h-4 w-4" aria-hidden="true" />ประกาศธง/Trigger</Button> : null}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="alert"
+        eyebrow={context || "อุทกภัย"}
+        title="ธงเตือนภัยและ Trigger เคลื่อนย้าย"
+        subtitle="ประกาศระดับรายพื้นที่ตามเกณฑ์ทีม SAT ระบบบอกสิ่งที่ต้องทำ ผู้รับผิดชอบ และรายชื่อกลุ่มเปราะบางที่เป็นเป้าหมาย"
+        meta={session ? <FreshnessBadge value={latestTime((data?.history || []).map((row) => row.declared_at))} staleHours={12} label="ประกาศ/ทบทวนล่าสุด" emptyText="ยังไม่มีการประกาศ" /> : null}
+        actions={data?.can_declare ? <button type="button" className={heroPrimaryButtonClass} onClick={() => setDialog({ open: true, initial: null })}><Flag className="h-4 w-4" aria-hidden="true" />ประกาศธง/Trigger</button> : null}
+      />
       {notice}
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}
       {data && !data.ready ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">ยังไม่ได้ติดตั้งตารางประกาศ ให้ผู้ดูแลระบบรัน npm run db:migrate</p> : null}
@@ -365,12 +368,12 @@ export default function AreaTriggersWorkspace() {
       ) : null}
 
       {session && !state.loading && !current.length ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-          <Flag className="mx-auto h-10 w-10 text-slate-300" aria-hidden="true" />
-          <p className="mt-2 font-bold text-slate-900">ยังไม่มีพื้นที่ที่ประกาศธง/Trigger</p>
-          <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">เมื่อ SAT ประเมินจากระดับน้ำ ฝน และเส้นทางแล้ว ให้ประกาศระดับรายอำเภอหรือตำบล ระบบจะดึงรายชื่อกลุ่มเปราะบางที่ต้องดำเนินการให้</p>
-          {data?.can_declare ? <div className="mt-4"><Button onClick={() => setDialog({ open: true, initial: null })}><Flag className="h-4 w-4" aria-hidden="true" />ประกาศธง/Trigger</Button></div> : null}
-        </div>
+        <EmptyPanel
+          icon="alert"
+          title="ยังไม่มีพื้นที่ที่ประกาศธง/Trigger"
+          text="เมื่อ SAT ประเมินจากระดับน้ำ ฝน และเส้นทางแล้ว ให้ประกาศระดับรายอำเภอหรือตำบล ระบบจะดึงรายชื่อกลุ่มเปราะบางที่ต้องดำเนินการให้"
+          action={data?.can_declare ? <Button onClick={() => setDialog({ open: true, initial: null })}><Flag className="h-4 w-4" aria-hidden="true" />ประกาศธง/Trigger</Button> : null}
+        />
       ) : null}
 
       <div className="space-y-3">
@@ -416,6 +419,6 @@ export default function AreaTriggersWorkspace() {
         onClose={() => setDialog({ open: false, initial: null })}
         onSaved={async (message) => { setDialog({ open: false, initial: null }); success(message); await load(); }}
       />
-    </AdminPage>
+    </div>
   );
 }

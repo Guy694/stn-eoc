@@ -1,6 +1,6 @@
 "use client";
 
-import AppIcon from "@/components/icons/AppIcon";
+import { Panel } from "@/components/common/ThemePanels";
 import PublicIncidentMap from './PublicIncidentMapLazy';
 import { floodAreaMapMeta } from '@/lib/floodMapLevels';
 
@@ -10,21 +10,16 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
         <>
         {/* Flood Map */}
         <div id="sec-map" className="scroll-mt-20 mb-6">
-            <div className="flex flex-col gap-1 mb-4 md:flex-row md:items-end md:justify-between">
-                <div>
-                    <h3 className="text-lg font-black text-slate-900">แผนที่อุทกภัยน้ำท่วมช่วง EOC</h3>
-                    <p className="text-sm text-slate-500">
-                        แสดงข้อมูลจากวันที่เปิดถึงวันที่ปิด EOC: {formatDateKey(mapStartDate)} - {formatDateKey(mapEndDate)}
-                    </p>
-                </div>
-                <div className="text-sm text-slate-600">
-                    วันที่มีข้อมูล {formatNumber(flood_map?.available_dates?.length)} วัน
-                </div>
-            </div>
             {/* เดิมมีการ์ดตัวเลข 5 ใบตรงนี้ แต่เป็นยอดรวมทุกวันของเหตุการณ์ (หมู่บ้านเดียวกันถูกนับซ้ำทุกวันที่รายงาน)
                 และซ้ำกับแผงสรุปด้านบนซึ่งใช้รายงานวันล่าสุด จึงเอาออกเพื่อไม่ให้ตัวเลขขัดกัน */}
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-                <div className="h-[560px] overflow-hidden rounded-lg border border-[#c9dcee] bg-white shadow">
+                <Panel
+                    icon="map"
+                    title="แผนที่อุทกภัยน้ำท่วมช่วง EOC"
+                    subtitle={`แสดงข้อมูลจากวันที่เปิดถึงวันที่ปิด EOC: ${formatDateKey(mapStartDate)} - ${formatDateKey(mapEndDate)}`}
+                    action={<span className="text-sm text-slate-600">วันที่มีข้อมูล {formatNumber(flood_map?.available_dates?.length)} วัน</span>}
+                    bodyClassName="h-[560px]"
+                >
                     <PublicIncidentMap
                         disasterType="flood"
                         sessionId={session.id}
@@ -49,9 +44,8 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                         includeAllShelters
                         shelterApiPath="/stn-eoc/api/eoc/shelter-centers"
                     />
-                </div>
-                <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5">
-                    <h4 className="font-semibold text-slate-800 mb-3">พื้นที่สำคัญจากบันทึกอุทกภัยน้ำท่วม</h4>
+                </Panel>
+                <Panel icon="mapPin" title="พื้นที่สำคัญจากบันทึกอุทกภัยน้ำท่วม" bodyClassName="p-4">
                     {flood_map?.events?.length > 0 ? (
                         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                             {flood_map.events.slice(0, 12).map((event) => {
@@ -77,7 +71,7 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                     ) : (
                         <p className="text-sm text-slate-500">ยังไม่มีบันทึกอุทกภัยน้ำท่วมในช่วงเหตุการณ์นี้</p>
                     )}
-                </div>
+                </Panel>
             </div>
         </div>
 
@@ -85,8 +79,7 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
             <div className="mb-6">
                 <h3 className="text-lg font-black text-slate-900 mb-3">เหตุการณ์ประจำวันที่ {effectiveDateLabel}</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5">
-                        <h4 className="font-semibold text-slate-800 mb-3">ผู้ได้รับผลกระทบ</h4>
+                    <Panel icon="users" title="ผู้ได้รับผลกระทบ" bodyClassName="p-4">
                         {affected_areas.district_list?.length > 0 ? (
                             <div className="space-y-2">
                                 {affected_areas.district_list.map((district, index) => (
@@ -99,10 +92,9 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                         ) : (
                             <p className="text-slate-500 text-sm">ไม่มีรายงานผู้ได้รับผลกระทบในวันนี้</p>
                         )}
-                    </div>
+                    </Panel>
 
-                    <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5">
-                        <h4 className="font-semibold text-slate-800 mb-3">โรคที่รายงาน</h4>
+                    <Panel icon="disease" title="โรคที่รายงาน" bodyClassName="p-4">
                         {diseases.today?.length > 0 ? (
                             <div className="space-y-2">
                                 {diseases.today.map((item, index) => (
@@ -118,10 +110,9 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                         ) : (
                             <p className="text-slate-500 text-sm">ไม่มีรายงานโรคในวันนี้</p>
                         )}
-                    </div>
+                    </Panel>
 
-                    <div className="bg-white rounded-xl border border-[#c9dcee] shadow-sm p-5">
-                        <h4 className="font-semibold text-slate-800 mb-3">กิจกรรม/บันทึก</h4>
+                    <Panel icon="clipboard" title="กิจกรรม/บันทึก" bodyClassName="p-4">
                         {dashboardData.recent_activities?.length > 0 ? (
                             <div className="space-y-2">
                                 {dashboardData.recent_activities.map((activity, index) => (
@@ -135,7 +126,7 @@ export default function FloodMapSection({ session, affected_areas, shelters, dis
                         ) : (
                             <p className="text-slate-500 text-sm">ไม่มีกิจกรรมที่บันทึกในวันนี้</p>
                         )}
-                    </div>
+                    </Panel>
                 </div>
             </div>
         )}

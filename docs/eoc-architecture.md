@@ -65,7 +65,6 @@ Legacy officer roles matching a `team_code` do not bypass session membership.
 | Flood management projection | `GET /api/eoc/flood/management?session_id=:id&report_date=YYYY-MM-DD` |
 | Flood missions/meetings/decisions | `GET/POST /api/eoc/flood/management/resources` |
 | Update mission/meeting/decision | `PATCH /api/eoc/flood/management/resources/:id` |
-| Officer work inbox | `GET /api/officer/inbox` |
 | Officer notifications | `GET/PATCH /api/officer/notifications` |
 | Data-quality dashboard | `GET /api/admin/data-quality` |
 | Population master data | `/api/admin/master-data/population` |

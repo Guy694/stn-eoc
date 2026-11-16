@@ -6,7 +6,8 @@ import { AlertTriangle, Archive, ChevronLeft, ChevronRight, Database, Pencil, Pl
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useAuth } from "@/context/AuthContext";
 import { showConfirm, showError, showSuccess } from "@/lib/feedback";
-import { MetricCard } from "@/components/common/MetricCards";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
+import { PageHero, Panel, heroButtonClass } from "@/components/common/ThemePanels";
 
 const EMPTY_FORM = {
   province_code: "91",
@@ -156,13 +157,13 @@ export default function DataManagementPage() {
 
   return <EOCLayout>
     <section className="w-full space-y-5">
-      <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
-        <p className="text-xs font-semibold text-blue-100">ผู้ดูแลระบบ · ข้อมูลหลักของระบบ</p>
-        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-          <div><h1 className="text-xl font-semibold text-white sm:text-2xl">ศูนย์จัดการและตรวจคุณภาพข้อมูล</h1><p className="mt-1 text-sm text-blue-100">จัดการข้อมูลหลักพร้อม การตรวจสอบ และตรวจข้อมูลผิดปกติก่อนนำไปใช้</p></div>
-          <button type="button" onClick={load} className="inline-flex h-10 items-center gap-2 border border-white/25 px-3 text-sm font-bold rounded-lg"><RefreshCw className="h-4 w-4" />รีเฟรช</button>
-        </div>
-      </header>
+      <PageHero
+        icon="database"
+        eyebrow="ผู้ดูแลระบบ · ข้อมูลหลักของระบบ"
+        title="ศูนย์จัดการและตรวจคุณภาพข้อมูล"
+        subtitle="จัดการข้อมูลหลักพร้อม การตรวจสอบ และตรวจข้อมูลผิดปกติก่อนนำไปใช้"
+        actions={<button type="button" onClick={load} className={heroButtonClass}><RefreshCw className="h-4 w-4" aria-hidden="true" />รีเฟรช</button>}
+      />
 
       <nav className="grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <button type="button" onClick={() => { setSection("population"); setPage(1); }} className={`p-4 text-sm font-black ${section === "population" ? "bg-[#0b4c86] text-white" : "text-slate-700"}`}><Database className="mr-2 inline h-4 w-4" />ประชากรรายอำเภอ</button>
@@ -171,11 +172,11 @@ export default function DataManagementPage() {
 
       {error ? <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{error}</div> : null}
       {section === "population" ? <>
-        <div className="grid gap-3 md:grid-cols-3">
-          <Metric label="รายการในหน้านี้" value={rows.length} />
-          <Metric label="ประชากรรวมในหน้านี้" value={totalPopulation.toLocaleString("th-TH")} />
-          <Metric label="รายการทั้งหมด" value={total.toLocaleString("th-TH")} />
-        </div>
+        <MetricGrid>
+          <Metric icon="layers" label="รายการในหน้านี้" value={rows.length} />
+          <Metric icon="users" label="ประชากรรวมในหน้านี้" value={totalPopulation.toLocaleString("th-TH")} tone="blue" />
+          <Metric icon="database" label="รายการทั้งหมด" value={total.toLocaleString("th-TH")} />
+        </MetricGrid>
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
           <form onSubmit={(event) => { event.preventDefault(); setPage(1); setAppliedSearch(search); }} className="flex min-w-0 flex-1 gap-2">
             <label className="relative min-w-0 flex-1"><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ค้นหาอำเภอ รหัส หรือแหล่งข้อมูล" className="h-10 w-full border border-slate-300 pl-9 pr-3 text-sm rounded-lg" /></label>
@@ -202,7 +203,7 @@ export default function DataManagementPage() {
           <div className="flex justify-end gap-2"><button type="button" onClick={resetForm} className="border border-slate-300 px-4 py-2 text-sm font-bold rounded-lg">ยกเลิก</button><button disabled={saving} className="inline-flex items-center gap-2 bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"><Save className="h-4 w-4" />{saving ? "กำลังบันทึก..." : "บันทึก"}</button></div>
         </form> : null}
 
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <Panel icon="users" title="ประชากรรายอำเภอ" subtitle={`ทั้งหมด ${total.toLocaleString("th-TH")} รายการ`} bodyClassName="overflow-x-auto">
           <table className="stack-mobile min-w-full text-left text-sm"><thead className="bg-slate-50 text-xs font-semibold text-slate-500"><tr><th className="px-4 py-3">อำเภอ</th><th className="px-4 py-3 text-right">ชาย</th><th className="px-4 py-3 text-right">หญิง</th><th className="px-4 py-3 text-right">รวม</th><th className="px-4 py-3">ขอบเขต/ปี</th><th className="px-4 py-3">แหล่งข้อมูล</th><th className="px-4 py-3">แก้ไขล่าสุด</th><th className="px-4 py-3">จัดการ</th></tr></thead>
             <tbody>{loading ? <tr><td colSpan="8" className="p-10 text-center text-slate-500">กำลังโหลด...</td></tr> : !rows.length ? <tr><td colSpan="8" className="p-10 text-center text-slate-500">ไม่พบข้อมูล</td></tr> : rows.map((row) => <tr key={row.id} className="border-t border-slate-100">
               <td className="px-4 py-3 font-black">{row.district_name}<p className="text-xs font-normal text-slate-500">{row.district_code || "-"}</p></td>
@@ -214,19 +215,19 @@ export default function DataManagementPage() {
             </tr>)}</tbody>
           </table>
           <footer className="flex items-center justify-between border-t border-slate-200 p-3 text-sm"><span>หน้า {page} / {Math.max(Math.ceil(total / pageSize), 1)}</span><div className="flex gap-2"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)} className="border border-slate-300 p-2 disabled:opacity-40 rounded-lg"><ChevronLeft className="h-4 w-4" /></button><button type="button" disabled={page * pageSize >= total} onClick={() => setPage((value) => value + 1)} className="border border-slate-300 p-2 disabled:opacity-40 rounded-lg"><ChevronRight className="h-4 w-4" /></button></div></footer>
-        </div>
+        </Panel>
       </> : <QualityView quality={quality} loading={loading} />}
     </section>
     <style jsx global>{`.input{margin-top:.25rem;width:100%;border:1px solid #cbd5e1;padding:.625rem .75rem;font-weight:400;min-height:42px}`}</style>
   </EOCLayout>;
 }
 
-function Metric({ label, value }) { return <MetricCard label={label} value={value} />; }
+function Metric({ icon, label, value, tone }) { return <MetricCard icon={icon} label={label} value={value} tone={tone} />; }
 function Field({ label, wide, children }) { return <label className={`text-sm font-bold text-slate-700 ${wide ? "md:col-span-2" : ""}`}>{label}{children}</label>; }
 function QualityView({ quality, loading }) {
   const types = Object.entries(quality.summary?.by_type || {});
   return <div className="space-y-4">
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric label="ปัญหาทั้งหมด" value={quality.summary?.total || 0} />{types.slice(0, 3).map(([type, count]) => <Metric key={type} label={ISSUE_LABELS[type] || type} value={count} />)}</div>
-    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white"><table className="stack-mobile min-w-full text-left text-sm"><thead className="bg-slate-50 text-xs font-semibold text-slate-500"><tr><th className="px-4 py-3">ประเภทปัญหา</th><th className="px-4 py-3">ตาราง/Record</th><th className="px-4 py-3">ข้อมูล</th><th className="px-4 py-3">รายละเอียด</th><th className="px-4 py-3">แก้ไข</th></tr></thead><tbody>{loading ? <tr><td colSpan="5" className="p-10 text-center">กำลังตรวจสอบ...</td></tr> : !quality.data?.length ? <tr><td colSpan="5" className="p-10 text-center text-emerald-700"><ShieldCheck className="mx-auto mb-2 h-7 w-7" />ไม่พบปัญหาตามกฎที่ตรวจสอบ</td></tr> : quality.data.map((item, index) => <tr key={`${item.table_name}-${item.record_id}-${item.issue_type}-${index}`} className="border-t border-slate-100"><td className="px-4 py-3"><span className="inline-flex items-center gap-1 border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-800"><AlertTriangle className="h-3 w-3" />{ISSUE_LABELS[item.issue_type] || item.issue_type}</span></td><td className="px-4 py-3 font-mono text-xs">{item.table_name} #{item.record_id}</td><td className="px-4 py-3 font-bold">{item.label}</td><td className="px-4 py-3">{item.detail}</td><td className="px-4 py-3"><a href={item.edit_url} className="font-bold text-[#0b4c86] underline">เปิดรายการ</a></td></tr>)}</tbody></table></div>
+    <MetricGrid><Metric icon="alert" label="ปัญหาทั้งหมด" value={quality.summary?.total || 0} tone={quality.summary?.total ? "amber" : "green"} />{types.slice(0, 3).map(([type, count]) => <Metric key={type} icon="alertCircle" label={ISSUE_LABELS[type] || type} value={count} />)}</MetricGrid>
+    <Panel icon="shield" title="ข้อมูลที่ต้องตรวจ" subtitle="ตรวจตามกฎคุณภาพข้อมูล" bodyClassName="overflow-x-auto"><table className="stack-mobile min-w-full text-left text-sm"><thead className="bg-slate-50 text-xs font-semibold text-slate-500"><tr><th className="px-4 py-3">ประเภทปัญหา</th><th className="px-4 py-3">ตาราง/Record</th><th className="px-4 py-3">ข้อมูล</th><th className="px-4 py-3">รายละเอียด</th><th className="px-4 py-3">แก้ไข</th></tr></thead><tbody>{loading ? <tr><td colSpan="5" className="p-10 text-center">กำลังตรวจสอบ...</td></tr> : !quality.data?.length ? <tr><td colSpan="5" className="p-10 text-center text-emerald-700"><ShieldCheck className="mx-auto mb-2 h-7 w-7" />ไม่พบปัญหาตามกฎที่ตรวจสอบ</td></tr> : quality.data.map((item, index) => <tr key={`${item.table_name}-${item.record_id}-${item.issue_type}-${index}`} className="border-t border-slate-100"><td className="px-4 py-3"><span className="inline-flex items-center gap-1 border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-800"><AlertTriangle className="h-3 w-3" />{ISSUE_LABELS[item.issue_type] || item.issue_type}</span></td><td className="px-4 py-3 font-mono text-xs">{item.table_name} #{item.record_id}</td><td className="px-4 py-3 font-bold">{item.label}</td><td className="px-4 py-3">{item.detail}</td><td className="px-4 py-3"><a href={item.edit_url} className="font-bold text-[#0b4c86] underline">เปิดรายการ</a></td></tr>)}</tbody></table></Panel>
   </div>;
 }

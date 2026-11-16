@@ -7,6 +7,8 @@ import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from "chart.js";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { MetricCard } from "@/components/common/MetricCards";
+import { Panel } from "@/components/common/ThemePanels";
+import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 import { SATUN_DISTRICT_NAMES } from "@/lib/satunDistricts";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
@@ -31,8 +33,7 @@ function lastDays(rows, days) {
 function BarList({ title, rows, note }) {
   const max = Math.max(1, ...rows.map((row) => row.n));
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white">
-      <h4 className="border-b border-slate-100 px-4 py-3 font-black text-slate-900">{title}</h4>
+    <Panel icon="barChart" title={title}>
       {rows.length ? (
         <ul className="divide-y divide-slate-100">
           {rows.map((row) => (
@@ -47,7 +48,7 @@ function BarList({ title, rows, note }) {
         </ul>
       ) : <p className="p-4 text-sm text-slate-500">ยังไม่มีข้อมูล</p>}
       {note ? <p className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-500">{note}</p> : null}
-    </div>
+    </Panel>
   );
 }
 
@@ -116,6 +117,7 @@ export default function PushAudiencePanel() {
   const devices = data ? Object.entries(data.by_device || {}).map(([label, n]) => ({ label, n })).sort((a, b) => b.n - a.n) : [];
   const daily = data ? lastDays(data.new_by_day || [], Math.min(days, 90)) : [];
   const totals = data?.totals;
+  const { anchor: alertsAnchor, ...alertPages } = usePagination(data?.alerts, { pageSize: 20, resetKey: String(days) });
 
   return (
     <div className="space-y-5">
@@ -147,22 +149,22 @@ export default function PushAudiencePanel() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h4 className="font-black text-slate-900">แจ้งเตือนถึงประชาชนใน {rangeLabel}</h4>
-              <p className="mb-3 text-sm text-slate-600">
-                {totals.alerts ? `${formatNumber(totals.alerts)} ครั้ง${totals.tracked_alerts < totals.alerts ? ` (นับผู้รับได้ ${formatNumber(totals.tracked_alerts)} ครั้ง)` : ""}` : "ยังไม่มีการส่งในช่วงนี้"}
-              </p>
+            <Panel
+              icon="send"
+              title={`แจ้งเตือนถึงประชาชนใน ${rangeLabel}`}
+              subtitle={totals.alerts ? `${formatNumber(totals.alerts)} ครั้ง${totals.tracked_alerts < totals.alerts ? ` (นับผู้รับได้ ${formatNumber(totals.tracked_alerts)} ครั้ง)` : ""}` : "ยังไม่มีการส่งในช่วงนี้"}
+              bodyClassName="p-4"
+            >
               {totals.tracked_alerts ? <Funnel totals={totals} /> : <p className="text-sm text-slate-500">ตัวเลข &quot;แสดงแล้ว/เปิดอ่าน&quot; เริ่มนับตั้งแต่แจ้งเตือนครั้งถัดไป</p>}
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h4 className="mb-2 font-black text-slate-900">สมัครใหม่รายวัน{days > 90 ? " (90 วันล่าสุด)" : ""}</h4>
+            </Panel>
+            <Panel icon="calendar" title={`สมัครใหม่รายวัน${days > 90 ? " (90 วันล่าสุด)" : ""}`} bodyClassName="p-4">
               <div className="h-48" role="img" aria-label={`กราฟจำนวนเครื่องที่สมัครรับแจ้งเตือนใหม่รายวัน รวม ${data.new_total} เครื่อง`}>
                 <Bar
                   data={{ labels: daily.map((row) => row.label), datasets: [{ label: "สมัครใหม่", data: daily.map((row) => row.n), backgroundColor: "#2a78d6", borderRadius: 2 }] }}
                   options={{ responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true } }, y: { beginAtZero: true, ticks: { precision: 0 } } } }}
                 />
               </div>
-            </div>
+            </Panel>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -170,10 +172,10 @@ export default function PushAudiencePanel() {
             <BarList title="อุปกรณ์" rows={devices} />
           </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white">
-            <h4 className="border-b border-slate-100 px-4 py-3 font-black text-slate-900">แต่ละแจ้งเตือน</h4>
-            {data.alerts.length ? <ul className="divide-y divide-slate-100">{data.alerts.map((row) => <AlertRow key={row.id} row={row} />)}</ul> : <p className="p-4 text-sm text-slate-500">ยังไม่มีการส่งในช่วงนี้</p>}
-          </section>
+          <Panel icon="bell" title="แต่ละแจ้งเตือน" subtitle={data.alerts.length ? `${formatNumber(data.alerts.length)} ครั้งใน ${rangeLabel}` : null}>
+            {data.alerts.length ? <ul ref={alertsAnchor} className="scroll-mt-4 divide-y divide-slate-100">{alertPages.visible.map((row) => <AlertRow key={row.id} row={row} />)}</ul> : <p className="p-4 text-sm text-slate-500">ยังไม่มีการส่งในช่วงนี้</p>}
+            <PaginationControls {...alertPages.controls} pageSizeOptions={[20, 50, 100]} itemLabel="ครั้ง" className="border-t border-slate-100 bg-slate-50" />
+          </Panel>
 
           <p className="flex gap-2 rounded-xl border border-[#c9dcee] bg-[#edf5fc] p-4 text-sm text-[#083865]">
             <Smartphone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />

@@ -378,7 +378,7 @@ function AnnouncementsContent() {
         <EOCLayout>
             <div className="w-full">
                 {/* Header */}
-                <PageHero icon="megaphone" title={<>จัดการประชาสัมพันธ์/แบนเนอร์ {filters.eoc_type && ( <span className="text-xl text-blue-100"> ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label}) </span> )}</>} subtitle="จัดการแบนเนอร์และประกาศข่าวสารต่างๆ" actions={<><button
+                <PageHero icon="megaphone" eyebrow="สื่อสารความเสี่ยง" title={<>จัดการประชาสัมพันธ์/แบนเนอร์ {filters.eoc_type && ( <span className="text-xl text-blue-100"> ({EOC_TYPES.find(t => t.value === filters.eoc_type)?.label}) </span> )}</>} subtitle="จัดการแบนเนอร์และประกาศข่าวสารต่างๆ" actions={<><button
                         onClick={openCreateModal}
                         className={heroPrimaryButtonClass}
                     >

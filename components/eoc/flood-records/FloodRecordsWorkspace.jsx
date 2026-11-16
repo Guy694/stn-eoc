@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ChevronLeft, ChevronRight, ClipboardCheck, Copy, Home, Plus, Users } from "lucide-react";
 import {
-  AdminPage, Button, DataTable, DeleteDialog, FilterSelect, RowActions, StatStrip, StatusPill, Toolbar, UpdatedAt, inputClass, useNotice
+  Button, DataTable, DeleteDialog, FilterSelect, RowActions, StatStrip, StatusPill, Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
@@ -17,6 +17,7 @@ import TambonCoverage from "./TambonCoverage";
 import RecordFormDialog from "./RecordFormDialog";
 import CopyDayDialog from "./CopyDayDialog";
 import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExcelDialog";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
 
 const API = "/stn-eoc/api/admin/flood-records";
 
@@ -134,33 +135,47 @@ export default function FloodRecordsWorkspace() {
   };
 
   if (sessionsState.loading) {
-    return <AdminPage context="บันทึกข้อมูล" title="บันทึกพื้นที่น้ำท่วม"><div className="h-40 animate-pulse rounded-2xl border border-slate-200 bg-white" /></AdminPage>;
+    return (
+      <div className="w-full space-y-4">
+        <PageHero icon="flood" eyebrow="อุทกภัย · บันทึกข้อมูล" title="บันทึกพื้นที่น้ำท่วม" />
+        <div className="h-40 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+      </div>
+    );
   }
   if (!session) {
     return (
-      <AdminPage context="บันทึกข้อมูล" title="บันทึกพื้นที่น้ำท่วม">
-        <p className="rounded-xl border border-dashed border-[#c9dcee] bg-white px-5 py-6 text-sm text-slate-700" role="status">
-          {sessionsState.error || "ยังไม่มีเหตุการณ์ EOC อุทกภัยน้ำท่วม — เปิดเหตุการณ์ก่อนจึงจะบันทึกพื้นที่น้ำท่วมได้"}
-        </p>
-      </AdminPage>
+      <div className="w-full space-y-4">
+        <PageHero icon="flood" eyebrow="อุทกภัย · บันทึกข้อมูล" title="บันทึกพื้นที่น้ำท่วม" />
+        <div role="status">
+          <EmptyPanel
+            icon="flood"
+            tone={sessionsState.error ? "amber" : "slate"}
+            title={sessionsState.error ? "โหลดข้อมูลเหตุการณ์ไม่สำเร็จ" : "ยังไม่มีเหตุการณ์ EOC อุทกภัยน้ำท่วม"}
+            text={sessionsState.error || "เปิดเหตุการณ์ก่อนจึงจะบันทึกพื้นที่น้ำท่วมได้"}
+          />
+        </div>
+      </div>
     );
   }
 
   const isToday = date === todayKey();
 
   return (
-    <AdminPage
-      context={`บันทึกข้อมูล · อุทกภัยน้ำท่วม ครั้งที่ ${session.session_number}`}
-      title="บันทึกพื้นที่น้ำท่วม"
-      description="ส่งสถานการณ์รายหมู่บ้านวันละครั้ง ตัวเลขนี้ใช้ในแผงสรุปสถานการณ์ แผนที่สาธารณะ และสรุปห้องประชุม"
-      actions={canOperate ? (
-        <>
-          <Button variant="secondary" onClick={() => setCopyOpen(true)}><Copy className="h-4 w-4" aria-hidden="true" /> คัดลอกจากวันอื่น</Button>
-          <ImportExcelButton onClick={() => setImportOpen(true)} />
-          <Button onClick={() => setDialog({ mode: "village" })}><Plus className="h-4 w-4" aria-hidden="true" /> บันทึกหมู่บ้าน</Button>
-        </>
-      ) : null}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="flood"
+        eyebrow={`อุทกภัย ครั้งที่ ${session.session_number} · บันทึกข้อมูล`}
+        title="บันทึกพื้นที่น้ำท่วม"
+        subtitle="ส่งสถานการณ์รายหมู่บ้านวันละครั้ง ตัวเลขนี้ใช้ในแผงสรุปสถานการณ์ แผนที่สาธารณะ และสรุปห้องประชุม"
+        tray
+        actions={canOperate ? (
+          <>
+            <Button variant="secondary" onClick={() => setCopyOpen(true)}><Copy className="h-4 w-4" aria-hidden="true" /> คัดลอกจากวันอื่น</Button>
+            <ImportExcelButton onClick={() => setImportOpen(true)} />
+            <Button onClick={() => setDialog({ mode: "village" })}><Plus className="h-4 w-4" aria-hidden="true" /> บันทึกหมู่บ้าน</Button>
+          </>
+        ) : null}
+      />
       <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 lg:flex-row lg:items-center" aria-label="เลือกเหตุการณ์และวันที่">
         {sessions.length > 1 ? (
           <label className="block lg:w-80">
@@ -295,6 +310,6 @@ export default function FloodRecordsWorkspace() {
       />
       {notice}
       <ImportExcelDialog open={importOpen} onOpenChange={setImportOpen} kind="flood-records" context={{ eoc: "flood", session_id: session.id }} onImported={load} />
-    </AdminPage>
+    </div>
   );
 }

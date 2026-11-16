@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, RotateCcw } from "lucide-react";
 import { Button, IconButton, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { apiRequest } from "@/lib/adminApi";
 import { groupMenuItems } from "@/src/config/navigation/admin-navigation";
@@ -111,7 +112,8 @@ export default function MenuLayoutSettings() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <ol className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+        <Panel icon="menu" title={`ลำดับเมนู${current?.label || ""}`} subtitle="เลื่อนขึ้น/ลง และพิมพ์ชื่อกลุ่ม">
+        <ol className="divide-y divide-slate-100">
           {draft.map((item, index) => (
             <li key={item.key} className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -138,6 +140,7 @@ export default function MenuLayoutSettings() {
             </li>
           ))}
         </ol>
+        </Panel>
         <datalist id={`menu-groups-${eocType}`}>
           {groupNames.map((name) => <option key={name} value={name} />)}
         </datalist>

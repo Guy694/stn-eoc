@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  CalendarClock,
   ClipboardList,
   LayoutGrid,
   MessageSquareText,
@@ -11,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
 import { getOperationSessionLockByType } from "@/lib/eocSessionLock";
 import { showError, showSuccess } from "@/lib/feedback";
 import ReasonDialog from "@/components/ui/reason-dialog";
@@ -22,11 +22,11 @@ export const FLOOD_EOC_BASE_PATH = "/eoc/flood/management";
 // เมนู "ภารกิจและข้อสั่งการ" เหลือเฉพาะงานสั่งการ — ภาพรวม/สรุปรายวัน/ความครบรายงาน อยู่ที่หน้าภาพรวมสถานการณ์
 // และแบบบันทึกหลักอยู่ที่หน้าบันทึกพื้นที่น้ำท่วม (หน้าเดิมเหล่านั้น redirect ไปแล้ว)
 const VIEWS = [
-  { key: "directives", label: "สถานการณ์/ข้อสั่งการรายวัน", href: `${FLOOD_EOC_BASE_PATH}/directives`, icon: ClipboardList },
-  { key: "missions", label: "ภารกิจ", href: `${FLOOD_EOC_BASE_PATH}/missions`, icon: LayoutGrid },
-  { key: "meetings", label: "ประชุมและสั่งการ", href: `${FLOOD_EOC_BASE_PATH}/meetings`, icon: MessageSquareText },
-  { key: "decisions", label: "บันทึกการตัดสินใจ", href: `${FLOOD_EOC_BASE_PATH}/decisions`, icon: Target },
-  { key: "workspace", label: "รายงานของกลุ่มภารกิจ", href: `${FLOOD_EOC_BASE_PATH}/team-workspace`, icon: Users },
+  { key: "directives", label: "สถานการณ์/ข้อสั่งการรายวัน", href: `${FLOOD_EOC_BASE_PATH}/directives`, icon: ClipboardList, heroIcon: "clipboard", subtitle: "สรุปสถานการณ์และข้อสั่งการประจำวัน กรอกเป็นข้อ ๆ ใช้ประกอบการประชุม" },
+  { key: "missions", label: "ภารกิจ", href: `${FLOOD_EOC_BASE_PATH}/missions`, icon: LayoutGrid, heroIcon: "briefcase", subtitle: "ติดตามภารกิจที่มอบหมายในเหตุการณ์ ตั้งแต่รับเรื่องจนปิดภารกิจ" },
+  { key: "meetings", label: "ประชุมและสั่งการ", href: `${FLOOD_EOC_BASE_PATH}/meetings`, icon: MessageSquareText, heroIcon: "message", subtitle: "บันทึกการประชุม มติ และข้อสั่งการ พร้อมผู้รับผิดชอบติดตามผล" },
+  { key: "decisions", label: "บันทึกการตัดสินใจ", href: `${FLOOD_EOC_BASE_PATH}/decisions`, icon: Target, heroIcon: "checkCircle", subtitle: "ประเด็น ข้อมูลประกอบ และข้อสั่งการของผู้บัญชาการเหตุการณ์" },
+  { key: "workspace", label: "รายงานของกลุ่มภารกิจ", href: `${FLOOD_EOC_BASE_PATH}/team-workspace`, icon: Users, heroIcon: "users", subtitle: "สถานะรายงานประจำวันของแต่ละกลุ่มภารกิจ (ทีม SAT) ในเหตุการณ์" },
 ];
 
 // สถานะรายงานทีมจากระบบเดิมเก็บเป็นภาษาอังกฤษ
@@ -93,15 +93,17 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
   return (
     <EOCLayout>
       <section className="w-full space-y-4">
-        <header className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6 space-y-1">
-          <p className="text-sm font-semibold text-blue-100">ภารกิจและข้อสั่งการ</p>
-          <h1 className="text-xl font-semibold text-white sm:text-2xl">{viewMeta.label}</h1>
-          {state.data?.session?.status === "closed" ? (
-            <p className="mt-2 rounded-lg border border-[#c9dcee] bg-white/15 px-3 py-2 text-sm text-white">
+        <PageHero
+          icon={viewMeta.heroIcon}
+          eyebrow="อุทกภัย · ภารกิจและข้อสั่งการ"
+          title={viewMeta.label}
+          subtitle={viewMeta.subtitle}
+          meta={state.data?.session?.status === "closed" ? (
+            <p className="rounded-lg bg-white/15 px-3 py-2 text-sm text-white ring-1 ring-white/20">
               เหตุการณ์นี้ปิดแล้ว งานปฏิบัติการอยู่ในโหมดอ่านอย่างเดียว แต่ยังจัดทำ แก้ไข ส่ง และตรวจรายงานย้อนหลังได้
             </p>
           ) : null}
-        </header>
+        />
 
         <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1" aria-label="เมนูภารกิจและข้อสั่งการ">
           {VIEWS.map((item) => {
@@ -116,13 +118,15 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
           })}
         </nav>
 
-        {state.loading ? <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">กำลังโหลดข้อมูล…</div> : null}
+        {state.loading ? <EmptyPanel icon="loader" title="กำลังโหลดข้อมูล…" /> : null}
         {state.error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800" role="alert">
-            {state.error}
-            {state.error.includes("ทีม") ? (
-              <p className="mt-2 font-semibold text-red-700">รายงานของกลุ่มภารกิจใช้ข้อมูลทีม SAT — เพิ่มทีมเข้าเหตุการณ์ได้ที่ <Link href="/eoc/flood/operations-team" className="underline">ทีมปฏิบัติการ</Link></p>
-            ) : null}
+          <div role="alert">
+            <EmptyPanel
+              icon="alert"
+              tone="amber"
+              title={state.error}
+              text={state.error.includes("ทีม") ? <>รายงานของกลุ่มภารกิจใช้ข้อมูลทีม SAT — เพิ่มทีมเข้าเหตุการณ์ได้ที่ <Link href="/eoc/flood/operations-team" className="font-semibold text-[#0b4c86] underline">ทีมปฏิบัติการ</Link></> : null}
+            />
           </div>
         ) : null}
         {!state.loading && !state.error ? content : null}
@@ -133,7 +137,7 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
 
 function TeamStatusView({ data }) {
   if (!data.teams?.length) {
-    return <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">ยังไม่มีกลุ่มภารกิจในเหตุการณ์นี้ — เพิ่มได้ที่ <Link href="/eoc/flood/operations-team" className="font-bold text-[#0b4c86] underline">ทีมปฏิบัติการ</Link></p>;
+    return <EmptyPanel icon="users" title="ยังไม่มีกลุ่มภารกิจในเหตุการณ์นี้" text={<>เพิ่มได้ที่ <Link href="/eoc/flood/operations-team" className="font-bold text-[#0b4c86] underline">ทีมปฏิบัติการ</Link></>} />;
   }
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
@@ -243,7 +247,7 @@ function OperationalResourceView({ view, sessionId }) {
       setMoving(false);
     }
   };
-  if (resource.loading) return <div className="border border-slate-200 bg-white p-10 text-center text-slate-500">กำลังโหลดข้อมูลจากฐานข้อมูล...</div>;
+  if (resource.loading) return <EmptyPanel icon="loader" title="กำลังโหลดข้อมูลจากฐานข้อมูล..." />;
   const columns = {
     missions: [
       ["mission_code", "รหัส"], ["mission_name", "ภารกิจ"], ["area", "พื้นที่"],
@@ -259,15 +263,15 @@ function OperationalResourceView({ view, sessionId }) {
     ]
   }[view];
   return <div className="space-y-4">
-    {resource.error ? <div className="border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{resource.error}</div> : null}
+    {resource.error ? <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{resource.error}</div> : null}
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
       <p className="text-sm text-slate-600">{resource.rows.length ? `${resource.rows.length.toLocaleString("th-TH")} รายการในเหตุการณ์นี้` : "บันทึกของเหตุการณ์ที่เปิดอยู่"}</p>
       {resource.permissions.canOperate ? <button type="button" onClick={() => setShowForm((value) => !value)} className="rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]">{showForm ? "ปิดแบบฟอร์ม" : `เพิ่ม${labels[view]}`}</button> : null}
     </div>
     {showForm ? <ResourceForm view={view} form={form} setForm={setForm} submit={submit} saving={saving} /> : null}
-    {!resource.rows.length ? <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"><CalendarClock className="mx-auto h-8 w-8 text-slate-400" aria-hidden="true" /><p className="mt-3 font-bold text-slate-900">ยังไม่มี{labels[view]}ในเหตุการณ์นี้</p><p className="mt-1 text-sm text-slate-500">{resource.permissions.canOperate ? `กด "เพิ่ม${labels[view]}" เพื่อเริ่มบันทึก` : "เมื่อมีการบันทึกจะแสดงที่นี่"}</p></div> :
-      <div ref={listAnchor} className="scroll-mt-4 border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><table className="stack-mobile min-w-full text-left text-sm">
-        <thead className="bg-slate-900 text-white"><tr>{columns.map(([, label]) => <th key={label} className="px-4 py-3">{label}</th>)}{view === "missions" ? <th className="px-4 py-3">ขั้นตอนงาน</th> : null}</tr></thead>
+    {!resource.rows.length ? <EmptyPanel icon="calendar" title={`ยังไม่มี${labels[view]}ในเหตุการณ์นี้`} text={resource.permissions.canOperate ? `กด "เพิ่ม${labels[view]}" เพื่อเริ่มบันทึก` : "เมื่อมีการบันทึกจะแสดงที่นี่"} /> :
+      <div ref={listAnchor} className="scroll-mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="overflow-x-auto"><table className="stack-mobile min-w-full text-left text-sm">
+        <thead className="bg-slate-50 text-xs text-slate-600"><tr>{columns.map(([, label]) => <th key={label} scope="col" className="px-4 py-3 font-semibold">{label}</th>)}{view === "missions" ? <th scope="col" className="px-4 py-3 font-semibold">ขั้นตอนงาน</th> : null}</tr></thead>
         <tbody>{paged.visible.map((row) => <tr key={row.id} className="border-t border-slate-100">{columns.map(([key]) => <td key={key} className="max-w-xs px-4 py-3">{key === "progress_percent" ? `${row[key] ?? 0}%` : row[key] ?? "-"}</td>)}{view === "missions" ? <td className="px-4 py-3"><MissionActions row={row} canVerify={resource.permissions.canVerify} onMove={moveMission} /></td> : null}</tr>)}</tbody>
       </table></div><PaginationControls {...paged.controls} pageSizeOptions={[20, 50, 100]} /></div>}
     <ReasonDialog
@@ -323,15 +327,15 @@ function normalizeResourceForm(view, form) {
 
 function ResourceForm({ view, form, setForm, submit, saving }) {
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-  const field = (key, label, options = {}) => <label className={`text-sm font-bold text-slate-700 ${options.wide ? "md:col-span-2" : ""}`}>{label}{options.textarea ? <textarea required={options.required} rows="3" value={form[key] || ""} onChange={(event) => update(key, event.target.value)} className="mt-1 w-full border border-slate-300 px-3 py-2 font-normal" /> : <input type={options.type || "text"} required={options.required} min={options.min} max={options.max} value={form[key] ?? ""} onChange={(event) => update(key, event.target.value)} className="mt-1 w-full border border-slate-300 px-3 py-2 font-normal" />}</label>;
-  return <form onSubmit={submit} className="space-y-4 border border-[#c9dcee] bg-white p-5 shadow-sm">
-    <h3 className="text-lg font-black">บันทึกข้อมูลจากการปฏิบัติงานจริง</h3>
+  const field = (key, label, options = {}) => <label className={`text-sm font-bold text-slate-700 ${options.wide ? "md:col-span-2" : ""}`}>{label}{options.textarea ? <textarea required={options.required} rows="3" value={form[key] || ""} onChange={(event) => update(key, event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" /> : <input type={options.type || "text"} required={options.required} min={options.min} max={options.max} value={form[key] ?? ""} onChange={(event) => update(key, event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" />}</label>;
+  return <form onSubmit={submit} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
+    <h3 className="text-lg font-semibold text-slate-900">บันทึกข้อมูลจากการปฏิบัติงานจริง</h3>
     <div className="grid gap-4 md:grid-cols-2">
       {view === "missions" ? <>{field("mission_code", "รหัสภารกิจ", { required: true })}{field("mission_type", "ประเภทภารกิจ", { required: true })}{field("mission_name", "ชื่อภารกิจ", { required: true, wide: true })}{field("area", "พื้นที่")}{field("assigned_team", "ทีมรับผิดชอบ")}{field("responsible_agency", "หน่วยงานรับผิดชอบ")}{field("responsible_person", "ผู้รับผิดชอบ")}{field("due_at", "กำหนดเสร็จ", { type: "datetime-local" })}{field("progress_percent", "ความคืบหน้า 0–100", { type: "number", min: 0, max: 100 })}{field("remarks", "หมายเหตุ", { textarea: true, wide: true })}</> : null}
       {view === "meetings" ? <>{field("meeting_date", "วันที่ประชุม", { type: "date", required: true })}{field("meeting_time", "เวลาประชุม", { type: "time", required: true })}{field("chairperson", "ประธาน")}{field("attendees", "ผู้เข้าร่วม (คั่นด้วย ,)")}{field("agenda", "วาระ", { textarea: true, wide: true })}{field("situation_summary", "สรุปสถานการณ์", { textarea: true, wide: true })}{field("key_issues", "ประเด็นสำคัญ", { textarea: true })}{field("decisions", "มติ", { textarea: true })}{field("orders", "ข้อสั่งการ", { textarea: true, wide: true })}{field("responsible_team", "ทีมรับผิดชอบ")}{field("due_date", "กำหนดติดตาม", { type: "date" })}<label className="flex items-center gap-2 text-sm font-bold md:col-span-2"><input type="checkbox" checked={form.create_linked_work} onChange={(event) => update("create_linked_work", event.target.checked)} />สร้างการตัดสินใจและ ภารกิจ ที่เชื่อมโยงกันในการบันทึกครั้งเดียว</label>{form.create_linked_work ? <>{field("mission_code", "รหัสภารกิจ", { required: true })}{field("mission_name", "ชื่อภารกิจ", { required: true })}</> : null}</> : null}
       {view === "decisions" ? <>{field("decision_datetime", "วันเวลา", { type: "datetime-local", required: true })}{field("decision_maker", "ผู้ตัดสินใจ")}{field("issue", "ประเด็น", { textarea: true, required: true })}{field("supporting_data", "ข้อมูลประกอบ", { textarea: true })}{field("decision", "ข้อสั่งการ", { textarea: true, required: true, wide: true })}{field("assigned_team", "ทีมรับผิดชอบ")}{field("followup_due", "กำหนดติดตาม", { type: "datetime-local" })}</> : null}
     </div>
-    <div className="flex justify-end"><button disabled={saving} className="bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{saving ? "กำลังบันทึก..." : "บันทึก"}</button></div>
+    <div className="flex justify-end"><button disabled={saving} className="rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{saving ? "กำลังบันทึก..." : "บันทึก"}</button></div>
   </form>;
 }
 

@@ -3,6 +3,7 @@ import { transaction } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getSessionTeamAccess, writeTeamReportAudit } from "@/lib/eocTeamAccess";
+import { teamRecordsPath } from "@/src/features/eoc/shared/utils/eoc-path";
 
 export async function POST(request, { params }) {
   try {
@@ -48,7 +49,7 @@ export async function POST(request, { params }) {
         `, [
           creators[0].created_by, `report_${body.status}`,
           body.status === "returned" ? "รายงานถูกส่งกลับแก้ไข" : body.status === "verified" ? "รายงานผ่านการตรวจสอบ" : "รายงานได้รับอนุมัติ",
-          creators[0].title, `/eoc/staff/${sessionId}/teams/${sessionTeamId}`,
+          creators[0].title, teamRecordsPath({ eocType: access.context.eoc_type, teamCode: access.context.team_code, sessionId }),
           sessionId, parsedReportId,
         ]);
       }

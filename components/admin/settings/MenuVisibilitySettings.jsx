@@ -4,6 +4,7 @@
 // เป็นการซ่อนเมนู ไม่ใช่ล็อกหน้า (ผู้ที่มีลิงก์และมีสิทธิ์ตามบทบาทยังเปิดหน้านั้นได้)
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, StatusPill, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import { apiRequest } from "@/lib/adminApi";
 
 const API = "/stn-eoc/api/admin/menu-visibility";
@@ -80,16 +81,18 @@ export default function MenuVisibilitySettings() {
         const switchable = group.items.filter((item) => !item.protected);
         const closed = switchable.filter((item) => hidden.has(item.key)).length;
         return (
-          <div key={group.id} className="rounded-2xl border border-slate-200 bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-              <h3 className="text-sm font-black text-slate-900">{group.title}{closed ? <span className="ml-2 text-xs font-bold text-amber-700">ปิด {closed}/{switchable.length}</span> : null}</h3>
-              {switchable.length ? (
-                <div className="flex gap-1.5">
-                  <Button variant="secondary" onClick={() => setGroup(group, true)} disabled={saving || !closed}>เปิดทั้งหมวด</Button>
-                  <Button variant="secondary" onClick={() => setGroup(group, false)} disabled={saving || closed === switchable.length}>ปิดทั้งหมวด</Button>
-                </div>
-              ) : null}
-            </div>
+          <Panel
+            key={group.id}
+            icon="menu"
+            title={group.title}
+            subtitle={closed ? `ปิด ${closed}/${switchable.length} เมนู` : null}
+            action={switchable.length ? (
+              <div className="flex gap-1.5">
+                <Button variant="secondary" onClick={() => setGroup(group, true)} disabled={saving || !closed}>เปิดทั้งหมวด</Button>
+                <Button variant="secondary" onClick={() => setGroup(group, false)} disabled={saving || closed === switchable.length}>ปิดทั้งหมวด</Button>
+              </div>
+            ) : null}
+          >
             <ul className="divide-y divide-slate-100">
               {group.items.map((item) => {
                 const open = item.protected || !hidden.has(item.key);
@@ -115,7 +118,7 @@ export default function MenuVisibilitySettings() {
                 );
               })}
             </ul>
-          </div>
+          </Panel>
         );
       })}
     </section>

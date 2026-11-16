@@ -160,7 +160,7 @@ export default function ShelterCenterMap({
     return (
         <div className={`text-slate-800 overflow-hidden ${embedded ? 'bg-transparent' : 'bg-white rounded-lg shadow-md'}`}>
             {!embedded && (
-                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50">
+                <div className="text-center p-4 bg-slate-50">
                     <h3 className="text-2xl font-bold text-slate-800">ศูนย์พักพิงชั่วคราว</h3>
                     <p className="text-lg mt-1">
                         แสดงตำแหน่งศูนย์พักพิงบนแผนที่ ({sheltersWithCoordinates.length}/{shelters.length} แห่ง)
@@ -173,7 +173,7 @@ export default function ShelterCenterMap({
                 </div>
             )}
 
-            <div className={embedded ? "" : "p-4 bg-gradient-to-br from-green-50 to-blue-50"}>
+            <div className={embedded ? "" : "p-4 bg-slate-50"}>
                 {/* Filter Controls */}
                 {!embedded && !eocType && (
                     <div className="mb-4 bg-white p-4 rounded-lg shadow">

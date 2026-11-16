@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { cn } from "@/lib/utils";
+import { Panel } from "@/components/common/ThemePanels";
 
 const VisitorMapCanvas = dynamic(() => import("@/components/admin/visitors/VisitorMapCanvas"), {
   ssr: false,
@@ -43,20 +44,17 @@ export default function VisitorMap({ params, onPickIp, refreshKey = 0 }) {
   const gpsPoints = state.points.filter((point) => point.kind === "gps").length;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="flex flex-col gap-2 border-b border-slate-100 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h4 className="font-black text-slate-900">แผนที่ผู้เข้าชม</h4>
-          <p className="text-xs text-slate-500">
-            {state.loading ? "กำลังโหลด…" : `${formatNumber(state.points.length)} ตำแหน่ง · ${formatNumber(visits)} ครั้ง${gpsPoints ? ` · GPS ${formatNumber(gpsPoints)} ตำแหน่ง` : ""}${state.unlocated ? ` · ไม่ทราบตำแหน่ง ${formatNumber(state.unlocated)} ครั้ง` : ""}`}
-            {state.truncated ? " · แสดงเฉพาะตำแหน่งที่เข้าชมมากที่สุด" : ""}
-          </p>
-        </div>
+    <Panel
+      icon="map"
+      title="แผนที่ผู้เข้าชม"
+      subtitle={`${state.loading ? "กำลังโหลด…" : `${formatNumber(state.points.length)} ตำแหน่ง · ${formatNumber(visits)} ครั้ง${gpsPoints ? ` · GPS ${formatNumber(gpsPoints)} ตำแหน่ง` : ""}${state.unlocated ? ` · ไม่ทราบตำแหน่ง ${formatNumber(state.unlocated)} ครั้ง` : ""}`}${state.truncated ? " · แสดงเฉพาะตำแหน่งที่เข้าชมมากที่สุด" : ""}`}
+      action={(
         <div className="flex flex-wrap gap-2">
           <Segmented label="รูปแบบแผนที่" value={mode} onChange={setMode} options={[["heat", "ความหนาแน่น"], ["dots", "จุด"]]} />
           <Segmented label="มุมมอง" value={view} onChange={setView} options={[["fit", "พอดีทุกจุด"], ["satun", "สตูล"], ["thailand", "ทั้งประเทศ"]]} />
         </div>
-      </div>
+      )}
+    >
       {state.error ? <p role="alert" className="px-4 py-3 text-sm text-red-800">{state.error}</p> : null}
       <div className="h-[26rem] lg:h-[32rem]">
         <VisitorMapCanvas points={state.points} mode={mode} view={view} onPickIp={onPickIp} />
@@ -75,6 +73,6 @@ export default function VisitorMap({ params, onPickIp, refreshKey = 0 }) {
         )}
         <span className="ml-auto">แตะจุดเพื่อดูว่าใครเข้าชม · ตำแหน่งจาก IP เป็นระดับเมือง ไม่ใช่ที่อยู่จริง</span>
       </div>
-    </section>
+    </Panel>
   );
 }

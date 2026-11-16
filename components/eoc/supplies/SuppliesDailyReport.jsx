@@ -9,6 +9,7 @@ import { formatNumber } from "@/lib/adminApi";
 import { sendOrQueue } from "@/lib/offlineQueue";
 import { shortThaiDate, todayKey } from "@/lib/medicalDaily";
 import FacilitySelect from "@/components/common/FacilitySelect";
+import { EmptyPanel } from "@/components/common/ThemePanels";
 
 const blankRow = { received_qty: "", used_qty: "", counted_qty: "", note: "" };
 const toInput = (value) => (value === null || value === undefined ? "" : String(Number(value)));
@@ -110,7 +111,7 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
               facilities={facilities} value={facilityId || ""} onChange={onFacilityChange} selectClassName={inputClass}
               renderLabel={(facility) => {
                 const status = statusOf(facility.id);
-                const mark = status === "complete" ? " ✓ รายงานแล้ว" : status === "partial" ? " · รายงานไม่ครบ" : "";
+                const mark = status === "complete" ? " · รายงานแล้ว" : status === "partial" ? " · รายงานไม่ครบ" : "";
                 return `${facility.name}${facility.district ? ` (อ.${facility.district})` : ""}${mark}`;
               }}
             />
@@ -130,11 +131,11 @@ export default function SuppliesDailyReport({ eocType = "flood", sessionId, faci
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
 
       {!facilityId ? (
-        <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">กด “นำเข้าไฟล์คลังยา รพ.” เพื่อรายงานจาก 4 ไฟล์ของวันนี้ หรือเลือกหน่วยบริการเพื่อดูและแก้ยอดรายวัน</p>
+        <EmptyPanel icon="building" title="เลือกหน่วยบริการ" text="กด “นำเข้าไฟล์คลังยา รพ.” เพื่อรายงานจาก 4 ไฟล์ของวันนี้ หรือเลือกหน่วยบริการเพื่อดูและแก้ยอดรายวัน" />
       ) : state.loading && !rows.length ? (
         <div className="h-40 animate-pulse rounded-xl bg-slate-100" aria-busy="true" />
       ) : !rows.length ? (
-        <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-600">หน่วยบริการนี้ยังไม่มีรายการในคลัง — เพิ่มรายการหรือนำเข้ายอดตั้งต้นก่อน</p>
+        <EmptyPanel icon="package" title="หน่วยบริการนี้ยังไม่มีรายการในคลัง" text="เพิ่มรายการหรือนำเข้ายอดตั้งต้นก่อน" />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">

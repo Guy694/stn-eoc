@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { getMapBaseLayer, MAP_BASE_LAYERS } from "@/lib/mapBaseLayers";
-import AppIcon from "@/components/icons/AppIcon";
+import { Panel } from "@/components/common/ThemePanels";
 import { VULNERABLE_TYPES } from "@/lib/vulnerableEvent";
 import { MetricCard } from "@/components/common/MetricCards";
 
@@ -203,30 +203,26 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
     }
 
     return (
-        <section className="rounded-lg bg-white p-6 shadow-lg">
-            <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                    <h2 className="mb-2 flex items-center gap-2 text-2xl font-bold text-slate-800">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="accessibility" className="h-4 w-4" /></span>
-                        แผนที่ข้อมูลกลุ่มเปราะบาง (ระดับหมู่บ้าน)
-                    </h2>
-                    <p className="text-slate-600">
-                        ครั้งที่ {session.session_number} • ระบายสีตาม{metricLabel} จาก{sourceLabel} • กดกล่องตัวเลขด้านล่างเพื่อเลือกประเภท
-                    </p>
-                </div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    แผนที่พื้นหลัง
-                    <select
-                        value={baseMap}
-                        onChange={(event) => setBaseMap(event.target.value)}
-                        className="rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:border-emerald-500"
-                    >
-                        {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
-                            <option key={key} value={key}>{layer.label}</option>
-                        ))}
-                    </select>
-                </label>
-            </div>
+        <Panel
+            icon="accessibility"
+            title="แผนที่ข้อมูลกลุ่มเปราะบาง (ระดับหมู่บ้าน)"
+            subtitle={`ครั้งที่ ${session.session_number} • ระบายสีตาม${metricLabel} จาก${sourceLabel} • กดกล่องตัวเลขด้านล่างเพื่อเลือกประเภท`}
+            bodyClassName="p-6"
+            action={(
+                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        แผนที่พื้นหลัง
+                        <select
+                            value={baseMap}
+                            onChange={(event) => setBaseMap(event.target.value)}
+                            className="rounded border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:border-emerald-500"
+                        >
+                            {Object.entries(MAP_BASE_LAYERS).map(([key, layer]) => (
+                                <option key={key} value={key}>{layer.label}</option>
+                            ))}
+                        </select>
+                    </label>
+            )}
+        >
 
             <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5 xl:grid-cols-10">
                 <SummaryBox label="รวมทั้งหมด" value={provinceSummary.total} tone="emerald" active={metric === "total"} onClick={() => setMetric("total")} />
@@ -310,7 +306,7 @@ export default function VulnerableGroupsVillageMap({ session, polygons = [] }) {
                     <LegendItem color="#E5E7EB" label="ไม่มีข้อมูล" />
                 </div>
             </div>
-        </section>
+        </Panel>
     );
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
-import AppIcon from "@/components/icons/AppIcon";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
 import ReportingCompleteness from '@/components/eoc/ReportingCompleteness';
 import SituationBoard from '@/components/eoc/flood-overview/SituationBoard';
 import FloodMapSection from '@/components/eoc/flood-overview/FloodMapSection';
@@ -100,17 +100,9 @@ export default function EOCOverview() {
     if (sessions.length === 0) {
         return (
             <EOCLayout>
-                <div className="w-full">
-                    <h1 className="mb-6 flex items-center gap-2.5 font-[family-name:var(--font-kanit)] text-2xl font-semibold text-slate-900"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-[#0b4c86] ring-1 ring-sky-100"><AppIcon icon="barChart" className="h-5 w-5" /></span>ภาพรวม EOC</h1>
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
-                        <div className="flex items-center">
-                            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
-                            <div>
-                                <h3 className="text-lg font-semibold text-yellow-800">ไม่มีเหตุการณ์ EOC</h3>
-                                <p className="text-yellow-700">ยังไม่มีข้อมูลเหตุการณ์สำหรับแสดงผลย้อนหลัง</p>
-                            </div>
-                        </div>
-                    </div>
+                <div className="w-full space-y-4">
+                    <PageHero icon="flood" eyebrow="อุทกภัย" title="ภาพรวมสถานการณ์" />
+                    <EmptyPanel icon="alert" tone="amber" title="ไม่มีเหตุการณ์ EOC" text="ยังไม่มีข้อมูลเหตุการณ์สำหรับแสดงผลย้อนหลัง" />
                 </div>
             </EOCLayout>
         );
@@ -135,18 +127,9 @@ export default function EOCOverview() {
     return (
         <EOCLayout>
             <div className="w-full">
-                {/* หัวเรื่อง — สถานะเหตุการณ์แสดงอยู่แล้วในแถบเหตุการณ์ด้านบน จึงไม่ซ้ำ */}
-                <header className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h1 className="text-2xl font-black text-slate-900 sm:text-[1.7rem]">ภาพรวมสถานการณ์ <span className="font-semibold text-[#0b4c86]">{getEocTypeLabel(session.eoc_type || 'flood')} ครั้งที่ {session.session_number}</span></h1>
-                    <p className="text-sm text-slate-600">
-                        {session.status === 'active' ? 'เปิดอยู่ · ' : 'ปิดแล้ว · '}
-                        {session.opened_by_name ? `เปิดโดย ${session.opened_by_name} ` : 'เปิด'}เมื่อ {new Date(session.open_time).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}
-                        {session.close_time ? ` · ปิดเมื่อ ${new Date(session.close_time).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}` : ''}
-                    </p>
-                </header>
 
                 {/* ทางลัดไปยังหัวข้อในหน้า */}
-                <nav aria-label="ไปยังหัวข้อ" className="sticky top-0 z-20 -mx-1 mb-5 flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white/90 p-1.5 font-[family-name:var(--font-kanit)] shadow-[0_8px_20px_-16px_rgba(15,23,42,.5)] backdrop-blur [scrollbar-width:none]">
+                <nav aria-label="ไปยังหัวข้อ" className="sticky top-0 z-20 -mx-1 mb-4 flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white/90 p-1.5 font-[family-name:var(--font-kanit)] shadow-[0_8px_20px_-16px_rgba(15,23,42,.5)] backdrop-blur [scrollbar-width:none]">
                     {SECTION_LINKS.map((item) => (
                         <a key={item.id} href={`#${item.id}`} className="shrink-0 rounded-xl px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-[#edf5fc] hover:text-[#0b4c86]">
                             {item.label}
@@ -154,7 +137,13 @@ export default function EOCOverview() {
                     ))}
                 </nav>
 
-                <SituationBoard sessionId={session.id} eocType="flood" />
+                {/* หัวหน้า (PageHero) อยู่ในแผงสรุปสถานการณ์ — ชื่อเหตุการณ์และเวลาเปิด/ปิดส่งเข้าไปแสดงในหัว */}
+                <SituationBoard
+                    sessionId={session.id}
+                    eocType="flood"
+                    heroEyebrow={`ภาพรวมสถานการณ์ · ${getEocTypeLabel(session.eoc_type || 'flood')} ครั้งที่ ${session.session_number}`}
+                    heroSubtitle={`${session.status === 'active' ? 'เปิดอยู่ · ' : 'ปิดแล้ว · '}${session.opened_by_name ? `เปิดโดย ${session.opened_by_name} ` : 'เปิด'}เมื่อ ${new Date(session.open_time).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}${session.close_time ? ` · ปิดเมื่อ ${new Date(session.close_time).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}` : ''}`}
+                />
 
                 {/* แผนที่และบันทึกรายวัน — ส่วนที่แผงสรุปด้านบนไม่มี (ดูย้อนหลังเป็นรายวันได้)
                     ตัวเลขผู้ประสบภัย/ศูนย์พักพิง/โรค/กลุ่มเปราะบาง/เวชภัณฑ์/IT อยู่ในแผงสรุปด้านบน และหน้าของแต่ละเมนูแล้ว จึงไม่แสดงซ้ำที่นี่ */}

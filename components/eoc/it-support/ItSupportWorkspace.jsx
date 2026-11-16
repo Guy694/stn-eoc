@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertOctagon, CheckCircle2, Clock3, Eye, Server, TimerReset, Wrench } from "lucide-react";
 import {
-  AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, FormSection, RowActions,
+  AddButton, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, FormSection, RowActions,
   StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
@@ -13,7 +13,12 @@ import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { IT_CATEGORIES, IT_SEVERITIES, IT_STATUSES, RESOURCE_STATUSES, formatDuration } from "@/lib/itSupport";
 import { sendOrQueue } from "@/lib/offlineQueue";
-import { MetricCard, toneFromClass } from "@/components/common/MetricCards";
+import { MetricCard, MetricGrid, toneFromClass } from "@/components/common/MetricCards";
+import { EmptyPanel, PageHero, Panel } from "@/components/common/ThemePanels";
+
+// กลุ่มบนหัวหน้า (eyebrow) ตามประเภทเหตุการณ์
+const EYEBROWS = { flood: "อุทกภัย", disease: "โรคระบาด" };
+const DESCRIPTION = "บันทึกปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการสื่อสารระหว่างเหตุการณ์ พร้อมสถานะการแก้ไข เพื่อให้ศูนย์สั่งการใช้งานได้ต่อเนื่อง";
 
 const API = "/stn-eoc/api/eoc/it-support";
 const RESOURCE_TYPES = { server: "เซิร์ฟเวอร์", internet: "อินเทอร์เน็ต", network: "เครือข่าย", hardware: "ฮาร์ดแวร์" };
@@ -30,7 +35,7 @@ const EMPTY = {
 };
 
 function Kpi({ icon, label, value, hint, tone = "text-slate-900" }) {
-  return <MetricCard icon={icon} label={label} value={value} note={hint} tone={toneFromClass(tone)} compact />;
+  return <MetricCard icon={icon} label={label} value={value} note={hint} tone={toneFromClass(tone)} />;
 }
 
 export default function ItSupportWorkspace({ eocType = "flood" }) {
@@ -114,7 +119,12 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
   const context = session ? `${getEocTypeLabel(eocType)} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : null;
 
   if (!state.loading && data && !session) {
-    return <AdminPage title="รายงาน IT support"><p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">{data.message}</p></AdminPage>;
+    return (
+      <div className="w-full space-y-4">
+        <PageHero icon="monitor" eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)} title="รายงาน IT support" subtitle={DESCRIPTION} />
+        <EmptyPanel icon="info" title={data.message} />
+      </div>
+    );
   }
 
   const ticketColumns = [
@@ -140,12 +150,16 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
   ];
 
   return (
-    <AdminPage
-      context={context}
-      title="รายงาน IT support"
-      description="บันทึกปัญหาระบบ อินเทอร์เน็ต อุปกรณ์ และการสื่อสารระหว่างเหตุการณ์ พร้อมสถานะการแก้ไข เพื่อให้ศูนย์สั่งการใช้งานได้ต่อเนื่อง"
-      actions={perms.can_edit ? <AddButton onClick={() => openForm()}>แจ้งปัญหา IT</AddButton> : null}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="monitor"
+        eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)}
+        title="รายงาน IT support"
+        subtitle={DESCRIPTION}
+        meta={context}
+        actions={perms.can_edit ? <AddButton onClick={() => openForm()}>แจ้งปัญหา IT</AddButton> : null}
+        tray
+      />
       {notice}
       {state.error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error}</p> : null}
       {perms.read_only_message ? (
@@ -156,21 +170,20 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
       {data?.migration_needed ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">ยังไม่มีตารางรายงาน IT support ให้ผู้ดูแลระบบรัน <code>npm run db:migrate</code></p> : null}
 
       {summary ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <MetricGrid>
           <Kpi icon={Wrench} label="ปัญหาที่ยังไม่แก้" value={formatNumber(summary.open)} hint={`ทั้งหมด ${formatNumber(summary.total)} เรื่อง`} tone={summary.open ? "text-[#0b4c86]" : "text-slate-900"} />
           <Kpi icon={AlertOctagon} label="วิกฤต / สูง ที่ยังเปิด" value={formatNumber(summary.critical)} tone={summary.critical ? "text-red-700" : "text-slate-900"} />
           <Kpi icon={CheckCircle2} label="แก้ไขแล้ววันนี้" value={formatNumber(summary.resolvedToday)} tone="text-emerald-700" />
           <Kpi icon={TimerReset} label="เวลาแก้ไขเฉลี่ย" value={formatDuration(summary.avgHoursToResolve)} />
           <Kpi icon={Clock3} label="เรื่องค้างนานสุด" value={formatDuration(summary.oldestOpenHours)} tone={summary.oldestOpenHours >= 12 ? "text-amber-700" : "text-slate-900"} />
           <Kpi icon={Server} label="ระบบ/อุปกรณ์ออฟไลน์" value={`${formatNumber(summary.resources.offline)} / ${formatNumber(summary.resources.total)}`} hint={summary.resources.maintenance ? `ซ่อมบำรุง ${summary.resources.maintenance}` : "จากทะเบียนทรัพยากร IT"} tone={summary.resources.offline ? "text-red-700" : "text-slate-900"} />
-        </div>
+        </MetricGrid>
       ) : null}
 
       {summary?.byCategory?.length || summary?.unitsWithProblems?.length ? (
         <div className="grid gap-3 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <h3 className="text-sm font-black text-slate-900">ปัญหาแยกตามประเภท</h3>
-            <ul className="mt-2 space-y-2">
+          <Panel icon="barChart" title="ปัญหาแยกตามประเภท" bodyClassName="p-4">
+            <ul className="space-y-2">
               {summary.byCategory.map((row) => (
                 <li key={row.key}>
                   <div className="flex justify-between text-sm"><span className="font-semibold text-slate-800">{row.label}</span><span className="tabular-nums text-slate-600">ยังเปิด <b className="text-slate-900">{row.open}</b> / {row.total}</span></div>
@@ -178,17 +191,16 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <h3 className="text-sm font-black text-slate-900">หน่วยงานที่ยังมีปัญหา</h3>
+          </Panel>
+          <Panel icon="building" title="หน่วยงานที่ยังมีปัญหา" bodyClassName="p-4">
             {summary.unitsWithProblems.length ? (
-              <ul className="mt-2 flex flex-wrap gap-1.5">
+              <ul className="flex flex-wrap gap-1.5">
                 {summary.unitsWithProblems.map((unit) => (
                   <li key={unit}><button type="button" onClick={() => { setTab("tickets"); setStatusFilter("active"); setSearch(unit); }} className="rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-800 ring-1 ring-red-200 hover:bg-red-100">{unit}</button></li>
                 ))}
               </ul>
-            ) : <p className="mt-2 rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">ไม่มีปัญหาค้าง</p>}
-          </div>
+            ) : <p className="rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">ไม่มีปัญหาค้าง</p>}
+          </Panel>
         </div>
       ) : null}
 
@@ -307,6 +319,6 @@ export default function ItSupportWorkspace({ eocType = "flood" }) {
       </FormDialog>
 
       <DeleteDialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)} itemType="เรื่องแจ้งปัญหา IT" itemLabel={deleting ? `${deleting.ticket_no} ${deleting.title}` : ""} onConfirm={confirmDelete} busy={busy} error={formError} />
-    </AdminPage>
+    </div>
   );
 }

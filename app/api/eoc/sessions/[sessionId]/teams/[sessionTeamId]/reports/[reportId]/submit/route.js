@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { publicInternalError } from "@/lib/apiResponse";
 import { getSessionTeamAccess, writeTeamReportAudit } from "@/lib/eocTeamAccess";
 import { normalizeTeamCode } from "@/src/features/eoc/registries/team.registry";
+import { teamRecordsPath } from "@/src/features/eoc/shared/utils/eoc-path";
 import { validateTeamReportPayload } from "@/src/features/eoc/teams/shared/schemas/team-report-payload.schema";
 
 export async function POST(request, { params }) {
@@ -44,7 +45,7 @@ export async function POST(request, { params }) {
           AND officer.id <> ?
       `, [
         submittedReports[0]?.title || `รายงาน ${access.context.team_code}`,
-        `/eoc/staff/${sessionId}/teams/${sessionTeamId}`,
+        teamRecordsPath({ eocType: access.context.eoc_type, teamCode: access.context.team_code, sessionId }),
         sessionId, parsedReportId, auth.user.id,
       ]);
       return true;

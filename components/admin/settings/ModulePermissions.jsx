@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Plus, RotateCcw, X } from "lucide-react";
 import { Button, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { apiRequest } from "@/lib/adminApi";
 
@@ -179,11 +180,13 @@ export default function ModulePermissions() {
         </div>
       ) : null}
 
-      <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
-        {(current?.modules || []).map((mod) => (
-          <ModuleRow key={mod.key} eocType={eocType} mod={mod} teams={state.data.teams} onSaved={onSaved} onError={fail} />
-        ))}
-      </ul>
+      <Panel icon="lock" title={`เมนูของ${current?.label || "เหตุการณ์"}`} subtitle="ทีมที่บันทึกและแก้ไขข้อมูลแต่ละเมนูได้">
+        <ul className="divide-y divide-slate-100">
+          {(current?.modules || []).map((mod) => (
+            <ModuleRow key={mod.key} eocType={eocType} mod={mod} teams={state.data.teams} onSaved={onSaved} onError={fail} />
+          ))}
+        </ul>
+      </Panel>
 
       <AppDialog open={confirmReset} onOpenChange={setConfirmReset} title={`คืนค่าเริ่มต้นทุกเมนูของ${current?.label || ""}?`} description="สิทธิ์ที่ปรับไว้จะถูกแทนด้วยค่าเริ่มต้นของระบบ มีผลทันทีกับเหตุการณ์ที่เปิดอยู่" busy={resetting}>
         <AppDialogActions>

@@ -1,13 +1,13 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { EmptyPanel, PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
 import { showError, showSuccess, showDeleteConfirm } from '@/lib/feedback';
 import dynamic from 'next/dynamic';
 import AppIcon from "@/components/icons/AppIcon";
-import { MetricCard } from "@/components/common/MetricCards";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
@@ -214,11 +214,8 @@ export default function ServicePointsPage() {
         return (
             <EOCLayout>
                 <div className="w-full">
-                    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
-                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
-                        <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
-                        <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนจัดการจุดบริการ</p>
-                    </div>
+                    <PageHero icon="route" eyebrow="อุบัติเหตุ" title="จุดบริการชั่วคราว" className="mb-6" />
+                    <EmptyPanel icon="alert" tone="amber" title="ไม่มีเหตุการณ์ EOC ที่เปิดอยู่" text="กรุณาเปิดเหตุการณ์ EOC ก่อนจัดการจุดบริการ" />
                 </div>
             </EOCLayout>
         );
@@ -228,7 +225,7 @@ export default function ServicePointsPage() {
         <EOCLayout>
             <div className="w-full">
                 {/* Header */}
-                <PageHero icon="route" title="จุดบริการชั่วคราว" subtitle={<>เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย</>} actions={<><button
+                <PageHero icon="route" eyebrow="อุบัติเหตุ" title="จุดบริการชั่วคราว" subtitle={<>เหตุการณ์ครั้งที่ {activeSession.session_number} - จุดตรวจ/จุดบริการช่วง 7 วันอันตราย</>} actions={<><button
                         onClick={() => { setEditingPoint(null); resetForm(); setShowModal(true); }}
                         className={heroPrimaryButtonClass}
                     >
@@ -236,12 +233,12 @@ export default function ServicePointsPage() {
                     </button></>} className="mb-6" />
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <MetricGrid className="mb-6">
                     <MetricCard label="จุดบริการทั้งหมด" value={stats.total} tone="amber" />
                     <MetricCard icon="statusGreen" label="เปิดให้บริการ" value={stats.active} tone="green" />
                     <MetricCard icon="shield" label="เจ้าหน้าที่" value={stats.officers} tone="blue" />
                     <MetricCard icon="car" label="รถตรวจ" value={stats.vehicles} tone="blue" />
-                </div>
+                </MetricGrid>
 
                 {/* Cards View */}
                 {loading ? (
@@ -250,11 +247,7 @@ export default function ServicePointsPage() {
                         <p className="text-slate-600">กำลังโหลด...</p>
                     </div>
                 ) : points.length === 0 ? (
-                    <div className="border border-slate-200 bg-white rounded-2xl p-12 text-center">
-                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
-                        <h3 className="text-xl font-bold text-slate-700 mb-2">ยังไม่มีจุดบริการ</h3>
-                        <p className="text-slate-500 mb-4">คลิกปุ่ม &quot;เพิ่มจุดบริการ&quot; เพื่อเริ่มต้น</p>
-                    </div>
+                    <EmptyPanel icon="file" title="ยังไม่มีจุดบริการ" text={'คลิกปุ่ม "เพิ่มจุดบริการ" เพื่อเริ่มต้น'} />
                 ) : (
                     <div ref={listAnchor} className="scroll-mt-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

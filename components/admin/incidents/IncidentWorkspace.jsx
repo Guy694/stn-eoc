@@ -6,8 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, Eye, Phone } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, IconButton, RowActions, StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
+  Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, IconButton, RowActions, StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
+import { PageHero } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { useUrlState } from "@/components/admin/useUrlState";
 import { REPORT_TYPE_LABELS, categoryMeta } from "@/lib/incidentPublishing";
@@ -179,11 +180,14 @@ export default function IncidentWorkspace() {
   };
 
   return (
-    <AdminPage
-      context="งานรอดำเนินการ"
-      title="คำขอจากประชาชน"
-      description="คำขอความช่วยเหลือ รายงานเส้นทาง และจุดปัญหาที่ประชาชนแจ้ง ตรวจว่าเกิดจริง → เลือกว่าจะเผยแพร่บนแผนที่หรือไม่ (คำขอความช่วยเหลือไม่เผยแพร่) ทุกการเปลี่ยนแปลงถูกบันทึกประวัติ"
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="siren"
+        tray
+        eyebrow="งานรอดำเนินการ"
+        title="คำขอจากประชาชน"
+        subtitle="คำขอความช่วยเหลือ รายงานเส้นทาง และจุดปัญหาที่ประชาชนแจ้ง ตรวจว่าเกิดจริง → เลือกว่าจะเผยแพร่บนแผนที่หรือไม่ (คำขอความช่วยเหลือไม่เผยแพร่) ทุกการเปลี่ยนแปลงถูกบันทึกประวัติ"
+      />
       {!publishingReady ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
           ยังไม่ได้ติดตั้งระบบเผยแพร่ (รัน <code>npm run db:migrate</code>) — ระหว่างนี้แผนที่สาธารณะจะไม่แสดงจุดจากประชาชน
@@ -345,6 +349,6 @@ export default function IncidentWorkspace() {
         note="ถ้าเป็นเรื่องซ้ำหรือข้อมูลไม่จริง แนะนำเปลี่ยนสถานะเป็น “ไม่ดำเนินการ” แทนการลบ ส่วนการลบจะย้ายไปถังขยะ กู้คืนได้"
       />
       {notice}
-    </AdminPage>
+    </div>
   );
 }

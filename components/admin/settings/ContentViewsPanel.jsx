@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ExternalLink, Images, Megaphone, Newspaper, RefreshCw } from "lucide-react";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { MetricCard } from "@/components/common/MetricCards";
+import { Panel } from "@/components/common/ThemePanels";
 import { CONTENT_KINDS, contentHref } from "@/lib/contentViews";
 
 const API = "/stn-eoc/api/admin/content-views";
@@ -64,11 +65,11 @@ export default function ContentViewsPanel() {
             ))}
           </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-slate-100 px-4 py-3">
-              <h4 className="font-black text-slate-900">ยอดเข้าชมแต่ละชิ้น{kind ? ` • ${CONTENT_KINDS[kind]}` : ""}</h4>
-              {kind ? <button type="button" onClick={() => setKind("")} className="text-sm font-semibold text-[#0b4c86] hover:underline">ดูทุกประเภท</button> : null}
-            </div>
+          <Panel
+            icon="barChart"
+            title={`ยอดเข้าชมแต่ละชิ้น${kind ? ` • ${CONTENT_KINDS[kind]}` : ""}`}
+            action={kind ? <button type="button" onClick={() => setKind("")} className="text-sm font-semibold text-[#0b4c86] hover:underline">ดูทุกประเภท</button> : null}
+          >
             {shown.length ? (
               <ol className="divide-y divide-slate-100">
                 {shown.map((item, index) => (
@@ -95,7 +96,7 @@ export default function ContentViewsPanel() {
                 {all ? "แสดงน้อยลง" : `ดูทั้งหมด (อีก ${items.length - SHOW} ชิ้น)`}
               </button>
             ) : null}
-          </section>
+          </Panel>
 
           <p className="rounded-xl border border-[#c9dcee] bg-[#edf5fc] p-4 text-sm text-[#083865]">
             นับเมื่อกดเข้าไปอ่านประกาศหรือสื่อความรู้ และเมื่อกดดูอินโฟกราฟิกขนาดเต็ม คนเดิม (IP เดิม) เปิดชิ้นเดิมซ้ำภายใน 1 ชั่วโมงนับครั้งเดียว ไม่เก็บข้อมูลผู้เข้าชม

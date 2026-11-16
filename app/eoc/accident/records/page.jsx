@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PageHero, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+import { EmptyPanel, PageHero, Panel, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from "@/components/layouts/EOCLayout";
 import { useSatunDistricts } from "@/lib/useSatunDistricts";
@@ -8,7 +8,7 @@ import { showError, showSuccess, showDeleteConfirm } from '@/lib/feedback';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import dynamic from 'next/dynamic';
 import AppIcon from "@/components/icons/AppIcon";
-import { MetricCard } from "@/components/common/MetricCards";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
 
 const MapSelector = dynamic(() => import('@/components/MapSelector'), {
     ssr: false,
@@ -215,11 +215,8 @@ export default function AccidentRecordsPage() {
         return (
             <EOCLayout>
                 <div className="w-full">
-                    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 text-center">
-                        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="alert" className="h-6 w-6" /></span>
-                        <h3 className="text-xl font-semibold text-slate-900 mb-2">ไม่มีเหตุการณ์ EOC ที่เปิดอยู่</h3>
-                        <p className="text-slate-600">กรุณาเปิดเหตุการณ์ EOC ก่อนบันทึกข้อมูล</p>
-                    </div>
+                    <PageHero icon="car" eyebrow="อุบัติเหตุ" title="บันทึกอุบัติเหตุ" className="mb-6" />
+                    <EmptyPanel icon="alert" tone="amber" title="ไม่มีเหตุการณ์ EOC ที่เปิดอยู่" text="กรุณาเปิดเหตุการณ์ EOC ก่อนบันทึกข้อมูล" />
                 </div>
             </EOCLayout>
         );
@@ -229,7 +226,7 @@ export default function AccidentRecordsPage() {
         <EOCLayout>
             <div className="w-full">
                 {/* Header */}
-                <PageHero icon="car" title="บันทึกอุบัติเหตุ" subtitle={<>เหตุการณ์ครั้งที่ {activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}</>} actions={<><button
+                <PageHero icon="car" eyebrow="อุบัติเหตุ" title="บันทึกอุบัติเหตุ" subtitle={<>เหตุการณ์ครั้งที่ {activeSession.session_number} - {activeSession.open_reason || '7 วันอันตราย'}</>} actions={<><button
                         onClick={() => { setEditingRecord(null); resetForm(); setShowModal(true); }}
                         className={heroPrimaryButtonClass}
                     >
@@ -237,12 +234,12 @@ export default function AccidentRecordsPage() {
                     </button></>} className="mb-6" />
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <MetricGrid className="mb-6">
                     <MetricCard label="อุบัติเหตุทั้งหมด" value={stats.total} tone="red" />
                     <MetricCard icon="skull" label="เสียชีวิต" value={stats.deaths} tone="slate" />
                     <MetricCard icon="stethoscope" label="บาดเจ็บ" value={stats.injuries} tone="amber" />
                     <MetricCard icon="beer" label="เมาแล้วขับ" value={stats.drunk} tone="blue" />
-                </div>
+                </MetricGrid>
 
                 {/* Filters */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-4 mb-6">
@@ -273,10 +270,7 @@ export default function AccidentRecordsPage() {
                 </div>
 
                 {/* Table */}
-                <div className="border border-slate-200 bg-white rounded-2xl overflow-hidden">
-                    <div className="p-4 bg-slate-50 border-b">
-                        <h3 className="font-semibold text-slate-900">รายการอุบัติเหตุ ({records.length} รายการ)</h3>
-                    </div>
+                <Panel icon="car" title={`รายการอุบัติเหตุ (${records.length} รายการ)`}>
 
                     {loading ? (
                         <div className="text-center py-8">
@@ -284,22 +278,22 @@ export default function AccidentRecordsPage() {
                             <p className="text-slate-600 text-sm">กำลังโหลด...</p>
                         </div>
                     ) : records.length === 0 ? (
-                        <div className="text-center py-12">
-                            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 text-slate-400 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
-                            <p className="text-slate-500">ยังไม่มีรายงานอุบัติเหตุ</p>
+                        <div className="flex flex-col items-center px-6 py-10 text-center">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-slate-200"><AppIcon icon="file" className="h-6 w-6" /></span>
+                            <p className="mt-3 font-semibold text-slate-900">ยังไม่มีรายงานอุบัติเหตุ</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="stack-mobile min-w-full divide-y divide-slate-200">
                                 <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">#</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">วัน/เวลา</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">ประเภท</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">สถานที่</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">ผลกระทบ</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">สาเหตุ</th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">จัดการ</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500">#</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500">วัน/เวลา</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500">ประเภท</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500">สถานที่</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500">ผลกระทบ</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-slate-500">สาเหตุ</th>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-slate-500">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-slate-200">
@@ -351,7 +345,7 @@ export default function AccidentRecordsPage() {
                         onPageChange={setCurrentPage}
                         onPageSizeChange={setPageSize}
                     />
-                </div>
+                </Panel>
 
                 {/* Modal */}
                 {showModal && (

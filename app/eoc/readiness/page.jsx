@@ -4,7 +4,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, Clock, LifeBuoy } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { AdminPage, Button, inputClass, useNotice } from "@/components/admin/crud";
+import { Button, inputClass, useNotice } from "@/components/admin/crud";
+import { PageHero, Panel } from "@/components/common/ThemePanels";
 import ReadinessSlider from "@/components/readiness/ReadinessSlider";
 import { apiRequest } from "@/lib/adminApi";
 import { MAX_NOTE_LENGTH, isStale, readinessMeta } from "@/lib/officerReadiness";
@@ -68,16 +69,18 @@ export default function MyReadinessPage() {
 
   return (
     <EOCLayout>
-      <AdminPage title="สถานะของฉัน" description="บอกศูนย์ฯ ว่าวันนี้คุณพร้อมมาปฏิบัติงานหรือไม่ ผู้บัญชาการใช้ข้อมูลนี้จัดกำลังคน">
-        <section className="mx-auto w-full max-w-2xl space-y-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <div className="w-full space-y-4">
+        <PageHero icon="personStanding" eyebrow="เจ้าหน้าที่" title="สถานะของฉัน" subtitle="บอกศูนย์ฯ ว่าวันนี้คุณพร้อมมาปฏิบัติงานหรือไม่ ผู้บัญชาการใช้ข้อมูลนี้จัดกำลังคน" />
+        <Panel
+          icon="checkCircle"
+          title="ตอนนี้คุณพร้อมปฏิบัติงานไหม"
+          className="mx-auto w-full max-w-2xl"
+          bodyClassName="space-y-4 p-5 sm:p-6"
+          action={current ? (
+            <span className="rounded-full px-3 py-1 text-sm font-bold" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+          ) : !state.loading ? <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">ยังไม่ได้รายงาน</span> : null}
+        >
           {state.error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
-
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-black text-slate-900">ตอนนี้คุณพร้อมปฏิบัติงานไหม</h2>
-            {current ? (
-              <span className="rounded-full px-3 py-1 text-sm font-bold" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
-            ) : !state.loading ? <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">ยังไม่ได้รายงาน</span> : null}
-          </div>
 
           <ReadinessSlider value={draft} onChange={pick} disabled={saving || state.loading} />
           <p className="text-center text-xs text-slate-500">แตะหรือปัดแถบเพื่อเลือก ระบบบันทึกให้ทันที</p>
@@ -114,8 +117,8 @@ export default function MyReadinessPage() {
               </span>
             </p>
           ) : null}
-        </section>
-      </AdminPage>
+        </Panel>
+      </div>
     </EOCLayout>
   );
 }

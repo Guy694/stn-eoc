@@ -5,12 +5,15 @@ import { useCallback, useEffect, useState } from "react";
 import { areaLabel } from "@/lib/vulnerableEvent";
 import Link from "next/link";
 import { AlertOctagon, AlertTriangle, ArrowRight, Info, Printer, RefreshCw, Siren, FileSpreadsheet } from "lucide-react";
-import { Button } from "@/components/admin/crud";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { LEVEL_LABELS } from "@/lib/meetingBrief";
 import { numberItems } from "@/lib/dailyDirectives";
 import AlertsPanel from "@/components/eoc/brief/AlertsPanel";
+import { EmptyPanel, PageHero, heroButtonClass, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
+
+// กลุ่มบนหัวหน้า (eyebrow) ตามประเภทเหตุการณ์
+const EYEBROWS = { flood: "อุทกภัย", disease: "โรคระบาด" };
 
 const LEVEL_STYLE = {
   critical: { icon: AlertOctagon, box: "border-red-300 bg-red-50", chip: "bg-red-700 text-white", text: "text-red-950" },
@@ -58,8 +61,16 @@ export default function MeetingBriefView({ eocType = "flood" }) {
 
   const data = state.data;
   if (state.loading && !data) return <div className="space-y-3">{[0, 1, 2].map((key) => <div key={key} className="h-32 animate-pulse rounded-xl bg-white" />)}</div>;
-  if (state.error) return <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error}</p>;
-  if (!data?.session) return <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">{data?.message}</p>;
+  if (state.error || !data?.session) {
+    return (
+      <div className="w-full space-y-4">
+        <PageHero icon="clipboard" eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)} title="สรุปสถานการณ์สำหรับห้องประชุม" subtitle="ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล" />
+        {state.error
+          ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error}</p>
+          : <EmptyPanel icon="info" title={data?.message || "ยังไม่มีเหตุการณ์ที่เปิดอยู่"} />}
+      </div>
+    );
+  }
 
   const base = `/eoc/${eocType}`;
   const { health, shelters, supplies, vulnerable, it, directives, completeness } = data;
@@ -69,22 +80,33 @@ export default function MeetingBriefView({ eocType = "flood" }) {
   return (
     <div className="w-full space-y-4 print:max-w-none print:space-y-3 print:text-[12px]">
       <style>{"@media print { @page { size: A4; margin: 12mm; } }"}</style>
-      <header className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#0b4c86] pb-3">
+      <PageHero
+        icon="clipboard"
+        eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)}
+        title="สรุปสถานการณ์สำหรับห้องประชุม"
+        subtitle="ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล"
+        meta={`${getEocTypeLabel(eocType)} ครั้งที่ ${data.session.session_number}${data.session.status === "active" ? "" : " (ปิดแล้ว)"} · ข้อมูล ณ ${formatDateTime(data.generated_at)}`}
+        className="print:hidden"
+        actions={(
+          <>
+            <button type="button" className={heroButtonClass} onClick={load} disabled={state.loading}><RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} aria-hidden="true" />ดึงข้อมูลล่าสุด</button>
+            {eocType === "flood" ? (
+              <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download
+                title="14 แผ่นงานตามแบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล (ไม่รวมข้อมูลรายบุคคล)"
+                className={heroButtonClass}>
+                <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
+              </a>
+            ) : null}
+            <button type="button" className={heroPrimaryButtonClass} onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden="true" />พิมพ์ / บันทึก PDF</button>
+          </>
+        )}
+      />
+      {/* หัวสำหรับพิมพ์ (บนจอใช้ PageHero ด้านบน) */}
+      <header className="hidden flex-wrap items-end justify-between gap-3 border-b-2 border-[#0b4c86] pb-3 print:flex">
         <div>
           <p className="text-sm font-semibold text-[#0b4c86]">ศูนย์ข้อมูลสถานการณ์ฉุกเฉินด้านการแพทย์และสาธารณสุข จังหวัดสตูล</p>
-          <h1 className="font-[family-name:var(--font-kanit)] text-2xl font-semibold text-slate-900">สรุปสถานการณ์สำหรับห้องประชุม</h1>
+          <p className="font-[family-name:var(--font-kanit)] text-2xl font-semibold text-slate-900">สรุปสถานการณ์สำหรับห้องประชุม</p>
           <p className="text-sm text-slate-600">{getEocTypeLabel(eocType)} ครั้งที่ {data.session.session_number}{data.session.status === "active" ? "" : " (ปิดแล้ว)"} · ข้อมูล ณ {formatDateTime(data.generated_at)}</p>
-        </div>
-        <div className="flex gap-2 print:hidden">
-          <Button variant="secondary" onClick={load} disabled={state.loading}><RefreshCw className={`h-4 w-4 ${state.loading ? "animate-spin" : ""}`} />ดึงข้อมูลล่าสุด</Button>
-          {eocType === "flood" ? (
-            <a href={`/stn-eoc/api/eoc/sheet-export/?eoc=flood&session_id=${data.session.id}`} download
-              title="14 แผ่นงานตามแบบรายงานเตรียมความพร้อมรับมืออุทกภัยของ สสจ.สตูล (ไม่รวมข้อมูลรายบุคคล)"
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
-              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />ส่งออก Excel แบบชีต สสจ.
-            </a>
-          ) : null}
-          <Button onClick={() => window.print()}><Printer className="h-4 w-4" />พิมพ์ / บันทึก PDF</Button>
         </div>
       </header>
 

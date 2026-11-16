@@ -7,9 +7,9 @@
 import dynamic from "next/dynamic";
 import VulnerableViewTabs from "@/components/eoc/vulnerable/VulnerableViewTabs";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, History, Lock, MapPinOff, Navigation, Pencil, Phone, RefreshCw, Trash2, UserRound } from "lucide-react";
+import { ExternalLink, History, Lock, MapPinOff, Navigation, Pencil, Phone, RefreshCw, Trash2, UserRound, Zap } from "lucide-react";
 import { IconButton,
-  AddButton, AdminPage, Button, Field, FilterSelect, FormDialog, FormGrid, FormSection, ReadOnlyNotice, StatusPill,
+  AddButton, Button, Field, FreshnessBadge, FilterSelect, FormDialog, FormGrid, FormSection, ReadOnlyNotice, StatusPill,
   Toolbar, UpdatedAt, inputClass, latestTime, useNotice
 } from "@/components/admin/crud";
 import LocationPicker from "@/components/admin/LocationPicker";
@@ -27,6 +27,10 @@ import ImportExcelDialog, { ImportExcelButton } from "@/components/eoc/ImportExc
 import Link from "next/link";
 import { shelterMarkerHtml } from "@/lib/shelterMarker";
 import PaginationControls, { usePagination } from "@/components/common/PaginationControls";
+import { PageHero } from "@/components/common/ThemePanels";
+
+// กลุ่มบนหัวหน้า (eyebrow) ตามประเภทเหตุการณ์
+const EYEBROWS = { flood: "อุทกภัย", disease: "โรคระบาด" };
 
 const API = "/stn-eoc/api/eoc/vulnerable-persons";
 const AREA_API = "/stn-eoc/api/eoc/vulnerable-event";
@@ -118,8 +122,8 @@ function MapLegend({ showShelters = false }) {
         ))}
       </ul>
       <p className="mt-1.5 flex items-center gap-1.5 text-slate-600">
-        <span className="rounded-full bg-white px-1.5 text-[10px] font-bold text-slate-800 ring-1 ring-slate-400">HD ⚡</span>
-        ป้ายบนหมุด = ประเภท, ⚡ = ใช้อุปกรณ์ไฟฟ้า
+        <span className="inline-flex items-center gap-0.5 rounded-full bg-white px-1.5 text-[10px] font-bold text-slate-800 ring-1 ring-slate-400">HD <Zap className="h-2.5 w-2.5 fill-violet-700 text-violet-700" aria-hidden="true" /></span>
+        <span>ป้ายบนหมุด = ประเภท, <Zap className="inline-block h-3 w-3 fill-violet-700 align-[-2px] text-violet-700" aria-label="สายฟ้า" /> = ใช้อุปกรณ์ไฟฟ้า</span>
       </p>
       <p className="mt-1 flex items-center gap-1.5 text-slate-600">
         <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center" aria-hidden="true"><span className="absolute inset-0 rounded-full bg-red-500/40" /><span className="h-1.5 w-1.5 rounded-full bg-red-600" /></span>
@@ -252,7 +256,7 @@ function PersonCard({ person, selected, onSelect, perms, onQuick, onStatus, onEd
             </span>
             <span className="mt-1 flex flex-wrap items-center gap-1">
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">{type?.short || person.vulnerable_type}</span>
-              {person.power_dependent ? <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-bold text-violet-800 ring-1 ring-violet-200">⚡ ใช้อุปกรณ์ไฟฟ้า</span> : null}
+              {person.power_dependent ? <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-bold text-violet-800 ring-1 ring-violet-200"><Zap className="h-3 w-3 fill-violet-700" aria-hidden="true" />ใช้อุปกรณ์ไฟฟ้า</span> : null}
               {followUp ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${followUp.key === "late" ? "bg-red-50 text-red-700 ring-red-200" : followUp.key === "due" ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-cyan-50 text-cyan-800 ring-cyan-200"}`}>{followUp.text}</span> : null}
               {pregnancy ? <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 ring-1 ring-rose-200">{pregnancy.text}</span> : null}
               {person.in_flood_area && caseStatus(person.status).group !== "done" ? <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800 ring-1 ring-sky-200">บ้านอยู่ในพื้นที่น้ำท่วม</span> : null}
@@ -667,18 +671,26 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood", registry
   const context = registry ? "ข้อมูลกลาง" : session ? `${getEocTypeLabel(eocType)} ครั้งที่ ${session.session_number}${session.status === "active" ? "" : " (ปิดแล้ว)"}` : null;
 
   return (
-    <AdminPage
-      context={context}
-      title={registry ? "ทะเบียนกลุ่มเปราะบางรายบุคคล" : "แผนที่กลุ่มเปราะบางรายบุคคล"}
-      freshness={session ? { value: latestTime(persons.map((person) => person.status_updated_at)), staleHours: 6, label: "อัปเดตสถานะล่าสุด", emptyText: "ยังไม่มีการอัปเดตสถานะในเหตุการณ์นี้" } : null}
-      description="ดูว่าใครยังไม่ได้รับการช่วยเหลือ อยู่ตรงไหน และอัปเดตสถานะเมื่อเจ้าหน้าที่เข้าพื้นที่"
-      actions={(
-        <div className="flex flex-wrap gap-2">
-          {registry && perms.can_edit_registry ? <ImportExcelButton onClick={() => setImportOpen(true)} /> : null}
-          {perms.can_edit_registry ? <AddButton onClick={() => setPersonDialog({ open: true, editing: null })}>เพิ่มรายชื่อ</AddButton> : null}
-        </div>
-      )}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon={registry ? "users" : "mapPinned"}
+        eyebrow={registry ? "ข้อมูลกลาง" : EYEBROWS[eocType] || getEocTypeLabel(eocType)}
+        title={registry ? "ทะเบียนกลุ่มเปราะบางรายบุคคล" : "แผนที่กลุ่มเปราะบางรายบุคคล"}
+        subtitle="ดูว่าใครยังไม่ได้รับการช่วยเหลือ อยู่ตรงไหน และอัปเดตสถานะเมื่อเจ้าหน้าที่เข้าพื้นที่"
+        meta={(!registry && context) || session ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {!registry && context ? <span className="text-sm font-medium text-blue-100">{context}</span> : null}
+            {session ? <FreshnessBadge value={latestTime(persons.map((person) => person.status_updated_at))} staleHours={6} label="อัปเดตสถานะล่าสุด" emptyText="ยังไม่มีการอัปเดตสถานะในเหตุการณ์นี้" /> : null}
+          </div>
+        ) : null}
+        actions={perms.can_edit_registry ? (
+          <>
+            {registry ? <ImportExcelButton onClick={() => setImportOpen(true)} /> : null}
+            <AddButton onClick={() => setPersonDialog({ open: true, editing: null })}>เพิ่มรายชื่อ</AddButton>
+          </>
+        ) : null}
+        tray
+      />
       <VulnerableViewTabs eocType={eocType} current="persons" registry={registry} />
       {!registry && perms.can_edit_registry ? (
         <p className="text-xs text-slate-500">นำเข้ารายชื่อจาก Excel ได้ที่ <Link href="/eoc/vulnerable-groups/persons" className="font-semibold text-[#0b4c86] hover:underline">ทะเบียนกลุ่มเปราะบาง › รายบุคคลและแผนที่</Link> รายชื่อชุดเดียวกันใช้ได้ทุกเหตุการณ์</p>
@@ -827,6 +839,6 @@ export default function VulnerablePersonsWorkspace({ eocType = "flood", registry
         {removing?.phone ? <p className="mt-2 text-xs text-slate-500">เบอร์ที่บันทึกไว้: {maskPhone(removing.phone)}</p> : null}
       </FormDialog>
       <ImportExcelDialog open={importOpen} onOpenChange={setImportOpen} kind="vulnerable" context={{ eoc: eocType, session_id: sessionId }} onImported={load} />
-    </AdminPage>
+    </div>
   );
 }

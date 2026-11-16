@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
-import { AdminPage, Button, DataTable, FilterSelect, StatusPill, Toolbar, UpdatedAt, useNotice } from "@/components/admin/crud";
+import { PageHero } from "@/components/common/ThemePanels";
+import { Button, DataTable, FilterSelect, StatusPill, Toolbar, UpdatedAt, useNotice } from "@/components/admin/crud";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 
@@ -63,11 +64,13 @@ export default function TrashPage() {
 
   return (
     <EOCLayout>
-      <AdminPage
-        context="บริหารระบบ"
-        title="ถังขยะ"
-        description="ข้อมูลศูนย์พักพิง กลุ่มเปราะบาง และคำขอจากประชาชนที่ถูกลบ จะมาอยู่ที่นี่พร้อมเหตุผล ผู้ดูแลระบบกู้คืนกลับเข้าระบบได้"
-      >
+      <div className="w-full space-y-4">
+        <PageHero
+          icon="trash"
+          eyebrow="บริหารระบบ"
+          title="ถังขยะ"
+          subtitle="ข้อมูลศูนย์พักพิง กลุ่มเปราะบาง และคำขอจากประชาชนที่ถูกลบ จะมาอยู่ที่นี่พร้อมเหตุผล ผู้ดูแลระบบกู้คืนกลับเข้าระบบได้"
+        />
         <Toolbar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อ เหตุผล หรือผู้ลบ">
           <FilterSelect label="ประเภทข้อมูล" value={table} onChange={setTable} options={[{ value: "all", label: "ทุกประเภท" }, ...tables]} />
           <label className="flex items-center gap-2 px-1 text-sm text-slate-700">
@@ -97,7 +100,7 @@ export default function TrashPage() {
             </Button>
           )}
         />
-      </AdminPage>
+      </div>
 
       <AppDialog open={Boolean(restoring)} onOpenChange={(open) => !open && setRestoring(null)} title="กู้คืนข้อมูล" size="sm" busy={busy}
         footer={(

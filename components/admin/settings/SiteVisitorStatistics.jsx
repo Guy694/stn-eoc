@@ -7,7 +7,8 @@ import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from "chart.js";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { visitorStatsToCsv } from "@/lib/systemStatus";
-import { MetricCard } from "@/components/common/MetricCards";
+import { MetricCard, MetricGrid } from "@/components/common/MetricCards";
+import { Panel } from "@/components/common/ThemePanels";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -20,8 +21,7 @@ function Stat({ icon, label, value, note, tone }) {
 function RankList({ title, rows, label, valueKey, unit = "ครั้ง" }) {
   const max = Math.max(1, ...rows.map((row) => row[valueKey] || 0));
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white">
-      <h4 className="border-b border-slate-100 px-4 py-3 font-black text-slate-900">{title}</h4>
+    <Panel icon="barChart" title={title}>
       {rows.length ? (
         <ul className="divide-y divide-slate-100">
           {rows.map((row) => (
@@ -35,7 +35,7 @@ function RankList({ title, rows, label, valueKey, unit = "ครั้ง" }) {
           ))}
         </ul>
       ) : <p className="p-4 text-sm text-slate-500">ยังไม่มีข้อมูล</p>}
-    </div>
+    </Panel>
   );
 }
 
@@ -82,13 +82,12 @@ export default function SiteVisitorStatistics() {
       {state.loading && !stats ? <p className="py-10 text-center text-sm text-slate-500">กำลังโหลดสถิติ…</p> : null}
       {stats ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <MetricGrid>
             <Stat icon={Users} tone="blue" label="ผู้เข้าชมทั้งหมด" value={formatNumber(stats.totalVisits)} note="นับครั้งละหนึ่งเซสชันของเบราว์เซอร์" />
             <Stat icon={CalendarDays} label="วันนี้" value={formatNumber(stats.todayVisits)} />
             <Stat icon={CalendarRange} label="7 วันล่าสุด" value={formatNumber(stats.last7DaysVisits)} />
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <h4 className="mb-2 font-black text-slate-900">ยอดเข้าชมรายวัน 30 วันล่าสุด</h4>
+          </MetricGrid>
+          <Panel icon="calendarDays" title="ยอดเข้าชมรายวัน 30 วันล่าสุด" bodyClassName="p-4">
             {daily.length ? (
               <div className="h-56" role="img" aria-label="กราฟยอดผู้เข้าชมรายวัน 30 วันล่าสุด">
                 <Bar
@@ -100,7 +99,7 @@ export default function SiteVisitorStatistics() {
                 />
               </div>
             ) : <p className="text-sm text-slate-500">ยังไม่มีข้อมูลการเข้าชมรายวัน</p>}
-          </div>
+          </Panel>
           <div className="grid gap-4 lg:grid-cols-2">
             <RankList title="หน้าที่เข้าชมมากที่สุด (30 วัน)" rows={stats.topPages || []} label={(row) => row.path} valueKey="visits" />
             <RankList title="อุปกรณ์ที่ใช้เข้าชม (30 วัน)" rows={stats.devices || []} label={(row) => DEVICE_LABELS[row.type] || row.type} valueKey="visits" />

@@ -10,11 +10,11 @@ import {
     ClipboardList,
     FileChartColumn,
     Map,
-    MonitorCog,
     ShieldAlert,
     Users
 } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 const ACTIONS = [
@@ -126,33 +126,28 @@ export default function DiseaseManagementPage() {
     return (
         <EOCLayout>
             <div className="w-full space-y-5">
-                <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] p-5">
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
-                        <div>
-                            <div className="flex items-center gap-2 text-sm font-semibold text-blue-100">
-                                <MonitorCog className="h-4 w-4" />
-                                ศูนย์จัดการงานเจ้าหน้าที่ EOC โรคระบาด
-                            </div>
-                            <h1 className="mt-1 text-xl font-semibold leading-snug sm:text-2xl">จัดการ EOC {eocName}</h1>
-                            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/90">
-                                ศูนย์รวมเมนูปฏิบัติการโรคระบาดสำหรับเจ้าหน้าที่ ตั้งแต่ภาพรวม แผนที่ สรุปรายวัน การบันทึกผู้ป่วย และข้อมูลสนับสนุน
-                            </p>
-                            <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
-                                <span className="rounded-full bg-white/15 px-3 py-1">
-                                    สถานะ: {activeSession ? "เปิด EOC" : "ยังไม่มี EOC ที่เปิดอยู่"}
-                                </span>
-                                {activeSession && (
-                                    <>
-                                        <span className="rounded-full bg-white/15 px-3 py-1">ครั้งที่ {activeSession.session_number || activeSession.id}</span>
-                                        <span className="rounded-full bg-white/15 px-3 py-1">เปิดเมื่อ {formatDateTime(activeSession.opened_at)}</span>
-                                    </>
-                                )}
-                            </div>
+                <PageHero
+                    icon="disease"
+                    eyebrow="โรคระบาด"
+                    title={`จัดการ EOC ${eocName}`}
+                    subtitle="ศูนย์รวมเมนูปฏิบัติการโรคระบาดสำหรับเจ้าหน้าที่ ตั้งแต่ภาพรวม แผนที่ สรุปรายวัน การบันทึกผู้ป่วย และข้อมูลสนับสนุน"
+                    meta={(
+                        <div className="flex flex-wrap gap-2 font-semibold">
+                            <span className="rounded-full bg-white/15 px-3 py-1">
+                                สถานะ: {activeSession ? "เปิด EOC" : "ยังไม่มี EOC ที่เปิดอยู่"}
+                            </span>
+                            {activeSession && (
+                                <>
+                                    <span className="rounded-full bg-white/15 px-3 py-1">ครั้งที่ {activeSession.session_number || activeSession.id}</span>
+                                    <span className="rounded-full bg-white/15 px-3 py-1">เปิดเมื่อ {formatDateTime(activeSession.opened_at)}</span>
+                                </>
+                            )}
                         </div>
-
-                        <div className="rounded-xl border border-white/20 bg-white/15 p-4 backdrop-blur">
-                            <div className="flex items-center gap-2 text-sm font-black text-white">
-                                <ShieldAlert className="h-4 w-4" />
+                    )}
+                    aside={(
+                        <div className="rounded-xl bg-white/10 p-4 ring-1 ring-white/15">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                                <ShieldAlert className="h-4 w-4" aria-hidden="true" />
                                 สรุปข้อมูลล่าสุด
                             </div>
                             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -162,17 +157,21 @@ export default function DiseaseManagementPage() {
                                 <MiniStat label="อำเภอ" value={stats.affected_districts} />
                             </div>
                         </div>
-                    </div>
-                </section>
+                    )}
+                />
 
                 {!loading && !activeSession && (
-                    <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                        <h2 className="font-black">ยังไม่มี EOC โรคระบาดที่เปิดอยู่</h2>
-                        <p className="mt-1 text-sm">สามารถเตรียมข้อมูลพื้นฐานหรือเปิด EOC จากหน้าจัดการ EOC กลางได้</p>
-                        <Link href="/admin/eoc-management" className="mt-3 inline-flex rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700">
-                            ไปหน้าเปิด/ปิด EOC
-                        </Link>
-                    </section>
+                    <EmptyPanel
+                        icon="alert"
+                        tone="amber"
+                        title="ยังไม่มี EOC โรคระบาดที่เปิดอยู่"
+                        text="สามารถเตรียมข้อมูลพื้นฐานหรือเปิด EOC จากหน้าจัดการ EOC กลางได้"
+                        action={(
+                            <Link href="/admin/eoc-management" className="inline-flex rounded-xl bg-[#0b4c86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#083865]">
+                                ไปหน้าเปิด/ปิด EOC
+                            </Link>
+                        )}
+                    />
                 )}
 
                 <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -182,15 +181,15 @@ export default function DiseaseManagementPage() {
                             <Link
                                 key={action.href}
                                 href={action.href}
-                                className={`rounded-xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${action.tone}`}
+                                className="rounded-2xl border border-slate-200 bg-white p-4 font-[family-name:var(--font-kanit)] transition hover:border-sky-300 hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,.5)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b4c86]"
                             >
                                 <div className="flex items-start gap-3">
-                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/70">
-                                        <Icon className="h-5 w-5" />
+                                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${action.tone}`}>
+                                        <Icon className="h-5 w-5" aria-hidden="true" />
                                     </span>
                                     <div>
-                                        <h2 className="font-black">{action.title}</h2>
-                                        <p className="mt-1 text-sm leading-6 opacity-80">{action.description}</p>
+                                        <h2 className="font-semibold text-slate-900">{action.title}</h2>
+                                        <p className="mt-1 text-sm leading-6 text-slate-500">{action.description}</p>
                                     </div>
                                 </div>
                             </Link>
@@ -204,9 +203,9 @@ export default function DiseaseManagementPage() {
 
 function MiniStat({ label, value }) {
     return (
-        <div className="rounded-lg bg-white/15 p-3 text-center">
-            <div className="text-2xl font-black">{formatNumber(value)}</div>
-            <div className="mt-1 text-xs font-semibold text-white/80">{label}</div>
+        <div className="rounded-lg bg-white/10 p-3 text-center">
+            <div className="text-2xl font-bold tabular-nums">{formatNumber(value)}</div>
+            <div className="mt-1 text-xs font-medium text-blue-100">{label}</div>
         </div>
     );
 }

@@ -4,7 +4,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { AdminPage, DataTable, FilterSelect, StatusPill, Tabs, Toolbar } from "@/components/admin/crud";
+import { DataTable, FilterSelect, StatusPill, Tabs, Toolbar } from "@/components/admin/crud";
+import { PageHero } from "@/components/common/ThemePanels";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { formatEocDisplayName, getEocTypeLabel } from "@/lib/eocDisplay";
 import { useUrlState } from "@/components/admin/useUrlState";
@@ -62,11 +63,14 @@ export default function EventHistoryList() {
   const active = state.rows.filter((row) => row.status === "active").length;
 
   return (
-    <AdminPage
-      context="ข้อมูลย้อนหลัง"
-      title="ประวัติเหตุการณ์"
-      description={`ทุกครั้งที่เปิด EOC ${formatNumber(state.rows.length)} เหตุการณ์${active ? ` (เปิดอยู่ ${active})` : ""} — กดชื่อเหตุการณ์เพื่อดูผลกระทบ การช่วยเหลือ และการทำงานของศูนย์`}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="calendarDays"
+        tray
+        eyebrow="ข้อมูลย้อนหลัง"
+        title="ประวัติเหตุการณ์"
+        subtitle={`ทุกครั้งที่เปิด EOC ${formatNumber(state.rows.length)} เหตุการณ์${active ? ` (เปิดอยู่ ${active})` : ""} — กดชื่อเหตุการณ์เพื่อดูผลกระทบ การช่วยเหลือ และการทำงานของศูนย์`}
+      />
       <Tabs value={type} onChange={setType} items={TYPE_TABS.map((value) => ({
         value,
         label: value === "all" ? "ทั้งหมด" : getEocTypeLabel(value),
@@ -126,6 +130,6 @@ export default function EventHistoryList() {
           </Link>
         )}
       />
-    </AdminPage>
+    </div>
   );
 }

@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Construction, ExternalLink, Power } from "lucide-react";
 import { Button, Field, inputClass, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import { apiRequest, formatDateTime } from "@/lib/adminApi";
 import { DEFAULT_MESSAGE } from "@/lib/maintenanceRules";
@@ -86,9 +87,8 @@ export default function MaintenanceSettings() {
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h3 className="text-base font-black text-slate-900">ข้อความบนหน้าปิดปรับปรุง</h3>
-        <div className="mt-3 grid gap-4">
+      <Panel icon="message" title="ข้อความบนหน้าปิดปรับปรุง" bodyClassName="p-5">
+        <div className="grid gap-4">
           <Field label="ข้อความถึงผู้ใช้" hint="เช่น ปรับปรุงฐานข้อมูล คาดว่าจะใช้เวลาประมาณ 1 ชั่วโมง">
             <textarea rows={3} maxLength={500} className={inputClass} value={form.message} onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))} />
           </Field>
@@ -106,7 +106,7 @@ export default function MaintenanceSettings() {
             </a>
           </div>
         </div>
-      </section>
+      </Panel>
 
       <p className="text-xs leading-5 text-slate-500">
         ระหว่างปิดปรับปรุง: หน้าเข้าสู่ระบบยังเปิดได้ เพื่อให้ผู้ดูแลระบบเข้ามาเปิดระบบคืน • ทุกการเปิด/ปิดถูกบันทึกในประวัติการแก้ไข • หน้าปิดปรับปรุงแสดงเบอร์ฉุกเฉิน 1669/1784/191/199 ให้ประชาชนเสมอ

@@ -39,7 +39,6 @@ export default function Navbar({ sidebarMenu = false }) {
         // { name: "สภาพอากาศ", path: "/public/weather-watch" },
         // { name: "แผนที่ภัยพิบัติ", path: "/public/disaster-map" },
         // { name: "แผนที่อุทกภัยน้ำท่วม", path: "/eoc/flood" },
-        // { name: "แผนที่หมู่บ้าน", path: "/eoc/village-map" },
         //{ name: "โรคระบาด", path: "/eoc/disease" },
         //{ name: "อุบัติเหตุช่วงเทศกาล", path: "/eoc/festival-accidents" },
         // { name: "ทรัพยากร", path: "/resources", requiresAdmin: true },

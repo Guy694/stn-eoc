@@ -5,9 +5,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import EOCLayout from '@/components/layouts/EOCLayout';
 import {
-    AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid,
+    AddButton, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid,
     ReadOnlyNotice, RowActions, StatStrip, StatusPill, Tabs, Toolbar, inputClass, useNotice
 } from '@/components/admin/crud';
+import { PageHero } from '@/components/common/ThemePanels';
 import LocationPicker from '@/components/admin/LocationPicker';
 import FacilityPinMap, { hasCoordinates, typeColor } from '@/components/admin/health/FacilityPinMap';
 import HealthFacilityStatusModal from '@/components/admin/HealthFacilityStatusModal';
@@ -227,11 +228,15 @@ export default function HealthFacilitiesPage() {
 
     return (
         <EOCLayout>
-            <AdminPage
-                title="หน่วยบริการสุขภาพ"
-                description="โรงพยาบาล รพ.สต. และสำนักงานสาธารณสุข พร้อมพิกัดและสถานะการให้บริการที่แสดงบนแผนที่ประชาชน"
-                actions={canEdit ? <AddButton onClick={openCreate}>เพิ่มหน่วยบริการ</AddButton> : null}
-            >
+            <div className="w-full space-y-4">
+                <PageHero
+                    icon="hospital"
+                    eyebrow="ข้อมูลกลาง"
+                    title="หน่วยบริการสุขภาพ"
+                    subtitle="โรงพยาบาล รพ.สต. และสำนักงานสาธารณสุข พร้อมพิกัดและสถานะการให้บริการที่แสดงบนแผนที่ประชาชน"
+                    tray
+                    actions={canEdit ? <AddButton onClick={openCreate}>เพิ่มหน่วยบริการ</AddButton> : null}
+                />
                 {!canEdit ? <ReadOnlyNotice message="ดูข้อมูลและอัปเดตสถานะการให้บริการได้ · เพิ่ม แก้ไข หรือปักพิกัดหน่วยบริการ ให้ผู้ดูแลระบบเป็นผู้ทำ" /> : null}
 
                 <StatStrip
@@ -282,7 +287,7 @@ export default function HealthFacilitiesPage() {
                         />
                     </>
                 )}
-            </AdminPage>
+            </div>
 
             <FormDialog
                 open={formOpen}

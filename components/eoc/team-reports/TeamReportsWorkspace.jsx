@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminPage, Button, DataTable, Field, FormDialog, FormGrid, FormSection, ReadOnlyNotice, StatStrip, StatusPill, Tabs, inputClass, useNotice } from "@/components/admin/crud";
+import { Button, DataTable, Field, FormDialog, FormGrid, FormSection, ReadOnlyNotice, StatStrip, StatusPill, Tabs, inputClass, useNotice } from "@/components/admin/crud";
 import { useUrlState } from "@/components/admin/useUrlState";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
 import { Activity, ClipboardCheck, Layers, Package, Users } from "lucide-react";
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
@@ -147,10 +148,16 @@ export default function TeamReportsWorkspace({ eocType = "flood" }) {
   ];
 
   return (
-    <AdminPage title="รายงานประจำวันรายอำเภอ" context={context} description="แต่ละทีมกรอกตัวเลขของวันนั้นแยกตามอำเภอ ระบบรวมยอดสะสมและนำขึ้นหน้าภาพรวมสถานการณ์ให้เอง">
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="clipboard"
+        eyebrow={context || getEocTypeLabel(eocType)}
+        title="รายงานประจำวันรายอำเภอ"
+        subtitle="แต่ละทีมกรอกตัวเลขของวันนั้นแยกตามอำเภอ ระบบรวมยอดสะสมและนำขึ้นหน้าภาพรวมสถานการณ์ให้เอง"
+      />
       {notice}
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
-      {data && !session ? <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">{data.message}</p> : null}
+      {data && !session ? <EmptyPanel icon="clipboard" title="ยังไม่มีเหตุการณ์" text={data.message} /> : null}
       {data && data.ready === false ? <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">ยังไม่ได้ติดตั้งตารางรายงานทีม ให้ผู้ดูแลระบบรัน <code>npm run db:migrate</code></p> : null}
       <ReadOnlyNotice message={perms.read_only_message} />
 
@@ -216,6 +223,6 @@ export default function TeamReportsWorkspace({ eocType = "flood" }) {
           </Field>
         </FormGrid>
       </FormDialog>
-    </AdminPage>
+    </div>
   );
 }

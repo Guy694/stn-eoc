@@ -5,7 +5,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, FileText, HeartCrack, HeartPulse, Home, Tent, Users } from "lucide-react";
-import { AdminPage, Button, StatStrip, StatusPill } from "@/components/admin/crud";
+import { Button, StatStrip, StatusPill } from "@/components/admin/crud";
+import { PageHero, Panel } from "@/components/common/ThemePanels";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
@@ -23,13 +24,9 @@ function fileUrl(path) {
 
 function Section({ title, children, aside }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
-      <header className="flex items-baseline justify-between gap-2 border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-black text-slate-900">{title}</h2>
-        {aside ? <span className="text-xs text-slate-500">{aside}</span> : null}
-      </header>
-      <div className="p-4">{children}</div>
-    </section>
+    <Panel title={title} action={aside ? <span className="text-xs text-slate-500">{aside}</span> : null} bodyClassName="p-4">
+      {children}
+    </Panel>
   );
 }
 
@@ -91,16 +88,16 @@ export default function EventHistoryDetail({ sessionId }) {
   }, [data, showAllLogs]);
 
   const back = (
-    <Link href="/admin/eoc-sessions" className="inline-flex items-center gap-1 text-sm font-semibold text-[#0b4c86] hover:underline">
+    <Link href="/admin/eoc-sessions" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-100 hover:text-white hover:underline">
       <ArrowLeft className="h-4 w-4" aria-hidden="true" /> ประวัติเหตุการณ์
     </Link>
   );
 
   if (state.loading) {
-    return <AdminPage context={back} title="กำลังโหลดสรุปเหตุการณ์…"><div className="h-48 animate-pulse rounded-2xl border border-slate-200 bg-white" /></AdminPage>;
+    return <div className="w-full space-y-4"><PageHero icon="file" eyebrow={back} title="กำลังโหลดสรุปเหตุการณ์…" /><div className="h-48 animate-pulse rounded-2xl border border-slate-200 bg-white" /></div>;
   }
   if (!data) {
-    return <AdminPage context={back} title="ไม่พบเหตุการณ์"><p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error || "ไม่พบเหตุการณ์นี้"}</p></AdminPage>;
+    return <div className="w-full space-y-4"><PageHero icon="file" eyebrow={back} title="ไม่พบเหตุการณ์" /><p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{state.error || "ไม่พบเหตุการณ์นี้"}</p></div>;
   }
 
   const { impact, casualties, shelters, health, vulnerable, directives, citizen, teams, it, activity } = data;
@@ -128,19 +125,22 @@ export default function EventHistoryDetail({ sessionId }) {
   const days = (impact?.days || []).map((row) => ({ ...row, displayLabel: shortDate(row.date, false) }));
 
   return (
-    <AdminPage
-      context={back}
-      title={`${formatEocDisplayName(session)} ครั้งที่ ${session.session_number}`}
-      description={`${shortDate(session.opened_at)} – ${session.closed_at ? shortDate(session.closed_at) : "ปัจจุบัน"} · ${formatNumber(session.days)} วัน`}
-      actions={(
-        <>
-          <StatusPill tone={session.status === "active" ? "green" : "gray"}>{session.status === "active" ? "เปิดอยู่" : "ปิดแล้ว"}</StatusPill>
-          <Link href={`/admin/eoc-sessions/${session.id}/teams`}>
-            <Button variant="secondary" className="min-h-9"><Users className="h-4 w-4" aria-hidden="true" /> กลุ่มภารกิจ</Button>
-          </Link>
-        </>
-      )}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="file"
+        tray
+        eyebrow={back}
+        title={`${formatEocDisplayName(session)} ครั้งที่ ${session.session_number}`}
+        subtitle={`${shortDate(session.opened_at)} – ${session.closed_at ? shortDate(session.closed_at) : "ปัจจุบัน"} · ${formatNumber(session.days)} วัน`}
+        actions={(
+          <>
+            <StatusPill tone={session.status === "active" ? "green" : "gray"}>{session.status === "active" ? "เปิดอยู่" : "ปิดแล้ว"}</StatusPill>
+            <Link href={`/admin/eoc-sessions/${session.id}/teams`}>
+              <Button variant="secondary" className="min-h-9"><Users className="h-4 w-4" aria-hidden="true" /> กลุ่มภารกิจ</Button>
+            </Link>
+          </>
+        )}
+      />
       <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2">
         <div>
           <div className="text-xs text-slate-500">เปิดเหตุการณ์</div>
@@ -300,6 +300,6 @@ export default function EventHistoryDetail({ sessionId }) {
       {empty.length ? (
         <p className="text-xs text-slate-500">ไม่มีข้อมูลบันทึกในเหตุการณ์นี้: {empty.join(" · ")}</p>
       ) : null}
-    </AdminPage>
+    </div>
   );
 }

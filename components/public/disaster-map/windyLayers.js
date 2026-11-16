@@ -9,16 +9,16 @@
 export const SATUN_CENTER = { lat: 6.6238, lon: 100.0673 };
 
 export const WINDY_OVERLAYS = [
-  { key: "wind", label: "ลม", icon: "Wind", tone: "from-sky-400 to-emerald-400" },
-  { key: "gust", label: "ลมกระโชก", icon: "Tornado", tone: "from-teal-400 to-lime-400" },
-  { key: "rain", label: "ฝน, ฟ้าผ่า", icon: "CloudRain", tone: "from-blue-500 to-cyan-400" },
-  { key: "rainAccu", label: "ปริมาณฝนสะสม", icon: "Umbrella", tone: "from-indigo-500 to-sky-400" },
-  { key: "thunder", label: "พายุฝนฟ้าคะนอง", icon: "CloudLightning", tone: "from-yellow-400 to-orange-500" },
-  { key: "temp", label: "อุณหภูมิ", icon: "Thermometer", tone: "from-orange-400 to-red-500" },
-  { key: "clouds", label: "เมฆ", icon: "Cloud", tone: "from-slate-300 to-slate-500" },
-  { key: "rh", label: "ความชื้น", icon: "Droplets", tone: "from-cyan-400 to-blue-600" },
-  { key: "pressure", label: "ความกดอากาศ", icon: "Gauge", tone: "from-violet-400 to-fuchsia-500" },
-  { key: "waves", label: "คลื่น", icon: "Waves", tone: "from-blue-600 to-violet-500" }
+  { key: "wind", label: "ลม", icon: "Wind", tone: "bg-emerald-400" },
+  { key: "gust", label: "ลมกระโชก", icon: "Tornado", tone: "bg-lime-400" },
+  { key: "rain", label: "ฝน, ฟ้าผ่า", icon: "CloudRain", tone: "bg-cyan-400" },
+  { key: "rainAccu", label: "ปริมาณฝนสะสม", icon: "Umbrella", tone: "bg-sky-400" },
+  { key: "thunder", label: "พายุฝนฟ้าคะนอง", icon: "CloudLightning", tone: "bg-orange-500" },
+  { key: "temp", label: "อุณหภูมิ", icon: "Thermometer", tone: "bg-red-500" },
+  { key: "clouds", label: "เมฆ", icon: "Cloud", tone: "bg-slate-500" },
+  { key: "rh", label: "ความชื้น", icon: "Droplets", tone: "bg-blue-600" },
+  { key: "pressure", label: "ความกดอากาศ", icon: "Gauge", tone: "bg-fuchsia-500" },
+  { key: "waves", label: "คลื่น", icon: "Waves", tone: "bg-violet-500" }
 ];
 
 export const WINDY_PRODUCTS = [

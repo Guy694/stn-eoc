@@ -11,7 +11,7 @@ import { Power, PowerOff, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEOC } from "@/context/EOCContext";
 import {
-  AddButton, AdminPage, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, IconButton, RowActions,
+  AddButton, Button, DataTable, DeleteDialog, Field, FilterSelect, FormDialog, FormGrid, IconButton, RowActions,
   StatusPill, Tabs, Toolbar, UpdatedAt, inputClass, useNotice
 } from "@/components/admin/crud";
 import AreaFields from "@/components/admin/AreaFields";
@@ -20,6 +20,7 @@ import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/ap
 import { apiRequest, formatNumber } from "@/lib/adminApi";
 import { readQuery, useUrlState } from "@/components/admin/useUrlState";
 import ShelterSessionDashboard from "@/components/admin/shelters/ShelterSessionDashboard";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
 import { summarizeShelters } from "@/lib/shelterDashboard";
 import { sendOrQueue } from "@/lib/offlineQueue";
 import { SHELTER_CAPABILITIES, SHELTER_TYPES, capabilityLabel, parseCapabilities, shelterTypeMeta } from "@/lib/shelterSuitability";
@@ -289,42 +290,46 @@ export default function ShelterWorkspace() {
   const districtOptions = [{ value: "all", label: "ทุกอำเภอ" }, ...districts.map((name) => ({ value: name, label: `อ.${name}` }))];
 
   return (
-    <AdminPage
-      context={tab === "session" ? (currentEvent ? `เหตุการณ์ ${currentEvent.label}` : "เหตุการณ์") : "ข้อมูลกลาง"}
-      title="ศูนย์พักพิง"
-      description={tab === "session"
-        ? "เปิดใช้ศูนย์ในเหตุการณ์ และอัปเดตยอดผู้พักพิงให้เป็นปัจจุบัน ตัวเลขนี้แสดงในภาพรวมสถานการณ์ สรุปห้องประชุม และหน้าเว็บประชาชน"
-        : tab === "map"
-          ? "ตำแหน่งศูนย์พักพิงบนแผนที่ คลิกจุดเพื่อดูรายละเอียด — ศูนย์ที่ยังไม่มีพิกัดแก้ได้ที่แท็บทะเบียนกลาง"
-          : "รายชื่อศูนย์พักพิงทั้งหมดของจังหวัด ใช้ร่วมกันทุกเหตุการณ์"}
-      actions={(
-        <>
-          {tab === "registry" && canEdit ? <AddButton onClick={() => openForm()}>เพิ่มศูนย์พักพิง</AddButton> : null}
-        </>
-      )}
-    >
-      <Tabs
-        value={tab}
-        onChange={setTab}
-        items={[
-          { value: "session", label: "ในเหตุการณ์", count: currentEvent ? sessionStats.count : undefined },
-          { value: "map", label: "แผนที่" },
-          { value: "registry", label: "ทะเบียนกลาง", count: registry.length }
-        ]}
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="shelter"
+        eyebrow={tab === "session" ? (currentEvent ? `เหตุการณ์ ${currentEvent.label}` : "เหตุการณ์") : "ข้อมูลกลาง"}
+        title="ศูนย์พักพิง"
+        subtitle={tab === "session"
+          ? "เปิดใช้ศูนย์ในเหตุการณ์ และอัปเดตยอดผู้พักพิงให้เป็นปัจจุบัน ตัวเลขนี้แสดงในภาพรวมสถานการณ์ สรุปห้องประชุม และหน้าเว็บประชาชน"
+          : tab === "map"
+            ? "ตำแหน่งศูนย์พักพิงบนแผนที่ คลิกจุดเพื่อดูรายละเอียด — ศูนย์ที่ยังไม่มีพิกัดแก้ได้ที่แท็บทะเบียนกลาง"
+            : "รายชื่อศูนย์พักพิงทั้งหมดของจังหวัด ใช้ร่วมกันทุกเหตุการณ์"}
+        actions={tab === "registry" && canEdit ? <AddButton onClick={() => openForm()}>เพิ่มศูนย์พักพิง</AddButton> : null}
+        tray
       />
+      <div className="rounded-2xl border border-slate-200 bg-white px-2">
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: "session", label: "ในเหตุการณ์", count: currentEvent ? sessionStats.count : undefined },
+            { value: "map", label: "แผนที่" },
+            { value: "registry", label: "ทะเบียนกลาง", count: registry.length }
+          ]}
+        />
+      </div>
 
       {loadError ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{loadError}</p> : null}
 
       {tab === "session" ? (
         !currentEvent ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-            <p className="font-bold text-slate-800">ยังไม่มีเหตุการณ์ที่เปิดอยู่</p>
-            <p className="mt-1 text-sm text-slate-600">การเปิดใช้ศูนย์และบันทึกยอดผู้พักพิงทำได้เมื่อเปิด EOC แล้ว ระหว่างนี้จัดการรายชื่อศูนย์ได้ที่แท็บทะเบียนกลาง</p>
-            <div className="mt-4 flex justify-center gap-2">
-              <Button variant="secondary" onClick={() => setTab("registry")}>ไปที่ทะเบียนกลาง</Button>
-              {isAdmin ? <Link href="/admin/eoc-management" className="inline-flex min-h-10 items-center rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]">เปิด EOC</Link> : null}
-            </div>
-          </div>
+          <EmptyPanel
+            icon="shelter"
+            title="ยังไม่มีเหตุการณ์ที่เปิดอยู่"
+            text="การเปิดใช้ศูนย์และบันทึกยอดผู้พักพิงทำได้เมื่อเปิด EOC แล้ว ระหว่างนี้จัดการรายชื่อศูนย์ได้ที่แท็บทะเบียนกลาง"
+            action={(
+              <div className="flex justify-center gap-2">
+                <Button variant="secondary" onClick={() => setTab("registry")}>ไปที่ทะเบียนกลาง</Button>
+                {isAdmin ? <Link href="/admin/eoc-management" className="inline-flex min-h-10 items-center rounded-lg bg-[#0b4c86] px-4 py-2 text-sm font-bold text-white hover:bg-[#083865]">เปิด EOC</Link> : null}
+              </div>
+            )}
+          />
         ) : (
           <>
             {!canEditSession && sessionPerms.read_only_message ? (
@@ -332,7 +337,7 @@ export default function ShelterWorkspace() {
             ) : null}
             <ShelterSessionDashboard summary={dashboard} onShowShelter={(name) => { setSessionFilter("all"); setDistrict("all"); setSearch(name); }} />
             <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="text-base font-black text-slate-900">รายชื่อศูนย์ในเหตุการณ์</h3>
+              <h3 className="font-[family-name:var(--font-kanit)] text-base font-semibold text-slate-900">รายชื่อศูนย์ในเหตุการณ์</h3>
               {canEditSession && usableShelters.length ? (
                 <button
                   type="button"
@@ -565,6 +570,6 @@ export default function ShelterWorkspace() {
         note="ศูนย์ที่เคยเปิดใช้ในเหตุการณ์จะลบไม่ได้ (ใช้ปิดใช้งานแทน) ส่วนศูนย์ที่ไม่มีประวัติจะย้ายไปถังขยะ กู้คืนได้"
       />
       {notice}
-    </AdminPage>
+    </div>
   );
 }

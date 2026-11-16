@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { BellRing, RefreshCw, Send, Smartphone, Trash2 } from "lucide-react";
 import { Button, Field, StatusPill, inputClass, useNotice } from "@/components/admin/crud";
+import { Panel } from "@/components/common/ThemePanels";
 import AppDialog, { AppDialogActions, AppDialogCancel } from "@/components/ui/app-dialog";
 import PaginationControls from "@/components/common/PaginationControls";
 import { apiRequest, formatDateTime, formatNumber } from "@/lib/adminApi";
@@ -174,10 +175,8 @@ export default function PublicPushSettings() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h3 className="text-base font-black text-slate-900">ส่งข้อความแจ้งเตือน</h3>
-        <p className="mt-0.5 text-xs text-slate-500">ใช้กับเรื่องสำคัญเท่านั้น เช่น ประกาศอพยพ เปิดศูนย์พักพิง — ส่งบ่อยเกินไปคนจะปิดการแจ้งเตือน</p>
-        <div className="mt-3">
+      <Panel icon="send" title="ส่งข้อความแจ้งเตือน" subtitle="ใช้กับเรื่องสำคัญเท่านั้น เช่น ประกาศอพยพ เปิดศูนย์พักพิง — ส่งบ่อยเกินไปคนจะปิดการแจ้งเตือน" bodyClassName="p-5">
+        <div>
           <p className="text-sm font-bold text-slate-800">ข้อความสำเร็จรูป</p>
           <p className="text-xs text-slate-500">เลือกอำเภอใน &quot;ส่งถึง&quot; ก่อน ระบบจะใส่ชื่ออำเภอให้ แล้วแก้ส่วนในวงเล็บ [ ] ให้ตรงพื้นที่จริง</p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -232,18 +231,19 @@ export default function PublicPushSettings() {
           <Button variant="secondary" disabled={busy || !ready || !device?.supported || device?.permission === "denied"} onClick={sendTest}><Smartphone className="h-4 w-4" aria-hidden="true" />ทดสอบส่งถึงเครื่องนี้</Button>
           {device && !device.supported ? <span className="text-xs text-slate-500">เบราว์เซอร์นี้รับแจ้งเตือนไม่ได้</span> : null}
         </div>
-      </section>
+      </Panel>
 
-      <section className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3">
-          <h3 className="text-base font-black text-slate-900">ประวัติการส่ง{stats?.log_total ? <span className="ml-1.5 text-sm font-semibold text-slate-500">ทั้งหมด {formatNumber(stats.log_total)} ครั้ง</span> : null}</h3>
-          {testIds.length ? (
+      <Panel
+        icon="clock"
+        title="ประวัติการส่ง"
+        subtitle={stats?.log_total ? `ทั้งหมด ${formatNumber(stats.log_total)} ครั้ง` : null}
+        action={testIds.length ? (
             <button type="button" disabled={busy} onClick={() => setRemoving({ ids: testIds, label: `รายการทดสอบในหน้านี้ ${testIds.length} รายการ` })}
               className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">
               <Trash2 className="h-4 w-4" aria-hidden="true" />ลบรายการทดสอบ ({testIds.length})
             </button>
           ) : null}
-        </div>
+      >
         {stats?.log?.length ? (
           <ul className="divide-y divide-slate-100">
             {stats.log.map((row) => (
@@ -269,7 +269,7 @@ export default function PublicPushSettings() {
           onPageChange={(page) => setLogPage((value) => ({ ...value, page }))}
           onPageSizeChange={(size) => setLogPage({ page: 1, size })}
         />
-      </section>
+      </Panel>
 
       <AppDialog open={Boolean(removing)} onOpenChange={(open) => !open && setRemoving(null)} title="ลบออกจากประวัติการส่ง"
         description={`ลบ ${removing?.label || ""} ออกจากประวัติ และจะไม่แสดงในหน้าประกาศของประชาชนอีก ข้อความที่เด้งถึงมือถือไปแล้วเรียกคืนไม่ได้`} busy={busy}>

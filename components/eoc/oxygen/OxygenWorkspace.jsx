@@ -2,12 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertOctagon, AlertTriangle, ClipboardCheck, Hourglass, Plus, Truck } from "lucide-react";
-import { Button, AdminPage, Field, FormDialog, FormGrid, ReadOnlyNotice, StatStrip, StatusPill, inputClass, latestTime, useNotice } from "@/components/admin/crud";
+import { Button, Field, FreshnessBadge, FormDialog, FormGrid, ReadOnlyNotice, StatStrip, StatusPill, inputClass, latestTime, useNotice } from "@/components/admin/crud";
 import { apiRequest } from "@/lib/adminApi";
 import { getEocTypeLabel } from "@/lib/eocDisplay";
 import { OXYGEN_CRITICAL_DAYS, OXYGEN_LEVELS, OXYGEN_LOW_DAYS, OXYGEN_SOURCES, formatDays, oxygenDays, oxygenLevel } from "@/lib/liquidOxygen";
 import { cn } from "@/lib/utils";
 import FacilitySelect from "@/components/common/FacilitySelect";
+import { EmptyPanel, PageHero } from "@/components/common/ThemePanels";
+
+// กลุ่มบนหัวหน้า (eyebrow) ตามประเภทเหตุการณ์
+const EYEBROWS = { flood: "อุทกภัย", disease: "โรคระบาด" };
 
 const thaiDate = (value) => (value ? new Date(`${value}T00:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "");
 
@@ -148,16 +152,19 @@ export default function OxygenWorkspace({ eocType = "flood" }) {
   const summary = data?.summary;
 
   return (
-    <AdminPage
-      title="ออกซิเจนเหลว"
-      context={context}
-      freshness={session ? { value: latestTime((data?.summary?.items || []).map((row) => row.updated_at || (row.report_date ? `${row.report_date}T08:00:00+07:00` : null))), staleHours: 24, label: "รายงานล่าสุด" } : null}
-      description={`คงเหลือของแต่ละโรงพยาบาลและใช้ได้อีกกี่วัน ระบบเตือนเมื่อเหลือน้อยกว่า ${OXYGEN_LOW_DAYS} วัน`}
-      actions={perms.can_edit ? <Button onClick={() => openReport()}><Plus className="h-4 w-4" />รายงานหน่วยอื่น</Button> : null}
-    >
+    <div className="w-full space-y-4">
+      <PageHero
+        icon="activity"
+        eyebrow={EYEBROWS[eocType] || getEocTypeLabel(eocType)}
+        title="ออกซิเจนเหลว"
+        subtitle={`คงเหลือของแต่ละโรงพยาบาลและใช้ได้อีกกี่วัน ระบบเตือนเมื่อเหลือน้อยกว่า ${OXYGEN_LOW_DAYS} วัน`}
+        meta={session ? <div className="flex flex-wrap items-center gap-2">{context ? <span className="text-sm font-medium text-blue-100">{context}</span> : null}<FreshnessBadge value={latestTime((data?.summary?.items || []).map((row) => row.updated_at || (row.report_date ? `${row.report_date}T08:00:00+07:00` : null)))} staleHours={24} label="รายงานล่าสุด" /></div> : null}
+        actions={perms.can_edit ? <Button onClick={() => openReport()}><Plus className="h-4 w-4" />รายงานหน่วยอื่น</Button> : null}
+        tray
+      />
       {notice}
       {state.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.error}</p> : null}
-      {data && !session ? <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">{data.message}</p> : null}
+      {data && !session ? <EmptyPanel icon="info" title={data.message} /> : null}
       {data && data.ready === false ? <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">ยังไม่ได้ติดตั้งตารางออกซิเจนเหลว ให้ผู้ดูแลระบบรัน <code>npm run db:migrate</code></p> : null}
       <ReadOnlyNotice message={perms.read_only_message} />
 
@@ -272,6 +279,6 @@ export default function OxygenWorkspace({ eocType = "flood" }) {
           ) : null}
         </FormGrid>
       </FormDialog>
-    </AdminPage>
+    </div>
   );
 }

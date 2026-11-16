@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { BarChart3, Search } from "lucide-react";
 import { formatNumber } from "@/lib/adminApi";
+import { Panel } from "@/components/common/ThemePanels";
 
 const SHOW = 10;
 
@@ -14,11 +15,11 @@ export default function PublicPagesCard({ data, onPickPath, filtered = false }) 
   const max = Math.max(1, ...pages.map((page) => page.visits));
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-slate-100 px-4 py-3">
-        <h4 className="flex items-center gap-2 font-black text-slate-900"><BarChart3 className="h-4 w-4 text-[#0b4c86]" aria-hidden="true" />หน้าที่ประชาชนเข้าชม</h4>
-        {data ? <span className="text-sm text-slate-500">{formatNumber(data.visits)} ครั้ง • {formatNumber(data.ips)} IP</span> : null}
-      </div>
+    <Panel
+      icon={BarChart3}
+      title="หน้าที่ประชาชนเข้าชม"
+      action={data ? <span className="text-sm text-slate-500">{formatNumber(data.visits)} ครั้ง • {formatNumber(data.ips)} IP</span> : null}
+    >
       {shown.length ? (
         <ol className="divide-y divide-slate-100">
           {shown.map((page, index) => {
@@ -52,6 +53,6 @@ export default function PublicPagesCard({ data, onPickPath, filtered = false }) 
       <p className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-500">
         นับเฉพาะผู้ที่ไม่ได้เข้าสู่ระบบ ตามช่วงเวลาและคำค้นที่เลือก • หน้าอ่านรายเรื่อง (เช่น ประกาศแต่ละฉบับ) รวมเป็นแถวเดียว จำนวน IP ของแถวนั้นอาจนับคนเดียวกันซ้ำ
       </p>
-    </div>
+    </Panel>
   );
 }

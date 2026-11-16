@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import { PageHero, heroInputClass, heroPrimaryButtonClass } from "@/components/common/ThemePanels";
 import { formatEocDisplayName } from "@/lib/eocDisplay";
 
 const PublicIncidentMap = dynamic(() => import("@/components/PublicIncidentMap"), {
@@ -81,42 +82,40 @@ export default function DiseaseMapPage() {
     return (
         <EOCLayout>
             <div className="w-full space-y-4">
-                <section className="relative overflow-hidden rounded-2xl bg-[#0b4c86] p-5 font-[family-name:var(--font-kanit)] text-white shadow-[0_18px_36px_-24px_rgba(11,76,134,.9)] sm:p-6">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                        <div>
-                            <p className="text-sm font-bold text-blue-100">{eocName}</p>
-                            <h1 className="text-2xl font-semibold text-white md:text-3xl">แผนที่และสถานการณ์โรคระบาด</h1>
-                            <p className="mt-1 text-sm text-blue-100">
-                                ติดตามรายงานโรคระบาดจากหน่วยบริการร่วมกับรายงานเหตุการณ์จากประชาชน
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-blue-100">
-                                <span className="rounded-full bg-white/15 px-3 py-1 text-blue-100">
-                                    {activeSession ? "เปิด EOC อยู่" : loadingSession ? "กำลังตรวจสอบสถานะ" : "ยังไม่มี EOC ที่เปิดอยู่"}
+                <PageHero
+                    icon="map"
+                    eyebrow={`โรคระบาด · ${eocName}`}
+                    title="แผนที่และสถานการณ์โรคระบาด"
+                    subtitle="ติดตามรายงานโรคระบาดจากหน่วยบริการร่วมกับรายงานเหตุการณ์จากประชาชน"
+                    meta={(
+                        <div className="flex flex-wrap gap-2 font-semibold">
+                            <span className="rounded-full bg-white/15 px-3 py-1">
+                                {activeSession ? "เปิด EOC อยู่" : loadingSession ? "กำลังตรวจสอบสถานะ" : "ยังไม่มี EOC ที่เปิดอยู่"}
+                            </span>
+                            {activeSession && (
+                                <span className="rounded-full bg-white/10 px-3 py-1">
+                                    ครั้งที่ {activeSession.session_number || activeSession.id} เปิดเมื่อ {formatDateTime(activeSession.opened_at)}
                                 </span>
-                                {activeSession && (
-                                    <span className="rounded-full bg-white/10 px-3 py-1">
-                                        ครั้งที่ {activeSession.session_number || activeSession.id} เปิดเมื่อ {formatDateTime(activeSession.opened_at)}
-                                    </span>
-                                )}
-                            </div>
+                            )}
                         </div>
-
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                            <label className="block">
-                                <span className="mb-1 block text-xs font-bold text-blue-100">วันที่</span>
+                    )}
+                    actions={(
+                        <>
+                            <label className="flex items-center gap-2 text-sm font-medium text-blue-100">
+                                วันที่
                                 <input
                                     type="date"
                                     value={selectedDate}
                                     onChange={(event) => setSelectedDate(event.target.value)}
-                                    className="h-10 rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-semibold text-white outline-none [color-scheme:dark] focus:border-white"
+                                    className={heroInputClass}
                                 />
                             </label>
-                            <Link href="/eoc/disease/records" className="flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-bold text-[#0b4c86] hover:bg-blue-50 sm:self-end">
+                            <Link href="/eoc/disease/records" className={heroPrimaryButtonClass}>
                                 บันทึกรายงานผู้ป่วย
                             </Link>
-                        </div>
-                    </div>
-                </section>
+                        </>
+                    )}
+                />
 
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                     <PublicIncidentMap

@@ -212,7 +212,7 @@ export default function ITResourcesPage() {
         <EOCLayout>
             <div className="w-full">
                 {/* Header */}
-                <PageHero title="จัดการทรัพยากร IT Support" subtitle="ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ" className="mb-6" />
+                <PageHero icon="monitor" eyebrow="ข้อมูลกลาง" title="จัดการทรัพยากร IT Support" subtitle="ข้อมูลเซิร์ฟเวอร์, อินเทอร์เน็ตและอุปกรณ์ IT ของหน่วยบริการ" className="mb-6" />
 
                 {/* Stats Cards */}
                 <MetricGrid className="mb-6">
