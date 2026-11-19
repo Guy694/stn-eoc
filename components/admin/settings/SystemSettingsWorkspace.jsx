@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity, AlertTriangle, BarChart3, BellRing, CheckCircle2, Construction, DatabaseBackup, ExternalLink, Map as MapIcon,
-  KeyRound, ListTree, Megaphone, PlugZap, RefreshCw, ShieldCheck, Users, Volume2, Waves, XCircle, FlaskConical
+  KeyRound, ListTree, PlugZap, RefreshCw, ShieldCheck, Users, Volume2, Waves, XCircle
 } from "lucide-react";
 import { StatusPill, useNotice } from "@/components/admin/crud";
 import { PageHero, Panel, heroButtonClass } from "@/components/common/ThemePanels";
@@ -22,15 +22,13 @@ import MenuVisibilitySettings from "@/components/admin/settings/MenuVisibilitySe
 import WaterAlertSettings from "@/components/admin/settings/WaterAlertSettings";
 import MaintenanceSettings from "@/components/admin/settings/MaintenanceSettings";
 import PublicMenuSettings from "@/components/admin/settings/PublicMenuSettings";
-import AlertTestSettings from "@/components/admin/settings/AlertTestSettings";
 import AlertSoundSettings from "@/components/admin/settings/AlertSoundSettings";
-import TestDataSettings from "@/components/admin/settings/TestDataSettings";
 
 const API = "/stn-eoc/api/admin/system-status";
 
 const SECTIONS = [
   { value: "overview", label: "ภาพรวมระบบ", hint: "สุขภาพระบบและสิ่งที่ต้องแก้", icon: Activity },
-  { value: "alerts", label: "การแจ้งเตือน", hint: "Telegram ของศูนย์ และทดสอบการแจ้งเตือน", icon: BellRing },
+  { value: "alerts", label: "การแจ้งเตือน", hint: "Telegram ของศูนย์ และเกณฑ์แจ้งเตือนระดับน้ำ", icon: BellRing },
   { value: "integrations", label: "การเชื่อมต่อภายนอก", hint: "สถานะและทดสอบการเชื่อมต่อ", icon: PlugZap },
   { value: "security", label: "ความปลอดภัย", hint: "นโยบายรหัสผ่านและการเข้าสู่ระบบ", icon: ShieldCheck },
   { value: "roles", label: "สิทธิ์และบทบาท", hint: "แต่ละบทบาททำอะไรได้บ้าง", icon: Users },
@@ -38,12 +36,9 @@ const SECTIONS = [
   { value: "menus", label: "จัดกลุ่มเมนู", hint: "กลุ่มและลำดับเมนูของเหตุการณ์ในเมนูข้าง", icon: ListTree },
   { value: "menu-visibility", label: "เปิด/ปิดเมนู", hint: "ซ่อนเมนูหลังบ้านที่ไม่ใช้จากเมนูข้าง", icon: ListTree },
   { value: "alert-sounds", label: "เสียงแจ้งเตือน", hint: "แบบเสียงบนหน้าเว็บ ใช้ทุกเครื่อง", icon: Volume2 },
-  // ลิงก์เดิม ?section=alert-test → แท็บ "ทดสอบ" ของหมวดการแจ้งเตือน (ไม่แสดงในเมนูแล้ว)
-  { value: "alert-test", label: "ทดสอบการแจ้งเตือน", hint: "ตรวจความพร้อม ทดสอบเสียง popup และมือถือ", icon: Megaphone, hidden: true },
   { value: "maintenance", label: "ปิดปรับปรุงระบบ", hint: "ปิดหน้าเว็บชั่วคราวระหว่างปรับปรุง", icon: Construction },
   { value: "public-menus", label: "เมนูประชาชน", hint: "เปิด/ปิดเมนูรายงานระดับน้ำ", icon: Waves },
   { value: "backup", label: "สำรองข้อมูล", hint: "ไฟล์สำรองและวิธีสำรอง/กู้คืน", icon: DatabaseBackup },
-  { value: "test-data", label: "ข้อมูลทดสอบ", hint: "ลบข้อมูลที่ติดป้าย [ทดสอบ] ก่อนใช้งานจริง", icon: FlaskConical },
   { value: "visitors", label: "ผู้เข้าชม", hint: "IP ตำแหน่ง และสถิติการเข้าชม", icon: BarChart3 },
   { value: "data", label: "ข้อมูลพื้นที่และข้อมูลอ้างอิง", hint: "ทางลัดไปหน้าจัดการข้อมูลกลาง", icon: MapIcon }
 ];
@@ -53,7 +48,7 @@ const GROUPS = [
   { label: null, items: ["overview"] },
   { label: "การแจ้งเตือน", items: ["alerts", "alert-sounds"] },
   { label: "ผู้ใช้และสิทธิ์", items: ["security", "roles", "modules", "menus", "menu-visibility"] },
-  { label: "ข้อมูล", items: ["data", "visitors", "test-data", "backup"] },
+  { label: "ข้อมูล", items: ["data", "visitors", "backup"] },
   { label: "ระบบ", items: ["integrations", "public-menus", "maintenance"] }
 ].map((group) => ({ ...group, items: group.items.map((value) => SECTIONS.find((item) => item.value === value)).filter(Boolean) }));
 
@@ -326,32 +321,11 @@ function DataLinks() {
   );
 }
 
-const ALERT_TABS = [
-  { value: "channels", label: "ช่องทางแจ้งเตือน" },
-  { value: "test", label: "ทดสอบการแจ้งเตือน" }
-];
-
 export default function SystemSettingsWorkspace() {
-  const [rawSection, setSection] = useUrlState("section", "overview", SECTIONS.map((item) => item.value));
-  const [rawAlertTab, setAlertTab] = useUrlState("tab", "channels", ALERT_TABS.map((item) => item.value));
-  // ทดสอบการแจ้งเตือน = แท็บหนึ่งของหมวดการแจ้งเตือน
-  const section = rawSection === "alert-test" ? "alerts" : rawSection;
-  const alertTab = rawSection === "alert-test" ? "test" : rawAlertTab;
-  const chooseSection = (value) => {
-    setSection(value);
-    if (value !== "alerts") setAlertTab("channels");
-  };
-  // ข้อมูลทดสอบ: แสดงในเมนูเฉพาะเมื่อยังมีข้อมูลที่ติดป้าย [ทดสอบ] (ลบหมดแล้ว = ซ่อน)
-  const [testDataTotal, setTestDataTotal] = useState(null);
-  useEffect(() => {
-    let active = true;
-    apiRequest("/stn-eoc/api/admin/test-data").then((result) => { if (active) setTestDataTotal(Number(result?.total) || 0); }).catch(() => {});
-    return () => { active = false; };
-  }, []);
-  const hiddenSection = (value) => SECTIONS.find((item) => item.value === value)?.hidden
-    || (value === "test-data" && !testDataTotal && section !== "test-data");
+  const [section, setSection] = useUrlState("section", "overview", SECTIONS.map((item) => item.value));
+  const chooseSection = (value) => setSection(value);
   const groups = GROUPS
-    .map((group) => ({ ...group, items: group.items.filter((item) => !hiddenSection(item.value)) }))
+    .map((group) => ({ ...group, items: group.items.filter((item) => !item.hidden) }))
     .filter((group) => group.items.length);
   const [state, setState] = useState({ loading: true, data: null, error: "" });
   const [confirmTest, setConfirmTest] = useState(false);
@@ -382,8 +356,7 @@ export default function SystemSettingsWorkspace() {
   };
 
   const current = SECTIONS.find((item) => item.value === section) || SECTIONS[0];
-  const needsData = !["visitors", "data", "modules", "maintenance", "public-menus", "menu-visibility", "alert-sounds"].includes(section)
-    && !(section === "alerts" && alertTab === "test");
+  const needsData = !["visitors", "data", "modules", "maintenance", "public-menus", "menu-visibility", "alert-sounds"].includes(section);
   const problems = state.data?.checks?.filter((check) => check.tone !== "ok").length || 0;
 
   return (
@@ -447,27 +420,14 @@ export default function SystemSettingsWorkspace() {
           {section === "menu-visibility" ? <MenuVisibilitySettings /> : null}
           {section === "maintenance" ? <MaintenanceSettings /> : null}
           {section === "public-menus" ? <PublicMenuSettings /> : null}
-          {section === "alerts" ? (
-            <div role="tablist" aria-label="การแจ้งเตือน" className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
-              {ALERT_TABS.map((tab) => (
-                <button key={tab.value} type="button" role="tab" aria-selected={alertTab === tab.value}
-                  onClick={() => { setSection("alerts"); setAlertTab(tab.value); }}
-                  className={`min-h-10 rounded-lg px-4 text-sm font-bold ${alertTab === tab.value ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc]"}`}>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          {section === "alerts" && alertTab === "test" ? <AlertTestSettings /> : null}
           {section === "alert-sounds" ? <AlertSoundSettings /> : null}
-          {section === "test-data" ? <TestDataSettings /> : null}
           {needsData ? (
             state.error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{state.error} <button type="button" onClick={load} className="ml-2 font-bold underline">ลองใหม่</button></p>
               : !state.data ? <p className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">กำลังตรวจสถานะระบบ…</p>
                 : <>
                   {section === "overview" ? <Overview data={state.data} /> : null}
-                  {section === "alerts" && alertTab === "channels" ? <Alerts data={state.data} onTest={() => setConfirmTest(true)} /> : null}
-                  {section === "alerts" && alertTab === "channels" ? <WaterAlertSettings /> : null}
+                  {section === "alerts" ? <Alerts data={state.data} onTest={() => setConfirmTest(true)} /> : null}
+                  {section === "alerts" ? <WaterAlertSettings /> : null}
                   {section === "integrations" ? <Integrations data={state.data} /> : null}
                   {section === "security" ? <Security data={state.data} /> : null}
                   {section === "roles" ? <Roles data={state.data} /> : null}

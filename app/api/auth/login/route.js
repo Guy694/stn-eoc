@@ -118,9 +118,10 @@ export async function POST(request) {
                     ['account_locked', officer.id, username, ip_address, user_agent, 'Attempt to login locked account', 'high']
                 );
 
+                // ตอบเหมือนรหัสผิด ไม่บอกว่ามีบัญชีนี้และถูกล็อกอยู่
                 return NextResponse.json(
-                    { success: false, message: `บัญชีถูกล็อค กรุณาติดต่อผู้ดูแลระบบ` },
-                    { status: 403 }
+                    { success: false, code: 'invalid_credentials', message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
+                    { status: 401 }
                 );
             }
 

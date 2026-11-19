@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { hourlyRainCategory, rain24hMapCategory } from "@/lib/thaiWaterRain";
+import { rainRipple } from "@/lib/publicMotion";
 
 // แผนที่ 7 อำเภอของสตูลแบบ SVG (ไฟล์ย่อจากขอบเขตอำเภอทางการ ~10 KB)
 // mode="now" (ค่าเริ่มต้น): สีและตัวเลข = ฝนสูงสุดใน 1 ชม. จากสถานีวัดฝน ThaiWater ที่รายงานภายใน 2 ชม. (ไม่มีสถานี = สีเทา ไม่ใช้ค่าประมาณ)
+// อำเภอที่ฝนกำลังตก (โหมด now): วงกระเพื่อมรอบชื่ออำเภอ ยิ่งตกหนักวงยิ่งมาก/เร็ว (lib/publicMotion.js rainRipple)
 // mode="rain": สีและตัวเลข = ฝนสะสมใน 24 ชม. จากสถานีวัดฝนหรือค่าประมาณ · แตะเพื่อเลือกเป็นพื้นที่ของฉัน
 
 /** ฝนตอนนี้ของอำเภอ (สถานีวัดฝนที่รายงานภายใน 2 ชม.): { mm, stations } หรือ null เมื่อไม่มีสถานี */
@@ -98,6 +100,20 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
         );
       })}
 
+      {/* A2: วงกระเพื่อมของฝนที่กำลังตก (อยู่ใต้ป้ายชื่อ ไม่รับการคลิก) */}
+      {nowMode && outline.districts.map((shape) => {
+        const district = byName.get(normalize(shape.name));
+        const ripple = district ? rainRipple(districtRainNow(district)?.mm) : null;
+        if (!ripple) return null;
+        return (
+          <g key={`ripple-${shape.code}`} transform={`translate(${shape.label[0]} ${shape.label[1] + 10})`} pointerEvents="none" className={`satun-map__ripple is-${ripple.level}`}>
+            {Array.from({ length: ripple.rings }, (_, ring) => (
+              <circle key={ring} r="70" style={{ animationDuration: `${ripple.durationS}s`, animationDelay: `${(ripple.durationS / ripple.rings) * ring}s` }} />
+            ))}
+          </g>
+        );
+      })}
+
       {/* ป้ายชื่ออำเภอ (ไม่รับการคลิก เพื่อให้แตะผ่านไปยังพื้นที่ได้) */}
       {outline.districts.map((shape) => {
         const district = byName.get(normalize(shape.name));
@@ -149,10 +165,22 @@ export default function SatunRiskMap({ districts = [], selectedName, onSelect, u
           stroke-width: 5px;
         }
         .satun-map__pulse { animation: satun-pulse 2s ease-out infinite; transform-origin: center; }
+        .satun-map__ripple circle {
+          fill: none;
+          stroke: #ffffff;
+          stroke-width: 6px;
+          opacity: 0;
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: satun-ripple 2s ease-out infinite;
+        }
+        .satun-map__ripple.is-heavy circle { stroke: #ffd166; stroke-width: 8px; }
+        @keyframes satun-ripple { from { transform: scale(.25); opacity: .85; } to { transform: scale(1.7); opacity: 0; } }
         @keyframes satun-district-in { from { fill: #5b7a8c; fill-opacity: .35; } }
         @keyframes satun-pulse { from { transform: scale(.6); opacity: .6; } to { transform: scale(2.2); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
           .satun-map__district, .satun-map__pulse { animation: none; }
+          .satun-map__ripple circle { animation: none; opacity: .5; transform: scale(.9); }
         }
       `}</style>
     </svg>

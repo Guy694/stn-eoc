@@ -548,7 +548,7 @@ export default function PublicIncidentMap({
         const styleString = Object.entries(style).map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ');
         return L.divIcon({
             className: 'label-icon',
-            html: `<div style="${styleString}; white-space: nowrap; pointer-events: none;">${text}</div>`,
+            html: `<div style="${styleString}; white-space: nowrap; pointer-events: none;">${esc(text)}</div>`,
             iconSize: null, iconAnchor: [0, 0]
         });
     };

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCronRequest } from "@/lib/cronSecret";
 import { OFFICER_ROLES, requireAuth } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { publicInternalError } from "@/lib/apiResponse";
@@ -53,8 +54,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const secret = process.env.ALERT_CRON_SECRET;
-    const fromCron = Boolean(secret) && request.headers.get("x-cron-secret") === secret;
+    const fromCron = isCronRequest(request);
     let user = null;
     if (!fromCron) {
       const auth = await requireAuth(request, ["admin", "commander"]);

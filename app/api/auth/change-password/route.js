@@ -5,6 +5,7 @@ import { publicInternalError } from "@/lib/apiResponse";
 import { query } from "@/lib/db";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { getClientIp, getUserAgent } from "@/lib/clientIp";
+import { consumeRateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 export async function POST(request) {
     try {
@@ -37,6 +38,11 @@ export async function POST(request) {
 
         const isPasswordValid = await bcrypt.compare(currentPassword, officers[0].password_hash || '');
         if (!isPasswordValid) {
+            const limited = await consumeRateLimit('passwordChange', `user:${userId}`);
+            if (!limited.allowed) {
+                await revokeUserSessions(userId).catch(() => {});
+                return tooManyRequestsResponse(limited, 'ใส่รหัสผ่านปัจจุบันผิดหลายครั้ง ระบบออกจากระบบให้แล้ว กรุณาเข้าสู่ระบบใหม่');
+            }
             return NextResponse.json(
                 { success: false, message: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' },
                 { status: 400 }

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { DISASTER_TYPES } from "@/lib/disasterConfig";
 import { getPool } from "@/lib/db";
+import { getAuthSession } from "@/lib/auth";
+
+// ผู้ที่ไม่ได้เข้าสู่ระบบเห็นสรุปเหตุการณ์ได้ แต่ไม่เห็นชื่อเจ้าหน้าที่ผู้เปิด/ปิด และข้อความสรุปภายใน
+const OFFICER_FIELDS = ["opened_by_title", "opened_by_given_name", "opened_by_family_name", "closed_by_title", "closed_by_given_name", "closed_by_family_name", "summary", "open_reason", "close_reason"];
 
 const pool = getPool();
 
@@ -13,6 +17,7 @@ export async function GET(request, { params }) {
         const { type: disasterType } = await params;
         const { searchParams } = new URL(request.url);
         const year = searchParams.get('year');
+        const staff = (await getAuthSession(request).catch(() => ({ success: false }))).success;
 
         // Validate disaster type
         if (!Object.values(DISASTER_TYPES).includes(disasterType)) {
@@ -82,7 +87,7 @@ export async function GET(request, { params }) {
                     total_hours: parseFloat(stats[0].total_hours || 0),
                 },
                 sessions: sessions.map(s => ({
-                    ...s,
+                    ...(staff ? s : Object.fromEntries(Object.entries(s).filter(([key]) => !OFFICER_FIELDS.includes(key)))),
                     affected_areas: s.affected_areas ? JSON.parse(s.affected_areas) : null,
                     duration_hours: parseFloat(s.duration_hours || 0)
                 }))

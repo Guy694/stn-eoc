@@ -12,6 +12,8 @@ import { showWarning } from "@/lib/feedback";
 import useHelpAvailability from "@/components/public/useHelpAvailability";
 import { trackPublicUsage } from "@/lib/publicUsage";
 import TrackingCodeCard from "@/components/public/TrackingCodeCard";
+import AnimatedCheck from "@/components/public/motion/AnimatedCheck";
+import GpsRadar from "@/components/public/motion/GpsRadar";
 import { shareVisitGps } from "@/lib/visitorGps";
 import { ACCESS_ROUTES, MEDICINE_REMAINING, MOBILITY, ON_BEHALF_RELATIONS, VULNERABLE_GROUPS } from "@/lib/helpRequestDetails";
 
@@ -70,9 +72,28 @@ function getLocalDateTimeValue() {
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
+// A5: บอกช่องที่ยังไม่ครบ — แจ้งเตือน + เลื่อนไปที่การ์ดนั้น + สั่นเบา ๆ (ลดการเคลื่อนไหว = ไม่สั่น ดู publicMotion.css)
+// target: ชื่อช่อง (name="…"), "step:N" = การ์ดขั้นที่ N, หรือ "field:X" = [data-field="X"]
+function warnField(message, target) {
+    showWarning(message);
+    if (typeof document === "undefined" || !target) return;
+    const [kind, key] = target.includes(":") ? target.split(":") : ["name", target];
+    const anchor = kind === "step" ? document.querySelector(`[data-step="${key}"]`)
+        : kind === "field" ? document.querySelector(`[data-field="${key}"]`)
+            : document.querySelector(`[name="${key}"]`);
+    const card = anchor?.closest?.("section, label, .rounded-2xl") || anchor;
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.remove("pm-shake");
+    void card.offsetWidth; // เริ่มแอนิเมชันใหม่ถ้ากดซ้ำ
+    card.classList.add("pm-shake");
+    window.setTimeout(() => card.classList.remove("pm-shake"), 1600);
+    if (kind === "name") anchor.focus?.({ preventScroll: true });
+}
+
 function StepTitle({ number, children, hint }) {
     return (
-        <h2 className="mb-4 flex w-full flex-wrap items-baseline gap-x-2 px-1">
+        <h2 data-step={number} className="mb-4 flex w-full flex-wrap items-baseline gap-x-2 px-1">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full bg-[#0b4c86] text-sm font-black text-white" aria-hidden="true">{number}</span>
             <span className="text-lg font-black text-slate-900">{children}</span>
             {hint ? <span className="text-sm text-slate-500">{hint}</span> : null}
@@ -261,42 +282,42 @@ export default function ReportIncidentPage() {
         setSubmitError("");
 
         if (!formData.firstName || !formData.lastName) {
-            showWarning("กรุณากรอกชื่อและนามสกุล");
+            warnField("กรุณากรอกชื่อและนามสกุล", formData.firstName ? "lastName" : "firstName");
             return;
         }
 
         if (!formData.phone) {
-            showWarning("กรุณากรอกเบอร์โทรศัพท์");
+            warnField("กรุณากรอกเบอร์โทรศัพท์", "phone");
             return;
         }
 
         if (!formData.helpCategory) {
-            showWarning("กรุณาเลือกประเภทความช่วยเหลือ");
+            warnField("กรุณาเลือกประเภทความช่วยเหลือ", "step:2");
             return;
         }
 
         if (formData.helpCategory === "medicine" && !details.medicineRemaining) {
-            showWarning("กรุณาระบุว่ายาเหลือพอใช้อีกกี่วัน");
+            warnField("กรุณาระบุว่ายาเหลือพอใช้อีกกี่วัน", "step:2");
             return;
         }
 
         if (formData.helpCategory === "vulnerable" && !details.vulnerableGroups.length) {
-            showWarning("กรุณาเลือกกลุ่มที่ต้องดูแลพิเศษอย่างน้อย 1 กลุ่ม");
+            warnField("กรุณาเลือกกลุ่มที่ต้องดูแลพิเศษอย่างน้อย 1 กลุ่ม", "step:2");
             return;
         }
 
         if (!formData.helpReason.trim()) {
-            showWarning("กรุณาระบุเหตุผลการขอความช่วยเหลือ");
+            warnField("กรุณาระบุเหตุผลการขอความช่วยเหลือ", "helpReason");
             return;
         }
 
         if (!markerPosition) {
-            showWarning("กรุณาปักหมุดจุดขอความช่วยเหลือบนแผนที่");
+            warnField("กรุณาปักหมุดจุดขอความช่วยเหลือบนแผนที่", "step:6");
             return;
         }
 
         if (!consentGiven) {
-            showWarning("กรุณายืนยันการให้ใช้ข้อมูลส่วนบุคคลเพื่อการช่วยเหลือ");
+            warnField("กรุณายืนยันการให้ใช้ข้อมูลส่วนบุคคลเพื่อการช่วยเหลือ", "field:consent");
             return;
         }
 
@@ -416,10 +437,15 @@ export default function ReportIncidentPage() {
                 </aside>
                 <p className="mb-5 text-sm text-slate-600">ต้องการแจ้งน้ำท่วม ถนนขาด หรือไฟดับโดยไม่มีผู้ขอความช่วยเหลือ? <Link href="/public/report-problem" className="font-bold text-[#0b4c86] underline">แจ้งจุดปัญหา</Link></p>
                 {submitSuccess && (
-                    <section className="mb-5 rounded-2xl border border-emerald-200 bg-white p-4 text-emerald-800" role="status">
-                        <h2 className="flex items-center gap-2 text-lg font-black"><CircleCheck className="h-5 w-5" aria-hidden="true" /> ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว</h2>
-                        <p className="mt-1 text-sm">เจ้าหน้าที่ได้รับข้อมูลและจะตรวจสอบเพื่อประสานความช่วยเหลือต่อไป</p>
-                        {tracking ? <TrackingCodeCard code={tracking.code} firstName={tracking.firstName} lastName={tracking.lastName} phone={tracking.phone} /> : null}
+                    <section className="pm-pop-in mb-5 rounded-2xl border border-emerald-200 bg-white p-4 text-emerald-800" role="status">
+                        <div className="flex items-center gap-3">
+                            <AnimatedCheck className="h-12 w-12 shrink-0" />
+                            <div>
+                                <h2 className="text-lg font-black">ส่งคำขอความช่วยเหลือเรียบร้อยแล้ว</h2>
+                                <p className="mt-0.5 text-sm">เจ้าหน้าที่ได้รับข้อมูลและจะตรวจสอบเพื่อประสานความช่วยเหลือต่อไป</p>
+                            </div>
+                        </div>
+                        {tracking ? <div className="pm-rise-in"><TrackingCodeCard code={tracking.code} firstName={tracking.firstName} lastName={tracking.lastName} phone={tracking.phone} /></div> : null}
                     </section>
                 )}
 
@@ -642,10 +668,10 @@ export default function ReportIncidentPage() {
                                 </button>
                             </div>
 
-                            {gpsStatus === "requesting" && <p className="mb-2 text-sm font-semibold text-slate-500">กำลังขอตำแหน่ง...</p>}
                             {gpsError && <p className="mb-2 rounded-lg bg-amber-50 p-2 text-sm font-semibold text-amber-700">{gpsError}</p>}
 
-                            <div className="h-64 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 md:h-72">
+                            <div className="relative h-64 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 md:h-72">
+                                {gpsStatus === "requesting" && <GpsRadar label="กำลังหาตำแหน่งของท่าน…" />}
                                 {mounted && (
                                     <MapContainer center={markerPosition || [6.6238, 100.0750]} zoom={11} style={{ height: "100%", width: "100%" }}>
                                         <TileLayer
@@ -674,7 +700,7 @@ export default function ReportIncidentPage() {
                             </div>
                         </section>
 
-                        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#c9dcee] bg-white p-4 text-sm leading-6 text-slate-700">
+                        <label data-field="consent" className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#c9dcee] bg-white p-4 text-sm leading-6 text-slate-700">
                             <input
                                 type="checkbox"
                                 checked={consentGiven}

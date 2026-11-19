@@ -158,13 +158,15 @@ async function findRegistrationByThaiIdName(connection, thaiIdProfile) {
          FROM registration_requests
          WHERE normalized_given_name = ?
            AND normalized_family_name = ?
-           AND status IN ('pending', 'verified', 'approved')
+           AND status = 'pending'
+           AND pid_hash IS NULL
          ORDER BY FIELD(user_type, 'officer', 'citizen'), created_at DESC
-         LIMIT 1`,
+         LIMIT 2`,
         [normalizeName(thaiIdProfile.given_name), normalizeName(thaiIdProfile.family_name)]
     );
 
-    return rows[0] || null;
+    // จับคู่ด้วยชื่อได้เฉพาะเมื่อมีคำขอรอยืนยันชื่อนี้ "รายการเดียว" — ชื่อซ้ำ = ให้ผู้ดูแลระบบตรวจแทนการผูกอัตโนมัติ
+    return rows.length === 1 ? rows[0] : null;
 }
 
 /**
@@ -187,7 +189,7 @@ export async function GET(request) {
         if (error) {
             const baseUrl = getAppBaseUrl(request);
             return applyNoStoreHeaders(NextResponse.redirect(
-                `${baseUrl}/login?error=thaiid_auth_failed&message=${error}`
+                `${baseUrl}/login?error=thaiid_auth_failed&message=${encodeURIComponent(String(error).slice(0, 100))}`
             ));
         }
 
@@ -353,12 +355,20 @@ export async function GET(request) {
                             ));
                         }
 
-                        await connection.execute(
+                        // ผูกเลขบัตรได้เฉพาะบัญชีที่ยังไม่เคยผูกและยังไม่อนุมัติ (บัญชีที่ใช้งานอยู่ห้ามถูกยึดด้วยชื่อที่ตรงกัน)
+                        const [linked] = await connection.execute(
                             `UPDATE officer
                              SET pid_hash = ?, title = COALESCE(?, title), given_name = ?, family_name = ?, last_login = NOW()
-                             WHERE id = ?`,
+                             WHERE id = ? AND pid_hash IS NULL AND COALESCE(is_approved, 0) = 0`,
                             [pidHash, thaiIdProfile.title || registration.title || null, thaiIdProfile.given_name, thaiIdProfile.family_name, registration.officer_id]
                         );
+                        if (!linked.affectedRows) {
+                            const baseUrl = getAppBaseUrl(request);
+                            connection.release();
+                            return applyNoStoreHeaders(NextResponse.redirect(
+                                `${baseUrl}/login?error=callback_failed&message=${encodeURIComponent('ไม่สามารถผูกบัญชีนี้กับ ThaiD ได้ กรุณาติดต่อผู้ดูแลระบบ')}`
+                            ));
+                        }
 
                         await connection.execute(
                             `UPDATE registration_requests

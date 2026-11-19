@@ -23,17 +23,26 @@ describe("โอกาสฝนรายวันจาก Ensemble", () => {
     members.forEach((value, index) => { daily[`precipitation_sum_member${String(index + 1).padStart(2, "0")}`] = [value]; });
     const [day] = ensembleRainDays(daily);
     expect(day.prob_rain).toBe(60);
+    expect(day.prob_wet).toBe(40);
     expect(day.prob_moderate).toBe(30);
     expect(day.prob_heavy).toBe(10);
   });
 
   test.each([
-    [{ prob_rain: 100, prob_moderate: 20, prob_heavy: 40 }, "อาจมีฝนหนัก", 20],
-    [{ prob_rain: 100, prob_moderate: 55, prob_heavy: 2 }, "มีฝนหลายพื้นที่", 55],
-    [{ prob_rain: 100, prob_moderate: 25, prob_heavy: 0 }, "มีฝนบางพื้นที่", 25],
-    [{ prob_rain: 100, prob_moderate: 10, prob_heavy: 0 }, "ฝนน้อย", 10],
+    [{ prob_wet: 80, prob_moderate: 20, prob_heavy: 40 }, "อาจมีฝนหนัก", 80],
+    [{ prob_wet: 84, prob_moderate: 63, prob_heavy: 2 }, "มีฝนหลายพื้นที่", 84],
+    [{ prob_wet: 33, prob_moderate: 10, prob_heavy: 0 }, "มีฝนบางพื้นที่", 33],
+    [{ prob_wet: 15, prob_moderate: 2, prob_heavy: 0 }, "ฝนเล็กน้อย", 15],
+    [{ prob_wet: 4, prob_moderate: 0, prob_heavy: 0 }, "ไม่ค่อยมีฝน", 4],
+    [{ prob_moderate: 55, prob_heavy: 0 }, "มีฝนบางพื้นที่", 55],
     [{ prob_rain: 100 }, "ไม่มีข้อมูลฝน", null]
-  ])("rainOutlook %j → %s (โอกาสฝน = ฝน ≥10 มม.)", (day, label, pct) => {
+  ])("rainOutlook %j → %s (โอกาสฝน = ชุดที่ให้ฝน ≥5 มม.)", (day, label, pct) => {
     expect(rainOutlook(day)).toMatchObject({ label, pct });
+  });
+
+  test("วันนี้: สถานีวัดว่ากำลังตก → บอกตามจริง แม้พยากรณ์ให้โอกาสต่ำ", () => {
+    expect(rainOutlook({ prob_wet: 2, raining_now: true, rain_now_max1h: 32 })).toMatchObject({ label: "ฝนตกหนักขณะนี้", pct: 100, tone: "heavy" });
+    expect(rainOutlook({ prob_wet: 2, raining_now: true, rain_now_max1h: 1.5 })).toMatchObject({ label: "ฝนตกเล็กน้อยขณะนี้", pct: 100 });
+    expect(rainOutlook({ prob_wet: 5, raining_now: false, observed_today_mm: 18 })).toMatchObject({ pct: 100 });
   });
 });

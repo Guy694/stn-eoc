@@ -30,7 +30,6 @@
       `CREATE USER 'stneoc_app'@'%' IDENTIFIED BY '...'; GRANT ALL ON stneoc.* TO 'stneoc_app'@'%';`
 - [ ] MySQL ไม่เปิดพอร์ต 3306 สู่ภายนอก (bind 127.0.0.1 หรืออยู่ในเครือข่าย docker เท่านั้น) และ firewall ปิด 3306
 - [ ] migrate ฐานข้อมูล: `./scripts/docker-migrate.sh up` (สำรองให้อัตโนมัติ) · ตรวจ `./scripts/docker-migrate.sh status` ไม่มีค้าง — ขั้นตอนเต็มดู [docs/database-migration.md](database-migration.md)
-- [ ] ลบข้อมูลทดสอบ: `npm run test-data:cleanup` (ดูก่อน) → `-- --apply`
 - [ ] เปลี่ยนรหัสผ่านบัญชีทดสอบ/บัญชีตั้งต้น และรัน `npm run security:weak-passwords`
 
 ## 4. เครื่องและเครือข่าย

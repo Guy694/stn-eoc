@@ -65,6 +65,9 @@ export default function WeatherIcon({ code, text, kind: forcedKind = null, class
         .wx-rain line:nth-child(2) { animation-delay: .35s; }
         .wx-rain line:nth-child(3) { animation-delay: .7s; }
         .wx-bolt { animation: wx-flash 3s ease-in-out infinite; }
+        /* ฝนกำลังตกจริง (สถานีวัดได้): หยดฝนถี่ขึ้น */
+        .wx--fast .wx-rain line { animation-duration: .7s; }
+        .wx--fast .wx-bolt { animation-duration: 1.6s; }
         @keyframes wx-spin { to { transform: rotate(360deg); } }
         @keyframes wx-drop { 0% { opacity: 0; transform: translateY(-3px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(3px); } }
         @keyframes wx-flash { 0%, 70%, 100% { opacity: 1; } 75%, 85% { opacity: .3; } }

@@ -95,6 +95,16 @@ export async function PUT(request) {
         if (enabled && !chatId) {
             return NextResponse.json({ success: false, message: 'กรุณาเชื่อม Telegram ก่อนเปิดรับแจ้งเตือน' }, { status: 400 });
         }
+        // ใส่ Chat ID เอง (เช่น กลุ่ม) = ส่งข้อมูลผู้ขอความช่วยเหลือออกไปที่อื่น — เฉพาะผู้ดูแลระบบ และต้องส่งข้อความทดสอบถึงจริง
+        if (chatId && chatId !== current.telegramChatId) {
+            if (auth.user.role !== 'admin') {
+                return NextResponse.json({ success: false, message: 'การใส่ Chat ID เองทำได้เฉพาะผู้ดูแลระบบ กรุณาเชื่อมด้วยปุ่ม "เปิด Telegram แล้วกด Start"' }, { status: 403 });
+            }
+            const probe = await sendTelegramMessage(chatId, '🔔 ตั้งค่าส่งแจ้งเตือนจาก ศูนย์ข้อมูลสถานการณ์ฉุกเฉิน จังหวัดสตูล มาที่ห้องนี้');
+            if (!probe?.ok) {
+                return NextResponse.json({ success: false, message: 'ส่งข้อความไปที่ Chat ID นี้ไม่ได้ ตรวจว่าเพิ่มบอทเข้ากลุ่มแล้ว' }, { status: 400 });
+            }
+        }
         await query('UPDATE officer SET telegram_chat_id = ?, telegram_notify_enabled = ? WHERE id = ?', [chatId || null, enabled ? 1 : 0, auth.user.id]);
         return NextResponse.json({ success: true, message: enabled ? 'เปิดรับแจ้งเตือน Telegram แล้ว' : 'ปิดรับแจ้งเตือน Telegram แล้ว', data: await readStatus(auth.user.id) });
     } catch (error) {

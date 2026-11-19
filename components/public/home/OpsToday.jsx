@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { Construction, Headset, MapPinned } from "lucide-react";
-
-function formatNumber(value) {
-  return Number(value || 0).toLocaleString("th-TH");
-}
+import CountUp from "@/components/public/motion/CountUp";
 
 function ago(value) {
   const time = new Date(value || 0).getTime();
@@ -37,7 +34,7 @@ export function OpsTodayCard({ ops }) {
         {items.map((item) => (
           <div key={item.label} className="border-l-2 border-[#d6e3ea] pl-3">
             <dt className="text-sm text-slate-500">{item.label}</dt>
-            <dd className={`font-[family-name:var(--font-kanit)] text-3xl font-bold leading-tight ${item.tone}`}>{formatNumber(item.value)}</dd>
+            <dd className={`font-[family-name:var(--font-kanit)] text-3xl font-bold leading-tight ${item.tone}`}><CountUp value={Number(item.value || 0)} /></dd>
           </div>
         ))}
       </dl>

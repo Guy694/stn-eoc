@@ -39,13 +39,12 @@ export async function GET(request) {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
+            console.error('GISTDA flood-freq upstream error:', response.status, (await response.text()).slice(0, 300));
             return NextResponse.json({
                 success: false,
                 error: 'gistda_upstream_error',
-                message: 'ไม่สามารถดึงข้อมูล flood frequency จาก GISTDA ได้',
-                details: errorText
-            }, { status: response.status });
+                message: 'ไม่สามารถดึงข้อมูล flood frequency จาก GISTDA ได้'
+            }, { status: 502 });
         }
 
         const data = await response.json();

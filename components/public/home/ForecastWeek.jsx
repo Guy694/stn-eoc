@@ -1,32 +1,47 @@
 "use client";
 
 // พยากรณ์อากาศ 7 วันของ "พื้นที่ของฉัน" บนหน้าแรก (ข้อมูลจาก /api/public/weather-watch?view=home → district.forecast_daily แบบย่อ)
-// แต่ละวัน: ภาพสภาพอากาศ อุณหภูมิสูง/ต่ำ (ชดเชยแล้ว lib/forecastCalibration.js) ระดับฝน + โอกาสฝน (ECMWF Ensemble 51 ชุด)
+// แต่ละวัน: ภาพสภาพอากาศ อุณหภูมิสูง/ต่ำ (ชดเชยแล้ว lib/forecastCalibration.js) ระดับฝน + โอกาสมีฝน (ECMWF Ensemble 51 ชุด) · วันนี้ใช้ฝนที่สถานีวัดได้จริงก่อน
 // ไม่แสดงเป็นมิลลิเมตร: ทดสอบย้อนหลังที่สตูลพบว่าปริมาณฝนรายวันแทบไม่สัมพันธ์กับค่าจริง จึงบอกเป็นโอกาสแทน
 // วันที่ 4–7 (index ≥ 3) แสดงเป็น "แนวโน้ม" สีจางกว่า
 import Link from "next/link";
 import { ArrowRight, Sun } from "lucide-react";
 import WeatherIcon from "@/components/common/WeatherIcon";
 import { uvLevel } from "@/lib/weatherHealth";
+import { rainBarPercent } from "@/lib/publicMotion";
+import Reveal from "@/components/public/motion/Reveal";
 
 const HEAVY_CHIP_PCT = 20;
 const OUTLOOK_FROM = 3;
 
 /**
  * ระดับฝนของวัน จาก ECMWF Ensemble 51 ชุด
- * "โอกาสฝน" ใช้สัดส่วนชุดที่ให้ฝน ≥ 10.1 มม. (prob_moderate) ไม่ใช่ ≥ 1 มม.:
- * ทดสอบย้อนหลังที่สตูล (ส.ค.–พ.ย. 2569) แบบจำลองให้ฝน ≥ 1 มม. เกือบทุกวัน (92–99%) แต่ฝนตกจริง 36% ของวัน
- * เกณฑ์ 10 มม. ทำให้ความถี่ "มีฝน" ของแบบจำลอง (44–55%) ใกล้ความจริงที่สุด
+ * "โอกาสฝน" = โอกาสมีฝนจริง (≥ 1 มม.) ประมาณจากสัดส่วนชุดที่ให้ฝน ≥ 5 มม. (prob_wet, lib/forecastSignals.js):
+ *   ทดสอบกับสถานีสตูล 48570 (ส.ค.–พ.ย. 2569) แบบจำลองให้ฝน ≥ 1 มม. เกือบทุกวัน ส่วนเกณฑ์ 10 มม. (ของเดิม) ทำให้วันฝนตกดูเหมือน "ฝนน้อย"
+ * วันนี้: สถานีวัดฝนรายงานว่ากำลังตก หรือวันนี้ตกแล้ว ≥ 1 มม. → บอกตามที่วัดได้จริงก่อนค่าพยากรณ์
  */
 export function rainOutlook(day) {
-  const raw = day?.prob_moderate;
-  if (raw === null || raw === undefined || !Number.isFinite(Number(raw))) return { label: "ไม่มีข้อมูลฝน", pct: null, tone: "none" };
-  const pct = Math.round(Number(raw));
-  if (Number(day?.prob_heavy) >= 30) return { label: "อาจมีฝนหนัก", pct, tone: "heavy" };
-  if (pct >= 50) return { label: "มีฝนหลายพื้นที่", pct, tone: "moderate" };
-  if (pct >= 20) return { label: "มีฝนบางพื้นที่", pct, tone: "light" };
-  return { label: "ฝนน้อย", pct, tone: "dry" };
+  const heavyLikely = Number(day?.prob_heavy) >= 30;
+  if (day?.raining_now) {
+    const mm = Number(day.rain_now_max1h);
+    const label = mm >= 20 ? "ฝนตกหนักขณะนี้" : mm >= 5 ? "ฝนกำลังตก" : "ฝนตกเล็กน้อยขณะนี้";
+    return { label, pct: 100, tone: mm >= 20 || heavyLikely ? "heavy" : "moderate", observed: true };
+  }
+  const observedMm = Number(day?.observed_today_mm);
+  const raw = day?.prob_wet ?? day?.prob_moderate;
+  if (raw === null || raw === undefined || !Number.isFinite(Number(raw))) {
+    return Number.isFinite(observedMm) && observedMm >= 1 ? { label: `วันนี้ฝน ${Math.round(observedMm)} มม.`, pct: 100, tone: "moderate", observed: true } : { label: "ไม่มีข้อมูลฝน", pct: null, tone: "none" };
+  }
+  const pct = Math.max(Math.round(Number(raw)), Number.isFinite(observedMm) && observedMm >= 1 ? 100 : 0);
+  if (heavyLikely) return { label: "อาจมีฝนหนัก", pct, tone: "heavy" };
+  if (pct >= 60) return { label: "มีฝนหลายพื้นที่", pct, tone: "moderate" };
+  if (pct >= 30) return { label: "มีฝนบางพื้นที่", pct, tone: "light" };
+  if (pct >= 10) return { label: "ฝนเล็กน้อย", pct, tone: "light" };
+  return { label: "ไม่ค่อยมีฝน", pct, tone: "dry" };
 }
+
+// สีแถบโอกาสฝน (A1) ตามระดับฝน
+const TONE_BAR = { heavy: "#f59e0b", moderate: "#1d4ed8", light: "#3b82f6", dry: "#10b981", none: "#94a3b8" };
 
 const TONE_TEXT = {
   heavy: "text-amber-700",
@@ -68,7 +83,7 @@ export default function ForecastWeek({ district, loading = false }) {
       {loading && days.length === 0 ? (
         <div className="mt-4 h-32 animate-pulse rounded-3xl bg-white sm:h-44" />
       ) : (
-        <ol className="-mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto sm:gap-2.5 px-4 pb-2 pt-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-7 [&::-webkit-scrollbar]:hidden" aria-label={`พยากรณ์ 7 วัน อำเภอ${district?.district_name || ""}`}>
+        <Reveal as="ol" className="-mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto sm:gap-2.5 px-4 pb-2 pt-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-7 [&::-webkit-scrollbar]:hidden" aria-label={`พยากรณ์ 7 วัน อำเภอ${district?.district_name || ""}`}>
           {days.map((day, index) => {
             const outlook = rainOutlook(day);
             const heavy = Number(day.prob_heavy) >= HEAVY_CHIP_PCT;
@@ -81,13 +96,18 @@ export default function ForecastWeek({ district, loading = false }) {
                 {trend ? <span className="absolute -top-2 rounded-full bg-[#e3edf2] px-1.5 py-px text-[9px] sm:px-2 sm:text-[10px] font-semibold text-slate-600">แนวโน้ม</span> : null}
                 <p className="font-[family-name:var(--font-kanit)] text-[13px] font-semibold leading-tight sm:text-[15px]">{dayLabel(day.forecast_datetime, index)}</p>
                 <p className={`text-[11px] sm:text-xs ${today ? "text-[#9fc9d6]" : "text-slate-500"}`}>{dateLabel(day.forecast_datetime)}</p>
-                <WeatherIcon code={day.weather_code} text={day.weather_condition} kind={day.weather_kind} className={`my-1 h-10 w-10 sm:my-1.5 sm:h-14 sm:w-14 ${trend ? "opacity-70 saturate-[.8]" : ""}`} />
+                <WeatherIcon code={day.weather_code} text={day.weather_condition} kind={day.weather_kind} className={`my-1 h-10 w-10 sm:my-1.5 sm:h-14 sm:w-14 ${trend ? "opacity-70 saturate-[.8]" : ""} ${outlook.observed ? "wx--fast" : ""}`} />
                 <p className={`hidden line-clamp-2 min-h-[2.25rem] text-xs leading-[1.15rem] sm:block ${today ? "text-[#d5e7ec]" : "text-slate-600"}`}>{day.weather_condition}</p>
                 <p className="font-[family-name:var(--font-kanit)] tabular-nums sm:mt-1" aria-label={`สูงสุด ${day.temperature_max} องศา ต่ำสุด ${day.temperature_min} องศา`}>
                   <span className="text-base font-bold sm:text-lg">{day.temperature_max}°</span>
                   <span className={`ml-0.5 text-xs sm:ml-1 sm:text-sm ${today ? "text-[#9fc9d6]" : "text-slate-500"}`}>{day.temperature_min}°</span>
                 </p>
                 <p className={`mt-0.5 text-[11px] font-semibold leading-tight sm:text-xs ${today ? "text-[#7fd3df]" : TONE_TEXT[outlook.tone]}`}>{outlook.label}</p>
+                {rainBarPercent(outlook.pct) !== null ? (
+                  <span className="pm-bar mt-1 max-w-[4.5rem]" aria-hidden="true">
+                    <span style={{ "--w": `${rainBarPercent(outlook.pct)}%`, "--c": today ? "#7fd3df" : TONE_BAR[outlook.tone], "--d": `${index * 80}ms` }} />
+                  </span>
+                ) : null}
                 {outlook.pct !== null ? (
                   <p className={`text-[10px] tabular-nums sm:text-[11px] ${today ? "text-[#9fc9d6]" : "text-slate-500"}`}><span className="hidden sm:inline">โอกาสฝน </span><span className="sm:hidden">ฝน </span>{outlook.pct}%</p>
                 ) : null}
@@ -104,7 +124,7 @@ export default function ForecastWeek({ district, loading = false }) {
               </li>
             );
           })}
-        </ol>
+        </Reveal>
       )}
       {uvAdvice ? (
         <p className="mt-2 flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold sm:text-sm" style={{ backgroundColor: `${uvAdvice.color}1f`, color: uvAdvice.text }}>
@@ -114,8 +134,8 @@ export default function ForecastWeek({ district, loading = false }) {
       {days.length ? (
         <p className="mt-2 text-[11px] leading-snug text-slate-500 sm:text-xs">
           {days.some((day) => day.forecast_source === "tmd")
-            ? "สภาพอากาศและอุณหภูมิ: กรมอุตุนิยมวิทยา • โอกาสฝน: ECMWF Ensemble • UV: NOAA GFS"
-            : "สภาพอากาศและอุณหภูมิ: ECMWF (ปรับเทียบสถานีอุตุฯ สตูล) • โอกาสฝน: ECMWF Ensemble • UV: NOAA GFS"}
+            ? "สภาพอากาศและอุณหภูมิ: กรมอุตุนิยมวิทยา • โอกาสฝน: ECMWF Ensemble (ปรับเกณฑ์ตามสถานีอุตุฯ สตูล) • UV: NOAA GFS"
+            : "สภาพอากาศและอุณหภูมิ: ECMWF (ปรับเทียบสถานีอุตุฯ สตูล) • โอกาสฝน: ECMWF Ensemble (ปรับเกณฑ์ตามสถานีอุตุฯ สตูล) • UV: NOAA GFS"}
         </p>
       ) : null}
     </section>

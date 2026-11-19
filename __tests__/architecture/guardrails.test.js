@@ -103,13 +103,13 @@ describe('architecture guardrails', () => {
         'ตัวเลขสรุปสำหรับแผนที่/หน้าสาธารณะ': ['eoc/disease/daily-stats', 'eoc/disease/outbreak-dashboard', 'eoc/disease/sessions-summary', 'eoc/festival-accidents/compare', 'eoc/festival-accidents/daily-summary', 'eoc/flood/area-status'],
         'ส่งต่อไปยัง route ที่ตรวจสิทธิ์แล้ว (re-export)': ['eoc/vulnerable-groups', 'eoc/vulnerable-groups/stats'],
         'ตรวจสถานะเซิร์ฟเวอร์': ['health'],
-        'บริการประชาชน (มี rate limit)': ['assistant/route-advice', 'public/accident-reports', 'public/accident-stats', 'public/agency-contacts', 'public/announcements', 'public/announcements/popup', 'public/disease-stats', 'public/flood-disease-summary', 'public/flood-freq', 'public/flood-outlook', 'public/flood-stats', 'public/hydro-trends', 'public/help-availability', 'public/incident-normal', 'public/infographic-gallery', 'public/infographics', 'public/offline-pack', 'public/ops-today', 'public/place-search', 'public/pm25', 'public/cctv/frame', 'public/satisfaction', 'public/dpm-water', 'public/content-view', 'public/push', 'public/push/receipt', 'public/rain-stations', 'public/alert-sounds', 'public/report-incident', 'public/riskcom-media', 'public/sea-level', 'public/shelter-centers', 'public/site-views', 'public/situation', 'public/track', 'public/usage', 'public/villages', 'public/visit', 'public/water-levels', 'public/weather-watch', 'public/where']
+        'บริการประชาชน (มี rate limit)': ['assistant/route-advice', 'public/accident-reports', 'public/accident-stats', 'public/agency-contacts', 'public/announcements', 'public/announcements/popup', 'public/disease-stats', 'public/flood-disease-summary', 'public/flood-freq', 'public/flood-freq/point', 'public/flood-outlook', 'public/flood-stats', 'public/hydro-trends', 'public/help-availability', 'public/incident-normal', 'public/infographic-gallery', 'public/infographics', 'public/offline-pack', 'public/ops-today', 'public/place-search', 'public/pm25', 'public/cctv/frame', 'public/satisfaction', 'public/dpm-water', 'public/content-view', 'public/push', 'public/push/receipt', 'public/rain-stations', 'public/alert-sounds', 'public/report-incident', 'public/riskcom-media', 'public/sea-level', 'public/shelter-centers', 'public/site-views', 'public/situation', 'public/track', 'public/usage', 'public/villages', 'public/visit', 'public/water-levels', 'public/weather-watch', 'public/where']
     };
     const AUTH_MARKERS = /requireAuth|getAuthSession|getCitizenSession|x-cron-secret|CRON_SECRET/;
 
     test('every API route checks the caller, or is a listed public route', () => {
         const apiDir = path.join(ROOT, 'app', 'api');
-        const routes = listFiles(apiDir, (file) => path.basename(file) === 'route.js')
+        const routes = listFiles(apiDir, (file) => /^route\.jsx?$/.test(path.basename(file)))
             .map((file) => ({ name: path.relative(apiDir, path.dirname(file)).split(path.sep).join('/'), source: read(file) }));
         const allowed = new Set(Object.values(PUBLIC_API_ROUTES).flat());
         const unchecked = routes.filter((route) => !AUTH_MARKERS.test(route.source)).map((route) => route.name);

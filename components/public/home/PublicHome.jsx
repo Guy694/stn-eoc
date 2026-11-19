@@ -51,6 +51,8 @@ import { effectiveHomeTheme, useHomeTheme } from "@/lib/homeTheme";
 import "./homeThemeSky.css";
 import { pm25ForDistrict, pm25Level } from "@/lib/pm25";
 import { heatLevel } from "@/lib/weatherHealth";
+import Reveal from "@/components/public/motion/Reveal";
+import CountUp from "@/components/public/motion/CountUp";
 
 // หน้าแรกสำหรับประชาชน
 // จุดเด่นเดียวของหน้า: แผนที่ 7 อำเภอที่ระบายสีตามความเสี่ยงวันนี้ แตะแล้วเห็น "พื้นที่ของฉัน" ทันที
@@ -591,21 +593,21 @@ export default function PublicHome() {
                       <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                         <div className={tile} style={heat && heat.key !== "normal" ? { backgroundColor: `${heat.color}55` } : undefined} title={heat?.advice || undefined}>
                           <dt className={label}><Thermometer className="h-3.5 w-3.5 text-[#f97316]" aria-hidden="true" />รู้สึกเหมือน</dt>
-                          <dd className={value}>{myDistrict.apparent_temperature ?? "–"}<span className={unit}>°C</span></dd>
+                          <dd className={value}><CountUp value={myDistrict.apparent_temperature} /><span className={unit}>°C</span></dd>
                           {heat ? <dd className="text-[11px] font-semibold leading-tight" style={{ color: heat.key === "normal" ? "#64748b" : heat.text === "#ffffff" ? "#7f1d1d" : heat.text }}>{heat.key === "normal" ? "ปกติ" : heat.advice ? `${heat.label} • ${heat.key === "caution" ? "ดื่มน้ำบ่อย ๆ" : "เลี่ยงแดด"}` : heat.label}</dd> : null}
                         </div>
                         <div className={tile}>
                           <dt className={label}><Droplets className="h-3.5 w-3.5 text-[#2f80ed]" aria-hidden="true" />ความชื้น</dt>
-                          <dd className={value}>{myDistrict.humidity ?? "–"}<span className={unit}>%</span></dd>
+                          <dd className={value}><CountUp value={myDistrict.humidity} /><span className={unit}>%</span></dd>
                         </div>
                         <div className={tile}>
                           <dt className={label}><Wind className="h-3.5 w-3.5 text-[#0ea5e9]" aria-hidden="true" />ลม</dt>
-                          <dd className={value}>{myDistrict.wind_speed ?? "–"}<span className={unit}> กม./ชม.</span></dd>
+                          <dd className={value}><CountUp value={myDistrict.wind_speed} /><span className={unit}> กม./ชม.</span></dd>
                           {myDistrict.wind_direction && myDistrict.wind_direction !== "-" ? <dd className="truncate text-[11px] text-slate-500">จากทิศ{myDistrict.wind_direction}</dd> : null}
                         </div>
                         <div className={tile} style={myPm25Level ? { backgroundColor: `${myPm25Level.color}29` } : undefined} title={myPm25Level?.advice || "ยังไม่มีข้อมูลฝุ่น"}>
                           <dt className={label}><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: myPm25Level?.color || "#94a3b8" }} aria-hidden="true" />ฝุ่น PM2.5</dt>
-                          <dd className={value}>{myPm25Level ? Math.round(Number(myPm25.value)) : "–"}<span className={unit}> µg/m³</span></dd>
+                          <dd className={value}><CountUp value={myPm25Level ? Math.round(Number(myPm25.value)) : null} /><span className={unit}> µg/m³</span></dd>
                           {myPm25Level ? <dd className="text-[11px] font-semibold leading-tight" style={{ color: myPm25Level.text }}>{myPm25Level.label}{myPm25.scope === "province" ? " (ทั้งจังหวัด)" : ""}</dd> : null}
                         </div>
                       </dl>
@@ -750,8 +752,8 @@ export default function PublicHome() {
                 <Link href="/public/shelters?near=1" className="group flex items-center gap-3 bg-[#f4effc] p-5 hover:bg-[#ebe2fa] sm:col-span-2 xl:col-span-1">
                   <Tent className="h-7 w-7 shrink-0 text-[#6d3fc4] transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none" aria-hidden="true" />
                   <span>
-                    <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">ศูนย์พักพิงเปิด {formatNumber(summary.open)} แห่ง</span>
-                    <span className="block text-sm text-[#5b3a9e]">รับได้อีก {formatNumber(summary.vacancy)} คน • หาที่ใกล้ฉัน</span>
+                    <span className="block font-[family-name:var(--font-kanit)] text-lg font-semibold">ศูนย์พักพิงเปิด <CountUp value={summary.open} /> แห่ง</span>
+                    <span className="block text-sm text-[#5b3a9e]">รับได้อีก <CountUp value={summary.vacancy} /> คน • หาที่ใกล้ฉัน</span>
                   </span>
                 </Link>
               );
@@ -771,17 +773,17 @@ export default function PublicHome() {
         <ForecastWeek district={myDistrict} loading={loading} />
 
         {/* ── น้ำในคลองตอนนี้ ── */}
-        <DpmCanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} history={water.history} />
+        <Reveal><DpmCanalStrip stations={water.stations} observedAt={water.fetchedAt} loading={water.loading} history={water.history} /></Reveal>
         {/* ── สิ่งที่ควรทำตอนนี้ (มือถือ/แท็บเล็ต): ก่อนน้ำทะเลหนุน เพราะเป็นสิ่งที่ต้องลงมือทำ ── */}
         <section className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:hidden"><AdviceList groups={adviceGroups} id="todo-title-mobile" /></section>
         {/* ── น้ำทะเลหนุน: ต่อจากน้ำในคลอง (น้ำทะเลขึ้นสูงทำให้คลองระบายช้า) ── */}
-        <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-6"><SeaTodayCard layout="wide" /></div>
+        <Reveal className="mx-auto max-w-6xl px-4 pt-4 sm:px-6"><SeaTodayCard layout="wide" /></Reveal>
 
         {/* ── รายงานน้ำจากประชาชน (มือถือ/แท็บเล็ต: แถบเลื่อนต่อจากระดับน้ำในคลอง) ── */}
         <CitizenWaterReports reports={waterReports} layout="strip" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:hidden" />
 
         {/* ── สถานการณ์ที่ดำเนินการอยู่ + สิ่งที่ควรทำ ── */}
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <Reveal className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <section aria-labelledby="events-title">
             <h2 id="events-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">
               {events.length > 0 ? "เหตุการณ์ที่หน่วยงานกำลังรับมือ" : "ไม่มีเหตุการณ์ฉุกเฉินในขณะนี้"}
@@ -843,14 +845,14 @@ export default function PublicHome() {
             </div>
             <AlertSubscribeCard defaultDistrict={districtName} className="mt-6" />
           </section>
-        </div>
+        </Reveal>
 
         </div>
 
         {/* ── ข่าวสารและความรู้สุขภาพ (มีภาพ ดึงดูดให้อ่าน) ── */}
         {announcements.length > 0 && (
           <section aria-labelledby="news-title" className="bg-white">
-            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+            <Reveal className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 id="news-title" className="font-[family-name:var(--font-kanit)] text-2xl font-bold text-[#0c2f4a]">ข่าวสารและความรู้สุขภาพ</h2>
                 <Link href="/public/announcements" className="shrink-0 text-[15px] font-semibold text-[#11466e] underline-offset-4 hover:underline">ดูทั้งหมด</Link>
@@ -873,7 +875,7 @@ export default function PublicHome() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           </section>
         )}
 

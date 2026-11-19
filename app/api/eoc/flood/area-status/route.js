@@ -95,19 +95,10 @@ export async function GET(request) {
         const [activeSessions] = await connection.execute(sessionQuery, sessionParams);
 
         if (activeSessions.length === 0) {
-            // ลองตรวจสอบว่ามี session อะไรบ้างในระบบ (สำหรับ debug)
-            const [allFloodSessions] = await connection.execute(`
-                SELECT id, eoc_type, status, session_number, opened_at 
-                FROM eoc_sessions 
-                WHERE LOWER(eoc_type) LIKE '%flood%'
-                ORDER BY opened_at DESC
-                LIMIT 5
-            `);
             return NextResponse.json({
                 success: false,
                 hasActiveSession: false,
-                message: sessionId ? 'ไม่พบเหตุการณ์ EOC อุทกภัยน้ำท่วมที่เลือก' : 'ไม่มีเหตุการณ์ EOC ที่เปิดอยู่',
-                debug: { allFloodSessions }
+                message: sessionId ? 'ไม่พบเหตุการณ์ EOC อุทกภัยน้ำท่วมที่เลือก' : 'ไม่มีเหตุการณ์ EOC ที่เปิดอยู่'
             });
         }
 

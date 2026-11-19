@@ -71,8 +71,9 @@ export async function GET(request) {
     const eocType = params.get("eoc") || "flood";
     if (!SUPPORTED.includes(eocType)) return bad("ประเภท EOC ไม่ถูกต้อง");
     const session = await resolveSession(eocType, params.get("session_id"));
+    // รายชื่อ/ที่อยู่กลุ่มเปราะบาง: ผู้บัญชาการ/แอดมิน หรือทีมของเหตุการณ์ที่ "ยังเปิดอยู่" เท่านั้น (ทีมของเหตุการณ์ที่ปิดแล้วไม่ได้สิทธิ์ถาวร)
     const canSeePeople = PRIVILEGED.includes(auth.user.role)
-      || Boolean(session && (await getOperationalSessionAccess(auth.user, session.id).catch(() => ({ ok: false }))).ok);
+      || Boolean(session && session.status === "active" && (await getOperationalSessionAccess(auth.user, session.id).catch(() => ({ ok: false }))).ok);
 
     let rows;
     let cases = [];

@@ -3,6 +3,10 @@ import { REGISTRATION_SESSION_COOKIE, setRegistrationSessionCookie, unsealRegist
 import { notifySecurityEvent } from "@/lib/telegram";
 import { getPool } from "@/lib/db";
 import { getClientIp } from "@/lib/clientIp";
+import { TEAM_ROLE_CODES } from "@/lib/eocRoles";
+
+// บทบาทที่ขอได้ (เหมือนหน้าลงทะเบียนปกติ — ขอเป็น admin ไม่ได้)
+const REQUESTABLE_ROLES = ["staff", "commander", ...TEAM_ROLE_CODES];
 
 const pool = getPool();
 
@@ -28,7 +32,20 @@ export async function POST(request) {
             });
             return NextResponse.json({ success: false, message: 'การเข้าสู่ระบบไม่ถูกต้อง กรุณายืนยันตัวตนใหม่' }, { status: 401 });
         }
-        const { position, department, requested_role, phone, email } = await request.json();
+        // ใช้ได้เฉพาะเจ้าหน้าที่ที่ยังไม่ได้รับอนุมัติ (คุกกี้ของประชาชนมี id ของตาราง citizens — ห้ามนำไปแก้ตาราง officer)
+        if (userData?.userType !== 'officer' || !Number.isInteger(Number(userData?.id))) {
+            return NextResponse.json({ success: false, message: 'การเข้าสู่ระบบไม่ถูกต้อง กรุณายืนยันตัวตนใหม่' }, { status: 403 });
+        }
+        const body = await request.json().catch(() => ({}));
+        const clip = (value, max) => String(value ?? '').trim().slice(0, max);
+        const position = clip(body.position, 150);
+        const department = clip(body.department, 191);
+        const requested_role = clip(body.requested_role, 50);
+        const phone = clip(body.phone, 20);
+        const email = clip(body.email, 191);
+        if (requested_role && !REQUESTABLE_ROLES.includes(requested_role)) {
+            return NextResponse.json({ success: false, message: 'บทบาทที่ขอไม่ถูกต้อง' }, { status: 400 });
+        }
 
         // Validate
         if (!position || !department || !requested_role || !phone || !email) {
@@ -46,8 +63,8 @@ export async function POST(request) {
                 `UPDATE officer 
                 SET position = ?, department = ?, requested_role = ?, 
                     phone = ?, email = ?, request_time = NOW() 
-                WHERE id = ?`,
-                [position, department, requested_role, phone, email, userData.id]
+                WHERE id = ? AND COALESCE(is_approved, 0) = 0`,
+                [position, department, requested_role, phone, email, Number(userData.id)]
             );
 
             connection.release();
