@@ -14,12 +14,11 @@ export const EVENT_MODULES = {
     items: (ctx) => [
       { key: "overview", group: "ประเมินสถานการณ์", name: "ภาพรวมสถานการณ์", path: "/eoc/flood/overview", iconKey: "overview" },
       { key: "water-report", group: "ประเมินสถานการณ์", name: "รายงานระดับน้ำ", path: "/eoc/flood/water-report", iconKey: "flood", description: "ระดับน้ำสถานีเฝ้าระวัง ปภ. เทียบย้อนหลัง บันทึกเป็น PDF/รูป A4" },
-      { key: "risk-map", group: "ประเมินสถานการณ์", name: "แผนที่สถานการณ์และความเสี่ยง", path: "/eoc/flood/risk-map", iconKey: "map", description: "ชุดเดียวกับหน้าประชาชน: ระดับน้ำ ฝน น้ำขึ้น–ลง น้ำท่วมซ้ำซาก ความเสี่ยงรายอำเภอ และ Windy" },
+      { key: "hydro-trends", group: "ประเมินสถานการณ์", name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood", description: "กราฟฝนรายวัน ระดับน้ำในคลอง และน้ำทะเลหนุน 7/30/90 วัน" },
       // "แนวโน้มน้ำและฝน" อยู่ในหมวดภาพรวม (เปิดได้ตลอด ไม่ต้องมีเหตุการณ์) — ไม่ซ้ำในเมนูเหตุการณ์
       { key: "area-risk", group: "ประเมินสถานการณ์", name: "พยากรณ์พื้นที่เสี่ยง", path: "/eoc/flood/area-risk", iconKey: "map", description: "ตอนนี้ • พยากรณ์ 7 วัน • จำลองถ้าฝน/คลอง/น้ำทะเลหนุน — ตำบลและหมู่บ้านที่คาดว่าน้ำท่วม" },
       { key: "triggers", group: "สั่งการ", name: "ธงเตือนภัยและ Trigger", path: "/eoc/flood/triggers", iconKey: "flag", description: "ประกาศธงเขียว/เหลือง/แดง และ Trigger เคลื่อนย้ายกลุ่มเปราะบาง รายพื้นที่" },
-      { key: "command", group: "สั่งการ", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ" },
-      { key: "brief", group: "สั่งการ", name: "สรุปสำหรับห้องประชุม", path: "/eoc/flood/meeting-brief", iconKey: "command", description: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
+      { key: "command", group: "สั่งการ", name: "ภารกิจและข้อสั่งการ", path: "/eoc/flood/management/directives", iconKey: "command", description: "สรุปสำหรับห้องประชุม สถานการณ์/ข้อสั่งการรายวัน ภารกิจ ประชุม บันทึกการตัดสินใจ", alsoActive: ["/eoc/flood/meeting-brief", "/eoc/flood/management/missions", "/eoc/flood/management/meetings", "/eoc/flood/management/decisions", "/eoc/flood/management/team-workspace"] },
       { key: "records", group: "พื้นที่และประชาชน", name: "บันทึกพื้นที่น้ำท่วม", path: "/eoc/flood/records", iconKey: "flood" },
       { key: "shelters", group: "พื้นที่และประชาชน", name: "ศูนย์พักพิง", path: `/eoc/shelters?eoc=flood${ctx.sessionId ? `&session=${ctx.sessionId}` : ""}`, iconKey: "shelter", description: "เปิดใช้ศูนย์และอัปเดตยอดผู้พักพิง" },
       { key: "vulnerable", group: "พื้นที่และประชาชน", name: "กลุ่มเปราะบาง", path: "/eoc/flood/vulnerable-groups", iconKey: "vulnerable", description: "ยอดรายหมู่บ้าน และรายบุคคลบนแผนที่ (พิกัดบ้าน สถานะการช่วยเหลือ)", alsoActive: ["/eoc/flood/vulnerable-persons"] },
@@ -38,8 +37,7 @@ export const EVENT_MODULES = {
     items: () => [
       { key: "overview", name: "ภาพรวมสถานการณ์", path: "/eoc/disease/overview", iconKey: "overview" },
       { key: "command", name: "จัดการ EOC", path: "/eoc/disease/management", iconKey: "command" },
-      { key: "records", name: "บันทึกรายงานผู้ป่วย", path: "/eoc/disease/records", iconKey: "records" },
-      { key: "facility-reports", name: "รายงานจากหน่วยบริการ", path: "/eoc/disease/records?tab=facility", iconKey: "health" },
+      { key: "records", name: "บันทึกรายงานผู้ป่วย", path: "/eoc/disease/records", iconKey: "records", description: "รายงานในชุมชน และรายงานจากหน่วยบริการ (แท็บในหน้า)", anyTab: true },
       { key: "daily", name: "สรุปรายวัน", path: "/eoc/disease/daily-risk", iconKey: "daily" },
       { key: "map", name: "แผนที่", path: "/eoc/disease/map", iconKey: "map" },
       { key: "vulnerable", name: "กลุ่มเปราะบาง", path: "/eoc/disease/vulnerable-groups", iconKey: "vulnerable", description: "ยอดรายหมู่บ้าน และรายบุคคลบนแผนที่", alsoActive: ["/eoc/disease/vulnerable-persons"] },
@@ -163,8 +161,13 @@ export function buildMyTeamWorkSection({ eocStatus = {}, assignments = [], overr
   return { section: "my-team-work", title: "งานของทีมฉัน", highlight: true, items };
 }
 
+/** มีเมนู "แนวโน้มน้ำและฝน" ในหมวดเหตุการณ์แล้วหรือยัง (กันแสดงซ้ำในภาพรวม) */
+function hasHydroItem(sections = []) {
+  return sections.some((section) => (section.items || []).some((item) => item.path === "/eoc/hydro-trends"));
+}
+
 /** หมวดภาพรวม: เหมือนกันทุกบทบาท (แอดมิน/ผู้บัญชาการเห็นความพร้อมของทุกคนเพิ่ม) */
-function overviewSection(role) {
+function overviewSection(role, { withHydro = true } = {}) {
   const seesEveryone = role === "admin" || role === "commander";
   return {
     section: "overview",
@@ -174,8 +177,9 @@ function overviewSection(role) {
       { name: "หน้าหลัก", path: "/dashboard", iconKey: "home", description: "เลือกเหตุการณ์ก่อนเข้าสู่หน้าปฏิบัติการ" },
       { name: "สถานะของฉัน", path: "/eoc/readiness", iconKey: "myStatus", description: "รายงานว่าพร้อมปฏิบัติงานหรือไม่" },
       ...(seesEveryone ? [{ name: "สถานะความพร้อมเจ้าหน้าที่", path: "/admin/officer-readiness", iconKey: "readiness", description: "ใครพร้อม/มาไม่ได้/ต้องการความช่วยเหลือ สรุปรายทีม ปรับสถานะแทนได้" }] : []),
-      { name: "วิเคราะห์ข้อมูล", path: "/analytics", iconKey: "analytics" },
-      { name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood", description: "กราฟฝนรายวัน ระดับน้ำในคลอง และน้ำทะเลหนุน 7/30/90 วัน" }
+      { name: "แผนที่สถานการณ์", path: "/analytics", iconKey: "map", description: "แผนที่เต็มจอ: ความเสี่ยง ฝน น้ำ กลุ่มเปราะบาง สถานะการช่วยเหลือ และคำขอความช่วยเหลือ" },
+      // แนวโน้มน้ำและฝนอยู่ในเมนูอุทกภัยเมื่อเปิดเหตุการณ์ — ไม่มีเหตุการณ์อุทกภัยในเมนู จึงแสดงที่นี่แทน (ไม่ซ้ำ)
+      ...(withHydro ? [{ name: "แนวโน้มน้ำและฝน", path: "/eoc/hydro-trends", iconKey: "flood", description: "กราฟฝนรายวัน ระดับน้ำในคลอง และน้ำทะเลหนุน 7/30/90 วัน" }] : [])
     ]
   };
 }
@@ -197,7 +201,7 @@ export function buildOfficerMenu({ role = "staff", eocStatus = {}, assignments =
   const events = buildOfficerEventSections({ eocStatus, assignments, role, overrides, layout });
   const teamWork = buildMyTeamWorkSection({ eocStatus, assignments, overrides, layout });
   return [
-    overviewSection(role),
+    overviewSection(role, { withHydro: !hasHydroItem(events) }),
     ...(teamWork ? [teamWork] : []),
     ...(events.length ? [{ section: "events-heading", title: "เหตุการณ์ที่เปิดอยู่", group: "events-heading", items: [] }, ...events] : []),
     // ผู้บัญชาการเหตุการณ์จัดการประกาศและส่งเตือนภัยถึงประชาชนได้ — ชื่อหมวด/ลำดับเดียวกับของแอดมิน
@@ -219,7 +223,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "", overrides = {}, 
   const anyOpen = events.some((section) => section.eventState === "open");
 
   return [
-    overviewSection("admin"),
+    overviewSection("admin", { withHydro: !hasHydroItem(events) }),
     {
       section: "events-heading",
       title: "เหตุการณ์ที่เปิดอยู่",
@@ -234,7 +238,8 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "", overrides = {}, 
       audience: "แอดมิน",
       items: [
         { name: "คำขอจากประชาชน", path: "/admin/incident-reports", iconKey: "inbox", badge: "pendingReports", description: "คำขอความช่วยเหลือ จุดปัญหา และรายงานเส้นทาง — ตรวจก่อนเผยแพร่" },
-        { name: "คำขอสมัครเจ้าหน้าที่", path: "/admin/officers?tab=requests", iconKey: "userCheck", badge: "pendingRegistrations", description: "อนุมัติหรือปฏิเสธบัญชีที่สมัครใหม่" }
+        // แสดงเฉพาะเมื่อมีคำขอค้าง (ปกติอยู่ในแท็บของ "ผู้ใช้งาน")
+        { name: "คำขอสมัครเจ้าหน้าที่", path: "/admin/officers?tab=requests", iconKey: "userCheck", badge: "pendingRegistrations", hideWhenZero: true, description: "อนุมัติหรือปฏิเสธบัญชีที่สมัครใหม่" }
       ]
     },
     {
@@ -261,8 +266,7 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "", overrides = {}, 
       collapsible: anyOpen,
       defaultExpanded: !anyOpen,
       items: [
-        { name: "ประกาศ", path: "/announcements", iconKey: "megaphone" },
-        { name: "คลังอินโฟกราฟิก", path: "/admin/upload-infographics", iconKey: "image", description: "อัปโหลดภาพอินโฟกราฟิก แสดงในหน้าประกาศและความรู้ของประชาชน" },
+        { name: "ประกาศ", path: "/announcements", iconKey: "megaphone", description: "ประกาศ และคลังอินโฟกราฟิก (แท็บในหน้า)", alsoActive: ["/admin/upload-infographics"] },
         { name: "แจ้งเตือนประชาชน", path: "/admin/public-alerts", iconKey: "announcements", description: "ส่งเตือนภัยเข้ามือถือประชาชน ข้อความสำเร็จรูป การส่งอัตโนมัติ" }
       ]
     },
@@ -273,14 +277,20 @@ export function buildAdminMenu({ eocStatus = {}, pathname = "", overrides = {}, 
       collapsible: true,
       defaultExpanded: false,
       items: [
-        { name: "ตั้งค่าระบบ", path: "/admin/settings", iconKey: "settings", description: "สถานะระบบ แจ้งเตือน การเชื่อมต่อ ความปลอดภัย สำรองข้อมูล" },
-        { name: "เปิด/ปิด EOC", path: "/admin/eoc-management", iconKey: "power" },
-        { name: "ประวัติเหตุการณ์", path: "/admin/eoc-sessions", iconKey: "history" },
-        { name: "เจ้าหน้าที่และสิทธิ์", path: "/admin/officers", iconKey: "users" },
-        { name: "ผู้ใช้ประชาชน", path: "/admin/citizens", iconKey: "people" },
+        { name: "ตั้งค่าระบบ", path: "/admin/settings", iconKey: "settings", description: "สถานะระบบ แจ้งเตือน การเชื่อมต่อ ความปลอดภัย สำรองข้อมูล ผู้เข้าชม", anyTab: true },
+        { name: "เหตุการณ์ EOC", path: "/admin/eoc-management", iconKey: "power", description: "เปิด/ปิด EOC และประวัติเหตุการณ์ (แท็บในหน้า)", alsoActive: ["/admin/eoc-sessions"] },
+        { name: "ผู้ใช้งาน", path: "/admin/officers", iconKey: "users", description: "เจ้าหน้าที่และสิทธิ์ คำขอสมัคร และผู้ใช้ประชาชน (แท็บในหน้า)", anyTab: true, exceptTabs: ["requests"], alsoActive: ["/admin/citizens"] }
+      ]
+    },
+    {
+      section: "audit",
+      title: "ตรวจสอบย้อนหลัง",
+      audience: "แอดมิน",
+      collapsible: true,
+      defaultExpanded: false,
+      items: [
         { name: "ตรวจคุณภาพข้อมูล", path: "/admin/data-management", iconKey: "database" },
         { name: "ประวัติการใช้งาน", path: "/admin/activity-logs", iconKey: "log" },
-        { name: "ผู้เข้าชม", path: "/admin/visitors", iconKey: "visitors", description: "ใครเข้าชมระบบ จาก IP และตำแหน่งโดยประมาณใด (ประวัติความปลอดภัย)" },
         { name: "ถังขยะ", path: "/admin/trash", iconKey: "trash", description: "ข้อมูลที่ถูกลบ กู้คืนได้" }
       ]
     },
@@ -306,6 +316,8 @@ export function isMenuItemActive(item, pathname, search = "") {
   if ((item.alsoActive || []).some((path) => pathname === path || pathname === `${path}/`)) return true;
   const [itemPath, itemQuery = ""] = item.path.split("?");
   if (pathname !== itemPath && !(itemPath !== "/" && pathname === `${itemPath}/`)) return false;
+  // เมนูที่รวมหลายแท็บไว้ในเมนูเดียว (anyTab) active ทุกแท็บของหน้า — ยกเว้นแท็บที่มีเมนูลัดของตัวเอง ให้เมนูลัดนั้น active แทน
+  if (item.anyTab) return !(item.exceptTabs || []).includes(new URLSearchParams(search).get("tab") || "");
   // เทียบเฉพาะ "แท็บ" — เมนูที่ไม่ระบุแท็บคือแท็บเริ่มต้นของหน้า จึงไม่ active เมื่อกำลังดูแท็บอื่น
   const currentTab = new URLSearchParams(search).get("tab") || "";
   const wantedTab = new URLSearchParams(itemQuery).get("tab") || "";

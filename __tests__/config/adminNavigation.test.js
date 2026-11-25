@@ -52,4 +52,15 @@ describe('admin navigation', () => {
         expect(isMenuItemActive(session, '/eoc/shelters/', '')).toBe(true);
         expect(isMenuItemActive(registry, '/eoc/shelters-x', '?tab=registry')).toBe(false);
     });
+    test('ไม่มีเมนูซ้ำ: แผนที่ ผู้เข้าชม ประวัติเหตุการณ์ ผู้ใช้ประชาชน อินโฟกราฟิก อยู่เป็นแท็บ/หน้าเดียว', () => {
+        const all = (status) => buildAdminMenu({ eocStatus: status }).flatMap((section) => section.items).map((item) => item.path);
+        const open = all(eocStatus);
+        for (const gone of ['/eoc/flood/risk-map', '/admin/visitors', '/admin/eoc-sessions', '/admin/citizens', '/admin/upload-infographics', '/eoc/flood/meeting-brief', '/eoc/disease/records?tab=facility']) {
+            expect(open).not.toContain(gone);
+        }
+        expect(open.filter((href) => href === '/analytics')).toHaveLength(1);
+        // แนวโน้มน้ำและฝน: อยู่ในเมนูอุทกภัยเมื่อเปิดเหตุการณ์ ไม่เปิด = อยู่ในภาพรวม (มีที่เดียวเสมอ)
+        expect(open.filter((href) => href === '/eoc/hydro-trends')).toHaveLength(1);
+        expect(all({}).filter((href) => href === '/eoc/hydro-trends')).toHaveLength(1);
+    });
 });

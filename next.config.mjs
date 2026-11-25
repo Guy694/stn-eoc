@@ -68,6 +68,9 @@ const nextConfig = {
       { source: '/eoc/flood/shelters/manage', destination: '/eoc/shelters?eoc=flood', permanent: false },
       { source: '/eoc/flood/shelters', destination: '/eoc/shelters?eoc=flood&tab=map', permanent: false },
       { source: '/admin/alert-test', destination: '/admin/settings?section=alerts', permanent: false },
+      // รวมเมนูซ้ำ (พ.ย. 2569): ผู้เข้าชมอยู่ในตั้งค่าระบบ · แผนที่สถานการณ์ของอุทกภัยรวมกับแผนที่เต็มจอ /analytics
+      { source: '/admin/visitors', destination: '/admin/settings?section=visitors', permanent: false },
+      { source: '/eoc/flood/risk-map', destination: '/analytics', permanent: false },
       // ศูนย์งานเจ้าหน้าที่แบบเก่า (เลิกใช้) — ลิงก์ในการแจ้งเตือนเก่าพาไปหน้าหลัก
       { source: '/eoc/staff/:path*', destination: '/dashboard', permanent: false },
       {

@@ -216,8 +216,11 @@ function MediaThumb({ item, label }) {
   );
 }
 
-/** embedded = แสดงในหน้าเจ้าหน้าที่ (ใน EOCLayout): ไม่มีแถบเมนูประชาชนและผู้ช่วย AI ของหน้าประชาชน */
-export default function WeatherWatchWorkspace({ embedded = false }) {
+/**
+ * staff: แผนที่เต็มจอของเจ้าหน้าที่ (/analytics) — { mapLayers, menu, panel, flyTarget }
+ *   mapLayers = ชั้นข้อมูลเพิ่มในแผนที่ · menu = ตัวกรองเพิ่มบนสุดของเมนูขวา · panel = แถบรายละเอียดซ้าย (แทนกล่องเช็คความเสี่ยง)
+ */
+export default function WeatherWatchWorkspace({ staff = null }) {
   const [data, setData] = useState(null);
   const { sheltersOpen } = useHelpAvailability();
   const [loading, setLoading] = useState(true);
@@ -388,9 +391,9 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
   };
 
   return (
-    <div className={embedded ? "flex h-[calc(100dvh-12rem)] min-h-[560px] flex-col overflow-hidden rounded-2xl bg-slate-900" : "flex h-dvh flex-col overflow-hidden bg-slate-900"}>
+    <div className="flex h-dvh flex-col overflow-hidden bg-slate-900">
       {/* แถบล่างมือถือแสดงในหน้านี้ด้วย: showBottomBar = ไม่เว้นที่ท้าย body (หน้านี้สูงเท่าจอ) เว้นที่ด้วย spacer ด้านล่างแทน */}
-      {embedded ? null : <PublicTopNavigation activeMenu="weather" showWeatherMenu showBottomBar />}
+      {staff ? null : <PublicTopNavigation activeMenu="weather" showWeatherMenu showBottomBar />}
 
       <main className="relative min-h-0 flex-1 overflow-hidden" aria-label="แผนที่สถานการณ์และความเสี่ยง">
         <div className={`absolute inset-0 ${isWindy ? "invisible" : ""}`} aria-hidden={isWindy}>
@@ -400,14 +403,16 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
             onSelectDistrict={selectDistrict}
             baseMap={baseMap}
             userLocation={userLocation}
-            flyTarget={flyTarget}
+            flyTarget={staff?.flyTarget && (staff.flyTarget.at || 0) > (flyTarget?.at || 0) ? staff.flyTarget : flyTarget}
             elevationEnabled={elevationEnabled}
             colorBy={colorBy}
             pm25={pm25}
             situationLayers={situationLayers}
             tide={situationLayers.tide ? seaLevel : null}
             onFloodFreqStatus={onFloodFreqStatus}
-          />
+          >
+            {staff?.mapLayers || null}
+          </WeatherRiskMap>
         </div>
         {isWindy && <WindyFrame src={windyUrl} />}
 
@@ -447,6 +452,19 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
           </div>
         </div>
 
+        {staff ? (
+          /* ซ้าย (เจ้าหน้าที่): แถบรายละเอียด */
+          <section
+            className={`absolute z-[700] flex flex-col overflow-hidden rounded-2xl ${GLASS}
+              left-3 top-3 bottom-3 w-[360px]
+              max-md:inset-x-2 max-md:top-auto max-md:bottom-2 max-md:w-auto max-md:max-h-[62%]
+              ${sidebarOpen ? "max-md:hidden" : ""}`}
+            aria-label="รายละเอียด"
+          >
+            {staff.panel}
+          </section>
+        ) : (
+          <>
         {/* ซ้าย: เช็คความเสี่ยงพื้นที่ของฉัน */}
         <section
           className={`absolute z-[700] flex flex-col overflow-hidden rounded-2xl ${GLASS}
@@ -767,12 +785,15 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
             </div>
           )}
         </section>
+          </>
+        )}
 
         {/* ขวา: เมนูชั้นข้อมูลแบบ Windy */}
         <div className="pointer-events-none absolute right-3 top-3 z-[700] flex max-h-[calc(100%-7.5rem)] flex-col items-end">
           <MenuToggle open={sidebarOpen} onToggle={() => setSidebarOpen((open) => !open)} controls="weather-layer-menu" />
           {sidebarOpen && (
             <nav id="weather-layer-menu" aria-label="ชั้นข้อมูลสภาพอากาศ" className="pointer-events-auto mt-3 min-h-0 w-[250px] overflow-y-auto overscroll-contain pb-2 pl-2 pr-0.5 [scrollbar-width:thin]">
+              {staff?.menu || null}
               <SectionTitle>สถานการณ์ตอนนี้</SectionTitle>
               <div className="space-y-1.5">
                 {SITUATION_ITEMS.map((item) => (
@@ -965,9 +986,9 @@ export default function WeatherWatchWorkspace({ embedded = false }) {
       </main>
 
       {/* ที่ว่างใต้แผนที่สำหรับแถบล่างบนมือถือ (แถบเป็น fixed จึงไม่ดันเนื้อหาเอง) */}
-      {embedded ? null : <div aria-hidden="true" className="h-[calc(4.5rem+env(safe-area-inset-bottom))] shrink-0 lg:hidden" />}
+      {staff ? null : <div aria-hidden="true" className="h-[calc(4.5rem+env(safe-area-inset-bottom))] shrink-0 lg:hidden" />}
 
-      {embedded ? null : <AIChatbot showLauncher={false} />}
+      {staff ? null : <AIChatbot showLauncher={false} />}
     </div>
   );
 }

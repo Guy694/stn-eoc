@@ -173,9 +173,7 @@ export default function EocControlWorkspace() {
         eyebrow="บริหารระบบ"
         title="เปิด/ปิด EOC"
         subtitle="เปิดศูนย์ปฏิบัติการเมื่อมีคำสั่ง ระบบจะเริ่มรอบเหตุการณ์ใหม่ เปิดเมนูกรอกข้อมูลให้ทีม และเปิดปุ่มขอความช่วยเหลือบนหน้าเว็บประชาชน"
-        actions={tab === "types" ? <AddButton onClick={() => startEditType()}>เพิ่มประเภทเหตุการณ์</AddButton> : (
-          <Link href="/admin/eoc-sessions" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">ประวัติเหตุการณ์</Link>
-        )}
+        actions={tab === "types" ? <AddButton onClick={() => startEditType()}>เพิ่มประเภทเหตุการณ์</AddButton> : null}
       />
       <Tabs value={tab} onChange={setTab} items={[
         { value: "status", label: "สถานะเหตุการณ์", count: openCount },

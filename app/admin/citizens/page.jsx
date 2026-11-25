@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageHero } from "@/components/common/ThemePanels";
 import { AppDialogFrame } from "@/components/ui/app-dialog";
 import EOCLayout from '@/components/layouts/EOCLayout';
+import LinkTabs, { USER_ADMIN_TABS } from '@/components/common/LinkTabs';
 import { showError, showSuccess, showWarning } from '@/lib/feedback';
 import PaginationControls, { paginateRows } from '@/components/common/PaginationControls';
 import AppIcon from "@/components/icons/AppIcon";
@@ -134,6 +135,7 @@ export default function CitizensManagementPage() {
     return (
         <EOCLayout>
             <div className="w-full">
+                <LinkTabs items={USER_ADMIN_TABS} current="citizens" label="ผู้ใช้งาน" className="mb-4" />
                 {/* Header */}
                 <PageHero icon="users" eyebrow="ผู้ดูแลระบบ" title="จัดการผู้ใช้ประชาชน" subtitle="รายชื่อประชาชนที่ลงทะเบียนผ่าน ThaiD และสามารถเลื่อนตำแหน่งเป็นเจ้าหน้าที่" className="mb-6" />
 

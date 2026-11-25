@@ -78,7 +78,8 @@ export default function WeatherRiskMap({
   pm25 = null,
   situationLayers = null,
   tide = null,
-  onFloodFreqStatus
+  onFloodFreqStatus,
+  children = null
 }) {
   const byPm25 = colorBy === "pm25" && Boolean(pm25);
   const [boundaries, setBoundaries] = useState([]);
@@ -182,6 +183,9 @@ export default function WeatherRiskMap({
           <Tooltip direction="top" offset={[0, -8]} permanent>ตำแหน่งของคุณ</Tooltip>
         </CircleMarker>
       )}
+
+      {/* ชั้นข้อมูลเพิ่มของหน้าที่นำแผนที่นี้ไปใช้ (เช่น แผนที่สถานการณ์เจ้าหน้าที่ /analytics) */}
+      {children}
 
       <FlyTo target={flyTarget} />
     </MapContainer>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Biohazard, Droplets, Earth, ImagePlus, RefreshCw, Sun, Trash2, Upload, Waves, X } from "lucide-react";
 import EOCLayout from "@/components/layouts/EOCLayout";
+import LinkTabs, { ANNOUNCEMENT_TABS } from "@/components/common/LinkTabs";
 import { useAuth } from "@/context/AuthContext";
 import { Button, useNotice } from "@/components/admin/crud";
 import { PageHero, Panel, heroButtonClass } from "@/components/common/ThemePanels";
@@ -124,6 +125,7 @@ export default function UploadInfographics() {
   return (
     <EOCLayout>
       <div className="w-full space-y-4">
+        <LinkTabs items={ANNOUNCEMENT_TABS} current="infographics" label="ประกาศและอินโฟกราฟิก" />
         <PageHero
           icon="camera"
           eyebrow="สื่อสารความเสี่ยง"

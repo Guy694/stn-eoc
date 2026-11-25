@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { CircleMarker, GeoJSON, MapContainer, Marker, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
-import { pinFill, pinHtml, pinKey, pinLabel, spreadApproxPositions } from "@/components/eoc/vulnerable/vulnerablePins";
+import { PIN_CSS, pinFill, pinHtml, pinKey, pinLabel, spreadApproxPositions } from "@/components/eoc/vulnerable/vulnerablePins";
 import { caseStatus, typeMeta } from "@/lib/vulnerablePersons";
 import { effectiveCareGroup } from "@/lib/careGroups";
 import { capabilityLabel, parseCapabilities, shelterTypeMeta } from "@/lib/shelterSuitability";
@@ -24,19 +24,6 @@ const PULSE_LIMIT = 25;
 const LIGHT_DONE_ABOVE = 200;
 const LIGHT_ZOOM = 13;
 
-const PIN_CSS = `
-.vp-pin{position:relative;transform-origin:50% 100%}
-.vp-pin svg{display:block}
-.vp-pin--selected{z-index:2}
-.vp-pin--urgent::before{content:"";position:absolute;left:50%;top:38%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:9999px;background:rgba(220,38,38,.22);box-shadow:0 0 0 2px rgba(220,38,38,.55)}
-.vp-pulse .vp-pin--urgent::before{animation:vp-pulse 2s ease-out infinite}
-.vp-moving .vp-pin--urgent::before{animation:none}
-.vp-pin--approx svg path:nth-child(2){stroke-dasharray:3 2;opacity:.82}.vp-pin--approx::after{content:"";position:absolute;left:50%;bottom:-3px;width:10px;height:4px;margin-left:-5px;border-radius:9999px;background:rgba(15,23,42,.25)}
-.vp-tag{position:absolute;left:62%;top:-6px;white-space:nowrap;border-radius:9999px;background:#fff;color:#0f172a;font:700 10px/1 var(--font-kanit),system-ui,sans-serif;padding:2px 5px;box-shadow:0 0 0 1px #94a3b8}
-
-@keyframes vp-pulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.7);opacity:0}}
-@media (prefers-reduced-motion: reduce){.vp-pulse .vp-pin--urgent::before{animation:none}}
-`;
 
 const FLOOD_STYLE = {
   severe: { color: "#b91c1c", fillColor: "#ef4444", fillOpacity: 0.35, weight: 1 },

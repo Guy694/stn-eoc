@@ -6,6 +6,7 @@ import {
   ClipboardList,
   LayoutGrid,
   MessageSquareText,
+  Presentation,
   Target,
   Users,
 } from "lucide-react";
@@ -22,6 +23,8 @@ export const FLOOD_EOC_BASE_PATH = "/eoc/flood/management";
 // เมนู "ภารกิจและข้อสั่งการ" เหลือเฉพาะงานสั่งการ — ภาพรวม/สรุปรายวัน/ความครบรายงาน อยู่ที่หน้าภาพรวมสถานการณ์
 // และแบบบันทึกหลักอยู่ที่หน้าบันทึกพื้นที่น้ำท่วม (หน้าเดิมเหล่านั้น redirect ไปแล้ว)
 const VIEWS = [
+  // สรุปสำหรับห้องประชุม เป็นหน้าแยก (/eoc/flood/meeting-brief) แต่อยู่ใต้เมนูนี้ — แท็บแรกเพราะเปิดในห้องประชุมบ่อยสุด
+  { key: "brief", label: "สรุปสำหรับห้องประชุม", href: "/eoc/flood/meeting-brief", icon: Presentation, heroIcon: "clipboard", subtitle: "เรื่องเร่งด่วนจากทุกงานในหน้าเดียว พิมพ์ได้" },
   { key: "directives", label: "สถานการณ์/ข้อสั่งการรายวัน", href: `${FLOOD_EOC_BASE_PATH}/directives`, icon: ClipboardList, heroIcon: "clipboard", subtitle: "สรุปสถานการณ์และข้อสั่งการประจำวัน กรอกเป็นข้อ ๆ ใช้ประกอบการประชุม" },
   { key: "missions", label: "ภารกิจ", href: `${FLOOD_EOC_BASE_PATH}/missions`, icon: LayoutGrid, heroIcon: "briefcase", subtitle: "ติดตามภารกิจที่มอบหมายในเหตุการณ์ ตั้งแต่รับเรื่องจนปิดภารกิจ" },
   { key: "meetings", label: "ประชุมและสั่งการ", href: `${FLOOD_EOC_BASE_PATH}/meetings`, icon: MessageSquareText, heroIcon: "message", subtitle: "บันทึกการประชุม มติ และข้อสั่งการ พร้อมผู้รับผิดชอบติดตามผล" },
@@ -52,6 +55,24 @@ async function resolveSessionId(signal) {
   const status = await fetch("/stn-eoc/api/eoc/status", { signal }).then((res) => res.json());
   const id = (status.data || []).find((row) => row.eoc_type === "flood" && row.session_id)?.session_id;
   return id ? Number(id) : null;
+}
+
+/** แท็บของเมนู "ภารกิจและข้อสั่งการ" (ใช้ในหน้าสรุปสำหรับห้องประชุมด้วย) */
+export function FloodCommandTabs({ view }) {
+  return (
+    <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1" aria-label="เมนูภารกิจและข้อสั่งการ">
+      {VIEWS.map((item) => {
+        const Icon = item.icon;
+        const active = item.key === view;
+        return (
+          <Link key={item.key} href={item.href} aria-current={active ? "page" : undefined}
+            className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold ${active ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc] hover:text-[#0b4c86]"}`}>
+            <Icon className="h-4 w-4" aria-hidden="true" />{item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 }
 
 export default function FloodEocManagementDashboard({ view = "directives" }) {
@@ -105,18 +126,7 @@ export default function FloodEocManagementDashboard({ view = "directives" }) {
           ) : null}
         />
 
-        <nav className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1" aria-label="เมนูภารกิจและข้อสั่งการ">
-          {VIEWS.map((item) => {
-            const Icon = item.icon;
-            const active = item.key === view;
-            return (
-              <Link key={item.key} href={item.href} aria-current={active ? "page" : undefined}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold ${active ? "bg-[#0b4c86] text-white" : "text-slate-700 hover:bg-[#edf5fc] hover:text-[#0b4c86]"}`}>
-                <Icon className="h-4 w-4" aria-hidden="true" />{item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <FloodCommandTabs view={view} />
 
         {state.loading ? <EmptyPanel icon="loader" title="กำลังโหลดข้อมูล…" /> : null}
         {state.error ? (

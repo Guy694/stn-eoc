@@ -231,6 +231,8 @@ export default function Sidebar() {
 
     const renderItem = (item, nested = false) => {
         const badgeCount = getBadgeCount(item);
+        // เมนูลัดที่แสดงเฉพาะเมื่อมีงานค้าง (เช่น คำขอสมัครเจ้าหน้าที่)
+        if (item.hideWhenZero && badgeCount === 0 && !isMenuItemActive(item, pathname, search)) return null;
         const active = isMenuItemActive(item, pathname, search);
         return (
             <li key={`${item.path}-${item.name}`}>
